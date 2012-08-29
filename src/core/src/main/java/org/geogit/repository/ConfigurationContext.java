@@ -6,17 +6,23 @@ package org.geogit.repository;
 
 import org.springframework.context.support.ClassPathXmlApplicationContext;
 
+import com.google.common.base.Stopwatch;
+
 public class ConfigurationContext extends ClassPathXmlApplicationContext {
 	private static ConfigurationContext instance;
 	
 	public static synchronized ConfigurationContext getInstance() {
 		if(instance == null) {
+	            //Stopwatch sw = new Stopwatch().start();
 			instance = new ConfigurationContext();
+			//sw.stop();
+			//System.err.println("App context loaded in " + sw);
 		}
 		return instance;
 	}
 	
 	private ConfigurationContext() {
 		super("org/geogit/storage/applicationContext.xml");
+		
 	}
 }

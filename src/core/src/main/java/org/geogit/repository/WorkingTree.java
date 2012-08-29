@@ -119,13 +119,11 @@ public class WorkingTree {
     /**
      * Inserts the given features into the index.
      * 
-     * @param features
-     *            the features to insert
-     * @param forceUseProvidedFID
-     *            whether to force the use of the existing Feature IDs or not. If {@code true} the
-     *            existing provided feature ids will be used, if {@code false} new Feature IDS will
-     *            be created, at least a specific Feature has the {@link Hints#USE_PROVIDED_FID}
-     *            hint set to {@code Boolean.TRUE}.
+     * @param features the features to insert
+     * @param forceUseProvidedFID whether to force the use of the existing Feature IDs or not. If
+     *        {@code true} the existing provided feature ids will be used, if {@code false} new
+     *        Feature IDS will be created, at least a specific Feature has the
+     *        {@link Hints#USE_PROVIDED_FID} hint set to {@code Boolean.TRUE}.
      * @param listener
      * @return
      * @throws Exception
@@ -134,20 +132,30 @@ public class WorkingTree {
     public List<FeatureId> insert(final FeatureCollection features,
             final boolean forceUseProvidedFID, final ProgressListener listener) throws Exception {
 
-        final int size = features.size();
+        listener.started();
 
-        List<Ref> refs;
-        Iterator<Feature> iterator = features.iterator();
         try {
-            Iterator<Triplet<ObjectWriter<?>, BoundingBox, List<String>>> objects;
-            objects = Iterators.transform(iterator, new FeatureInserter(forceUseProvidedFID));
+            final int size = features.size();
 
-            refs = index.inserted(objects, listener, size <= 0 ? null : size);
-        } finally {
-            features.close(iterator);
+            List<Ref> refs;
+            Iterator<Feature> iterator = features.iterator();
+            try {
+                Iterator<Triplet<ObjectWriter<?>, BoundingBox, List<String>>> objects;
+                objects = Iterators.transform(iterator, new FeatureInserter(forceUseProvidedFID));
+
+                refs = index.inserted(objects, listener, size <= 0 ? null : size);
+            } finally {
+                features.close(iterator);
+            }
+            List<FeatureId> inserted = Lists.transform(refs, new RefToResourceId());
+
+            listener.complete();
+
+            return inserted;
+        } catch (Exception e) {
+            listener.exceptionOccurred(e);
+            throw e;
         }
-        List<FeatureId> inserted = Lists.transform(refs, new RefToResourceId());
-        return inserted;
     }
 
     private static class FeatureInserter implements
