@@ -240,8 +240,8 @@ public abstract class RepositoryTestCase extends TestCase {
         String localPart = name.getLocalPart();
         String id = f.getIdentifier().getID();
 
-        Ref ref = index.inserted(
-        		WrappedSerialisingFactory.getInstance().createFeatureWriter(f), f.getBounds(), namespaceURI, localPart, id);
+        Ref ref = index.inserted(WrappedSerialisingFactory.getInstance().createFeatureWriter(f),
+                f.getBounds(), namespaceURI, localPart, id);
         ObjectId objectId = ref.getObjectId();
         return objectId;
     }
@@ -266,7 +266,8 @@ public abstract class RepositoryTestCase extends TestCase {
                 String id = f.getIdentifier().getID();
 
                 Triplet<ObjectWriter<?>, BoundingBox, List<String>> tuple;
-                ObjectWriter<?> writer = WrappedSerialisingFactory.getInstance().createFeatureWriter(f);
+                ObjectWriter<?> writer = WrappedSerialisingFactory.getInstance()
+                        .createFeatureWriter(f);
                 BoundingBox bounds = f.getBounds();
                 List<String> path = Arrays.asList(namespaceURI, localPart, id);
                 tuple = new Triplet<ObjectWriter<?>, BoundingBox, List<String>>(writer, bounds,
@@ -277,7 +278,7 @@ public abstract class RepositoryTestCase extends TestCase {
 
         iterator = Iterators.transform(Iterators.forArray(features), function);
 
-        index.inserted(iterator, new NullProgressListener(), null);
+        index.inserted(iterator, new NullProgressListener(), null, null);
 
     }
 

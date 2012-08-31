@@ -4,17 +4,11 @@
  */
 package org.geoserver.data.geogit;
 
-import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Properties;
-import java.util.logging.Logger;
 
-import junit.framework.TestCase;
-
-import org.apache.commons.io.FileUtils;
 import org.geogit.api.GeoGIT;
 import org.geogit.api.ObjectId;
 import org.geogit.api.Ref;
@@ -23,24 +17,15 @@ import org.geogit.repository.Repository;
 import org.geogit.repository.StagingArea;
 import org.geogit.repository.Triplet;
 import org.geogit.storage.ObjectWriter;
-import org.geogit.storage.RepositoryDatabase;
 import org.geogit.storage.WrappedSerialisingFactory;
-import org.geogit.storage.bdbje.EntityStoreConfig;
-import org.geogit.storage.bdbje.EnvironmentBuilder;
-import org.geogit.storage.bdbje.JERepositoryDatabase;
 import org.geoserver.data.RepositoryTestCase;
-import org.geoserver.data.versioning.decorator.DecoratedTestCase;
 import org.geotools.data.DataUtilities;
 import org.geotools.feature.NameImpl;
-import org.geotools.feature.simple.SimpleFeatureBuilder;
 import org.geotools.geometry.jts.ReferencedEnvelope;
-import org.geotools.geometry.jts.WKTReader2;
 import org.geotools.referencing.CRS;
 import org.geotools.util.NullProgressListener;
-import org.geotools.util.logging.Logging;
 import org.opengis.feature.Feature;
 import org.opengis.feature.simple.SimpleFeatureType;
-import org.opengis.feature.type.GeometryDescriptor;
 import org.opengis.feature.type.Name;
 import org.opengis.geometry.BoundingBox;
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
@@ -48,10 +33,6 @@ import org.opengis.referencing.crs.CoordinateReferenceSystem;
 import com.google.common.base.Function;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Iterators;
-import com.sleepycat.je.Environment;
-import com.sleepycat.je.dbi.DbEnvPool;
-import com.sleepycat.je.dbi.EnvironmentImpl;
-import com.vividsolutions.jts.io.ParseException;
 
 public abstract class GeoGITRepositoryTestCase extends RepositoryTestCase {
 
@@ -132,7 +113,7 @@ public abstract class GeoGITRepositoryTestCase extends RepositoryTestCase {
         }
         setupInternal = false;
         tearDownChild();
-        
+
     }
 
     /**
@@ -197,8 +178,8 @@ public abstract class GeoGITRepositoryTestCase extends RepositoryTestCase {
         String localPart = name.getLocalPart();
         String id = f.getIdentifier().getID();
 
-        Ref ref = index.inserted(
-        		WrappedSerialisingFactory.getInstance().createFeatureWriter(f), f.getBounds(), namespaceURI, localPart, id);
+        Ref ref = index.inserted(WrappedSerialisingFactory.getInstance().createFeatureWriter(f),
+                f.getBounds(), namespaceURI, localPart, id);
         ObjectId objectId = ref.getObjectId();
         return objectId;
     }
@@ -223,7 +204,8 @@ public abstract class GeoGITRepositoryTestCase extends RepositoryTestCase {
                 String id = f.getIdentifier().getID();
 
                 Triplet<ObjectWriter<?>, BoundingBox, List<String>> tuple;
-                ObjectWriter<?> writer = WrappedSerialisingFactory.getInstance().createFeatureWriter(f);
+                ObjectWriter<?> writer = WrappedSerialisingFactory.getInstance()
+                        .createFeatureWriter(f);
                 BoundingBox bounds = f.getBounds();
                 List<String> path = Arrays.asList(namespaceURI, localPart, id);
                 tuple = new Triplet<ObjectWriter<?>, BoundingBox, List<String>>(writer, bounds,
@@ -234,7 +216,7 @@ public abstract class GeoGITRepositoryTestCase extends RepositoryTestCase {
 
         iterator = Iterators.transform(Iterators.forArray(features), function);
 
-        index.inserted(iterator, new NullProgressListener(), null);
+        index.inserted(iterator, new NullProgressListener(), null, null);
 
     }
 

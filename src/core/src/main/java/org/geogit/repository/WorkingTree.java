@@ -15,6 +15,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
+import javax.annotation.Nullable;
+
 import org.geogit.api.DiffEntry;
 import org.geogit.api.MutableTree;
 import org.geogit.api.ObjectId;
@@ -24,7 +26,6 @@ import org.geogit.api.TreeVisitor;
 import org.geogit.storage.ObjectWriter;
 import org.geogit.storage.StagingDatabase;
 import org.geogit.storage.WrappedSerialisingFactory;
-import org.geotools.factory.CommonFactoryFinder;
 import org.geotools.factory.Hints;
 import org.geotools.feature.FeatureCollection;
 import org.geotools.feature.FeatureIterator;
@@ -33,8 +34,6 @@ import org.opengis.feature.Feature;
 import org.opengis.feature.type.FeatureType;
 import org.opengis.feature.type.Name;
 import org.opengis.filter.Filter;
-import org.opengis.filter.FilterFactory2;
-import org.opengis.filter.identity.FeatureId;
 import org.opengis.geometry.BoundingBox;
 import org.opengis.util.ProgressListener;
 
@@ -42,7 +41,6 @@ import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.collect.Iterators;
-import com.google.common.collect.Lists;
 
 /**
  * A working tree is the collection of Features for a single FeatureType in GeoServer that has a
@@ -73,17 +71,6 @@ public class WorkingTree {
     private final StagingArea index;
 
     private final Repository repository;
-
-    private static final FilterFactory2 filterFactory = CommonFactoryFinder.getFilterFactory2(null);
-
-    private static class RefToResourceId implements Function<Ref, FeatureId> {
-
-        @Override
-        public FeatureId apply(Ref input) {
-            return filterFactory.featureId(input.getName(), input.getObjectId().toString());
-        }
-
-    }
 
     public WorkingTree(final Repository repository) {
         Preconditions.checkNotNull(repository);
@@ -128,33 +115,33 @@ public class WorkingTree {
      * @return
      * @throws Exception
      */
-    @SuppressWarnings({ "deprecation", "unchecked" })
-    public List<FeatureId> insert(final FeatureCollection features,
-            final boolean forceUseProvidedFID, final ProgressListener listener) throws Exception {
+    public void insert(final FeatureCollection features, final boolean forceUseProvidedFID,
+            final ProgressListener listener) throws Exception {
 
-        listener.started();
+        insert(features, forceUseProvidedFID, listener, null);
+    }
 
+    /**
+     * @param features
+     * @param forceUseProvidedFIDs
+     * @param nullProgressListener
+     * @param inserted
+     * @throws Exception
+     */
+    @SuppressWarnings({ "unchecked", "deprecation" })
+    public void insert(FeatureCollection features, boolean forceUseProvidedFID,
+            ProgressListener listener, @Nullable List<Ref> insertedTarget) throws Exception {
+
+        final int size = features.size();
+
+        Iterator<Feature> iterator = features.iterator();
         try {
-            final int size = features.size();
+            Iterator<Triplet<ObjectWriter<?>, BoundingBox, List<String>>> objects;
+            objects = Iterators.transform(iterator, new FeatureInserter(forceUseProvidedFID));
 
-            List<Ref> refs;
-            Iterator<Feature> iterator = features.iterator();
-            try {
-                Iterator<Triplet<ObjectWriter<?>, BoundingBox, List<String>>> objects;
-                objects = Iterators.transform(iterator, new FeatureInserter(forceUseProvidedFID));
-
-                refs = index.inserted(objects, listener, size <= 0 ? null : size);
-            } finally {
-                features.close(iterator);
-            }
-            List<FeatureId> inserted = Lists.transform(refs, new RefToResourceId());
-
-            listener.complete();
-
-            return inserted;
-        } catch (Exception e) {
-            listener.exceptionOccurred(e);
-            throw e;
+            index.inserted(objects, listener, size <= 0 ? null : size, insertedTarget);
+        } finally {
+            features.close(iterator);
         }
     }
 
@@ -205,7 +192,7 @@ public class WorkingTree {
             final boolean forceUseProvidedFID = true;
             objects = Iterators.transform(features, new FeatureInserter(forceUseProvidedFID));
 
-            index.inserted(objects, listener, size <= 0 ? null : size);
+            index.inserted(objects, listener, size <= 0 ? null : size, null);
         } finally {
             newValues.close(features);
         }
@@ -396,5 +383,4 @@ public class WorkingTree {
         }
 
     }
-
 }

@@ -5,13 +5,14 @@
 package org.geogit.repository;
 
 import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+
+import javax.annotation.Nullable;
 
 import org.geogit.api.DiffEntry;
 import org.geogit.api.DiffEntry.ChangeType;
@@ -184,29 +185,30 @@ public class Index implements StagingArea {
         tuple = new Triplet<ObjectWriter<?>, BoundingBox, List<String>>(blob, bounds,
                 Arrays.asList(path));
 
-        List<Ref> inserted = inserted(Iterators.singletonIterator(tuple),
-                new NullProgressListener(), null);
+        List<Ref> inserted = new ArrayList<Ref>(1);
+
+        inserted(Iterators.singletonIterator(tuple), new NullProgressListener(), null, inserted);
         return inserted.get(0);
     }
 
     @Override
-    public List<Ref> inserted(
+    public void inserted(
             final Iterator<Triplet<ObjectWriter<?>, BoundingBox, List<String>>> objects,//
             final ProgressListener progress,//
-            final Integer size) throws Exception {
+            final @Nullable Integer size, @Nullable final List<Ref> target) throws Exception {
 
         Preconditions.checkNotNull(objects);
         Preconditions.checkNotNull(progress);
         Preconditions.checkArgument(size == null || size.intValue() > 0);
 
-        List<Ref> inserted = new LinkedList<Ref>();
         Triplet<ObjectWriter<?>, BoundingBox, List<String>> triplet;
         int count = 0;
 
+        progress.started();
         while (objects.hasNext()) {
             count++;
             if (progress.isCanceled()) {
-                return Collections.emptyList();
+                return;
             }
             if (size != null) {
                 progress.progress((float) (count * 100) / size.intValue());
@@ -226,12 +228,13 @@ public class Index implements StagingArea {
             } else {
                 objectRef = new SpatialRef(nodeId, objectId, TYPE.BLOB, bounds);
             }
-            inserted.add(objectRef);
+            if (target != null) {
+                target.add(objectRef);
+            }
             DiffEntry diffEntry = DiffEntry.newInstance(null, null, null, objectRef, path);
             indexDatabase.putUnstaged(diffEntry);
         }
         progress.complete();
-        return inserted;
     }
 
     @Override

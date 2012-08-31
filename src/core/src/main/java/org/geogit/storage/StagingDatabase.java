@@ -47,7 +47,7 @@ import com.sleepycat.je.Environment;
  * <p>
  * Object writes are always performed against the staging area object database.
  * <p>
- * The staing area database holds references to two root {@link RevTree trees}, one for the staged
+ * The staging area database holds references to two root {@link RevTree trees}, one for the staged
  * objects and another one for the unstaged objects. When objects are added/changed/deleted to/from
  * the index, those modifications are written to the unstaged root tree. When objects are staged to
  * be committed, the unstaged objects are moved to the staged root tree.
@@ -63,8 +63,14 @@ import com.sleepycat.je.Environment;
  */
 public class StagingDatabase implements ObjectDatabase {
 
+    /**
+     * The database that backs the {@link #unstaged} map
+     */
     private Database unstagedEntries;
 
+    /**
+     * The database that backs the {@link #staged} map
+     */
     private Database stagedEntries;
 
     StoredSortedMap<List<String>, DiffEntry> staged;
@@ -87,8 +93,7 @@ public class StagingDatabase implements ObjectDatabase {
     private final ObjectDatabase repositoryDb;
 
     /**
-     * @param referenceDatabase
-     *            the repository reference database, used to get the head re
+     * @param referenceDatabase the repository reference database, used to get the head re
      * @param repoDb
      * @param stagingDb
      */
@@ -104,7 +109,8 @@ public class StagingDatabase implements ObjectDatabase {
         {
             DatabaseConfig unstagedDbConfig = new DatabaseConfig();
             unstagedDbConfig.setAllowCreate(true);
-            unstagedDbConfig.setTransactional(env.getConfig().getTransactional());
+            unstagedDbConfig.setDeferredWrite(true);
+            unstagedDbConfig.setTransactional(false);
             unstagedDbConfig.setSortedDuplicates(false);
             unstagedEntries = env.openDatabase(null, "UnstagedDb", unstagedDbConfig);
             unstaged = new StoredSortedMap<List<String>, DiffEntry>(this.unstagedEntries,
@@ -114,11 +120,10 @@ public class StagingDatabase implements ObjectDatabase {
         {
             DatabaseConfig stagedDbConfig = new DatabaseConfig();
             stagedDbConfig.setAllowCreate(true);
-            // stagedDbConfig.setDeferredWrite(true);
-            stagedDbConfig.setTransactional(env.getConfig().getTransactional());
+            stagedDbConfig.setDeferredWrite(true);
+            stagedDbConfig.setTransactional(false);
             stagedDbConfig.setSortedDuplicates(false);
             stagedEntries = env.openDatabase(null, "StagedDb", stagedDbConfig);
-
             staged = new StoredSortedMap<List<String>, DiffEntry>(this.stagedEntries,
                     this.keyPathBinding, this.diffEntryBinding, true);
         }
@@ -273,7 +278,7 @@ public class StagingDatabase implements ObjectDatabase {
                 try {
                     crs = CRS.decode(srs);
                 } catch (Exception e) {
-                    //e.printStackTrace();
+                    // e.printStackTrace();
                     crs = null;
                 }
 

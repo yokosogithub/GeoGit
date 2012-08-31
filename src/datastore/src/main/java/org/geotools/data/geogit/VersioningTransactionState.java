@@ -21,6 +21,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
@@ -30,43 +31,47 @@ import org.geogit.api.CommitOp;
 import org.geogit.api.CommitStateResolver;
 import org.geogit.api.GeoGIT;
 import org.geogit.api.NothingToCommitException;
+import org.geogit.api.Ref;
 import org.geogit.api.RevCommit;
 import org.geogit.repository.StagingArea;
 import org.geogit.repository.WorkingTree;
 import org.geotools.data.Transaction;
+import org.geotools.factory.CommonFactoryFinder;
 import org.geotools.feature.FeatureCollection;
 import org.geotools.util.NullProgressListener;
 import org.geotools.util.logging.Logging;
 import org.opengis.feature.type.Name;
 import org.opengis.filter.Filter;
+import org.opengis.filter.FilterFactory;
 import org.opengis.filter.identity.FeatureId;
 import org.opengis.util.ProgressListener;
+
+import com.google.common.base.Function;
+import com.google.common.collect.Lists;
 
 @SuppressWarnings("rawtypes")
 public class VersioningTransactionState implements Transaction.State {
 
-    public static final VersioningTransactionState VOID = new VersioningTransactionState(
-            null) {
+    public static final VersioningTransactionState VOID = new VersioningTransactionState(null) {
 
         @Override
-        public List<FeatureId> stageInsert(final Name typeName,
-                FeatureCollection affectedFeatures) throws Exception {
+        public List<FeatureId> stageInsert(final Name typeName, FeatureCollection affectedFeatures)
+                throws Exception {
             return Collections.emptyList();
         }
 
         @Override
-        public void stageUpdate(final Name typeName,
-                final FeatureCollection affectedFeatures) throws Exception {
+        public void stageUpdate(final Name typeName, final FeatureCollection affectedFeatures)
+                throws Exception {
         }
 
         @Override
-        public void stageDelete(Name typeName, Filter filter,
-                FeatureCollection affectedFeatures) throws Exception {
+        public void stageDelete(Name typeName, Filter filter, FeatureCollection affectedFeatures)
+                throws Exception {
         }
 
         @Override
-        public void stageRename(final Name typeName, final String oldFid,
-                final String newFid) {
+        public void stageRename(final Name typeName, final String oldFid, final String newFid) {
         }
 
     };
@@ -81,8 +86,7 @@ public class VersioningTransactionState implements Transaction.State {
 
     private static final ProgressListener NULL_PROGRESS_LISTENER = new NullProgressListener();
 
-    private static final Logger LOGGER = Logging
-            .getLogger(VersioningTransactionState.class);
+    private static final Logger LOGGER = Logging.getLogger(VersioningTransactionState.class);
 
     private Transaction transaction;
 
@@ -102,10 +106,9 @@ public class VersioningTransactionState implements Transaction.State {
     public void setTransaction(final Transaction transaction) {
         if (transaction != null) {
             // configure
-            if( this.transaction == null ){
+            if (this.transaction == null) {
                 this.transaction = transaction;
-            }
-            else {
+            } else {
                 LOGGER.fine("Transaction being hot replaced!");
                 this.transaction = transaction;
             }
@@ -161,30 +164,41 @@ public class VersioningTransactionState implements Transaction.State {
      * @param transactionID
      * @param typeName
      * @param affectedFeatures
-     * @return the list of feature ids of the inserted features, in the order
-     *         they were added
+     * @return the list of feature ids of the inserted features, in the order they were added
      * @throws Exception
      */
-    public List<FeatureId> stageInsert(final Name typeName,
-            FeatureCollection affectedFeatures) throws Exception {
+    public List<FeatureId> stageInsert(final Name typeName, FeatureCollection affectedFeatures)
+            throws Exception {
         return stageInsert(typeName, affectedFeatures, false);
     }
 
-    public List<FeatureId> stageInsert(final Name typeName,
-            FeatureCollection affectedFeatures,
+    private static Function<Ref, FeatureId> RefToFeatureId = new Function<Ref, FeatureId>() {
+
+        private final FilterFactory filterFactory = CommonFactoryFinder.getFilterFactory();
+
+        @Override
+        public FeatureId apply(Ref input) {
+            return filterFactory.featureId(input.getName(), input.getObjectId().toString());
+        }
+
+    };
+
+    public List<FeatureId> stageInsert(final Name typeName, FeatureCollection affectedFeatures,
             final boolean forceUseProvidedFIDs) throws Exception {
 
         changedTypes.add(typeName);
 
         WorkingTree workingTree = geoGit.getRepository().getWorkingTree();
-        List<FeatureId> inserted = workingTree.insert(affectedFeatures,
-                forceUseProvidedFIDs, NULL_PROGRESS_LISTENER);
+        List<Ref> inserted = new LinkedList<Ref>();
+
+        workingTree
+                .insert(affectedFeatures, forceUseProvidedFIDs, NULL_PROGRESS_LISTENER, inserted);
         geoGit.add().call();
-        return inserted;
+        return Lists.transform(inserted, RefToFeatureId);
     }
 
-    public void stageUpdate(final Name typeName,
-            final FeatureCollection newValues) throws Exception {
+    public void stageUpdate(final Name typeName, final FeatureCollection newValues)
+            throws Exception {
 
         changedTypes.add(typeName);
 
@@ -205,8 +219,7 @@ public class VersioningTransactionState implements Transaction.State {
 
     }
 
-    public void stageRename(final Name typeName, final String oldFid,
-            final String newFid) {
+    public void stageRename(final Name typeName, final String oldFid, final String newFid) {
 
         StagingArea index = geoGit.getRepository().getIndex();
 
