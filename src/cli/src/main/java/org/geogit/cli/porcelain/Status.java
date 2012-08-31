@@ -110,7 +110,7 @@ public class Status implements CLICommand {
             console.println("#   (use \"geogit add <path/to/fid>...\" to update what will be committed");
             console.println("#   (use \"geogit checkout -- <path/to/fid>...\" to discard changes in working directory");
             console.println("#");
-            print(console, unstaged, Color.RED, countStaged);
+            print(console, unstaged, Color.RED, countUnstaged);
         }
     }
 
