@@ -5,10 +5,8 @@
 
 package org.geogit.cli;
 
-import org.springframework.context.ApplicationContext;
-
 /**
- * Marker interface to aid in looking up CLI commands on the {@link ApplicationContext}
+ * Marker interface to aid in looking up CLI commands
  */
 public interface CLICommand {
 

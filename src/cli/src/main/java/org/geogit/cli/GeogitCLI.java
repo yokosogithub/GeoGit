@@ -13,6 +13,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.ServiceLoader;
 import java.util.logging.Level;
 
 import javax.annotation.Nullable;
@@ -29,26 +30,27 @@ import org.geogit.storage.bdbje.JERepositoryDatabase;
 import org.geotools.util.DefaultProgressListener;
 import org.geotools.util.logging.Logging;
 import org.opengis.util.ProgressListener;
-import org.springframework.context.ApplicationContext;
-import org.springframework.context.annotation.AnnotationConfigApplicationContext;
-import org.springframework.stereotype.Service;
 
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.ParameterException;
 import com.google.common.base.Throwables;
+import com.google.inject.Binding;
+import com.google.inject.Guice;
+import com.google.inject.Injector;
+import com.google.inject.Key;
+import com.google.inject.Module;
 import com.sleepycat.je.Environment;
 
 /**
  * Command Line Interface for geogit.
  * <p>
- * Looks up and executes {@link CLICommand} implementations on the classpath annotated with the
- * Spring's {@link Service @Service} annotation. If a command holds any state, make sure to also
- * annotate it with {@code @Scope(value = "prototype")} to account for any possible non-single run,
- * like when using the {@link GeogitConsole console application}.
+ * Looks up and executes {@link CLICommand} implementations provided by any {@link Guice}
+ * {@link Module} that implements {@link CLIModule} declared in any classpath's
+ * {@code META-INF/services/com.google.inject.Module} file.
  */
 public class GeogitCLI {
 
-    private ApplicationContext ctx;
+    private Injector injector;
 
     private Platform platform;
 
@@ -63,7 +65,9 @@ public class GeogitCLI {
      */
     public GeogitCLI(final ConsoleReader consoleReader) {
         this.consoleReader = consoleReader;
-        ctx = new AnnotationConfigApplicationContext("org.geogit.cli");
+
+        Iterable<CLIModule> plugins = ServiceLoader.load(CLIModule.class);
+        injector = Guice.createInjector(plugins);
         platform = new DefaultPlatform();
     }
 
@@ -219,20 +223,19 @@ public class GeogitCLI {
         System.exit(exitCode);
     }
 
-    public ApplicationContext getContext() {
-        return ctx;
-    }
-
-    public Collection<CLICommand> findCommands() {
-        Map<String, CLICommand> commandBeans = ctx.getBeansOfType(CLICommand.class);
-        return commandBeans.values();
+    public Collection<Key<?>> findCommands() {
+        Map<Key<?>, Binding<?>> commands = injector.getBindings();
+        return commands.keySet();
     }
 
     public JCommander newCommandParser() {
         JCommander jc = new JCommander(this);
         jc.setProgramName("geogit");
-        for (CLICommand cmd : findCommands()) {
-            jc.addCommand(cmd);
+        for (Key<?> cmd : findCommands()) {
+            Object obj = injector.getInstance(cmd);
+            if (obj instanceof CLICommand) {
+                jc.addCommand(obj);
+            }
         }
         return jc;
     }

@@ -2,14 +2,13 @@
  * This code is licensed under the LGPL 2.1 license, available at the root
  * application directory.
  */
-
-package org.geogit.cli;
+package org.geogit.cli.porcelain;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import org.springframework.context.annotation.Scope;
-import org.springframework.stereotype.Service;
+import org.geogit.cli.CLICommand;
+import org.geogit.cli.GeogitCLI;
 
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
@@ -18,8 +17,6 @@ import com.beust.jcommander.Parameters;
 /**
  *
  */
-@Service
-@Scope(value = "prototype")
 @Parameters(commandNames = { "help", "--help" }, commandDescription = "Print this help message, or provide a command name to get help for")
 public class Help implements CLICommand {
 

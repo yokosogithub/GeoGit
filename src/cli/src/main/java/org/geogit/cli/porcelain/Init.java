@@ -19,8 +19,6 @@ import org.geogit.storage.RepositoryDatabase;
 import org.geogit.storage.bdbje.EntityStoreConfig;
 import org.geogit.storage.bdbje.EnvironmentBuilder;
 import org.geogit.storage.bdbje.JERepositoryDatabase;
-import org.springframework.context.annotation.Scope;
-import org.springframework.stereotype.Service;
 
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.Parameters;
@@ -29,8 +27,6 @@ import com.sleepycat.je.Environment;
 /**
  *
  */
-@Service
-@Scope(value = "prototype")
 @Parameters(commandNames = "init", commandDescription = "Create an empty geogit repository or reinitialize an existing one")
 public class Init extends AbstractCommand implements CLICommand {
 

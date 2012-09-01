@@ -108,6 +108,11 @@
   <dependencyManagement>
     <dependencies>
       <dependency>
+        <groupId>com.google.inject</groupId>
+        <artifactId>guice</artifactId>
+        <version>3.0</version>
+      </dependency>
+      <dependency>
         <!-- used for LRUMap, can be removed once/if AbstractObjectDatabase uses an alternate/external caching mechanism -->
         <groupId>commons-collections</groupId>
         <artifactId>commons-collections</artifactId>

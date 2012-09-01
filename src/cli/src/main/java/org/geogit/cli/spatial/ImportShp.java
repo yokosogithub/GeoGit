@@ -32,8 +32,6 @@ import org.geotools.data.shapefile.ShapefileDataStoreFactory;
 import org.geotools.data.simple.SimpleFeatureCollection;
 import org.geotools.feature.NameImpl;
 import org.opengis.feature.type.Name;
-import org.springframework.context.annotation.Scope;
-import org.springframework.stereotype.Service;
 
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.Parameters;
@@ -41,8 +39,6 @@ import com.beust.jcommander.internal.Maps;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
 
-@Service
-@Scope(value = "prototype")
 @Parameters(commandNames = "shpimport", commandDescription = "Imports a shapefile to the working tree")
 public class ImportShp extends AbstractCommand implements CLICommand {
 

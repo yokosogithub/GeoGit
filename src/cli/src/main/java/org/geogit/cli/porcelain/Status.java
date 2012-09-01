@@ -34,14 +34,10 @@ import org.geogit.cli.AnsiDecorator;
 import org.geogit.cli.CLICommand;
 import org.geogit.cli.GeogitCLI;
 import org.geogit.storage.StagingDatabase;
-import org.springframework.context.annotation.Scope;
-import org.springframework.stereotype.Service;
 
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.Parameters;
 
-@Service
-@Scope(value = "prototype")
 @Parameters(commandNames = "status", commandDescription = "Show the working tree status")
 public class Status implements CLICommand {
 

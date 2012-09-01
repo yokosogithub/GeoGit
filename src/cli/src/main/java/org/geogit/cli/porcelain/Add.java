@@ -12,8 +12,6 @@ import org.geogit.cli.AbstractCommand;
 import org.geogit.cli.CLICommand;
 import org.geogit.cli.GeogitCLI;
 import org.geogit.repository.StagingArea;
-import org.springframework.context.annotation.Scope;
-import org.springframework.stereotype.Service;
 
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.Parameters;
@@ -21,8 +19,6 @@ import com.beust.jcommander.Parameters;
 /**
  *
  */
-@Service
-@Scope(value = "prototype")
 @Parameters(commandNames = "add", commandDescription = "Add features to the staging area")
 public class Add extends AbstractCommand implements CLICommand {
 

@@ -20,8 +20,6 @@ import org.geogit.cli.AnsiDecorator;
 import org.geogit.cli.CLICommand;
 import org.geogit.cli.GeogitCLI;
 import org.geogit.cli.Platform;
-import org.springframework.context.annotation.Scope;
-import org.springframework.stereotype.Service;
 
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.Parameters;
@@ -32,8 +30,6 @@ import com.google.common.collect.Iterators;
 /**
  *
  */
-@Service
-@Scope(value = "prototype")
 @Parameters(commandNames = "log", commandDescription = "Show commit logs")
 public class Log extends AbstractCommand implements CLICommand {
 
