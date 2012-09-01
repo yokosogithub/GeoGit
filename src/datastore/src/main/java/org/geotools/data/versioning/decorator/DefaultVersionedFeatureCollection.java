@@ -59,26 +59,25 @@ public class DefaultVersionedFeatureCollection implements SimpleFeatureCollectio
 
     public DefaultVersionedFeatureCollection(
             FeatureCollection<SimpleFeatureType, SimpleFeature> collection) {
-        this( collection.getID(), collection.getSchema() );
+        this(collection.getID(), collection.getSchema());
         addAll(collection);
     }
 
-    public DefaultVersionedFeatureCollection(String id,
-            SimpleFeatureType memberType) {
+    public DefaultVersionedFeatureCollection(String id, SimpleFeatureType memberType) {
         this.id = id == null ? "featureCollection" : id;
-        this.schema = memberType;       
+        this.schema = memberType;
     }
 
-    private static Logger LOGGER = org.geotools.util.logging.Logging.getLogger("org.geotools.feature");
+    private static Logger LOGGER = org.geotools.util.logging.Logging
+            .getLogger("org.geotools.feature");
 
     /**
      * Contents of collection, referenced by FeatureID.
      * <p>
-     * This use will result in collections that are sorted by FID, in keeping
-     * with shapefile etc...
+     * This use will result in collections that are sorted by FID, in keeping with shapefile etc...
      * </p>
      */
-    private SortedMap<String,SimpleFeature> contents = new TreeMap<String,SimpleFeature>();
+    private SortedMap<String, SimpleFeature> contents = new TreeMap<String, SimpleFeature>();
 
     /** Internal envelope of bounds. */
     private ReferencedEnvelope bounds = null;
@@ -88,7 +87,7 @@ public class DefaultVersionedFeatureCollection implements SimpleFeatureCollectio
      */
     private List<CollectionListener> listeners = new ArrayList<CollectionListener>();
 
-    /** 
+    /**
      * id used when serialized to gml
      */
     private String id;
@@ -109,7 +108,7 @@ public class DefaultVersionedFeatureCollection implements SimpleFeatureCollectio
     }
 
     protected void fireChange(SimpleFeature feature, int type) {
-        fireChange(new SimpleFeature[] {feature}, type);
+        fireChange(new SimpleFeature[] { feature }, type);
     }
 
     protected void fireChange(Collection<SimpleFeature> coll, int type) {
@@ -129,14 +128,13 @@ public class DefaultVersionedFeatureCollection implements SimpleFeatureCollectio
         if (contents.containsKey(ID)) {
             return false; // feature all ready present
         }
-    
+
         if (this.schema == null) {
             this.schema = feature.getFeatureType();
         }
         SimpleFeatureType childType = (SimpleFeatureType) getSchema();
         if (!feature.getFeatureType().equals(childType)) {
-            LOGGER.warning("Feature Collection contains a heterogeneous"
-                    + " mix of features");
+            LOGGER.warning("Feature Collection contains a heterogeneous" + " mix of features");
         }
         contents.put(ID, feature);
         if (fire) {
@@ -146,30 +144,27 @@ public class DefaultVersionedFeatureCollection implements SimpleFeatureCollectio
     }
 
     /**
-     * Ensures that this collection contains the specified element (optional
-     * operation).  Returns <tt>true</tt> if this collection changed as a
-     * result of the call.  (Returns <tt>false</tt> if this collection does
-     * not permit duplicates and already contains the specified element.)
+     * Ensures that this collection contains the specified element (optional operation). Returns
+     * <tt>true</tt> if this collection changed as a result of the call. (Returns <tt>false</tt> if
+     * this collection does not permit duplicates and already contains the specified element.)
      * 
      * <p>
-     * Collections that support this operation may place limitations on what
-     * elements may be added to this collection.  In particular, some
-     * collections will refuse to add <tt>null</tt> elements, and others will
-     * impose restrictions on the type of elements that may be added.
-     * Collection classes should clearly specify in their documentation any
-     * restrictions on what elements may be added.
+     * Collections that support this operation may place limitations on what elements may be added
+     * to this collection. In particular, some collections will refuse to add <tt>null</tt>
+     * elements, and others will impose restrictions on the type of elements that may be added.
+     * Collection classes should clearly specify in their documentation any restrictions on what
+     * elements may be added.
      * </p>
      * 
      * <p>
-     * If a collection refuses to add a particular element for any reason other
-     * than that it already contains the element, it <i>must</i> throw an
-     * exception (rather than returning <tt>false</tt>).  This preserves the
-     * invariant that a collection always contains the specified element after
+     * If a collection refuses to add a particular element for any reason other than that it already
+     * contains the element, it <i>must</i> throw an exception (rather than returning <tt>false</tt>
+     * ). This preserves the invariant that a collection always contains the specified element after
      * this call returns.
      * </p>
-     *
+     * 
      * @param o element whose presence in this collection is to be ensured.
-     *
+     * 
      * @return <tt>true</tt> if this collection changed as a result of the call
      */
     public boolean add(SimpleFeature o) {
@@ -177,34 +172,32 @@ public class DefaultVersionedFeatureCollection implements SimpleFeatureCollectio
     }
 
     /**
-     * Adds all of the elements in the specified collection to this collection
-     * (optional operation).  The behavior of this operation is undefined if
-     * the specified collection is modified while the operation is in
-     * progress. (This implies that the behavior of this call is undefined if
-     * the specified collection is this collection, and this collection is
-     * nonempty.)
-     *
+     * Adds all of the elements in the specified collection to this collection (optional operation).
+     * The behavior of this operation is undefined if the specified collection is modified while the
+     * operation is in progress. (This implies that the behavior of this call is undefined if the
+     * specified collection is this collection, and this collection is nonempty.)
+     * 
      * @param collection elements to be inserted into this collection.
-     *
+     * 
      * @return <tt>true</tt> if this collection changed as a result of the call
-     *
+     * 
      * @see #add(Object)
      */
     public boolean addAll(Collection collection) {
-        if(collection instanceof FeatureCollection) {
-            return addAll((FeatureCollection)collection);
+        if (collection instanceof FeatureCollection) {
+            return addAll((FeatureCollection) collection);
         }
-        //TODO check inheritance with FeatureType here!!!
+        // TODO check inheritance with FeatureType here!!!
         boolean changed = false;
 
         Iterator iterator = collection.iterator();
         List<SimpleFeature> featuresAdded = new ArrayList<SimpleFeature>(collection.size());
         while (iterator.hasNext()) {
             SimpleFeature f = (SimpleFeature) iterator.next();
-            boolean added = add(f,false);
+            boolean added = add(f, false);
             changed |= added;
 
-            if(added) {
+            if (added) {
                 featuresAdded.add(f);
             }
         }
@@ -217,7 +210,7 @@ public class DefaultVersionedFeatureCollection implements SimpleFeatureCollectio
     }
 
     public boolean addAll(FeatureCollection collection) {
-        //TODO check inheritance with FeatureType here!!!
+        // TODO check inheritance with FeatureType here!!!
         boolean changed = false;
 
         FeatureIterator iterator = collection.features();
@@ -225,10 +218,11 @@ public class DefaultVersionedFeatureCollection implements SimpleFeatureCollectio
             List<SimpleFeature> featuresAdded = new ArrayList<SimpleFeature>(collection.size());
             while (iterator.hasNext()) {
                 SimpleFeature f = (SimpleFeature) iterator.next();
-                boolean added = add(f,false);
+                boolean added = add(f, false);
                 changed |= added;
 
-                if(added) featuresAdded.add(f);
+                if (added)
+                    featuresAdded.add(f);
             }
 
             if (changed) {
@@ -236,8 +230,7 @@ public class DefaultVersionedFeatureCollection implements SimpleFeatureCollectio
             }
 
             return changed;
-        }
-        finally {
+        } finally {
             iterator.close();
         }
     }
@@ -246,15 +239,14 @@ public class DefaultVersionedFeatureCollection implements SimpleFeatureCollectio
         if (id.getFeatureVersion() == null) {
             return id.getID();
         } else {
-            return id.getID() + FeatureId.VERSION_SEPARATOR
-                    + id.getFeatureVersion();
+            return id.getID() + FeatureId.VERSION_SEPARATOR + id.getFeatureVersion();
         }
     }
 
     /**
-     * Returns <tt>true</tt> if this collection contains the specified element.
-     * More formally, returns <tt>true</tt> if and only if this collection
-     * contains at least one element <tt>e</tt> such that <tt>(o==null ?
+     * Returns <tt>true</tt> if this collection contains the specified element. More formally,
+     * returns <tt>true</tt> if and only if this collection contains at least one element <tt>e</tt>
+     * such that <tt>(o==null ?
      * e==null : o.equals(e))</tt>.
      * 
      * @param o element whose presence in this collection is to be tested.
@@ -267,10 +259,10 @@ public class DefaultVersionedFeatureCollection implements SimpleFeatureCollectio
         if (!(o instanceof SimpleFeature)) {
             return false;
         }
-    
+
         SimpleFeature feature = (SimpleFeature) o;
         String ID = getKey(feature.getIdentifier());
-    
+
         return contents.containsKey(ID); // || contents.containsValue( feature
         // );
     }
@@ -295,31 +287,29 @@ public class DefaultVersionedFeatureCollection implements SimpleFeatureCollectio
     }
 
     /**
-     * Will return an optimized subCollection based on access
-     * to the origional MemoryFeatureCollection.
+     * Will return an optimized subCollection based on access to the origional
+     * MemoryFeatureCollection.
      * <p>
-     * This method is intended in a manner similar to subList,
-     * example use:
-     * <code>
+     * This method is intended in a manner similar to subList, example use: <code>
      * collection.subCollection( myFilter ).clear()
      * </code>
-     * </p>    
+     * </p>
+     * 
      * @param filter Filter used to determine sub collection.
      * @since GeoTools 2.2, Filter 1.1
      */
     public SimpleFeatureCollection subCollection(Filter filter) {
-        if( filter == Filter.INCLUDE ){
+        if (filter == Filter.INCLUDE) {
             return this;
-        }               
-        return new SubFeatureCollection( this, filter );
+        }
+        return new SubFeatureCollection(this, filter);
     }
 
     /**
-     * Returns an iterator over the elements in this collection.  There are no
-     * guarantees concerning the order in which the elements are returned
-     * (unless this collection is an instance of some class that provides a
-     * guarantee).
-     *
+     * Returns an iterator over the elements in this collection. There are no guarantees concerning
+     * the order in which the elements are returned (unless this collection is an instance of some
+     * class that provides a guarantee).
+     * 
      * @return an <tt>Iterator</tt> over the elements in this collection
      */
     public Iterator iterator() {
@@ -345,9 +335,9 @@ public class DefaultVersionedFeatureCollection implements SimpleFeatureCollectio
     }
 
     /**
-     * Gets a SimpleFeatureIterator of this feature collection.  This allows
-     * iteration without having to cast.
-     *
+     * Gets a SimpleFeatureIterator of this feature collection. This allows iteration without having
+     * to cast.
+     * 
      * @return the SimpleFeatureIterator for this collection.
      */
     public SimpleFeatureIterator features() {
@@ -355,20 +345,19 @@ public class DefaultVersionedFeatureCollection implements SimpleFeatureCollectio
     }
 
     /**
-     * Removes a single instance of the specified element from this collection,
-     * if it is present (optional operation).  More formally, removes an
-     * element <tt>e</tt> such that <tt>(o==null ?  e==null :
-     * o.equals(e))</tt>, if this collection contains one or more such
-     * elements.  Returns true if this collection contained the specified
-     * element (or equivalently, if this collection changed as a result of the
-     * call).
-     *
+     * Removes a single instance of the specified element from this collection, if it is present
+     * (optional operation). More formally, removes an element <tt>e</tt> such that
+     * <tt>(o==null ?  e==null :
+     * o.equals(e))</tt>, if this collection contains one or more such elements. Returns true if
+     * this collection contained the specified element (or equivalently, if this collection changed
+     * as a result of the call).
+     * 
      * @param o element to be removed from this collection, if present.
-     *
+     * 
      * @return <tt>true</tt> if this collection changed as a result of the call
      */
     public boolean remove(Object o) {
-        if( !(o instanceof SimpleFeature)) {
+        if (!(o instanceof SimpleFeature)) {
             return false;
         }
 
@@ -382,15 +371,14 @@ public class DefaultVersionedFeatureCollection implements SimpleFeatureCollectio
     }
 
     /**
-     * Removes all this collection's elements that are also contained in the
-     * specified collection (optional operation).  After this call returns,
-     * this collection will contain no elements in common with the specified
-     * collection.
-     *
+     * Removes all this collection's elements that are also contained in the specified collection
+     * (optional operation). After this call returns, this collection will contain no elements in
+     * common with the specified collection.
+     * 
      * @param collection elements to be removed from this collection.
-     *
+     * 
      * @return <tt>true</tt> if this collection changed as a result of the call
-     *
+     * 
      * @see #remove(Object)
      * @see #contains(Object)
      */
@@ -403,7 +391,7 @@ public class DefaultVersionedFeatureCollection implements SimpleFeatureCollectio
                 SimpleFeature f = (SimpleFeature) iterator.next();
                 boolean removed = contents.values().remove(f);
 
-                if(removed) {
+                if (removed) {
                     changed = true;
                     removedFeatures.add(f);
                 }
@@ -414,24 +402,22 @@ public class DefaultVersionedFeatureCollection implements SimpleFeatureCollectio
             }
 
             return changed;
-        }
-        finally {
-            if( collection instanceof FeatureCollection ){
-                ((SimpleFeatureCollection)collection).close( iterator );
+        } finally {
+            if (collection instanceof FeatureCollection) {
+                ((SimpleFeatureCollection) collection).close(iterator);
             }
         }
     }
 
     /**
-     * Retains only the elements in this collection that are contained in the
-     * specified collection (optional operation).  In other words, removes
-     * from this collection all of its elements that are not contained in the
-     * specified collection.
-     *
+     * Retains only the elements in this collection that are contained in the specified collection
+     * (optional operation). In other words, removes from this collection all of its elements that
+     * are not contained in the specified collection.
+     * 
      * @param collection elements to be retained in this collection.
-     *
+     * 
      * @return <tt>true</tt> if this collection changed as a result of the call
-     *
+     * 
      * @see #remove(Object)
      * @see #contains(Object)
      */
@@ -439,9 +425,9 @@ public class DefaultVersionedFeatureCollection implements SimpleFeatureCollectio
         List removedFeatures = new ArrayList(contents.size() - collection.size());
         boolean modified = false;
 
-        for(Iterator it = contents.values().iterator(); it.hasNext(); )  {
+        for (Iterator it = contents.values().iterator(); it.hasNext();) {
             SimpleFeature f = (SimpleFeature) it.next();
-            if(!collection.contains(f)) {
+            if (!collection.contains(f)) {
                 it.remove();
                 modified = true;
                 removedFeatures.add(f);
@@ -455,24 +441,26 @@ public class DefaultVersionedFeatureCollection implements SimpleFeatureCollectio
         return modified;
     }
 
-    public void close( FeatureIterator<SimpleFeature>  close ) {
-        if( close instanceof FeatureIteratorImpl){
+    public void close(FeatureIterator<SimpleFeature> close) {
+        if (close instanceof FeatureIteratorImpl) {
             FeatureIteratorImpl<SimpleFeature> wrapper = (FeatureIteratorImpl<SimpleFeature>) close;
             wrapper.close();
         }
     }
 
-    public void close( Iterator close ) {
+    public void close(Iterator close) {
         // nop
     }
 
-    public  FeatureReader<SimpleFeatureType, SimpleFeature> reader() throws IOException {
-        final SimpleFeatureIterator iterator = features(); 
-        return new FeatureReader<SimpleFeatureType, SimpleFeature>(){
+    public FeatureReader<SimpleFeatureType, SimpleFeature> reader() throws IOException {
+        final SimpleFeatureIterator iterator = features();
+        return new FeatureReader<SimpleFeatureType, SimpleFeature>() {
             public SimpleFeatureType getFeatureType() {
                 return getSchema();
             }
-            public SimpleFeature next() throws IOException, IllegalAttributeException, NoSuchElementException {
+
+            public SimpleFeature next() throws IOException, IllegalAttributeException,
+                    NoSuchElementException {
                 return iterator.next();
             }
 
@@ -481,8 +469,8 @@ public class DefaultVersionedFeatureCollection implements SimpleFeatureCollectio
             }
 
             public void close() throws IOException {
-                DefaultVersionedFeatureCollection.this.close( iterator );
-            }            
+                DefaultVersionedFeatureCollection.this.close(iterator);
+            }
         };
     }
 
@@ -493,19 +481,18 @@ public class DefaultVersionedFeatureCollection implements SimpleFeatureCollectio
     /**
      * Gets the bounding box for the features in this feature collection.
      * 
-     * @return the envelope of the geometries contained by this feature
-     *         collection.
+     * @return the envelope of the geometries contained by this feature collection.
      */
     public ReferencedEnvelope getBounds() {
         if (bounds == null) {
             bounds = new ReferencedEnvelope();
-    
+
             for (Iterator<SimpleFeature> i = contents.values().iterator(); i.hasNext();) {
                 BoundingBox geomBounds = i.next().getBounds();
                 // IanS - as of 1.3, JTS expandToInclude ignores "null" Envelope
                 // and simply adds the new bounds...
                 // This check ensures this behavior does not occur.
-                if ( ! geomBounds.isEmpty() ) {
+                if (!geomBounds.isEmpty()) {
                     bounds.include(geomBounds);
                 }
             }
@@ -514,70 +501,70 @@ public class DefaultVersionedFeatureCollection implements SimpleFeatureCollectio
     }
 
     public SimpleFeatureCollection collection() throws IOException {
-        SimpleFeatureCollection copy = new DefaultFeatureCollection( null, getSchema() );
-        List<SimpleFeature> list = new ArrayList<SimpleFeature>( contents.size() );
+        SimpleFeatureCollection copy = new DefaultFeatureCollection(null, getSchema());
+        List<SimpleFeature> list = new ArrayList<SimpleFeature>(contents.size());
         SimpleFeatureIterator iterator = features();
         try {
-            while( iterator.hasNext() ){
+            while (iterator.hasNext()) {
                 SimpleFeature feature = iterator.next();
                 SimpleFeature duplicate;
-                try {                
+                try {
                     duplicate = SimpleFeatureBuilder.copy(feature);
                 } catch (IllegalAttributeException e) {
-                    throw new DataSourceException( "Unable to copy "+feature.getID(), e );
+                    throw new DataSourceException("Unable to copy " + feature.getID(), e);
                 }
-                list.add( duplicate );
+                list.add(duplicate);
             }
-        }
-        finally {
+        } finally {
             iterator.close();
         }
-        copy.addAll( list );
+        copy.addAll(list);
         return copy;
     }
 
     /**
-     * Optimization time ... grab the fid set so other can quickly test membership
-     * during removeAll/retainAll implementations.
+     * Optimization time ... grab the fid set so other can quickly test membership during
+     * removeAll/retainAll implementations.
      * 
      * @return Set of fids.
      */
     public Set fids() {
-        return Collections.unmodifiableSet( contents.keySet() );
+        return Collections.unmodifiableSet(contents.keySet());
     }
 
-    public void accepts(org.opengis.feature.FeatureVisitor visitor, org.opengis.util.ProgressListener progress) {
+    public void accepts(org.opengis.feature.FeatureVisitor visitor,
+            org.opengis.util.ProgressListener progress) {
         Iterator iterator = null;
-        if (progress == null) progress = new NullProgressListener();
-        try{
+        if (progress == null)
+            progress = new NullProgressListener();
+        try {
             float size = size();
-            float position = 0;            
+            float position = 0;
             progress.started();
-            for( iterator = iterator(); !progress.isCanceled() && iterator.hasNext(); progress.progress( position++/size )){
+            for (iterator = iterator(); !progress.isCanceled() && iterator.hasNext(); progress
+                    .progress(position++ / size)) {
                 try {
                     SimpleFeature feature = (SimpleFeature) iterator.next();
                     visitor.visit(feature);
+                } catch (Exception erp) {
+                    progress.exceptionOccurred(erp);
                 }
-                catch( Exception erp ){
-                    progress.exceptionOccurred( erp );
-                }
-            }            
+            }
+        } finally {
+            progress.complete();
+            close(iterator);
         }
-        finally {
-            progress.complete();            
-            close( iterator );
-        }       
     }
 
     /**
      * Construct a sorted view of this content.
      * <p>
-     * Sorts may be combined togther in a stable fashion, in congruence
-     * with the Filter 1.1 specification.
+     * Sorts may be combined togther in a stable fashion, in congruence with the Filter 1.1
+     * specification.
      * </p>
      * <p>
-     * This method should also be able to handle GeoTools specific
-     * sorting through detecting order as a SortBy2 instance.
+     * This method should also be able to handle GeoTools specific sorting through detecting order
+     * as a SortBy2 instance.
      * </p>
      * 
      * @since GeoTools 2.2, Filter 1.1
@@ -587,30 +574,30 @@ public class DefaultVersionedFeatureCollection implements SimpleFeatureCollectio
      * 
      */
     public SimpleFeatureCollection sort(SortBy order) {
-        if( order == SortBy.NATURAL_ORDER ){
+        if (order == SortBy.NATURAL_ORDER) {
             return this;
         }
-        if( order instanceof SortBy2){
+        if (order instanceof SortBy2) {
             SortBy2 advanced = (SortBy2) order;
-            return sort( advanced );
+            return sort(advanced);
         }
         return null;
     }
+
     /**
-     * Allows for "Advanced" sort capabilities specific to the
-     * GeoTools platform!
+     * Allows for "Advanced" sort capabilities specific to the GeoTools platform!
      * <p>
-     * Advanced in this case really means making use of a generic
-     * Expression, rather then being limited to PropertyName.
+     * Advanced in this case really means making use of a generic Expression, rather then being
+     * limited to PropertyName.
      * </p>
+     * 
      * @param order GeoTools SortBy
      * @return FeatureList sorted according to provided order
      */
-    public SimpleFeatureCollection sort(SortBy2 order ){
-        if( order == SortBy.NATURAL_ORDER ){
+    public SimpleFeatureCollection sort(SortBy2 order) {
+        if (order == SortBy.NATURAL_ORDER) {
             return this;
-        }
-        else if ( order == SortBy.REVERSE_ORDER ){
+        } else if (order == SortBy.REVERSE_ORDER) {
             // backwards
         }
         // custom
@@ -619,8 +606,9 @@ public class DefaultVersionedFeatureCollection implements SimpleFeatureCollectio
 
     public void purge() {
         // no resources were harmed in the making of this FeatureCollection
-    }       
-    public void validate() {        
+    }
+
+    public void validate() {
     }
 
     public String getID() {
@@ -631,8 +619,7 @@ public class DefaultVersionedFeatureCollection implements SimpleFeatureCollectio
         listeners.add(listener);
     }
 
-    public final void removeListener(CollectionListener listener)
-            throws NullPointerException {
+    public final void removeListener(CollectionListener listener) throws NullPointerException {
         listeners.remove(listener);
     }
 
@@ -641,25 +628,24 @@ public class DefaultVersionedFeatureCollection implements SimpleFeatureCollectio
     }
 
     /**
-     * Removes all of the elements from this collection (optional operation).
-     * This collection will be empty after this method returns unless it
-     * throws an exception.
+     * Removes all of the elements from this collection (optional operation). This collection will
+     * be empty after this method returns unless it throws an exception.
      */
     public void clear() {
-        if(contents.isEmpty() ) {
+        if (contents.isEmpty()) {
             return;
         }
-    
+
         SimpleFeature[] oldFeatures = new SimpleFeature[contents.size()];
         oldFeatures = (SimpleFeature[]) contents.values().toArray(oldFeatures);
-    
+
         contents.clear();
         fireChange(oldFeatures, CollectionEvent.FEATURES_REMOVED);
     }
 
     /**
      * Returns <tt>true</tt> if this collection contains no elements.
-     *
+     * 
      * @return <tt>true</tt> if this collection contains no elements
      */
     public boolean isEmpty() {
@@ -667,10 +653,9 @@ public class DefaultVersionedFeatureCollection implements SimpleFeatureCollectio
     }
 
     /**
-     * Returns the number of elements in this collection.  If this collection
-     * contains more than <tt>Integer.MAX_VALUE</tt> elements, returns
-     * <tt>Integer.MAX_VALUE</tt>.
-     *
+     * Returns the number of elements in this collection. If this collection contains more than
+     * <tt>Integer.MAX_VALUE</tt> elements, returns <tt>Integer.MAX_VALUE</tt>.
+     * 
      * @return the number of elements in this collection
      */
     public int size() {
@@ -678,23 +663,20 @@ public class DefaultVersionedFeatureCollection implements SimpleFeatureCollectio
     }
 
     /**
-     * Returns an array containing all of the elements in this collection.  If
-     * the collection makes any guarantees as to what order its elements are
-     * returned by its iterator, this method must return the elements in the
-     * same order.
+     * Returns an array containing all of the elements in this collection. If the collection makes
+     * any guarantees as to what order its elements are returned by its iterator, this method must
+     * return the elements in the same order.
      * 
      * <p>
-     * The returned array will be "safe" in that no references to it are
-     * maintained by this collection.  (In other words, this method must
-     * allocate a new array even if this collection is backed by an array).
-     * The caller is thus free to modify the returned array.
+     * The returned array will be "safe" in that no references to it are maintained by this
+     * collection. (In other words, this method must allocate a new array even if this collection is
+     * backed by an array). The caller is thus free to modify the returned array.
      * </p>
      * 
      * <p>
-     * This method acts as bridge between array-based and collection-based
-     * APIs.
+     * This method acts as bridge between array-based and collection-based APIs.
      * </p>
-     *
+     * 
      * @return an array containing all of the elements in this collection
      */
     public Object[] toArray() {
@@ -702,55 +684,50 @@ public class DefaultVersionedFeatureCollection implements SimpleFeatureCollectio
     }
 
     /**
-     * Returns an array containing all of the elements in this collection; the
-     * runtime type of the returned array is that of the specified array. If
-     * the collection fits in the specified array, it is returned therein.
-     * Otherwise, a new array is allocated with the runtime type of the
+     * Returns an array containing all of the elements in this collection; the runtime type of the
+     * returned array is that of the specified array. If the collection fits in the specified array,
+     * it is returned therein. Otherwise, a new array is allocated with the runtime type of the
      * specified array and the size of this collection.
      * 
      * <p>
-     * If this collection fits in the specified array with room to spare (i.e.,
-     * the array has more elements than this collection), the element in the
-     * array immediately following the end of the collection is set to
-     * <tt>null</tt>.  This is useful in determining the length of this
-     * collection <i>only</i> if the caller knows that this collection does
-     * not contain any <tt>null</tt> elements.)
+     * If this collection fits in the specified array with room to spare (i.e., the array has more
+     * elements than this collection), the element in the array immediately following the end of the
+     * collection is set to <tt>null</tt>. This is useful in determining the length of this
+     * collection <i>only</i> if the caller knows that this collection does not contain any
+     * <tt>null</tt> elements.)
      * </p>
      * 
      * <p>
-     * If this collection makes any guarantees as to what order its elements
-     * are returned by its iterator, this method must return the elements in
-     * the same order.
+     * If this collection makes any guarantees as to what order its elements are returned by its
+     * iterator, this method must return the elements in the same order.
      * </p>
      * 
      * <p>
-     * Like the <tt>toArray</tt> method, this method acts as bridge between
-     * array-based and collection-based APIs.  Further, this method allows
-     * precise control over the runtime type of the output array, and may,
-     * under certain circumstances, be used to save allocation costs
+     * Like the <tt>toArray</tt> method, this method acts as bridge between array-based and
+     * collection-based APIs. Further, this method allows precise control over the runtime type of
+     * the output array, and may, under certain circumstances, be used to save allocation costs
      * </p>
      * 
      * <p>
-     * Suppose <tt>l</tt> is a <tt>List</tt> known to contain only strings. The
-     * following code can be used to dump the list into a newly allocated
-     * array of <tt>String</tt>:
+     * Suppose <tt>l</tt> is a <tt>List</tt> known to contain only strings. The following code can
+     * be used to dump the list into a newly allocated array of <tt>String</tt>:
+     * 
      * <pre>
-     *     String[] x = (String[]) v.toArray(new String[0]);
+     * String[] x = (String[]) v.toArray(new String[0]);
      * </pre>
+     * 
      * </p>
      * 
      * <p>
-     * Note that <tt>toArray(new Object[0])</tt> is identical in function to
-     * <tt>toArray()</tt>.
+     * Note that <tt>toArray(new Object[0])</tt> is identical in function to <tt>toArray()</tt>.
      * </p>
-     *
-     * @param a the array into which the elements of this collection are to be
-     *        stored, if it is big enough; otherwise, a new array of the same
-     *        runtime type is allocated for this purpose.
-     *
+     * 
+     * @param a the array into which the elements of this collection are to be stored, if it is big
+     *        enough; otherwise, a new array of the same runtime type is allocated for this purpose.
+     * 
      * @return an array containing the elements of this collection
      */
     public Object[] toArray(Object[] a) {
-        return contents.values().toArray(a != null ? a : new Object[ contents.size() ]);
+        return contents.values().toArray(a != null ? a : new Object[contents.size()]);
     }
 }

@@ -44,12 +44,13 @@ public class RefDatabase {
         final String master = Ref.MASTER;
         condCreate(master, TYPE.COMMIT);
     }
-    
+
     /**
      * Add a new tracked remote to the reference database
+     * 
      * @param refName the name of the remote to track, no need to add the prefix, "remotes/".
      */
-    public void addRef(final Ref ref){
+    public void addRef(final Ref ref) {
         condCreate(ref.getName(), TYPE.REMOTE);
     }
 
@@ -66,12 +67,14 @@ public class RefDatabase {
         RevTree refsTree;
         try {
             if (db.exists(REFS_TREE_ID)) {
-                refsTree = db.get(REFS_TREE_ID, WrappedSerialisingFactory.getInstance().createRevTreeReader(db));
-//                refsTree = db.get(REFS_TREE_ID, new BxmlRevTreeReader(db));
+                refsTree = db.get(REFS_TREE_ID, WrappedSerialisingFactory.getInstance()
+                        .createRevTreeReader(db));
+                // refsTree = db.get(REFS_TREE_ID, new BxmlRevTreeReader(db));
             } else {
                 refsTree = new RevSHA1Tree(db);
-                db.put(REFS_TREE_ID, WrappedSerialisingFactory.getInstance().createRevTreeWriter(refsTree));
-//                db.put(REFS_TREE_ID, new BxmlRevTreeWriter(refsTree));
+                db.put(REFS_TREE_ID,
+                        WrappedSerialisingFactory.getInstance().createRevTreeWriter(refsTree));
+                // db.put(REFS_TREE_ID, new BxmlRevTreeWriter(refsTree));
             }
         } catch (RuntimeException e) {
             throw e;
@@ -135,8 +138,9 @@ public class RefDatabase {
         refsTree = refsTree.mutable();
         ((MutableTree) refsTree).put(ref);
         try {
-            db.put(REFS_TREE_ID, WrappedSerialisingFactory.getInstance().createRevTreeWriter(refsTree));
-//            db.put(REFS_TREE_ID, new BxmlRevTreeWriter(refsTree));
+            db.put(REFS_TREE_ID,
+                    WrappedSerialisingFactory.getInstance().createRevTreeWriter(refsTree));
+            // db.put(REFS_TREE_ID, new BxmlRevTreeWriter(refsTree));
         } catch (Exception e) {
             throw new RuntimeException(e);
         }

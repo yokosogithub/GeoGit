@@ -28,8 +28,7 @@ public class DiffOp extends AbstractGeoGitOp<Iterator<DiffEntry>> {
     }
 
     /**
-     * @param commitId
-     *            the oldVersion to set
+     * @param commitId the oldVersion to set
      * @return
      */
     public DiffOp setOldVersion(ObjectId commitId) {
@@ -38,8 +37,7 @@ public class DiffOp extends AbstractGeoGitOp<Iterator<DiffEntry>> {
     }
 
     /**
-     * @param commitId
-     *            the newVersion to set
+     * @param commitId the newVersion to set
      * @return
      */
     public DiffOp setNewVersion(ObjectId commitId) {

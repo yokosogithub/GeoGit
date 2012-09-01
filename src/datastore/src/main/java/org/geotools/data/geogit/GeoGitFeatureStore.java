@@ -51,25 +51,22 @@ import com.google.common.base.Throwables;
 import com.google.common.collect.Lists;
 
 @SuppressWarnings("rawtypes")
-public class GeoGitFeatureStore extends GeoGitFeatureSource implements
-        SimpleVersioningFeatureStore {
+public class GeoGitFeatureStore extends GeoGitFeatureSource implements SimpleVersioningFeatureStore {
 
     private Transaction transaction;
 
-    public GeoGitFeatureStore(final SimpleFeatureType type,
-            final GeoGitDataStore store) {
+    public GeoGitFeatureStore(final SimpleFeatureType type, final GeoGitDataStore store) {
         super(type, store);
         transaction = Transaction.AUTO_COMMIT;
     }
 
     /**
-     * @return the object id of the current HEAD's commit if we're not inside a
-     *         transaction, or {@code null} if we're inside a transaction
+     * @return the object id of the current HEAD's commit if we're not inside a transaction, or
+     *         {@code null} if we're inside a transaction
      */
     @Override
     public RevTree getCurrentVersion() {
-        if (getTransaction() == null
-                || Transaction.AUTO_COMMIT.equals(getTransaction())) {
+        if (getTransaction() == null || Transaction.AUTO_COMMIT.equals(getTransaction())) {
             return super.getCurrentVersion();
         }
 
@@ -125,12 +122,10 @@ public class GeoGitFeatureStore extends GeoGitFeatureSource implements
      */
     @Override
     public List<FeatureId> addFeatures(
-            FeatureCollection<SimpleFeatureType, SimpleFeature> collection)
-            throws IOException {
+            FeatureCollection<SimpleFeatureType, SimpleFeature> collection) throws IOException {
         Preconditions.checkNotNull(collection);
         Preconditions.checkNotNull(collection.getSchema());
-        Preconditions.checkArgument(type.getName().equals(
-                collection.getSchema().getName()));
+        Preconditions.checkArgument(type.getName().equals(collection.getSchema().getName()));
 
         checkTransaction();
 
@@ -139,8 +134,7 @@ public class GeoGitFeatureStore extends GeoGitFeatureSource implements
 
         List<FeatureId> insertedResourceIds;
         try {
-            insertedResourceIds = versioningState.stageInsert(typeName,
-                    collection);
+            insertedResourceIds = versioningState.stageInsert(typeName, collection);
         } catch (Exception e) {
             throw new IOException(e);
         }
@@ -153,9 +147,8 @@ public class GeoGitFeatureStore extends GeoGitFeatureSource implements
      *      java.lang.Object[], org.opengis.filter.Filter)
      */
     @Override
-    public void modifyFeatures(final Name[] attributeNames,
-            final Object[] attributeValues, final Filter filter)
-            throws IOException {
+    public void modifyFeatures(final Name[] attributeNames, final Object[] attributeValues,
+            final Filter filter) throws IOException {
 
         checkTransaction();
         // throws exception if filter has a resourceid that doesn't match the
@@ -163,8 +156,8 @@ public class GeoGitFeatureStore extends GeoGitFeatureSource implements
         checkEditFilterMatchesCurrentVersion(filter);
 
         final SimpleFeatureCollection affectedFeatures = getFeatures(filter);
-        final FeatureCollection newValues = new ModifyingFeatureCollection(
-                affectedFeatures, attributeNames, attributeValues);
+        final FeatureCollection newValues = new ModifyingFeatureCollection(affectedFeatures,
+                attributeNames, attributeValues);
 
         VersioningTransactionState versioningState = getVersioningState();
         try {
@@ -194,8 +187,8 @@ public class GeoGitFeatureStore extends GeoGitFeatureSource implements
     }
 
     /**
-     * Throws an IllegalArgumentException if {@code filter} contains a resource
-     * filter that doesn't match the current version of a feature
+     * Throws an IllegalArgumentException if {@code filter} contains a resource filter that doesn't
+     * match the current version of a feature
      * 
      * @param filter original upate filter
      */
@@ -214,8 +207,7 @@ public class GeoGitFeatureStore extends GeoGitFeatureSource implements
             List<Ref> current;
             try {
                 requested = Lists.newArrayList(query.get(rid));
-                current = Lists.newArrayList(query.get(new ResourceIdImpl(rid
-                        .getID(), null)));
+                current = Lists.newArrayList(query.get(new ResourceIdImpl(rid.getID(), null)));
             } catch (Exception e) {
                 throw new RuntimeException(e);
             }
@@ -231,8 +223,7 @@ public class GeoGitFeatureStore extends GeoGitFeatureSource implements
      * @see org.geotools.data.FeatureStore#setFeatures(org.geotools.data.FeatureReader)
      */
     @Override
-    public void setFeatures(
-            FeatureReader<SimpleFeatureType, SimpleFeature> reader)
+    public void setFeatures(FeatureReader<SimpleFeatureType, SimpleFeature> reader)
             throws IOException {
         throw new UnsupportedOperationException("do versioning!");
     }
@@ -251,8 +242,7 @@ public class GeoGitFeatureStore extends GeoGitFeatureSource implements
         }
 
         final Object key = GeoGitDataStore.class;
-        VersioningTransactionState state = (VersioningTransactionState) transaction
-                .getState(key);
+        VersioningTransactionState state = (VersioningTransactionState) transaction.getState(key);
         if (state == null) {
             Repository repository = dataStore.getRepository();
             state = new VersioningTransactionState(new GeoGIT(repository));
@@ -281,8 +271,8 @@ public class GeoGitFeatureStore extends GeoGitFeatureSource implements
      * @see #modifyFeatures(Name[], Object[], Filter)
      */
     @Override
-    public void modifyFeatures(String[] names, Object[] attributeValues,
-            Filter filter) throws IOException {
+    public void modifyFeatures(String[] names, Object[] attributeValues, Filter filter)
+            throws IOException {
 
         Name[] attributeNames = new Name[names.length];
         for (int i = 0; i < names.length; i++) {
@@ -298,8 +288,8 @@ public class GeoGitFeatureStore extends GeoGitFeatureSource implements
      * @see #modifyFeatures(Name[], Object[], Filter)
      */
     @Override
-    public void modifyFeatures(AttributeDescriptor[] type, Object[] value,
-            Filter filter) throws IOException {
+    public void modifyFeatures(AttributeDescriptor[] type, Object[] value, Filter filter)
+            throws IOException {
 
         Name[] attributeNames = new Name[type.length];
         for (int i = 0; i < type.length; i++) {
@@ -314,11 +304,10 @@ public class GeoGitFeatureStore extends GeoGitFeatureSource implements
      * @see #modifyFeatures(Name[], Object[], Filter)
      */
     @Override
-    public void modifyFeatures(Name attributeName, Object attributeValue,
-            Filter filter) throws IOException {
+    public void modifyFeatures(Name attributeName, Object attributeValue, Filter filter)
+            throws IOException {
 
-        modifyFeatures(new Name[] { attributeName },
-                new Object[] { attributeValue }, filter);
+        modifyFeatures(new Name[] { attributeName }, new Object[] { attributeValue }, filter);
     }
 
     /**
@@ -327,11 +316,10 @@ public class GeoGitFeatureStore extends GeoGitFeatureSource implements
      * @see #modifyFeatures(Name[], Object[], Filter)
      */
     @Override
-    public void modifyFeatures(AttributeDescriptor type, Object value,
-            Filter filter) throws IOException {
+    public void modifyFeatures(AttributeDescriptor type, Object value, Filter filter)
+            throws IOException {
 
-        modifyFeatures(new Name[] { type.getName() }, new Object[] { value },
-                filter);
+        modifyFeatures(new Name[] { type.getName() }, new Object[] { value }, filter);
 
     }
 

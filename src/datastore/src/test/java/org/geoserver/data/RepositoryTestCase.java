@@ -25,16 +25,15 @@ import com.vividsolutions.jts.io.ParseException;
 
 public abstract class RepositoryTestCase extends TestCase {
     protected Repository repo;
-    
+
     private File envHome;
 
     // prevent recursion
     private boolean setup = false;
 
     protected RepositoryDatabase repositoryDatabase;
-    
-    protected static final Logger LOGGER = Logging
-            .getLogger(GeoGITRepositoryTestCase.class);
+
+    protected static final Logger LOGGER = Logging.getLogger(GeoGITRepositoryTestCase.class);
 
     @Override
     protected void setUp() throws Exception {
@@ -84,26 +83,26 @@ public abstract class RepositoryTestCase extends TestCase {
             repo = null;
         }
         repositoryDatabase = null;
-        
+
         FileUtils.deleteDirectory(envHome);
     }
-   
+
     protected abstract void setUpInternal() throws Exception;
-    
+
     protected abstract void tearDownInternal() throws Exception;
 
     protected Feature feature(SimpleFeatureType type, String id, Object... values)
             throws ParseException {
-                SimpleFeatureBuilder builder = new SimpleFeatureBuilder(type);
-                for (int i = 0; i < values.length; i++) {
-                    Object value = values[i];
-                    if (type.getDescriptor(i) instanceof GeometryDescriptor) {
-                        if (value instanceof String) {
-                            value = new WKTReader2().read((String) value);
-                        }
-                    }
-                    builder.set(i, value);
+        SimpleFeatureBuilder builder = new SimpleFeatureBuilder(type);
+        for (int i = 0; i < values.length; i++) {
+            Object value = values[i];
+            if (type.getDescriptor(i) instanceof GeometryDescriptor) {
+                if (value instanceof String) {
+                    value = new WKTReader2().read((String) value);
                 }
-                return builder.buildFeature(id);
             }
+            builder.set(i, value);
+        }
+        return builder.buildFeature(id);
+    }
 }

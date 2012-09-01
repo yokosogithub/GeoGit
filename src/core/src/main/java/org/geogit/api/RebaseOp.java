@@ -9,15 +9,15 @@ import org.geogit.repository.Repository;
 
 /**
  * 
- * Rebase the current head to the included branch head 
+ * Rebase the current head to the included branch head
  * 
  * @author jhudson
  * @since 1.2.0
  */
-public class RebaseOp extends AbstractGeoGitOp<Boolean>{
+public class RebaseOp extends AbstractGeoGitOp<Boolean> {
 
     private Ref branch;
-    
+
     public RebaseOp(Repository repository) {
         super(repository);
         // TODO Auto-generated constructor stub

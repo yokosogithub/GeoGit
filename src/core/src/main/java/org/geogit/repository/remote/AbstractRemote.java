@@ -10,5 +10,5 @@ package org.geogit.repository.remote;
  * @author jhudson
  */
 public abstract class AbstractRemote implements IRemote {
-    /*nothing to see here*/
+    /* nothing to see here */
 }

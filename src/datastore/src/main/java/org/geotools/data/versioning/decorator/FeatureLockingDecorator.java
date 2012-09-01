@@ -28,9 +28,8 @@ import org.opengis.feature.type.FeatureType;
 import org.opengis.filter.Filter;
 
 @SuppressWarnings("rawtypes")
-public class FeatureLockingDecorator<T extends FeatureType, F extends Feature>
-        extends FeatureStoreDecorator<T, F> implements
-        VersioningFeatureLocking<T, F> {
+public class FeatureLockingDecorator<T extends FeatureType, F extends Feature> extends
+        FeatureStoreDecorator<T, F> implements VersioningFeatureLocking<T, F> {
 
     public FeatureLockingDecorator(FeatureLocking unversioned, Repository repo) {
         super(unversioned, repo);

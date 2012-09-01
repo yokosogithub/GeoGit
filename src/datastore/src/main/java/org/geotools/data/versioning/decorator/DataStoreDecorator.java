@@ -33,26 +33,24 @@ import org.opengis.feature.simple.SimpleFeatureType;
 import org.opengis.feature.type.Name;
 import org.opengis.filter.Filter;
 
-public class DataStoreDecorator extends
-        DataAccessDecorator<SimpleFeatureType, SimpleFeature> implements
-        VersioningDataStore {
+public class DataStoreDecorator extends DataAccessDecorator<SimpleFeatureType, SimpleFeature>
+        implements VersioningDataStore {
 
     public DataStoreDecorator(DataStore unversioned, Repository versioningRepo) {
         super(unversioned, versioningRepo);
     }
 
     @Override
-    public SimpleFeatureSource getFeatureSource(Name typeName)
-            throws IOException {
+    public SimpleFeatureSource getFeatureSource(Name typeName) throws IOException {
         Repository repo = getRepository(typeName);
-        
-        FeatureSource<SimpleFeatureType, SimpleFeature> source = unversioned.getFeatureSource(typeName);
+
+        FeatureSource<SimpleFeatureType, SimpleFeature> source = unversioned
+                .getFeatureSource(typeName);
         return (SimpleFeatureSource) VersioningAdapterFactory.create(source, repo);
     }
 
     @Override
-    public void updateSchema(String typeName, SimpleFeatureType featureType)
-            throws IOException {
+    public void updateSchema(String typeName, SimpleFeatureType featureType) throws IOException {
         throw new UnsupportedOperationException();
     }
 
@@ -67,35 +65,33 @@ public class DataStoreDecorator extends
     }
 
     @Override
-    public SimpleFeatureSource getFeatureSource(String typeName)
-            throws IOException {
+    public SimpleFeatureSource getFeatureSource(String typeName) throws IOException {
         SimpleFeatureSource source = ((DataStore) unversioned).getFeatureSource(typeName);
-        Repository repo = getRepository( source.getName() );
-        return (SimpleFeatureSource) VersioningAdapterFactory.create(source,repo);
+        Repository repo = getRepository(source.getName());
+        return (SimpleFeatureSource) VersioningAdapterFactory.create(source, repo);
     }
 
     @Override
-    public FeatureReader<SimpleFeatureType, SimpleFeature> getFeatureReader(
-            Query query, Transaction transaction) throws IOException {
+    public FeatureReader<SimpleFeatureType, SimpleFeature> getFeatureReader(Query query,
+            Transaction transaction) throws IOException {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public FeatureWriter<SimpleFeatureType, SimpleFeature> getFeatureWriter(
-            String typeName, Filter filter, Transaction transaction)
-            throws IOException {
+    public FeatureWriter<SimpleFeatureType, SimpleFeature> getFeatureWriter(String typeName,
+            Filter filter, Transaction transaction) throws IOException {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public FeatureWriter<SimpleFeatureType, SimpleFeature> getFeatureWriter(
-            String typeName, Transaction transaction) throws IOException {
+    public FeatureWriter<SimpleFeatureType, SimpleFeature> getFeatureWriter(String typeName,
+            Transaction transaction) throws IOException {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public FeatureWriter<SimpleFeatureType, SimpleFeature> getFeatureWriterAppend(
-            String typeName, Transaction transaction) throws IOException {
+    public FeatureWriter<SimpleFeatureType, SimpleFeature> getFeatureWriterAppend(String typeName,
+            Transaction transaction) throws IOException {
         throw new UnsupportedOperationException();
     }
 

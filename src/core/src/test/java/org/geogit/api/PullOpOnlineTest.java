@@ -54,21 +54,23 @@ public class PullOpOnlineTest extends MultipleRepositoryTestCase {
 
     public void testOnlyOrigin() throws Exception {
         // setup the 'origin'
-        //GeoGIT origin = new GeoGIT(getRepository(0));
+        // GeoGIT origin = new GeoGIT(getRepository(0));
         insertAddCommit(this.server, points1);
         this.client.pull();
         this.server.getRepository().close();
 
         this.client.remoteAddOp().setName("origin").setFetch(Ref.MASTER)
-                .setUrl(GEOGIT_URL+"/project0/geogit").call();
+                .setUrl(GEOGIT_URL + "/project0/geogit").call();
 
         this.client.pull().call();
-        
+
         // re-open the server - so we can check the heads
         this.server = new GeoGIT(createRepo(0, false));
 
-        Ref clientRemoteMaster = this.client.getRepository().getRef(Ref.REMOTES_PREFIX + Ref.ORIGIN + Ref.MASTER);
-        assertEquals(clientRemoteMaster.getObjectId(), this.server.getRepository().getHead().getObjectId());
+        Ref clientRemoteMaster = this.client.getRepository().getRef(
+                Ref.REMOTES_PREFIX + Ref.ORIGIN + Ref.MASTER);
+        assertEquals(clientRemoteMaster.getObjectId(), this.server.getRepository().getHead()
+                .getObjectId());
     }
 
     public void testPullRemoteMasterTwoChanges() throws Exception {
@@ -83,7 +85,7 @@ public class PullOpOnlineTest extends MultipleRepositoryTestCase {
 
         // setup the client to have a remote ref to the server
         this.client.remoteAddOp().setName("project0").setFetch("project0")
-                .setUrl(GEOGIT_URL+"/project0/geogit").call();
+                .setUrl(GEOGIT_URL + "/project0/geogit").call();
 
         // fetch the remotes
         MergeResult mergeResults = client.pull().setRepository("project0/" + Ref.MASTER).call();

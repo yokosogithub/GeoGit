@@ -46,10 +46,8 @@ public abstract class VersioningTestSupport extends GeoGITRepositoryTestCase {
         versioningStore.createSchema(linesType);
         versioningStore.createSchema(pointsType);
 
-        lines = (SimpleFeatureStore) versioningStore
-                .getFeatureSource(linesTypeName);
-        points = (SimpleFeatureStore) versioningStore
-                .getFeatureSource(pointsTypeName);
+        lines = (SimpleFeatureStore) versioningStore.getFeatureSource(linesTypeName);
+        points = (SimpleFeatureStore) versioningStore.getFeatureSource(pointsTypeName);
 
     }
 }

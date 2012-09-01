@@ -21,7 +21,6 @@ import org.opengis.feature.simple.SimpleFeature;
 import org.opengis.feature.simple.SimpleFeatureType;
 
 public interface SimpleVersioningFeatureSource extends
-        VersioningFeatureSource<SimpleFeatureType, SimpleFeature>,
-        SimpleFeatureSource {
+        VersioningFeatureSource<SimpleFeatureType, SimpleFeature>, SimpleFeatureSource {
 
 }

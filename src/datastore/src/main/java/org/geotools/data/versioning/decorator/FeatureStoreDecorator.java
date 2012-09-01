@@ -53,12 +53,10 @@ import com.google.common.base.Throwables;
 import com.google.common.collect.Lists;
 
 @SuppressWarnings("rawtypes")
-public class FeatureStoreDecorator<T extends FeatureType, F extends Feature>
-        extends FeatureSourceDecorator<T, F> implements
-        VersioningFeatureStore<T, F> {
+public class FeatureStoreDecorator<T extends FeatureType, F extends Feature> extends
+        FeatureSourceDecorator<T, F> implements VersioningFeatureStore<T, F> {
 
-    public FeatureStoreDecorator(final FeatureStore unversioned,
-            final Repository repo) {
+    public FeatureStoreDecorator(final FeatureStore unversioned, final Repository repo) {
         super(unversioned, repo);
     }
 
@@ -69,8 +67,7 @@ public class FeatureStoreDecorator<T extends FeatureType, F extends Feature>
             return super.getCurrentVersion();
         }
         final Name name = getName();
-        RevTree headVersion = repository.getWorkingTree()
-                .getStagedVersion(name);
+        RevTree headVersion = repository.getWorkingTree().getStagedVersion(name);
         return headVersion;
     }
 
@@ -98,52 +95,50 @@ public class FeatureStoreDecorator<T extends FeatureType, F extends Feature>
      * @see org.geotools.data.FeatureStore#addFeatures(org.geotools.feature.FeatureCollection)
      */
     @Override
-    public List<FeatureId> addFeatures(FeatureCollection<T, F> collection)
-            throws IOException {
+    public List<FeatureId> addFeatures(FeatureCollection<T, F> collection) throws IOException {
         boolean versioned = isVersioned();
-        
+
         if (versioned) {
             checkTransaction();
         }
         FilterFactory2 ff = CommonFactoryFinder.getFilterFactory2();
 
         final FeatureStore<T, F> unversioned = getUnversionedStore();
-        
+
         // Optimisation: special case the first load (this is often when we have lots of feaures)
         int initialCount = -1;
-        if( versioned ){
+        if (versioned) {
             initialCount = unversioned.getCount(Query.ALL);
         }
-        // step 1: add features to unversioned 
+        // step 1: add features to unversioned
         List<FeatureId> unversionedIds = unversioned.addFeatures(collection);
-        
+
         // step 2: add features to versioned databse
         if (versioned) {
             try {
                 final Name typeName = getSchema().getName();
                 VersioningTransactionState versioningState = getVersioningState();
-                
+
                 List<Filter> block = new ArrayList<Filter>();
-                
-                if( initialCount == 0 ){
+
+                if (initialCount == 0) {
                     // Optimisation: grab everything for the first load
-                    block.add( Filter.INCLUDE );
-                }
-                else {
+                    block.add(Filter.INCLUDE);
+                } else {
                     // Stage inserts in blocks of 3000 to avoid limitations of SQL generation
                     final int PAGE = 1000;
                     int SIZE = unversionedIds.size();
-                    for( int i=0; i < SIZE; i+=PAGE){
-                        List<FeatureId> list = unversionedIds.subList(i, Math.min( SIZE, i+PAGE));
+                    for (int i = 0; i < SIZE; i += PAGE) {
+                        List<FeatureId> list = unversionedIds.subList(i, Math.min(SIZE, i + PAGE));
                         Id id = ff.id(new HashSet<Identifier>(list));
-                        block.add( id );
+                        block.add(id);
                     }
                 }
                 List<FeatureId> versionedIds = new ArrayList<FeatureId>();
-                for( Filter filter : block ){
-                    FeatureCollection<T, F> inserted = unversioned.getFeatures( filter );
+                for (Filter filter : block) {
+                    FeatureCollection<T, F> inserted = unversioned.getFeatures(filter);
                     List<FeatureId> staged = versioningState.stageInsert(typeName, inserted, true);
-                    versionedIds.addAll( staged );
+                    versionedIds.addAll(staged);
                 }
                 return versionedIds;
             } catch (Exception e) {
@@ -178,9 +173,8 @@ public class FeatureStoreDecorator<T extends FeatureType, F extends Feature>
      *      java.lang.Object[], org.opengis.filter.Filter)
      */
     @Override
-    public void modifyFeatures(final Name[] attributeNames,
-            final Object[] attributeValues, final Filter filter)
-            throws IOException {
+    public void modifyFeatures(final Name[] attributeNames, final Object[] attributeValues,
+            final Filter filter) throws IOException {
 
         final FeatureStore<T, F> unversioned = getUnversionedStore();
         final boolean versioned = isVersioned();
@@ -208,22 +202,18 @@ public class FeatureStoreDecorator<T extends FeatureType, F extends Feature>
                 } finally {
                     iterator.close();
                 }
-                final FilterFactory2 ff = CommonFactoryFinder
-                        .getFilterFactory2(null);
+                final FilterFactory2 ff = CommonFactoryFinder.getFilterFactory2(null);
                 affectedFeaturesFitler = ff.id(affectedIds);
             }
         }
 
-        unversioned.modifyFeatures(attributeNames, attributeValues,
-                unversionedFilter);
+        unversioned.modifyFeatures(attributeNames, attributeValues, unversionedFilter);
 
         if (versioned && affectedFeaturesFitler != null
                 && affectedFeaturesFitler.getIdentifiers().size() > 0) {
             try {
-                FeatureCollection newValues = unversioned
-                        .getFeatures(affectedFeaturesFitler);
-                getVersioningState().stageUpdate(getSchema().getName(),
-                        newValues);
+                FeatureCollection newValues = unversioned.getFeatures(affectedFeaturesFitler);
+                getVersioningState().stageUpdate(getSchema().getName(), newValues);
             } catch (Exception e) {
                 Throwables.propagate(e);
             }
@@ -231,8 +221,8 @@ public class FeatureStoreDecorator<T extends FeatureType, F extends Feature>
     }
 
     /**
-     * Throws an IllegalArgumentException if {@code filter} contains a resource
-     * filter that doesn't match the current version of a feature
+     * Throws an IllegalArgumentException if {@code filter} contains a resource filter that doesn't
+     * match the current version of a feature
      * 
      * @param filter original upate filter
      */
@@ -250,8 +240,7 @@ public class FeatureStoreDecorator<T extends FeatureType, F extends Feature>
             List<Ref> current;
             try {
                 requested = Lists.newArrayList(query.get(rid));
-                current = Lists.newArrayList(query.get(new ResourceIdImpl(rid
-                        .getID(), null)));
+                current = Lists.newArrayList(query.get(new ResourceIdImpl(rid.getID(), null)));
             } catch (Exception e) {
                 throw new RuntimeException(e);
             }
@@ -267,8 +256,8 @@ public class FeatureStoreDecorator<T extends FeatureType, F extends Feature>
      * @see #modifyFeatures(Name[], Object[], Filter)
      */
     @Override
-    public void modifyFeatures(AttributeDescriptor[] type, Object[] value,
-            Filter filter) throws IOException {
+    public void modifyFeatures(AttributeDescriptor[] type, Object[] value, Filter filter)
+            throws IOException {
 
         Name[] attributeNames = new Name[type.length];
         for (int i = 0; i < type.length; i++) {
@@ -281,22 +270,20 @@ public class FeatureStoreDecorator<T extends FeatureType, F extends Feature>
      * @see #modifyFeatures(Name[], Object[], Filter)
      */
     @Override
-    public void modifyFeatures(Name attributeName, Object attributeValue,
-            Filter filter) throws IOException {
+    public void modifyFeatures(Name attributeName, Object attributeValue, Filter filter)
+            throws IOException {
 
-        modifyFeatures(new Name[] { attributeName },
-                new Object[] { attributeValue }, filter);
+        modifyFeatures(new Name[] { attributeName }, new Object[] { attributeValue }, filter);
     }
 
     /**
      * @see #modifyFeatures(Name[], Object[], Filter)
      */
     @Override
-    public void modifyFeatures(AttributeDescriptor type, Object value,
-            Filter filter) throws IOException {
+    public void modifyFeatures(AttributeDescriptor type, Object value, Filter filter)
+            throws IOException {
 
-        modifyFeatures(new Name[] { type.getName() }, new Object[] { value },
-                filter);
+        modifyFeatures(new Name[] { type.getName() }, new Object[] { value }, filter);
 
     }
 
@@ -327,8 +314,7 @@ public class FeatureStoreDecorator<T extends FeatureType, F extends Feature>
         }
 
         Object key = "WHAT_WOULD_BE_A_GOOD_KEY?";
-        VersioningTransactionState state = (VersioningTransactionState) transaction
-                .getState(key);
+        VersioningTransactionState state = (VersioningTransactionState) transaction.getState(key);
         if (state == null) {
             state = new VersioningTransactionState(new GeoGIT(repository));
             transaction.putState(key, state);

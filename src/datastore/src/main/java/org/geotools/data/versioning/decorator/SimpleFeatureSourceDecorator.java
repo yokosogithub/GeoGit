@@ -33,8 +33,7 @@ public class SimpleFeatureSourceDecorator extends
         FeatureSourceDecorator<SimpleFeatureType, SimpleFeature> implements
         SimpleVersioningFeatureSource {
 
-    public SimpleFeatureSourceDecorator(SimpleFeatureSource unversioned,
-            Repository repo) {
+    public SimpleFeatureSourceDecorator(SimpleFeatureSource unversioned, Repository repo) {
         super(unversioned, repo);
     }
 
@@ -44,8 +43,7 @@ public class SimpleFeatureSourceDecorator extends
     }
 
     @Override
-    public SimpleFeatureCollection getFeatures(Filter filter)
-            throws IOException {
+    public SimpleFeatureCollection getFeatures(Filter filter) throws IOException {
         return (SimpleFeatureCollection) super.getFeatures(filter);
     }
 
@@ -56,9 +54,8 @@ public class SimpleFeatureSourceDecorator extends
 
     @Override
     protected FeatureCollection<SimpleFeatureType, SimpleFeature> createFeatureCollection(
-            FeatureCollection<SimpleFeatureType, SimpleFeature> delegate,
-            RevTree typeTree) {
-        return new SimpleResourceIdAssigningFeatureCollection(
-                (SimpleFeatureCollection) delegate, this, typeTree);
+            FeatureCollection<SimpleFeatureType, SimpleFeature> delegate, RevTree typeTree) {
+        return new SimpleResourceIdAssigningFeatureCollection((SimpleFeatureCollection) delegate,
+                this, typeTree);
     }
 }

@@ -34,8 +34,7 @@ import com.google.common.base.Function;
 import com.google.common.collect.Iterators;
 
 /**
- * FeatureCollection decorator whose iterators apply feature modifications on
- * the fly
+ * FeatureCollection decorator whose iterators apply feature modifications on the fly
  * 
  * @author groldan
  */
@@ -48,8 +47,7 @@ class ModifyingFeatureCollection extends
 
     private final Map<Iterator<SimpleFeature>, Iterator<SimpleFeature>> openIterators = new ConcurrentHashMap<Iterator<SimpleFeature>, Iterator<SimpleFeature>>();
 
-    protected ModifyingFeatureCollection(
-            final SimpleFeatureCollection delegate,
+    protected ModifyingFeatureCollection(final SimpleFeatureCollection delegate,
             final Name[] attributeNames, final Object[] attributeValues) {
         super(delegate);
         this.attributeNames = Arrays.copyOf(attributeNames, attributeNames.length);
@@ -60,8 +58,7 @@ class ModifyingFeatureCollection extends
     @Override
     public Iterator<SimpleFeature> iterator() {
         final Iterator<SimpleFeature> original = delegate.iterator();
-        Iterator<SimpleFeature> modified = Iterators.transform(original,
-                new ModifyFunction());
+        Iterator<SimpleFeature> modified = Iterators.transform(original, new ModifyFunction());
         openIterators.put(modified, original);
         return modified;
     }
@@ -106,8 +103,7 @@ class ModifyingFeatureCollection extends
         close.close();
     }
 
-    private class ModifyFunction implements
-            Function<SimpleFeature, SimpleFeature> {
+    private class ModifyFunction implements Function<SimpleFeature, SimpleFeature> {
 
         @Override
         public SimpleFeature apply(final SimpleFeature input) {
@@ -121,22 +117,19 @@ class ModifyingFeatureCollection extends
             return input;
         }
     }
-    
+
     @Override
     public boolean equals(Object o) {
-    	if(o == null || !this.getClass().equals(o.getClass())) {
-    		return false;
-    	}
-    	ModifyingFeatureCollection m = (ModifyingFeatureCollection)o;
-    		return super.equals(o)
-    				&& attributeNames.equals(m.attributeNames) 
-    				&& attributeValues.equals(m.attributeValues);
+        if (o == null || !this.getClass().equals(o.getClass())) {
+            return false;
+        }
+        ModifyingFeatureCollection m = (ModifyingFeatureCollection) o;
+        return super.equals(o) && attributeNames.equals(m.attributeNames)
+                && attributeValues.equals(m.attributeValues);
     }
-    
+
     @Override
     public int hashCode() {
-    	return super.hashCode() + 
-    			attributeNames.hashCode() << 2 + 
-    			attributeValues.hashCode() << 4;
+        return super.hashCode() + attributeNames.hashCode() << 2 + attributeValues.hashCode() << 4;
     }
 }

@@ -109,7 +109,8 @@ public class IndexTest extends RepositoryTestCase {
         ObjectInserter objectInserter = repo.newObjectInserter();
         RevCommit commit = new RevCommit(ObjectId.NULL);
         commit.setTreeId(newRootTreeId);
-        ObjectId commitId = objectInserter.insert(WrappedSerialisingFactory.getInstance().createCommitWriter(commit));
+        ObjectId commitId = objectInserter.insert(WrappedSerialisingFactory.getInstance()
+                .createCommitWriter(commit));
         final Ref newHead = repo.updateRef(new Ref(Ref.HEAD, commitId, TYPE.COMMIT));
 
         index.deleted(linesNs, linesName, lines1.getIdentifier().getID());
@@ -218,7 +219,8 @@ public class IndexTest extends RepositoryTestCase {
             ObjectInserter objectInserter = repo.newObjectInserter();
             RevCommit commit = new RevCommit(ObjectId.NULL);
             commit.setTreeId(newRepoTreeId1);
-            ObjectId commitId = objectInserter.insert(WrappedSerialisingFactory.getInstance().createCommitWriter(commit));
+            ObjectId commitId = objectInserter.insert(WrappedSerialisingFactory.getInstance()
+                    .createCommitWriter(commit));
             final Ref newHead = repo.updateRef(new Ref(Ref.HEAD, commitId, TYPE.COMMIT));
         }
 
@@ -253,12 +255,13 @@ public class IndexTest extends RepositoryTestCase {
             assertNotNull(treeChild = repoDb.getTreeChild(newRepoTree, pointsNs, pointsName, idP1));
             assertEquals(oId1_1, treeChild.getObjectId());
         }
-        
+
         {// simulate a commit so the repo head points to this new tree
             ObjectInserter objectInserter = repo.newObjectInserter();
             RevCommit commit = new RevCommit(ObjectId.NULL);
             commit.setTreeId(newRepoTreeId2);
-            ObjectId commitId = objectInserter.insert(WrappedSerialisingFactory.getInstance().createCommitWriter(commit));
+            ObjectId commitId = objectInserter.insert(WrappedSerialisingFactory.getInstance()
+                    .createCommitWriter(commit));
             final Ref newHead = repo.updateRef(new Ref(Ref.HEAD, commitId, TYPE.COMMIT));
         }
 

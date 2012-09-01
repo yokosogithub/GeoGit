@@ -36,8 +36,7 @@ public final class CommitBuilder {
     }
 
     /**
-     * @param treeId
-     *            the treeId to set
+     * @param treeId the treeId to set
      */
     public void setTreeId(ObjectId treeId) {
         this.treeId = treeId;
@@ -51,8 +50,7 @@ public final class CommitBuilder {
     }
 
     /**
-     * @param parentIds
-     *            the parentIds to set
+     * @param parentIds the parentIds to set
      */
     public void setParentIds(List<ObjectId> parentIds) {
         this.parentIds = parentIds;
@@ -66,8 +64,7 @@ public final class CommitBuilder {
     }
 
     /**
-     * @param author
-     *            the author to set
+     * @param author the author to set
      */
     public void setAuthor(String author) {
         this.author = author;
@@ -81,8 +78,7 @@ public final class CommitBuilder {
     }
 
     /**
-     * @param committer
-     *            the committer to set
+     * @param committer the committer to set
      */
     public void setCommitter(String committer) {
         this.committer = committer;
@@ -96,8 +92,7 @@ public final class CommitBuilder {
     }
 
     /**
-     * @param message
-     *            the message to set
+     * @param message the message to set
      */
     public void setMessage(String message) {
         this.message = message;
@@ -111,9 +106,8 @@ public final class CommitBuilder {
     }
 
     /**
-     * @param timestamp
-     *            timestamp, in UTC, of the commit. Let it blank for the builder to auto-set it at
-     *            {@link #build()} time
+     * @param timestamp timestamp, in UTC, of the commit. Let it blank for the builder to auto-set
+     *        it at {@link #build()} time
      */
     public void setTimestamp(long timestamp) {
         this.timestamp = timestamp;

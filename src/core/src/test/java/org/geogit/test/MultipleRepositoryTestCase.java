@@ -53,7 +53,7 @@ public abstract class MultipleRepositoryTestCase extends TestCase {
     protected static final String idP2 = "Points.2";
 
     protected static final String idP3 = "Points.3";
-    
+
     protected static final String idP4 = "Points.4";
 
     protected static final String pointsNs = "http://geogit.points";
@@ -71,12 +71,15 @@ public abstract class MultipleRepositoryTestCase extends TestCase {
     protected Feature points2;
 
     protected Feature points3;
-    
+
     protected Feature points_conflicting1_1;
+
     protected Feature points_conflicting2_2;
+
     protected Feature points_conflicting3_3;
+
     protected Feature points_conflicting4_4;
-    
+
     protected Feature points3_modify;
 
     protected static final String linesNs = "http://geogit.lines";
@@ -96,19 +99,19 @@ public abstract class MultipleRepositoryTestCase extends TestCase {
     protected Feature lines3;
 
     protected Repository[] repos;
-    
+
     protected final Logger LOGGER;
 
     // prevent recursion
     private boolean setup = false;
 
     protected RepositoryDatabase repositoryDatabase;
-    
+
     protected int numberOfRepos;
-    
+
     protected static final String GEOGIT_URL = "http://localhost:8080/geoserver/geogit";
-    
-    public MultipleRepositoryTestCase( int numberOfRepos ) {
+
+    public MultipleRepositoryTestCase(int numberOfRepos) {
         super();
         LOGGER = Logging.getLogger(getClass());
         this.numberOfRepos = numberOfRepos;
@@ -116,32 +119,37 @@ public abstract class MultipleRepositoryTestCase extends TestCase {
 
     @Override
     protected final void setUp() throws Exception {
-        
+
         if (setup) {
             throw new IllegalStateException("Are you calling super.setUp()!?");
         }
         setup = true;
         Logging.ALL.forceMonolineConsoleOutput();
-        
+
         repos = new Repository[numberOfRepos];
 
-        for (int i=0;i<numberOfRepos;i++){
+        for (int i = 0; i < numberOfRepos; i++) {
 
             Repository repo = createRepo(i, true);
-    
+
             pointsType = DataUtilities.createType(pointsNs, pointsName, pointsTypeSpec);
-    
+
             points1 = feature(pointsType, idP1, "StringProp1_1", new Integer(1000), "POINT(1 1)");
             points2 = feature(pointsType, idP2, "StringProp1_2", new Integer(2000), "POINT(2 2)");
             points3 = feature(pointsType, idP3, "StringProp1_3", new Integer(3000), "POINT(3 3)");
-            points3_modify = feature(pointsType, idP3, "StringProp1_3", new Integer(3000), "POINT(3 5)");
-            points_conflicting1_1 = feature(pointsType, idP4, "StringProp1_3", new Integer(1000), "POINT(1 1)");
-            points_conflicting2_2 = feature(pointsType, idP4, "StringProp1_3", new Integer(2000), "POINT(2 2)");
-            points_conflicting3_3 = feature(pointsType, idP4, "StringProp1_3", new Integer(3000), "POINT(3 3)");
-            points_conflicting4_4 = feature(pointsType, idP4, "StringProp1_3", new Integer(4000), "POINT(4 4)");
+            points3_modify = feature(pointsType, idP3, "StringProp1_3", new Integer(3000),
+                    "POINT(3 5)");
+            points_conflicting1_1 = feature(pointsType, idP4, "StringProp1_3", new Integer(1000),
+                    "POINT(1 1)");
+            points_conflicting2_2 = feature(pointsType, idP4, "StringProp1_3", new Integer(2000),
+                    "POINT(2 2)");
+            points_conflicting3_3 = feature(pointsType, idP4, "StringProp1_3", new Integer(3000),
+                    "POINT(3 3)");
+            points_conflicting4_4 = feature(pointsType, idP4, "StringProp1_3", new Integer(4000),
+                    "POINT(4 4)");
 
             linesType = DataUtilities.createType(linesNs, linesName, linesTypeSpec);
-    
+
             lines1 = feature(linesType, idL1, "StringProp2_1", new Integer(1000),
                     "LINESTRING(1 1, 2 2)");
             lines2 = feature(linesType, idL2, "StringProp2_2", new Integer(2000),
@@ -155,12 +163,12 @@ public abstract class MultipleRepositoryTestCase extends TestCase {
         setUpInternal();
     }
 
-    protected Repository createRepo( int i, boolean delete ) throws IOException {
-        final File envHome = new File(new File("target/project"+i), "geogit");
+    protected Repository createRepo(int i, boolean delete) throws IOException {
+        final File envHome = new File(new File("target/project" + i), "geogit");
         final File repositoryHome = new File(envHome, "repository");
         final File indexHome = new File(envHome, "index");
-   
-        if (delete){
+
+        if (delete) {
             FileUtils.deleteDirectory(envHome);
             repositoryHome.mkdirs();
             indexHome.mkdirs();
@@ -175,11 +183,11 @@ public abstract class MultipleRepositoryTestCase extends TestCase {
 
         Environment stagingEnvironment;
         stagingEnvironment = esb.buildEnvironment(indexHome, bdbEnvProperties);
-   
+
         repositoryDatabase = new JERepositoryDatabase(environment, stagingEnvironment);
 
         Repository repo = new Repository(repositoryDatabase, envHome);
-   
+
         repo.create();
         return repo;
     }
@@ -225,7 +233,7 @@ public abstract class MultipleRepositoryTestCase extends TestCase {
         }
         return builder.buildFeature(id);
     }
-    
+
     /**
      * Inserts the Feature to the index and stages it to be committed.
      */
@@ -246,17 +254,18 @@ public abstract class MultipleRepositoryTestCase extends TestCase {
         String id = feature.getIdentifier().getID();
 
         WrappedSerialisingFactory fact = WrappedSerialisingFactory.getInstance();
-        Ref ref = index.inserted(fact.createFeatureWriter(feature), feature.getBounds(), namespaceURI, localPart, id);
+        Ref ref = index.inserted(fact.createFeatureWriter(feature), feature.getBounds(),
+                namespaceURI, localPart, id);
         ObjectId objectId = ref.getObjectId();
         return objectId;
     }
-    
+
     protected void assertContains(List<ObjectId> parentIds, RevCommit... commits) {
         for (RevCommit commit : commits) {
             assertTrue(parentIds.contains(commit.getId()));
         }
     }
-    
+
     protected <E> List<E> toList(Iterator<E> logs) {
         List<E> logged = new ArrayList<E>();
         Iterators.addAll(logged, logs);

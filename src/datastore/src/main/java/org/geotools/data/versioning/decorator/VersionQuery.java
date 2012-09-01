@@ -140,11 +140,10 @@ public class VersionQuery {
                 return Collections.emptyList();
             }
 
-        } else if (Version.Action.NEXT.equals(action)
-                || Version.Action.PREVIOUS.equals(action)) {
+        } else if (Version.Action.NEXT.equals(action) || Version.Action.PREVIOUS.equals(action)) {
             /*
-             * There is no reference point for NEXT/PREVIOUS, so we're going to
-             * leave them with nothing.
+             * There is no reference point for NEXT/PREVIOUS, so we're going to leave them with
+             * nothing.
              */
             return featureRefs;
         } else if (Version.Action.FIRST.equals(action)) {
@@ -225,8 +224,7 @@ public class VersionQuery {
             Ref nsRef = commitTree.get(typeName.getNamespaceURI());
             RevTree nsTree = ggit.getRepository().getTree(nsRef.getObjectId());
             Ref typeRef = nsTree.get(typeName.getLocalPart());
-            RevTree typeTree = ggit.getRepository().getTree(
-                    typeRef.getObjectId());
+            RevTree typeTree = ggit.getRepository().getTree(typeRef.getObjectId());
             Iterator<Ref> it = typeTree.iterator(null);
 
             while (it.hasNext()) {
@@ -252,8 +250,8 @@ public class VersionQuery {
 
     /**
      * @param id
-     * @return an iterator for all the requested versions of a given feature, or
-     *         the empty iterator if no such feature is found.
+     * @return an iterator for all the requested versions of a given feature, or the empty iterator
+     *         if no such feature is found.
      * @throws Exception
      */
     public Iterator<Ref> get(final ResourceId id) throws Exception {
@@ -261,15 +259,12 @@ public class VersionQuery {
         final String featureVersion = id.getFeatureVersion();
 
         final Version version = id.getVersion();
-        final boolean isDateRangeQuery = id.getStartTime() != null
-                || id.getEndTime() != null;
+        final boolean isDateRangeQuery = id.getStartTime() != null || id.getEndTime() != null;
         final boolean isVesionQuery = !version.isEmpty();
 
-        final Ref requestedVersionRef = extractRequestedVersion(ggit,
-                featureId, featureVersion);
+        final Ref requestedVersionRef = extractRequestedVersion(ggit, featureId, featureVersion);
         {
-            final boolean explicitVersionQuery = !isDateRangeQuery
-                    && !isVesionQuery;
+            final boolean explicitVersionQuery = !isDateRangeQuery && !isVesionQuery;
             if (explicitVersionQuery) {
                 if (requestedVersionRef == null) {
                     return Iterators.emptyIterator();
@@ -290,14 +285,12 @@ public class VersionQuery {
 
         if (isDateRangeQuery) {
             // time range query, limit commits by time range, if speficied
-            Date startTime = id.getStartTime() == null ? new Date(0L) : id
-                    .getStartTime();
-            Date endTime = id.getEndTime() == null ? new Date(Long.MAX_VALUE)
-                    : id.getEndTime();
+            Date startTime = id.getStartTime() == null ? new Date(0L) : id.getStartTime();
+            Date endTime = id.getEndTime() == null ? new Date(Long.MAX_VALUE) : id.getEndTime();
             boolean isMinIncluded = true;
             boolean isMaxIncluded = true;
-            Range<Date> timeRange = new Range<Date>(Date.class, startTime,
-                    isMinIncluded, endTime, isMaxIncluded);
+            Range<Date> timeRange = new Range<Date>(Date.class, startTime, isMinIncluded, endTime,
+                    isMaxIncluded);
             logOp.setTimeRange(timeRange);
         }
 
@@ -305,8 +298,7 @@ public class VersionQuery {
         Iterator<RevCommit> featureCommits = logOp.call();
 
         if (isDateRangeQuery) {
-            List<Ref> allInAscendingOrder = getAllInAscendingOrder(ggit,
-                    featureCommits, featureId);
+            List<Ref> allInAscendingOrder = getAllInAscendingOrder(ggit, featureCommits, featureId);
             result.addAll(allInAscendingOrder);
         } else if (isVesionQuery) {
             if (version.isDateTime()) {
@@ -314,15 +306,13 @@ public class VersionQuery {
                 RevCommit closest = findClosest(validAsOf, featureCommits);
                 if (closest != null) {
                     featureCommits = Iterators.singletonIterator(closest);
-                    result.addAll(getAllInAscendingOrder(ggit, featureCommits,
-                            featureId));
+                    result.addAll(getAllInAscendingOrder(ggit, featureCommits, featureId));
                 }
             } else if (version.isIndex()) {
                 final int requestIndex = version.getIndex().intValue();
                 final int listIndex = requestIndex - 1;// version indexing
                                                        // starts at 1
-                List<Ref> allVersions = getAllInAscendingOrder(ggit,
-                        featureCommits, featureId);
+                List<Ref> allVersions = getAllInAscendingOrder(ggit, featureCommits, featureId);
                 if (allVersions.size() > 0) {
                     if (allVersions.size() >= requestIndex) {
                         result.add(allVersions.get(listIndex));
@@ -332,8 +322,8 @@ public class VersionQuery {
                 }
             } else if (version.isVersionAction()) {
                 final Action versionAction = version.getVersionAction();
-                List<Ref> allInAscendingOrder = getAllInAscendingOrder(ggit,
-                        featureCommits, featureId);
+                List<Ref> allInAscendingOrder = getAllInAscendingOrder(ggit, featureCommits,
+                        featureId);
                 switch (versionAction) {
                 case ALL:
                     result.addAll(allInAscendingOrder);
@@ -345,8 +335,7 @@ public class VersionQuery {
                     break;
                 case LAST:
                     if (allInAscendingOrder.size() > 0) {
-                        result.add(allInAscendingOrder.get(allInAscendingOrder
-                                .size() - 1));
+                        result.add(allInAscendingOrder.get(allInAscendingOrder.size() - 1));
                     }
                     break;
                 case NEXT:
@@ -356,8 +345,7 @@ public class VersionQuery {
                     }
                     break;
                 case PREVIOUS:
-                    Ref previous = previous(requestedVersionRef,
-                            allInAscendingOrder);
+                    Ref previous = previous(requestedVersionRef, allInAscendingOrder);
                     if (previous != null) {
                         result.add(previous);
                     }
@@ -370,8 +358,7 @@ public class VersionQuery {
         return result.iterator();
     }
 
-    private RevCommit findClosest(final Date date,
-            Iterator<RevCommit> commitsInDescendingOrder) {
+    private RevCommit findClosest(final Date date, Iterator<RevCommit> commitsInDescendingOrder) {
         final long requestedTime = date.getTime();
         RevCommit closest = null;
         while (commitsInDescendingOrder.hasNext()) {
@@ -380,8 +367,7 @@ public class VersionQuery {
                 closest = current;
             } else {
                 long delta = Math.abs(current.getTimestamp() - requestedTime);
-                long prevDelta = Math.abs(closest.getTimestamp()
-                        - requestedTime);
+                long prevDelta = Math.abs(closest.getTimestamp() - requestedTime);
                 if (delta < prevDelta) {
                     closest = current;
                 }
@@ -423,9 +409,8 @@ public class VersionQuery {
         return -1;
     }
 
-    private List<Ref> getAllInAscendingOrder(final GeoGIT ggit,
-            final Iterator<RevCommit> commits, final String featureId)
-            throws Exception {
+    private List<Ref> getAllInAscendingOrder(final GeoGIT ggit, final Iterator<RevCommit> commits,
+            final String featureId) throws Exception {
 
         LinkedList<Ref> featureRefs = new LinkedList<Ref>();
 
@@ -435,8 +420,8 @@ public class VersionQuery {
             RevCommit commit = commits.next();
             ObjectId commitId = commit.getId();
             ObjectId parentCommitId = commit.getParentIds().get(0);
-            DiffOp diffOp = ggit.diff().setOldVersion(parentCommitId)
-                    .setNewVersion(commitId).setFilter(path);
+            DiffOp diffOp = ggit.diff().setOldVersion(parentCommitId).setNewVersion(commitId)
+                    .setFilter(path);
             Iterator<DiffEntry> diffs = diffOp.call();
             Preconditions.checkState(diffs.hasNext());
             DiffEntry diff = diffs.next();
@@ -454,21 +439,20 @@ public class VersionQuery {
     }
 
     /**
-     * Extracts the feature version from the given {@code rid} if supplied, or
-     * finds out the current feature version from the feature id otherwise.
+     * Extracts the feature version from the given {@code rid} if supplied, or finds out the current
+     * feature version from the feature id otherwise.
      * 
-     * @return the version identifier of the feature given by {@code version},
-     *         or at the current geogit HEAD if {@code version == null}, or
-     *         {@code null} if such a feature does not exist.
+     * @return the version identifier of the feature given by {@code version}, or at the current
+     *         geogit HEAD if {@code version == null}, or {@code null} if such a feature does not
+     *         exist.
      */
-    private Ref extractRequestedVersion(final GeoGIT ggit,
-            final String featureId, final String version) {
+    private Ref extractRequestedVersion(final GeoGIT ggit, final String featureId,
+            final String version) {
         final Repository repository = ggit.getRepository();
         if (version != null) {
             ObjectId versionedId = ObjectId.valueOf(version);
             // verify the object exists
-            StagingDatabase stagingDatabase = repository.getIndex()
-                    .getDatabase();
+            StagingDatabase stagingDatabase = repository.getIndex().getDatabase();
             boolean exists = stagingDatabase.exists(versionedId);
             // Ref rootTreeChild = repository.getRootTreeChild(path(featureId));
             if (exists) {

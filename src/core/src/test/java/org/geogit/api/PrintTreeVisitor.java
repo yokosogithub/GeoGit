@@ -67,7 +67,8 @@ public class PrintTreeVisitor implements TreeVisitor {
             indent();
             print("order/bucket: " + depth + "/" + bucket);
             printlimit = 0;
-            RevTree tree = odb.get(treeId, WrappedSerialisingFactory.getInstance().createRevTreeReader(odb, depth));
+            RevTree tree = odb.get(treeId, WrappedSerialisingFactory.getInstance()
+                    .createRevTreeReader(odb, depth));
             tree.accept(this);
             depth--;
         } catch (IOException e) {

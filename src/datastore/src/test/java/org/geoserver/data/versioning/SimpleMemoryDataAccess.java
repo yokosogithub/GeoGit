@@ -68,8 +68,7 @@ import org.opengis.referencing.crs.CoordinateReferenceSystem;
  * <li>FeatureListenerManager use: allows handling of FeatureEvents</li>
  * </ul>
  * <p>
- * This class will also illustrate the use of In-Process locking when the time
- * comes.
+ * This class will also illustrate the use of In-Process locking when the time comes.
  * </p>
  * 
  * @author jgarnett
@@ -78,8 +77,7 @@ import org.opengis.referencing.crs.CoordinateReferenceSystem;
 public class SimpleMemoryDataAccess extends AbstractDataStore implements
         DataAccess<SimpleFeatureType, SimpleFeature> {
 
-    private static final Logger LOGGER = Logging
-            .getLogger(SimpleMemoryDataAccess.class);
+    private static final Logger LOGGER = Logging.getLogger(SimpleMemoryDataAccess.class);
 
     /** Memory holds Map of Feature by fid by typeName. */
     protected Map<Name, Map<String, SimpleFeature>> memory = new LinkedHashMap<Name, Map<String, SimpleFeature>>();
@@ -88,11 +86,9 @@ public class SimpleMemoryDataAccess extends AbstractDataStore implements
     protected Map<Name, SimpleFeatureType> schema = new HashMap<Name, SimpleFeatureType>();
 
     /**
-     * Construct an MemoryDataStore around an empty collection of the provided
-     * FeatureType
+     * Construct an MemoryDataStore around an empty collection of the provided FeatureType
      * 
-     * @param schema An empty feature collection of this type will be made
-     *        available
+     * @param schema An empty feature collection of this type will be made available
      */
     public SimpleMemoryDataAccess(SimpleFeatureType featureType) {
         Map<String, SimpleFeature> featureMap = new LinkedHashMap<String, SimpleFeature>();
@@ -150,13 +146,11 @@ public class SimpleMemoryDataAccess extends AbstractDataStore implements
             featureType = feature.getType();
             typeName = featureType.getName();
 
-            featureMap.put(feature.getIdentifier().getID(),
-                    (SimpleFeature) feature);
+            featureMap.put(feature.getIdentifier().getID(), (SimpleFeature) feature);
 
             while (reader.hasNext()) {
                 feature = reader.next();
-                featureMap.put(feature.getIdentifier().getID(),
-                        (SimpleFeature) feature);
+                featureMap.put(feature.getIdentifier().getID(), (SimpleFeature) feature);
             }
 
             schema.put(typeName, (SimpleFeatureType) featureType);
@@ -192,13 +186,11 @@ public class SimpleMemoryDataAccess extends AbstractDataStore implements
             featureType = feature.getType();
             typeName = featureType.getName();
 
-            featureMap.put(feature.getIdentifier().getID(),
-                    (SimpleFeature) feature);
+            featureMap.put(feature.getIdentifier().getID(), (SimpleFeature) feature);
 
             while (reader.hasNext()) {
                 feature = reader.next();
-                featureMap.put(feature.getIdentifier().getID(),
-                        (SimpleFeature) feature);
+                featureMap.put(feature.getIdentifier().getID(), (SimpleFeature) feature);
             }
 
             schema.put(typeName, (SimpleFeatureType) featureType);
@@ -219,8 +211,7 @@ public class SimpleMemoryDataAccess extends AbstractDataStore implements
      */
     public void addFeatures(Collection<?> collection) {
         if ((collection == null) || collection.isEmpty()) {
-            throw new IllegalArgumentException(
-                    "Provided FeatureCollection is empty");
+            throw new IllegalArgumentException("Provided FeatureCollection is empty");
         }
 
         synchronized (memory) {
@@ -232,8 +223,7 @@ public class SimpleMemoryDataAccess extends AbstractDataStore implements
 
     public void addFeatures(FeatureCollection collection) {
         if ((collection == null)) {
-            throw new IllegalArgumentException(
-                    "Provided FeatureCollection is null");
+            throw new IllegalArgumentException("Provided FeatureCollection is null");
         }
         synchronized (memory) {
             try {
@@ -269,8 +259,8 @@ public class SimpleMemoryDataAccess extends AbstractDataStore implements
     /**
      * Adds a single Feature to the correct typeName entry.
      * <p>
-     * This is an internal opperation used for setting up MemoryDataStore -
-     * please use FeatureWriter for generatl use.
+     * This is an internal opperation used for setting up MemoryDataStore - please use FeatureWriter
+     * for generatl use.
      * </p>
      * <p>
      * This method is willing to create new FeatureTypes for MemoryDataStore.
@@ -307,12 +297,11 @@ public class SimpleMemoryDataAccess extends AbstractDataStore implements
         }
 
         featuresMap = memory.get(typeName);
-        featuresMap.put(feature.getIdentifier().getID(),
-                (SimpleFeature) feature);
+        featuresMap.put(feature.getIdentifier().getID(), (SimpleFeature) feature);
     }
 
-    protected Map<String, SimpleFeature> features(final String nsUri,
-            final String typeName) throws IOException {
+    protected Map<String, SimpleFeature> features(final String nsUri, final String typeName)
+            throws IOException {
         synchronized (memory) {
             for (Name name : memory.keySet()) {
                 if (nsUri == null && name.getLocalPart().equals(typeName)) {
@@ -334,8 +323,7 @@ public class SimpleMemoryDataAccess extends AbstractDataStore implements
      * @return A Map of Features by FID
      * @throws IOException If typeName cannot be found
      */
-    protected Map<String, SimpleFeature> features(Name typeName)
-            throws IOException {
+    protected Map<String, SimpleFeature> features(Name typeName) throws IOException {
         synchronized (memory) {
             if (memory.containsKey(typeName)) {
                 return memory.get(typeName);
@@ -348,8 +336,8 @@ public class SimpleMemoryDataAccess extends AbstractDataStore implements
     /**
      * Adds support for a new featureType to MemoryDataStore.
      * <p>
-     * FeatureTypes are stored by typeName, an IOException will be thrown if the
-     * requested typeName is already in use.
+     * FeatureTypes are stored by typeName, an IOException will be thrown if the requested typeName
+     * is already in use.
      * </p>
      * 
      * @param featureType FeatureType to be added
@@ -369,20 +357,18 @@ public class SimpleMemoryDataAccess extends AbstractDataStore implements
         memory.put(name, featuresMap);
     }
 
-    private FeatureReader getFeatureReader(final Name typeName)
-            throws IOException {
+    private FeatureReader getFeatureReader(final Name typeName) throws IOException {
         return new FeatureReader<FeatureType, Feature>() {
             FeatureType featureType = getSchema(typeName);
 
-            Iterator<SimpleFeature> iterator = features(typeName).values()
-                    .iterator();
+            Iterator<SimpleFeature> iterator = features(typeName).values().iterator();
 
             public FeatureType getFeatureType() {
                 return featureType;
             }
 
-            public Feature next() throws IOException,
-                    IllegalAttributeException, NoSuchElementException {
+            public Feature next() throws IOException, IllegalAttributeException,
+                    NoSuchElementException {
                 if (iterator == null) {
                     throw new IOException("Feature Reader has been closed");
                 }
@@ -395,8 +381,7 @@ public class SimpleMemoryDataAccess extends AbstractDataStore implements
                     // TODO: clone complex Feature
                     return next;
                 } catch (NoSuchElementException end) {
-                    throw new DataSourceException("There are no more Features",
-                            end);
+                    throw new DataSourceException("There are no more Features", end);
                 }
             }
 
@@ -429,14 +414,12 @@ public class SimpleMemoryDataAccess extends AbstractDataStore implements
      * @see org.geotools.data.AbstractDataStore#getFeatureSource(java.lang.String)
      */
     public FeatureWriter<SimpleFeatureType, SimpleFeature> createFeatureWriter(
-            final String typeName, final Transaction transaction)
-            throws IOException {
+            final String typeName, final Transaction transaction) throws IOException {
 
         return new FeatureWriter<SimpleFeatureType, SimpleFeature>() {
             SimpleFeatureType featureType = getSchema(typeName);
 
-            Map<String, SimpleFeature> contents = features(featureType
-                    .getName());
+            Map<String, SimpleFeature> contents = features(featureType.getName());
 
             Iterator<SimpleFeature> iterator = contents.values().iterator();
 
@@ -448,8 +431,7 @@ public class SimpleMemoryDataAccess extends AbstractDataStore implements
                 return featureType;
             }
 
-            public SimpleFeature next() throws IOException,
-                    NoSuchElementException {
+            public SimpleFeature next() throws IOException, NoSuchElementException {
                 if (hasNext()) {
                     // existing content
                     live = iterator.next();
@@ -457,20 +439,18 @@ public class SimpleMemoryDataAccess extends AbstractDataStore implements
                     try {
                         current = SimpleFeatureBuilder.copy(live);
                     } catch (IllegalAttributeException e) {
-                        throw new DataSourceException("Unable to edit "
-                                + live.getID() + " of " + typeName);
+                        throw new DataSourceException("Unable to edit " + live.getID() + " of "
+                                + typeName);
                     }
                 } else {
                     // new content
                     live = null;
 
                     try {
-                        current = SimpleFeatureBuilder.template(featureType,
-                                null);
+                        current = SimpleFeatureBuilder.template(featureType, null);
                     } catch (IllegalAttributeException e) {
-                        throw new DataSourceException(
-                                "Unable to add additional Features of "
-                                        + typeName);
+                        throw new DataSourceException("Unable to add additional Features of "
+                                + typeName);
                     }
                 }
 
@@ -520,18 +500,14 @@ public class SimpleMemoryDataAccess extends AbstractDataStore implements
                         try {
                             live.setAttributes(current.getAttributes());
                         } catch (Exception e) {
-                            throw new DataSourceException(
-                                    "Unable to accept modifications to "
-                                            + live.getID() + " on " + typeName);
+                            throw new DataSourceException("Unable to accept modifications to "
+                                    + live.getID() + " on " + typeName);
                         }
 
                         ReferencedEnvelope bounds = new ReferencedEnvelope();
-                        bounds.expandToInclude(new ReferencedEnvelope(live
-                                .getBounds()));
-                        bounds.expandToInclude(new ReferencedEnvelope(current
-                                .getBounds()));
-                        listenerManager.fireFeaturesChanged(typeName,
-                                transaction, bounds, true);
+                        bounds.expandToInclude(new ReferencedEnvelope(live.getBounds()));
+                        bounds.expandToInclude(new ReferencedEnvelope(current.getBounds()));
+                        listenerManager.fireFeaturesChanged(typeName, transaction, bounds, true);
                         live = null;
                         current = null;
                     }
@@ -539,14 +515,10 @@ public class SimpleMemoryDataAccess extends AbstractDataStore implements
                     // add new content
                     //
                     String id = current.getID();
-                    if (Boolean.TRUE.equals(current.getUserData().get(
-                            Hints.USE_PROVIDED_FID))
-                            && null != current.getUserData().get(
-                                    Hints.PROVIDED_FID)) {
-                        id = (String) current.getUserData().get(
-                                Hints.PROVIDED_FID);
-                        current = SimpleFeatureBuilder.build(
-                                current.getFeatureType(),
+                    if (Boolean.TRUE.equals(current.getUserData().get(Hints.USE_PROVIDED_FID))
+                            && null != current.getUserData().get(Hints.PROVIDED_FID)) {
+                        id = (String) current.getUserData().get(Hints.PROVIDED_FID);
+                        current = SimpleFeatureBuilder.build(current.getFeatureType(),
                                 current.getAttributes(), id);
                     }
                     contents.put(id, current);
@@ -581,8 +553,7 @@ public class SimpleMemoryDataAccess extends AbstractDataStore implements
     }
 
     /**
-     * @see org.geotools.data.AbstractDataStore#getBounds(java.lang.String,
-     *      org.geotools.data.Query)
+     * @see org.geotools.data.AbstractDataStore#getBounds(java.lang.String, org.geotools.data.Query)
      */
     protected ReferencedEnvelope getBounds(Query query) throws IOException {
         String localName = query.getTypeName();
@@ -592,8 +563,7 @@ public class SimpleMemoryDataAccess extends AbstractDataStore implements
         Map<String, SimpleFeature> contents = features(nsUri, localName);
         Iterator<SimpleFeature> iterator = contents.values().iterator();
 
-        CoordinateReferenceSystem coordinateSystem = query
-                .getCoordinateSystem();
+        CoordinateReferenceSystem coordinateSystem = query.getCoordinateSystem();
         ReferencedEnvelope envelope = null;
 
         Filter filter = query.getFilter();
@@ -617,8 +587,7 @@ public class SimpleMemoryDataAccess extends AbstractDataStore implements
     }
 
     /**
-     * @see org.geotools.data.AbstractDataStore#getCount(java.lang.String,
-     *      org.geotools.data.Query)
+     * @see org.geotools.data.AbstractDataStore#getCount(java.lang.String, org.geotools.data.Query)
      */
     protected int getCount(Query query) throws IOException {
         String localName = query.getTypeName();
@@ -681,8 +650,8 @@ public class SimpleMemoryDataAccess extends AbstractDataStore implements
     }
 
     @Override
-    protected FeatureReader<SimpleFeatureType, SimpleFeature> getFeatureReader(
-            String typeName) throws IOException {
+    protected FeatureReader<SimpleFeatureType, SimpleFeature> getFeatureReader(String typeName)
+            throws IOException {
         for (Name name : getNames()) {
             if (name.getLocalPart().equals(typeName)) {
                 return getFeatureReader(name);

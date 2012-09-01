@@ -33,19 +33,17 @@ class VersionedFeatureWrapper {
         if (f instanceof SimpleFeature) {
             return (F) new SimpleFeatureWrapper((SimpleFeature) f, versionId);
         }
-        throw new UnsupportedOperationException(
-                "Non simple Features are not yet supported: " + f);
+        throw new UnsupportedOperationException("Non simple Features are not yet supported: " + f);
     }
 
-    private static final class SimpleFeatureWrapper extends DecoratingFeature
-            implements SimpleFeature {
+    private static final class SimpleFeatureWrapper extends DecoratingFeature implements
+            SimpleFeature {
         private static final FilterFactory2 FILTER_FACTORY = CommonFactoryFinder
                 .getFilterFactory2(null);
 
         private final String versionId;
 
-        public SimpleFeatureWrapper(final SimpleFeature delegate,
-                final String versionId) {
+        public SimpleFeatureWrapper(final SimpleFeature delegate, final String versionId) {
             super(delegate);
             this.versionId = versionId;
         }
@@ -72,7 +70,7 @@ class VersionedFeatureWrapper {
             }
             return super.equals(obj);
         }
-        
+
         @Override
         public int hashCode() {
             return getID().hashCode() * versionId.hashCode() * getFeatureType().hashCode();

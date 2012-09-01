@@ -41,8 +41,8 @@ public class QueryFeatureCollector implements Iterable<Feature> {
 
     private Query query;
 
-    public QueryFeatureCollector(final Repository repository,
-            final FeatureType featureType, Query query) {
+    public QueryFeatureCollector(final Repository repository, final FeatureType featureType,
+            Query query) {
         this.repository = repository;
         this.featureType = featureType;
         this.query = query;
@@ -52,8 +52,7 @@ public class QueryFeatureCollector implements Iterable<Feature> {
     public Iterator<Feature> iterator() {
 
         GeoGIT ggit = new GeoGIT(repository);
-        VersionQuery versionQuery = new VersionQuery(ggit,
-                featureType.getName());
+        VersionQuery versionQuery = new VersionQuery(ggit, featureType.getName());
         Iterator<Ref> featureRefs;
         try {
             featureRefs = versionQuery.getByQuery(query);
@@ -61,8 +60,8 @@ public class QueryFeatureCollector implements Iterable<Feature> {
             throw new RuntimeException(e);
         }
 
-        Iterator<Feature> features = Iterators.transform(featureRefs,
-                new RefToFeature(repository, featureType));
+        Iterator<Feature> features = Iterators.transform(featureRefs, new RefToFeature(repository,
+                featureType));
 
         return features;
     }
@@ -88,8 +87,8 @@ public class QueryFeatureCollector implements Iterable<Feature> {
             StagingDatabase database = repo.getIndex().getDatabase();
             Feature feature;
             try {
-                ObjectReader<Feature> featureReader = serialisingFactory
-                        .createFeatureReader(type, featureId);
+                ObjectReader<Feature> featureReader = serialisingFactory.createFeatureReader(type,
+                        featureId);
                 feature = database.get(contentId, featureReader);
                 if (!feature.getType().equals(type)) {
                     throw new IOException("Invalid feature type returned.");
@@ -97,8 +96,7 @@ public class QueryFeatureCollector implements Iterable<Feature> {
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
-            return VersionedFeatureWrapper.wrap(feature, featureRef
-                    .getObjectId().toString());
+            return VersionedFeatureWrapper.wrap(feature, featureRef.getObjectId().toString());
         }
 
     }

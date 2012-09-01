@@ -39,7 +39,8 @@ public interface RevObject {
             public int value() {
                 return 3;
             }
-        }, REMOTE {
+        },
+        REMOTE {
             @Override
             public int value() {
                 return 4;

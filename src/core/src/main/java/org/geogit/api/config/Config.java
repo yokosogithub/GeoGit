@@ -32,24 +32,32 @@ import com.google.common.base.Preconditions;
 public class Config {
 
     private static final String URL = "url";
+
     private static String CONFIG_FILE = "config";
+
     private static final String CORE = "core";
+
     private static final String REMOTE = "remote";
+
     private static final String BRANCH = "branch";
+
     private static final String FETCH = "fetch";
 
     public static final String NEW_LINE = System.getProperty("line.separator");
+
     public static final String TAB = "\t";
 
     private String owner;
 
     private Map<String, RemoteConfigObject> remotes;
+
     private Map<String, BranchConfigObject> branches;
 
     private File configFile;
+
     private Repository repo;
 
-    public Config( final Repository repo ) {
+    public Config(final Repository repo) {
         Preconditions.checkNotNull(repo);
         this.repo = repo;
         this.remotes = new HashMap<String, RemoteConfigObject>();
@@ -68,16 +76,17 @@ public class Config {
 
         readConfig();
     }
-    private void addBranch( BranchConfigObject branchConfigObject ) {
+
+    private void addBranch(BranchConfigObject branchConfigObject) {
         this.branches.put(branchConfigObject.getName(), branchConfigObject);
         writeConfig();
     }
 
-    public RemoteConfigObject getRemote( String remoteName ) {
+    public RemoteConfigObject getRemote(String remoteName) {
         return remotes.get(remoteName);
     }
 
-    public void addRemoteConfigObject( final RemoteConfigObject rs ) {
+    public void addRemoteConfigObject(final RemoteConfigObject rs) {
         this.remotes.put(rs.getName(), rs);
         writeConfig();
     }
@@ -90,7 +99,7 @@ public class Config {
         Scanner scanner = null;
         try {
             scanner = new Scanner(new FileReader(configFile));
-            while( scanner.hasNextLine() ) {
+            while (scanner.hasNextLine()) {
                 String line = scanner.nextLine();
                 processLine: {
                     if (line.startsWith("[")) {
@@ -127,7 +136,7 @@ public class Config {
      * 
      * @param scanner
      */
-    protected void processBranchConfig( final String header, final Scanner scanner ) {
+    protected void processBranchConfig(final String header, final Scanner scanner) {
         String remoteName = extractHeaderName(header);
 
         String remote = extractValue(scanner.nextLine().trim());
@@ -145,7 +154,7 @@ public class Config {
      * 
      * @param scanner
      */
-    protected void processRemoteConfig( final String header, final Scanner scanner ) {
+    protected void processRemoteConfig(final String header, final Scanner scanner) {
         String remoteName = extractHeaderName(header);
 
         String fetch = extractValue(scanner.nextLine().trim());
@@ -156,7 +165,7 @@ public class Config {
 
     }
 
-    private String extractValue( String line ) {
+    private String extractValue(String line) {
         Scanner valueScanner = new Scanner(line.trim());
         valueScanner.useDelimiter("=");
         valueScanner.next(); // skip value
@@ -165,12 +174,12 @@ public class Config {
         return retStr.trim();
     }
 
-    private String extractHeaderName( final String header ) {
+    private String extractHeaderName(final String header) {
         Pattern pattern = Pattern.compile("\"(.*?)\"");
         Matcher matcher = pattern.matcher(header);
         String remoteName = "";
 
-        while( matcher.find() ) {
+        while (matcher.find()) {
             remoteName = header.substring(matcher.start() + 1, matcher.end() - 1);
         }
         return remoteName;
@@ -185,14 +194,14 @@ public class Config {
             out.write("[core]" + NEW_LINE);
 
             // write branches
-            for( BranchConfigObject branch : branches.values() ) {
+            for (BranchConfigObject branch : branches.values()) {
                 out.write("[branch \"" + branch.getName() + "\"]" + NEW_LINE);
                 out.write(TAB + "fetch = " + branch.getRemote() + NEW_LINE);
                 out.write(TAB + "merge = " + branch.getMerge() + NEW_LINE);
             }
 
             // write remotes
-            for( RemoteConfigObject remote : remotes.values() ) {
+            for (RemoteConfigObject remote : remotes.values()) {
                 out.write("[remote \"" + remote.getName() + "\"]" + NEW_LINE);
                 out.write(TAB + "fetch = " + remote.getFetch() + NEW_LINE);
                 out.write(TAB + "url = " + remote.getUrl() + NEW_LINE);
@@ -216,6 +225,7 @@ public class Config {
     public Map<String, RemoteConfigObject> getRemotes() {
         return this.remotes;
     }
+
     public Map<String, BranchConfigObject> getBranches() {
         return this.branches;
     }

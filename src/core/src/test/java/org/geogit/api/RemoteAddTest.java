@@ -15,10 +15,13 @@ import org.geogit.test.RepositoryTestCase;
 public class RemoteAddTest extends RepositoryTestCase {
 
     private RefDatabase refDb;
+
     private GeoGIT ggit;
+
     private RemoteConfigObject remote;
+
     private BranchConfigObject branch;
-    
+
     @Override
     protected void setUpInternal() throws Exception {
         ggit = new GeoGIT(repo);
@@ -40,8 +43,10 @@ public class RemoteAddTest extends RepositoryTestCase {
     }
 
     public void testNewRemote() {
-        ggit.remoteAddOp().setName(remote.getName()).setFetch(remote.getFetch()).setUrl(remote.getUrl()).call();
-        assertEquals(ObjectId.NULL, refDb.getRef(Ref.REMOTES_PREFIX+"john"+"/"+Ref.MASTER).getObjectId());
+        ggit.remoteAddOp().setName(remote.getName()).setFetch(remote.getFetch())
+                .setUrl(remote.getUrl()).call();
+        assertEquals(ObjectId.NULL, refDb.getRef(Ref.REMOTES_PREFIX + "john" + "/" + Ref.MASTER)
+                .getObjectId());
         assertEquals(1, refDb.getRefs(Ref.REMOTES_PREFIX).size());
     }
 
@@ -49,11 +54,11 @@ public class RemoteAddTest extends RepositoryTestCase {
         byte[] raw = new byte[20];
         Arrays.fill(raw, (byte) 1);
         ObjectId oid = new ObjectId(raw);
-        Ref ref = new Ref(Ref.REMOTES_PREFIX+remote.getName(), oid, TYPE.COMMIT);
+        Ref ref = new Ref(Ref.REMOTES_PREFIX + remote.getName(), oid, TYPE.COMMIT);
         assertTrue(refDb.put(ref));
         assertFalse(refDb.put(ref));
 
-        Ref read = refDb.getRef(Ref.REMOTES_PREFIX+remote.getName());
+        Ref read = refDb.getRef(Ref.REMOTES_PREFIX + remote.getName());
         assertNotSame(ref, read);
         assertEquals(ref, read);
     }

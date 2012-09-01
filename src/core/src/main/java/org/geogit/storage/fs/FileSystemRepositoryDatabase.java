@@ -27,7 +27,7 @@ public class FileSystemRepositoryDatabase implements RepositoryDatabase {
 
         FileObjectDatabase stagingObjectDb = new FileObjectDatabase(stagingEnvironment);
         throw new UnsupportedOperationException("need to revisit here");
-        //this.stagingDatabase = new StagingDatabase(repositoryObjectDb, stagingObjectDb);
+        // this.stagingDatabase = new StagingDatabase(repositoryObjectDb, stagingObjectDb);
     }
 
     @Override

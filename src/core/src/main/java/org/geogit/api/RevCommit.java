@@ -39,8 +39,7 @@ public class RevCommit extends AbstractRevObject {
     }
 
     /**
-     * @param treeId
-     *            the treeId to set
+     * @param treeId the treeId to set
      */
     public void setTreeId(ObjectId treeId) {
         this.treeId = treeId;
@@ -55,8 +54,7 @@ public class RevCommit extends AbstractRevObject {
     }
 
     /**
-     * @param parentIds
-     *            the parentIds to set
+     * @param parentIds the parentIds to set
      */
     public void setParentIds(List<ObjectId> parentIds) {
         this.parentIds = parentIds;
@@ -70,8 +68,7 @@ public class RevCommit extends AbstractRevObject {
     }
 
     /**
-     * @param author
-     *            the author to set
+     * @param author the author to set
      */
     public void setAuthor(String author) {
         this.author = author;
@@ -85,8 +82,7 @@ public class RevCommit extends AbstractRevObject {
     }
 
     /**
-     * @param committer
-     *            the committer to set
+     * @param committer the committer to set
      */
     public void setCommitter(String committer) {
         this.committer = committer;
@@ -100,8 +96,7 @@ public class RevCommit extends AbstractRevObject {
     }
 
     /**
-     * @param message
-     *            the message to set
+     * @param message the message to set
      */
     public void setMessage(String message) {
         this.message = message;
@@ -117,8 +112,7 @@ public class RevCommit extends AbstractRevObject {
     }
 
     /**
-     * @param timestamp
-     *            the timestamp to set
+     * @param timestamp the timestamp to set
      */
     public void setTimestamp(long timestamp) {
         this.timestamp = timestamp;

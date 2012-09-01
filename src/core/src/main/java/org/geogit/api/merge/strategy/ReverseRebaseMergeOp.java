@@ -32,9 +32,8 @@ import com.google.common.collect.Iterators;
  * Very simple merge; to push the HEAD up to the current remotes head.
  * </p>
  * <p>
- * This will rebase if there are no new commits on this repo. Otherwise it will
- * create a new commit head and set the parents the old head and the branch
- * head.
+ * This will rebase if there are no new commits on this repo. Otherwise it will create a new commit
+ * head and set the parents the old head and the branch head.
  * </p>
  * 
  * @author jhudson
@@ -42,153 +41,148 @@ import com.google.common.collect.Iterators;
  */
 public class ReverseRebaseMergeOp extends AbstractMergeOp {
 
-	public ReverseRebaseMergeOp() {
-		super();
-	}
+    public ReverseRebaseMergeOp() {
+        super();
+    }
 
-	public MergeResult call() throws Exception {
-		MergeResult mergeResult = new MergeResult();
+    public MergeResult call() throws Exception {
+        MergeResult mergeResult = new MergeResult();
 
-		/*
-		 * just in case
-		 */
-		if (branch == null) {
-			return mergeResult;
-		}
+        /*
+         * just in case
+         */
+        if (branch == null) {
+            return mergeResult;
+        }
 
-		/*
-		 * Grab old head - this will be used to find all the new 
-		 * commits above what our current head is.
-		 */
-		RevCommit oldHead;
-		
-		Ref head = getRepository().getHead();
-		if (!ObjectId.NULL.equals(head.getObjectId())) {
-			oldHead = getRepository().getCommit(getRepository().getHead().getObjectId());
-		} else {
-			/*
-			 * current head is 000...000 so just grab the top commit - its now the index. 
-			 * rebase to it
-			 */
-			rebase();
-			return mergeResult;
-		}
+        /*
+         * Grab old head - this will be used to find all the new commits above what our current head
+         * is.
+         */
+        RevCommit oldHead;
 
-		/*
-		 * Work out if this is a rebase or a merge
-		 */
-		LogOp l = new LogOp(getRepository());
-		Iterator<RevCommit> s = l.setSince(oldHead.getId()).call();
+        Ref head = getRepository().getHead();
+        if (!ObjectId.NULL.equals(head.getObjectId())) {
+            oldHead = getRepository().getCommit(getRepository().getHead().getObjectId());
+        } else {
+            /*
+             * current head is 000...000 so just grab the top commit - its now the index. rebase to
+             * it
+             */
+            rebase();
+            return mergeResult;
+        }
 
-		if (Iterators.contains(s, oldHead)) { /* rebase */
-			rebase();
-		} else { /* merge - new commit head and add parents of both branches */
-			/*
-			 * New head
-			 */
-			final ObjectId commitId;
-			final RevCommit branchHead;
-			{
-				/*
-				 * Grab branch head parents
-				 */
-				branchHead = getRepository().getCommit(branch.getObjectId());
+        /*
+         * Work out if this is a rebase or a merge
+         */
+        LogOp l = new LogOp(getRepository());
+        Iterator<RevCommit> s = l.setSince(oldHead.getId()).call();
 
-				/*
-				 * Grab the branch split
-				 */
-				RevCommit branchSplit = MergeUtils.findBranchCommitSplit(
-						branchHead, getRepository());
+        if (Iterators.contains(s, oldHead)) { /* rebase */
+            rebase();
+        } else { /* merge - new commit head and add parents of both branches */
+            /*
+             * New head
+             */
+            final ObjectId commitId;
+            final RevCommit branchHead;
+            {
+                /*
+                 * Grab branch head parents
+                 */
+                branchHead = getRepository().getCommit(branch.getObjectId());
 
-				/*
-				 * Set the parents to the current master head commit - thus
-				 * moving it to 'above' the head
-				 */
-				List<ObjectId> newParents = new ArrayList<ObjectId>();
-				newParents.add(oldHead.getId());
-				branchSplit.setParentIds(newParents);
+                /*
+                 * Grab the branch split
+                 */
+                RevCommit branchSplit = MergeUtils.findBranchCommitSplit(branchHead,
+                        getRepository());
 
-				CommitBuilder cb = new CommitBuilder();
+                /*
+                 * Set the parents to the current master head commit - thus moving it to 'above' the
+                 * head
+                 */
+                List<ObjectId> newParents = new ArrayList<ObjectId>();
+                newParents.add(oldHead.getId());
+                branchSplit.setParentIds(newParents);
 
-				/*
-				 * Merge the trees
-				 */
-				ObjectId treeId = mergeTrees(oldHead.getId(),
-						branchHead.getId());
+                CommitBuilder cb = new CommitBuilder();
 
-				/*
-				 * add the parents
-				 */
-				List<ObjectId> parents = Arrays.asList(branchHead.getId());
-				cb.setParentIds(parents);
-				cb.setTreeId(treeId);
-				cb.setMessage(this.comment);
+                /*
+                 * Merge the trees
+                 */
+                ObjectId treeId = mergeTrees(oldHead.getId(), branchHead.getId());
 
-				/*
-				 * insert the new commit
-				 */
-				ObjectInserter objectInserter = getRepository()
-						.newObjectInserter();
-				commitId = objectInserter.insert(WrappedSerialisingFactory
-						.getInstance().createCommitWriter(
-								cb.build(ObjectId.NULL)));
-			}
+                /*
+                 * add the parents
+                 */
+                List<ObjectId> parents = Arrays.asList(branchHead.getId());
+                cb.setParentIds(parents);
+                cb.setTreeId(treeId);
+                cb.setMessage(this.comment);
 
-			/*
-			 * Update the head
-			 */
-			getRepository().getRefDatabase().put(
-					new Ref(Ref.HEAD, commitId, TYPE.COMMIT));
+                /*
+                 * insert the new commit
+                 */
+                ObjectInserter objectInserter = getRepository().newObjectInserter();
+                commitId = objectInserter.insert(WrappedSerialisingFactory.getInstance()
+                        .createCommitWriter(cb.build(ObjectId.NULL)));
+            }
 
-			/*
-			 * diff the changes
-			 */
-			DiffOp diffOp = new DiffOp(getRepository());
-			Iterator<DiffEntry> diffs = diffOp.setNewVersion(oldHead.getId())
-					.setOldVersion(branchHead.getId()).call();
+            /*
+             * Update the head
+             */
+            getRepository().getRefDatabase().put(new Ref(Ref.HEAD, commitId, TYPE.COMMIT));
 
-			while (diffs.hasNext()) {
-				DiffEntry diff = diffs.next();
-				/*
-				 * This might be a little over zealous - what about ChangeType.ADD and ChangeType.DELETE?
-				 */
-				if (diff.getType() == ChangeType.MODIFY) {
-					mergeResult.addDiff(diff);
-				}
-			}
+            /*
+             * diff the changes
+             */
+            DiffOp diffOp = new DiffOp(getRepository());
+            Iterator<DiffEntry> diffs = diffOp.setNewVersion(oldHead.getId())
+                    .setOldVersion(branchHead.getId()).call();
 
-			LOGGER.info("Merged master -> " + branch.getName());
-			LOGGER.info(" " + commitId.printSmallId());
-		}
+            while (diffs.hasNext()) {
+                DiffEntry diff = diffs.next();
+                /*
+                 * This might be a little over zealous - what about ChangeType.ADD and
+                 * ChangeType.DELETE?
+                 */
+                if (diff.getType() == ChangeType.MODIFY) {
+                    mergeResult.addDiff(diff);
+                }
+            }
 
-		return mergeResult;
-	}
+            LOGGER.info("Merged master -> " + branch.getName());
+            LOGGER.info(" " + commitId.printSmallId());
+        }
 
-	/**
-	 * Merge the two trees together so the new commit has a reference to the
-	 * actual features
-	 * 
-	 * TODO: is this actually needed? GIT uses its history to traverse its
-	 * commits to create its checkout - since the parents of this new commit
-	 * HEAD have the trees should this BE objectId.NULL... not sure?
-	 * 
-	 * @param oldHead
-	 * @param branchHead
-	 * @return ObjectId of the new tree created and inserted into the DB
-	 * @throws Exception
-	 */
-	private ObjectId mergeTrees(ObjectId oldHead, ObjectId branchHead)
-			throws Exception {
-		return ObjectId.NULL;
-	}
+        return mergeResult;
+    }
 
-	/**
-	 * Point the HEAD at the current remote branch head - is this a rebaseOp?
-	 * 
-	 * @throws Exception
-	 */
-	private void rebase() throws Exception {
-		RebaseOp rebaseOp = new RebaseOp(getRepository());
-		rebaseOp.include(branch).call();
-	}
+    /**
+     * Merge the two trees together so the new commit has a reference to the actual features
+     * 
+     * TODO: is this actually needed? GIT uses its history to traverse its commits to create its
+     * checkout - since the parents of this new commit HEAD have the trees should this BE
+     * objectId.NULL... not sure?
+     * 
+     * @param oldHead
+     * @param branchHead
+     * @return ObjectId of the new tree created and inserted into the DB
+     * @throws Exception
+     */
+    private ObjectId mergeTrees(ObjectId oldHead, ObjectId branchHead) throws Exception {
+        return ObjectId.NULL;
+    }
+
+    /**
+     * Point the HEAD at the current remote branch head - is this a rebaseOp?
+     * 
+     * @throws Exception
+     */
+    private void rebase() throws Exception {
+        RebaseOp rebaseOp = new RebaseOp(getRepository());
+        rebaseOp.include(branch).call();
+    }
 }

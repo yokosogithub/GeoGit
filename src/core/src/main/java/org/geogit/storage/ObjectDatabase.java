@@ -27,8 +27,7 @@ public interface ObjectDatabase {
      * @param id
      * @return
      * @throws IOException
-     * @throws IllegalArgumentException
-     *             if an object with such id does not exist
+     * @throws IllegalArgumentException if an object with such id does not exist
      */
     public abstract InputStream getRaw(final ObjectId id) throws IOException;
 
@@ -40,8 +39,7 @@ public interface ObjectDatabase {
      * @param reader
      * @return
      * @throws IOException
-     * @throws IllegalArgumentException
-     *             if an object with such id does not exist
+     * @throws IllegalArgumentException if an object with such id does not exist
      */
     public abstract <T> T get(final ObjectId id, final ObjectReader<T> reader) throws IOException;
 
@@ -53,13 +51,10 @@ public interface ObjectDatabase {
      * version.
      * </p>
      * 
-     * @param <T>
-     *            the type of object returned
-     * @param id
-     *            the id of the object to return from the cache, or to look up in the database and
-     *            cache afterwards.
-     * @param reader
-     *            the reader to use in the case of a cache miss.
+     * @param <T> the type of object returned
+     * @param id the id of the object to return from the cache, or to look up in the database and
+     *        cache afterwards.
+     * @param reader the reader to use in the case of a cache miss.
      * @return the cached version of the required object.
      * @throws IOException
      */
@@ -104,8 +99,8 @@ public interface ObjectDatabase {
      * it's mutable copy, otherwise just returns a new mutable tree without any modification to
      * root.
      * 
-     * @throws IllegalArgumentException
-     *             if an reference exists for {@code childPath} but is not of type {@code TREE}
+     * @throws IllegalArgumentException if an reference exists for {@code childPath} but is not of
+     *         type {@code TREE}
      */
     public MutableTree getOrCreateSubTree(final RevTree parent, List<String> childPath);
 

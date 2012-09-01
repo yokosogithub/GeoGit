@@ -8,14 +8,17 @@ import com.google.common.base.Preconditions;
 
 /**
  * Object representing a Remote config element as supplied in the config file
- *
+ * 
  * @author jhudson
  */
 public class RemoteConfigObject {
     private final String name;
+
     private final String url;
+
     private final String fetch;
-    public RemoteConfigObject( String name, String fetch, String url ) {
+
+    public RemoteConfigObject(String name, String fetch, String url) {
         Preconditions.checkNotNull(name);
         Preconditions.checkNotNull(url);
         Preconditions.checkNotNull(fetch);

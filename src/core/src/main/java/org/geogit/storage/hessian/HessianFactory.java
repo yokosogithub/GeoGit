@@ -38,7 +38,8 @@ public class HessianFactory implements ObjectSerialisingFactory {
     }
 
     @Override
-    public ObjectReader<Feature> createFeatureReader(FeatureType featureType, String featureId, Hints hints) {
+    public ObjectReader<Feature> createFeatureReader(FeatureType featureType, String featureId,
+            Hints hints) {
         return new HessianFeatureReader(featureType, featureId, hints);
     }
 

@@ -49,9 +49,8 @@ public class VersionDetail {
     private static final String DATE_FORMAT = "EEE MMM dd kk:mm:ss ZZZ yyyy";
 
     /**
-     * Creates a QueryVersion object describing the version filtering parameters
-     * of the given Query object. If no version parameters can be determined,
-     * returns null.
+     * Creates a QueryVersion object describing the version filtering parameters of the given Query
+     * object. If no version parameters can be determined, returns null.
      * 
      * @param query
      * @return
@@ -64,8 +63,7 @@ public class VersionDetail {
             // dow mon dd hh:mm:ss zzz yyyy
             DateFormat fmt = new SimpleDateFormat(DATE_FORMAT);
             try {
-                Date date = fmt.parse(versionString.substring(DATE_PREFIX
-                        .length()));
+                Date date = fmt.parse(versionString.substring(DATE_PREFIX.length()));
                 return new VersionDetail(date);
             } catch (ParseException ex) {
                 return null;
@@ -77,10 +75,8 @@ public class VersionDetail {
             }
             DateFormat fmt = new SimpleDateFormat(DATE_FORMAT);
             try {
-                Date start = fmt.parse(versionString.substring(
-                        RANGE_PREFIX.length(), sepIndex));
-                Date end = fmt.parse(versionString.substring(sepIndex
-                        + RANGE_SEPARATOR.length()));
+                Date start = fmt.parse(versionString.substring(RANGE_PREFIX.length(), sepIndex));
+                Date end = fmt.parse(versionString.substring(sepIndex + RANGE_SEPARATOR.length()));
                 return new VersionDetail(start, end);
             } catch (ParseException ex) {
                 return null;
@@ -119,10 +115,8 @@ public class VersionDetail {
             }
             DateFormat fmt = new SimpleDateFormat(DATE_FORMAT);
             try {
-                Date start = fmt.parse(versionString.substring(
-                        RANGE_PREFIX.length(), sepIndex));
-                Date end = fmt.parse(versionString.substring(sepIndex
-                        + RANGE_SEPARATOR.length()));
+                Date start = fmt.parse(versionString.substring(RANGE_PREFIX.length(), sepIndex));
+                Date end = fmt.parse(versionString.substring(sepIndex + RANGE_SEPARATOR.length()));
                 return new DateRange(start, end);
             } catch (ParseException ex) {
                 return null;

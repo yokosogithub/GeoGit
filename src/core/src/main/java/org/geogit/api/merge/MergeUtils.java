@@ -16,45 +16,50 @@ import com.google.common.collect.AbstractIterator;
 
 public class MergeUtils {
 
-	/**
-	 * Find the commit - start looking from the provided commit object
-	 * @param branchTip
-	 * @param repository
-	 * @return
-	 */
-    public static RevCommit findBranchCommitSplit(final RevCommit branchTip, final Repository repository){
-    	for (ObjectId parentId : branchTip.getParentIds()){
-    		if (MergeUtils.onBranch(repository.getHead().getObjectId(), parentId, repository)){
-    			return branchTip;
-    		} else {
-    			if (!ObjectId.NULL.equals(parentId)){
-    				RevCommit nextBranchTip = repository.getCommit(parentId);
-    					return findBranchCommitSplit(nextBranchTip, repository);
-    			}
-    		}
-    	}
-    	return null;
+    /**
+     * Find the commit - start looking from the provided commit object
+     * 
+     * @param branchTip
+     * @param repository
+     * @return
+     */
+    public static RevCommit findBranchCommitSplit(final RevCommit branchTip,
+            final Repository repository) {
+        for (ObjectId parentId : branchTip.getParentIds()) {
+            if (MergeUtils.onBranch(repository.getHead().getObjectId(), parentId, repository)) {
+                return branchTip;
+            } else {
+                if (!ObjectId.NULL.equals(parentId)) {
+                    RevCommit nextBranchTip = repository.getCommit(parentId);
+                    return findBranchCommitSplit(nextBranchTip, repository);
+                }
+            }
+        }
+        return null;
     }
-    
+
     /**
      * Is the commit on the master branch?
+     * 
      * @param parentId
      * @param repository
      * @return true if the objectid is found on the branch
      */
-    public static boolean onBranch(final ObjectId branchHeadId, final ObjectId parentId, final Repository repository){
-    	Iterator<RevCommit> linearHistory = new LinearHistoryIterator(branchHeadId, repository);
-   	 	while (linearHistory.hasNext()){
-   	 		RevCommit c = linearHistory.next();
-   		 	if (c.getParentIds().contains(parentId)){
-   		 		return true;
-   		 	}
-   	 	}
-   	 	return false;
+    public static boolean onBranch(final ObjectId branchHeadId, final ObjectId parentId,
+            final Repository repository) {
+        Iterator<RevCommit> linearHistory = new LinearHistoryIterator(branchHeadId, repository);
+        while (linearHistory.hasNext()) {
+            RevCommit c = linearHistory.next();
+            if (c.getParentIds().contains(parentId)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private static class LinearHistoryIterator extends AbstractIterator<RevCommit> {
         private ObjectId nextCommitId;
+
         private final Repository repo;
 
         public LinearHistoryIterator(final ObjectId tip, final Repository repo) {

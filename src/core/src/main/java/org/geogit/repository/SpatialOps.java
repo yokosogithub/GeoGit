@@ -30,11 +30,9 @@ public class SpatialOps {
     private static final GeometryFactory gfac = new GeometryFactory();
 
     /**
-     * @param target
-     *            bounds to be expanded (or created if null) to include {@code include} and then be
-     *            returned
-     * @param include
-     *            bounds to ensure are included by {@code target}
+     * @param target bounds to be expanded (or created if null) to include {@code include} and then
+     *        be returned
+     * @param include bounds to ensure are included by {@code target}
      * @return
      */
     public static BoundingBox expandToInclude(BoundingBox target, BoundingBox include) {

@@ -16,7 +16,6 @@
  */
 package org.geoserver.data.versioning.decorator;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -24,7 +23,6 @@ import org.geotools.data.Query;
 import org.geotools.data.simple.SimpleFeatureCollection;
 import org.geotools.data.simple.SimpleFeatureIterator;
 import org.geotools.data.simple.SimpleFeatureSource;
-import org.geotools.filter.FilterFactoryFinder;
 import org.geotools.filter.FilterFactoryImpl;
 import org.opengis.feature.simple.SimpleFeature;
 import org.opengis.feature.simple.SimpleFeatureType;
@@ -32,7 +30,6 @@ import org.opengis.feature.type.Name;
 import org.opengis.filter.Filter;
 import org.opengis.filter.FilterFactory2;
 import org.opengis.filter.identity.Version;
-import org.opengis.filter.spatial.BBOX;
 
 public class UnversionedTest extends DecoratedTestCase {
 
@@ -51,8 +48,7 @@ public class UnversionedTest extends DecoratedTestCase {
         assertEquals("Both feature types have been added.", 2, names.size());
         assertTrue("The sample feature type must be available.",
                 names.contains(sampleType.getName()));
-        assertTrue("The sample feature type must be available.",
-                names.contains(testType.getName()));
+        assertTrue("The sample feature type must be available.", names.contains(testType.getName()));
     }
 
     public void testNoQuery() throws Exception {
@@ -171,8 +167,7 @@ public class UnversionedTest extends DecoratedTestCase {
         verifyBboxQuery(featList);
     }
 
-    private void verifyBboxQuery(List<SimpleFeature> expectedFeatures)
-            throws Exception {
+    private void verifyBboxQuery(List<SimpleFeature> expectedFeatures) throws Exception {
         SimpleFeatureIterator feats = null;
         try {
             SimpleFeatureSource source = versioned.getFeatureSource(testName);

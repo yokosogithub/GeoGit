@@ -20,27 +20,30 @@ import org.geogit.repository.Repository;
 public class MergeOp extends AbstractGeoGitOp<MergeResult> {
 
     private Ref branch;
+
     private String comment;
+
     private IMergeOp mergeStrategy;
 
     public MergeOp(Repository repository) {
         super(repository);
         this.comment = "";
         /*
-         * The default merge strategy is a very simple merge operation and is loaded 
-         * from the applicationContext.xml file.
+         * The default merge strategy is a very simple merge operation and is loaded from the
+         * applicationContext.xml file.
          */
         this.mergeStrategy = (IMergeOp) ConfigurationContext.getInstance().getBean("mergeOp");
     }
 
     /**
-     * Override the default merge operation 
+     * Override the default merge operation
+     * 
      * @param mergeStrategy
      * @return
      */
     public MergeOp setMergeStrategy(final IMergeOp mergeStrategy) {
-    	this.mergeStrategy = mergeStrategy;
-    	return this;
+        this.mergeStrategy = mergeStrategy;
+        return this;
     }
 
     public MergeOp include(final Ref branch) {
@@ -48,34 +51,35 @@ public class MergeOp extends AbstractGeoGitOp<MergeResult> {
         return this;
     }
 
-    public MergeOp setComment(final String comment){
+    public MergeOp setComment(final String comment) {
         this.comment = comment;
         return this;
     }
 
     public MergeResult call() throws Exception {
-    	/*
-    	 * The merge strategy does the actual work of merging - see FirstInMergeOp. If this is null
-    	 * break out.
-    	 */
+        /*
+         * The merge strategy does the actual work of merging - see FirstInMergeOp. If this is null
+         * break out.
+         */
         if (this.mergeStrategy == null) {
-        	return new MergeResult();
+            return new MergeResult();
         }
-    	
-    	/*
+
+        /*
          * Load up the merge strategy with the information needed to complete the merge
          */
-    	this.mergeStrategy.setComment(this.comment);
-    	this.mergeStrategy.setRepository(getRepository());
+        this.mergeStrategy.setComment(this.comment);
+        this.mergeStrategy.setRepository(getRepository());
 
-    	/*
-    	 * This should never be null - a normal pull operation has a default branch or "origin" if 
-    	 * there is no branch to merge to there is nothing to merge to...
-    	 */
-    	if (this.branch == null) {
-    		throw new NoBranchToMergeException("There is no branch set to merge from - nothing to merge");
-    	}
-    	this.mergeStrategy.setBranch(this.branch);
+        /*
+         * This should never be null - a normal pull operation has a default branch or "origin" if
+         * there is no branch to merge to there is nothing to merge to...
+         */
+        if (this.branch == null) {
+            throw new NoBranchToMergeException(
+                    "There is no branch set to merge from - nothing to merge");
+        }
+        this.mergeStrategy.setBranch(this.branch);
 
         return this.mergeStrategy.call();
     }

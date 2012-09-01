@@ -172,10 +172,9 @@ public abstract class AbstractObjectDatabase implements ObjectDatabase {
     /**
      * @param id
      * @param rawData
-     * @param override
-     *            if {@code true} an a record with the given id already exists, it shall be
-     *            overriden. If {@code false} and a record with the given id already exists, it
-     *            shall not be overriden.
+     * @param override if {@code true} an a record with the given id already exists, it shall be
+     *        overriden. If {@code false} and a record with the given id already exists, it shall
+     *        not be overriden.
      * @return
      * @throws IOException
      */
@@ -206,7 +205,8 @@ public abstract class AbstractObjectDatabase implements ObjectDatabase {
     public RevCommit getCommit(final ObjectId commitId) {
         RevCommit commit;
         try {
-            commit = this.getCached(commitId, WrappedSerialisingFactory.getInstance().createCommitReader());
+            commit = this.getCached(commitId, WrappedSerialisingFactory.getInstance()
+                    .createCommitReader());
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -231,7 +231,8 @@ public abstract class AbstractObjectDatabase implements ObjectDatabase {
         }
         RevTree tree;
         try {
-            tree = this.getCached(treeId, WrappedSerialisingFactory.getInstance().createRevTreeReader(this));
+            tree = this.getCached(treeId, WrappedSerialisingFactory.getInstance()
+                    .createRevTreeReader(this));
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -243,8 +244,8 @@ public abstract class AbstractObjectDatabase implements ObjectDatabase {
      * it's mutable copy, otherwise just returns a new mutable tree without any modification to
      * root.
      * 
-     * @throws IllegalArgumentException
-     *             if an reference exists for {@code childPath} but is not of type {@code TREE}
+     * @throws IllegalArgumentException if an reference exists for {@code childPath} but is not of
+     *         type {@code TREE}
      */
     @Override
     public MutableTree getOrCreateSubTree(final RevTree parent, List<String> childPath) {
@@ -270,12 +271,14 @@ public abstract class AbstractObjectDatabase implements ObjectDatabase {
     public ObjectId writeBack(MutableTree root, final RevTree tree, final List<String> pathToTree)
             throws Exception {
 
-        final ObjectId treeId = put(WrappedSerialisingFactory.getInstance().createRevTreeWriter(tree));
+        final ObjectId treeId = put(WrappedSerialisingFactory.getInstance().createRevTreeWriter(
+                tree));
         final String treeName = pathToTree.get(pathToTree.size() - 1);
 
         if (pathToTree.size() == 1) {
             root.put(new Ref(treeName, treeId, TYPE.TREE));
-            ObjectId newRootId = put(WrappedSerialisingFactory.getInstance().createRevTreeWriter(root));
+            ObjectId newRootId = put(WrappedSerialisingFactory.getInstance().createRevTreeWriter(
+                    root));
             return newRootId;
         }
         final List<String> parentPath = pathToTree.subList(0, pathToTree.size() - 1);

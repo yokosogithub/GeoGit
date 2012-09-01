@@ -31,6 +31,7 @@ import org.geogit.storage.ObjectDatabase;
 import org.geotools.data.DataSourceException;
 import org.geotools.data.DefaultResourceInfo;
 import org.geotools.data.FeatureListener;
+import org.geotools.data.FeatureSource;
 import org.geotools.data.Query;
 import org.geotools.data.QueryCapabilities;
 import org.geotools.data.ResourceInfo;
@@ -61,15 +62,13 @@ public class GeoGitFeatureSource implements SimpleVersioningFeatureSource {
     /**
      * @see #getSupportedHints()
      */
-    private static final Set<Key> supportedHints = Collections
-            .unmodifiableSet(new HashSet<Key>(Arrays.asList(
-                    Hints.FEATURE_DETACHED, Hints.JTS_GEOMETRY_FACTORY,
+    private static final Set<Key> supportedHints = Collections.unmodifiableSet(new HashSet<Key>(
+            Arrays.asList(Hints.FEATURE_DETACHED, Hints.JTS_GEOMETRY_FACTORY,
                     Hints.JTS_COORDINATE_SEQUENCE_FACTORY)
 
-            ));
+    ));
 
-    public GeoGitFeatureSource(final SimpleFeatureType type,
-            final GeoGitDataStore dataStore) {
+    public GeoGitFeatureSource(final SimpleFeatureType type, final GeoGitDataStore dataStore) {
         this.type = type;
         this.dataStore = dataStore;
     }
@@ -82,8 +81,7 @@ public class GeoGitFeatureSource implements SimpleVersioningFeatureSource {
         try {
             final Name typeName = this.type.getName();
             Repository repository = dataStore.getRepository();
-            RevTree typeTree = repository.getWorkingTree().getHeadVersion(
-                    typeName);
+            RevTree typeTree = repository.getWorkingTree().getHeadVersion(typeName);
             return typeTree;
         } catch (Exception e) {
             throw new RuntimeException(e);
@@ -204,8 +202,8 @@ public class GeoGitFeatureSource implements SimpleVersioningFeatureSource {
     }
 
     /**
-     * GeoGit Features are always "detached", so we return the FEATURE_DETACHED
-     * hint here, as well as the JTS related ones.
+     * GeoGit Features are always "detached", so we return the FEATURE_DETACHED hint here, as well
+     * as the JTS related ones.
      * <p>
      * The JTS related hints supported are:
      * <ul>
@@ -213,8 +211,8 @@ public class GeoGitFeatureSource implements SimpleVersioningFeatureSource {
      * <li>JTS_COORDINATE_SEQUENCE_FACTORY
      * </ul>
      * Note, however, that if a {@link GeometryFactory} is provided through the
-     * {@code JTS_GEOMETRY_FACTORY} hint, that very factory is used and takes
-     * precedence over all the other ones.
+     * {@code JTS_GEOMETRY_FACTORY} hint, that very factory is used and takes precedence over all
+     * the other ones.
      * </p>
      * 
      * @see FeatureSource#getSupportedHints()
@@ -236,14 +234,12 @@ public class GeoGitFeatureSource implements SimpleVersioningFeatureSource {
     }
 
     @Override
-    public SimpleFeatureCollection getFeatures(final Filter filter)
-            throws IOException {
+    public SimpleFeatureCollection getFeatures(final Filter filter) throws IOException {
         return getFeatures(new Query(getName().getLocalPart(), filter));
     }
 
     @Override
-    public SimpleFeatureCollection getFeatures(final Query query)
-            throws IOException {
+    public SimpleFeatureCollection getFeatures(final Query query) throws IOException {
         Filter filter = query.getFilter();
         if (filter == null) {
             filter = Filter.INCLUDE;
@@ -255,12 +251,11 @@ public class GeoGitFeatureSource implements SimpleVersioningFeatureSource {
         final Query query2 = reprojectFilter(query);
         filter = query2.getFilter();
 
-        final ObjectDatabase lookupDatabase = dataStore.getRepository()
-                .getIndex().getDatabase();
+        final ObjectDatabase lookupDatabase = dataStore.getRepository().getIndex().getDatabase();
         final RevTree typeTree = getCurrentVersion();
         GeoGitSimpleFeatureCollection featureCollection;
-        featureCollection = new GeoGitSimpleFeatureCollection(type, filter,
-                lookupDatabase, typeTree);
+        featureCollection = new GeoGitSimpleFeatureCollection(type, filter, lookupDatabase,
+                typeTree);
 
         final int maxFeatures = query2.getMaxFeatures();
         if (maxFeatures > 0 && maxFeatures != Query.DEFAULT_MAX) {
@@ -285,8 +280,8 @@ public class GeoGitFeatureSource implements SimpleVersioningFeatureSource {
 
     /**
      * @return the id of the root tree. Defaults to the repository's root, but
-     *         {@link GeoGitFeatureStore} shall override to account for whether
-     *         there's a transaction in progress
+     *         {@link GeoGitFeatureStore} shall override to account for whether there's a
+     *         transaction in progress
      */
     protected ObjectId getRootTreeId() {
         Repository repository = dataStore.getRepository();
@@ -295,15 +290,14 @@ public class GeoGitFeatureSource implements SimpleVersioningFeatureSource {
     }
 
     private Query reprojectFilter(Query query) throws IOException {
-        final Filter originalFilter = query.getFilter() != null ? query
-                .getFilter() : Filter.INCLUDE;
+        final Filter originalFilter = query.getFilter() != null ? query.getFilter()
+                : Filter.INCLUDE;
         if (Filter.INCLUDE.equals(originalFilter)) {
             return query;
         }
 
         final SimpleFeatureType nativeFeatureType = getSchema();
-        final GeometryDescriptor geom = nativeFeatureType
-                .getGeometryDescriptor();
+        final GeometryDescriptor geom = nativeFeatureType.getGeometryDescriptor();
         // if no geometry involved, no reprojection needed
         if (geom == null) {
             return query;
@@ -312,30 +306,26 @@ public class GeoGitFeatureSource implements SimpleVersioningFeatureSource {
         final FilterFactory2 ff = CommonFactoryFinder.getFilterFactory2(null);
 
         try {
-            CoordinateReferenceSystem nativeCRS = geom
-                    .getCoordinateReferenceSystem();
+            CoordinateReferenceSystem nativeCRS = geom.getCoordinateReferenceSystem();
 
             // now we apply a default to all geometries and bbox in the filter
-            DefaultCRSFilterVisitor defaultCRSVisitor = new DefaultCRSFilterVisitor(
-                    ff, nativeCRS);
-            final Filter defaultedFilter = (Filter) originalFilter.accept(
-                    defaultCRSVisitor, null);
+            DefaultCRSFilterVisitor defaultCRSVisitor = new DefaultCRSFilterVisitor(ff, nativeCRS);
+            final Filter defaultedFilter = (Filter) originalFilter.accept(defaultCRSVisitor, null);
 
             // and then we reproject all geometries so that the datastore
             // receives
             // them in the native projection system (or the forced one, in case
             // of force)
-            ReprojectingFilterVisitor reprojectingVisitor = new ReprojectingFilterVisitor(
-                    ff, nativeFeatureType);
-            final Filter reprojectedFilter = (Filter) defaultedFilter.accept(
-                    reprojectingVisitor, null);
+            ReprojectingFilterVisitor reprojectingVisitor = new ReprojectingFilterVisitor(ff,
+                    nativeFeatureType);
+            final Filter reprojectedFilter = (Filter) defaultedFilter.accept(reprojectingVisitor,
+                    null);
 
             Query reprojectedQuery = new Query(query);
             reprojectedQuery.setFilter(reprojectedFilter);
             return reprojectedQuery;
         } catch (Exception e) {
-            throw new DataSourceException(
-                    "Had troubles handling filter reprojection...", e);
+            throw new DataSourceException("Had troubles handling filter reprojection...", e);
         }
     }
 

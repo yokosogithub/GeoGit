@@ -21,15 +21,15 @@ import com.vividsolutions.jts.geom.Geometry;
  * @author mleslie
  */
 enum GtEntityType implements Serializable {
-    STRING(0, String.class), BOOLEAN(1, Boolean.class), BYTE(2, Byte.class), DOUBLE(3, Double.class), 
-    BIGDECIMAL(4, BigDecimal.class), FLOAT(5, Float.class), INT(6, Integer.class), 
-    BIGINT(7, BigInteger.class), LONG(8, Long.class), BOOLEAN_ARRAY(11, boolean[].class), 
-    BYTE_ARRAY(12, byte[].class), CHAR_ARRAY(13, char[].class), DOUBLE_ARRAY(14, double[].class), 
-    FLOAT_ARRAY(15, float[].class), INT_ARRAY(16, int[].class), LONG_ARRAY(17, long[].class), 
-    GEOMETRY(9, Geometry.class), NULL(10, null), UNKNOWN_SERIALISABLE(18, Serializable.class), 
-    UNKNOWN(19, null), UUID(20, java.util.UUID.class), DATE_UTIL(21, java.util.Date.class), DATE_SQL(22, java.sql.Date.class);
-    
-    
+    STRING(0, String.class), BOOLEAN(1, Boolean.class), BYTE(2, Byte.class), DOUBLE(3, Double.class), BIGDECIMAL(
+            4, BigDecimal.class), FLOAT(5, Float.class), INT(6, Integer.class), BIGINT(7,
+            BigInteger.class), LONG(8, Long.class), BOOLEAN_ARRAY(11, boolean[].class), BYTE_ARRAY(
+            12, byte[].class), CHAR_ARRAY(13, char[].class), DOUBLE_ARRAY(14, double[].class), FLOAT_ARRAY(
+            15, float[].class), INT_ARRAY(16, int[].class), LONG_ARRAY(17, long[].class), GEOMETRY(
+            9, Geometry.class), NULL(10, null), UNKNOWN_SERIALISABLE(18, Serializable.class), UNKNOWN(
+            19, null), UUID(20, java.util.UUID.class), DATE_UTIL(21, java.util.Date.class), DATE_SQL(
+            22, java.sql.Date.class);
+
     public static GtEntityType determineType(Object value) {
         if (value == null)
             return NULL;
@@ -79,6 +79,7 @@ enum GtEntityType implements Serializable {
     }
 
     private int value;
+
     private Class binding;
 
     private GtEntityType(int value, Class binding) {
@@ -89,25 +90,24 @@ enum GtEntityType implements Serializable {
     public int getValue() {
         return this.value;
     }
-    
+
     public Class getBinding() {
         return this.binding;
     }
-    
+
     public static GtEntityType fromBinding(Class cls) {
-        if(cls == null)
+        if (cls == null)
             return NULL;
         /*
-         * We're handling equality first, as some entity types are top-level
-         * catch-alls, and we can't rely on processing order to ensure the 
-         * more specific cases are handled first.
+         * We're handling equality first, as some entity types are top-level catch-alls, and we
+         * can't rely on processing order to ensure the more specific cases are handled first.
          */
         for (GtEntityType type : GtEntityType.values()) {
-            if(type.binding != null && type.binding.equals(cls))
+            if (type.binding != null && type.binding.equals(cls))
                 return type;
         }
         for (GtEntityType type : GtEntityType.values()) {
-            if(type.binding != null && type.binding.isAssignableFrom(cls))
+            if (type.binding != null && type.binding.isAssignableFrom(cls))
                 return type;
         }
         return UNKNOWN;

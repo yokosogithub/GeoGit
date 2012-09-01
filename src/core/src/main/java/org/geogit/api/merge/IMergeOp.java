@@ -9,11 +9,15 @@ import org.geogit.repository.Repository;
 
 /**
  * IMergeOp interface for custom merge operations
+ * 
  * @author jhudson
  */
 public interface IMergeOp {
-	public MergeResult call() throws Exception;
-	public void setBranch(final Ref branch);
-	public void setComment(final String comment);
-	public void setRepository(final Repository respoitory);
+    public MergeResult call() throws Exception;
+
+    public void setBranch(final Ref branch);
+
+    public void setComment(final String comment);
+
+    public void setRepository(final Repository respoitory);
 }

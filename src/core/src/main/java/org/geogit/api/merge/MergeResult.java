@@ -10,7 +10,8 @@ import java.util.List;
 import org.geogit.api.DiffEntry;
 
 /**
- * A list of object ID's which are the content ID's of features which have been changed in this merge
+ * A list of object ID's which are the content ID's of features which have been changed in this
+ * merge
  * 
  * @author jhudson
  * @since 1.2.0

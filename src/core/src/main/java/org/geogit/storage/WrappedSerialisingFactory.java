@@ -36,7 +36,8 @@ public class WrappedSerialisingFactory implements ObjectSerialisingFactory {
         return wrappedFactory.createFeatureReader(featureType, featureId);
     }
 
-    public ObjectReader<Feature> createFeatureReader(FeatureType featureType, String featureId, Hints hints) {
+    public ObjectReader<Feature> createFeatureReader(FeatureType featureType, String featureId,
+            Hints hints) {
         return wrappedFactory.createFeatureReader(featureType, featureId, hints);
     }
 
@@ -59,7 +60,10 @@ public class WrappedSerialisingFactory implements ObjectSerialisingFactory {
 
     public static synchronized WrappedSerialisingFactory getInstance() {
         if (instance == null) {
-            //System.err.println("appcontext loading forced by " + Thread.currentThread().getStackTrace()[3] + "->" + Thread.currentThread().getStackTrace()[2] + "->" + Thread.currentThread().getStackTrace()[1]);
+            // System.err.println("appcontext loading forced by " +
+            // Thread.currentThread().getStackTrace()[3] + "->" +
+            // Thread.currentThread().getStackTrace()[2] + "->" +
+            // Thread.currentThread().getStackTrace()[1]);
             instance = new WrappedSerialisingFactory();
         }
         return instance;

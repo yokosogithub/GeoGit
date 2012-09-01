@@ -39,8 +39,7 @@ public class AddOp extends AbstractGeoGitOp<StagingArea> {
     }
 
     /**
-     * @param pattern
-     *            a regular expression to match what content to be staged
+     * @param pattern a regular expression to match what content to be staged
      * @return {@code this}
      */
     public AddOp addPattern(final String pattern) {
@@ -49,9 +48,8 @@ public class AddOp extends AbstractGeoGitOp<StagingArea> {
     }
 
     /**
-     * @param updateOnly
-     *            if {@code true}, only add already tracked features (either for modification or
-     *            deletion), but do not stage any newly added one.
+     * @param updateOnly if {@code true}, only add already tracked features (either for modification
+     *        or deletion), but do not stage any newly added one.
      * @return {@code this}
      */
     public AddOp setUpdateOnly(final boolean updateOnly) {

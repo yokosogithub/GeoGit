@@ -10,5 +10,6 @@ import org.geogit.repository.remote.payload.IPayload;
 
 public interface IRemote {
     public void dispose();
-    public IPayload requestFetchPayload( Map<String, String> branchHeads );
+
+    public IPayload requestFetchPayload(Map<String, String> branchHeads);
 }

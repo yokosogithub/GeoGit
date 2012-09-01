@@ -39,8 +39,7 @@ public class SimpleFeatureStoreDecorator extends
      * @param unversioned
      * @param store
      */
-    public SimpleFeatureStoreDecorator(SimpleFeatureStore unversioned,
-            Repository repo) {
+    public SimpleFeatureStoreDecorator(SimpleFeatureStore unversioned, Repository repo) {
         super(unversioned, repo);
     }
 
@@ -61,8 +60,8 @@ public class SimpleFeatureStoreDecorator extends
      *      java.lang.Object[], org.opengis.filter.Filter)
      */
     @Override
-    public void modifyFeatures(String[] names, Object[] attributeValues,
-            Filter filter) throws IOException {
+    public void modifyFeatures(String[] names, Object[] attributeValues, Filter filter)
+            throws IOException {
 
         Name[] attributeNames = new Name[names.length];
         for (int i = 0; i < names.length; i++) {
@@ -84,8 +83,7 @@ public class SimpleFeatureStoreDecorator extends
      * @see org.geotools.data.versioning.decorator.FeatureSourceDecorator#getFeatures(org.opengis.filter.Filter)
      */
     @Override
-    public SimpleFeatureCollection getFeatures(Filter filter)
-            throws IOException {
+    public SimpleFeatureCollection getFeatures(Filter filter) throws IOException {
         return (SimpleFeatureCollection) super.getFeatures(filter);
     }
 
@@ -99,15 +97,13 @@ public class SimpleFeatureStoreDecorator extends
 
     /**
      * @see org.geotools.data.versioning.decorator.FeatureSourceDecorator#createFeatureCollection(org.geotools.feature.FeatureCollection,
-     *      org.geoserver.data.versioning.decorator.VersioningDataAccess,
-     *      org.geogit.api.ObjectId)
+     *      org.geoserver.data.versioning.decorator.VersioningDataAccess, org.geogit.api.ObjectId)
      */
     @Override
     protected FeatureCollection<SimpleFeatureType, SimpleFeature> createFeatureCollection(
-            FeatureCollection<SimpleFeatureType, SimpleFeature> delegate,
-            RevTree typeTree) {
+            FeatureCollection<SimpleFeatureType, SimpleFeature> delegate, RevTree typeTree) {
 
-        return new SimpleResourceIdAssigningFeatureCollection(
-                (SimpleFeatureCollection) delegate, this, typeTree);
+        return new SimpleResourceIdAssigningFeatureCollection((SimpleFeatureCollection) delegate,
+                this, typeTree);
     }
 }

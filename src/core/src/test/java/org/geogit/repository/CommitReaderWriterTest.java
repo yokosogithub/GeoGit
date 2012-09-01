@@ -64,7 +64,8 @@ public class CommitReaderWriterTest extends TestCase {
         WrappedSerialisingFactory.getInstance().createBlobPrinter().print(built, System.err);
         // transform to text xml for XPath evaluation
         out = new ByteArrayOutputStream();
-        WrappedSerialisingFactory.getInstance().createBlobPrinter().print(built, new PrintStream(out));
+        WrappedSerialisingFactory.getInstance().createBlobPrinter()
+                .print(built, new PrintStream(out));
 
         Document dom = DocumentBuilderFactory.newInstance().newDocumentBuilder()
                 .parse(new ByteArrayInputStream(out.toByteArray()));
@@ -84,7 +85,8 @@ public class CommitReaderWriterTest extends TestCase {
         WrappedSerialisingFactory.getInstance().createBlobPrinter().print(built, System.err);
         // transform to text xml for XPath evaluation
         out = new ByteArrayOutputStream();
-        WrappedSerialisingFactory.getInstance().createBlobPrinter().print(built, new PrintStream(out));
+        WrappedSerialisingFactory.getInstance().createBlobPrinter()
+                .print(built, new PrintStream(out));
 
         Document dom = DocumentBuilderFactory.newInstance().newDocumentBuilder()
                 .parse(new ByteArrayInputStream(out.toByteArray()));
@@ -106,9 +108,11 @@ public class CommitReaderWriterTest extends TestCase {
         WrappedSerialisingFactory.getInstance().createBlobPrinter().print(built, System.err);
         // transform to text xml for XPath evaluation
         out = new ByteArrayOutputStream();
-        WrappedSerialisingFactory.getInstance().createBlobPrinter().print(built, new PrintStream(out));
+        WrappedSerialisingFactory.getInstance().createBlobPrinter()
+                .print(built, new PrintStream(out));
 
-        RevCommit read = WrappedSerialisingFactory.getInstance().createCommitReader().read(ObjectId.NULL, new ByteArrayInputStream(built));
+        RevCommit read = WrappedSerialisingFactory.getInstance().createCommitReader()
+                .read(ObjectId.NULL, new ByteArrayInputStream(built));
         assertNotNull(read);
 
         assertEquals(commit.getAuthor(), read.getAuthor());

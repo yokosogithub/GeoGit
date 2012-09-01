@@ -31,8 +31,7 @@ import org.opengis.feature.type.Name;
 public class VersioningAdapterFactory {
 
     @SuppressWarnings({ "rawtypes" })
-    public static FeatureSource create(final FeatureSource subject,
-            Repository versioningRepo) {
+    public static FeatureSource create(final FeatureSource subject, Repository versioningRepo) {
 
         final Name typeName = subject.getSchema().getName();
 
@@ -46,34 +45,28 @@ public class VersioningAdapterFactory {
         }
 
         if (subject instanceof SimpleFeatureLocking) {
-            return new SimpleFeatureLockingDecorator(
-                    (SimpleFeatureLocking) subject, versioningRepo);
+            return new SimpleFeatureLockingDecorator((SimpleFeatureLocking) subject, versioningRepo);
         }
         if (subject instanceof SimpleFeatureStore) {
-            return new SimpleFeatureStoreDecorator(
-                    (SimpleFeatureStore) subject, versioningRepo);
+            return new SimpleFeatureStoreDecorator((SimpleFeatureStore) subject, versioningRepo);
         }
         if (subject instanceof SimpleFeatureSource) {
-            return new SimpleFeatureSourceDecorator(
-                    (SimpleFeatureSource) subject, versioningRepo);
+            return new SimpleFeatureSourceDecorator((SimpleFeatureSource) subject, versioningRepo);
         }
 
         if (subject instanceof FeatureLocking) {
-            return new FeatureLockingDecorator((FeatureLocking) subject,
-                    versioningRepo);
+            return new FeatureLockingDecorator((FeatureLocking) subject, versioningRepo);
         }
         if (subject instanceof FeatureStore) {
-            return new FeatureStoreDecorator((FeatureStore) subject,
-                    versioningRepo);
+            return new FeatureStoreDecorator((FeatureStore) subject, versioningRepo);
         }
 
         return new FeatureSourceDecorator(subject, versioningRepo);
     }
 
     @SuppressWarnings("rawtypes")
-    public static DataAccess create(final DataAccess subject,
-            Repository versioningRepo) {
-        if( subject == null ){
+    public static DataAccess create(final DataAccess subject, Repository versioningRepo) {
+        if (subject == null) {
             throw new NullPointerException("DataAccess subject is required");
         }
 

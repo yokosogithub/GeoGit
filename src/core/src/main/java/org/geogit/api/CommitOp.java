@@ -80,8 +80,7 @@ public class CommitOp extends AbstractGeoGitOp<RevCommit> {
     /**
      * Sets the {@link RevCommit#getMessage() commit message}.
      * 
-     * @param message
-     *            description of the changes to record the commit with.
+     * @param message description of the changes to record the commit with.
      * @return {@code this}, to ease command chaining
      */
     public CommitOp setMessage(final String message) {
@@ -93,8 +92,7 @@ public class CommitOp extends AbstractGeoGitOp<RevCommit> {
      * Sets the {@link RevCommit#getTimestamp() timestamp} the commit will be marked to, or if not
      * set defaults to the current system time at the time {@link #call()} is called.
      * 
-     * @param timestamp
-     *            commit timestamp, in milliseconds, as in {@link Date#getTime()}
+     * @param timestamp commit timestamp, in milliseconds, as in {@link Date#getTime()}
      * @return {@code this}, to ease command chaining
      */
     public CommitOp setTimestamp(final Long timestamp) {
@@ -106,9 +104,8 @@ public class CommitOp extends AbstractGeoGitOp<RevCommit> {
      * If {@code true}, tells {@link #call()} to stage all the unstaged changes that are not new
      * object before performing the commit.
      * 
-     * @param all
-     *            {@code true} to {@link AddOp#setUpdateOnly(boolean) stage changes) before commit,
-     *            {@code false} to not do that. Defaults to {@code false}.
+     * @param all {@code true} to {@link AddOp#setUpdateOnly(boolean) stage changes) before commit,
+     *        {@code false} to not do that. Defaults to {@code false}.
      * @return {@code this}, to ease command chaining
      */
     public CommitOp setAll(boolean all) {
@@ -120,9 +117,8 @@ public class CommitOp extends AbstractGeoGitOp<RevCommit> {
      * @return the commit just applied, or {@code null} iif
      *         {@code getProgressListener().isCanceled()}
      * @see org.geogit.api.AbstractGeoGitOp#call()
-     * @throws NothingToCommitException
-     *             if there are no staged changes by comparing the index staging tree and the
-     *             repository HEAD tree.
+     * @throws NothingToCommitException if there are no staged changes by comparing the index
+     *         staging tree and the repository HEAD tree.
      */
     public RevCommit call() throws Exception {
         // TODO: check repository is in a state that allows committing
@@ -173,7 +169,8 @@ public class CommitOp extends AbstractGeoGitOp<RevCommit> {
                 return null;
             }
             ObjectInserter objectInserter = repository.newObjectInserter();
-            commitId = objectInserter.insert(WrappedSerialisingFactory.getInstance().createCommitWriter(cb.build(ObjectId.NULL)));
+            commitId = objectInserter.insert(WrappedSerialisingFactory.getInstance()
+                    .createCommitWriter(cb.build(ObjectId.NULL)));
         }
         final RevCommit commit = repository.getCommit(commitId);
         // set the HEAD pointing to the new commit

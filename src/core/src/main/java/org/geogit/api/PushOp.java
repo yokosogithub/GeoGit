@@ -49,15 +49,19 @@ public class PushOp extends AbstractGeoGitOp<PushResult> {
              * clients knowledge of the upstream HEAD
              */
             LocalRemote lr = new LocalRemote(getRepository());
-            Map<String,String> originMaster = RefIO.getRemoteList(getRepository().getRepositoryHome(), "origin");
+            Map<String, String> originMaster = RefIO.getRemoteList(getRepository()
+                    .getRepositoryHome(), "origin");
             IPayload payload = lr.requestFetchPayload(originMaster);
 
             HttpPost post = new HttpPost(upstream);
-            post.setHeader(Ref.HEAD,originMaster.get(Ref.HEAD)); /*Set a header ID so the server can reject/accept*/
+            post.setHeader(Ref.HEAD, originMaster.get(Ref.HEAD)); /*
+                                                                   * Set a header ID so the server
+                                                                   * can reject/accept
+                                                                   */
             post.setEntity(new PayloadEntity(payload));
 
             HttpResponse response = httpclient.execute(post);
-            if (response.getStatusLine().getStatusCode()!= HttpStatus.SC_OK){
+            if (response.getStatusLine().getStatusCode() != HttpStatus.SC_OK) {
                 result.setStatus(PushResult.STATUS.CONFLICT);
             } else {
                 result.setStatus(PushResult.STATUS.OK_APPLIED);

@@ -6,6 +6,7 @@ package org.geogit.api.merge;
 
 /**
  * Indicates there are is no branch to merge from
+ * 
  * @author jhudson
  */
 public class NoBranchToMergeException extends Exception {

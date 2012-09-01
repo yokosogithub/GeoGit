@@ -12,6 +12,7 @@ import org.opengis.feature.Feature;
 
 /**
  * To test a remote fetch using the GeoGIT protocol
+ * 
  * @author jhudson
  * @since 1.2.0
  */
@@ -78,7 +79,7 @@ public class FetchOpOnlineTest extends MultipleRepositoryTestCase {
 
         // setup the client to have a remote ref to the server
         this.client.remoteAddOp().setName("project0").setFetch("project0")
-                .setUrl(GEOGIT_URL+"/project0/geogit").call();
+                .setUrl(GEOGIT_URL + "/project0/geogit").call();
 
         // fetch the remotes
         client.fetch().call();
@@ -89,7 +90,8 @@ public class FetchOpOnlineTest extends MultipleRepositoryTestCase {
         // re-open the server
         this.server = new GeoGIT(createRepo(0, false));
 
-        assertEquals(clientRemoteMaster.getObjectId(), this.server.getRepository().getHead().getObjectId());
+        assertEquals(clientRemoteMaster.getObjectId(), this.server.getRepository().getHead()
+                .getObjectId());
     }
 
     public void testFetchRemoteMasterRetrieveFeature() throws Exception {
@@ -103,7 +105,7 @@ public class FetchOpOnlineTest extends MultipleRepositoryTestCase {
 
         // setup the client to have a remote ref to the server
         this.client.remoteAddOp().setName("project0").setFetch("project0")
-                .setUrl(GEOGIT_URL+"/project0/geogit").call();
+                .setUrl(GEOGIT_URL + "/project0/geogit").call();
 
         // fetch the remotes
         client.fetch().call();
@@ -137,7 +139,7 @@ public class FetchOpOnlineTest extends MultipleRepositoryTestCase {
         assertEquals(lines1, feature3);
         assertEquals(lines2, feature4);
     }
-    
+
     public void testFetchOneRemoteNonFastForward() throws Exception {
         insertAddCommit(this.server, points1);
         insertAddCommit(this.server, points3);
@@ -145,7 +147,7 @@ public class FetchOpOnlineTest extends MultipleRepositoryTestCase {
 
         // setup the client to have a remote ref to the server
         this.client.remoteAddOp().setName("project0").setFetch("project0")
-                .setUrl(GEOGIT_URL+"/project0/geogit").call();
+                .setUrl(GEOGIT_URL + "/project0/geogit").call();
 
         // fetch the remotes
         client.fetch().call();
@@ -196,7 +198,7 @@ public class FetchOpOnlineTest extends MultipleRepositoryTestCase {
 
         // setup the client to have a remote ref to the server
         this.client.remoteAddOp().setName("project0").setFetch("project0")
-                .setUrl(GEOGIT_URL+"/project0/geogit").call();
+                .setUrl(GEOGIT_URL + "/project0/geogit").call();
 
         // fetch the remotes
         client.fetch().call();
@@ -239,7 +241,7 @@ public class FetchOpOnlineTest extends MultipleRepositoryTestCase {
 
         // setup the client to have a remote ref to the server
         this.client.remoteAddOp().setName("project0").setFetch("project0")
-                .setUrl(GEOGIT_URL+"/project0/geogit").call();
+                .setUrl(GEOGIT_URL + "/project0/geogit").call();
 
         // fetch the remotes
         client.fetch().call();
@@ -271,9 +273,9 @@ public class FetchOpOnlineTest extends MultipleRepositoryTestCase {
 
         // setup the client to have a remote ref to the server
         this.client.remoteAddOp().setName("project0").setFetch("project0")
-                .setUrl(GEOGIT_URL+"/project0/geogit").call();
+                .setUrl(GEOGIT_URL + "/project0/geogit").call();
         this.client.remoteAddOp().setName("project2").setFetch("project2")
-                .setUrl(GEOGIT_URL+"/project2/geogit").call();
+                .setUrl(GEOGIT_URL + "/project2/geogit").call();
 
         // fetch the remotes
         client.fetch().call();
@@ -288,8 +290,10 @@ public class FetchOpOnlineTest extends MultipleRepositoryTestCase {
         Ref clientRemoteMaster2 = this.client.getRepository().getRef(
                 Ref.REMOTES_PREFIX + "project2/" + Ref.MASTER);
 
-        assertEquals(clientRemoteMaster1.getObjectId(), this.server.getRepository().getHead().getObjectId());
-        assertEquals(clientRemoteMaster2.getObjectId(), this.server2.getRepository().getHead().getObjectId());
+        assertEquals(clientRemoteMaster1.getObjectId(), this.server.getRepository().getHead()
+                .getObjectId());
+        assertEquals(clientRemoteMaster2.getObjectId(), this.server2.getRepository().getHead()
+                .getObjectId());
     }
 
     private void assertHasFeatuers(final GeoGIT ggit, final RevTree tree, final int expected) {

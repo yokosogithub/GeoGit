@@ -46,8 +46,7 @@ public class ResourceIdQueryFeatureCollector implements Iterable<Feature> {
     private Query query;
 
     public ResourceIdQueryFeatureCollector(final Repository repository,
-            final FeatureType featureType, final Set<ResourceId> resourceIds,
-            Query query) {
+            final FeatureType featureType, final Set<ResourceId> resourceIds, Query query) {
         this.repository = repository;
         this.featureType = featureType;
         this.resourceIds = resourceIds;
@@ -60,8 +59,7 @@ public class ResourceIdQueryFeatureCollector implements Iterable<Feature> {
         Iterator<Ref> featureRefs = Iterators.emptyIterator();
 
         GeoGIT ggit = new GeoGIT(repository);
-        VersionQuery versionQuery = new VersionQuery(ggit,
-                featureType.getName());
+        VersionQuery versionQuery = new VersionQuery(ggit, featureType.getName());
         try {
             for (ResourceId rid : resourceIds) {
                 Iterator<Ref> ridIterator;
@@ -74,8 +72,8 @@ public class ResourceIdQueryFeatureCollector implements Iterable<Feature> {
 
         featureRefs = versionQuery.filterByQueryVersion(featureRefs, query);
 
-        Iterator<Feature> features = Iterators.transform(featureRefs,
-                new RefToFeature(repository, featureType));
+        Iterator<Feature> features = Iterators.transform(featureRefs, new RefToFeature(repository,
+                featureType));
 
         return features;
     }
@@ -101,14 +99,13 @@ public class ResourceIdQueryFeatureCollector implements Iterable<Feature> {
             StagingDatabase database = repo.getIndex().getDatabase();
             Feature feature;
             try {
-                ObjectReader<Feature> featureReader = serialisingFactory
-                        .createFeatureReader(type, featureId);
+                ObjectReader<Feature> featureReader = serialisingFactory.createFeatureReader(type,
+                        featureId);
                 feature = database.get(contentId, featureReader);
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
-            return VersionedFeatureWrapper.wrap(feature, featureRef
-                    .getObjectId().toString());
+            return VersionedFeatureWrapper.wrap(feature, featureRef.getObjectId().toString());
         }
 
     }

@@ -33,13 +33,11 @@ import org.opengis.filter.identity.ResourceId;
 public class VersionFilters {
 
     /**
-     * @return a copy of {@code filter} with any {@link ResourceId} stripped off
-     *         and converted to normal {@link FeatureId} with no version
-     *         information.
+     * @return a copy of {@code filter} with any {@link ResourceId} stripped off and converted to
+     *         normal {@link FeatureId} with no version information.
      */
     public static final Filter getUnversioningFilter(Filter filter) {
-        if (filter == null || Filter.INCLUDE.equals(filter)
-                || Filter.EXCLUDE.equals(filter)) {
+        if (filter == null || Filter.INCLUDE.equals(filter) || Filter.EXCLUDE.equals(filter)) {
             return filter;
         }
         DuplicatingFilterVisitor visitor = new DuplicatingFilterVisitor() {
@@ -69,8 +67,7 @@ public class VersionFilters {
 
     public static final Id getVersioningFilter(Filter filter) {
 
-        if (filter == null || Filter.INCLUDE.equals(filter)
-                || Filter.EXCLUDE.equals(filter)) {
+        if (filter == null || Filter.INCLUDE.equals(filter) || Filter.EXCLUDE.equals(filter)) {
             return null;
         }
 
@@ -82,30 +79,25 @@ public class VersionFilters {
                     if (id instanceof ResourceId) {
                         // does it contain any actual versioning predicate?
                         ResourceId rid = (ResourceId) id;
-                        if (rid.getFeatureVersion() != null
-                                || rid.getEndTime() != null
-                                || rid.getStartTime() != null
-                                || rid.getVersion() != null) {
+                        if (rid.getFeatureVersion() != null || rid.getEndTime() != null
+                                || rid.getStartTime() != null || rid.getVersion() != null) {
                             // yes, there's something to query in the version
                             // history
                             resourceIds.add((ResourceId) id);
                         }
                     } else if (id instanceof FeatureId) {
                         FeatureId fid = (FeatureId) id;
-                        int idx = fid.getID().indexOf(
-                                FeatureId.VERSION_SEPARATOR);
+                        int idx = fid.getID().indexOf(FeatureId.VERSION_SEPARATOR);
                         if (idx > 0) {
                             String featureId = fid.getID().substring(0, idx);
                             String versionId = fid.getID().substring(idx + 1);
-                            resourceIds.add(new ResourceIdImpl(featureId,
-                                    versionId));
+                            resourceIds.add(new ResourceIdImpl(featureId, versionId));
                         }
                     }
                 }
                 if (resourceIds.size() > 0) {
                     found = true;
-                    return CommonFactoryFinder.getFilterFactory2(null).id(
-                            resourceIds);
+                    return CommonFactoryFinder.getFilterFactory2(null).id(resourceIds);
                 }
                 return null;
             }

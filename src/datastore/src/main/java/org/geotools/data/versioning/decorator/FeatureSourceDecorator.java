@@ -46,19 +46,20 @@ import org.opengis.feature.type.FeatureType;
 import org.opengis.feature.type.Name;
 import org.opengis.filter.Filter;
 import org.opengis.filter.Id;
+import org.opengis.filter.identity.FeatureId;
 import org.opengis.filter.identity.Identifier;
 import org.opengis.filter.identity.ResourceId;
 
 /**
- * Provides support for {@link ResourceId} filtering by means of wrapping an
- * unversioned feature source and accessing the versioning information in the
- * versioning subsystem provided by the argument {@link DataAccessDecorator}.
+ * Provides support for {@link ResourceId} filtering by means of wrapping an unversioned feature
+ * source and accessing the versioning information in the versioning subsystem provided by the
+ * argument {@link DataAccessDecorator}.
  * 
  * @author groldan
  */
 @SuppressWarnings({ "rawtypes", "unchecked" })
-public class FeatureSourceDecorator<T extends FeatureType, F extends Feature>
-        implements VersioningFeatureSource<T, F> {
+public class FeatureSourceDecorator<T extends FeatureType, F extends Feature> implements
+        VersioningFeatureSource<T, F> {
     private static final Logger LOGGER = org.geotools.util.logging.Logging
             .getLogger("org.geoserver.data.geogit.decorator");
 
@@ -66,23 +67,20 @@ public class FeatureSourceDecorator<T extends FeatureType, F extends Feature>
 
     protected final Repository repository;
 
-    public FeatureSourceDecorator(final FeatureSource unversioned,
-            final Repository repository) {
+    public FeatureSourceDecorator(final FeatureSource unversioned, final Repository repository) {
         this.unversioned = unversioned;
         this.repository = repository;
     }
 
     /**
-     * @return {@code true} if this is a versioned Feature Type, {@code false}
-     *         otherwise.
+     * @return {@code true} if this is a versioned Feature Type, {@code false} otherwise.
      */
     public boolean isVersioned() {
         final Name name = getSchema().getName();
         return isVersioned(name, repository);
     }
 
-    public static boolean isVersioned(final Name typeName,
-            final Repository repository) {
+    public static boolean isVersioned(final Name typeName, final Repository repository) {
         final WorkingTree workingTree = repository.getWorkingTree();
         final boolean isVersioned = workingTree.hasRoot(typeName);
         return isVersioned;
@@ -106,21 +104,18 @@ public class FeatureSourceDecorator<T extends FeatureType, F extends Feature>
      * @return
      * @throws IOException
      */
-    protected FeatureCollection getFeatures(final Id versioningFilter,
-            final Query extraQuery) throws IOException {
+    protected FeatureCollection getFeatures(final Id versioningFilter, final Query extraQuery)
+            throws IOException {
 
         // Assert.notNull(versioningFilter);
         // Assert.isTrue(versioningFilter.getIdentifiers().size() > 0);
         final FeatureType featureType = getSchema();
         Iterable<Feature> versionQuery;
-        if (versioningFilter == null
-                || versioningFilter.getIdentifiers().size() == 0) {
-            versionQuery = new QueryFeatureCollector(repository, featureType,
-                    extraQuery);
+        if (versioningFilter == null || versioningFilter.getIdentifiers().size() == 0) {
+            versionQuery = new QueryFeatureCollector(repository, featureType, extraQuery);
         } else {
 
-            final Set<Identifier> identifiers = versioningFilter
-                    .getIdentifiers();
+            final Set<Identifier> identifiers = versioningFilter.getIdentifiers();
             final Set<ResourceId> resourceIds = new HashSet<ResourceId>();
             for (Identifier id : identifiers) {
                 if (id instanceof ResourceId) {
@@ -128,27 +123,25 @@ public class FeatureSourceDecorator<T extends FeatureType, F extends Feature>
                 }
             }
             if (resourceIds.size() == 0) {
-                throw new IllegalArgumentException("At least one "
-                        + ResourceId.class.getName() + " should be provided: "
-                        + identifiers);
+                throw new IllegalArgumentException("At least one " + ResourceId.class.getName()
+                        + " should be provided: " + identifiers);
             }
 
             if (extraQuery.getVersion() != null) {
-                versionQuery = new ResourceIdQueryFeatureCollector(repository,
-                        featureType, resourceIds, extraQuery);
+                versionQuery = new ResourceIdQueryFeatureCollector(repository, featureType,
+                        resourceIds, extraQuery);
             } else {
-                versionQuery = new ResourceIdFeatureCollector(repository,
-                        featureType, resourceIds);
+                versionQuery = new ResourceIdFeatureCollector(repository, featureType, resourceIds);
             }
         }
 
-        DefaultVersionedFeatureCollection features = new DefaultVersionedFeatureCollection(
-                null, (SimpleFeatureType) featureType);
+        DefaultVersionedFeatureCollection features = new DefaultVersionedFeatureCollection(null,
+                (SimpleFeatureType) featureType);
 
         for (Feature f : versionQuery) {
             boolean contained = features.contains(f);
-            LOGGER.info("Feature " + (contained ? "is" : "is not")
-                    + " found in the collection: " + f);
+            LOGGER.info("Feature " + (contained ? "is" : "is not") + " found in the collection: "
+                    + f);
             features.add((SimpleFeature) f);
         }
         return features;
@@ -198,8 +191,7 @@ public class FeatureSourceDecorator<T extends FeatureType, F extends Feature>
      * @see #getFeatures(Query)
      */
     @Override
-    public FeatureCollection<T, F> getFeatures(Filter filter)
-            throws IOException {
+    public FeatureCollection<T, F> getFeatures(Filter filter) throws IOException {
         return getFeatures(namedQuery(filter));
     }
 
@@ -215,25 +207,22 @@ public class FeatureSourceDecorator<T extends FeatureType, F extends Feature>
         int maxFeartures = Integer.MAX_VALUE;
         String[] propNames = null;
         String handle = null;
-        Query query = new Query(typeName, namespace, filter, maxFeartures,
-                propNames, handle);
+        Query query = new Query(typeName, namespace, filter, maxFeartures, propNames, handle);
         return query;
     }
 
     /**
      * Performs the given query with knowledge of feature versioning.
      * <p>
-     * In case the feature type this source refers to is not versioned, defers
-     * to the underlying {@link FeatureSource}.
+     * In case the feature type this source refers to is not versioned, defers to the underlying
+     * {@link FeatureSource}.
      * </p>
-     * If the Feature Type is versioned, and the Query filter contains an
-     * {@link Id} filter with {@link ResourceId} predicates, defers to the
-     * versioning backend (GeoGIT) to spply the requested versions of the
-     * feature identified by the {@link ResourceId}s; othwewise just wraps the
-     * wrapped FeatureSource results into a decorating FeatureCollection that
-     * assigns {@link ResourceId} instead of {@link FeatureId} to returned
-     * Features, containing the current version hash, as in
-     * {@code <original feature id>@<current version id>}. </p>
+     * If the Feature Type is versioned, and the Query filter contains an {@link Id} filter with
+     * {@link ResourceId} predicates, defers to the versioning backend (GeoGIT) to spply the
+     * requested versions of the feature identified by the {@link ResourceId}s; othwewise just wraps
+     * the wrapped FeatureSource results into a decorating FeatureCollection that assigns
+     * {@link ResourceId} instead of {@link FeatureId} to returned Features, containing the current
+     * version hash, as in {@code <original feature id>@<current version id>}. </p>
      * 
      * @see org.geotools.data.FeatureSource#getFeatures(org.geotools.data.Query)
      */
@@ -256,10 +245,9 @@ public class FeatureSourceDecorator<T extends FeatureType, F extends Feature>
         return coll.subCollection(unversionedFilter);
     }
 
-    protected FeatureCollection<T, F> createFeatureCollection(
-            FeatureCollection<T, F> delegate, RevTree currentTypeTree) {
-        return new ResourceIdAssigningFeatureCollection(delegate, this,
-                currentTypeTree);
+    protected FeatureCollection<T, F> createFeatureCollection(FeatureCollection<T, F> delegate,
+            RevTree currentTypeTree) {
+        return new ResourceIdAssigningFeatureCollection(delegate, this, currentTypeTree);
     }
 
     // / directly deferred methods

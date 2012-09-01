@@ -30,7 +30,7 @@ import com.google.common.base.Preconditions;
 public class GeoGIT {
 
     private final Repository repository;
-    
+
     /**
      * The configuration object stores the git projects configuration
      */
@@ -39,7 +39,7 @@ public class GeoGIT {
     public static final CommitStateResolver DEFAULT_COMMIT_RESOLVER = new PlatformResolver();
 
     private static CommitStateResolver commitStateResolver = DEFAULT_COMMIT_RESOLVER;
-    
+
     public GeoGIT(final Repository repository) {
         Preconditions.checkNotNull(repository, "repository can't be null");
         this.repository = repository;
@@ -59,8 +59,9 @@ public class GeoGIT {
     }
 
     public static CloneOp clone(final String url) {
-        return null;//new CloneOp(url);
+        return null;// new CloneOp(url);
     }
+
     /**
      * Clone a FeatureType into a new working tree for the {@code user}'s repository.
      * <p>
@@ -151,6 +152,7 @@ public class GeoGIT {
 
     /**
      * Download objects and refs from another repository
+     * 
      * @return new FetchOp
      */
     public FetchOp fetch() {
@@ -175,7 +177,7 @@ public class GeoGIT {
      * Join two or more development histories together
      */
     public MergeOp merge() {
-    	return new MergeOp(repository);
+        return new MergeOp(repository);
     }
 
     /**
@@ -234,22 +236,21 @@ public class GeoGIT {
     }
 
     /**
-     * Return this GeoGit repositories config object, 
-     * stores 
-     *  CORE (TODO)
-     *  REMOTES
-     *  BRANCHS (TODO)
+     * Return this GeoGit repositories config object, stores CORE (TODO) REMOTES BRANCHS (TODO)
+     * 
      * @return
      */
     public Config getConfig() {
-       return this.config;
+        return this.config;
     }
 
     /**
-     * Implementation of a "git remote add" command to add remotes to the configuraiton, which get updated after a fetch
+     * Implementation of a "git remote add" command to add remotes to the configuraiton, which get
+     * updated after a fetch
+     * 
      * @return
      */
-    public RemoteAddOp remoteAddOp(){
+    public RemoteAddOp remoteAddOp() {
         return new RemoteAddOp(getRepository(), this.config);
     }
 }

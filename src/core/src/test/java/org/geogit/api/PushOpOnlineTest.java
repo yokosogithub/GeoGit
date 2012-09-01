@@ -26,7 +26,7 @@ public class PushOpOnlineTest extends MultipleRepositoryTestCase {
         insertAddCommit(this.origin, points1);
         this.origin.getRepository().close();
         this.client.remoteAddOp().setName("origin").setFetch(Ref.MASTER)
-                .setUrl(GEOGIT_URL+"/project1/geogit").call();
+                .setUrl(GEOGIT_URL + "/project1/geogit").call();
         this.client.pull().call();
 
         printHeads();
@@ -52,7 +52,7 @@ public class PushOpOnlineTest extends MultipleRepositoryTestCase {
         insertAddCommit(this.client, lines1);
         insertAddCommit(this.client, lines2);
         insertAddCommit(this.client, lines3);
-        
+
         // push to origin
         PushResult pushResult = client.push().call();
         assertEquals(pushResult.getStatus(), PushResult.STATUS.OK_APPLIED);
@@ -107,7 +107,7 @@ public class PushOpOnlineTest extends MultipleRepositoryTestCase {
         // push to origin
         pushResult = client.push().call();
         assertEquals(pushResult.getStatus(), PushResult.STATUS.OK_APPLIED);
-        
+
         this.origin = new GeoGIT(createRepo(1, false));
         originHead = this.origin.getRepository().getHead();
         assertEquals(this.client.getRepository().getHead(), originHead);

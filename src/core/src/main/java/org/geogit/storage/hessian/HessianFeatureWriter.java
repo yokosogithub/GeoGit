@@ -80,9 +80,9 @@ class HessianFeatureWriter implements ObjectWriter<Feature> {
     private void writeProperty(final Hessian2Output out, Property prop) throws IOException {
         final Object value = prop.getValue();
         final EntityType type = EntityType.determineType(value);
-        
+
         out.writeInt(type.getValue());
-        
+
         switch (type) {
         case STRING:
             out.writeString((String) value);
@@ -143,7 +143,7 @@ class HessianFeatureWriter implements ObjectWriter<Feature> {
             out.writeBytes(bigBytes);
             break;
         case UUID:
-            UUID uuid = (UUID)value;
+            UUID uuid = (UUID) value;
             long most = uuid.getMostSignificantBits();
             long least = uuid.getLeastSignificantBits();
             out.writeLong(most);

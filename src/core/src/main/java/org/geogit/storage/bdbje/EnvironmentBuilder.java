@@ -29,9 +29,9 @@ public class EnvironmentBuilder {
     /**
      * 
      * @param storeDirectory
-     * @param bdbEnvProperties
-     *            properties for the {@link EnvironmentConfig}, or {@code null}. If not provided
-     *            {@code environment.properties} will be looked up for inside {@code storeDirectory}
+     * @param bdbEnvProperties properties for the {@link EnvironmentConfig}, or {@code null}. If not
+     *        provided {@code environment.properties} will be looked up for inside
+     *        {@code storeDirectory}
      * @return
      */
     public Environment buildEnvironment(final File storeDirectory, final Properties bdbEnvProperties) {

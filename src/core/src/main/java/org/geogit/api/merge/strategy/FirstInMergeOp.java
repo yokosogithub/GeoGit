@@ -30,9 +30,8 @@ import com.google.common.collect.Iterators;
  * Very simple merge; to push the HEAD up to the current remotes head.
  * </p>
  * <p>
- * This will rebase if there are no new commits on this repo. Otherwise
- * it will create a new commit head and set the parents the old head and
- * the branch head.
+ * This will rebase if there are no new commits on this repo. Otherwise it will create a new commit
+ * head and set the parents the old head and the branch head.
  * </p>
  * 
  * @author jhudson
@@ -47,7 +46,7 @@ public class FirstInMergeOp extends AbstractMergeOp {
     public MergeResult call() throws Exception {
         MergeResult mergeResult = new MergeResult();
 
-        if (branch == null){
+        if (branch == null) {
             return mergeResult;
         }
 
@@ -56,7 +55,7 @@ public class FirstInMergeOp extends AbstractMergeOp {
          */
         RevCommit oldHead;
         if (!ObjectId.NULL.equals(getRepository().getHead().getObjectId())) {
-             oldHead = getRepository().getCommit(getRepository().getHead().getObjectId());
+            oldHead = getRepository().getCommit(getRepository().getHead().getObjectId());
         } else {
             rebase();
             return mergeResult;
@@ -68,9 +67,9 @@ public class FirstInMergeOp extends AbstractMergeOp {
         LogOp l = new LogOp(getRepository());
         Iterator<RevCommit> s = l.setSince(oldHead.getId()).call();
 
-        if (Iterators.contains(s, oldHead)){ /*rebase*/
+        if (Iterators.contains(s, oldHead)) { /* rebase */
             rebase();
-        } else { /*merge - new commit head and add parents of both branches*/
+        } else { /* merge - new commit head and add parents of both branches */
 
             /**
              * New head
@@ -79,7 +78,7 @@ public class FirstInMergeOp extends AbstractMergeOp {
             final RevCommit branchHead;
             {
                 CommitBuilder cb = new CommitBuilder();
-                
+
                 /**
                  * Grab branch head parents
                  */
@@ -102,7 +101,8 @@ public class FirstInMergeOp extends AbstractMergeOp {
                  * insert the new commit
                  */
                 ObjectInserter objectInserter = getRepository().newObjectInserter();
-                commitId = objectInserter.insert(WrappedSerialisingFactory.getInstance().createCommitWriter(cb.build(ObjectId.NULL)));
+                commitId = objectInserter.insert(WrappedSerialisingFactory.getInstance()
+                        .createCommitWriter(cb.build(ObjectId.NULL)));
             }
 
             /**
@@ -114,15 +114,16 @@ public class FirstInMergeOp extends AbstractMergeOp {
              * diff the changes
              */
             DiffOp diffOp = new DiffOp(getRepository());
-            Iterator<DiffEntry> diffs = diffOp.setNewVersion(oldHead.getId()).setOldVersion(branchHead.getId()).call();
+            Iterator<DiffEntry> diffs = diffOp.setNewVersion(oldHead.getId())
+                    .setOldVersion(branchHead.getId()).call();
 
             while (diffs.hasNext()) {
                 DiffEntry diff = diffs.next();
                 /*
-                 * This might need to be changed to add the ChangeType.ADD and ChangeType.Delete, 
+                 * This might need to be changed to add the ChangeType.ADD and ChangeType.Delete,
                  * there is no real reason they are missing here?
                  */
-                if (diff.getType()==ChangeType.MODIFY) {
+                if (diff.getType() == ChangeType.MODIFY) {
                     mergeResult.addDiff(diff);
                 }
             }
@@ -137,14 +138,14 @@ public class FirstInMergeOp extends AbstractMergeOp {
     /**
      * Merge the two trees together so the new commit has a reference to the actual features
      * 
-     * TODO: is this actually needed? GIT uses its history to traverse its commits to create
-     * its checkout - since the parents of this new commit HEAD have the trees should this BE
+     * TODO: is this actually needed? GIT uses its history to traverse its commits to create its
+     * checkout - since the parents of this new commit HEAD have the trees should this BE
      * objectId.NULL... not sure?
      * 
      * @param oldHead
      * @param branchHead
      * @return ObjectId of the new tree created and inserted into the DB
-     * @throws Exception 
+     * @throws Exception
      */
     private ObjectId mergeTrees(ObjectId oldHead, ObjectId branchHead) throws Exception {
         return ObjectId.NULL;
@@ -152,7 +153,8 @@ public class FirstInMergeOp extends AbstractMergeOp {
 
     /**
      * Point the HEAD at the current remote branch head - is this a rebaseOp?
-     * @throws Exception 
+     * 
+     * @throws Exception
      */
     private void rebase() throws Exception {
         RebaseOp rebaseOp = new RebaseOp(getRepository());

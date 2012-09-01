@@ -26,8 +26,7 @@ import org.geotools.util.logging.Logging;
 
 public class GeoToolsCommitStateResolver implements CommitStateResolver {
 
-    private static final Logger LOGGER = Logging
-            .getLogger(GeoToolsCommitStateResolver.class);
+    private static final Logger LOGGER = Logging.getLogger(GeoToolsCommitStateResolver.class);
 
     public static final String GEOGIT_AUTHOR = "GEOGIT_AUTHOR";
 
@@ -51,8 +50,7 @@ public class GeoToolsCommitStateResolver implements CommitStateResolver {
         if (transaction != null) {
             user = (String) transaction.getProperty(GEOGIT_AUTHOR);
             if (user == null) {
-                user = (String) transaction
-                        .getProperty("VersioningCommitAuthor");
+                user = (String) transaction.getProperty("VersioningCommitAuthor");
             }
         }
         if (user == null) {
@@ -79,8 +77,7 @@ public class GeoToolsCommitStateResolver implements CommitStateResolver {
         long timestamp = System.currentTimeMillis();
         Transaction transaction = getTransaction();
         if (transaction != null) {
-            Object providedTimestamp = transaction
-                    .getProperty(GEOGIT_COMMIT_TIMESTAMP);
+            Object providedTimestamp = transaction.getProperty(GEOGIT_COMMIT_TIMESTAMP);
             if (providedTimestamp instanceof Date) {
                 timestamp = ((Date) providedTimestamp).getTime();
             } else if (providedTimestamp instanceof Number) {
@@ -94,9 +91,7 @@ public class GeoToolsCommitStateResolver implements CommitStateResolver {
                         timestamp = Long.parseLong(str);
                     } catch (Exception e2) {
                         LOGGER.warning("Can't parse commit timestamp out of Transaction's "
-                                + GEOGIT_COMMIT_TIMESTAMP
-                                + " hint: '"
-                                + str
+                                + GEOGIT_COMMIT_TIMESTAMP + " hint: '" + str
                                 + "'. Using System's current time");
                     }
                 }
@@ -112,8 +107,7 @@ public class GeoToolsCommitStateResolver implements CommitStateResolver {
         if (transaction != null) {
             message = (String) transaction.getProperty(GEOGIT_COMMIT_MESSAGE);
             if (message == null) {
-                message = (String) transaction
-                        .getProperty("VersioningCommitMessage");
+                message = (String) transaction.getProperty("VersioningCommitMessage");
             }
         }
         if (message == null) {

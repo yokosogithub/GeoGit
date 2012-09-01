@@ -26,29 +26,27 @@ import org.geotools.feature.FeatureIterator;
 import org.geotools.feature.collection.DecoratingFeatureCollection;
 import org.opengis.feature.Feature;
 import org.opengis.feature.type.FeatureType;
+import org.opengis.filter.identity.ResourceId;
 
 import com.google.common.collect.AbstractIterator;
 
 /**
  * FeatureCollectionDecorator that assigns as {@link ResourceId} as each Feature
- * {@link Feature#getIdentifier() identifier} from the {@link ObjectId} of the
- * current state of the Feature.
+ * {@link Feature#getIdentifier() identifier} from the {@link ObjectId} of the current state of the
+ * Feature.
  * 
  * @author groldan
  */
-class ResourceIdAssigningFeatureCollection<T extends FeatureType, F extends Feature>
-        extends DecoratingFeatureCollection<T, F> implements
-        FeatureCollection<T, F> {
+class ResourceIdAssigningFeatureCollection<T extends FeatureType, F extends Feature> extends
+        DecoratingFeatureCollection<T, F> implements FeatureCollection<T, F> {
 
     protected final FeatureSourceDecorator<T, F> store;
 
     protected final RevTree currentTypeTree;
 
     @SuppressWarnings({ "rawtypes", "unchecked" })
-    protected ResourceIdAssigningFeatureCollection(
-            final FeatureCollection delegate,
-            final FeatureSourceDecorator<T, F> store,
-            final RevTree currentTypeTree) {
+    protected ResourceIdAssigningFeatureCollection(final FeatureCollection delegate,
+            final FeatureSourceDecorator<T, F> store, final RevTree currentTypeTree) {
 
         super(delegate);
 
@@ -72,8 +70,7 @@ class ResourceIdAssigningFeatureCollection<T extends FeatureType, F extends Feat
             F next = iterator.next();
             String featureId = next.getIdentifier().getID();
             Ref ref = currentTypeTree.get(featureId);
-            String versionId = ref == null ? null : ref.getObjectId()
-                    .toString();
+            String versionId = ref == null ? null : ref.getObjectId().toString();
             return VersionedFeatureWrapper.wrap(next, versionId);
         }
 
@@ -86,8 +83,8 @@ class ResourceIdAssigningFeatureCollection<T extends FeatureType, F extends Feat
         return new ResourceIdAssigningIterator(iterator);
     }
 
-    protected static class ResourceIdAssigningFeatureIterator<G extends Feature>
-            implements FeatureIterator<G> {
+    protected static class ResourceIdAssigningFeatureIterator<G extends Feature> implements
+            FeatureIterator<G> {
 
         protected FeatureIterator<G> features;
 
@@ -112,8 +109,7 @@ class ResourceIdAssigningFeatureCollection<T extends FeatureType, F extends Feat
             G next = features.next();
             String featureId = next.getIdentifier().getID();
             Ref ref = typeTree.get(featureId);
-            String versionId = ref == null ? null : ref.getObjectId()
-                    .toString();
+            String versionId = ref == null ? null : ref.getObjectId().toString();
             return VersionedFeatureWrapper.wrap(next, versionId);
         }
 
@@ -126,8 +122,7 @@ class ResourceIdAssigningFeatureCollection<T extends FeatureType, F extends Feat
     @SuppressWarnings("unchecked")
     @Override
     public FeatureIterator<F> features() {
-        return new ResourceIdAssigningFeatureIterator(delegate.features(),
-                store, currentTypeTree);
+        return new ResourceIdAssigningFeatureIterator(delegate.features(), store, currentTypeTree);
     }
 
     @SuppressWarnings("deprecation")

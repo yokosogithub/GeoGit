@@ -45,7 +45,7 @@ public class GeoGitDataStoreTest extends GeoGITRepositoryTestCase {
     protected void setUpChild() throws Exception {
         dataStore = new GeoGitDataStore(repo);
     }
-    
+
     @Override
     protected void tearDownChild() throws Exception {
         dataStore = null;
@@ -53,8 +53,7 @@ public class GeoGitDataStoreTest extends GeoGITRepositoryTestCase {
 
     public void testCreateSchema() throws IOException {
         final RefDatabase refDatabase = repo.getRefDatabase();
-        final Ref initialTypesTreeRef = refDatabase
-                .getRef(GeoGitDataStore.TYPE_NAMES_REF_TREE);
+        final Ref initialTypesTreeRef = refDatabase.getRef(GeoGitDataStore.TYPE_NAMES_REF_TREE);
         assertNotNull(initialTypesTreeRef);
 
         final SimpleFeatureType featureType = super.linesType;
@@ -77,19 +76,16 @@ public class GeoGitDataStoreTest extends GeoGITRepositoryTestCase {
 
     }
 
-    private void assertTypeRefs(Set<SimpleFeatureType> expectedTypes)
-            throws IOException {
+    private void assertTypeRefs(Set<SimpleFeatureType> expectedTypes) throws IOException {
         final RefDatabase refDatabase = repo.getRefDatabase();
 
         for (SimpleFeatureType featureType : expectedTypes) {
             final Name typeName = featureType.getName();
-            final Ref typesTreeRef = refDatabase
-                    .getRef(GeoGitDataStore.TYPE_NAMES_REF_TREE);
+            final Ref typesTreeRef = refDatabase.getRef(GeoGitDataStore.TYPE_NAMES_REF_TREE);
             assertNotNull(typesTreeRef);
 
             RevTree typesTree = repo.getTree(typesTreeRef.getObjectId());
-            List<String> path = Arrays.asList(typeName.getNamespaceURI(),
-                    typeName.getLocalPart());
+            List<String> path = Arrays.asList(typeName.getNamespaceURI(), typeName.getLocalPart());
             ObjectDatabase objectDatabase = repo.getObjectDatabase();
 
             Ref typeRef = objectDatabase.getTreeChild(typesTree, path);
@@ -98,10 +94,10 @@ public class GeoGitDataStoreTest extends GeoGITRepositoryTestCase {
 
             WrappedSerialisingFactory serialisingFactory;
             serialisingFactory = WrappedSerialisingFactory.getInstance();
-//            SimpleFeatureType readType = objectDatabase.get(typeRef
-//                    .getObjectId(), serialisingFactory
-//                    .createSimpleFeatureTypeReader(featureType.getName()));
-            SimpleFeatureType readType = objectDatabase.get(typeRef.getObjectId(), 
+            // SimpleFeatureType readType = objectDatabase.get(typeRef
+            // .getObjectId(), serialisingFactory
+            // .createSimpleFeatureTypeReader(featureType.getName()));
+            SimpleFeatureType readType = objectDatabase.get(typeRef.getObjectId(),
                     new HessianSimpleFeatureTypeReader(featureType.getName()));
 
             assertEquals(featureType, readType);
@@ -119,10 +115,8 @@ public class GeoGitDataStoreTest extends GeoGITRepositoryTestCase {
         dataStore.createSchema(super.pointsType);
         assertEquals(2, dataStore.getNames().size());
 
-        assertTrue(dataStore.getNames().contains(
-                GeoGITRepositoryTestCase.linesTypeName));
-        assertTrue(dataStore.getNames().contains(
-                GeoGITRepositoryTestCase.pointsTypeName));
+        assertTrue(dataStore.getNames().contains(GeoGITRepositoryTestCase.linesTypeName));
+        assertTrue(dataStore.getNames().contains(GeoGITRepositoryTestCase.pointsTypeName));
     }
 
     public void testGetTypeNames() throws IOException {
@@ -150,8 +144,7 @@ public class GeoGitDataStoreTest extends GeoGITRepositoryTestCase {
         }
 
         dataStore.createSchema(super.linesType);
-        SimpleFeatureType lines = dataStore
-                .getSchema(GeoGITRepositoryTestCase.linesTypeName);
+        SimpleFeatureType lines = dataStore.getSchema(GeoGITRepositoryTestCase.linesTypeName);
         assertEquals(super.linesType, lines);
 
         try {
@@ -162,8 +155,7 @@ public class GeoGitDataStoreTest extends GeoGITRepositoryTestCase {
         }
 
         dataStore.createSchema(super.pointsType);
-        SimpleFeatureType points = dataStore
-                .getSchema(GeoGITRepositoryTestCase.pointsTypeName);
+        SimpleFeatureType points = dataStore.getSchema(GeoGITRepositoryTestCase.pointsTypeName);
         assertEquals(super.pointsType, points);
     }
 
@@ -176,8 +168,7 @@ public class GeoGitDataStoreTest extends GeoGITRepositoryTestCase {
         }
 
         dataStore.createSchema(super.linesType);
-        SimpleFeatureType lines = dataStore
-                .getSchema(GeoGITRepositoryTestCase.linesName);
+        SimpleFeatureType lines = dataStore.getSchema(GeoGITRepositoryTestCase.linesName);
         assertEquals(super.linesType, lines);
 
         try {
@@ -188,8 +179,7 @@ public class GeoGitDataStoreTest extends GeoGITRepositoryTestCase {
         }
 
         dataStore.createSchema(super.pointsType);
-        SimpleFeatureType points = dataStore
-                .getSchema(GeoGITRepositoryTestCase.pointsName);
+        SimpleFeatureType points = dataStore.getSchema(GeoGITRepositoryTestCase.pointsName);
         assertEquals(super.pointsType, points);
     }
 

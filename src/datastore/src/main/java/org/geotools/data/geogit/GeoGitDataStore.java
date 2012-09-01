@@ -58,8 +58,7 @@ import com.google.common.base.Throwables;
 
 public class GeoGitDataStore implements VersioningDataStore {
 
-    private static final Logger LOGGER = Logging
-            .getLogger(GeoGitDataStore.class);
+    private static final Logger LOGGER = Logging.getLogger(GeoGitDataStore.class);
 
     public static final String TYPE_NAMES_REF_TREE = "typeNames";
 
@@ -73,8 +72,7 @@ public class GeoGitDataStore implements VersioningDataStore {
         this(repo, null);
     }
 
-    public GeoGitDataStore(final Repository repo, final String defaultNamespace)
-            throws IOException {
+    public GeoGitDataStore(final Repository repo, final String defaultNamespace) throws IOException {
         Preconditions.checkNotNull(repo, "repository");
         this.repo = repo;
         this.defaultNamespace = defaultNamespace;
@@ -141,21 +139,17 @@ public class GeoGitDataStore implements VersioningDataStore {
         final Ref typesTreeRef = refDatabase.getRef(TYPE_NAMES_REF_TREE);
         Preconditions.checkState(typesTreeRef != null);
 
-        RevTree namespacesTree = objectDatabase.getTree(typesTreeRef
-                .getObjectId());
-        Preconditions.checkState(null != namespacesTree,
-                "Referenced types tree does not exist: " + typesTreeRef);
+        RevTree namespacesTree = objectDatabase.getTree(typesTreeRef.getObjectId());
+        Preconditions.checkState(null != namespacesTree, "Referenced types tree does not exist: "
+                + typesTreeRef);
 
         List<Name> names = new ArrayList<Name>();
-        for (Iterator<Ref> namespaces = namespacesTree.iterator(null); namespaces
-                .hasNext();) {
+        for (Iterator<Ref> namespaces = namespacesTree.iterator(null); namespaces.hasNext();) {
             final Ref namespaceRef = namespaces.next();
             Preconditions.checkState(TYPE.TREE.equals(namespaceRef.getType()));
             final String nsUri = namespaceRef.getName();
-            final RevTree typesTree = objectDatabase.getTree(namespaceRef
-                    .getObjectId());
-            for (Iterator<Ref> simpleNames = typesTree.iterator(null); simpleNames
-                    .hasNext();) {
+            final RevTree typesTree = objectDatabase.getTree(namespaceRef.getObjectId());
+            for (Iterator<Ref> simpleNames = typesTree.iterator(null); simpleNames.hasNext();) {
                 final Ref typeNameRef = simpleNames.next();
                 final String simpleTypeName = typeNameRef.getName();
                 names.add(new NameImpl(nsUri, simpleTypeName));
@@ -191,8 +185,7 @@ public class GeoGitDataStore implements VersioningDataStore {
      * @see org.geotools.data.DataAccess#createSchema(org.opengis.feature.type.FeatureType)
      */
     @Override
-    public void createSchema(final SimpleFeatureType featureType)
-            throws IOException {
+    public void createSchema(final SimpleFeatureType featureType) throws IOException {
         Preconditions.checkNotNull(featureType);
 
         SimpleFeatureType createType = featureType;
@@ -209,8 +202,8 @@ public class GeoGitDataStore implements VersioningDataStore {
             // as the DataStore's namespace parameter
             final String ignoreNamespace = "http://www.opengis.net/gml";
             Name name = createType.getName();
-            if ((ignoreNamespace.equals(name.getNamespaceURI()) || null == name
-                    .getNamespaceURI()) && null != defaultNamespace) {
+            if ((ignoreNamespace.equals(name.getNamespaceURI()) || null == name.getNamespaceURI())
+                    && null != defaultNamespace) {
                 LOGGER.info("FeatureType to be created has no namespace, assigning DataStore's default: '"
                         + defaultNamespace + "'");
 
@@ -229,36 +222,32 @@ public class GeoGitDataStore implements VersioningDataStore {
         final Ref typesTreeRef = refDatabase.getRef(TYPE_NAMES_REF_TREE);
         Preconditions.checkState(typesTreeRef != null);
 
-        final RevTree namespacesRootTree = objectDatabase.getTree(typesTreeRef
-                .getObjectId());
+        final RevTree namespacesRootTree = objectDatabase.getTree(typesTreeRef.getObjectId());
         Preconditions.checkState(namespacesRootTree != null);
 
-        final String namespace = null == typeName.getNamespaceURI() ? NULL_NAMESPACE
-                : typeName.getNamespaceURI();
+        final String namespace = null == typeName.getNamespaceURI() ? NULL_NAMESPACE : typeName
+                .getNamespaceURI();
         final String localName = typeName.getLocalPart();
 
         try {
             final ObjectId featureTypeBlobId;
-//            WrappedSerialisingFactory serialisingFactory;
-//            serialisingFactory = WrappedSerialisingFactory.getInstance();
-//            featureTypeBlobId = objectDatabase.put(serialisingFactory
-//                    .createSimpleFeatureTypeWriter(createType));
+            // WrappedSerialisingFactory serialisingFactory;
+            // serialisingFactory = WrappedSerialisingFactory.getInstance();
+            // featureTypeBlobId = objectDatabase.put(serialisingFactory
+            // .createSimpleFeatureTypeWriter(createType));
             featureTypeBlobId = objectDatabase.put(new HessianSimpleFeatureTypeWriter(createType));
 
-            final List<String> namespaceTreePath = Collections
-                    .singletonList(namespace);
-            MutableTree namespaceTree = objectDatabase.getOrCreateSubTree(
-                    namespacesRootTree, namespaceTreePath);
+            final List<String> namespaceTreePath = Collections.singletonList(namespace);
+            MutableTree namespaceTree = objectDatabase.getOrCreateSubTree(namespacesRootTree,
+                    namespaceTreePath);
 
             namespaceTree.put(new Ref(localName, featureTypeBlobId, TYPE.BLOB));
 
             final MutableTree root = namespacesRootTree.mutable();
             final ObjectId newTypeRefsTreeId;
-            newTypeRefsTreeId = objectDatabase.writeBack(root, namespaceTree,
-                    namespaceTreePath);
+            newTypeRefsTreeId = objectDatabase.writeBack(root, namespaceTree, namespaceTreePath);
 
-            final Ref newTypesTreeRef = new Ref(TYPE_NAMES_REF_TREE,
-                    newTypeRefsTreeId, TYPE.TREE);
+            final Ref newTypesTreeRef = new Ref(TYPE_NAMES_REF_TREE, newTypeRefsTreeId, TYPE.TREE);
             refDatabase.put(newTypesTreeRef);
 
         } catch (IOException e) {
@@ -281,29 +270,25 @@ public class GeoGitDataStore implements VersioningDataStore {
         final Ref typesTreeRef = refDatabase.getRef(TYPE_NAMES_REF_TREE);
         Preconditions.checkState(typesTreeRef != null);
 
-        final RevTree namespacesRootTree = objectDatabase.getTree(typesTreeRef
-                .getObjectId());
+        final RevTree namespacesRootTree = objectDatabase.getTree(typesTreeRef.getObjectId());
         Preconditions.checkState(namespacesRootTree != null);
 
         final String[] path = {
-                name.getNamespaceURI() == null ? NULL_NAMESPACE : name
-                        .getNamespaceURI(), name.getLocalPart() };
+                name.getNamespaceURI() == null ? NULL_NAMESPACE : name.getNamespaceURI(),
+                name.getLocalPart() };
 
-        final Ref typeRef = objectDatabase.getTreeChild(namespacesRootTree,
-                path);
+        final Ref typeRef = objectDatabase.getTreeChild(namespacesRootTree, path);
         if (typeRef == null) {
             throw new SchemaNotFoundException(name.toString());
         }
         Preconditions.checkState(TYPE.BLOB.equals(typeRef.getType()));
         final ObjectId objectId = typeRef.getObjectId();
         WrappedSerialisingFactory serialisingFactory;
-//        serialisingFactory = WrappedSerialisingFactory.getInstance();
-//        final ObjectReader<SimpleFeatureType> reader = serialisingFactory
-//                .createSimpleFeatureTypeReader(name);
-        final ObjectReader<SimpleFeatureType> reader = 
-                new HessianSimpleFeatureTypeReader(name);
-        final SimpleFeatureType featureType = objectDatabase.get(objectId,
-                reader);
+        // serialisingFactory = WrappedSerialisingFactory.getInstance();
+        // final ObjectReader<SimpleFeatureType> reader = serialisingFactory
+        // .createSimpleFeatureTypeReader(name);
+        final ObjectReader<SimpleFeatureType> reader = new HessianSimpleFeatureTypeReader(name);
+        final SimpleFeatureType featureType = objectDatabase.get(objectId, reader);
         return featureType;
     }
 
@@ -312,8 +297,7 @@ public class GeoGitDataStore implements VersioningDataStore {
      * @see #getSchema(Name)
      */
     @Override
-    public SimpleFeatureType getSchema(final String typeName)
-            throws IOException {
+    public SimpleFeatureType getSchema(final String typeName) throws IOException {
         final List<Name> names = getNames();
         for (Name name : names) {
             if (name.getLocalPart().equals(typeName)) {
@@ -328,8 +312,7 @@ public class GeoGitDataStore implements VersioningDataStore {
      * @see #getFeatureSource(Name)
      */
     @Override
-    public GeoGitFeatureSource getFeatureSource(final String typeName)
-            throws IOException {
+    public GeoGitFeatureSource getFeatureSource(final String typeName) throws IOException {
         final List<Name> names = getNames();
         for (Name name : names) {
             if (name.getLocalPart().equals(typeName)) {
@@ -343,36 +326,34 @@ public class GeoGitDataStore implements VersioningDataStore {
      * @see org.geotools.data.DataStore#getFeatureSource(org.opengis.feature.type.Name)
      */
     @Override
-    public GeoGitFeatureSource getFeatureSource(final Name typeName)
-            throws IOException {
+    public GeoGitFeatureSource getFeatureSource(final Name typeName) throws IOException {
         final SimpleFeatureType featureType = getSchema(typeName);
 
         return new GeoGitFeatureStore(featureType, this);
     }
 
     @Override
-    public FeatureReader<SimpleFeatureType, SimpleFeature> getFeatureReader(
-            Query query, Transaction transaction) throws IOException {
+    public FeatureReader<SimpleFeatureType, SimpleFeature> getFeatureReader(Query query,
+            Transaction transaction) throws IOException {
 
         throw new UnsupportedOperationException("not yet implemented");
     }
 
     @Override
-    public FeatureWriter<SimpleFeatureType, SimpleFeature> getFeatureWriter(
-            String typeName, Filter filter, Transaction transaction)
-                    throws IOException {
+    public FeatureWriter<SimpleFeatureType, SimpleFeature> getFeatureWriter(String typeName,
+            Filter filter, Transaction transaction) throws IOException {
         throw new UnsupportedOperationException("not yet implemented");
     }
 
     @Override
-    public FeatureWriter<SimpleFeatureType, SimpleFeature> getFeatureWriter(
-            String typeName, Transaction transaction) throws IOException {
+    public FeatureWriter<SimpleFeatureType, SimpleFeature> getFeatureWriter(String typeName,
+            Transaction transaction) throws IOException {
         throw new UnsupportedOperationException("not yet implemented");
     }
 
     @Override
-    public FeatureWriter<SimpleFeatureType, SimpleFeature> getFeatureWriterAppend(
-            String typeName, Transaction transaction) throws IOException {
+    public FeatureWriter<SimpleFeatureType, SimpleFeature> getFeatureWriterAppend(String typeName,
+            Transaction transaction) throws IOException {
         throw new UnsupportedOperationException("not yet implemented");
     }
 
@@ -386,8 +367,7 @@ public class GeoGitDataStore implements VersioningDataStore {
      *      org.opengis.feature.type.FeatureType)
      */
     @Override
-    public void updateSchema(Name typeName, SimpleFeatureType featureType)
-            throws IOException {
+    public void updateSchema(Name typeName, SimpleFeatureType featureType) throws IOException {
         throw new UnsupportedOperationException("Not yet implemented");
     }
 
@@ -396,8 +376,7 @@ public class GeoGitDataStore implements VersioningDataStore {
      *      org.opengis.feature.simple.SimpleFeatureType)
      */
     @Override
-    public void updateSchema(String typeName, SimpleFeatureType featureType)
-            throws IOException {
+    public void updateSchema(String typeName, SimpleFeatureType featureType) throws IOException {
         throw new UnsupportedOperationException("Not yet implemented");
     }
 

@@ -17,19 +17,16 @@ import org.geogit.repository.remote.payload.Payload;
  * A Remote is a single end point of a request/response geogit instance which response is the geogit
  * protocol:
  * 
- * This is a custom protocol which is used to transport all of the COMMIT/TREE/BLOB/BRANCH_HEAD objects to this
- * client this is the protocol: 
+ * This is a custom protocol which is used to transport all of the COMMIT/TREE/BLOB/BRANCH_HEAD
+ * objects to this client this is the protocol:
  * 
  * [{C/T/B}{00000000000000000000}{0000000000}{PAYLOAD}]
  * 
- * first byte is a single character : 
- * 'C' for a commit
- * 'T' for a tree
- * 'B' for a blob
- * 'N' for branch head
+ * first byte is a single character : 'C' for a commit 'T' for a tree 'B' for a blob 'N' for branch
+ * head
  * 
- * 2nd byte to the 21st byte are the objects ID - 20 bytes 
- * 22nd byte to the 31st byte is the objects length - 10 bytes
+ * 2nd byte to the 21st byte are the objects ID - 20 bytes 22nd byte to the 31st byte is the objects
+ * length - 10 bytes
  * 
  * The rest is the payload in bytes
  * 
@@ -50,14 +47,13 @@ public class Remote extends AbstractRemote {
 
     @Override
     public IPayload requestFetchPayload(Map<String, String> branchHeads) {
-        
+
         Payload payload = null;
 
         StringBuffer branchBuffer = new StringBuffer();
 
         /*
-         * Create a string to send to the geogit server in the form of:
-         * BRANCH_NAME:UUID,...
+         * Create a string to send to the geogit server in the form of: BRANCH_NAME:UUID,...
          */
         for (String branchName : branchHeads.keySet()) {
             branchBuffer.append(branchName + ":" + branchHeads.get(branchName) + ",");
@@ -66,10 +62,10 @@ public class Remote extends AbstractRemote {
         String branches = branchBuffer.toString();
 
         /*
-         * remote the last ',' 
+         * remote the last ','
          */
         if (branches.length() > 0) {
-            branches = branches.substring(0,branches.length() - 1);
+            branches = branches.substring(0, branches.length() - 1);
         }
 
         /*
@@ -82,7 +78,7 @@ public class Remote extends AbstractRemote {
             HttpResponse response = httpclient.execute(httpget);
             HttpEntity entity = response.getEntity();
             /*
-             * The NetworkIO class knows how to translate an input stream of bytes into a payload 
+             * The NetworkIO class knows how to translate an input stream of bytes into a payload
              * that GeoGit understands.
              */
             payload = NetworkIO.receivePayload(entity.getContent());

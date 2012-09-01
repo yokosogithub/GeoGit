@@ -55,7 +55,8 @@ public class RevSHA1TreeTest extends RepositoryTestCase {
         // + (numEntries / sw.getTotalTimeSeconds()) + "/s)");
 
         sw.start();
-        RevTree tree = odb.get(treeId, WrappedSerialisingFactory.getInstance().createRevTreeReader(odb, 0));
+        RevTree tree = odb.get(treeId,
+                WrappedSerialisingFactory.getInstance().createRevTreeReader(odb, 0));
         sw.stop();
         System.out.println("Retrieved tree in " + sw.getTime() + "ms");
 
@@ -95,7 +96,8 @@ public class RevSHA1TreeTest extends RepositoryTestCase {
     public void testRemove() throws Exception {
         final int numEntries = 1000;
         ObjectId treeId = createAndSaveTree(numEntries, true);
-        RevTree tree = odb.get(treeId, WrappedSerialisingFactory.getInstance().createRevTreeReader(odb, 0));
+        RevTree tree = odb.get(treeId,
+                WrappedSerialisingFactory.getInstance().createRevTreeReader(odb, 0));
 
         // collect some keys to remove
         final Set<String> removedKeys = new HashSet<String>();
@@ -123,8 +125,10 @@ public class RevSHA1TreeTest extends RepositoryTestCase {
             assertNull(tree.get(key));
         }
 
-        final ObjectId newTreeId = odb.put(WrappedSerialisingFactory.getInstance().createRevTreeWriter(tree));
-        RevTree tree2 = odb.get(newTreeId, WrappedSerialisingFactory.getInstance().createRevTreeReader(odb, 0));
+        final ObjectId newTreeId = odb.put(WrappedSerialisingFactory.getInstance()
+                .createRevTreeWriter(tree));
+        RevTree tree2 = odb.get(newTreeId, WrappedSerialisingFactory.getInstance()
+                .createRevTreeReader(odb, 0));
 
         for (String key : removedKeys) {
             assertNull(tree2.get(key));
@@ -134,7 +138,8 @@ public class RevSHA1TreeTest extends RepositoryTestCase {
     public void testSize() throws Exception {
         final int numEntries = RevSHA1Tree.SPLIT_FACTOR + 1000;
         ObjectId treeId = createAndSaveTree(numEntries, true);
-        RevTree tree = odb.get(treeId, WrappedSerialisingFactory.getInstance().createRevTreeReader(odb, 0));
+        RevTree tree = odb.get(treeId,
+                WrappedSerialisingFactory.getInstance().createRevTreeReader(odb, 0));
 
         int size = tree.size().intValue();
         assertEquals(numEntries, size);
@@ -192,7 +197,8 @@ public class RevSHA1TreeTest extends RepositoryTestCase {
     public void testIterator() throws Exception {
         final int numEntries = RevSHA1Tree.SPLIT_FACTOR + 1000;
         ObjectId treeId = createAndSaveTree(numEntries, true);
-        RevTree tree = odb.get(treeId, WrappedSerialisingFactory.getInstance().createRevTreeReader(odb, 0));
+        RevTree tree = odb.get(treeId,
+                WrappedSerialisingFactory.getInstance().createRevTreeReader(odb, 0));
 
         Iterator<Ref> iterator = tree.iterator(null);
         assertNotNull(iterator);
@@ -203,22 +209,22 @@ public class RevSHA1TreeTest extends RepositoryTestCase {
         }
         assertEquals(numEntries, count);
     }
-    
+
     public void testPrint() throws Exception {
-    	final int numEntries = RevSHA1Tree.SPLIT_FACTOR + 1000;
-    	ObjectId treeId = createAndSaveTree(numEntries, true);
-    	InputStream in = odb.getRaw(treeId);
-    	ByteArrayOutputStream out = new ByteArrayOutputStream();
-    	WrappedSerialisingFactory.getInstance().createBlobPrinter().print(in, System.out);
-    	
-    	in = odb.getRaw(treeId);
-    	WrappedSerialisingFactory.getInstance().createBlobPrinter().print(in, new PrintStream(out));
-    	
-    	Document dom = DocumentBuilderFactory.newInstance().newDocumentBuilder()
-    			.parse(new ByteArrayInputStream(out.toByteArray()));
-    	assertNotNull(dom);
-    	XMLAssert.assertXpathExists("/tree/tree/bucket", dom);
-    	XMLAssert.assertXpathExists("/tree/tree/objectid", dom);
+        final int numEntries = RevSHA1Tree.SPLIT_FACTOR + 1000;
+        ObjectId treeId = createAndSaveTree(numEntries, true);
+        InputStream in = odb.getRaw(treeId);
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        WrappedSerialisingFactory.getInstance().createBlobPrinter().print(in, System.out);
+
+        in = odb.getRaw(treeId);
+        WrappedSerialisingFactory.getInstance().createBlobPrinter().print(in, new PrintStream(out));
+
+        Document dom = DocumentBuilderFactory.newInstance().newDocumentBuilder()
+                .parse(new ByteArrayInputStream(out.toByteArray()));
+        assertNotNull(dom);
+        XMLAssert.assertXpathExists("/tree/tree/bucket", dom);
+        XMLAssert.assertXpathExists("/tree/tree/objectid", dom);
     }
 
     /**

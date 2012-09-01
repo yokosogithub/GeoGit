@@ -37,11 +37,9 @@ public class SimpleFeatureLockingDecorator extends
     SimpleFeatureStoreDecorator storeDelegate;
 
     public SimpleFeatureLockingDecorator(
-            FeatureLocking<SimpleFeatureType, SimpleFeature> unversioned,
-            Repository repo) {
+            FeatureLocking<SimpleFeatureType, SimpleFeature> unversioned, Repository repo) {
         super(unversioned, repo);
-        storeDelegate = new SimpleFeatureStoreDecorator(
-                (SimpleFeatureStore) unversioned, repo);
+        storeDelegate = new SimpleFeatureStoreDecorator((SimpleFeatureStore) unversioned, repo);
     }
 
     @Override
@@ -51,8 +49,8 @@ public class SimpleFeatureLockingDecorator extends
     }
 
     @Override
-    public void modifyFeatures(String[] names, Object[] attributeValues,
-            Filter filter) throws IOException {
+    public void modifyFeatures(String[] names, Object[] attributeValues, Filter filter)
+            throws IOException {
         storeDelegate.modifyFeatures(names, attributeValues, filter);
     }
 
@@ -62,8 +60,7 @@ public class SimpleFeatureLockingDecorator extends
     }
 
     @Override
-    public SimpleFeatureCollection getFeatures(Filter filter)
-            throws IOException {
+    public SimpleFeatureCollection getFeatures(Filter filter) throws IOException {
         return (SimpleFeatureCollection) super.getFeatures(filter);
     }
 
@@ -74,9 +71,8 @@ public class SimpleFeatureLockingDecorator extends
 
     @Override
     protected FeatureCollection<SimpleFeatureType, SimpleFeature> createFeatureCollection(
-            FeatureCollection<SimpleFeatureType, SimpleFeature> delegate,
-            RevTree typeTree) {
-        return new SimpleResourceIdAssigningFeatureCollection(
-                (SimpleFeatureCollection) delegate, this, typeTree);
+            FeatureCollection<SimpleFeatureType, SimpleFeature> delegate, RevTree typeTree) {
+        return new SimpleResourceIdAssigningFeatureCollection((SimpleFeatureCollection) delegate,
+                this, typeTree);
     }
 }

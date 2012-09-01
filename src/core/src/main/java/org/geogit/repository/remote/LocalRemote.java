@@ -92,7 +92,7 @@ public class LocalRemote extends AbstractRemote {
             if (!ObjectId.NULL/* THE HEAD */.equals(branchId)) {
                 if (getRepository().commitExists(branchId)) {
                     logOp.setSince(branchId);
-                    
+
                     RevCommit commit = getRepository().getCommit(branchId);
                     ObjectId treeId = commit.getTreeId();
                     RevTree tree = getRepository().getTree(treeId);
@@ -216,12 +216,14 @@ public class LocalRemote extends AbstractRemote {
 
     @Override
     public void dispose() {
-    	if (repository!= null) repository.close();
+        if (repository != null)
+            repository.close();
     }
 
     private class CommitTreeVisitor implements TreeVisitor {
 
         private Payload payload;
+
         private Payload excludedPayload;
 
         public CommitTreeVisitor(final Payload payload, final Payload excludedPayload) {
@@ -243,7 +245,7 @@ public class LocalRemote extends AbstractRemote {
             if (!excludedPayload.getTreeUpdates().contains(tree)) {
                 payload.addTrees(tree);
             }
-            
+
             tree.accept(this);
             return true;
         }

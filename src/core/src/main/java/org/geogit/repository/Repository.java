@@ -52,12 +52,12 @@ public class Repository {
     private final StagingArea index;
 
     private final WorkingTree workingTree;
-    
+
     /**
      * This is stored here for the convenience of knowing where to load the configuration file from
      */
     private final File repositoryHome;
-    
+
     public Repository(final RepositoryDatabase repoDb, File envHome) {
         Preconditions.checkNotNull(repoDb);
         this.repoDb = repoDb;
@@ -126,13 +126,10 @@ public class Repository {
     }
 
     /**
-     * @param revstr
-     *            an object reference expression
+     * @param revstr an object reference expression
      * @return the object the resolved reference points to.
-     * @throws NoSuchElementException
-     *             if {@code revstr} dosn't resolve to any object
-     * @throws IllegalArgumentException
-     *             if {@code revstr} resolves to more than one object.
+     * @throws NoSuchElementException if {@code revstr} dosn't resolve to any object
+     * @throws IllegalArgumentException if {@code revstr} resolves to more than one object.
      */
     public RevObject resolve(final String revstr) {
         Ref ref = getRef(revstr);
@@ -164,15 +161,16 @@ public class Repository {
     public RevObject getBlob(ObjectId objectId) {
         return getObjectDatabase().getBlob(objectId);
     }
-    
+
     /**
      * Test if a blob exists in the object database
+     * 
      * @param id the ID of the blob in the object database
      * @return true if the blob exists with the parameter ID, false otherwise
      */
     public boolean blobExists(final ObjectId id) {
-    	try {
-    		getObjectDatabase().getBlob(id);
+        try {
+            getObjectDatabase().getBlob(id);
         } catch (IllegalArgumentException e) {
             return false;
         }
@@ -212,8 +210,9 @@ public class Repository {
 
     public boolean commitExists(final ObjectId id) {
         try {
-            getObjectDatabase().getCached(id, WrappedSerialisingFactory.getInstance().createCommitReader());
-//            getObjectDatabase().getCached(id, new BxmlCommitReader());
+            getObjectDatabase().getCached(id,
+                    WrappedSerialisingFactory.getInstance().createCommitReader());
+            // getObjectDatabase().getCached(id, new BxmlCommitReader());
         } catch (IllegalArgumentException e) {
             return false;
         } catch (IOException e) {
@@ -221,7 +220,7 @@ public class Repository {
         }
         return true;
     }
-    
+
     public RevCommit getCommit(final ObjectId commitId) {
         Preconditions.checkNotNull(commitId, "commitId");
         return getObjectDatabase().getCommit(commitId);
@@ -233,22 +232,30 @@ public class Repository {
         }
         RevTree tree;
         try {
-            tree = getObjectDatabase().getCached(treeId, WrappedSerialisingFactory.getInstance().createRevTreeReader(getObjectDatabase()));
-//            tree = getObjectDatabase().getCached(treeId, new BxmlRevTreeReader(getObjectDatabase()));
+            tree = getObjectDatabase().getCached(
+                    treeId,
+                    WrappedSerialisingFactory.getInstance()
+                            .createRevTreeReader(getObjectDatabase()));
+            // tree = getObjectDatabase().getCached(treeId, new
+            // BxmlRevTreeReader(getObjectDatabase()));
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
         return tree;
     }
-    
+
     /**
      * Test if a tree exists in the object database
+     * 
      * @param id the ID of the tree in the object database
      * @return true if the tree exists with the parameter ID, false otherwise
      */
     public boolean treeExists(final ObjectId id) {
         try {
-            getObjectDatabase().getCached(id, WrappedSerialisingFactory.getInstance().createRevTreeReader(getObjectDatabase()));
+            getObjectDatabase().getCached(
+                    id,
+                    WrappedSerialisingFactory.getInstance()
+                            .createRevTreeReader(getObjectDatabase()));
         } catch (IllegalArgumentException e) {
             return false;
         } catch (IOException e) {
@@ -284,8 +291,12 @@ public class Repository {
             if (rootTreeId.isNull()) {
                 return newTree();
             }
-            root = getObjectDatabase().get(rootTreeId, WrappedSerialisingFactory.getInstance().createRevTreeReader(getObjectDatabase()));
-//            root = getObjectDatabase().get(rootTreeId, new BxmlRevTreeReader(getObjectDatabase()));
+            root = getObjectDatabase().get(
+                    rootTreeId,
+                    WrappedSerialisingFactory.getInstance()
+                            .createRevTreeReader(getObjectDatabase()));
+            // root = getObjectDatabase().get(rootTreeId, new
+            // BxmlRevTreeReader(getObjectDatabase()));
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -301,8 +312,9 @@ public class Repository {
 
     public Feature getFeature(final FeatureType featureType, final String featureId,
             final ObjectId contentId) {
-        ObjectReader<Feature> reader = WrappedSerialisingFactory.getInstance().createFeatureReader(featureType, featureId);
-//        BxmlFeatureReader reader = new BxmlFeatureReader(featureType, featureId);
+        ObjectReader<Feature> reader = WrappedSerialisingFactory.getInstance().createFeatureReader(
+                featureType, featureId);
+        // BxmlFeatureReader reader = new BxmlFeatureReader(featureType, featureId);
         Feature feature;
         try {
             feature = getObjectDatabase().get(contentId, reader);
@@ -343,9 +355,11 @@ public class Repository {
         RevTree root = getHeadTree();
         return getObjectDatabase().getTreeChild(root, path);
     }
-    
+
     /**
-     * Add a new REF to the reference database, this is used mostly by a fetch to create new references to remote branches
+     * Add a new REF to the reference database, this is used mostly by a fetch to create new
+     * references to remote branches
+     * 
      * @param ref
      */
     public void addRef(Ref ref) {
@@ -354,6 +368,7 @@ public class Repository {
 
     /**
      * Get this repositories home directory on disk
+     * 
      * @return
      */
     public File getRepositoryHome() {

@@ -42,8 +42,8 @@ public class ResourceIdFeatureCollector implements Iterable<Feature> {
 
     private final Set<ResourceId> resourceIds;
 
-    public ResourceIdFeatureCollector(final Repository repository,
-            final FeatureType featureType, final Set<ResourceId> resourceIds) {
+    public ResourceIdFeatureCollector(final Repository repository, final FeatureType featureType,
+            final Set<ResourceId> resourceIds) {
         this.repository = repository;
         this.featureType = featureType;
         this.resourceIds = resourceIds;
@@ -66,8 +66,8 @@ public class ResourceIdFeatureCollector implements Iterable<Feature> {
             throw new RuntimeException(e);
         }
 
-        Iterator<Feature> features = Iterators.transform(featureRefs,
-                new RefToFeature(repository, featureType));
+        Iterator<Feature> features = Iterators.transform(featureRefs, new RefToFeature(repository,
+                featureType));
 
         return features;
     }
@@ -93,14 +93,13 @@ public class ResourceIdFeatureCollector implements Iterable<Feature> {
             StagingDatabase database = repo.getIndex().getDatabase();
             Feature feature;
             try {
-                ObjectReader<Feature> featureReader = serialisingFactory
-                        .createFeatureReader(type, featureId);
+                ObjectReader<Feature> featureReader = serialisingFactory.createFeatureReader(type,
+                        featureId);
                 feature = database.get(contentId, featureReader);
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
-            return VersionedFeatureWrapper.wrap(feature, featureRef
-                    .getObjectId().toString());
+            return VersionedFeatureWrapper.wrap(feature, featureRef.getObjectId().toString());
         }
 
     }

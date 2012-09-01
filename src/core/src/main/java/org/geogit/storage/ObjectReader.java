@@ -16,8 +16,8 @@ public interface ObjectReader<T> {
      * @param rawData
      * @return
      * @throws IOException
-     * @throws IllegalArgumentException
-     *             if the provided stream does not represents an object of the required type
+     * @throws IllegalArgumentException if the provided stream does not represents an object of the
+     *         required type
      */
     public T read(ObjectId id, InputStream rawData) throws IOException, IllegalArgumentException;
 

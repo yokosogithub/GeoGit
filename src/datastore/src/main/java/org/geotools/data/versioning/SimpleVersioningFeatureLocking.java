@@ -21,7 +21,6 @@ import org.opengis.feature.simple.SimpleFeature;
 import org.opengis.feature.simple.SimpleFeatureType;
 
 public interface SimpleVersioningFeatureLocking extends
-        VersioningFeatureLocking<SimpleFeatureType, SimpleFeature>,
-        SimpleFeatureLocking {
+        VersioningFeatureLocking<SimpleFeatureType, SimpleFeature>, SimpleFeatureLocking {
 
 }
