@@ -12,7 +12,6 @@ import javax.xml.parsers.DocumentBuilderFactory;
 
 import org.custommonkey.xmlunit.XMLAssert;
 import org.geogit.storage.ObjectWriter;
-import org.geogit.storage.WrappedSerialisingFactory;
 import org.geogit.test.RepositoryTestCase;
 import org.opengis.feature.Feature;
 import org.w3c.dom.Document;
@@ -20,18 +19,16 @@ import org.w3c.dom.Document;
 public class FeaturePrintTest extends RepositoryTestCase {
 
     public void testPrint() throws Exception {
-        WrappedSerialisingFactory fact = WrappedSerialisingFactory.getInstance();
-
         ByteArrayOutputStream bout = new ByteArrayOutputStream();
-        ObjectWriter<Feature> writ = fact.createFeatureWriter(lines1);
+        ObjectWriter<Feature> writ = getRepository().newFeatureWriter(lines1);
         writ.write(bout);
 
         byte[] bytes = bout.toByteArray();
 
-        fact.createBlobPrinter().print(bytes, System.out);
+        getRepository().newBlobPrinter().print(bytes, System.out);
 
         bout = new ByteArrayOutputStream();
-        fact.createBlobPrinter().print(bytes, new PrintStream(bout));
+        getRepository().newBlobPrinter().print(bytes, new PrintStream(bout));
 
         Document dom = DocumentBuilderFactory.newInstance().newDocumentBuilder()
                 .parse(new ByteArrayInputStream(bout.toByteArray()));

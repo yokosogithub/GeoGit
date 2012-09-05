@@ -9,24 +9,28 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Properties;
 
 import junit.framework.TestCase;
 
 import org.apache.commons.io.FileUtils;
+import org.geogit.api.DefaultPlatform;
 import org.geogit.api.GeoGIT;
+import org.geogit.api.GeogitModule;
 import org.geogit.api.ObjectId;
+import org.geogit.api.Platform;
 import org.geogit.api.Ref;
 import org.geogit.api.RevCommit;
+import org.geogit.command.plumbing.PlumbingCommands;
 import org.geogit.repository.Repository;
 import org.geogit.repository.StagingArea;
 import org.geogit.repository.Triplet;
+import org.geogit.storage.ObjectDatabase;
 import org.geogit.storage.ObjectWriter;
-import org.geogit.storage.RepositoryDatabase;
-import org.geogit.storage.WrappedSerialisingFactory;
-import org.geogit.storage.bdbje.EntityStoreConfig;
-import org.geogit.storage.bdbje.EnvironmentBuilder;
-import org.geogit.storage.bdbje.JERepositoryDatabase;
+import org.geogit.storage.RefDatabase;
+import org.geogit.storage.StagingDatabase;
+import org.geogit.storage.memory.HeapObjectDatabse;
+import org.geogit.storage.memory.HeapRefDatabase;
+import org.geogit.storage.memory.HeapStagingDatabase;
 import org.geotools.data.DataUtilities;
 import org.geotools.feature.NameImpl;
 import org.geotools.feature.simple.SimpleFeatureBuilder;
@@ -45,7 +49,11 @@ import org.opengis.referencing.crs.CoordinateReferenceSystem;
 import com.google.common.base.Function;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Iterators;
-import com.sleepycat.je.Environment;
+import com.google.inject.AbstractModule;
+import com.google.inject.Guice;
+import com.google.inject.Injector;
+import com.google.inject.Scopes;
+import com.google.inject.util.Modules;
 import com.vividsolutions.jts.io.ParseException;
 
 public abstract class RepositoryTestCase extends TestCase {
@@ -99,40 +107,48 @@ public abstract class RepositoryTestCase extends TestCase {
     // prevent recursion
     private boolean setup = false;
 
-    protected RepositoryDatabase repositoryDatabase;
+    private static File envHome;
+
+    Injector injector;
+
+    static class TestPlatform extends DefaultPlatform {
+        @Override
+        public File pwd() {
+            return envHome;
+        }
+    }
+
+    static class TestModule extends AbstractModule {
+        @Override
+        protected void configure() {
+            bind(Platform.class).to(TestPlatform.class).in(Scopes.SINGLETON);
+            bind(ObjectDatabase.class).to(HeapObjectDatabse.class).in(Scopes.SINGLETON);
+            bind(RefDatabase.class).to(HeapRefDatabase.class).in(Scopes.SINGLETON);
+            bind(StagingDatabase.class).to(HeapStagingDatabase.class).in(Scopes.SINGLETON);
+        }
+    }
 
     @Override
     protected final void setUp() throws Exception {
         if (setup) {
             throw new IllegalStateException("Are you calling super.setUp()!?");
         }
+
         setup = true;
         Logging.ALL.forceMonolineConsoleOutput();
-        final File envHome = new File(new File("target"), "mockblobstore");
-        final File repositoryHome = new File(envHome, "repository");
-        final File indexHome = new File(envHome, "index");
+        envHome = new File(new File("target"), "testrepository");
 
         FileUtils.deleteDirectory(envHome);
-        repositoryHome.mkdirs();
-        indexHome.mkdirs();
+        assertFalse(envHome.exists());
+        assertTrue(envHome.mkdirs());
 
-        EntityStoreConfig config = new EntityStoreConfig();
-        config.setCacheMemoryPercentAllowed(50);
-        EnvironmentBuilder esb = new EnvironmentBuilder(config);
-        Properties bdbEnvProperties = null;
-        Environment environment;
-        environment = esb.buildEnvironment(repositoryHome, bdbEnvProperties);
+        // ///////////////////////////
+//        injector = Guice
+//                .createInjector(Modules.override(new GeogitModule()).with(new TestModule()),
+//                        new PlumbingCommands());
+        injector = Guice.createInjector(new GeogitModule(), new PlumbingCommands());
 
-        Environment stagingEnvironment;
-        stagingEnvironment = esb.buildEnvironment(indexHome, bdbEnvProperties);
-
-        repositoryDatabase = new JERepositoryDatabase(environment, stagingEnvironment);
-
-        // repositoryDatabase = new FileSystemRepositoryDatabase(envHome);
-
-        repo = new Repository(repositoryDatabase, envHome);
-
-        repo.create();
+        repo = new GeoGIT(injector, envHome).getRepository();
 
         pointsType = DataUtilities.createType(pointsNs, pointsName, pointsTypeSpec);
 
@@ -159,6 +175,11 @@ public abstract class RepositoryTestCase extends TestCase {
         if (repo != null) {
             repo.close();
         }
+        repo = null;
+        injector = null;
+        System.gc();
+        FileUtils.deleteDirectory(envHome);
+        assertFalse(envHome.exists());
     }
 
     /**
@@ -240,8 +261,8 @@ public abstract class RepositoryTestCase extends TestCase {
         String localPart = name.getLocalPart();
         String id = f.getIdentifier().getID();
 
-        Ref ref = index.inserted(WrappedSerialisingFactory.getInstance().createFeatureWriter(f),
-                f.getBounds(), namespaceURI, localPart, id);
+        Ref ref = index.inserted(getRepository().newFeatureWriter(f), f.getBounds(), namespaceURI,
+                localPart, id);
         ObjectId objectId = ref.getObjectId();
         return objectId;
     }
@@ -266,8 +287,7 @@ public abstract class RepositoryTestCase extends TestCase {
                 String id = f.getIdentifier().getID();
 
                 Triplet<ObjectWriter<?>, BoundingBox, List<String>> tuple;
-                ObjectWriter<?> writer = WrappedSerialisingFactory.getInstance()
-                        .createFeatureWriter(f);
+                ObjectWriter<?> writer = getRepository().newFeatureWriter(f);
                 BoundingBox bounds = f.getBounds();
                 List<String> path = Arrays.asList(namespaceURI, localPart, id);
                 tuple = new Triplet<ObjectWriter<?>, BoundingBox, List<String>>(writer, bounds,

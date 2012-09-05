@@ -14,7 +14,6 @@ import org.geogit.repository.Repository;
 import org.geogit.repository.StagingArea;
 import org.geogit.repository.Tuple;
 import org.geogit.storage.ObjectInserter;
-import org.geogit.storage.WrappedSerialisingFactory;
 import org.opengis.geometry.BoundingBox;
 
 import com.google.common.base.Preconditions;
@@ -169,8 +168,7 @@ public class CommitOp extends AbstractGeoGitOp<RevCommit> {
                 return null;
             }
             ObjectInserter objectInserter = repository.newObjectInserter();
-            commitId = objectInserter.insert(WrappedSerialisingFactory.getInstance()
-                    .createCommitWriter(cb.build(ObjectId.NULL)));
+            commitId = objectInserter.insert(repository.newCommitWriter(cb.build(ObjectId.NULL)));
         }
         final RevCommit commit = repository.getCommit(commitId);
         // set the HEAD pointing to the new commit

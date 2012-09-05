@@ -25,6 +25,7 @@ import org.opengis.filter.FilterFactory2;
 import org.opengis.filter.identity.FeatureId;
 
 import com.caucho.hessian.io.Hessian2Input;
+import com.google.common.base.Throwables;
 import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.geom.GeometryFactory;
 import com.vividsolutions.jts.geom.impl.PackedCoordinateSequenceFactory;
@@ -59,25 +60,28 @@ class HessianFeatureReader implements ObjectReader<Feature> {
         }
     }
 
-    public Feature read(ObjectId id, InputStream rawData) throws IOException,
-            IllegalArgumentException {
-        Hessian2Input in = new Hessian2Input(rawData);
-        in.startMessage();
-        BlobType type = BlobType.fromValue(in.readInt());
-        if (type != BlobType.FEATURE)
-            throw new IllegalArgumentException("Could not parse blob of type " + type
-                    + " as a feature.");
-        List<Object> values = new ArrayList<Object>();
-        String typeString = in.readString();
-        int attrCount = in.readInt();
-        for (int i = 0; i < attrCount; i++) {
-            Object obj = readValue(in);
-            values.add(obj);
+    public Feature read(ObjectId id, InputStream rawData) throws IllegalArgumentException {
+        try {
+            Hessian2Input in = new Hessian2Input(rawData);
+            in.startMessage();
+            BlobType type = BlobType.fromValue(in.readInt());
+            if (type != BlobType.FEATURE)
+                throw new IllegalArgumentException("Could not parse blob of type " + type
+                        + " as a feature.");
+            List<Object> values = new ArrayList<Object>();
+            String typeString = in.readString();
+            int attrCount = in.readInt();
+            for (int i = 0; i < attrCount; i++) {
+                Object obj = readValue(in);
+                values.add(obj);
+            }
+            in.completeMessage();
+            FeatureId fid = FILTER_FAC.featureId(featureId, id.toString());
+            SimpleFeature feat = new SimpleFeatureImpl(values, (SimpleFeatureType) featureType, fid);
+            return feat;
+        } catch (Exception e) {
+            throw Throwables.propagate(e);
         }
-        in.completeMessage();
-        FeatureId fid = FILTER_FAC.featureId(featureId, id.toString());
-        SimpleFeature feat = new SimpleFeatureImpl(values, (SimpleFeatureType) featureType, fid);
-        return feat;
     }
 
     static Object readValue(final Hessian2Input in) throws IOException {

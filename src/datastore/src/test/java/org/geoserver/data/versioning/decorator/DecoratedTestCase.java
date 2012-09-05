@@ -25,7 +25,6 @@ import java.util.logging.Logger;
 
 import org.apache.commons.collections.map.HashedMap;
 import org.apache.commons.io.FileUtils;
-import org.geoserver.data.RepositoryTestCase;
 import org.geotools.data.DataStore;
 import org.geotools.data.DataUtilities;
 import org.geotools.data.DefaultTransaction;
@@ -46,7 +45,7 @@ import org.opengis.filter.Filter;
 import org.opengis.filter.FilterFactory2;
 import org.opengis.filter.identity.FeatureId;
 
-public abstract class DecoratedTestCase extends RepositoryTestCase {
+public abstract class DecoratedTestCase extends org.geogit.test.RepositoryTestCase {
 
     protected static final String idS1 = "Sample.1";
 
@@ -444,7 +443,6 @@ public abstract class DecoratedTestCase extends RepositoryTestCase {
         tearDownChild();
         unversioned = null;
         versioned = null;
-        repositoryDatabase = null;
     }
 
     protected void setUpChild() throws Exception {

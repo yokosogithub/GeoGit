@@ -8,7 +8,9 @@ import org.geogit.api.RevCommit;
 import org.geogit.api.RevTree;
 import org.geotools.factory.Hints;
 import org.opengis.feature.Feature;
+import org.opengis.feature.simple.SimpleFeatureType;
 import org.opengis.feature.type.FeatureType;
+import org.opengis.feature.type.Name;
 
 /**
  * The ObjectSerialisingFactory is used to create instances of the various writers and readers used
@@ -97,5 +99,17 @@ public interface ObjectSerialisingFactory {
      * @return instance of a BlobPrinter for the current serialisation
      */
     public BlobPrinter createBlobPrinter();
+
+    /**
+     * @param type
+     * @return
+     */
+    public ObjectWriter<SimpleFeatureType> createSimpleFeatureTypeWriter(SimpleFeatureType type);
+
+    /**
+     * @param name
+     * @return
+     */
+    public ObjectReader<SimpleFeatureType> createSimpleFeatureTypeReader(Name name);
 
 }

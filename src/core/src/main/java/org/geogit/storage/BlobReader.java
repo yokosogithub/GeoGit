@@ -11,15 +11,20 @@ import java.io.InputStream;
 import org.geogit.api.ObjectId;
 import org.geogit.api.RevBlob;
 
+import com.google.common.base.Throwables;
+
 public class BlobReader implements ObjectReader<RevBlob> {
 
     @Override
-    public RevBlob read(ObjectId id, InputStream rawData) throws IOException,
-            IllegalArgumentException {
+    public RevBlob read(ObjectId id, InputStream rawData) throws IllegalArgumentException {
         ByteArrayOutputStream output = new ByteArrayOutputStream();
         int c;
-        while ((c = rawData.read()) != -1) {
-            output.write(c);
+        try {
+            while ((c = rawData.read()) != -1) {
+                output.write(c);
+            }
+        } catch (IOException e) {
+            throw Throwables.propagate(e);
         }
         return new RevBlob(id, output.toByteArray());
     }

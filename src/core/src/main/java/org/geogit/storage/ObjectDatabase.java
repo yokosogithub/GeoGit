@@ -11,14 +11,16 @@ import java.util.List;
 import org.geogit.api.MutableTree;
 import org.geogit.api.ObjectId;
 import org.geogit.api.Ref;
-import org.geogit.api.RevBlob;
-import org.geogit.api.RevCommit;
 import org.geogit.api.RevTree;
 
 public interface ObjectDatabase {
 
     public abstract void close();
 
+    /**
+     * Initializes/opens the databse. It's safe to call this method multiple times, and only the
+     * first call shall take effect.
+     */
     public abstract void create();
 
     public abstract boolean exists(final ObjectId id);
@@ -29,7 +31,7 @@ public interface ObjectDatabase {
      * @throws IOException
      * @throws IllegalArgumentException if an object with such id does not exist
      */
-    public abstract InputStream getRaw(final ObjectId id) throws IOException;
+    public abstract InputStream getRaw(final ObjectId id);
 
     public List<ObjectId> lookUp(final String partialId);
 
@@ -41,30 +43,12 @@ public interface ObjectDatabase {
      * @throws IOException
      * @throws IllegalArgumentException if an object with such id does not exist
      */
-    public abstract <T> T get(final ObjectId id, final ObjectReader<T> reader) throws IOException;
-
-    /**
-     * Returns a possibly cached version of the object identified by the given {@code id}.
-     * <p>
-     * The returned object is meant to be immutable. If any modification is to be made the calling
-     * code is in charge of cloning the returned object so that it doesn't affect the cached
-     * version.
-     * </p>
-     * 
-     * @param <T> the type of object returned
-     * @param id the id of the object to return from the cache, or to look up in the database and
-     *        cache afterwards.
-     * @param reader the reader to use in the case of a cache miss.
-     * @return the cached version of the required object.
-     * @throws IOException
-     */
-    public abstract <T> T getCached(final ObjectId id, final ObjectReader<T> reader)
-            throws IOException;
+    public abstract <T> T get(final ObjectId id, final ObjectReader<T> reader);
 
     /**
      * 
      */
-    public abstract <T> ObjectId put(final ObjectWriter<T> writer) throws Exception;
+    public abstract <T> ObjectId put(final ObjectWriter<T> writer);
 
     /**
      * @param id
@@ -74,7 +58,7 @@ public interface ObjectDatabase {
      *         key.
      * @throws Exception
      */
-    public abstract boolean put(final ObjectId id, final ObjectWriter<?> writer) throws Exception;
+    public abstract boolean put(final ObjectId id, final ObjectWriter<?> writer);
 
     /**
      * @param root
@@ -87,12 +71,6 @@ public interface ObjectDatabase {
             throws Exception;
 
     public abstract ObjectInserter newObjectInserter();
-
-    public RevBlob getBlob(ObjectId objectId);
-
-    public RevCommit getCommit(final ObjectId commitId);
-
-    public RevTree getTree(final ObjectId treeId);
 
     /**
      * If a child tree of {@code parent} addressed by the given {@code childPath} exists, returns
@@ -113,6 +91,12 @@ public interface ObjectDatabase {
 
     public Ref getTreeChild(RevTree root, List<String> path);
 
+    // public RevTree getTree(final ObjectId treeId);
+    //
+    // public RevTree getTree(final ObjectId treeId, int assignedDepth);
+
     public boolean delete(ObjectId objectId);
+
+    public abstract ObjectSerialisingFactory getSerialFactory();
 
 }

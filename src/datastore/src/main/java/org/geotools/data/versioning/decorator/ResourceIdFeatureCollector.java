@@ -16,7 +16,6 @@
  */
 package org.geotools.data.versioning.decorator;
 
-import java.io.IOException;
 import java.util.Iterator;
 import java.util.Set;
 
@@ -26,7 +25,6 @@ import org.geogit.api.Ref;
 import org.geogit.repository.Repository;
 import org.geogit.storage.ObjectReader;
 import org.geogit.storage.StagingDatabase;
-import org.geogit.storage.WrappedSerialisingFactory;
 import org.opengis.feature.Feature;
 import org.opengis.feature.type.FeatureType;
 import org.opengis.filter.identity.ResourceId;
@@ -72,18 +70,15 @@ public class ResourceIdFeatureCollector implements Iterable<Feature> {
         return features;
     }
 
-    private static class RefToFeature implements Function<Ref, Feature> {
+    private final class RefToFeature implements Function<Ref, Feature> {
 
         private final Repository repo;
 
         private final FeatureType type;
 
-        private WrappedSerialisingFactory serialisingFactory;
-
         public RefToFeature(final Repository repo, final FeatureType type) {
             this.repo = repo;
             this.type = type;
-            serialisingFactory = WrappedSerialisingFactory.getInstance();
         }
 
         @Override
@@ -92,13 +87,10 @@ public class ResourceIdFeatureCollector implements Iterable<Feature> {
             ObjectId contentId = featureRef.getObjectId();
             StagingDatabase database = repo.getIndex().getDatabase();
             Feature feature;
-            try {
-                ObjectReader<Feature> featureReader = serialisingFactory.createFeatureReader(type,
-                        featureId);
-                feature = database.get(contentId, featureReader);
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
+
+            ObjectReader<Feature> featureReader = repository.newFeatureReader(type, featureId);
+            feature = database.get(contentId, featureReader);
+
             return VersionedFeatureWrapper.wrap(feature, featureRef.getObjectId().toString());
         }
 

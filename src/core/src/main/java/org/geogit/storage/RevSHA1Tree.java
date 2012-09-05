@@ -4,7 +4,6 @@
  */
 package org.geogit.storage;
 
-import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.math.BigInteger;
 import java.security.MessageDigest;
@@ -24,7 +23,6 @@ import org.geogit.api.TreeVisitor;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
-import com.google.common.base.Throwables;
 import com.google.common.collect.Iterators;
 
 public class RevSHA1Tree extends AbstractRevObject implements RevTree {
@@ -98,23 +96,22 @@ public class RevSHA1Tree extends AbstractRevObject implements RevTree {
         // and then the ones in the stored subtrees
         if (mySubTrees.size() > 0) {
             final int childDepth = this.depth + 1;
-            try {
-                Integer bucket;
-                Ref subtreeRef;
-                ObjectId subtreeId;
-                RevSHA1Tree subtree;
-                for (Map.Entry<Integer, Ref> e : mySubTrees.entrySet()) {
-                    bucket = e.getKey();
-                    subtreeRef = e.getValue();
-                    subtreeId = subtreeRef.getObjectId();
-                    if (visitor.visitSubTree(bucket, subtreeId)) {
-                        subtree = (RevSHA1Tree) db.get(subtreeId, WrappedSerialisingFactory
-                                .getInstance().createRevTreeReader(db, childDepth));
-                        subtree.accept(visitor, myEntries);
-                    }
+            Integer bucket;
+            Ref subtreeRef;
+            ObjectId subtreeId;
+            RevSHA1Tree subtree;
+
+            ObjectSerialisingFactory serialFactory = db.getSerialFactory();
+
+            for (Map.Entry<Integer, Ref> e : mySubTrees.entrySet()) {
+                bucket = e.getKey();
+                subtreeRef = e.getValue();
+                subtreeId = subtreeRef.getObjectId();
+                if (visitor.visitSubTree(bucket, subtreeId)) {
+                    subtree = (RevSHA1Tree) db.get(subtreeId,
+                            serialFactory.createRevTreeReader(db, childDepth));
+                    subtree.accept(visitor, myEntries);
                 }
-            } catch (IOException ioe) {
-                throw new RuntimeException(ioe);
             }
         }
     }
@@ -154,7 +151,6 @@ public class RevSHA1Tree extends AbstractRevObject implements RevTree {
      * 
      * @param key
      * @return
-     * @see ObjectDatabase#getCached(ObjectId, org.geogit.storage.ObjectPersister)
      */
     @Override
     public Ref get(final String key) {
@@ -172,14 +168,10 @@ public class RevSHA1Tree extends AbstractRevObject implements RevTree {
             if (subTreeRef == null) {
                 value = null;
             } else {
-                RevTree subTree;
-                try {
-                    ObjectId subtreeId = subTreeRef.getObjectId();
-                    subTree = db.getCached(subtreeId, WrappedSerialisingFactory.getInstance()
-                            .createRevTreeReader(db, this.depth + 1));
-                } catch (IOException ioe) {
-                    throw new RuntimeException(ioe);
-                }
+                ObjectId subtreeId = subTreeRef.getObjectId();
+                ObjectSerialisingFactory serialFactory = db.getSerialFactory();
+                RevTree subTree = db.get(subtreeId,
+                        serialFactory.createRevTreeReader(db, this.depth + 1));
                 value = subTree.get(key);
             }
         }
@@ -256,7 +248,7 @@ public class RevSHA1Tree extends AbstractRevObject implements RevTree {
         return sorted.values().iterator();
     }
 
-    private static class LazySubtreeIterator implements Iterator<Ref> {
+    private class LazySubtreeIterator implements Iterator<Ref> {
 
         private final ObjectDatabase db;
 
@@ -279,13 +271,9 @@ public class RevSHA1Tree extends AbstractRevObject implements RevTree {
         public boolean hasNext() {
             if (subject == null) {
                 RevTree subtree;
-                try {
-                    subtree = db.get(objectId, WrappedSerialisingFactory.getInstance()
-                            .createRevTreeReader(db, depth));
-                    subject = subtree.iterator(filter);
-                } catch (IOException e) {
-                    Throwables.propagate(e);
-                }
+                ObjectSerialisingFactory serialFactory = db.getSerialFactory();
+                subtree = db.get(objectId, serialFactory.createRevTreeReader(db, depth));
+                subject = subtree.iterator(filter);
             }
             return subject.hasNext();
         }

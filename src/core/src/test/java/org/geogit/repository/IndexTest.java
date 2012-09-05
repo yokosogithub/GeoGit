@@ -16,7 +16,6 @@ import org.geogit.api.RevTree;
 import org.geogit.storage.ObjectDatabase;
 import org.geogit.storage.ObjectInserter;
 import org.geogit.storage.StagingDatabase;
-import org.geogit.storage.WrappedSerialisingFactory;
 import org.geogit.test.RepositoryTestCase;
 import org.geotools.util.NullProgressListener;
 import org.opengis.feature.Feature;
@@ -109,8 +108,7 @@ public class IndexTest extends RepositoryTestCase {
         ObjectInserter objectInserter = repo.newObjectInserter();
         RevCommit commit = new RevCommit(ObjectId.NULL);
         commit.setTreeId(newRootTreeId);
-        ObjectId commitId = objectInserter.insert(WrappedSerialisingFactory.getInstance()
-                .createCommitWriter(commit));
+        ObjectId commitId = objectInserter.insert(getRepository().newCommitWriter(commit));
         final Ref newHead = repo.updateRef(new Ref(Ref.HEAD, commitId, TYPE.COMMIT));
 
         index.deleted(linesNs, linesName, lines1.getIdentifier().getID());
@@ -200,10 +198,10 @@ public class IndexTest extends RepositoryTestCase {
             newRepoTreeId1 = writeResult.getFirst();
             // assertEquals(index.getDatabase().getStagedRootRef().getObjectId(), newRepoTreeId1);
 
-            RevTree newRepoTree = repoDb.getTree(newRepoTreeId1);
+            RevTree newRepoTree = repo.getTree(newRepoTreeId1);
 
             System.err.println("++++++++++ new repo tree 1: " + newRepoTreeId1 + " ++++++++++++");
-            newRepoTree.accept(new PrintVisitor(repoDb, new PrintWriter(System.err)));
+            newRepoTree.accept(new PrintVisitor(repo, new PrintWriter(System.err)));
             // check feature1_1 is there
             assertEquals(oId1_1, repoDb.getTreeChild(newRepoTree, pointsNs, pointsName, idP1)
                     .getObjectId());
@@ -219,8 +217,7 @@ public class IndexTest extends RepositoryTestCase {
             ObjectInserter objectInserter = repo.newObjectInserter();
             RevCommit commit = new RevCommit(ObjectId.NULL);
             commit.setTreeId(newRepoTreeId1);
-            ObjectId commitId = objectInserter.insert(WrappedSerialisingFactory.getInstance()
-                    .createCommitWriter(commit));
+            ObjectId commitId = objectInserter.insert(getRepository().newCommitWriter(commit));
             final Ref newHead = repo.updateRef(new Ref(Ref.HEAD, commitId, TYPE.COMMIT));
         }
 
@@ -236,9 +233,9 @@ public class IndexTest extends RepositoryTestCase {
             // assertEquals(index.getDatabase().getStagedRootRef().getObjectId(), newRepoTreeId2);
 
             System.err.println("++++++++ new root 2:" + newRepoTreeId2 + " ++++++++++");
-            RevTree newRepoTree = repoDb.getTree(newRepoTreeId2);
+            RevTree newRepoTree = repo.getTree(newRepoTreeId2);
 
-            newRepoTree.accept(new PrintVisitor(repoDb, new PrintWriter(System.err)));
+            newRepoTree.accept(new PrintVisitor(repo, new PrintWriter(System.err)));
 
             // check feature1_2, feature1_2 and feature2_1
             Ref treeChild;
@@ -260,8 +257,7 @@ public class IndexTest extends RepositoryTestCase {
             ObjectInserter objectInserter = repo.newObjectInserter();
             RevCommit commit = new RevCommit(ObjectId.NULL);
             commit.setTreeId(newRepoTreeId2);
-            ObjectId commitId = objectInserter.insert(WrappedSerialisingFactory.getInstance()
-                    .createCommitWriter(commit));
+            ObjectId commitId = objectInserter.insert(getRepository().newCommitWriter(commit));
             final Ref newHead = repo.updateRef(new Ref(Ref.HEAD, commitId, TYPE.COMMIT));
         }
 
@@ -284,9 +280,9 @@ public class IndexTest extends RepositoryTestCase {
             // assertEquals(index.getDatabase().getStagedRootRef().getObjectId(), newRepoTreeId3);
 
             System.err.println("++++++++ new root 3:" + newRepoTreeId3 + " ++++++++++");
-            RevTree newRepoTree = repoDb.getTree(newRepoTreeId3);
+            RevTree newRepoTree = repo.getTree(newRepoTreeId3);
 
-            newRepoTree.accept(new PrintVisitor(repoDb, new PrintWriter(System.err)));
+            newRepoTree.accept(new PrintVisitor(repo, new PrintWriter(System.err)));
 
             // and check only feature1_2 and feature2_2 remain
             assertNull(repoDb.getTreeChild(newRepoTree, pointsNs, pointsName, idP1));

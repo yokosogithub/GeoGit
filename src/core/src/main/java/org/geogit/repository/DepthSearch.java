@@ -13,17 +13,21 @@ import org.geogit.api.RevObject.TYPE;
 import org.geogit.api.RevTree;
 import org.geogit.api.TreeVisitor;
 import org.geogit.storage.ObjectDatabase;
+import org.geogit.storage.ObjectSerialisingFactory;
 
 public class DepthSearch {
 
     private final ObjectDatabase objectDb;
 
-    public DepthSearch(final ObjectDatabase db) {
+    private ObjectSerialisingFactory serialFactory;
+
+    public DepthSearch(final ObjectDatabase db, ObjectSerialisingFactory serialFactory) {
         this.objectDb = db;
+        this.serialFactory = serialFactory;
     }
 
     public Ref find(final ObjectId treeId, final List<String> path) {
-        RevTree tree = objectDb.getTree(treeId);
+        RevTree tree = objectDb.get(treeId, serialFactory.createRevTreeReader(objectDb));
         if (tree == null) {
             return null;
         }
@@ -39,7 +43,8 @@ public class DepthSearch {
         if (childTreeRef == null) {
             return null;
         }
-        final RevTree childTree = objectDb.getTree(childTreeRef.getObjectId());
+        final RevTree childTree = objectDb.get(childTreeRef.getObjectId(),
+                serialFactory.createRevTreeReader(objectDb));
         final List<String> subpath = path.subList(1, path.size());
         return find(childTree, subpath);
     }
@@ -65,7 +70,8 @@ public class DepthSearch {
                 if (TYPE.TREE.equals(ref.getType())) {
                     final int idx = path.size();
                     path.add(ref.getName());
-                    objectDb.getTree(ref.getObjectId()).accept(this);
+                    objectDb.get(ref.getObjectId(), serialFactory.createRevTreeReader(objectDb))
+                            .accept(this);
                     if (target[0] == null) {
                         path.remove(idx);
                     } else {

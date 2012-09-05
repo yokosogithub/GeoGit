@@ -6,13 +6,11 @@ package org.geogit.cli;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
-import java.io.File;
 import java.io.IOException;
 import java.text.NumberFormat;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
-import java.util.Properties;
 import java.util.ServiceLoader;
 import java.util.logging.Level;
 
@@ -21,12 +19,10 @@ import javax.annotation.Nullable;
 import jline.console.ConsoleReader;
 import jline.console.CursorBuffer;
 
+import org.geogit.api.DefaultPlatform;
 import org.geogit.api.GeoGIT;
-import org.geogit.repository.Repository;
-import org.geogit.storage.RepositoryDatabase;
-import org.geogit.storage.bdbje.EntityStoreConfig;
-import org.geogit.storage.bdbje.EnvironmentBuilder;
-import org.geogit.storage.bdbje.JERepositoryDatabase;
+import org.geogit.api.Platform;
+import org.geogit.command.plumbing.ResolveGeogitDir;
 import org.geotools.util.DefaultProgressListener;
 import org.geotools.util.logging.Logging;
 import org.opengis.util.ProgressListener;
@@ -39,7 +35,6 @@ import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Key;
 import com.google.inject.Module;
-import com.sleepycat.je.Environment;
 
 /**
  * Command Line Interface for geogit.
@@ -65,10 +60,11 @@ public class GeogitCLI {
      */
     public GeogitCLI(final ConsoleReader consoleReader) {
         this.consoleReader = consoleReader;
+        this.platform = new DefaultPlatform();
 
         Iterable<CLIModule> plugins = ServiceLoader.load(CLIModule.class);
         injector = Guice.createInjector(plugins);
-        platform = new DefaultPlatform();
+
     }
 
     public Platform getPlatform() {
@@ -109,44 +105,14 @@ public class GeogitCLI {
      *         directory.
      */
     private GeoGIT loadRepository() {
-        GeoGIT geogit = null;
+        GeoGIT geogit = new GeoGIT();
 
-        Platform platform = getPlatform();
-        File envHome = new File(platform.pwd(), ".geogit");
-        envHome.mkdirs();
-        if (!envHome.exists()) {
-            throw new RuntimeException("Unable to create geogit environment at '"
-                    + envHome.getAbsolutePath() + "'");
+        if (null != geogit.command(ResolveGeogitDir.class).call()) {
+            geogit.getRepository();
+            return geogit;
         }
 
-        File repositoryHome = new File(envHome, "objects");
-        File indexHome = new File(envHome, "index");
-
-        if (repositoryHome.exists()) {
-            // Stopwatch sw = new Stopwatch().start();
-            indexHome.mkdirs();
-
-            EntityStoreConfig config = new EntityStoreConfig();
-            config.setCacheMemoryPercentAllowed(50);
-            EnvironmentBuilder esb = new EnvironmentBuilder(config);
-            Properties bdbEnvProperties = null;
-            Environment environment;
-            environment = esb.buildEnvironment(repositoryHome, bdbEnvProperties);
-
-            Environment stagingEnvironment;
-            stagingEnvironment = esb.buildEnvironment(indexHome, bdbEnvProperties);
-
-            RepositoryDatabase repositoryDatabase = new JERepositoryDatabase(environment,
-                    stagingEnvironment);
-
-            repositoryDatabase.create();
-
-            Repository repository = new Repository(repositoryDatabase, envHome);
-
-            geogit = new GeoGIT(repository);
-        }
-
-        return geogit;
+        return null;
     }
 
     public ConsoleReader getConsole() {

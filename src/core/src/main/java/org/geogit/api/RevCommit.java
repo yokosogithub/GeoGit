@@ -4,6 +4,8 @@
  */
 package org.geogit.api;
 
+import static com.google.common.base.Objects.equal;
+
 import java.util.Collections;
 import java.util.List;
 
@@ -118,7 +120,19 @@ public class RevCommit extends AbstractRevObject {
         this.timestamp = timestamp;
     }
 
+    @Override
     public String toString() {
         return "Commit[" + getId() + ", '" + message + "']";
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (!(o instanceof RevCommit) && super.equals(o)) {
+            return false;
+        }
+        RevCommit c = (RevCommit) o;
+        return equal(getAuthor(), c.getAuthor()) && equal(getCommitter(), c.getCommitter())
+                && equal(getMessage(), c.getMessage()) && equal(getParentIds(), c.getParentIds())
+                && equal(getTimestamp(), c.getTimestamp()) && equal(getTreeId(), c.getTreeId());
     }
 }

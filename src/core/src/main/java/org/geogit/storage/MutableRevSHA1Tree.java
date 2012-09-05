@@ -17,6 +17,7 @@ import java.util.TreeMap;
 import org.geogit.api.MutableTree;
 import org.geogit.api.ObjectId;
 import org.geogit.api.Ref;
+import org.geogit.api.RevTree;
 
 import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
@@ -172,6 +173,7 @@ class MutableRevSHA1Tree extends RevSHA1Tree implements MutableTree {
             ObjectId subtreeId;
             MutableTree subtree;
 
+            ObjectSerialisingFactory serialFactory = db.getSerialFactory();
             while (it.hasNext()) {
                 Entry<Integer, Set<String>> e = it.next();
                 Integer bucket = e.getKey();
@@ -182,10 +184,9 @@ class MutableRevSHA1Tree extends RevSHA1Tree implements MutableTree {
                     subtree = new MutableRevSHA1Tree(db, childOrder);
                 } else {
                     subtreeId = subtreeRef.getObjectId();
-                    subtree = db.get(
-                            subtreeId,
-                            WrappedSerialisingFactory.getInstance().createRevTreeReader(db,
-                                    childOrder)).mutable();
+                    ObjectReader<RevTree> reader = serialFactory
+                            .createRevTreeReader(db, childOrder);
+                    subtree = db.get(subtreeId, reader).mutable();
                     // subtree = db.get(subtreeId, new BxmlRevTreeReader(db, childOrder)).mutable();
                 }
                 for (String key : keys) {
@@ -197,8 +198,7 @@ class MutableRevSHA1Tree extends RevSHA1Tree implements MutableTree {
                     }
                 }
                 size = size.add(subtree.size());
-                subtreeId = this.db.put(WrappedSerialisingFactory.getInstance()
-                        .createRevTreeWriter(subtree));
+                subtreeId = this.db.put(serialFactory.createRevTreeWriter(subtree));
                 // subtreeId = this.db.put(new BxmlRevTreeWriter(subtree));
                 subtreeRef = new Ref("", subtreeId, TYPE.TREE);
                 ignoreForSizeComputation.add(subtreeRef);
@@ -225,9 +225,10 @@ class MutableRevSHA1Tree extends RevSHA1Tree implements MutableTree {
                 continue;
             }
             subtreeId = ref.getObjectId();
-            size = size.add(db.getCached(subtreeId,
-                    WrappedSerialisingFactory.getInstance().createRevTreeReader(db, childOrder))
-                    .size());
+            ObjectSerialisingFactory serialFactory = db.getSerialFactory();
+            ObjectReader<RevTree> reader = serialFactory.createRevTreeReader(db, childOrder);
+            RevTree cached = db.get(subtreeId, reader);
+            size = size.add(cached.size());
             // size = size.add(db.getCached(subtreeId, new BxmlRevTreeReader(db,
             // childOrder)).size());
         }

@@ -8,7 +8,6 @@ import static com.sleepycat.je.OperationStatus.NOTFOUND;
 import static com.sleepycat.je.OperationStatus.SUCCESS;
 
 import java.io.ByteArrayInputStream;
-import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -20,9 +19,11 @@ import java.util.logging.Logger;
 import org.geogit.api.ObjectId;
 import org.geogit.storage.AbstractObjectDatabase;
 import org.geogit.storage.ObjectDatabase;
+import org.geogit.storage.ObjectSerialisingFactory;
 import org.geotools.util.logging.Logging;
 
 import com.google.common.base.Preconditions;
+import com.google.inject.Inject;
 import com.sleepycat.collections.CurrentTransaction;
 import com.sleepycat.je.Cursor;
 import com.sleepycat.je.CursorConfig;
@@ -41,11 +42,26 @@ public class JEObjectDatabase extends AbstractObjectDatabase implements ObjectDa
 
     private static final Logger LOGGER = Logging.getLogger(JEObjectDatabase.class);
 
-    private final Environment env;
+    private EnvironmentBuilder envProvider;
+
+    /**
+     * Lazily loaded, do not access it directly but through {@link #getEnvironment()}
+     */
+    private Environment env;
 
     private Database objectDb;
 
     private CurrentTransaction txn;
+
+    private ObjectSerialisingFactory serialFactory;
+
+    @Inject
+    public JEObjectDatabase(final EnvironmentBuilder envProvider,
+            final ObjectSerialisingFactory serialFactory) {
+        super();
+        this.envProvider = envProvider;
+        this.serialFactory = serialFactory;
+    }
 
     public JEObjectDatabase(final Environment env) {
         super();
@@ -53,11 +69,32 @@ public class JEObjectDatabase extends AbstractObjectDatabase implements ObjectDa
     }
 
     /**
+     * @return the env
+     */
+    private synchronized Environment getEnvironment() {
+        if (env == null) {
+            env = envProvider.setRelativePath("objects").get();
+        }
+        return env;
+    }
+
+    /**
      * @see org.geogit.storage.ObjectDatabase#close()
      */
     @Override
     public void close() {
-        objectDb.close();
+        // System.err.println("CLOSE");
+        if (objectDb != null) {
+            objectDb.close();
+            objectDb = null;
+        }
+        if (env != null) {
+            // System.err.println("--> " + env.getHome());
+            env.evictMemory();
+            env.sync();
+            env.close();
+            env = null;
+        }
     }
 
     /**
@@ -65,11 +102,19 @@ public class JEObjectDatabase extends AbstractObjectDatabase implements ObjectDa
      */
     @Override
     public void create() {
-        txn = CurrentTransaction.getInstance(env);
+        if (objectDb != null) {
+            return;
+        }
+        // System.err.println("OPEN");
+        Environment environment = getEnvironment();
+        // System.err.println("--> " + environment.getHome());
+        txn = CurrentTransaction.getInstance(environment);
         DatabaseConfig dbConfig = new DatabaseConfig();
         dbConfig.setAllowCreate(true);
-        dbConfig.setTransactional(env.getConfig().getTransactional());
-        this.objectDb = env.openDatabase(null, "BlobStore", dbConfig);
+        boolean transactional = getEnvironment().getConfig().getTransactional();
+        dbConfig.setTransactional(transactional);
+        Database database = environment.openDatabase(null, "ObjectDatabase", dbConfig);
+        this.objectDb = database;
     }
 
     @Override
@@ -129,7 +174,7 @@ public class JEObjectDatabase extends AbstractObjectDatabase implements ObjectDa
         data.setPartial(0, 0, true);
 
         final LockMode lockMode = LockMode.DEFAULT;
-        CurrentTransaction.getInstance(env);
+        CurrentTransaction.getInstance(getEnvironment());
         OperationStatus status = objectDb.get(txn.getTransaction(), key, data, lockMode);
         return SUCCESS == status;
     }
@@ -138,7 +183,7 @@ public class JEObjectDatabase extends AbstractObjectDatabase implements ObjectDa
      * @see org.geogit.storage.ObjectDatabase#getRaw(org.geogit.api.ObjectId)
      */
     @Override
-    protected InputStream getRawInternal(final ObjectId id) throws IOException {
+    protected InputStream getRawInternal(final ObjectId id) {
         Preconditions.checkNotNull(id, "id");
         DatabaseEntry key = new DatabaseEntry(id.getRawValue());
         DatabaseEntry data = new DatabaseEntry();
@@ -158,8 +203,7 @@ public class JEObjectDatabase extends AbstractObjectDatabase implements ObjectDa
      * @see org.geogit.storage.ObjectDatabase#put(org.geogit.storage.ObjectWriter)
      */
     @Override
-    protected boolean putInternal(final ObjectId id, final byte[] rawData, final boolean override)
-            throws IOException {
+    protected boolean putInternal(final ObjectId id, final byte[] rawData, final boolean override) {
         final byte[] rawKey = id.getRawValue();
         DatabaseEntry key = new DatabaseEntry(rawKey);
         DatabaseEntry data = new DatabaseEntry(rawData);
@@ -188,5 +232,14 @@ public class JEObjectDatabase extends AbstractObjectDatabase implements ObjectDa
         final OperationStatus status = objectDb.delete(txn.getTransaction(), key);
 
         return SUCCESS.equals(status);
+    }
+
+    /**
+     * @return
+     * @see org.geogit.storage.ObjectDatabase#getSerialFactory()
+     */
+    @Override
+    public ObjectSerialisingFactory getSerialFactory() {
+        return serialFactory;
     }
 }

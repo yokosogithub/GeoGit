@@ -7,22 +7,18 @@ package org.geogit.cli.porcelain;
 
 import java.io.File;
 import java.net.URI;
-import java.util.Properties;
+import java.net.URL;
 
 import org.geogit.api.GeoGIT;
+import org.geogit.api.InitOp;
 import org.geogit.cli.AbstractCommand;
 import org.geogit.cli.CLICommand;
 import org.geogit.cli.GeogitCLI;
-import org.geogit.cli.Platform;
-import org.geogit.repository.Repository;
-import org.geogit.storage.RepositoryDatabase;
-import org.geogit.storage.bdbje.EntityStoreConfig;
-import org.geogit.storage.bdbje.EnvironmentBuilder;
-import org.geogit.storage.bdbje.JERepositoryDatabase;
+import org.geogit.command.plumbing.ResolveGeogitDir;
 
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.Parameters;
-import com.sleepycat.je.Environment;
+import com.google.common.base.Throwables;
 
 /**
  *
@@ -36,40 +32,19 @@ public class Init extends AbstractCommand implements CLICommand {
     @Override
     public void runInternal(GeogitCLI cli/* TODO , ProgressListener progress */) {
 
-        Platform platform = cli.getPlatform();
-        File envHome = new File(platform.pwd(), ".geogit");
-        envHome.mkdirs();
-        if (!envHome.exists()) {
-            throw new RuntimeException("Unable to create geogit environment at '"
-                    + envHome.getAbsolutePath() + "'");
+        try {
+            GeoGIT geogit = new GeoGIT();
+            geogit.command(InitOp.class).call();
+            cli.setGeogit(geogit);
+
+            URL envHome = geogit.command(ResolveGeogitDir.class).call();
+
+            cli.getConsole().println(
+                    "Repository created at " + new File(envHome.toURI()).getAbsolutePath());
+
+        } catch (Exception e) {
+            throw Throwables.propagate(e);
         }
-
-        File repositoryHome = new File(envHome, "objects");
-        File indexHome = new File(envHome, "index");
-        repositoryHome.mkdir();
-        indexHome.mkdir();
-
-        EntityStoreConfig config = new EntityStoreConfig();
-        config.setCacheMemoryPercentAllowed(50);
-        EnvironmentBuilder esb = new EnvironmentBuilder(config);
-        Properties bdbEnvProperties = null;
-        Environment environment;
-        environment = esb.buildEnvironment(repositoryHome, bdbEnvProperties);
-
-        Environment stagingEnvironment;
-        stagingEnvironment = esb.buildEnvironment(indexHome, bdbEnvProperties);
-
-        RepositoryDatabase repositoryDatabase = new JERepositoryDatabase(environment,
-                stagingEnvironment);
-
-        Repository repository = new Repository(repositoryDatabase, envHome);
-
-        repository.create();
-
-        GeoGIT geogit = new GeoGIT(repository);
-        cli.setGeogit(geogit);
-
-        System.err.println("Repository created at " + envHome.getAbsolutePath());
     }
 
 }

@@ -15,6 +15,9 @@ import java.util.List;
 import org.geogit.api.ObjectId;
 import org.geogit.storage.AbstractObjectDatabase;
 import org.geogit.storage.ObjectDatabase;
+import org.geogit.storage.ObjectSerialisingFactory;
+
+import com.google.common.base.Throwables;
 
 public class FileObjectDatabase extends AbstractObjectDatabase implements ObjectDatabase {
 
@@ -55,17 +58,20 @@ public class FileObjectDatabase extends AbstractObjectDatabase implements Object
     }
 
     @Override
-    protected InputStream getRawInternal(ObjectId id) throws IOException {
+    protected InputStream getRawInternal(ObjectId id) {
         File f = filePath(id);
-        return new FileInputStream(f);
+        try {
+            return new FileInputStream(f);
+        } catch (FileNotFoundException e) {
+            throw Throwables.propagate(e);
+        }
     }
 
     /**
      * @see org.geogit.storage.AbstractObjectDatabase#putInternal(org.geogit.api.ObjectId, byte[])
      */
     @Override
-    protected boolean putInternal(final ObjectId id, final byte[] rawData, final boolean override)
-            throws IOException {
+    protected boolean putInternal(final ObjectId id, final byte[] rawData, final boolean override) {
         final File f = filePath(id);
         if (!override && f.exists()) {
             return false;
@@ -77,13 +83,21 @@ public class FileObjectDatabase extends AbstractObjectDatabase implements Object
         } catch (FileNotFoundException dirDoesNotExist) {
             final File parent = f.getParentFile();
             if (!parent.exists() && !parent.mkdirs()) {
-                throw new IOException("Can't create " + parent.getAbsolutePath());
+                throw new RuntimeException("Can't create " + parent.getAbsolutePath());
             }
-            fileOutputStream = new FileOutputStream(f);
+            try {
+                fileOutputStream = new FileOutputStream(f);
+            } catch (FileNotFoundException e) {
+                throw Throwables.propagate(e);
+            }
         }
-        fileOutputStream.write(rawData);
-        fileOutputStream.flush();
-        fileOutputStream.close();
+        try {
+            fileOutputStream.write(rawData);
+            fileOutputStream.flush();
+            fileOutputStream.close();
+        } catch (IOException e) {
+            throw Throwables.propagate(e);
+        }
         return true;
     }
 
@@ -109,6 +123,16 @@ public class FileObjectDatabase extends AbstractObjectDatabase implements Object
     @Override
     protected List<ObjectId> lookUpInternal(byte[] raw) {
         throw new UnsupportedOperationException("This method is not yet implemented");
+    }
+
+    /**
+     * @return
+     * @see org.geogit.storage.ObjectDatabase#getSerialFactory()
+     */
+    @Override
+    public ObjectSerialisingFactory getSerialFactory() {
+        // TODO Auto-generated method stub
+        return null;
     }
 
 }

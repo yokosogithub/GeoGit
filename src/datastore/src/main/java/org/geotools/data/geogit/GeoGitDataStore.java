@@ -33,9 +33,6 @@ import org.geogit.storage.ObjectDatabase;
 import org.geogit.storage.ObjectReader;
 import org.geogit.storage.ObjectWriter;
 import org.geogit.storage.RefDatabase;
-import org.geogit.storage.WrappedSerialisingFactory;
-import org.geogit.storage.hessian.HessianSimpleFeatureTypeReader;
-import org.geogit.storage.hessian.HessianSimpleFeatureTypeWriter;
 import org.geotools.data.DefaultServiceInfo;
 import org.geotools.data.FeatureReader;
 import org.geotools.data.FeatureWriter;
@@ -89,10 +86,7 @@ public class GeoGitDataStore implements VersioningDataStore {
             final RevTree typesTree = objectDatabase.newTree();
             ObjectId typesTreeId;
             try {
-                WrappedSerialisingFactory serialisingFactory;
-                serialisingFactory = WrappedSerialisingFactory.getInstance();
-                ObjectWriter<RevTree> treeWriter = serialisingFactory
-                        .createRevTreeWriter(typesTree);
+                ObjectWriter<RevTree> treeWriter = getRepository().newRevTreeWriter(typesTree);
                 typesTreeId = objectDatabase.put(treeWriter);
             } catch (Exception e) {
                 throw new IOException(e);
@@ -134,12 +128,11 @@ public class GeoGitDataStore implements VersioningDataStore {
 
     private List<Name> getNamesInternal() throws IOException {
         final RefDatabase refDatabase = repo.getRefDatabase();
-        final ObjectDatabase objectDatabase = repo.getObjectDatabase();
 
         final Ref typesTreeRef = refDatabase.getRef(TYPE_NAMES_REF_TREE);
         Preconditions.checkState(typesTreeRef != null);
 
-        RevTree namespacesTree = objectDatabase.getTree(typesTreeRef.getObjectId());
+        RevTree namespacesTree = repo.getTree(typesTreeRef.getObjectId());
         Preconditions.checkState(null != namespacesTree, "Referenced types tree does not exist: "
                 + typesTreeRef);
 
@@ -148,7 +141,7 @@ public class GeoGitDataStore implements VersioningDataStore {
             final Ref namespaceRef = namespaces.next();
             Preconditions.checkState(TYPE.TREE.equals(namespaceRef.getType()));
             final String nsUri = namespaceRef.getName();
-            final RevTree typesTree = objectDatabase.getTree(namespaceRef.getObjectId());
+            final RevTree typesTree = repo.getTree(namespaceRef.getObjectId());
             for (Iterator<Ref> simpleNames = typesTree.iterator(null); simpleNames.hasNext();) {
                 final Ref typeNameRef = simpleNames.next();
                 final String simpleTypeName = typeNameRef.getName();
@@ -217,12 +210,11 @@ public class GeoGitDataStore implements VersioningDataStore {
         }
         final Name typeName = createType.getName();
         final RefDatabase refDatabase = repo.getRefDatabase();
-        final ObjectDatabase objectDatabase = repo.getObjectDatabase();
 
         final Ref typesTreeRef = refDatabase.getRef(TYPE_NAMES_REF_TREE);
         Preconditions.checkState(typesTreeRef != null);
 
-        final RevTree namespacesRootTree = objectDatabase.getTree(typesTreeRef.getObjectId());
+        final RevTree namespacesRootTree = repo.getTree(typesTreeRef.getObjectId());
         Preconditions.checkState(namespacesRootTree != null);
 
         final String namespace = null == typeName.getNamespaceURI() ? NULL_NAMESPACE : typeName
@@ -231,11 +223,8 @@ public class GeoGitDataStore implements VersioningDataStore {
 
         try {
             final ObjectId featureTypeBlobId;
-            // WrappedSerialisingFactory serialisingFactory;
-            // serialisingFactory = WrappedSerialisingFactory.getInstance();
-            // featureTypeBlobId = objectDatabase.put(serialisingFactory
-            // .createSimpleFeatureTypeWriter(createType));
-            featureTypeBlobId = objectDatabase.put(new HessianSimpleFeatureTypeWriter(createType));
+            ObjectDatabase objectDatabase = repo.getObjectDatabase();
+            featureTypeBlobId = objectDatabase.put(repo.newSimpleFeatureTypeWriter(createType));
 
             final List<String> namespaceTreePath = Collections.singletonList(namespace);
             MutableTree namespaceTree = objectDatabase.getOrCreateSubTree(namespacesRootTree,
@@ -270,7 +259,7 @@ public class GeoGitDataStore implements VersioningDataStore {
         final Ref typesTreeRef = refDatabase.getRef(TYPE_NAMES_REF_TREE);
         Preconditions.checkState(typesTreeRef != null);
 
-        final RevTree namespacesRootTree = objectDatabase.getTree(typesTreeRef.getObjectId());
+        final RevTree namespacesRootTree = repo.getTree(typesTreeRef.getObjectId());
         Preconditions.checkState(namespacesRootTree != null);
 
         final String[] path = {
@@ -283,11 +272,8 @@ public class GeoGitDataStore implements VersioningDataStore {
         }
         Preconditions.checkState(TYPE.BLOB.equals(typeRef.getType()));
         final ObjectId objectId = typeRef.getObjectId();
-        WrappedSerialisingFactory serialisingFactory;
-        // serialisingFactory = WrappedSerialisingFactory.getInstance();
-        // final ObjectReader<SimpleFeatureType> reader = serialisingFactory
-        // .createSimpleFeatureTypeReader(name);
-        final ObjectReader<SimpleFeatureType> reader = new HessianSimpleFeatureTypeReader(name);
+        final ObjectReader<SimpleFeatureType> reader = getRepository().newSimpleFeatureTypeReader(
+                name);
         final SimpleFeatureType featureType = objectDatabase.get(objectId, reader);
         return featureType;
     }

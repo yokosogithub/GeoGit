@@ -19,6 +19,7 @@ import org.geogit.storage.RevSHA1Tree;
 
 import com.caucho.hessian.io.Hessian2Input;
 import com.caucho.hessian.io.HessianProtocolException;
+import com.google.common.base.Throwables;
 
 class HessianRevTreeReader extends HessianRevReader implements ObjectReader<RevTree> {
 
@@ -36,41 +37,44 @@ class HessianRevTreeReader extends HessianRevReader implements ObjectReader<RevT
     }
 
     @Override
-    public RevTree read(ObjectId id, InputStream rawData) throws IOException,
-            IllegalArgumentException {
+    public RevTree read(ObjectId id, InputStream rawData) throws IllegalArgumentException {
         Hessian2Input hin = new Hessian2Input(rawData);
-        hin.startMessage();
-        BlobType blobType = BlobType.fromValue(hin.readInt());
-        if (blobType != BlobType.REVTREE)
-            throw new IllegalArgumentException("Could not parse blob of type " + blobType
-                    + " as rev tree.");
+        try {
+            hin.startMessage();
+            BlobType blobType = BlobType.fromValue(hin.readInt());
+            if (blobType != BlobType.REVTREE)
+                throw new IllegalArgumentException("Could not parse blob of type " + blobType
+                        + " as rev tree.");
 
-        BigInteger size = new BigInteger(hin.readBytes());
+            BigInteger size = new BigInteger(hin.readBytes());
 
-        TreeMap<String, Ref> references = new TreeMap<String, Ref>();
-        TreeMap<Integer, Ref> subtrees = new TreeMap<Integer, Ref>();
+            TreeMap<String, Ref> references = new TreeMap<String, Ref>();
+            TreeMap<Integer, Ref> subtrees = new TreeMap<Integer, Ref>();
 
-        while (true) {
-            Node type = null;
-            try {
-                type = Node.fromValue(hin.readInt());
-            } catch (HessianProtocolException ex) {
-                ex.printStackTrace();
+            while (true) {
+                Node type = null;
+                try {
+                    type = Node.fromValue(hin.readInt());
+                } catch (HessianProtocolException ex) {
+                    ex.printStackTrace();
+                }
+                if (type.equals(Node.REF)) {
+                    Ref entryRef = readRef(hin);
+                    references.put(entryRef.getName(), entryRef);
+                } else if (type.equals(Node.TREE)) {
+                    parseAndSetSubTree(hin, subtrees);
+                } else if (type.equals(Node.END)) {
+                    break;
+                }
             }
-            if (type.equals(Node.REF)) {
-                Ref entryRef = readRef(hin);
-                references.put(entryRef.getName(), entryRef);
-            } else if (type.equals(Node.TREE)) {
-                parseAndSetSubTree(hin, subtrees);
-            } else if (type.equals(Node.END)) {
-                break;
-            }
+
+            hin.completeMessage();
+
+            RevSHA1Tree tree = new RevSHA1Tree(id, objectDb, order, references, subtrees, size);
+            return tree;
+        } catch (Exception e) {
+            throw Throwables.propagate(e);
         }
-
-        hin.completeMessage();
-
-        RevSHA1Tree tree = new RevSHA1Tree(id, objectDb, order, references, subtrees, size);
-        return tree;
     }
 
     private void parseAndSetSubTree(Hessian2Input hin, TreeMap<Integer, Ref> subtrees)

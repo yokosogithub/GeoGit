@@ -13,7 +13,9 @@ import org.geogit.storage.ObjectSerialisingFactory;
 import org.geogit.storage.ObjectWriter;
 import org.geotools.factory.Hints;
 import org.opengis.feature.Feature;
+import org.opengis.feature.simple.SimpleFeatureType;
 import org.opengis.feature.type.FeatureType;
+import org.opengis.feature.type.Name;
 
 public class HessianFactory implements ObjectSerialisingFactory {
 
@@ -61,6 +63,21 @@ public class HessianFactory implements ObjectSerialisingFactory {
     @Override
     public ObjectWriter<RevTree> createRevTreeWriter(RevTree tree) {
         return new HessianRevTreeWriter(tree);
+    }
+
+    @Override
+    public ObjectWriter<SimpleFeatureType> createSimpleFeatureTypeWriter(SimpleFeatureType type) {
+        return new HessianSimpleFeatureTypeWriter(type);
+    }
+
+    /**
+     * @param name
+     * @return
+     * @see org.geogit.storage.ObjectSerialisingFactory#createSimpleFeatureTypeReader(org.opengis.feature.type.Name)
+     */
+    @Override
+    public ObjectReader<SimpleFeatureType> createSimpleFeatureTypeReader(Name name) {
+        return new HessianSimpleFeatureTypeReader(name);
     }
 
 }

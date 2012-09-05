@@ -28,8 +28,7 @@ import org.geogit.api.RevObject.TYPE;
 import org.geogit.api.RevTree;
 import org.geogit.storage.ObjectDatabase;
 import org.geogit.storage.RefDatabase;
-import org.geogit.storage.WrappedSerialisingFactory;
-import org.geogit.storage.hessian.HessianSimpleFeatureTypeReader;
+import org.geogit.test.RepositoryTestCase;
 import org.geotools.data.SchemaNotFoundException;
 import org.geotools.data.geogit.GeoGitDataStore;
 import org.geotools.data.geogit.GeoGitFeatureSource;
@@ -37,17 +36,17 @@ import org.geotools.data.simple.SimpleFeatureSource;
 import org.opengis.feature.simple.SimpleFeatureType;
 import org.opengis.feature.type.Name;
 
-public class GeoGitDataStoreTest extends GeoGITRepositoryTestCase {
+public class GeoGitDataStoreTest extends RepositoryTestCase {
 
     private GeoGitDataStore dataStore;
 
     @Override
-    protected void setUpChild() throws Exception {
+    protected void setUpInternal() throws Exception {
         dataStore = new GeoGitDataStore(repo);
     }
 
     @Override
-    protected void tearDownChild() throws Exception {
+    protected void tearDownInternal() throws Exception {
         dataStore = null;
     }
 
@@ -92,13 +91,8 @@ public class GeoGitDataStoreTest extends GeoGITRepositoryTestCase {
             assertNotNull(typeRef);
             assertEquals(TYPE.BLOB, typeRef.getType());
 
-            WrappedSerialisingFactory serialisingFactory;
-            serialisingFactory = WrappedSerialisingFactory.getInstance();
-            // SimpleFeatureType readType = objectDatabase.get(typeRef
-            // .getObjectId(), serialisingFactory
-            // .createSimpleFeatureTypeReader(featureType.getName()));
-            SimpleFeatureType readType = objectDatabase.get(typeRef.getObjectId(),
-                    new HessianSimpleFeatureTypeReader(featureType.getName()));
+            SimpleFeatureType readType = objectDatabase.get(typeRef.getObjectId(), getRepository()
+                    .newSimpleFeatureTypeReader(featureType.getName()));
 
             assertEquals(featureType, readType);
 
@@ -115,8 +109,8 @@ public class GeoGitDataStoreTest extends GeoGITRepositoryTestCase {
         dataStore.createSchema(super.pointsType);
         assertEquals(2, dataStore.getNames().size());
 
-        assertTrue(dataStore.getNames().contains(GeoGITRepositoryTestCase.linesTypeName));
-        assertTrue(dataStore.getNames().contains(GeoGITRepositoryTestCase.pointsTypeName));
+        assertTrue(dataStore.getNames().contains(RepositoryTestCase.linesTypeName));
+        assertTrue(dataStore.getNames().contains(RepositoryTestCase.pointsTypeName));
     }
 
     public void testGetTypeNames() throws IOException {
@@ -131,61 +125,61 @@ public class GeoGitDataStoreTest extends GeoGITRepositoryTestCase {
 
         List<String> simpleNames = Arrays.asList(dataStore.getTypeNames());
 
-        assertTrue(simpleNames.contains(GeoGITRepositoryTestCase.linesName));
-        assertTrue(simpleNames.contains(GeoGITRepositoryTestCase.pointsName));
+        assertTrue(simpleNames.contains(RepositoryTestCase.linesName));
+        assertTrue(simpleNames.contains(RepositoryTestCase.pointsName));
     }
 
     public void testGetSchemaName() throws IOException {
         try {
-            dataStore.getSchema(GeoGITRepositoryTestCase.linesTypeName);
+            dataStore.getSchema(RepositoryTestCase.linesTypeName);
             fail("Expected SchemaNotFoundException");
         } catch (SchemaNotFoundException e) {
             assertTrue(true);
         }
 
         dataStore.createSchema(super.linesType);
-        SimpleFeatureType lines = dataStore.getSchema(GeoGITRepositoryTestCase.linesTypeName);
+        SimpleFeatureType lines = dataStore.getSchema(RepositoryTestCase.linesTypeName);
         assertEquals(super.linesType, lines);
 
         try {
-            dataStore.getSchema(GeoGITRepositoryTestCase.pointsTypeName);
+            dataStore.getSchema(RepositoryTestCase.pointsTypeName);
             fail("Expected SchemaNotFoundException");
         } catch (SchemaNotFoundException e) {
             assertTrue(true);
         }
 
         dataStore.createSchema(super.pointsType);
-        SimpleFeatureType points = dataStore.getSchema(GeoGITRepositoryTestCase.pointsTypeName);
+        SimpleFeatureType points = dataStore.getSchema(RepositoryTestCase.pointsTypeName);
         assertEquals(super.pointsType, points);
     }
 
     public void testGetSchemaString() throws IOException {
         try {
-            dataStore.getSchema(GeoGITRepositoryTestCase.linesName);
+            dataStore.getSchema(RepositoryTestCase.linesName);
             fail("Expected SchemaNotFoundException");
         } catch (SchemaNotFoundException e) {
             assertTrue(true);
         }
 
         dataStore.createSchema(super.linesType);
-        SimpleFeatureType lines = dataStore.getSchema(GeoGITRepositoryTestCase.linesName);
+        SimpleFeatureType lines = dataStore.getSchema(RepositoryTestCase.linesName);
         assertEquals(super.linesType, lines);
 
         try {
-            dataStore.getSchema(GeoGITRepositoryTestCase.pointsName);
+            dataStore.getSchema(RepositoryTestCase.pointsName);
             fail("Expected SchemaNotFoundException");
         } catch (SchemaNotFoundException e) {
             assertTrue(true);
         }
 
         dataStore.createSchema(super.pointsType);
-        SimpleFeatureType points = dataStore.getSchema(GeoGITRepositoryTestCase.pointsName);
+        SimpleFeatureType points = dataStore.getSchema(RepositoryTestCase.pointsName);
         assertEquals(super.pointsType, points);
     }
 
     public void testGetFeatureSourceName() throws IOException {
         try {
-            dataStore.getFeatureSource(GeoGITRepositoryTestCase.linesTypeName);
+            dataStore.getFeatureSource(RepositoryTestCase.linesTypeName);
             fail("Expected SchemaNotFoundException");
         } catch (SchemaNotFoundException e) {
             assertTrue(true);
@@ -194,24 +188,24 @@ public class GeoGitDataStoreTest extends GeoGITRepositoryTestCase {
         SimpleFeatureSource source;
 
         dataStore.createSchema(super.linesType);
-        source = dataStore.getFeatureSource(GeoGITRepositoryTestCase.linesTypeName);
+        source = dataStore.getFeatureSource(RepositoryTestCase.linesTypeName);
         assertTrue(source instanceof GeoGitFeatureSource);
 
         try {
-            dataStore.getFeatureSource(GeoGITRepositoryTestCase.pointsTypeName);
+            dataStore.getFeatureSource(RepositoryTestCase.pointsTypeName);
             fail("Expected SchemaNotFoundException");
         } catch (SchemaNotFoundException e) {
             assertTrue(true);
         }
 
         dataStore.createSchema(super.pointsType);
-        source = dataStore.getFeatureSource(GeoGITRepositoryTestCase.pointsTypeName);
+        source = dataStore.getFeatureSource(RepositoryTestCase.pointsTypeName);
         assertTrue(source instanceof GeoGitFeatureSource);
     }
 
     public void testGetFeatureSourceString() throws IOException {
         try {
-            dataStore.getFeatureSource(GeoGITRepositoryTestCase.linesName);
+            dataStore.getFeatureSource(RepositoryTestCase.linesName);
             fail("Expected SchemaNotFoundException");
         } catch (SchemaNotFoundException e) {
             assertTrue(true);
@@ -220,18 +214,18 @@ public class GeoGitDataStoreTest extends GeoGITRepositoryTestCase {
         SimpleFeatureSource source;
 
         dataStore.createSchema(super.linesType);
-        source = dataStore.getFeatureSource(GeoGITRepositoryTestCase.linesName);
+        source = dataStore.getFeatureSource(RepositoryTestCase.linesName);
         assertTrue(source instanceof GeoGitFeatureSource);
 
         try {
-            dataStore.getFeatureSource(GeoGITRepositoryTestCase.pointsName);
+            dataStore.getFeatureSource(RepositoryTestCase.pointsName);
             fail("Expected SchemaNotFoundException");
         } catch (SchemaNotFoundException e) {
             assertTrue(true);
         }
 
         dataStore.createSchema(super.pointsType);
-        source = dataStore.getFeatureSource(GeoGITRepositoryTestCase.pointsName);
+        source = dataStore.getFeatureSource(RepositoryTestCase.pointsName);
         assertTrue(source instanceof GeoGitFeatureSource);
     }
 

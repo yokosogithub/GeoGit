@@ -28,7 +28,6 @@ import org.geogit.storage.ObjectDatabase;
 import org.geogit.storage.ObjectWriter;
 import org.geogit.storage.RawObjectWriter;
 import org.geogit.storage.StagingDatabase;
-import org.geogit.storage.WrappedSerialisingFactory;
 import org.geotools.util.NullProgressListener;
 import org.opengis.geometry.BoundingBox;
 import org.opengis.util.ProgressListener;
@@ -36,6 +35,7 @@ import org.opengis.util.ProgressListener;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
 import com.google.common.collect.Iterators;
+import com.google.inject.Inject;
 
 /**
  * The Index keeps track of the changes not yet committed to the repository.
@@ -70,13 +70,13 @@ import com.google.common.collect.Iterators;
  */
 public class Index implements StagingArea {
 
-    private final Repository repository;
+    @Inject
+    private Repository repository;
 
-    private final StagingDatabase indexDatabase;
+    @Inject
+    private StagingDatabase indexDatabase;
 
-    public Index(Repository repository, StagingDatabase indexDatabase) {
-        this.repository = repository;
-        this.indexDatabase = indexDatabase;
+    public Index() {
     }
 
     @Override
@@ -110,7 +110,7 @@ public class Index implements StagingArea {
         final String nodeId = newTreePath.get(newTreePath.size() - 1);
         MutableTree emptyTree = indexDatabase.getObjectDatabase().newTree();
         ObjectWriter<RevTree> treeWriter;
-        treeWriter = WrappedSerialisingFactory.getInstance().createRevTreeWriter(emptyTree);
+        treeWriter = repository.newRevTreeWriter(emptyTree);
         ObjectId emptyTreeId = indexDatabase.getObjectDatabase().put(treeWriter);
         Ref newTreeRef = new Ref(nodeId, emptyTreeId, TYPE.TREE);
 
@@ -288,7 +288,7 @@ public class Index implements StagingArea {
             if (targetRef.getObjectId().isNull()) {
                 targetRootTreeRef = new Ref(targetRef.getName(), ObjectId.NULL, TYPE.TREE);
             } else {
-                RevCommit commit = repositoryDatabase.getCommit(targetRef.getObjectId());
+                RevCommit commit = repository.getCommit(targetRef.getObjectId());
                 ObjectId targetTeeId = commit.getTreeId();
                 targetRootTreeRef = new Ref(targetRef.getName(), targetTeeId, TYPE.TREE);
             }
@@ -297,7 +297,7 @@ public class Index implements StagingArea {
         }
 
         final ObjectId toTreeId = targetRootTreeRef.getObjectId();
-        final RevTree oldRoot = repositoryDatabase.getTree(toTreeId);
+        final RevTree oldRoot = repository.getTree(toTreeId);
 
         List<String> pathFilter = null;
         final int numChanges = indexDatabase.countStaged(pathFilter);
@@ -357,7 +357,7 @@ public class Index implements StagingArea {
         for (Map.Entry<List<String>, MutableTree> e : changedTrees.entrySet()) {
             List<String> treePath = e.getKey();
             MutableTree tree = e.getValue();
-            RevTree newRoot = repositoryDatabase.getTree(newTargetRootId);
+            RevTree newRoot = repository.getTree(newTargetRootId);
             newTargetRootId = repositoryDatabase.writeBack(newRoot.mutable(), tree, treePath);
         }
 
@@ -393,7 +393,7 @@ public class Index implements StagingArea {
         }
 
         if (TYPE.TREE.equals(objectRef.getType())) {
-            RevTree tree = from.getTree(objectRef.getObjectId());
+            RevTree tree = from.get(objectRef.getObjectId(), repository.newRevTreeReader(from));
             tree.accept(new TreeVisitor() {
 
                 @Override

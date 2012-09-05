@@ -4,7 +4,6 @@
  */
 package org.geogit.storage.hessian;
 
-import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
@@ -15,35 +14,39 @@ import org.geogit.repository.CommitBuilder;
 import org.geogit.storage.ObjectReader;
 
 import com.caucho.hessian.io.Hessian2Input;
+import com.google.common.base.Throwables;
 
 class HessianCommitReader extends HessianRevReader implements ObjectReader<RevCommit> {
 
     @Override
-    public RevCommit read(ObjectId id, InputStream rawData) throws IOException,
-            IllegalArgumentException {
+    public RevCommit read(ObjectId id, InputStream rawData) throws IllegalArgumentException {
         Hessian2Input hin = new Hessian2Input(rawData);
         CommitBuilder builder = new CommitBuilder();
 
-        hin.startMessage();
-        BlobType type = BlobType.fromValue(hin.readInt());
-        if (type != BlobType.COMMIT)
-            throw new IllegalArgumentException("Could not parse blob of type " + type
-                    + " as a commit.");
+        try {
+            hin.startMessage();
+            BlobType type = BlobType.fromValue(hin.readInt());
+            if (type != BlobType.COMMIT)
+                throw new IllegalArgumentException("Could not parse blob of type " + type
+                        + " as a commit.");
 
-        builder.setTreeId(readObjectId(hin));
-        int parentCount = hin.readInt();
-        List<ObjectId> pIds = new ArrayList<ObjectId>(parentCount);
-        for (int i = 0; i < parentCount; i++) {
-            pIds.add(readObjectId(hin));
+            builder.setTreeId(readObjectId(hin));
+            int parentCount = hin.readInt();
+            List<ObjectId> pIds = new ArrayList<ObjectId>(parentCount);
+            for (int i = 0; i < parentCount; i++) {
+                pIds.add(readObjectId(hin));
+            }
+            builder.setParentIds(pIds);
+            builder.setAuthor(hin.readString());
+            builder.setCommitter(hin.readString());
+            builder.setMessage(hin.readString());
+            builder.setTimestamp(hin.readLong());
+
+            hin.completeMessage();
+
+            return builder.build(id);
+        } catch (Exception e) {
+            throw Throwables.propagate(e);
         }
-        builder.setParentIds(pIds);
-        builder.setAuthor(hin.readString());
-        builder.setCommitter(hin.readString());
-        builder.setMessage(hin.readString());
-        builder.setTimestamp(hin.readLong());
-
-        hin.completeMessage();
-
-        return builder.build(id);
     }
 }

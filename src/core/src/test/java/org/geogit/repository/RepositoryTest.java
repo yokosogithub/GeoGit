@@ -10,7 +10,6 @@ import org.geogit.api.RevCommit;
 import org.geogit.api.RevObject;
 import org.geogit.api.RevTree;
 import org.geogit.storage.BlobWriter;
-import org.geogit.storage.WrappedSerialisingFactory;
 import org.geogit.test.RepositoryTestCase;
 
 public class RepositoryTest extends RepositoryTestCase {
@@ -43,8 +42,7 @@ public class RepositoryTest extends RepositoryTestCase {
         RevCommit insert = new RevCommit(ObjectId.forString("id1"));
         insert.setTreeId(ObjectId.forString("treetest"));
 
-        ObjectId commitId = repo.getObjectDatabase().put(
-                WrappedSerialisingFactory.getInstance().createCommitWriter(insert));
+        ObjectId commitId = repo.getObjectDatabase().put(getRepository().newCommitWriter(insert));
         RevCommit commit = repo.getCommit(commitId);
 
         Ref ref = new Ref(Ref.HEAD, commitId, RevObject.TYPE.COMMIT);
@@ -94,14 +92,12 @@ public class RepositoryTest extends RepositoryTestCase {
         ObjectId commitId = new ObjectId(raw2);
         String commitHash = commitId.toString();
 
-        repo.getObjectDatabase().put(treeId,
-                WrappedSerialisingFactory.getInstance().createRevTreeWriter(repo.newTree()));
+        repo.getObjectDatabase().put(treeId, getRepository().newRevTreeWriter(repo.newTree()));
 
         {
             RevCommit c = new RevCommit(ObjectId.NULL);
             c.setTreeId(ObjectId.NULL);
-            repo.getObjectDatabase().put(commitId,
-                    WrappedSerialisingFactory.getInstance().createCommitWriter(c));
+            repo.getObjectDatabase().put(commitId, getRepository().newCommitWriter(c));
         }
 
         String matchingPartialHash = blobHash.substring(0, 6);

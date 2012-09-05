@@ -28,9 +28,9 @@ import org.geogit.api.ObjectId;
 import org.geogit.api.Ref;
 import org.geogit.api.RevTree;
 import org.geogit.api.SpatialRef;
+import org.geogit.repository.Repository;
 import org.geogit.storage.ObjectDatabase;
 import org.geogit.storage.ObjectReader;
-import org.geogit.storage.WrappedSerialisingFactory;
 import org.geotools.data.simple.SimpleFeatureCollection;
 import org.geotools.data.simple.SimpleFeatureIterator;
 import org.geotools.factory.Hints;
@@ -86,12 +86,15 @@ public class GeoGitSimpleFeatureCollection implements SimpleFeatureCollection {
 
     private Integer maxFeatures;
 
+    private Repository repository;
+
     public GeoGitSimpleFeatureCollection(final SimpleFeatureType type, final Filter filter,
-            final ObjectDatabase odb, final RevTree typeTree) {
+            final ObjectDatabase odb, final RevTree typeTree, Repository repository) {
         this.type = type;
         this.filter = filter;
         this.odb = odb;
         this.typeTree = typeTree;
+        this.repository = repository;
         this.reprojector = new FeatureReprojector(type);
     }
 
@@ -224,7 +227,7 @@ public class GeoGitSimpleFeatureCollection implements SimpleFeatureCollection {
                 }
             } else {
                 Iterator<SimpleFeature> features = new GeoGitFeatureIterator(refs, type, filter,
-                        odb);
+                        odb, repository);
                 while (features.hasNext()) {
                     featureBounds = features.next().getBounds();
                     reprojector.expandToInclude(bounds, featureBounds);
@@ -257,7 +260,8 @@ public class GeoGitSimpleFeatureCollection implements SimpleFeatureCollection {
         if (refs.isFullySupported()) {
             size = Iterators.size(refs);
         } else {
-            Iterator<SimpleFeature> features = new GeoGitFeatureIterator(refs, type, filter, odb);
+            Iterator<SimpleFeature> features = new GeoGitFeatureIterator(refs, type, filter, odb,
+                    repository);
             size = Iterators.size(features);
         }
 
@@ -271,7 +275,8 @@ public class GeoGitSimpleFeatureCollection implements SimpleFeatureCollection {
     @Override
     public Iterator<SimpleFeature> iterator() {
         final FeatureRefIterator refs = new FeatureRefIterator(typeTree, filter);
-        Iterator<SimpleFeature> features = new GeoGitFeatureIterator(refs, type, filter, odb);
+        Iterator<SimpleFeature> features = new GeoGitFeatureIterator(refs, type, filter, odb,
+                repository);
         if (maxFeatures != null) {
             features = Iterators.limit(features, maxFeatures.intValue());
         }
@@ -404,15 +409,15 @@ public class GeoGitSimpleFeatureCollection implements SimpleFeatureCollection {
 
         private final ObjectDatabase odb;
 
-        final WrappedSerialisingFactory serialisingFactory;
+        private Repository repository;
 
         public GeoGitFeatureIterator(final Iterator<Ref> featureRefs, final SimpleFeatureType type,
-                final Filter filter, final ObjectDatabase odb) {
+                final Filter filter, final ObjectDatabase odb, final Repository repository) {
             this.featureRefs = featureRefs;
             this.type = type;
             this.filter = filter;
             this.odb = odb;
-            this.serialisingFactory = WrappedSerialisingFactory.getInstance();
+            this.repository = repository;
         }
 
         @Override
@@ -428,8 +433,8 @@ public class GeoGitSimpleFeatureCollection implements SimpleFeatureCollection {
                     ObjectId contentId = featureRef.getObjectId();
 
                     SimpleFeature feature;
-                    ObjectReader<Feature> featureReader = serialisingFactory.createFeatureReader(
-                            type, featureId, hints);
+                    ObjectReader<Feature> featureReader = repository.newFeatureReader(type,
+                            featureId, hints);
 
                     feature = (SimpleFeature) odb.get(contentId, featureReader);
                     feature = reprojector.reproject(feature);

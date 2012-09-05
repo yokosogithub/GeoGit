@@ -1,141 +1,47 @@
-/* Copyright (c) 2011 TOPP - www.openplans.org. All rights reserved.
- * This code is licensed under the LGPL 2.1 license, available at the root
- * application directory.
+/*
+ *    GeoTools - The Open Source Java GIS Toolkit
+ *    http://geotools.org
+ *
+ *    (C) 2002-2011, Open Source Geospatial Foundation (OSGeo)
+ *
+ *    This library is free software; you can redistribute it and/or
+ *    modify it under the terms of the GNU Lesser General Public
+ *    License as published by the Free Software Foundation;
+ *    version 2.1 of the License.
+ *
+ *    This library is distributed in the hope that it will be useful,
+ *    but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ *    Lesser General Public License for more details.
  */
 package org.geogit.storage;
 
-import java.util.Iterator;
-import java.util.LinkedList;
 import java.util.List;
 
-import org.geogit.api.MutableTree;
 import org.geogit.api.ObjectId;
 import org.geogit.api.Ref;
-import org.geogit.api.RevObject.TYPE;
-import org.geogit.api.RevTree;
-
-import com.google.common.base.Preconditions;
-import com.google.common.base.Predicate;
-import com.google.common.collect.Iterators;
 
 /**
- * Database of repository {@link Ref references}
- * <p>
- * It uses the {@link ObjectDatabase} to store the references in a {@link RevTree} under the
- * {@code ".geogit/refs"} key.
- * </p>
+ * @author groldan
  * 
  */
-public class RefDatabase {
+public interface RefDatabase {
 
-    private static final String REFS_TREE_KEY = ".geogit/refs";
+    public abstract void create();
 
-    private static final ObjectId REFS_TREE_ID = ObjectId.forString(REFS_TREE_KEY);
+    public abstract void close();
 
-    private ObjectDatabase db;
+    public abstract Ref getRef(String name);
 
-    public RefDatabase(final ObjectDatabase db) {
-        this.db = db;
-    }
+    public abstract List<Ref> getRefs(String prefix);
 
-    public void create() {
-        final String headRefName = Ref.HEAD;
-        condCreate(headRefName, TYPE.COMMIT);
-        final String master = Ref.MASTER;
-        condCreate(master, TYPE.COMMIT);
-    }
-
-    private void condCreate(final String refName, TYPE type) {
-        RevTree refsTree = getRefsTree();
-
-        Ref child = refsTree.get(refName);
-        if (null == child) {
-            put(new Ref(refName, ObjectId.NULL, type));
-        }
-    }
-
-    private RevTree getRefsTree() {
-        RevTree refsTree;
-        try {
-            if (db.exists(REFS_TREE_ID)) {
-                refsTree = db.get(REFS_TREE_ID, WrappedSerialisingFactory.getInstance()
-                        .createRevTreeReader(db));
-                // refsTree = db.get(REFS_TREE_ID, new BxmlRevTreeReader(db));
-            } else {
-                refsTree = new RevSHA1Tree(db);
-                db.put(REFS_TREE_ID,
-                        WrappedSerialisingFactory.getInstance().createRevTreeWriter(refsTree));
-                // db.put(REFS_TREE_ID, new BxmlRevTreeWriter(refsTree));
-            }
-        } catch (RuntimeException e) {
-            throw e;
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
-
-        return refsTree;
-    }
-
-    public void close() {
-        //
-    }
-
-    public Ref getRef(final String name) {
-        Preconditions.checkNotNull(name, "Ref name can't be null");
-        RevTree refsTree = getRefsTree();
-        Ref child = refsTree.get(name);
-        return child;
-    }
-
-    public List<Ref> getRefs(final String prefix) {
-        Preconditions.checkNotNull(prefix, "Ref prefix can't be null");
-        List<Ref> refs = new LinkedList<Ref>();
-        RevTree refsTree = getRefsTree();
-
-        Iterator<Ref> iterator = refsTree.iterator(new Predicate<Ref>() {
-            public boolean apply(Ref input) {
-                return input.getName().startsWith(prefix);
-            }
-        });
-
-        Iterators.addAll(refs, iterator);
-        return refs;
-    }
-
-    public List<Ref> getRefsPontingTo(final ObjectId oid) {
-        Preconditions.checkNotNull(oid);
-        List<Ref> refs = new LinkedList<Ref>();
-        RevTree refsTree = getRefsTree();
-        throw new UnsupportedOperationException(
-                "waiting for tree walking implementation to reliable implement this method");
-        // return refs;
-    }
+    public abstract List<Ref> getRefsPontingTo(ObjectId oid);
 
     /**
      * @param ref
      * @return {@code true} if the ref was inserted, {@code false} if it already existed and pointed
      *         to the same object
      */
-    public boolean put(final Ref ref) {
-        Preconditions.checkNotNull(ref);
-        Preconditions.checkNotNull(ref.getName());
-        Preconditions.checkNotNull(ref.getObjectId());
+    public abstract boolean put(Ref ref);
 
-        RevTree refsTree = getRefsTree();
-        Ref oldTarget = refsTree.get(ref.getName());
-        if (oldTarget != null && oldTarget.equals(ref)) {
-            return false;
-        }
-        refsTree = refsTree.mutable();
-        ((MutableTree) refsTree).put(ref);
-        try {
-            db.put(REFS_TREE_ID,
-                    WrappedSerialisingFactory.getInstance().createRevTreeWriter(refsTree));
-            // db.put(REFS_TREE_ID, new BxmlRevTreeWriter(refsTree));
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
-
-        return true;
-    }
 }

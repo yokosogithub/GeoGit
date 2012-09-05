@@ -9,7 +9,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
 import java.util.NoSuchElementException;
-import java.util.logging.Logger;
 
 import org.geogit.api.ObjectId;
 import org.geogit.api.Ref;
@@ -18,18 +17,22 @@ import org.geogit.api.RevCommit;
 import org.geogit.api.RevObject;
 import org.geogit.api.RevTag;
 import org.geogit.api.RevTree;
+import org.geogit.storage.BlobPrinter;
+import org.geogit.storage.BlobReader;
 import org.geogit.storage.ObjectDatabase;
 import org.geogit.storage.ObjectInserter;
 import org.geogit.storage.ObjectReader;
+import org.geogit.storage.ObjectSerialisingFactory;
+import org.geogit.storage.ObjectWriter;
 import org.geogit.storage.RefDatabase;
-import org.geogit.storage.RepositoryDatabase;
-import org.geogit.storage.WrappedSerialisingFactory;
-import org.geotools.util.logging.Logging;
+import org.geotools.factory.Hints;
 import org.opengis.feature.Feature;
+import org.opengis.feature.simple.SimpleFeatureType;
 import org.opengis.feature.type.FeatureType;
+import org.opengis.feature.type.Name;
 
 import com.google.common.base.Preconditions;
-import com.google.common.base.Throwables;
+import com.google.inject.Inject;
 
 /**
  * A repository is a collection of commits, each of which is an archive of what the project's
@@ -45,38 +48,43 @@ import com.google.common.base.Throwables;
  */
 public class Repository {
 
-    private static final Logger LOGGER = Logging.getLogger(Repository.class);
+    @Inject
+    private StagingArea index;
 
-    private final RepositoryDatabase repoDb;
+    @Inject
+    private WorkingTree workingTree;
 
-    private final StagingArea index;
-
-    private final WorkingTree workingTree;
+    @Inject
+    private ObjectSerialisingFactory serialFactory;
 
     /**
      * This is stored here for the convenience of knowing where to load the configuration file from
+     * 
+     * @deprecated
      */
-    private final File repositoryHome;
+    private File repositoryHome;
 
-    public Repository(final RepositoryDatabase repoDb, File envHome) {
-        Preconditions.checkNotNull(repoDb);
-        this.repoDb = repoDb;
-        // index = new Index(repoDb.getStagingDatabase());
-        index = new Index(this, repoDb.getStagingDatabase());
-        workingTree = new WorkingTree(this);
-        this.repositoryHome = envHome;
+    @Inject
+    private RefDatabase refDatabase;
+
+    @Inject
+    private ObjectDatabase objectDatabase;
+
+    public Repository() {
     }
 
     public void create() {
-        repoDb.create();
+        refDatabase.create();
+        objectDatabase.create();
+        index.getDatabase().create();
     }
 
     public RefDatabase getRefDatabase() {
-        return repoDb.getReferenceDatabase();
+        return refDatabase;
     }
 
     public ObjectDatabase getObjectDatabase() {
-        return repoDb.getObjectDatabase();
+        return objectDatabase;
     }
 
     public StagingArea getIndex() {
@@ -84,7 +92,9 @@ public class Repository {
     }
 
     public void close() {
-        repoDb.close();
+        refDatabase.close();
+        objectDatabase.close();
+        index.getDatabase().close();
     }
 
     public WorkingTree getWorkingTree() {
@@ -158,8 +168,8 @@ public class Repository {
         throw new NoSuchElementException();
     }
 
-    public RevObject getBlob(ObjectId objectId) {
-        return getObjectDatabase().getBlob(objectId);
+    public RevBlob getBlob(ObjectId objectId) {
+        return getObjectDatabase().get(objectId, new BlobReader());
     }
 
     /**
@@ -170,7 +180,7 @@ public class Repository {
      */
     public boolean blobExists(final ObjectId id) {
         try {
-            getObjectDatabase().getBlob(id);
+            getBlob(id);
         } catch (IllegalArgumentException e) {
             return false;
         }
@@ -184,9 +194,9 @@ public class Repository {
             return getBlob(ref.getObjectId());
         case COMMIT:
         case TAG:
-            return objectDatabase.getCommit(ref.getObjectId());
+            return getCommit(ref.getObjectId());
         case TREE:
-            return objectDatabase.getTree(ref.getObjectId());
+            return getTree(ref.getObjectId());
         default:
             throw new IllegalArgumentException("Unknown ref type: " + ref);
         }
@@ -210,20 +220,18 @@ public class Repository {
 
     public boolean commitExists(final ObjectId id) {
         try {
-            getObjectDatabase().getCached(id,
-                    WrappedSerialisingFactory.getInstance().createCommitReader());
-            // getObjectDatabase().getCached(id, new BxmlCommitReader());
+            getObjectDatabase().get(id, newCommitReader());
         } catch (IllegalArgumentException e) {
             return false;
-        } catch (IOException e) {
-            Throwables.propagate(e);
         }
+
         return true;
     }
 
     public RevCommit getCommit(final ObjectId commitId) {
-        Preconditions.checkNotNull(commitId, "commitId");
-        return getObjectDatabase().getCommit(commitId);
+        RevCommit commit = getObjectDatabase().get(commitId, newCommitReader());
+
+        return commit;
     }
 
     public RevTree getTree(final ObjectId treeId) {
@@ -231,16 +239,9 @@ public class Repository {
             return newTree();
         }
         RevTree tree;
-        try {
-            tree = getObjectDatabase().getCached(
-                    treeId,
-                    WrappedSerialisingFactory.getInstance()
-                            .createRevTreeReader(getObjectDatabase()));
-            // tree = getObjectDatabase().getCached(treeId, new
-            // BxmlRevTreeReader(getObjectDatabase()));
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
+        ObjectDatabase odb = getObjectDatabase();
+        tree = odb.get(treeId, newRevTreeReader(odb));
+
         return tree;
     }
 
@@ -252,15 +253,11 @@ public class Repository {
      */
     public boolean treeExists(final ObjectId id) {
         try {
-            getObjectDatabase().getCached(
-                    id,
-                    WrappedSerialisingFactory.getInstance()
-                            .createRevTreeReader(getObjectDatabase()));
+            getObjectDatabase().get(id, newRevTreeReader(getObjectDatabase()));
         } catch (IllegalArgumentException e) {
             return false;
-        } catch (IOException e) {
-            Throwables.propagate(e);
         }
+
         return true;
     }
 
@@ -286,20 +283,13 @@ public class Repository {
     public RevTree getHeadTree() {
 
         RevTree root;
-        try {
-            ObjectId rootTreeId = getRootTreeId();
-            if (rootTreeId.isNull()) {
-                return newTree();
-            }
-            root = getObjectDatabase().get(
-                    rootTreeId,
-                    WrappedSerialisingFactory.getInstance()
-                            .createRevTreeReader(getObjectDatabase()));
-            // root = getObjectDatabase().get(rootTreeId, new
-            // BxmlRevTreeReader(getObjectDatabase()));
-        } catch (IOException e) {
-            throw new RuntimeException(e);
+
+        ObjectId rootTreeId = getRootTreeId();
+        if (rootTreeId.isNull()) {
+            return newTree();
         }
+        root = getObjectDatabase().get(rootTreeId, newRevTreeReader(getObjectDatabase()));
+
         return root;
     }
 
@@ -312,15 +302,10 @@ public class Repository {
 
     public Feature getFeature(final FeatureType featureType, final String featureId,
             final ObjectId contentId) {
-        ObjectReader<Feature> reader = WrappedSerialisingFactory.getInstance().createFeatureReader(
-                featureType, featureId);
-        // BxmlFeatureReader reader = new BxmlFeatureReader(featureType, featureId);
-        Feature feature;
-        try {
-            feature = getObjectDatabase().get(contentId, reader);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
+        ObjectReader<Feature> reader = newFeatureReader(featureType, featureId);
+
+        Feature feature = getObjectDatabase().get(contentId, reader);
+
         return feature;
     }
 
@@ -344,9 +329,60 @@ public class Repository {
     /**
      * Get this repositories home directory on disk
      * 
-     * @return
+     * @deprecated needs to be replaced by ConfigDatabase and/or RefDatabase
      */
+    @Deprecated
     public File getRepositoryHome() {
         return repositoryHome;
     }
+
+    public ObjectWriter<RevCommit> newCommitWriter(RevCommit commit) {
+        return serialFactory.createCommitWriter(commit);
+    }
+
+    public BlobPrinter newBlobPrinter() {
+        return serialFactory.createBlobPrinter();
+    }
+
+    public ObjectReader<RevTree> newRevTreeReader(ObjectDatabase objectDatabase) {
+        return serialFactory.createRevTreeReader(objectDatabase);
+    }
+
+    public ObjectReader<RevTree> newRevTreeReader(ObjectDatabase odb, int depth) {
+        return serialFactory.createRevTreeReader(odb, depth);
+    }
+
+    public ObjectWriter<RevTree> newRevTreeWriter(RevTree tree) {
+        return serialFactory.createRevTreeWriter(tree);
+    }
+
+    public ObjectReader<RevCommit> newCommitReader() {
+        return serialFactory.createCommitReader();
+    }
+
+    public ObjectReader<Feature> newFeatureReader(FeatureType featureType, String featureId) {
+        return serialFactory.createFeatureReader(featureType, featureId);
+    }
+
+    public ObjectReader<Feature> newFeatureReader(final FeatureType featureType,
+            final String featureId, final Hints hints) {
+        return serialFactory.createFeatureReader(featureType, featureId, hints);
+    }
+
+    public ObjectWriter<Feature> newFeatureWriter(Feature feature) {
+        return serialFactory.createFeatureWriter(feature);
+    }
+
+    public ObjectWriter<SimpleFeatureType> newSimpleFeatureTypeWriter(SimpleFeatureType type) {
+        return serialFactory.createSimpleFeatureTypeWriter(type);
+    }
+
+    public ObjectReader<SimpleFeatureType> newSimpleFeatureTypeReader(Name name) {
+        return serialFactory.createSimpleFeatureTypeReader(name);
+    }
+
+    public ObjectSerialisingFactory getSerializationFactory() {
+        return serialFactory;
+    }
+
 }

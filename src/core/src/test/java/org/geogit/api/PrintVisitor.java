@@ -6,7 +6,7 @@ package org.geogit.api;
 
 import java.io.PrintWriter;
 
-import org.geogit.storage.ObjectDatabase;
+import org.geogit.repository.Repository;
 
 /**
  * Helper class to visit a tree and print its structure to aid in debugging
@@ -18,14 +18,14 @@ public class PrintVisitor implements TreeVisitor {
 
     private int depth;
 
-    private final ObjectDatabase db;
+    private Repository repo;
 
-    public PrintVisitor(ObjectDatabase index, PrintWriter writer) {
-        this(index, writer, 0);
+    public PrintVisitor(Repository repo, PrintWriter writer) {
+        this(repo, writer, 0);
     }
 
-    public PrintVisitor(ObjectDatabase index, PrintWriter writer, int depth) {
-        this.db = index;
+    public PrintVisitor(Repository repo, PrintWriter writer, int depth) {
+        this.repo = repo;
         this.writer = writer;
         this.depth = depth;
     }
@@ -35,8 +35,8 @@ public class PrintVisitor implements TreeVisitor {
         indent();
         println(ref.toString());
         if (ref.getType().equals(RevObject.TYPE.TREE)) {
-            RevTree tree = db.getTree(ref.getObjectId());
-            tree.accept(new PrintVisitor(db, writer, depth + 1));
+            RevTree tree = repo.getTree(ref.getObjectId());
+            tree.accept(new PrintVisitor(repo, writer, depth + 1));
         }
         return true;
     }

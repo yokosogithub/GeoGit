@@ -255,7 +255,7 @@ public class GeoGitFeatureSource implements SimpleVersioningFeatureSource {
         final RevTree typeTree = getCurrentVersion();
         GeoGitSimpleFeatureCollection featureCollection;
         featureCollection = new GeoGitSimpleFeatureCollection(type, filter, lookupDatabase,
-                typeTree);
+                typeTree, dataStore.getRepository());
 
         final int maxFeatures = query2.getMaxFeatures();
         if (maxFeatures > 0 && maxFeatures != Query.DEFAULT_MAX) {

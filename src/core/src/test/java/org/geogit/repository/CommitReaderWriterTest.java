@@ -13,17 +13,15 @@ import java.util.List;
 
 import javax.xml.parsers.DocumentBuilderFactory;
 
-import junit.framework.TestCase;
-
 import org.custommonkey.xmlunit.XMLAssert;
 import org.geogit.api.ObjectId;
 import org.geogit.api.RevCommit;
-import org.geogit.storage.WrappedSerialisingFactory;
+import org.geogit.test.RepositoryTestCase;
 import org.w3c.dom.Document;
 
 import com.vividsolutions.jts.util.Stopwatch;
 
-public class CommitReaderWriterTest extends TestCase {
+public class CommitReaderWriterTest extends RepositoryTestCase {
 
     RevCommit commit;
 
@@ -34,7 +32,7 @@ public class CommitReaderWriterTest extends TestCase {
     ObjectId parentId2;
 
     @Override
-    protected void setUp() throws Exception {
+    protected void setUpInternal() throws Exception {
         CommitBuilder b = new CommitBuilder();
         b.setAuthor("groldan");
         b.setCommitter("jdeolive");
@@ -58,14 +56,13 @@ public class CommitReaderWriterTest extends TestCase {
         commit = b.build(ObjectId.NULL);
 
         ByteArrayOutputStream out = new ByteArrayOutputStream();
-        WrappedSerialisingFactory.getInstance().createCommitWriter(commit).write(out);
+        getRepository().newCommitWriter(commit).write(out);
 
         byte[] built = out.toByteArray();
-        WrappedSerialisingFactory.getInstance().createBlobPrinter().print(built, System.err);
+        getRepository().newBlobPrinter().print(built, System.err);
         // transform to text xml for XPath evaluation
         out = new ByteArrayOutputStream();
-        WrappedSerialisingFactory.getInstance().createBlobPrinter()
-                .print(built, new PrintStream(out));
+        getRepository().newBlobPrinter().print(built, new PrintStream(out));
 
         Document dom = DocumentBuilderFactory.newInstance().newDocumentBuilder()
                 .parse(new ByteArrayInputStream(out.toByteArray()));
@@ -80,13 +77,12 @@ public class CommitReaderWriterTest extends TestCase {
 
     public void testBuildFull() throws Exception {
         ByteArrayOutputStream out = new ByteArrayOutputStream();
-        WrappedSerialisingFactory.getInstance().createCommitWriter(commit).write(out);
+        getRepository().newCommitWriter(commit).write(out);
         byte[] built = out.toByteArray();
-        WrappedSerialisingFactory.getInstance().createBlobPrinter().print(built, System.err);
+        getRepository().newBlobPrinter().print(built, System.err);
         // transform to text xml for XPath evaluation
         out = new ByteArrayOutputStream();
-        WrappedSerialisingFactory.getInstance().createBlobPrinter()
-                .print(built, new PrintStream(out));
+        getRepository().newBlobPrinter().print(built, new PrintStream(out));
 
         Document dom = DocumentBuilderFactory.newInstance().newDocumentBuilder()
                 .parse(new ByteArrayInputStream(out.toByteArray()));
@@ -103,16 +99,15 @@ public class CommitReaderWriterTest extends TestCase {
 
     public void testBackAndForth() throws Exception {
         ByteArrayOutputStream out = new ByteArrayOutputStream();
-        WrappedSerialisingFactory.getInstance().createCommitWriter(commit).write(out);
+        getRepository().newCommitWriter(commit).write(out);
         byte[] built = out.toByteArray();
-        WrappedSerialisingFactory.getInstance().createBlobPrinter().print(built, System.err);
+        getRepository().newBlobPrinter().print(built, System.err);
         // transform to text xml for XPath evaluation
         out = new ByteArrayOutputStream();
-        WrappedSerialisingFactory.getInstance().createBlobPrinter()
-                .print(built, new PrintStream(out));
+        getRepository().newBlobPrinter().print(built, new PrintStream(out));
 
-        RevCommit read = WrappedSerialisingFactory.getInstance().createCommitReader()
-                .read(ObjectId.NULL, new ByteArrayInputStream(built));
+        RevCommit read = getRepository().newCommitReader().read(ObjectId.NULL,
+                new ByteArrayInputStream(built));
         assertNotNull(read);
 
         assertEquals(commit.getAuthor(), read.getAuthor());
@@ -131,7 +126,7 @@ public class CommitReaderWriterTest extends TestCase {
         sw.start();
         for (int i = 0; i < k; i++) {
             out.reset();
-            WrappedSerialisingFactory.getInstance().createCommitWriter(commit).write(out);
+            getRepository().newCommitWriter(commit).write(out);
         }
         sw.stop();
         // it's at ~1200/s
@@ -144,7 +139,7 @@ public class CommitReaderWriterTest extends TestCase {
         // it's at ~700/s
         for (int i = 0; i < k; i++) {
             built.reset();
-            WrappedSerialisingFactory.getInstance().createCommitReader().read(ObjectId.NULL, built);
+            getRepository().newCommitReader().read(ObjectId.NULL, built);
         }
         sw.stop();
         System.err.printf("\nParsed %d commits in %s, (%d/s)\n", k, sw.getTimeString(), k * 1000

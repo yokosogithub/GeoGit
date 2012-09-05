@@ -22,8 +22,8 @@ import org.geogit.api.merge.AbstractMergeOp;
 import org.geogit.api.merge.MergeResult;
 import org.geogit.api.merge.MergeUtils;
 import org.geogit.repository.CommitBuilder;
+import org.geogit.repository.Repository;
 import org.geogit.storage.ObjectInserter;
-import org.geogit.storage.WrappedSerialisingFactory;
 
 import com.google.common.collect.Iterators;
 
@@ -61,9 +61,10 @@ public class ReverseRebaseMergeOp extends AbstractMergeOp {
          */
         RevCommit oldHead;
 
-        Ref head = getRepository().getHead();
+        final Repository repository = getRepository();
+        Ref head = repository.getHead();
         if (!ObjectId.NULL.equals(head.getObjectId())) {
-            oldHead = getRepository().getCommit(getRepository().getHead().getObjectId());
+            oldHead = repository.getCommit(repository.getHead().getObjectId());
         } else {
             /*
              * current head is 000...000 so just grab the top commit - its now the index. rebase to
@@ -76,7 +77,7 @@ public class ReverseRebaseMergeOp extends AbstractMergeOp {
         /*
          * Work out if this is a rebase or a merge
          */
-        LogOp l = new LogOp(getRepository());
+        LogOp l = new LogOp(repository);
         Iterator<RevCommit> s = l.setSince(oldHead.getId()).call();
 
         if (Iterators.contains(s, oldHead)) { /* rebase */
@@ -91,13 +92,12 @@ public class ReverseRebaseMergeOp extends AbstractMergeOp {
                 /*
                  * Grab branch head parents
                  */
-                branchHead = getRepository().getCommit(branch.getObjectId());
+                branchHead = repository.getCommit(branch.getObjectId());
 
                 /*
                  * Grab the branch split
                  */
-                RevCommit branchSplit = MergeUtils.findBranchCommitSplit(branchHead,
-                        getRepository());
+                RevCommit branchSplit = MergeUtils.findBranchCommitSplit(branchHead, repository);
 
                 /*
                  * Set the parents to the current master head commit - thus moving it to 'above' the
@@ -125,20 +125,20 @@ public class ReverseRebaseMergeOp extends AbstractMergeOp {
                 /*
                  * insert the new commit
                  */
-                ObjectInserter objectInserter = getRepository().newObjectInserter();
-                commitId = objectInserter.insert(WrappedSerialisingFactory.getInstance()
-                        .createCommitWriter(cb.build(ObjectId.NULL)));
+                ObjectInserter objectInserter = repository.newObjectInserter();
+                commitId = objectInserter
+                        .insert(repository.newCommitWriter(cb.build(ObjectId.NULL)));
             }
 
             /*
              * Update the head
              */
-            getRepository().getRefDatabase().put(new Ref(Ref.HEAD, commitId, TYPE.COMMIT));
+            repository.getRefDatabase().put(new Ref(Ref.HEAD, commitId, TYPE.COMMIT));
 
             /*
              * diff the changes
              */
-            DiffOp diffOp = new DiffOp(getRepository());
+            DiffOp diffOp = new DiffOp(repository);
             Iterator<DiffEntry> diffs = diffOp.setNewVersion(oldHead.getId())
                     .setOldVersion(branchHead.getId()).call();
 

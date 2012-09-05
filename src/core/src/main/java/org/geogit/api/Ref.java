@@ -16,7 +16,7 @@ import com.google.common.base.Preconditions;
  * to for symbolic refs plus the object id it points to and (for tags) the peeled target object id,
  * i.e. the tag resolved recursively until a non-tag object is referenced.
  */
-public class Ref {
+public class Ref implements Comparable<Ref> {
 
     /**
      * By convention, name of the main branch
@@ -95,6 +95,7 @@ public class Ref {
     /**
      * @see org.geogit.api.Ref#compareTo(org.geogit.api.Ref)
      */
+    @Override
     public int compareTo(Ref o) {
         return name.compareTo(o.getName());
     }

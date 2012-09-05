@@ -14,12 +14,12 @@ import jline.console.ConsoleReader;
 import org.fusesource.jansi.Ansi;
 import org.fusesource.jansi.Ansi.Color;
 import org.geogit.api.GeoGIT;
+import org.geogit.api.Platform;
 import org.geogit.api.RevCommit;
 import org.geogit.cli.AbstractCommand;
 import org.geogit.cli.AnsiDecorator;
 import org.geogit.cli.CLICommand;
 import org.geogit.cli.GeogitCLI;
-import org.geogit.cli.Platform;
 
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.Parameters;

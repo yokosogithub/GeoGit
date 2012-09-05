@@ -4,11 +4,10 @@
  */
 package org.geogit.api;
 
-import java.io.IOException;
 import java.io.PrintWriter;
 
+import org.geogit.repository.Repository;
 import org.geogit.storage.ObjectDatabase;
-import org.geogit.storage.WrappedSerialisingFactory;
 
 public class PrintTreeVisitor implements TreeVisitor {
     private final ObjectDatabase odb;
@@ -27,9 +26,12 @@ public class PrintTreeVisitor implements TreeVisitor {
 
     private boolean print = false;
 
-    public PrintTreeVisitor(final PrintWriter writer, final ObjectDatabase odb) {
+    private Repository repo;
+
+    public PrintTreeVisitor(final PrintWriter writer, final Repository repo) {
         this.writer = writer;
-        this.odb = odb;
+        this.repo = repo;
+        this.odb = repo.getObjectDatabase();
     }
 
     /**
@@ -50,30 +52,27 @@ public class PrintTreeVisitor implements TreeVisitor {
     }
 
     public boolean visitSubTree(final int bucket, final ObjectId treeId) {
-        try {
-            // if (unprinted > 0) {
-            // indent();
-            // writer.println("...and " + unprinted + " more.");
-            // unprinted = 0;
-            // }
 
-            if (subtreeEntries > 0) {
-                println(" (" + subtreeEntries + " entries)");
-            } else {
-                println('\n');
-            }
-            subtreeEntries = 0;
-            depth++;
-            indent();
-            print("order/bucket: " + depth + "/" + bucket);
-            printlimit = 0;
-            RevTree tree = odb.get(treeId, WrappedSerialisingFactory.getInstance()
-                    .createRevTreeReader(odb, depth));
-            tree.accept(this);
-            depth--;
-        } catch (IOException e) {
-            throw new RuntimeException(e);
+        // if (unprinted > 0) {
+        // indent();
+        // writer.println("...and " + unprinted + " more.");
+        // unprinted = 0;
+        // }
+
+        if (subtreeEntries > 0) {
+            println(" (" + subtreeEntries + " entries)");
+        } else {
+            println('\n');
         }
+        subtreeEntries = 0;
+        depth++;
+        indent();
+        print("order/bucket: " + depth + "/" + bucket);
+        printlimit = 0;
+        RevTree tree = odb.get(treeId, repo.newRevTreeReader(odb, depth));
+        tree.accept(this);
+        depth--;
+
         return false;
     }
 

@@ -25,7 +25,6 @@ import org.geogit.api.RevTree;
 import org.geogit.api.TreeVisitor;
 import org.geogit.storage.ObjectWriter;
 import org.geogit.storage.StagingDatabase;
-import org.geogit.storage.WrappedSerialisingFactory;
 import org.geotools.factory.Hints;
 import org.geotools.feature.FeatureCollection;
 import org.geotools.feature.FeatureIterator;
@@ -38,9 +37,9 @@ import org.opengis.geometry.BoundingBox;
 import org.opengis.util.ProgressListener;
 
 import com.google.common.base.Function;
-import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.collect.Iterators;
+import com.google.inject.Inject;
 
 /**
  * A working tree is the collection of Features for a single FeatureType in GeoServer that has a
@@ -68,16 +67,11 @@ import com.google.common.collect.Iterators;
 @SuppressWarnings("rawtypes")
 public class WorkingTree {
 
-    private final StagingArea index;
+    @Inject
+    private StagingArea index;
 
-    private final Repository repository;
-
-    public WorkingTree(final Repository repository) {
-        Preconditions.checkNotNull(repository);
-        this.repository = repository;
-        this.index = repository.getIndex();
-        Preconditions.checkState(index != null);
-    }
+    @Inject
+    private Repository repository;
 
     public void init(final FeatureType featureType) throws Exception {
 
@@ -137,7 +131,8 @@ public class WorkingTree {
         Iterator<Feature> iterator = features.iterator();
         try {
             Iterator<Triplet<ObjectWriter<?>, BoundingBox, List<String>>> objects;
-            objects = Iterators.transform(iterator, new FeatureInserter(forceUseProvidedFID));
+            objects = Iterators.transform(iterator, new FeatureInserter(forceUseProvidedFID,
+                    repository));
 
             index.inserted(objects, listener, size <= 0 ? null : size, insertedTarget);
         } finally {
@@ -150,17 +145,17 @@ public class WorkingTree {
 
         private final boolean forceUseProvidedFID;
 
-        private final WrappedSerialisingFactory serialisingFactory;
+        private final Repository repo;
 
-        public FeatureInserter(final boolean forceUseProvidedFID) {
+        public FeatureInserter(final boolean forceUseProvidedFID, final Repository repo) {
             this.forceUseProvidedFID = forceUseProvidedFID;
-            serialisingFactory = WrappedSerialisingFactory.getInstance();
+            this.repo = repo;
         }
 
         @Override
         public Triplet<ObjectWriter<?>, BoundingBox, List<String>> apply(final Feature input) {
 
-            ObjectWriter<Feature> featureWriter = serialisingFactory.createFeatureWriter(input);
+            ObjectWriter<Feature> featureWriter = repo.newFeatureWriter(input);
             final BoundingBox bounds = input.getBounds();
             final Name typeName = input.getType().getName();
             final String id;
@@ -190,7 +185,8 @@ public class WorkingTree {
         try {
             Iterator<Triplet<ObjectWriter<?>, BoundingBox, List<String>>> objects;
             final boolean forceUseProvidedFID = true;
-            objects = Iterators.transform(features, new FeatureInserter(forceUseProvidedFID));
+            objects = Iterators.transform(features, new FeatureInserter(forceUseProvidedFID,
+                    repository));
 
             index.inserted(objects, listener, size <= 0 ? null : size, null);
         } finally {

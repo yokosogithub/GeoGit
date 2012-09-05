@@ -6,7 +6,7 @@ package org.geogit.api.merge;
 
 import org.geogit.api.AbstractGeoGitOp;
 import org.geogit.api.Ref;
-import org.geogit.repository.ConfigurationContext;
+import org.geogit.api.merge.strategy.ReverseRebaseMergeOp;
 import org.geogit.repository.Repository;
 
 /**
@@ -29,10 +29,9 @@ public class MergeOp extends AbstractGeoGitOp<MergeResult> {
         super(repository);
         this.comment = "";
         /*
-         * The default merge strategy is a very simple merge operation and is loaded from the
-         * applicationContext.xml file.
+         * The default merge strategy is a very simple merge operation. TODO: make this configurable
          */
-        this.mergeStrategy = (IMergeOp) ConfigurationContext.getInstance().getBean("mergeOp");
+        this.mergeStrategy = new ReverseRebaseMergeOp();
     }
 
     /**

@@ -20,8 +20,8 @@ import org.geogit.api.RevObject.TYPE;
 import org.geogit.api.merge.AbstractMergeOp;
 import org.geogit.api.merge.MergeResult;
 import org.geogit.repository.CommitBuilder;
+import org.geogit.repository.Repository;
 import org.geogit.storage.ObjectInserter;
-import org.geogit.storage.WrappedSerialisingFactory;
 
 import com.google.common.collect.Iterators;
 
@@ -54,8 +54,9 @@ public class FirstInMergeOp extends AbstractMergeOp {
          * Grab old head
          */
         RevCommit oldHead;
-        if (!ObjectId.NULL.equals(getRepository().getHead().getObjectId())) {
-            oldHead = getRepository().getCommit(getRepository().getHead().getObjectId());
+        final Repository repository = getRepository();
+        if (!ObjectId.NULL.equals(repository.getHead().getObjectId())) {
+            oldHead = repository.getCommit(repository.getHead().getObjectId());
         } else {
             rebase();
             return mergeResult;
@@ -64,7 +65,7 @@ public class FirstInMergeOp extends AbstractMergeOp {
         /**
          * Work out if this is a rebase or a merge
          */
-        LogOp l = new LogOp(getRepository());
+        LogOp l = new LogOp(repository);
         Iterator<RevCommit> s = l.setSince(oldHead.getId()).call();
 
         if (Iterators.contains(s, oldHead)) { /* rebase */
@@ -82,7 +83,7 @@ public class FirstInMergeOp extends AbstractMergeOp {
                 /**
                  * Grab branch head parents
                  */
-                branchHead = getRepository().getCommit(branch.getObjectId());
+                branchHead = repository.getCommit(branch.getObjectId());
 
                 /**
                  * Merge the trees
@@ -100,20 +101,20 @@ public class FirstInMergeOp extends AbstractMergeOp {
                 /**
                  * insert the new commit
                  */
-                ObjectInserter objectInserter = getRepository().newObjectInserter();
-                commitId = objectInserter.insert(WrappedSerialisingFactory.getInstance()
-                        .createCommitWriter(cb.build(ObjectId.NULL)));
+                ObjectInserter objectInserter = repository.newObjectInserter();
+                commitId = objectInserter
+                        .insert(repository.newCommitWriter(cb.build(ObjectId.NULL)));
             }
 
             /**
              * Update the head
              */
-            getRepository().getRefDatabase().put(new Ref(Ref.HEAD, commitId, TYPE.COMMIT));
+            repository.getRefDatabase().put(new Ref(Ref.HEAD, commitId, TYPE.COMMIT));
 
             /**
              * diff the changes
              */
-            DiffOp diffOp = new DiffOp(getRepository());
+            DiffOp diffOp = new DiffOp(repository);
             Iterator<DiffEntry> diffs = diffOp.setNewVersion(oldHead.getId())
                     .setOldVersion(branchHead.getId()).call();
 

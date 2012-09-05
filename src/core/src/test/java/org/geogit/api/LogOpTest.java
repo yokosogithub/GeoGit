@@ -8,11 +8,9 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Set;
 
 import org.geogit.repository.StagingArea;
 import org.geogit.test.RepositoryTestCase;
@@ -20,6 +18,7 @@ import org.geotools.util.Range;
 import org.opengis.feature.Feature;
 
 import com.google.common.collect.Iterators;
+import com.google.common.collect.Lists;
 
 public class LogOpTest extends RepositoryTestCase {
 
@@ -121,16 +120,16 @@ public class LogOpTest extends RepositoryTestCase {
     public void testPathFilterByTypeName() throws Exception {
 
         List<Feature> features = Arrays.asList(points1, lines1, points2, lines2, points3, lines3);
-        LinkedList<RevCommit> commits = new LinkedList<RevCommit>();
+        LinkedList<RevCommit> commits = Lists.newLinkedList();
 
-        Set<RevCommit> typeName1Commits = new HashSet<RevCommit>();
+        LinkedList<RevCommit> typeName1Commits = Lists.newLinkedList();
 
         for (Feature f : features) {
             insertAndAdd(f);
-            final RevCommit commit = ggit.commit().call();
+            final RevCommit commit = ggit.commit().setMessage(f.getIdentifier().toString()).call();
             commits.addFirst(commit);
             if (pointsName.equals(f.getType().getName().getLocalPart())) {
-                typeName1Commits.add(commit);
+                typeName1Commits.addFirst(commit);
             }
         }
 
@@ -139,7 +138,7 @@ public class LogOpTest extends RepositoryTestCase {
 
         List<RevCommit> logCommits = toList(logOp.addPath(path).call());
         assertEquals(typeName1Commits.size(), logCommits.size());
-        assertEquals(typeName1Commits, new HashSet<RevCommit>(logCommits));
+        assertEquals(typeName1Commits, logCommits);
     }
 
     public void testLimit() throws Exception {
