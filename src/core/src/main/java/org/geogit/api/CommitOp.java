@@ -21,7 +21,7 @@ import com.google.common.base.Preconditions;
 
 /**
  * Commits the staged changed in the index to the repository, creating a new commit pointing to the
- * new root tree resulting from moving the staged changes to the respository, and updating the HEAD
+ * new root tree resulting from moving the staged changes to the repository, and updating the HEAD
  * ref to the new commit object.
  * <p>
  * Like {@code git commit -a}, If the {@link #setAll(boolean) all} flag is set, first stages all the

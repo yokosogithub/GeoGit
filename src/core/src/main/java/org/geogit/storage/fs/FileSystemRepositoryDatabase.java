@@ -58,20 +58,4 @@ public class FileSystemRepositoryDatabase implements RepositoryDatabase {
     public StagingDatabase getStagingDatabase() {
         return stagingDatabase;
     }
-
-    @Override
-    public void beginTransaction() {
-        // TODO Auto-generated method stub
-    }
-
-    @Override
-    public void commitTransaction() {
-        // TODO Auto-generated method stub
-    }
-
-    @Override
-    public void rollbackTransaction() {
-        // TODO Auto-generated method stub
-    }
-
 }

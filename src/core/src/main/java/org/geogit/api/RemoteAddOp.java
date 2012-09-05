@@ -19,7 +19,7 @@ import com.google.common.base.Preconditions;
  */
 public class RemoteAddOp extends AbstractGeoGitOp<Void> {
 
-    private static final String REFS_HEADS_REFS_REMOTES = "refs/heads/*:refs/remotes/";
+    public static final String REFS_HEADS_REFS_REMOTES = "refs/heads/*:refs/remotes/";
 
     Config config;
 
@@ -42,8 +42,8 @@ public class RemoteAddOp extends AbstractGeoGitOp<Void> {
         RemoteConfigObject remote = new RemoteConfigObject(name, fetch, url);
         config.addRemoteConfigObject(remote);
         Ref remoteRef = new Ref(Ref.REMOTES_PREFIX + this.name + "/" + Ref.MASTER,
-                ObjectId.forString(this.name), TYPE.REMOTE);
-        getRepository().getRefDatabase().addRef(remoteRef);
+                ObjectId.NULL/*ObjectId.forString(this.name)*/, TYPE.COMMIT);
+        getRepository().getRefDatabase().put(remoteRef);
         return null;
     }
 

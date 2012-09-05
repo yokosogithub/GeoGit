@@ -15,10 +15,4 @@ public interface RepositoryDatabase {
     public void create();
 
     public void close();
-
-    public void beginTransaction();
-
-    public void commitTransaction();
-
-    public void rollbackTransaction();
 }

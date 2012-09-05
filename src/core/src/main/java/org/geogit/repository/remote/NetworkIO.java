@@ -198,7 +198,7 @@ public class NetworkIO {
                     // System.out.println(blob);
                 } else if (type == 'N') {
                     String branchName = new String(payloadBuffer.toByteArray());
-                    Ref branchRef = new Ref(branchName, objectId, TYPE.REMOTE);
+                    Ref branchRef = new Ref(branchName, objectId, TYPE.COMMIT);
                     payload.addBranches(branchName, branchRef);
                     // System.out.println(branchName + " added to payload");
                 }

@@ -81,20 +81,4 @@ public class JERepositoryDatabase implements RepositoryDatabase {
     public StagingDatabase getStagingDatabase() {
         return stagingDatabase;
     }
-
-    @Override
-    public void beginTransaction() {
-        // CurrentTransaction.getInstance(environment).beginTransaction(null);
-    }
-
-    @Override
-    public void commitTransaction() {
-        // CurrentTransaction.getInstance(environment).commitTransaction();
-    }
-
-    @Override
-    public void rollbackTransaction() {
-        // CurrentTransaction.getInstance(environment).abortTransaction();
-    }
-
 }

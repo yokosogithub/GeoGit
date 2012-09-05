@@ -16,6 +16,9 @@
  */
 package org.geotools.data.versioning.decorator;
 
+import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkNotNull;
+
 import java.io.IOException;
 import java.util.HashSet;
 import java.util.List;
@@ -40,7 +43,6 @@ import org.opengis.feature.type.Name;
 import org.opengis.filter.Id;
 import org.opengis.filter.identity.Identifier;
 import org.opengis.filter.identity.ResourceId;
-import org.springframework.util.Assert;
 
 import com.google.common.base.Throwables;
 
@@ -67,9 +69,9 @@ public class DataAccessDecorator<T extends FeatureType, F extends Feature> imple
     private Repository repository;
 
     public DataAccessDecorator(DataAccess unversioned, Repository versioningRepo) {
-        Assert.notNull(unversioned);
-        Assert.notNull(versioningRepo);
-        Assert.isTrue(!(unversioned instanceof DataAccessDecorator));
+        checkNotNull(unversioned);
+        checkNotNull(versioningRepo);
+        checkArgument(!(unversioned instanceof DataAccessDecorator));
         this.unversioned = unversioned;
         this.repository = versioningRepo;
     }
@@ -169,9 +171,9 @@ public class DataAccessDecorator<T extends FeatureType, F extends Feature> imple
      */
     public FeatureCollection getFeatures(final Name typeName, final Id versioningFilter,
             final Query extraQuery) throws IOException {
-        Assert.notNull(typeName);
-        Assert.notNull(versioningFilter);
-        Assert.isTrue(versioningFilter.getIdentifiers().size() > 0);
+        checkNotNull(typeName);
+        checkNotNull(versioningFilter);
+        checkArgument(versioningFilter.getIdentifiers().size() > 0);
 
         final Set<Identifier> identifiers = versioningFilter.getIdentifiers();
         final Set<ResourceId> resourceIds = new HashSet<ResourceId>();

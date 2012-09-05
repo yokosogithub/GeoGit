@@ -130,7 +130,7 @@ public class PayloadUtil {
              * Now we must write out all the remote heads - so we can keep track of them for fetches
              */
             Ref remoteRef = new Ref(Ref.REMOTES_PREFIX + branchName + "/" + Ref.MASTER,
-                    ref.getObjectId(), TYPE.REMOTE);
+                    ref.getObjectId(), TYPE.COMMIT);
             Ref oldRef = getRepository().getRef(remoteRef.getName());
 
             if (oldRef != null && !oldRef.equals(remoteRef)) {

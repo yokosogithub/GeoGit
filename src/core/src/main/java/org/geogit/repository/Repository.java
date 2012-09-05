@@ -324,21 +324,6 @@ public class Repository {
         return feature;
     }
 
-    @Deprecated
-    public void beginTransaction() {
-        this.repoDb.beginTransaction();
-    }
-
-    @Deprecated
-    public void commitTransaction() {
-        this.repoDb.commitTransaction();
-    }
-
-    @Deprecated
-    public void rollbackTransaction() {
-        this.repoDb.rollbackTransaction();
-    }
-
     /**
      * Creates and return a new, empty tree, that stores to this repository's {@link ObjectDatabase}
      */
@@ -354,16 +339,6 @@ public class Repository {
     public Ref getRootTreeChild(String... path) {
         RevTree root = getHeadTree();
         return getObjectDatabase().getTreeChild(root, path);
-    }
-
-    /**
-     * Add a new REF to the reference database, this is used mostly by a fetch to create new
-     * references to remote branches
-     * 
-     * @param ref
-     */
-    public void addRef(Ref ref) {
-        this.repoDb.getReferenceDatabase().addRef(ref);
     }
 
     /**

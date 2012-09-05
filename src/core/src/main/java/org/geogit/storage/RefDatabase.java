@@ -45,15 +45,6 @@ public class RefDatabase {
         condCreate(master, TYPE.COMMIT);
     }
 
-    /**
-     * Add a new tracked remote to the reference database
-     * 
-     * @param refName the name of the remote to track, no need to add the prefix, "remotes/".
-     */
-    public void addRef(final Ref ref) {
-        condCreate(ref.getName(), TYPE.REMOTE);
-    }
-
     private void condCreate(final String refName, TYPE type) {
         RevTree refsTree = getRefsTree();
 
