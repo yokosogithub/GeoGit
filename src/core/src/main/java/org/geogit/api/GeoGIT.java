@@ -5,15 +5,11 @@
 package org.geogit.api;
 
 import java.io.File;
-import java.util.List;
+import java.net.URL;
 
-import org.geogit.api.merge.MergeOp;
 import org.geogit.command.plumbing.PlumbingCommands;
+import org.geogit.command.plumbing.ResolveGeogitDir;
 import org.geogit.repository.Repository;
-import org.geotools.feature.FeatureCollection;
-import org.opengis.feature.type.Name;
-import org.opengis.filter.expression.PropertyName;
-import org.opengis.util.ProgressListener;
 
 import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
@@ -29,7 +25,6 @@ import com.google.inject.Injector;
  * 
  * @author groldan
  */
-@SuppressWarnings("rawtypes")
 public class GeoGIT {
 
     private Repository repository;
@@ -38,16 +33,16 @@ public class GeoGIT {
 
     private static CommitStateResolver commitStateResolver = DEFAULT_COMMIT_RESOLVER;
 
-    private Injector injector;
+    private final Injector injector;
+
+    public GeoGIT() {
+        injector = Guice.createInjector(new GeogitModule(), new PlumbingCommands(),
+                new PorcelainCommands());
+    }
 
     public GeoGIT(File workingDir) {
         this();
         injector.getInstance(Platform.class).setWorkingDir(workingDir);
-    }
-
-    public GeoGIT() {
-        injector = Guice.createInjector(new GeogitModule(), new PlumbingCommands(),
-                new PorcelainCommnds());
     }
 
     public GeoGIT(final Injector injector) {
@@ -59,15 +54,24 @@ public class GeoGIT {
         injector.getInstance(Platform.class).setWorkingDir(workingDir);
     }
 
+    @Deprecated
     public GeoGIT(final Repository repository) {
         Preconditions.checkNotNull(repository, "repository can't be null");
         this.repository = repository;
+        this.injector = null;
+    }
+
+    public void close() {
+        if (repository != null) {
+            repository.close();
+            repository = null;
+        }
     }
 
     /**
      * @param commandClass
      */
-    public <T extends AbstractGeoGitOp> T command(Class<T> commandClass) {
+    public <T extends AbstractGeoGitOp<?>> T command(Class<T> commandClass) {
         return injector.getInstance(commandClass);
     }
 
@@ -79,12 +83,15 @@ public class GeoGIT {
         commitStateResolver = resolver == null ? new PlatformResolver() : resolver;
     }
 
-    public Repository getRepository() {
-        if (repository != null) {
-            return repository;
-        }
-        if (injector != null) {
-
+    /**
+     * Obtains the repository for the current directory or creates a new one and returns it if no
+     * repository can be found on the current directory.
+     * 
+     * @return the existing or newly created repository, never {@code null}
+     * @throws RuntimeException if the repository cannot be created at the current directory
+     */
+    public Repository getOrCreateRepository() {
+        if (getRepository() == null) {
             try {
                 repository = command(InitOp.class).call();
             } catch (Exception e) {
@@ -95,8 +102,25 @@ public class GeoGIT {
         throw new IllegalStateException();
     }
 
-    public static CloneOp clone(final String url) {
-        return null;// new CloneOp(url);
+    /**
+     * @return the configured repository or {@code null} if no repository is found on the current
+     *         directory
+     */
+    public synchronized Repository getRepository() {
+        if (repository != null) {
+            return repository;
+        }
+
+        final URL repoLocation = command(ResolveGeogitDir.class).call();
+        final boolean repoFound = null != repoLocation;
+        if (repoFound) {
+            try {
+                repository = injector.getInstance(Repository.class);
+            } catch (Exception e) {
+                throw Throwables.propagate(e);
+            }
+        }
+        return repository;
     }
 
     /**
@@ -107,42 +131,12 @@ public class GeoGIT {
     }
 
     /**
-     * Remove files from the working tree and from the index
-     * 
-     */
-    public String rm(final String user, final Name typeName,
-            final FeatureCollection affectedFeatures, final ProgressListener progressListener) {
-        throw new UnsupportedOperationException();
-    }
-
-    /**
-     * @return
-     */
-    public String update(final String user, final Name typeName,
-            final List<PropertyName> changedProperties, final FeatureCollection affectedFeatures,
-            final ProgressListener progressListener) {
-
-        throw new UnsupportedOperationException();
-    }
-
-    /**
      * Record changes to the repository
      * 
      * @return commit id
      */
     public CommitOp commit() {
         return new CommitOp(repository, commitStateResolver);
-    }
-
-    /**
-     * List, create or delete branches
-     */
-    public BranchCreateOp branchCreate() {
-        return new BranchCreateOp(repository);
-    }
-
-    public BranchDeleteOp branchDelete() {
-        return new BranchDeleteOp(repository);
     }
 
     /**
@@ -160,61 +154,10 @@ public class GeoGIT {
     }
 
     /**
-     * Create an empty working tree or reinitialize an existing one
-     */
-    public void init() {
-
-    }
-
-    /**
      * Show commit logs
      */
     public LogOp log() {
         return new LogOp(repository);
-    }
-
-    /**
-     * Join two or more development histories together
-     */
-    public MergeOp merge() {
-        return new MergeOp(repository);
-    }
-
-    /**
-     * Forward-port local commits to the updated upstream head
-     */
-    public RebaseOp rebase() {
-        return new RebaseOp(repository);
-    }
-
-    /**
-     * Reset current HEAD to the specified state
-     */
-    public void reset() {
-
-    }
-
-    /**
-     * Show various types of objects by their unique id
-     * 
-     * @return
-     */
-    public ShowOp show() {
-        return new ShowOp(repository);
-    }
-
-    /**
-     * Show the working tree status
-     */
-    public void status() {
-
-    }
-
-    /**
-     * Create, list, delete or verify a tag object
-     */
-    public void tag() {
-
     }
 
 }
