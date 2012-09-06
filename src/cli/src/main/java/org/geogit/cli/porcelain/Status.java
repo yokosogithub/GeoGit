@@ -16,9 +16,6 @@
  */
 package org.geogit.cli.porcelain;
 
-import static com.google.common.base.Preconditions.checkArgument;
-import static com.google.common.base.Preconditions.checkState;
-
 import java.io.IOException;
 import java.util.Iterator;
 import java.util.List;
@@ -50,26 +47,16 @@ public class Status implements CLICommand {
     @Parameter(names = "--all", description = "Force listing all changes (overrides limit).")
     private boolean all = false;
 
-    public void setColor(ColorArg strategy) {
-        this.coloredOutput = strategy;
-    }
-
-    public void setAll(boolean all) {
-        this.all = all;
-    }
-
-    public void setLimit(Integer limit) {
-        checkArgument(limit == null || limit.intValue() >= 0);
-        this.limit = limit;
-    }
-
     /**
      * @param cli
      * @see org.geogit.cli.CLICommand#run(org.geogit.cli.GeogitCLI)
      */
     @Override
     public void run(GeogitCLI cli) throws Exception {
-        checkState(cli.getGeogit() != null, "Not a geogit repository: " + cli.getPlatform().pwd());
+        if (cli.getGeogit() == null) {
+            cli.getConsole().println("Not a geogit repository: " + cli.getPlatform().pwd());
+            return;
+        }
 
         ConsoleReader console = cli.getConsole();
         GeoGIT geogit = cli.getGeogit();

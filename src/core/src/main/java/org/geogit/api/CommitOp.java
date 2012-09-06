@@ -124,10 +124,9 @@ public class CommitOp extends AbstractGeoGitOp<RevCommit> {
 
         getProgressListener().started();
         final Repository repository = getRepository();
-        GeoGIT ggit = new GeoGIT(repository);
         if (all) {
-            ggit.add().addPattern(".").setUpdateOnly(true).setProgressListener(subProgress(49f))
-                    .call();
+            new AddOp(getRepository()).addPattern(".").setUpdateOnly(true)
+                    .setProgressListener(subProgress(49f)).call();
         }
         if (getProgressListener().isCanceled()) {
             return null;

@@ -12,7 +12,6 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.ServiceLoader;
-import java.util.logging.Level;
 
 import javax.annotation.Nullable;
 
@@ -64,7 +63,6 @@ public class GeogitCLI {
 
         Iterable<CLIModule> plugins = ServiceLoader.load(CLIModule.class);
         injector = Guice.createInjector(plugins);
-
     }
 
     public Platform getPlatform() {
@@ -105,7 +103,7 @@ public class GeogitCLI {
      *         directory.
      */
     private GeoGIT loadRepository() {
-        GeoGIT geogit = new GeoGIT();
+        GeoGIT geogit = new GeoGIT(platform.pwd());
 
         if (null != geogit.command(ResolveGeogitDir.class).call()) {
             geogit.getRepository();
@@ -121,7 +119,7 @@ public class GeogitCLI {
 
     public void close() {
         if (geogit != null) {
-            geogit.getRepository().close();
+            geogit.close();
             geogit = null;
         }
     }
@@ -131,8 +129,6 @@ public class GeogitCLI {
      */
     public static void main(String[] args) {
         Logging.ALL.forceMonolineConsoleOutput();
-        Logging.getLogger("org.springframework").setLevel(Level.WARNING);
-
         // TODO: revisit in case we need to grafefully shutdown upon CTRL+C
         // Runtime.getRuntime().addShutdownHook(new Thread() {
         // @Override

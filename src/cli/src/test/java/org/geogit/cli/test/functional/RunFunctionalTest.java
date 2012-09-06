@@ -14,25 +14,18 @@
  *    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  *    Lesser General Public License for more details.
  */
-package org.geogit.cli.porcelain;
+package org.geogit.cli.test.functional;
 
-import java.util.List;
+import org.junit.runner.RunWith;
 
-import org.geogit.cli.CLITest;
-import org.junit.Test;
+import cucumber.junit.Cucumber;
 
 /**
- * @author groldan
+ * Single cucumber test runner. Its sole purpose is to serve as an entry point for junit. Step
+ * definitions and hooks are defined in their own classes so they can be reused across features.
  * 
  */
-public class InitTest extends CLITest {
-
-    @Test
-    public void test() throws Exception {
-        cli.execute("init");
-
-        List<String> cmdOutput = super.parseOutput(false);
-        System.err.println(cmdOutput);
-    }
-
+@RunWith(Cucumber.class)
+@Cucumber.Options(format = { "pretty", "html:target/cucumber-report" }, strict = true)
+public class RunFunctionalTest {
 }

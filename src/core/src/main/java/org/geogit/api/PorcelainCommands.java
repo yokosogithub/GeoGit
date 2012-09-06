@@ -14,25 +14,24 @@
  *    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  *    Lesser General Public License for more details.
  */
-package org.geogit.cli.porcelain;
+package org.geogit.api;
 
-import java.util.List;
+import org.geogit.command.porcelain.InitOp;
 
-import org.geogit.cli.CLITest;
-import org.junit.Test;
+import com.google.inject.AbstractModule;
 
 /**
- * @author groldan
- * 
+ *
  */
-public class InitTest extends CLITest {
+public class PorcelainCommands extends AbstractModule {
 
-    @Test
-    public void test() throws Exception {
-        cli.execute("init");
-
-        List<String> cmdOutput = super.parseOutput(false);
-        System.err.println(cmdOutput);
+    /**
+     * 
+     * @see com.google.inject.AbstractModule#configure()
+     */
+    @Override
+    protected void configure() {
+        bind(InitOp.class);
     }
 
 }

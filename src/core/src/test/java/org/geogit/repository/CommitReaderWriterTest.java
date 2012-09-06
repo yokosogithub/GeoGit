@@ -4,6 +4,9 @@
  */
 package org.geogit.repository;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
@@ -17,6 +20,7 @@ import org.custommonkey.xmlunit.XMLAssert;
 import org.geogit.api.ObjectId;
 import org.geogit.api.RevCommit;
 import org.geogit.test.RepositoryTestCase;
+import org.junit.Test;
 import org.w3c.dom.Document;
 
 import com.vividsolutions.jts.util.Stopwatch;
@@ -50,6 +54,7 @@ public class CommitReaderWriterTest extends RepositoryTestCase {
         commit = b.build(ObjectId.NULL);
     }
 
+    @Test
     public void testBuildEmpty() throws Exception {
         CommitBuilder b = new CommitBuilder();
         b.setTreeId(ObjectId.NULL);
@@ -75,6 +80,7 @@ public class CommitReaderWriterTest extends RepositoryTestCase {
         XMLAssert.assertXpathExists("/commit/timestamp", dom);
     }
 
+    @Test
     public void testBuildFull() throws Exception {
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         getRepository().newCommitWriter(commit).write(out);
@@ -97,6 +103,7 @@ public class CommitReaderWriterTest extends RepositoryTestCase {
         XMLAssert.assertXpathEvaluatesTo("1000", "/commit/timestamp/long", dom);
     }
 
+    @Test
     public void testBackAndForth() throws Exception {
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         getRepository().newCommitWriter(commit).write(out);
@@ -118,6 +125,7 @@ public class CommitReaderWriterTest extends RepositoryTestCase {
         assertEquals(commit.getParentIds(), read.getParentIds());
     }
 
+    @Test
     public void testPerf() throws Exception {
         ByteArrayOutputStream out = new ByteArrayOutputStream();
 

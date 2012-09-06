@@ -14,6 +14,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
+import jline.Terminal;
 import jline.console.ConsoleReader;
 import jline.console.completer.AggregateCompleter;
 import jline.console.completer.ArgumentCompleter;
@@ -58,6 +59,8 @@ public class GeogitConsole {
         consoleReader.setAutoprintThreshold(20);
         consoleReader.setPaginationEnabled(true);
         consoleReader.setHistoryEnabled(true);
+        // needed for CTRL+C not to let the console broken
+        consoleReader.getTerminal().setEchoEnabled(true);
 
         final GeogitCLI cli = new GeogitCLI(consoleReader);
         final JCommander globalCommandParser = cli.newCommandParser();
@@ -95,7 +98,16 @@ public class GeogitConsole {
         try {
             runInternal(cli);
         } finally {
-            cli.close();
+            Terminal terminal = consoleReader.getTerminal();
+            try {
+                cli.close();
+            } finally {
+                try {
+                    terminal.restore();
+                } catch (Exception e) {
+                    throw Throwables.propagate(e);
+                }
+            }
         }
     }
 

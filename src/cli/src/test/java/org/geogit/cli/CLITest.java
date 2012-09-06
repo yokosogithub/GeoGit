@@ -21,15 +21,12 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import javax.annotation.Nullable;
 
 import jline.UnsupportedTerminal;
 import jline.console.ConsoleReader;
 
-import org.geogit.api.GeoGIT;
 import org.geogit.api.RevCommit;
 import org.geogit.test.RepositoryTestCase;
 
@@ -40,14 +37,9 @@ import com.google.common.collect.Lists;
 import com.google.common.io.CharStreams;
 
 /**
- * @author groldan
  * 
  */
 public abstract class CLITest extends RepositoryTestCase {
-
-    static {
-        Logger.getLogger("org.springframework").setLevel(Level.WARNING);
-    }
 
     protected GeogitCLI cli;
 
@@ -68,25 +60,25 @@ public abstract class CLITest extends RepositoryTestCase {
     @Override
     protected void setUpInternal() throws Exception {
 
-        GeoGIT geoGIT = new GeoGIT(super.getRepository());
         cli = new GeogitCLI(new ConsoleReader(System.in, stdOut, new UnsupportedTerminal()));
-        cli.setGeogit(geoGIT);
+        cli.setPlatform(geogit.getPlatform());
+        cli.setGeogit(geogit);
 
         insertAndAdd(lines1, lines2);
-        commit1 = geoGIT.commit().setAuthor("groldan").setCommitter("juan").setMessage("commit 1")
+        commit1 = geogit.commit().setAuthor("groldan").setCommitter("juan").setMessage("commit 1")
                 .call();
 
         insertAndAdd(points1, points2);
-        commit2 = geoGIT.commit().setAuthor("juan").setCommitter("groldan").setMessage("commit 2")
+        commit2 = geogit.commit().setAuthor("juan").setCommitter("groldan").setMessage("commit 2")
                 .call();
 
         insertAndAdd(points3, lines3);
-        commit3 = geoGIT.commit().setAuthor("mike").setCommitter("groldan").setMessage("commit 3")
+        commit3 = geogit.commit().setAuthor("mike").setCommitter("groldan").setMessage("commit 3")
                 .call();
 
         deleteAndAdd(points1);
         deleteAndAdd(lines1);
-        commit4 = geoGIT.commit().setAuthor("mike").setCommitter("groldan").setMessage("commit 4")
+        commit4 = geogit.commit().setAuthor("mike").setCommitter("groldan").setMessage("commit 4")
                 .call();
     }
 

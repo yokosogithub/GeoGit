@@ -16,6 +16,8 @@
  */
 package org.geogit.cli.porcelain;
 
+import static org.junit.Assert.assertEquals;
+
 import java.util.List;
 
 import org.geogit.api.RevCommit;

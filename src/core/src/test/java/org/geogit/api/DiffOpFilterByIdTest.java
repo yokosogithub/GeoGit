@@ -7,12 +7,14 @@ package org.geogit.api;
 import static org.geogit.api.DiffEntry.ChangeType.ADD;
 import static org.geogit.api.DiffEntry.ChangeType.DELETE;
 import static org.geogit.api.DiffEntry.ChangeType.MODIFY;
+import static org.junit.Assert.assertEquals;
 
 import java.util.Arrays;
 import java.util.List;
 
 import org.geogit.api.DiffEntry.ChangeType;
 import org.geogit.test.RepositoryTestCase;
+import org.junit.Test;
 import org.opengis.feature.simple.SimpleFeature;
 
 /**
@@ -22,8 +24,6 @@ import org.opengis.feature.simple.SimpleFeature;
  * 
  */
 public class DiffOpFilterByIdTest extends RepositoryTestCase {
-
-    private GeoGIT ggit;
 
     private DiffOp diffOp;
 
@@ -62,22 +62,21 @@ public class DiffOpFilterByIdTest extends RepositoryTestCase {
 
     @Override
     protected void setUpInternal() throws Exception {
-        this.ggit = new GeoGIT(getRepository());
-        this.diffOp = ggit.diff();
+        this.diffOp = geogit.diff();
 
         points1Id = insertAndAdd(points1);
         lines1Id = insertAndAdd(lines1);
-        commit1 = ggit.commit().setAll(true).call();
+        commit1 = geogit.commit().setAll(true).call();
 
         points2Id = insertAndAdd(points2);
         lines2Id = insertAndAdd(lines2);
-        commit2 = ggit.commit().setAll(true).call();
+        commit2 = geogit.commit().setAll(true).call();
 
         deleteAndAdd(points1);
         ((SimpleFeature) lines1).setAttribute(0, "CHANGED");
         modifiedL1Id = insertAndAdd(lines1);// modifying a feature and inserting it has the same
                                             // effect
-        commit3 = ggit.commit().setAll(true).call();
+        commit3 = geogit.commit().setAll(true).call();
 
         commit1Id = commit1.getId();
         commit2Id = commit2.getId();
@@ -89,6 +88,7 @@ public class DiffOpFilterByIdTest extends RepositoryTestCase {
         L2Path = Arrays.asList(linesNs, linesName, idL2);
     }
 
+    @Test
     public void testFilterByObjectId1() throws Exception {
         diffOp.setOldVersion(commit1Id).setNewVersion(commit2Id);
         diffOp.setFilter(points2Id);
@@ -98,6 +98,7 @@ public class DiffOpFilterByIdTest extends RepositoryTestCase {
         assertDiff(diffs.get(0), ADD, commit1Id, commit2Id, ObjectId.NULL, points2Id, P2Path);
     }
 
+    @Test
     public void testFilterByObjectId_NoToVersion() throws Exception {
         diffOp.setOldVersion(commit1Id);
         // newVersion shall resolve to current head, i.e., commit3
@@ -120,6 +121,7 @@ public class DiffOpFilterByIdTest extends RepositoryTestCase {
         assertDiff(diffs.get(0), MODIFY, commit1Id, commit3Id, lines1Id, modifiedL1Id, L1Path);
     }
 
+    @Test
     public void testFilterByObjectId_InverseOrder() throws Exception {
         // set old and new version in inverse order than testFilterByObjectId_NoToVersion and expect
         // delete and add instead of add and delete

@@ -4,6 +4,12 @@
  */
 package org.geogit.repository;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+
 import java.io.PrintWriter;
 
 import org.geogit.api.DiffEntry;
@@ -18,6 +24,7 @@ import org.geogit.storage.ObjectInserter;
 import org.geogit.storage.StagingDatabase;
 import org.geogit.test.RepositoryTestCase;
 import org.geotools.util.NullProgressListener;
+import org.junit.Test;
 import org.opengis.feature.Feature;
 import org.opengis.feature.simple.SimpleFeature;
 import org.opengis.geometry.BoundingBox;
@@ -32,6 +39,7 @@ public class IndexTest extends RepositoryTestCase {
     }
 
     // two features with the same content and different fid should point to the same object
+    @Test
     public void testInsertIdenticalObjects() throws Exception {
         ObjectId oId1 = insertAndAdd(points1);
         Feature equalContentFeature = feature(pointsType, "DifferentId", ((SimpleFeature) points1)
@@ -47,6 +55,7 @@ public class IndexTest extends RepositoryTestCase {
     }
 
     // two features with different content should point to different objects
+    @Test
     public void testInsertNonEqualObjects() throws Exception {
         ObjectId oId1 = insertAndAdd(points1);
 
@@ -56,6 +65,7 @@ public class IndexTest extends RepositoryTestCase {
         assertFalse(oId1.equals(oId2));
     }
 
+    @Test
     public void testCreateEmptyTrees() throws Exception {
         String[] path1 = { "root", "to", "path1" };
         String[] path2 = { "root", "to", "path2" };
@@ -80,6 +90,7 @@ public class IndexTest extends RepositoryTestCase {
 
     }
 
+    @Test
     public void testWriteTree() throws Exception {
 
         insertAndAdd(points1, lines1);
@@ -127,6 +138,7 @@ public class IndexTest extends RepositoryTestCase {
 
     }
 
+    @Test
     public void testMultipleStaging() throws Exception {
 
         final StagingDatabase indexDb = index.getDatabase();
@@ -183,6 +195,7 @@ public class IndexTest extends RepositoryTestCase {
 
     }
 
+    @Test
     public void testWriteTree2() throws Exception {
 
         final ObjectDatabase repoDb = repo.getObjectDatabase();

@@ -4,6 +4,8 @@
  */
 package org.geogit.repository;
 
+import static org.junit.Assert.assertNotNull;
+
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
@@ -13,11 +15,13 @@ import javax.xml.parsers.DocumentBuilderFactory;
 import org.custommonkey.xmlunit.XMLAssert;
 import org.geogit.storage.ObjectWriter;
 import org.geogit.test.RepositoryTestCase;
+import org.junit.Test;
 import org.opengis.feature.Feature;
 import org.w3c.dom.Document;
 
 public class FeaturePrintTest extends RepositoryTestCase {
 
+    @Test
     public void testPrint() throws Exception {
         ByteArrayOutputStream bout = new ByteArrayOutputStream();
         ObjectWriter<Feature> writ = getRepository().newFeatureWriter(lines1);

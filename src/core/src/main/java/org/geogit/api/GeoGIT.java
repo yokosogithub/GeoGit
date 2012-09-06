@@ -4,14 +4,16 @@
  */
 package org.geogit.api;
 
+import static com.google.common.base.Preconditions.checkState;
+
 import java.io.File;
 import java.net.URL;
 
 import org.geogit.command.plumbing.PlumbingCommands;
 import org.geogit.command.plumbing.ResolveGeogitDir;
+import org.geogit.command.porcelain.InitOp;
 import org.geogit.repository.Repository;
 
-import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
@@ -27,13 +29,13 @@ import com.google.inject.Injector;
  */
 public class GeoGIT {
 
-    private Repository repository;
-
     public static final CommitStateResolver DEFAULT_COMMIT_RESOLVER = new PlatformResolver();
 
     private static CommitStateResolver commitStateResolver = DEFAULT_COMMIT_RESOLVER;
 
     private final Injector injector;
+
+    private Repository repository;
 
     public GeoGIT() {
         injector = Guice.createInjector(new GeogitModule(), new PlumbingCommands(),
@@ -52,13 +54,6 @@ public class GeoGIT {
     public GeoGIT(final Injector injector, final File workingDir) {
         this.injector = injector;
         injector.getInstance(Platform.class).setWorkingDir(workingDir);
-    }
-
-    @Deprecated
-    public GeoGIT(final Repository repository) {
-        Preconditions.checkNotNull(repository, "repository can't be null");
-        this.repository = repository;
-        this.injector = null;
     }
 
     public void close() {
@@ -89,11 +84,14 @@ public class GeoGIT {
      * 
      * @return the existing or newly created repository, never {@code null}
      * @throws RuntimeException if the repository cannot be created at the current directory
+     * @see InitOp
      */
     public Repository getOrCreateRepository() {
         if (getRepository() == null) {
             try {
                 repository = command(InitOp.class).call();
+                checkState(repository != null,
+                        "Repository shouldn't be null as we checked it didn't exist before calling init");
             } catch (Exception e) {
                 throw Throwables.propagate(e);
             }
@@ -158,6 +156,13 @@ public class GeoGIT {
      */
     public LogOp log() {
         return new LogOp(repository);
+    }
+
+    /**
+     * @return
+     */
+    public Platform getPlatform() {
+        return injector.getInstance(Platform.class);
     }
 
 }

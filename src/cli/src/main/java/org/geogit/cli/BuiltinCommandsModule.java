@@ -4,6 +4,7 @@
  */
 package org.geogit.cli;
 
+import org.geogit.cli.plumbing.RevParse;
 import org.geogit.cli.porcelain.Add;
 import org.geogit.cli.porcelain.Branch;
 import org.geogit.cli.porcelain.Checkout;
@@ -33,6 +34,7 @@ public class BuiltinCommandsModule extends AbstractModule implements CLIModule {
 
     @Override
     protected void configure() {
+        bind(RevParse.class);
         bind(Add.class);
         bind(Branch.class);
         bind(Checkout.class);

@@ -4,6 +4,10 @@
  */
 package org.geogit.repository;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+
 import org.geogit.api.ObjectId;
 import org.geogit.api.Ref;
 import org.geogit.api.RevCommit;
@@ -11,6 +15,7 @@ import org.geogit.api.RevObject;
 import org.geogit.api.RevTree;
 import org.geogit.storage.BlobWriter;
 import org.geogit.test.RepositoryTestCase;
+import org.junit.Test;
 
 public class RepositoryTest extends RepositoryTestCase {
 
@@ -18,6 +23,7 @@ public class RepositoryTest extends RepositoryTestCase {
     protected void setUpInternal() throws Exception {
     }
 
+    @Test
     public void testInitialize() {
         // "master" points to the latest commit in the "master" branch. There're no commits yet,
         // hence no master branch
@@ -38,6 +44,7 @@ public class RepositoryTest extends RepositoryTestCase {
         }
     }
 
+    @Test
     public void testResolve() throws Exception {
         RevCommit insert = new RevCommit(ObjectId.forString("id1"));
         insert.setTreeId(ObjectId.forString("treetest"));
@@ -53,6 +60,7 @@ public class RepositoryTest extends RepositoryTestCase {
         assertEquals(commit, repo.resolve(commitId.toString().substring(0, 8)));
     }
 
+    @Test
     public void testResolveMultiple() throws Exception {
         byte[] raw1 = { 'a', 'b', 'c', 'd', 4, 5, 6, 7, 8, 9, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 };
         byte[] raw2 = { 'a', 'b', 'c', 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
@@ -82,6 +90,7 @@ public class RepositoryTest extends RepositoryTestCase {
         assertEquals(blob2, repo.resolve(hash2.substring(0, 8)));
     }
 
+    @Test
     public void testResolveType() throws Exception {
         byte[] raw1 = { 'a', 'b', 'c', 'd', 4, 5, 6, 7, 8, 9, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 };
         byte[] raw2 = { 'a', 'b', 'c', 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };

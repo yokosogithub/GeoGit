@@ -4,27 +4,27 @@
  */
 package org.geogit.api;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+
 import org.geogit.repository.StagingArea;
 import org.geogit.test.RepositoryTestCase;
+import org.junit.Test;
 
 public class CommitOpTest extends RepositoryTestCase {
 
-    // used to prepare stuff to be committed
-    private StagingArea index;
-
-    // used to get a CommitOp command
-    private GeoGIT ggit;
-
     @Override
     protected void setUpInternal() throws Exception {
-        this.index = getRepository().getIndex();
-        this.ggit = new GeoGIT(getRepository());
     }
 
+    @Test
     public void testInitialCommit() throws Exception {
         try {
-            ggit.add().addPattern(".").call();
-            ggit.commit().setAuthor("groldan").call();
+            geogit.add().addPattern(".").call();
+            geogit.commit().setAuthor("groldan").call();
             fail("expected NothingToCommitException");
         } catch (NothingToCommitException e) {
             assertTrue(true);
@@ -38,8 +38,8 @@ public class CommitOpTest extends RepositoryTestCase {
         ObjectId oid2 = insertAndAdd(points2);
         // BLOBS.print(repo.getRawObject(insertedId2), System.err);
 
-        ggit.add().addPattern(".").call();
-        RevCommit commit = ggit.commit().setAuthor("groldan").call();
+        geogit.add().addPattern(".").call();
+        RevCommit commit = geogit.commit().setAuthor("groldan").call();
         assertNotNull(commit);
         assertNotNull(commit.getParentIds());
         assertEquals(1, commit.getParentIds().size());
@@ -75,13 +75,14 @@ public class CommitOpTest extends RepositoryTestCase {
         assertEquals(commit.getId(), head.getObjectId());
     }
 
+    @Test
     public void testMultipleCommits() throws Exception {
 
         // insert and commit points1
         final ObjectId oId1_1 = insertAndAdd(points1);
 
-        ggit.add().call();
-        final RevCommit commit1 = ggit.commit().setAuthor("groldan").call();
+        geogit.add().call();
+        final RevCommit commit1 = geogit.commit().setAuthor("groldan").call();
         {
             assertCommit(commit1, ObjectId.NULL, "groldan", null);
             // check points1 is there
@@ -94,8 +95,8 @@ public class CommitOpTest extends RepositoryTestCase {
         final ObjectId oId1_3 = insertAndAdd(points3);
         final ObjectId oId2_1 = insertAndAdd(lines1);
 
-        ggit.add().call();
-        final RevCommit commit2 = ggit.commit().setAuthor("groldan").setMessage("msg").call();
+        geogit.add().call();
+        final RevCommit commit2 = geogit.commit().setAuthor("groldan").setMessage("msg").call();
         {
             assertCommit(commit2, commit1.getId(), "groldan", "msg");
 
@@ -121,8 +122,8 @@ public class CommitOpTest extends RepositoryTestCase {
         // and insert feature2_2
         final ObjectId oId2_2 = insertAndAdd(lines2);
 
-        ggit.add().call();
-        final RevCommit commit3 = ggit.commit().setAuthor("groldan").call();
+        geogit.add().call();
+        final RevCommit commit3 = geogit.commit().setAuthor("groldan").call();
         {
             assertCommit(commit3, commit2.getId(), "groldan", null);
 

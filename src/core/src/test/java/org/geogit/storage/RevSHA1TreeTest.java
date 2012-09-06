@@ -4,6 +4,10 @@
  */
 package org.geogit.storage;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
@@ -24,6 +28,8 @@ import org.geogit.api.RevObject.TYPE;
 import org.geogit.api.RevTree;
 import org.geogit.api.TreeVisitor;
 import org.geogit.test.RepositoryTestCase;
+import org.junit.Ignore;
+import org.junit.Test;
 import org.w3c.dom.Document;
 
 import com.google.common.base.Stopwatch;
@@ -37,6 +43,7 @@ public class RevSHA1TreeTest extends RepositoryTestCase {
         odb = repo.getObjectDatabase();
     }
 
+    @Test
     public void testPutGet() throws Exception {
 
         final int numEntries = 1000 * 10;
@@ -92,6 +99,7 @@ public class RevSHA1TreeTest extends RepositoryTestCase {
 
     }
 
+    @Test
     public void testRemove() throws Exception {
         final int numEntries = 1000;
         ObjectId treeId = createAndSaveTree(numEntries, true);
@@ -131,6 +139,8 @@ public class RevSHA1TreeTest extends RepositoryTestCase {
         }
     }
 
+    @Ignore
+    @Test
     public void testSize() throws Exception {
         Stopwatch sw = new Stopwatch().start();
         final int numEntries = RevSHA1Tree.SPLIT_FACTOR + 1000;
@@ -192,6 +202,7 @@ public class RevSHA1TreeTest extends RepositoryTestCase {
         System.err.println("testSize run time: " + sw);
     }
 
+    @Test
     public void testIterator() throws Exception {
         final int numEntries = RevSHA1Tree.SPLIT_FACTOR + 1000;
         ObjectId treeId = createAndSaveTree(numEntries, true);
@@ -207,6 +218,7 @@ public class RevSHA1TreeTest extends RepositoryTestCase {
         assertEquals(numEntries, count);
     }
 
+    @Test
     public void testPrint() throws Exception {
         final int numEntries = RevSHA1Tree.SPLIT_FACTOR + 1000;
         ObjectId treeId = createAndSaveTree(numEntries, true);
@@ -230,6 +242,7 @@ public class RevSHA1TreeTest extends RepositoryTestCase {
      * 
      * @throws Exception
      */
+    @Test
     public void testEquality() throws Exception {
         testEquality(100);
         testEquality(100 + RevSHA1Tree.SPLIT_FACTOR);

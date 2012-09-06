@@ -4,6 +4,12 @@
  */
 package org.geogit.api;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -15,6 +21,7 @@ import java.util.List;
 import org.geogit.repository.StagingArea;
 import org.geogit.test.RepositoryTestCase;
 import org.geotools.util.Range;
+import org.junit.Test;
 import org.opengis.feature.Feature;
 
 import com.google.common.collect.Iterators;
@@ -22,29 +29,28 @@ import com.google.common.collect.Lists;
 
 public class LogOpTest extends RepositoryTestCase {
 
-    private GeoGIT ggit;
-
     private LogOp logOp;
 
     private StagingArea index;
 
     @Override
     protected void setUpInternal() throws Exception {
-        ggit = new GeoGIT(repo);
-        logOp = ggit.log();
-        index = ggit.getRepository().getIndex();
+        logOp = geogit.log();
+        index = geogit.getRepository().getIndex();
     }
 
+    @Test
     public void testEmptyRepo() throws Exception {
         Iterator<RevCommit> logs = logOp.call();
         assertNotNull(logs);
         assertFalse(logs.hasNext());
     }
 
+    @Test
     public void testHeadWithSingleCommit() throws Exception {
 
         insertAndAdd(points1);
-        final RevCommit firstCommit = ggit.commit().call();
+        final RevCommit firstCommit = geogit.commit().call();
 
         Iterator<RevCommit> iterator = logOp.call();
         assertNotNull(iterator);
@@ -54,13 +60,14 @@ public class LogOpTest extends RepositoryTestCase {
         assertFalse(iterator.hasNext());
     }
 
+    @Test
     public void testHeadWithTwoCommits() throws Exception {
 
         insertAndAdd(points1);
-        final RevCommit firstCommit = ggit.commit().call();
+        final RevCommit firstCommit = geogit.commit().call();
 
         insertAndAdd(lines1);
-        final RevCommit secondCommit = ggit.commit().call();
+        final RevCommit secondCommit = geogit.commit().call();
 
         Iterator<RevCommit> iterator = logOp.call();
         assertNotNull(iterator);
@@ -75,6 +82,7 @@ public class LogOpTest extends RepositoryTestCase {
         assertFalse(iterator.hasNext());
     }
 
+    @Test
     public void testHeadWithMultipleCommits() throws Exception {
 
         List<Feature> features = Arrays.asList(points1, lines1, points2, lines2, points3, lines3);
@@ -82,7 +90,7 @@ public class LogOpTest extends RepositoryTestCase {
 
         for (Feature f : features) {
             insertAndAdd(f);
-            final RevCommit commit = ggit.commit().call();
+            final RevCommit commit = geogit.commit().call();
             expected.addFirst(commit);
         }
 
@@ -95,6 +103,7 @@ public class LogOpTest extends RepositoryTestCase {
         assertEquals(expected, logged);
     }
 
+    @Test
     public void testPathFilterSingleFeature() throws Exception {
 
         List<Feature> features = Arrays.asList(points1, lines1, points2, lines2, points3, lines3);
@@ -104,7 +113,7 @@ public class LogOpTest extends RepositoryTestCase {
         for (Feature f : features) {
             insertAndAdd(f);
             String id = f.getIdentifier().getID();
-            final RevCommit commit = ggit.commit().call();
+            final RevCommit commit = geogit.commit().call();
             if (id.equals(lines1.getIdentifier().getID())) {
                 expectedCommit = commit;
             }
@@ -117,6 +126,7 @@ public class LogOpTest extends RepositoryTestCase {
         assertEquals(Collections.singletonList(expectedCommit), feature2_1Commits);
     }
 
+    @Test
     public void testPathFilterByTypeName() throws Exception {
 
         List<Feature> features = Arrays.asList(points1, lines1, points2, lines2, points3, lines3);
@@ -126,7 +136,8 @@ public class LogOpTest extends RepositoryTestCase {
 
         for (Feature f : features) {
             insertAndAdd(f);
-            final RevCommit commit = ggit.commit().setMessage(f.getIdentifier().toString()).call();
+            final RevCommit commit = geogit.commit().setMessage(f.getIdentifier().toString())
+                    .call();
             commits.addFirst(commit);
             if (pointsName.equals(f.getType().getName().getLocalPart())) {
                 typeName1Commits.addFirst(commit);
@@ -141,13 +152,14 @@ public class LogOpTest extends RepositoryTestCase {
         assertEquals(typeName1Commits, logCommits);
     }
 
+    @Test
     public void testLimit() throws Exception {
 
         List<Feature> features = Arrays.asList(points1, lines1, points2, lines2, points3, lines3);
 
         for (Feature f : features) {
             insertAndAdd(f);
-            ggit.commit().call();
+            geogit.commit().call();
         }
 
         assertEquals(3, Iterators.size(logOp.setLimit(3).call()));
@@ -155,6 +167,7 @@ public class LogOpTest extends RepositoryTestCase {
         assertEquals(4, Iterators.size(logOp.setLimit(4).call()));
     }
 
+    @Test
     public void testTemporalConstraint() throws Exception {
 
         List<Feature> features = Arrays.asList(points1, lines1, points2, lines2, points3, lines3);
@@ -167,7 +180,7 @@ public class LogOpTest extends RepositoryTestCase {
             Feature f = features.get(i);
             Long timestamp = timestamps.get(i);
             insertAndAdd(f);
-            final RevCommit commit = ggit.commit().setTimestamp(timestamp).call();
+            final RevCommit commit = geogit.commit().setTimestamp(timestamp).call();
             allCommits.addFirst(commit);
         }
 
@@ -187,31 +200,32 @@ public class LogOpTest extends RepositoryTestCase {
         maxInclusive = true;
         commitRange = new Range<Date>(Date.class, new Date(2000), minInclusive, new Date(5000),
                 maxInclusive);
-        logOp = ggit.log().setTimeRange(commitRange);
+        logOp = geogit.log().setTimeRange(commitRange);
 
         logged = toList(logOp.call());
         expected = allCommits.subList(1, 5);
         assertEquals(expected, logged);
 
         // test reset time range
-        logOp = ggit.log().setTimeRange(commitRange).setTimeRange(null);
+        logOp = geogit.log().setTimeRange(commitRange).setTimeRange(null);
         logged = toList(logOp.call());
         expected = allCommits;
         assertEquals(expected, logged);
     }
 
+    @Test
     public void testSinceUntil() throws Exception {
         final ObjectId oid1_1 = insertAndAdd(points1);
-        final RevCommit commit1_1 = ggit.commit().call();
+        final RevCommit commit1_1 = geogit.commit().call();
 
         final ObjectId oid1_2 = insertAndAdd(points2);
-        final RevCommit commit1_2 = ggit.commit().call();
+        final RevCommit commit1_2 = geogit.commit().call();
 
         final ObjectId oid2_1 = insertAndAdd(lines1);
-        final RevCommit commit2_1 = ggit.commit().call();
+        final RevCommit commit2_1 = geogit.commit().call();
 
         final ObjectId oid2_2 = insertAndAdd(lines2);
-        final RevCommit commit2_2 = ggit.commit().call();
+        final RevCommit commit2_2 = geogit.commit().call();
 
         try {
             logOp.setSince(oid1_1).call();

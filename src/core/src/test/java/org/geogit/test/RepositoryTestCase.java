@@ -4,13 +4,14 @@
  */
 package org.geogit.test;
 
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
-
-import junit.framework.TestCase;
 
 import org.apache.commons.io.FileUtils;
 import org.geogit.api.DefaultPlatform;
@@ -18,6 +19,7 @@ import org.geogit.api.GeoGIT;
 import org.geogit.api.GeogitModule;
 import org.geogit.api.ObjectId;
 import org.geogit.api.Platform;
+import org.geogit.api.PorcelainCommands;
 import org.geogit.api.Ref;
 import org.geogit.api.RevCommit;
 import org.geogit.command.plumbing.PlumbingCommands;
@@ -39,6 +41,8 @@ import org.geotools.geometry.jts.WKTReader2;
 import org.geotools.referencing.CRS;
 import org.geotools.util.NullProgressListener;
 import org.geotools.util.logging.Logging;
+import org.junit.After;
+import org.junit.Before;
 import org.opengis.feature.Feature;
 import org.opengis.feature.simple.SimpleFeatureType;
 import org.opengis.feature.type.GeometryDescriptor;
@@ -53,10 +57,9 @@ import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Scopes;
-import com.google.inject.util.Modules;
 import com.vividsolutions.jts.io.ParseException;
 
-public abstract class RepositoryTestCase extends TestCase {
+public abstract class RepositoryTestCase {
 
     protected static final String idL1 = "Lines.1";
 
@@ -102,6 +105,8 @@ public abstract class RepositoryTestCase extends TestCase {
 
     protected Feature lines3;
 
+    protected GeoGIT geogit;
+
     protected Repository repo;
 
     // prevent recursion
@@ -128,8 +133,8 @@ public abstract class RepositoryTestCase extends TestCase {
         }
     }
 
-    @Override
-    protected final void setUp() throws Exception {
+    @Before
+    public final void setUp() throws Exception {
         if (setup) {
             throw new IllegalStateException("Are you calling super.setUp()!?");
         }
@@ -143,12 +148,14 @@ public abstract class RepositoryTestCase extends TestCase {
         assertTrue(envHome.mkdirs());
 
         // ///////////////////////////
-//        injector = Guice
-//                .createInjector(Modules.override(new GeogitModule()).with(new TestModule()),
-//                        new PlumbingCommands());
-        injector = Guice.createInjector(new GeogitModule(), new PlumbingCommands());
+        // injector = Guice
+        // .createInjector(Modules.override(new GeogitModule()).with(new TestModule()),
+        // new PlumbingCommands());
+        injector = Guice.createInjector(new GeogitModule(), new PlumbingCommands(),
+                new PorcelainCommands());
 
-        repo = new GeoGIT(injector, envHome).getRepository();
+        geogit = new GeoGIT(injector, envHome);
+        repo = geogit.getOrCreateRepository();
 
         pointsType = DataUtilities.createType(pointsNs, pointsName, pointsTypeSpec);
 
@@ -168,8 +175,8 @@ public abstract class RepositoryTestCase extends TestCase {
         setUpInternal();
     }
 
-    @Override
-    protected final void tearDown() throws Exception {
+    @After
+    public final void tearDown() throws Exception {
         setup = false;
         tearDownInternal();
         if (repo != null) {
@@ -221,20 +228,18 @@ public abstract class RepositoryTestCase extends TestCase {
     protected List<RevCommit> populate(boolean oneCommitPerFeature, List<Feature> features)
             throws Exception {
 
-        final GeoGIT ggit = new GeoGIT(getRepository());
-
         List<RevCommit> commits = new ArrayList<RevCommit>();
 
         for (Feature f : features) {
             insertAndAdd(f);
             if (oneCommitPerFeature) {
-                RevCommit commit = ggit.commit().call();
+                RevCommit commit = geogit.commit().call();
                 commits.add(commit);
             }
         }
 
         if (!oneCommitPerFeature) {
-            RevCommit commit = ggit.commit().call();
+            RevCommit commit = geogit.commit().call();
             commits.add(commit);
         }
 
@@ -247,7 +252,7 @@ public abstract class RepositoryTestCase extends TestCase {
     protected ObjectId insertAndAdd(Feature f) throws Exception {
         ObjectId objectId = insert(f);
 
-        new GeoGIT(getRepository()).add().call();
+        geogit.add().call();
         return objectId;
     }
 
@@ -269,7 +274,7 @@ public abstract class RepositoryTestCase extends TestCase {
 
     protected void insertAndAdd(Feature... features) throws Exception {
         insert(features);
-        new GeoGIT(getRepository()).add().call();
+        geogit.add().call();
     }
 
     protected void insert(Feature... features) throws Exception {
@@ -312,7 +317,7 @@ public abstract class RepositoryTestCase extends TestCase {
     protected boolean deleteAndAdd(Feature f) throws Exception {
         boolean existed = delete(f);
         if (existed) {
-            new GeoGIT(getRepository()).add().call();
+            geogit.add().call();
         }
 
         return existed;

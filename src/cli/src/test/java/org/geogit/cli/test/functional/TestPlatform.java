@@ -14,25 +14,23 @@
  *    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  *    Lesser General Public License for more details.
  */
-package org.geogit.cli.porcelain;
+package org.geogit.cli.test.functional;
 
-import java.util.List;
+import java.io.File;
 
-import org.geogit.cli.CLITest;
-import org.junit.Test;
+import org.geogit.api.DefaultPlatform;
+import org.geogit.api.Platform;
 
-/**
- * @author groldan
- * 
- */
-public class InitTest extends CLITest {
+public class TestPlatform extends DefaultPlatform implements Platform {
 
-    @Test
-    public void test() throws Exception {
-        cli.execute("init");
+    private File workingDirectory;
 
-        List<String> cmdOutput = super.parseOutput(false);
-        System.err.println(cmdOutput);
+    public TestPlatform(final File workingDirectory) {
+        this.workingDirectory = workingDirectory;
     }
 
+    @Override
+    public File pwd() {
+        return workingDirectory;
+    }
 }

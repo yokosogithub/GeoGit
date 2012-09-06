@@ -4,32 +4,35 @@
  */
 package org.geogit.repository;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+
 import java.util.Arrays;
 
-import org.geogit.api.GeoGIT;
 import org.geogit.api.ObjectId;
 import org.geogit.api.Ref;
 import org.geogit.api.RevObject.TYPE;
 import org.geogit.storage.RefDatabase;
 import org.geogit.test.RepositoryTestCase;
+import org.junit.Test;
 
 public class RefDatabaseTest extends RepositoryTestCase {
 
     private RefDatabase refDb;
 
-    private GeoGIT ggit;
-
     @Override
     protected void setUpInternal() throws Exception {
         refDb = repo.getRefDatabase();
-        ggit = new GeoGIT(repo);
     }
 
+    @Test
     public void testEmpty() {
         assertEquals(ObjectId.NULL, refDb.getRef(Ref.MASTER).getObjectId());
         assertEquals(ObjectId.NULL, refDb.getRef(Ref.HEAD).getObjectId());
     }
 
+    @Test
     public void testPutGetRef() {
         byte[] raw = new byte[20];
         Arrays.fill(raw, (byte) 1);

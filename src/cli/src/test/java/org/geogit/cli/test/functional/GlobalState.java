@@ -14,25 +14,20 @@
  *    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  *    Lesser General Public License for more details.
  */
-package org.geogit.cli.porcelain;
+package org.geogit.cli.test.functional;
 
-import java.util.List;
-
-import org.geogit.cli.CLITest;
-import org.junit.Test;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.File;
 
 /**
- * @author groldan
- * 
  */
-public class InitTest extends CLITest {
+public class GlobalState {
 
-    @Test
-    public void test() throws Exception {
-        cli.execute("init");
+    public static File currentDirectory;
 
-        List<String> cmdOutput = super.parseOutput(false);
-        System.err.println(cmdOutput);
-    }
+    public static ByteArrayInputStream stdIn;
+
+    public static ByteArrayOutputStream stdOut;
 
 }
