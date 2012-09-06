@@ -22,7 +22,6 @@ import java.util.Iterator;
 import org.geogit.api.GeoGIT;
 import org.geogit.api.ObjectId;
 import org.geogit.api.Ref;
-import org.geogit.repository.Repository;
 import org.geogit.storage.ObjectReader;
 import org.geogit.storage.StagingDatabase;
 import org.geotools.data.Query;
@@ -34,15 +33,14 @@ import com.google.common.collect.Iterators;
 
 public class QueryFeatureCollector implements Iterable<Feature> {
 
-    private final Repository repository;
+    private final GeoGIT geogit;
 
     private final FeatureType featureType;
 
     private Query query;
 
-    public QueryFeatureCollector(final Repository repository, final FeatureType featureType,
-            Query query) {
-        this.repository = repository;
+    public QueryFeatureCollector(final GeoGIT repository, final FeatureType featureType, Query query) {
+        this.geogit = repository;
         this.featureType = featureType;
         this.query = query;
     }
@@ -50,8 +48,7 @@ public class QueryFeatureCollector implements Iterable<Feature> {
     @Override
     public Iterator<Feature> iterator() {
 
-        GeoGIT ggit = new GeoGIT(repository);
-        VersionQuery versionQuery = new VersionQuery(ggit, featureType.getName());
+        VersionQuery versionQuery = new VersionQuery(geogit, featureType.getName());
         Iterator<Ref> featureRefs;
         try {
             featureRefs = versionQuery.getByQuery(query);
@@ -59,7 +56,7 @@ public class QueryFeatureCollector implements Iterable<Feature> {
             throw new RuntimeException(e);
         }
 
-        Iterator<Feature> features = Iterators.transform(featureRefs, new RefToFeature(repository,
+        Iterator<Feature> features = Iterators.transform(featureRefs, new RefToFeature(geogit,
                 featureType));
 
         return features;
@@ -67,12 +64,12 @@ public class QueryFeatureCollector implements Iterable<Feature> {
 
     private final class RefToFeature implements Function<Ref, Feature> {
 
-        private final Repository repo;
+        private final GeoGIT geogit;
 
         private final FeatureType type;
 
-        public RefToFeature(final Repository repo, final FeatureType type) {
-            this.repo = repo;
+        public RefToFeature(final GeoGIT repo, final FeatureType type) {
+            this.geogit = repo;
             this.type = type;
         }
 
@@ -80,10 +77,11 @@ public class QueryFeatureCollector implements Iterable<Feature> {
         public Feature apply(final Ref featureRef) {
             String featureId = featureRef.getName();
             ObjectId contentId = featureRef.getObjectId();
-            StagingDatabase database = repo.getIndex().getDatabase();
+            StagingDatabase database = geogit.getRepository().getIndex().getDatabase();
             Feature feature;
             try {
-                ObjectReader<Feature> featureReader = repository.newFeatureReader(type, featureId);
+                ObjectReader<Feature> featureReader = geogit.getRepository().newFeatureReader(type,
+                        featureId);
                 feature = database.get(contentId, featureReader);
                 if (!feature.getType().equals(type)) {
                     throw new IOException("Invalid feature type returned.");

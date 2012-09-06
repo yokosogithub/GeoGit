@@ -23,12 +23,12 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.logging.Logger;
 
+import org.geogit.api.GeoGIT;
 import org.geogit.api.MutableTree;
 import org.geogit.api.ObjectId;
 import org.geogit.api.Ref;
 import org.geogit.api.RevObject.TYPE;
 import org.geogit.api.RevTree;
-import org.geogit.repository.Repository;
 import org.geogit.storage.ObjectDatabase;
 import org.geogit.storage.ObjectReader;
 import org.geogit.storage.ObjectWriter;
@@ -61,24 +61,24 @@ public class GeoGitDataStore implements VersioningDataStore {
 
     private static final String NULL_NAMESPACE = "";
 
-    private Repository repo;
+    private GeoGIT geogit;
 
     private final String defaultNamespace;
 
-    public GeoGitDataStore(final Repository repo) throws IOException {
+    public GeoGitDataStore(final GeoGIT repo) throws IOException {
         this(repo, null);
     }
 
-    public GeoGitDataStore(final Repository repo, final String defaultNamespace) throws IOException {
+    public GeoGitDataStore(final GeoGIT repo, final String defaultNamespace) throws IOException {
         Preconditions.checkNotNull(repo, "repository");
-        this.repo = repo;
+        this.geogit = repo;
         this.defaultNamespace = defaultNamespace;
         init();
     }
 
     private void init() throws IOException {
-        final RefDatabase refDatabase = repo.getRefDatabase();
-        final ObjectDatabase objectDatabase = repo.getObjectDatabase();
+        final RefDatabase refDatabase = geogit.getRepository().getRefDatabase();
+        final ObjectDatabase objectDatabase = geogit.getRepository().getObjectDatabase();
 
         Ref typesTreeRef = refDatabase.getRef(TYPE_NAMES_REF_TREE);
         if (null == typesTreeRef) {
@@ -86,7 +86,8 @@ public class GeoGitDataStore implements VersioningDataStore {
             final RevTree typesTree = objectDatabase.newTree();
             ObjectId typesTreeId;
             try {
-                ObjectWriter<RevTree> treeWriter = getRepository().newRevTreeWriter(typesTree);
+                ObjectWriter<RevTree> treeWriter = getGeogit().getRepository().newRevTreeWriter(
+                        typesTree);
                 typesTreeId = objectDatabase.put(treeWriter);
             } catch (Exception e) {
                 throw new IOException(e);
@@ -102,8 +103,8 @@ public class GeoGitDataStore implements VersioningDataStore {
 
     }
 
-    public Repository getRepository() {
-        return repo;
+    public GeoGIT getGeogit() {
+        return geogit;
     }
 
     /**
@@ -127,12 +128,12 @@ public class GeoGitDataStore implements VersioningDataStore {
     }
 
     private List<Name> getNamesInternal() throws IOException {
-        final RefDatabase refDatabase = repo.getRefDatabase();
+        final RefDatabase refDatabase = geogit.getRepository().getRefDatabase();
 
         final Ref typesTreeRef = refDatabase.getRef(TYPE_NAMES_REF_TREE);
         Preconditions.checkState(typesTreeRef != null);
 
-        RevTree namespacesTree = repo.getTree(typesTreeRef.getObjectId());
+        RevTree namespacesTree = geogit.getRepository().getTree(typesTreeRef.getObjectId());
         Preconditions.checkState(null != namespacesTree, "Referenced types tree does not exist: "
                 + typesTreeRef);
 
@@ -141,7 +142,7 @@ public class GeoGitDataStore implements VersioningDataStore {
             final Ref namespaceRef = namespaces.next();
             Preconditions.checkState(TYPE.TREE.equals(namespaceRef.getType()));
             final String nsUri = namespaceRef.getName();
-            final RevTree typesTree = repo.getTree(namespaceRef.getObjectId());
+            final RevTree typesTree = geogit.getRepository().getTree(namespaceRef.getObjectId());
             for (Iterator<Ref> simpleNames = typesTree.iterator(null); simpleNames.hasNext();) {
                 final Ref typeNameRef = simpleNames.next();
                 final String simpleTypeName = typeNameRef.getName();
@@ -209,12 +210,13 @@ public class GeoGitDataStore implements VersioningDataStore {
 
         }
         final Name typeName = createType.getName();
-        final RefDatabase refDatabase = repo.getRefDatabase();
+        final RefDatabase refDatabase = geogit.getRepository().getRefDatabase();
 
         final Ref typesTreeRef = refDatabase.getRef(TYPE_NAMES_REF_TREE);
         Preconditions.checkState(typesTreeRef != null);
 
-        final RevTree namespacesRootTree = repo.getTree(typesTreeRef.getObjectId());
+        final RevTree namespacesRootTree = geogit.getRepository().getTree(
+                typesTreeRef.getObjectId());
         Preconditions.checkState(namespacesRootTree != null);
 
         final String namespace = null == typeName.getNamespaceURI() ? NULL_NAMESPACE : typeName
@@ -223,8 +225,9 @@ public class GeoGitDataStore implements VersioningDataStore {
 
         try {
             final ObjectId featureTypeBlobId;
-            ObjectDatabase objectDatabase = repo.getObjectDatabase();
-            featureTypeBlobId = objectDatabase.put(repo.newSimpleFeatureTypeWriter(createType));
+            ObjectDatabase objectDatabase = geogit.getRepository().getObjectDatabase();
+            featureTypeBlobId = objectDatabase.put(geogit.getRepository()
+                    .newSimpleFeatureTypeWriter(createType));
 
             final List<String> namespaceTreePath = Collections.singletonList(namespace);
             MutableTree namespaceTree = objectDatabase.getOrCreateSubTree(namespacesRootTree,
@@ -253,13 +256,14 @@ public class GeoGitDataStore implements VersioningDataStore {
     public SimpleFeatureType getSchema(final Name name) throws IOException {
         Preconditions.checkNotNull(name);
 
-        final RefDatabase refDatabase = repo.getRefDatabase();
-        final ObjectDatabase objectDatabase = repo.getObjectDatabase();
+        final RefDatabase refDatabase = geogit.getRepository().getRefDatabase();
+        final ObjectDatabase objectDatabase = geogit.getRepository().getObjectDatabase();
 
         final Ref typesTreeRef = refDatabase.getRef(TYPE_NAMES_REF_TREE);
         Preconditions.checkState(typesTreeRef != null);
 
-        final RevTree namespacesRootTree = repo.getTree(typesTreeRef.getObjectId());
+        final RevTree namespacesRootTree = geogit.getRepository().getTree(
+                typesTreeRef.getObjectId());
         Preconditions.checkState(namespacesRootTree != null);
 
         final String[] path = {
@@ -272,8 +276,8 @@ public class GeoGitDataStore implements VersioningDataStore {
         }
         Preconditions.checkState(TYPE.BLOB.equals(typeRef.getType()));
         final ObjectId objectId = typeRef.getObjectId();
-        final ObjectReader<SimpleFeatureType> reader = getRepository().newSimpleFeatureTypeReader(
-                name);
+        final ObjectReader<SimpleFeatureType> reader = getGeogit().getRepository()
+                .newSimpleFeatureTypeReader(name);
         final SimpleFeatureType featureType = objectDatabase.get(objectId, reader);
         return featureType;
     }

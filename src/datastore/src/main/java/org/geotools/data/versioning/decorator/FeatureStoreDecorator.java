@@ -27,7 +27,6 @@ import java.util.Set;
 import org.geogit.api.GeoGIT;
 import org.geogit.api.Ref;
 import org.geogit.api.RevTree;
-import org.geogit.repository.Repository;
 import org.geotools.data.FeatureReader;
 import org.geotools.data.FeatureStore;
 import org.geotools.data.Query;
@@ -56,7 +55,7 @@ import com.google.common.collect.Lists;
 public class FeatureStoreDecorator<T extends FeatureType, F extends Feature> extends
         FeatureSourceDecorator<T, F> implements VersioningFeatureStore<T, F> {
 
-    public FeatureStoreDecorator(final FeatureStore unversioned, final Repository repo) {
+    public FeatureStoreDecorator(final FeatureStore unversioned, final GeoGIT repo) {
         super(unversioned, repo);
     }
 
@@ -67,7 +66,7 @@ public class FeatureStoreDecorator<T extends FeatureType, F extends Feature> ext
             return super.getCurrentVersion();
         }
         final Name name = getName();
-        RevTree headVersion = repository.getWorkingTree().getStagedVersion(name);
+        RevTree headVersion = geogit.getRepository().getWorkingTree().getStagedVersion(name);
         return headVersion;
     }
 
@@ -232,8 +231,7 @@ public class FeatureStoreDecorator<T extends FeatureType, F extends Feature> ext
             return;
         }
         // don't allow non current versions
-        GeoGIT ggit = new GeoGIT(repository);
-        VersionQuery query = new VersionQuery(ggit, getSchema().getName());
+        VersionQuery query = new VersionQuery(geogit, getSchema().getName());
         for (Identifier id : versionFilter.getIdentifiers()) {
             ResourceId rid = (ResourceId) id;
             List<Ref> requested;
@@ -316,7 +314,7 @@ public class FeatureStoreDecorator<T extends FeatureType, F extends Feature> ext
         Object key = "WHAT_WOULD_BE_A_GOOD_KEY?";
         VersioningTransactionState state = (VersioningTransactionState) transaction.getState(key);
         if (state == null) {
-            state = new VersioningTransactionState(new GeoGIT(repository));
+            state = new VersioningTransactionState(geogit);
             transaction.putState(key, state);
         }
         return state;

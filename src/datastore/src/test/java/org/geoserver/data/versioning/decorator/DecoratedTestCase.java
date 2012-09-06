@@ -16,6 +16,9 @@
  */
 package org.geoserver.data.versioning.decorator;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
+
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -367,7 +370,7 @@ public abstract class DecoratedTestCase extends org.geogit.test.RepositoryTestCa
 
         unversioned = fact.createNewDataStore(params);
 
-        versioned = new DataStoreDecorator(unversioned, repo);
+        versioned = new DataStoreDecorator(unversioned, geogit);
 
         sampleType = DataUtilities.createType(sampleNs, sampleName, sampleTypeSpec);
 

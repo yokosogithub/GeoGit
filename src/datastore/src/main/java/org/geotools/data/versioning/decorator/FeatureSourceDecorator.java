@@ -27,8 +27,8 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.logging.Logger;
 
+import org.geogit.api.GeoGIT;
 import org.geogit.api.RevTree;
-import org.geogit.repository.Repository;
 import org.geogit.repository.WorkingTree;
 import org.geotools.data.DataAccess;
 import org.geotools.data.FeatureListener;
@@ -65,11 +65,11 @@ public class FeatureSourceDecorator<T extends FeatureType, F extends Feature> im
 
     protected final FeatureSource<T, F> unversioned;
 
-    protected final Repository repository;
+    protected final GeoGIT geogit;
 
-    public FeatureSourceDecorator(final FeatureSource unversioned, final Repository repository) {
+    public FeatureSourceDecorator(final FeatureSource unversioned, final GeoGIT repository) {
         this.unversioned = unversioned;
-        this.repository = repository;
+        this.geogit = repository;
     }
 
     /**
@@ -77,11 +77,11 @@ public class FeatureSourceDecorator<T extends FeatureType, F extends Feature> im
      */
     public boolean isVersioned() {
         final Name name = getSchema().getName();
-        return isVersioned(name, repository);
+        return isVersioned(name, geogit);
     }
 
-    public static boolean isVersioned(final Name typeName, final Repository repository) {
-        final WorkingTree workingTree = repository.getWorkingTree();
+    public static boolean isVersioned(final Name typeName, final GeoGIT repository) {
+        final WorkingTree workingTree = repository.getRepository().getWorkingTree();
         final boolean isVersioned = workingTree.hasRoot(typeName);
         return isVersioned;
     }
@@ -91,7 +91,7 @@ public class FeatureSourceDecorator<T extends FeatureType, F extends Feature> im
      */
     public RevTree getCurrentVersion() {
         final Name name = getName();
-        RevTree headVersion = repository.getWorkingTree().getHeadVersion(name);
+        RevTree headVersion = geogit.getRepository().getWorkingTree().getHeadVersion(name);
         return headVersion;
     }
 
@@ -112,7 +112,7 @@ public class FeatureSourceDecorator<T extends FeatureType, F extends Feature> im
         final FeatureType featureType = getSchema();
         Iterable<Feature> versionQuery;
         if (versioningFilter == null || versioningFilter.getIdentifiers().size() == 0) {
-            versionQuery = new QueryFeatureCollector(repository, featureType, extraQuery);
+            versionQuery = new QueryFeatureCollector(geogit, featureType, extraQuery);
         } else {
 
             final Set<Identifier> identifiers = versioningFilter.getIdentifiers();
@@ -128,10 +128,10 @@ public class FeatureSourceDecorator<T extends FeatureType, F extends Feature> im
             }
 
             if (extraQuery.getVersion() != null) {
-                versionQuery = new ResourceIdQueryFeatureCollector(repository, featureType,
+                versionQuery = new ResourceIdQueryFeatureCollector(geogit, featureType,
                         resourceIds, extraQuery);
             } else {
-                versionQuery = new ResourceIdFeatureCollector(repository, featureType, resourceIds);
+                versionQuery = new ResourceIdFeatureCollector(geogit, featureType, resourceIds);
             }
         }
 

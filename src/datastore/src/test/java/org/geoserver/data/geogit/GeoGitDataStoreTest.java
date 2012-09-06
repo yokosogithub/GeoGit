@@ -16,6 +16,11 @@
  */
 package org.geoserver.data.geogit;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collections;
@@ -33,6 +38,7 @@ import org.geotools.data.SchemaNotFoundException;
 import org.geotools.data.geogit.GeoGitDataStore;
 import org.geotools.data.geogit.GeoGitFeatureSource;
 import org.geotools.data.simple.SimpleFeatureSource;
+import org.junit.Test;
 import org.opengis.feature.simple.SimpleFeatureType;
 import org.opengis.feature.type.Name;
 
@@ -42,7 +48,7 @@ public class GeoGitDataStoreTest extends RepositoryTestCase {
 
     @Override
     protected void setUpInternal() throws Exception {
-        dataStore = new GeoGitDataStore(repo);
+        dataStore = new GeoGitDataStore(geogit);
     }
 
     @Override
@@ -50,6 +56,7 @@ public class GeoGitDataStoreTest extends RepositoryTestCase {
         dataStore = null;
     }
 
+    @Test
     public void testCreateSchema() throws IOException {
         final RefDatabase refDatabase = repo.getRefDatabase();
         final Ref initialTypesTreeRef = refDatabase.getRef(GeoGitDataStore.TYPE_NAMES_REF_TREE);
@@ -99,6 +106,7 @@ public class GeoGitDataStoreTest extends RepositoryTestCase {
         }
     }
 
+    @Test
     public void testGetNames() throws IOException {
 
         assertEquals(0, dataStore.getNames().size());
@@ -113,6 +121,7 @@ public class GeoGitDataStoreTest extends RepositoryTestCase {
         assertTrue(dataStore.getNames().contains(RepositoryTestCase.pointsTypeName));
     }
 
+    @Test
     public void testGetTypeNames() throws IOException {
 
         assertEquals(0, dataStore.getTypeNames().length);
@@ -129,6 +138,7 @@ public class GeoGitDataStoreTest extends RepositoryTestCase {
         assertTrue(simpleNames.contains(RepositoryTestCase.pointsName));
     }
 
+    @Test
     public void testGetSchemaName() throws IOException {
         try {
             dataStore.getSchema(RepositoryTestCase.linesTypeName);
@@ -153,6 +163,7 @@ public class GeoGitDataStoreTest extends RepositoryTestCase {
         assertEquals(super.pointsType, points);
     }
 
+    @Test
     public void testGetSchemaString() throws IOException {
         try {
             dataStore.getSchema(RepositoryTestCase.linesName);
@@ -177,6 +188,7 @@ public class GeoGitDataStoreTest extends RepositoryTestCase {
         assertEquals(super.pointsType, points);
     }
 
+    @Test
     public void testGetFeatureSourceName() throws IOException {
         try {
             dataStore.getFeatureSource(RepositoryTestCase.linesTypeName);
@@ -203,6 +215,7 @@ public class GeoGitDataStoreTest extends RepositoryTestCase {
         assertTrue(source instanceof GeoGitFeatureSource);
     }
 
+    @Test
     public void testGetFeatureSourceString() throws IOException {
         try {
             dataStore.getFeatureSource(RepositoryTestCase.linesName);

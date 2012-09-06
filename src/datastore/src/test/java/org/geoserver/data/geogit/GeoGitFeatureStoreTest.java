@@ -16,13 +16,19 @@
  */
 package org.geoserver.data.geogit;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertSame;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import org.geogit.api.GeoGIT;
 import org.geogit.test.RepositoryTestCase;
 import org.geotools.data.DataUtilities;
 import org.geotools.data.DefaultTransaction;
@@ -32,6 +38,7 @@ import org.geotools.data.geogit.GeoGitFeatureStore;
 import org.geotools.factory.CommonFactoryFinder;
 import org.geotools.factory.Hints;
 import org.geotools.feature.FeatureCollection;
+import org.junit.Test;
 import org.opengis.feature.Feature;
 import org.opengis.feature.simple.SimpleFeature;
 import org.opengis.feature.simple.SimpleFeatureType;
@@ -52,7 +59,7 @@ public class GeoGitFeatureStoreTest extends RepositoryTestCase {
 
     @Override
     protected void setUpInternal() throws Exception {
-        dataStore = new GeoGitDataStore(repo);
+        dataStore = new GeoGitDataStore(geogit);
         dataStore.createSchema(super.pointsType);
         dataStore.createSchema(super.linesType);
 
@@ -67,6 +74,7 @@ public class GeoGitFeatureStoreTest extends RepositoryTestCase {
         lines = null;
     }
 
+    @Test
     public void testAddFeatures() throws Exception {
 
         FeatureCollection<SimpleFeatureType, SimpleFeature> collection;
@@ -111,6 +119,7 @@ public class GeoGitFeatureStoreTest extends RepositoryTestCase {
         }
     }
 
+    @Test
     public void testUseProvidedFIDSupported() throws Exception {
 
         assertTrue(points.getQueryCapabilities().isUseProvidedFIDSupported());
@@ -172,12 +181,13 @@ public class GeoGitFeatureStoreTest extends RepositoryTestCase {
     }
 
     @SuppressWarnings("deprecation")
+    @Test
     public void testModifyFeatures() throws Exception {
         // add features circunventing FeatureStore.addFeatures to keep the test
         // independent of the
         // addFeatures functionality
         insertAndAdd(lines1, lines2, lines3, points1, points2, points3);
-        new GeoGIT(repo).commit().call();
+        geogit.commit().call();
 
         Id filter = ff.id(Collections.singleton(ff.featureId(idP1)));
         Transaction tx = new DefaultTransaction();
@@ -218,12 +228,13 @@ public class GeoGitFeatureStoreTest extends RepositoryTestCase {
         }
     }
 
+    @Test
     public void testRemoveFeatures() throws Exception {
         // add features circunventing FeatureStore.addFeatures to keep the test
         // independent of the
         // addFeatures functionality
         insertAndAdd(lines1, lines2, lines3, points1, points2, points3);
-        new GeoGIT(repo).commit().call();
+        geogit.commit().call();
 
         Id filter = ff.id(Collections.singleton(ff.featureId(idP1)));
         Transaction tx = new DefaultTransaction();

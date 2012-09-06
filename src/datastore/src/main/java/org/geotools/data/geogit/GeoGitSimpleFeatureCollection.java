@@ -24,11 +24,11 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.NoSuchElementException;
 
+import org.geogit.api.GeoGIT;
 import org.geogit.api.ObjectId;
 import org.geogit.api.Ref;
 import org.geogit.api.RevTree;
 import org.geogit.api.SpatialRef;
-import org.geogit.repository.Repository;
 import org.geogit.storage.ObjectDatabase;
 import org.geogit.storage.ObjectReader;
 import org.geotools.data.simple.SimpleFeatureCollection;
@@ -86,15 +86,15 @@ public class GeoGitSimpleFeatureCollection implements SimpleFeatureCollection {
 
     private Integer maxFeatures;
 
-    private Repository repository;
+    private GeoGIT geogit;
 
     public GeoGitSimpleFeatureCollection(final SimpleFeatureType type, final Filter filter,
-            final ObjectDatabase odb, final RevTree typeTree, Repository repository) {
+            final ObjectDatabase odb, final RevTree typeTree, GeoGIT geogit) {
         this.type = type;
         this.filter = filter;
         this.odb = odb;
         this.typeTree = typeTree;
-        this.repository = repository;
+        this.geogit = geogit;
         this.reprojector = new FeatureReprojector(type);
     }
 
@@ -227,7 +227,7 @@ public class GeoGitSimpleFeatureCollection implements SimpleFeatureCollection {
                 }
             } else {
                 Iterator<SimpleFeature> features = new GeoGitFeatureIterator(refs, type, filter,
-                        odb, repository);
+                        odb, geogit);
                 while (features.hasNext()) {
                     featureBounds = features.next().getBounds();
                     reprojector.expandToInclude(bounds, featureBounds);
@@ -261,7 +261,7 @@ public class GeoGitSimpleFeatureCollection implements SimpleFeatureCollection {
             size = Iterators.size(refs);
         } else {
             Iterator<SimpleFeature> features = new GeoGitFeatureIterator(refs, type, filter, odb,
-                    repository);
+                    geogit);
             size = Iterators.size(features);
         }
 
@@ -276,7 +276,7 @@ public class GeoGitSimpleFeatureCollection implements SimpleFeatureCollection {
     public Iterator<SimpleFeature> iterator() {
         final FeatureRefIterator refs = new FeatureRefIterator(typeTree, filter);
         Iterator<SimpleFeature> features = new GeoGitFeatureIterator(refs, type, filter, odb,
-                repository);
+                geogit);
         if (maxFeatures != null) {
             features = Iterators.limit(features, maxFeatures.intValue());
         }
@@ -409,15 +409,15 @@ public class GeoGitSimpleFeatureCollection implements SimpleFeatureCollection {
 
         private final ObjectDatabase odb;
 
-        private Repository repository;
+        private GeoGIT geogit;
 
         public GeoGitFeatureIterator(final Iterator<Ref> featureRefs, final SimpleFeatureType type,
-                final Filter filter, final ObjectDatabase odb, final Repository repository) {
+                final Filter filter, final ObjectDatabase odb, final GeoGIT geogit) {
             this.featureRefs = featureRefs;
             this.type = type;
             this.filter = filter;
             this.odb = odb;
-            this.repository = repository;
+            this.geogit = geogit;
         }
 
         @Override
@@ -433,8 +433,8 @@ public class GeoGitSimpleFeatureCollection implements SimpleFeatureCollection {
                     ObjectId contentId = featureRef.getObjectId();
 
                     SimpleFeature feature;
-                    ObjectReader<Feature> featureReader = repository.newFeatureReader(type,
-                            featureId, hints);
+                    ObjectReader<Feature> featureReader = geogit.getRepository().newFeatureReader(
+                            type, featureId, hints);
 
                     feature = (SimpleFeature) odb.get(contentId, featureReader);
                     feature = reprojector.reproject(feature);

@@ -16,6 +16,10 @@
  */
 package org.geoserver.data.versioning.decorator;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
@@ -33,6 +37,7 @@ import org.geotools.data.simple.SimpleFeatureCollection;
 import org.geotools.data.simple.SimpleFeatureIterator;
 import org.geotools.data.simple.SimpleFeatureSource;
 import org.geotools.filter.FilterFactoryImpl;
+import org.junit.Test;
 import org.opengis.feature.simple.SimpleFeature;
 import org.opengis.feature.simple.SimpleFeatureType;
 import org.opengis.feature.type.Name;
@@ -42,6 +47,7 @@ import org.opengis.filter.identity.Version;
 
 public class VersionedTest extends DecoratedTestCase {
 
+    @Test
     public void testNoHistory() throws Exception {
         SimpleFeatureIterator feats = null;
         try {
@@ -69,6 +75,7 @@ public class VersionedTest extends DecoratedTestCase {
         }
     }
 
+    @Test
     public void testResourceId() throws Exception {
         SimpleFeatureIterator feats = null;
         List<SimpleFeature> featList = new ArrayList<SimpleFeature>(1);
@@ -99,6 +106,7 @@ public class VersionedTest extends DecoratedTestCase {
         }
     }
 
+    @Test
     public void testResourceIdHistory() throws Exception {
         updateSampleFeatures();
         SimpleFeatureIterator feats = null;
@@ -129,6 +137,7 @@ public class VersionedTest extends DecoratedTestCase {
         }
     }
 
+    @Test
     public void testResourceIdTrivialQuery() throws Exception {
         updateSampleFeatures();
         SimpleFeatureIterator feats = null;
@@ -160,6 +169,7 @@ public class VersionedTest extends DecoratedTestCase {
         }
     }
 
+    @Test
     public void testResourceIdReinforcingQuery() throws Exception {
         updateSampleFeatures();
         SimpleFeatureIterator feats = null;
@@ -191,6 +201,7 @@ public class VersionedTest extends DecoratedTestCase {
         }
     }
 
+    @Test
     public void testResourceIdContradictoryQuery() throws Exception {
         updateSampleFeatures();
         SimpleFeatureIterator feats = null;
@@ -212,6 +223,7 @@ public class VersionedTest extends DecoratedTestCase {
         }
     }
 
+    @Test
     public void testFullHistory() throws Exception {
         updateTestFeatures();
         SimpleFeatureIterator feats = null;
@@ -240,6 +252,7 @@ public class VersionedTest extends DecoratedTestCase {
         }
     }
 
+    @Test
     public void testBBoxHistory() throws Exception {
         updateTestFeatures();
         SimpleFeatureIterator feats = null;
@@ -273,6 +286,7 @@ public class VersionedTest extends DecoratedTestCase {
         }
     }
 
+    @Test
     public void testBBoxFullHistory() throws Exception {
 
         SimpleFeatureIterator feats = null;
@@ -309,11 +323,13 @@ public class VersionedTest extends DecoratedTestCase {
         }
     }
 
+    @Test
     public void testConsistencyNoHistory() throws Exception {
         verifyVersionedConsistency();
         verifyUnversionedConsistency();
     }
 
+    @Test
     public void testConsistencyHistory() throws Exception {
         updateTestFeatures();
         updateSampleFeatures();

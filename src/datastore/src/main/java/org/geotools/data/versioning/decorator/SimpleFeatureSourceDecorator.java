@@ -18,8 +18,8 @@ package org.geotools.data.versioning.decorator;
 
 import java.io.IOException;
 
+import org.geogit.api.GeoGIT;
 import org.geogit.api.RevTree;
-import org.geogit.repository.Repository;
 import org.geotools.data.Query;
 import org.geotools.data.simple.SimpleFeatureCollection;
 import org.geotools.data.simple.SimpleFeatureSource;
@@ -33,7 +33,7 @@ public class SimpleFeatureSourceDecorator extends
         FeatureSourceDecorator<SimpleFeatureType, SimpleFeature> implements
         SimpleVersioningFeatureSource {
 
-    public SimpleFeatureSourceDecorator(SimpleFeatureSource unversioned, Repository repo) {
+    public SimpleFeatureSourceDecorator(SimpleFeatureSource unversioned, GeoGIT repo) {
         super(unversioned, repo);
     }
 

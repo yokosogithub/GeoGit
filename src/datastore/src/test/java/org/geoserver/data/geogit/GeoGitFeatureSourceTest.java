@@ -16,6 +16,12 @@
  */
 package org.geoserver.data.geogit;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertSame;
+import static org.junit.Assert.assertTrue;
+
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collection;
@@ -26,7 +32,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.geogit.api.GeoGIT;
 import org.geogit.api.Ref;
 import org.geogit.api.RevTree;
 import org.geogit.test.RepositoryTestCase;
@@ -40,6 +45,7 @@ import org.geotools.filter.text.ecql.ECQL;
 import org.geotools.geometry.jts.JTS;
 import org.geotools.geometry.jts.ReferencedEnvelope;
 import org.geotools.referencing.CRS;
+import org.junit.Test;
 import org.opengis.feature.Feature;
 import org.opengis.feature.Property;
 import org.opengis.feature.simple.SimpleFeature;
@@ -64,12 +70,11 @@ public class GeoGitFeatureSourceTest extends RepositoryTestCase {
 
     @Override
     protected void setUpInternal() throws Exception {
-        dataStore = new GeoGitDataStore(repo);
+        dataStore = new GeoGitDataStore(geogit);
         dataStore.createSchema(super.pointsType);
         dataStore.createSchema(super.linesType);
         insertAndAdd(points1, points2, points3, lines1, lines2, lines3);
-        new GeoGIT(repo).commit().setAuthor("yo").setCommitter("me").setMessage("initial import")
-                .call();
+        geogit.commit().setAuthor("yo").setCommitter("me").setMessage("initial import").call();
 
         pointsSource = dataStore.getFeatureSource(pointsTypeName);
         linesSource = dataStore.getFeatureSource(linesTypeName);
@@ -82,11 +87,13 @@ public class GeoGitFeatureSourceTest extends RepositoryTestCase {
         linesSource = null;
     }
 
+    @Test
     public void testGetName() {
         assertEquals(pointsTypeName, pointsSource.getName());
         assertEquals(linesTypeName, linesSource.getName());
     }
 
+    @Test
     public void testGetInfo() {
         assertNotNull(pointsSource.getInfo());
         assertNotNull(pointsSource.getInfo().getBounds());
@@ -99,11 +106,13 @@ public class GeoGitFeatureSourceTest extends RepositoryTestCase {
         assertEquals(linesName, linesSource.getInfo().getName());
     }
 
+    @Test
     public void testGetDataStore() {
         assertSame(dataStore, pointsSource.getDataStore());
         assertSame(dataStore, linesSource.getDataStore());
     }
 
+    @Test
     public void testGetQueryCapabilities() {
         assertNotNull(pointsSource.getQueryCapabilities());
 
@@ -119,11 +128,13 @@ public class GeoGitFeatureSourceTest extends RepositoryTestCase {
         assertFalse(pointsSource.getQueryCapabilities().supportsSorting(sortAttributes));
     }
 
+    @Test
     public void testGetSchema() {
         assertEquals(pointsType, pointsSource.getSchema());
         assertEquals(linesType, linesSource.getSchema());
     }
 
+    @Test
     public void testGetBounds() throws IOException {
         ReferencedEnvelope expected;
         ReferencedEnvelope bounds;
@@ -139,6 +150,7 @@ public class GeoGitFeatureSourceTest extends RepositoryTestCase {
         assertEquals(expected, bounds);
     }
 
+    @Test
     public void testGetBoundsQuery() throws Exception {
 
         ReferencedEnvelope bounds;
@@ -175,6 +187,7 @@ public class GeoGitFeatureSourceTest extends RepositoryTestCase {
         assertEquals(boundsOf(lines3, lines2), bounds);
     }
 
+    @Test
     public void testGetCount() throws Exception {
         assertEquals(3, pointsSource.getCount(Query.ALL));
         assertEquals(3, linesSource.getCount(Query.ALL));
@@ -211,6 +224,7 @@ public class GeoGitFeatureSourceTest extends RepositoryTestCase {
     }
 
     @SuppressWarnings({ "deprecation", "unchecked" })
+    @Test
     public void testGetFeatures() throws Exception {
         SimpleFeatureCollection collection;
         Set<Collection<Property>> actual;
@@ -244,6 +258,7 @@ public class GeoGitFeatureSourceTest extends RepositoryTestCase {
     }
 
     @SuppressWarnings({ "deprecation", "unchecked" })
+    @Test
     public void testGetFeaturesFilter() throws Exception {
         SimpleFeatureCollection collection;
         Set<Collection<Property>> actual;
@@ -310,6 +325,7 @@ public class GeoGitFeatureSourceTest extends RepositoryTestCase {
 
     }
 
+    @Test
     public void testFeatureIdsAreVersioned() throws IOException {
         SimpleFeatureCollection collection = pointsSource.getFeatures(Query.ALL);
         SimpleFeatureIterator features = collection.features();

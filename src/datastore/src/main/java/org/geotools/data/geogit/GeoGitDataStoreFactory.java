@@ -24,7 +24,6 @@ import java.util.Collections;
 import java.util.Map;
 
 import org.geogit.api.GeoGIT;
-import org.geogit.repository.Repository;
 import org.geotools.data.DataSourceException;
 import org.geotools.data.DataStore;
 import org.geotools.data.DataStoreFactorySpi;
@@ -91,7 +90,7 @@ public class GeoGitDataStoreFactory implements DataStoreFactorySpi {
         String dataRootPath = (String) DATA_ROOT.lookUp(params);
         final File dataRoot = new File(dataRootPath);
 
-        Repository repository = new GeoGIT(dataRoot).getRepository();
+        GeoGIT repository = new GeoGIT(dataRoot);
 
         // Repository repository = GEOGIT.get().getRepository();
         GeoGitDataStore store = new GeoGitDataStore(repository, defaultNamespace);

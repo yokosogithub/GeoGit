@@ -18,7 +18,7 @@ package org.geotools.data.versioning.decorator;
 
 import java.io.IOException;
 
-import org.geogit.repository.Repository;
+import org.geogit.api.GeoGIT;
 import org.geotools.data.FeatureLock;
 import org.geotools.data.FeatureLocking;
 import org.geotools.data.Query;
@@ -31,8 +31,8 @@ import org.opengis.filter.Filter;
 public class FeatureLockingDecorator<T extends FeatureType, F extends Feature> extends
         FeatureStoreDecorator<T, F> implements VersioningFeatureLocking<T, F> {
 
-    public FeatureLockingDecorator(FeatureLocking unversioned, Repository repo) {
-        super(unversioned, repo);
+    public FeatureLockingDecorator(FeatureLocking unversioned, GeoGIT geogit) {
+        super(unversioned, geogit);
     }
 
     @Override

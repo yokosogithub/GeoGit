@@ -25,7 +25,6 @@ import java.util.List;
 import java.util.Set;
 
 import org.geogit.api.GeoGIT;
-import org.geogit.repository.Repository;
 import org.geotools.data.DataAccess;
 import org.geotools.data.FeatureLocking;
 import org.geotools.data.FeatureSource;
@@ -48,7 +47,7 @@ import com.google.common.base.Throwables;
 
 /**
  * Decorator around an unversioned DataAccess allowing it to be used in conjunction with a GeoGit
- * {@link Repository} for revision information.
+ * {@link GeoGIT} for revision information.
  * 
  * @param <T> FeatureType
  * @param <F> Feature
@@ -66,18 +65,18 @@ public class DataAccessDecorator<T extends FeatureType, F extends Feature> imple
      * Subclasses can use {@link #getRepository(Name)} to access while still allowing support for
      * multiple repositories if needed.
      */
-    private Repository repository;
+    private GeoGIT geogit;
 
-    public DataAccessDecorator(DataAccess unversioned, Repository versioningRepo) {
+    public DataAccessDecorator(DataAccess unversioned, GeoGIT versioningRepo) {
         checkNotNull(unversioned);
         checkNotNull(versioningRepo);
         checkArgument(!(unversioned instanceof DataAccessDecorator));
         this.unversioned = unversioned;
-        this.repository = versioningRepo;
+        this.geogit = versioningRepo;
     }
 
     public boolean isVersioned(Name name) {
-        boolean isVersioned = repository.getWorkingTree().hasRoot(name);
+        boolean isVersioned = geogit.getRepository().getWorkingTree().hasRoot(name);
         return isVersioned;
     }
 
@@ -121,10 +120,9 @@ public class DataAccessDecorator<T extends FeatureType, F extends Feature> imple
     public void createSchema(T featureType) throws IOException {
         unversioned.createSchema(featureType);
         try {
-            repository.getWorkingTree().init(featureType);
-            GeoGIT ggit = new GeoGIT(repository);
-            ggit.add().call();
-            ggit.commit().call();
+            geogit.getRepository().getWorkingTree().init(featureType);
+            geogit.add().call();
+            geogit.commit().call();
         } catch (Exception e) {
             Throwables.propagate(e);
         }
@@ -189,7 +187,7 @@ public class DataAccessDecorator<T extends FeatureType, F extends Feature> imple
 
         final FeatureType featureType = this.getSchema(typeName);
         ResourceIdFeatureCollector versionCollector;
-        versionCollector = new ResourceIdFeatureCollector(repository, featureType, resourceIds);
+        versionCollector = new ResourceIdFeatureCollector(geogit, featureType, resourceIds);
 
         DefaultFeatureCollection features = new DefaultFeatureCollection(null,
                 (SimpleFeatureType) featureType);
@@ -205,8 +203,8 @@ public class DataAccessDecorator<T extends FeatureType, F extends Feature> imple
      * 
      * @return Default repository (provided to the constructor)
      */
-    protected Repository getRepository() {
-        return repository;
+    protected GeoGIT getRepository() {
+        return geogit;
     }
 
     /**
@@ -217,8 +215,8 @@ public class DataAccessDecorator<T extends FeatureType, F extends Feature> imple
      * @param typeName
      * @return Repository for use with the provided typeName
      */
-    protected Repository getRepository(Name typeName) {
-        return repository;
+    protected GeoGIT getRepository(Name typeName) {
+        return geogit;
     }
 
     /**
@@ -229,7 +227,7 @@ public class DataAccessDecorator<T extends FeatureType, F extends Feature> imple
      * @return FeatureSource allowing access to source and repository data
      */
     protected FeatureSource<T, F> createFeatureSource(FeatureSource<T, F> source) {
-        Repository repo = getRepository(source.getName());
+        GeoGIT repo = getRepository(source.getName());
         if (repo == null) {
             repo = getRepository();
         }
@@ -244,7 +242,7 @@ public class DataAccessDecorator<T extends FeatureType, F extends Feature> imple
      * @return FeatureSource allowing access to source and repository data
      */
     protected FeatureStore<T, F> createFeatureStore(FeatureStore<T, F> store) {
-        Repository repo = getRepository(store.getName());
+        GeoGIT repo = getRepository(store.getName());
         if (repo == null) {
             repo = getRepository();
         }
@@ -259,7 +257,7 @@ public class DataAccessDecorator<T extends FeatureType, F extends Feature> imple
      * @return FeatureSource allowing access to source and repository data
      */
     protected FeatureLocking<T, F> createFeatureLocking(FeatureLocking<T, F> locking) {
-        Repository repo = getRepository(locking.getName());
+        GeoGIT repo = getRepository(locking.getName());
         return new FeatureLockingDecorator(locking, repo);
     }
 }

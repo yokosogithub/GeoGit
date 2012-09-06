@@ -25,7 +25,6 @@ import org.geogit.api.GeoGIT;
 import org.geogit.api.ObjectId;
 import org.geogit.api.Ref;
 import org.geogit.api.RevTree;
-import org.geogit.repository.Repository;
 import org.geogit.repository.WorkingTree;
 import org.geotools.data.FeatureReader;
 import org.geotools.data.Transaction;
@@ -73,8 +72,8 @@ public class GeoGitFeatureStore extends GeoGitFeatureSource implements SimpleVer
         // assume HEAD is at MASTER
         try {
             final Name typeName = this.type.getName();
-            Repository repository = dataStore.getRepository();
-            WorkingTree workingTree = repository.getWorkingTree();
+            GeoGIT geogit = dataStore.getGeogit();
+            WorkingTree workingTree = geogit.getRepository().getWorkingTree();
             RevTree typeTree = workingTree.getStagedVersion(typeName);
             return typeTree;
         } catch (Exception e) {
@@ -197,10 +196,9 @@ public class GeoGitFeatureStore extends GeoGitFeatureSource implements SimpleVer
         if (versionFilter == null) {
             return;
         }
-        final Repository repository = dataStore.getRepository();
+        final GeoGIT geogit = dataStore.getGeogit();
         // don't allow non current versions
-        GeoGIT ggit = new GeoGIT(repository);
-        VersionQuery query = new VersionQuery(ggit, getSchema().getName());
+        VersionQuery query = new VersionQuery(geogit, getSchema().getName());
         for (Identifier id : versionFilter.getIdentifiers()) {
             ResourceId rid = (ResourceId) id;
             List<Ref> requested;
@@ -244,8 +242,8 @@ public class GeoGitFeatureStore extends GeoGitFeatureSource implements SimpleVer
         final Object key = GeoGitDataStore.class;
         VersioningTransactionState state = (VersioningTransactionState) transaction.getState(key);
         if (state == null) {
-            Repository repository = dataStore.getRepository();
-            state = new VersioningTransactionState(new GeoGIT(repository));
+            GeoGIT geogit = dataStore.getGeogit();
+            state = new VersioningTransactionState(geogit);
             transaction.putState(key, state);
         }
 

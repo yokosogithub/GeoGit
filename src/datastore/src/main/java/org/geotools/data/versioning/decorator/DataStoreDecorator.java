@@ -18,7 +18,7 @@ package org.geotools.data.versioning.decorator;
 
 import java.io.IOException;
 
-import org.geogit.repository.Repository;
+import org.geogit.api.GeoGIT;
 import org.geotools.data.DataStore;
 import org.geotools.data.FeatureReader;
 import org.geotools.data.FeatureSource;
@@ -36,17 +36,17 @@ import org.opengis.filter.Filter;
 public class DataStoreDecorator extends DataAccessDecorator<SimpleFeatureType, SimpleFeature>
         implements VersioningDataStore {
 
-    public DataStoreDecorator(DataStore unversioned, Repository versioningRepo) {
+    public DataStoreDecorator(DataStore unversioned, GeoGIT versioningRepo) {
         super(unversioned, versioningRepo);
     }
 
     @Override
     public SimpleFeatureSource getFeatureSource(Name typeName) throws IOException {
-        Repository repo = getRepository(typeName);
+        GeoGIT geogit = getRepository(typeName);
 
         FeatureSource<SimpleFeatureType, SimpleFeature> source = unversioned
                 .getFeatureSource(typeName);
-        return (SimpleFeatureSource) VersioningAdapterFactory.create(source, repo);
+        return (SimpleFeatureSource) VersioningAdapterFactory.create(source, geogit);
     }
 
     @Override
@@ -67,8 +67,8 @@ public class DataStoreDecorator extends DataAccessDecorator<SimpleFeatureType, S
     @Override
     public SimpleFeatureSource getFeatureSource(String typeName) throws IOException {
         SimpleFeatureSource source = ((DataStore) unversioned).getFeatureSource(typeName);
-        Repository repo = getRepository(source.getName());
-        return (SimpleFeatureSource) VersioningAdapterFactory.create(source, repo);
+        GeoGIT geogit = getRepository(source.getName());
+        return (SimpleFeatureSource) VersioningAdapterFactory.create(source, geogit);
     }
 
     @Override

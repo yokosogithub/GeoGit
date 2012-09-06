@@ -18,8 +18,8 @@ package org.geotools.data.versioning.decorator;
 
 import java.io.IOException;
 
+import org.geogit.api.GeoGIT;
 import org.geogit.api.RevTree;
-import org.geogit.repository.Repository;
 import org.geotools.data.FeatureLocking;
 import org.geotools.data.Query;
 import org.geotools.data.simple.SimpleFeatureCollection;
@@ -37,7 +37,7 @@ public class SimpleFeatureLockingDecorator extends
     SimpleFeatureStoreDecorator storeDelegate;
 
     public SimpleFeatureLockingDecorator(
-            FeatureLocking<SimpleFeatureType, SimpleFeature> unversioned, Repository repo) {
+            FeatureLocking<SimpleFeatureType, SimpleFeature> unversioned, GeoGIT repo) {
         super(unversioned, repo);
         storeDelegate = new SimpleFeatureStoreDecorator((SimpleFeatureStore) unversioned, repo);
     }

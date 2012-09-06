@@ -16,6 +16,11 @@
  */
 package org.geoserver.data.versioning.decorator;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -24,6 +29,7 @@ import org.geotools.data.simple.SimpleFeatureCollection;
 import org.geotools.data.simple.SimpleFeatureIterator;
 import org.geotools.data.simple.SimpleFeatureSource;
 import org.geotools.filter.FilterFactoryImpl;
+import org.junit.Test;
 import org.opengis.feature.simple.SimpleFeature;
 import org.opengis.feature.simple.SimpleFeatureType;
 import org.opengis.feature.type.Name;
@@ -33,6 +39,7 @@ import org.opengis.filter.identity.Version;
 
 public class UnversionedTest extends DecoratedTestCase {
 
+    @Test
     public void testGetSchema() throws Exception {
         SimpleFeatureType type = versioned.getSchema(sampleType.getName());
         assertNotNull("Sample schema must be found.", type);
@@ -42,6 +49,7 @@ public class UnversionedTest extends DecoratedTestCase {
         assertEquals("Test schema must match.", testType, type);
     }
 
+    @Test
     public void testGetNames() throws Exception {
         List<Name> names = versioned.getNames();
 
@@ -51,10 +59,12 @@ public class UnversionedTest extends DecoratedTestCase {
         assertTrue("The sample feature type must be available.", names.contains(testType.getName()));
     }
 
+    @Test
     public void testNoQuery() throws Exception {
         verifyNoQuery();
     }
 
+    @Test
     public void testCurrentNoQuery() throws Exception {
         updateSampleFeatures();
         verifyNoQuery();
@@ -83,10 +93,12 @@ public class UnversionedTest extends DecoratedTestCase {
         }
     }
 
+    @Test
     public void testVersionQuery() throws Exception {
         verifyVersionQuery();
     }
 
+    @Test
     public void testCurrentVersionQuery() throws Exception {
         updateSampleFeatures();
         verifyVersionQuery();
@@ -118,10 +130,12 @@ public class UnversionedTest extends DecoratedTestCase {
         }
     }
 
+    @Test
     public void testIdQuery() throws Exception {
         verifyIdQuery(test1);
     }
 
+    @Test
     public void testCurrentIdQuery() throws Exception {
         updateTestFeatures();
         verifyIdQuery(test1b);
@@ -152,6 +166,7 @@ public class UnversionedTest extends DecoratedTestCase {
         }
     }
 
+    @Test
     public void testBboxQuery() throws Exception {
         List<SimpleFeature> featList = new ArrayList<SimpleFeature>(2);
         featList.add(test1);
@@ -159,6 +174,7 @@ public class UnversionedTest extends DecoratedTestCase {
         verifyBboxQuery(featList);
     }
 
+    @Test
     public void testCurrentBboxQuery() throws Exception {
         updateTestFeatures();
         List<SimpleFeature> featList = new ArrayList<SimpleFeature>(2);

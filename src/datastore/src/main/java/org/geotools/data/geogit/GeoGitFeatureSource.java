@@ -24,9 +24,9 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
+import org.geogit.api.GeoGIT;
 import org.geogit.api.ObjectId;
 import org.geogit.api.RevTree;
-import org.geogit.repository.Repository;
 import org.geogit.storage.ObjectDatabase;
 import org.geotools.data.DataSourceException;
 import org.geotools.data.DefaultResourceInfo;
@@ -52,6 +52,7 @@ import org.opengis.filter.sort.SortBy;
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
 
 import com.google.common.base.Throwables;
+import com.vividsolutions.jts.geom.GeometryFactory;
 
 public class GeoGitFeatureSource implements SimpleVersioningFeatureSource {
 
@@ -80,8 +81,8 @@ public class GeoGitFeatureSource implements SimpleVersioningFeatureSource {
         // assume HEAD is at MASTER
         try {
             final Name typeName = this.type.getName();
-            Repository repository = dataStore.getRepository();
-            RevTree typeTree = repository.getWorkingTree().getHeadVersion(typeName);
+            GeoGIT geogit = dataStore.getGeogit();
+            RevTree typeTree = geogit.getRepository().getWorkingTree().getHeadVersion(typeName);
             return typeTree;
         } catch (Exception e) {
             throw new RuntimeException(e);
@@ -251,11 +252,12 @@ public class GeoGitFeatureSource implements SimpleVersioningFeatureSource {
         final Query query2 = reprojectFilter(query);
         filter = query2.getFilter();
 
-        final ObjectDatabase lookupDatabase = dataStore.getRepository().getIndex().getDatabase();
+        final ObjectDatabase lookupDatabase = dataStore.getGeogit().getRepository().getIndex()
+                .getDatabase();
         final RevTree typeTree = getCurrentVersion();
         GeoGitSimpleFeatureCollection featureCollection;
         featureCollection = new GeoGitSimpleFeatureCollection(type, filter, lookupDatabase,
-                typeTree, dataStore.getRepository());
+                typeTree, dataStore.getGeogit());
 
         final int maxFeatures = query2.getMaxFeatures();
         if (maxFeatures > 0 && maxFeatures != Query.DEFAULT_MAX) {
@@ -284,8 +286,8 @@ public class GeoGitFeatureSource implements SimpleVersioningFeatureSource {
      *         transaction in progress
      */
     protected ObjectId getRootTreeId() {
-        Repository repository = dataStore.getRepository();
-        ObjectId rootTreeId = repository.getRootTreeId();
+        GeoGIT geogit = dataStore.getGeogit();
+        ObjectId rootTreeId = geogit.getRepository().getRootTreeId();
         return rootTreeId;
     }
 

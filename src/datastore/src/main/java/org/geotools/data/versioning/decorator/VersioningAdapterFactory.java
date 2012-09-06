@@ -16,7 +16,7 @@
  */
 package org.geotools.data.versioning.decorator;
 
-import org.geogit.repository.Repository;
+import org.geogit.api.GeoGIT;
 import org.geotools.data.DataAccess;
 import org.geotools.data.DataStore;
 import org.geotools.data.FeatureLocking;
@@ -31,7 +31,7 @@ import org.opengis.feature.type.Name;
 public class VersioningAdapterFactory {
 
     @SuppressWarnings({ "rawtypes" })
-    public static FeatureSource create(final FeatureSource subject, Repository versioningRepo) {
+    public static FeatureSource create(final FeatureSource subject, GeoGIT versioningRepo) {
 
         final Name typeName = subject.getSchema().getName();
 
@@ -65,7 +65,7 @@ public class VersioningAdapterFactory {
     }
 
     @SuppressWarnings("rawtypes")
-    public static DataAccess create(final DataAccess subject, Repository versioningRepo) {
+    public static DataAccess create(final DataAccess subject, GeoGIT versioningRepo) {
         if (subject == null) {
             throw new NullPointerException("DataAccess subject is required");
         }
