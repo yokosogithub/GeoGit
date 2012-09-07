@@ -11,13 +11,13 @@ import com.google.common.base.Predicate;
 
 public interface RevTree extends RevObject {
 
-    public abstract Ref get(final String key);
+    public abstract NodeRef get(final String key);
 
     public abstract void accept(TreeVisitor visitor);
 
     public abstract BigInteger size();
 
-    public abstract Iterator<Ref> iterator(Predicate<Ref> filter);
+    public abstract Iterator<NodeRef> iterator(Predicate<NodeRef> filter);
 
     public abstract boolean isNormalized();
 

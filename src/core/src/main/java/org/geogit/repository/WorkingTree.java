@@ -19,8 +19,8 @@ import javax.annotation.Nullable;
 
 import org.geogit.api.DiffEntry;
 import org.geogit.api.MutableTree;
+import org.geogit.api.NodeRef;
 import org.geogit.api.ObjectId;
-import org.geogit.api.Ref;
 import org.geogit.api.RevTree;
 import org.geogit.api.TreeVisitor;
 import org.geogit.storage.ObjectWriter;
@@ -124,7 +124,7 @@ public class WorkingTree {
      */
     @SuppressWarnings({ "unchecked", "deprecation" })
     public void insert(FeatureCollection features, boolean forceUseProvidedFID,
-            ProgressListener listener, @Nullable List<Ref> insertedTarget) throws Exception {
+            ProgressListener listener, @Nullable List<NodeRef> insertedTarget) throws Exception {
 
         final int size = features.size();
 
@@ -197,7 +197,7 @@ public class WorkingTree {
     public boolean hasRoot(final Name typeName) {
         String namespaceURI = typeName.getNamespaceURI() == null ? "" : typeName.getNamespaceURI();
         String localPart = typeName.getLocalPart();
-        Ref typeNameTreeRef = repository.getRootTreeChild(namespaceURI, localPart);
+        NodeRef typeNameTreeRef = repository.getRootTreeChild(namespaceURI, localPart);
         return typeNameTreeRef != null;
     }
 
@@ -225,13 +225,13 @@ public class WorkingTree {
         List<Name> names = new ArrayList<Name>();
         RevTree root = repository.getHeadTree();
         if (root != null) {
-            Iterator<Ref> namespaces = root.iterator(null);
+            Iterator<NodeRef> namespaces = root.iterator(null);
             while (namespaces.hasNext()) {
-                final Ref nsRef = namespaces.next();
+                final NodeRef nsRef = namespaces.next();
                 final String nsUri = nsRef.getName();
                 final ObjectId nsTreeId = nsRef.getObjectId();
                 final RevTree nsTree = repository.getTree(nsTreeId);
-                final Iterator<Ref> typeNameRefs = nsTree.iterator(null);
+                final Iterator<NodeRef> typeNameRefs = nsTree.iterator(null);
                 while (typeNameRefs.hasNext()) {
                     Name typeName = new NameImpl(nsUri, typeNameRefs.next().getName());
                     names.add(typeName);
@@ -243,7 +243,7 @@ public class WorkingTree {
 
     public RevTree getHeadVersion(final Name typeName) {
         List<String> path = path(typeName, null);
-        Ref typeTreeRef = repository.getRootTreeChild(path);
+        NodeRef typeTreeRef = repository.getRootTreeChild(path);
         RevTree typeTree;
         if (typeTreeRef == null) {
             typeTree = repository.newTree();
@@ -270,9 +270,9 @@ public class WorkingTree {
 
         private final RevTree typeTree;
 
-        private final Map<String, Ref> inserts = new HashMap<String, Ref>();
+        private final Map<String, NodeRef> inserts = new HashMap<String, NodeRef>();
 
-        private final Map<String, Ref> updates = new HashMap<String, Ref>();
+        private final Map<String, NodeRef> updates = new HashMap<String, NodeRef>();
 
         private final Set<String> deletes = new HashSet<String>();
 
@@ -321,8 +321,8 @@ public class WorkingTree {
         }
 
         @Override
-        public Ref get(final String fid) {
-            Ref ref = inserts.get(fid);
+        public NodeRef get(final String fid) {
+            NodeRef ref = inserts.get(fid);
             if (ref == null) {
                 ref = updates.get(fid);
             }
@@ -350,31 +350,31 @@ public class WorkingTree {
         }
 
         @Override
-        public Iterator<Ref> iterator(Predicate<Ref> filter) {
-            Iterator<Ref> current = typeTree.iterator(null);
+        public Iterator<NodeRef> iterator(Predicate<NodeRef> filter) {
+            Iterator<NodeRef> current = typeTree.iterator(null);
 
-            current = Iterators.filter(current, new Predicate<Ref>() {
+            current = Iterators.filter(current, new Predicate<NodeRef>() {
                 @Override
-                public boolean apply(Ref input) {
+                public boolean apply(NodeRef input) {
                     boolean returnIt = !deletes.contains(input.getName());
                     return returnIt;
                 }
             });
-            current = Iterators.transform(current, new Function<Ref, Ref>() {
+            current = Iterators.transform(current, new Function<NodeRef, NodeRef>() {
                 @Override
-                public Ref apply(Ref input) {
-                    Ref update = updates.get(input.getName());
+                public NodeRef apply(NodeRef input) {
+                    NodeRef update = updates.get(input.getName());
                     return update == null ? input : update;
                 }
             });
 
-            Iterator<Ref> inserted = inserts.values().iterator();
+            Iterator<NodeRef> inserted = inserts.values().iterator();
             if (filter != null) {
                 inserted = Iterators.filter(inserted, filter);
                 current = Iterators.filter(current, filter);
             }
 
-            Iterator<Ref> diffed = Iterators.concat(inserted, current);
+            Iterator<NodeRef> diffed = Iterators.concat(inserted, current);
             return diffed;
         }
 

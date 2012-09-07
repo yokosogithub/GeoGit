@@ -13,8 +13,8 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.geogit.api.MutableTree;
+import org.geogit.api.NodeRef;
 import org.geogit.api.ObjectId;
-import org.geogit.api.Ref;
 import org.geogit.api.RevObject.TYPE;
 import org.geogit.api.RevTree;
 import org.geogit.repository.DepthSearch;
@@ -184,7 +184,7 @@ public abstract class AbstractObjectDatabase implements ObjectDatabase {
      */
     @Override
     public MutableTree getOrCreateSubTree(final RevTree parent, List<String> childPath) {
-        Ref treeChildRef = getTreeChild(parent, childPath);
+        NodeRef treeChildRef = getTreeChild(parent, childPath);
         if (treeChildRef == null) {
             return newTree();
         }
@@ -228,12 +228,12 @@ public abstract class AbstractObjectDatabase implements ObjectDatabase {
         final String treeName = pathToTree.get(pathToTree.size() - 1);
 
         if (pathToTree.size() == 1) {
-            root.put(new Ref(treeName, treeId, TYPE.TREE));
+            root.put(new NodeRef(treeName, treeId, TYPE.TREE));
             ObjectId newRootId = put(serialFactory.createRevTreeWriter(root));
             return newRootId;
         }
         final List<String> parentPath = pathToTree.subList(0, pathToTree.size() - 1);
-        Ref parentRef = getTreeChild(root, parentPath);
+        NodeRef parentRef = getTreeChild(root, parentPath);
         MutableTree parent;
         if (parentRef == null) {
             parent = newTree();
@@ -241,7 +241,7 @@ public abstract class AbstractObjectDatabase implements ObjectDatabase {
             ObjectId parentId = parentRef.getObjectId();
             parent = getTree(parentId).mutable();
         }
-        parent.put(new Ref(treeName, treeId, TYPE.TREE));
+        parent.put(new NodeRef(treeName, treeId, TYPE.TREE));
         return writeBack(root, parent, parentPath);
     }
 
@@ -250,7 +250,7 @@ public abstract class AbstractObjectDatabase implements ObjectDatabase {
      *      java.lang.String[])
      */
     @Override
-    public Ref getTreeChild(RevTree root, String... path) {
+    public NodeRef getTreeChild(RevTree root, String... path) {
         return getTreeChild(root, Arrays.asList(path));
     }
 
@@ -258,8 +258,8 @@ public abstract class AbstractObjectDatabase implements ObjectDatabase {
      * @see org.geogit.storage.ObjectDatabase#getTreeChild(org.geogit.api.RevTree, java.util.List)
      */
     @Override
-    public Ref getTreeChild(RevTree root, List<String> path) {
-        Ref treeRef = new DepthSearch(this, serialFactory).find(root, path);
+    public NodeRef getTreeChild(RevTree root, List<String> path) {
+        NodeRef treeRef = new DepthSearch(this, serialFactory).find(root, path);
         return treeRef;
     }
 

@@ -22,8 +22,8 @@ import java.io.IOException;
 import java.util.List;
 
 import org.geogit.api.GeoGIT;
+import org.geogit.api.NodeRef;
 import org.geogit.api.ObjectId;
-import org.geogit.api.Ref;
 import org.geogit.api.RevTree;
 import org.geogit.repository.WorkingTree;
 import org.geotools.data.FeatureReader;
@@ -201,8 +201,8 @@ public class GeoGitFeatureStore extends GeoGitFeatureSource implements SimpleVer
         VersionQuery query = new VersionQuery(geogit, getSchema().getName());
         for (Identifier id : versionFilter.getIdentifiers()) {
             ResourceId rid = (ResourceId) id;
-            List<Ref> requested;
-            List<Ref> current;
+            List<NodeRef> requested;
+            List<NodeRef> current;
             try {
                 requested = Lists.newArrayList(query.get(rid));
                 current = Lists.newArrayList(query.get(new ResourceIdImpl(rid.getID(), null)));

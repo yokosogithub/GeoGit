@@ -10,6 +10,7 @@ import java.io.InputStream;
 import java.util.List;
 import java.util.NoSuchElementException;
 
+import org.geogit.api.NodeRef;
 import org.geogit.api.ObjectId;
 import org.geogit.api.Ref;
 import org.geogit.api.RevBlob;
@@ -316,12 +317,12 @@ public class Repository {
         return getObjectDatabase().newTree();
     }
 
-    public Ref getRootTreeChild(List<String> path) {
+    public NodeRef getRootTreeChild(List<String> path) {
         RevTree root = getHeadTree();
         return getObjectDatabase().getTreeChild(root, path);
     }
 
-    public Ref getRootTreeChild(String... path) {
+    public NodeRef getRootTreeChild(String... path) {
         RevTree root = getHeadTree();
         return getObjectDatabase().getTreeChild(root, path);
     }

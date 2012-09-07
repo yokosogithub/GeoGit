@@ -7,8 +7,8 @@ package org.geogit.repository;
 import java.util.LinkedList;
 import java.util.List;
 
+import org.geogit.api.NodeRef;
 import org.geogit.api.ObjectId;
-import org.geogit.api.Ref;
 import org.geogit.api.RevObject.TYPE;
 import org.geogit.api.RevTree;
 import org.geogit.api.TreeVisitor;
@@ -26,7 +26,7 @@ public class DepthSearch {
         this.serialFactory = serialFactory;
     }
 
-    public Ref find(final ObjectId treeId, final List<String> path) {
+    public NodeRef find(final ObjectId treeId, final List<String> path) {
         RevTree tree = objectDb.get(treeId, serialFactory.createRevTreeReader(objectDb));
         if (tree == null) {
             return null;
@@ -34,12 +34,12 @@ public class DepthSearch {
         return find(tree, path);
     }
 
-    public Ref find(final RevTree tree, final List<String> path) {
+    public NodeRef find(final RevTree tree, final List<String> path) {
         if (path.size() == 1) {
             return tree.get(path.get(0));
         }
         final String childName = path.get(0);
-        final Ref childTreeRef = tree.get(childName);
+        final NodeRef childTreeRef = tree.get(childName);
         if (childTreeRef == null) {
             return null;
         }
@@ -54,14 +54,14 @@ public class DepthSearch {
      * @param childId
      * @return the tuple of tree path/object reference if found, or {@code null} if not.
      */
-    public Tuple<List<String>, Ref> find(final RevTree tree, final ObjectId childId) {
-        final Ref[] target = new Ref[1];
+    public Tuple<List<String>, NodeRef> find(final RevTree tree, final ObjectId childId) {
+        final NodeRef[] target = new NodeRef[1];
         final List<String> path = new LinkedList<String>();
 
         class IdFindedVisitor implements TreeVisitor {
 
             @Override
-            public boolean visitEntry(Ref ref) {
+            public boolean visitEntry(NodeRef ref) {
                 if (childId.equals(ref.getObjectId())) {
                     target[0] = ref;
                     path.add(ref.getName());
@@ -92,6 +92,6 @@ public class DepthSearch {
         if (target[0] == null) {
             return null;
         }
-        return new Tuple<List<String>, Ref>(path, target[0]);
+        return new Tuple<List<String>, NodeRef>(path, target[0]);
     }
 }

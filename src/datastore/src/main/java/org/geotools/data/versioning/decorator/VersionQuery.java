@@ -28,8 +28,8 @@ import org.geogit.api.DiffEntry;
 import org.geogit.api.DiffOp;
 import org.geogit.api.GeoGIT;
 import org.geogit.api.LogOp;
+import org.geogit.api.NodeRef;
 import org.geogit.api.ObjectId;
-import org.geogit.api.Ref;
 import org.geogit.api.RevCommit;
 import org.geogit.api.RevObject.TYPE;
 import org.geogit.api.RevTree;
@@ -59,7 +59,7 @@ public class VersionQuery {
         this.typeName = typeName;
     }
 
-    public Iterator<Ref> getByQuery(Query query) {
+    public Iterator<NodeRef> getByQuery(Query query) {
         VersionDetail vDetail = VersionDetail.extractVersionDetails(query);
         if (vDetail == null) {
             return Iterators.emptyIterator();
@@ -79,7 +79,7 @@ public class VersionQuery {
         return Iterators.emptyIterator();
     }
 
-    public Iterator<Ref> filterByQueryVersion(Iterator<Ref> refs, Query query) {
+    public Iterator<NodeRef> filterByQueryVersion(Iterator<NodeRef> refs, Query query) {
         VersionDetail vDetail = VersionDetail.extractVersionDetails(query);
         if (vDetail == null) {
             return refs;
@@ -99,7 +99,7 @@ public class VersionQuery {
         return Iterators.emptyIterator();
     }
 
-    private List<Ref> fetchByDate(final Date date) {
+    private List<NodeRef> fetchByDate(final Date date) {
         LogOp logOp = ggit.log().addPath(typeNamePath());
         try {
             Iterator<RevCommit> featureCommits = logOp.call();
@@ -113,22 +113,22 @@ public class VersionQuery {
         }
     }
 
-    private List<Ref> filterByDate(Iterator<Ref> refs, final Date date) {
-        List<Ref> dateRefs = fetchByDate(date);
+    private List<NodeRef> filterByDate(Iterator<NodeRef> refs, final Date date) {
+        List<NodeRef> dateRefs = fetchByDate(date);
         return filterIteratorByList(dateRefs, refs);
     }
 
-    private List<Ref> fetchByRange(DateRange range) {
+    private List<NodeRef> fetchByRange(DateRange range) {
         return null;
     }
 
-    private List<Ref> filterByRange(Iterator<Ref> refs, DateRange range) {
-        List<Ref> rangeRefs = fetchByRange(range);
+    private List<NodeRef> filterByRange(Iterator<NodeRef> refs, DateRange range) {
+        List<NodeRef> rangeRefs = fetchByRange(range);
         return filterIteratorByList(rangeRefs, refs);
     }
 
-    private List<Ref> fetchByAction(Version.Action action) {
-        List<Ref> featureRefs = new ArrayList<Ref>();
+    private List<NodeRef> fetchByAction(Version.Action action) {
+        List<NodeRef> featureRefs = new ArrayList<NodeRef>();
         if (Version.Action.ALL.equals(action)) {
             LogOp logOp = ggit.log().addPath(typeNamePath());
             try {
@@ -164,11 +164,11 @@ public class VersionQuery {
         return featureRefs;
     }
 
-    private List<Ref> filterByAction(Iterator<Ref> refs, Version.Action action) {
+    private List<NodeRef> filterByAction(Iterator<NodeRef> refs, Version.Action action) {
         if (Version.Action.ALL.equals(action)) {
-            List<Ref> newRefs = new ArrayList<Ref>();
+            List<NodeRef> newRefs = new ArrayList<NodeRef>();
             while (refs.hasNext()) {
-                Ref ref = refs.next();
+                NodeRef ref = refs.next();
                 newRefs.add(ref);
             }
             return newRefs;
@@ -179,11 +179,11 @@ public class VersionQuery {
             // iterate through refs and retrieve the next version
             return Collections.emptyList();
         }
-        List<Ref> actionRefs = fetchByAction(action);
+        List<NodeRef> actionRefs = fetchByAction(action);
         return filterIteratorByList(actionRefs, refs);
     }
 
-    private List<Ref> fetchByIndex(int index) {
+    private List<NodeRef> fetchByIndex(int index) {
         LogOp logOp = ggit.log().addPath(typeNamePath());
         try {
             Iterator<RevCommit> featureCommits = logOp.call();
@@ -211,36 +211,36 @@ public class VersionQuery {
         }
     }
 
-    private List<Ref> filterByIndex(Iterator<Ref> refs, int index) {
-        List<Ref> indexRefs = fetchByIndex(index);
+    private List<NodeRef> filterByIndex(Iterator<NodeRef> refs, int index) {
+        List<NodeRef> indexRefs = fetchByIndex(index);
         return filterIteratorByList(indexRefs, refs);
     }
 
-    private List<Ref> getRefsByCommit(RevCommit commit) {
-        List<Ref> treeRefs = new ArrayList<Ref>();
+    private List<NodeRef> getRefsByCommit(RevCommit commit) {
+        List<NodeRef> treeRefs = new ArrayList<NodeRef>();
         if (commit != null) {
             ObjectId commitTreeId = commit.getTreeId();
             RevTree commitTree = ggit.getRepository().getTree(commitTreeId);
-            Ref nsRef = commitTree.get(typeName.getNamespaceURI());
+            NodeRef nsRef = commitTree.get(typeName.getNamespaceURI());
             RevTree nsTree = ggit.getRepository().getTree(nsRef.getObjectId());
-            Ref typeRef = nsTree.get(typeName.getLocalPart());
+            NodeRef typeRef = nsTree.get(typeName.getLocalPart());
             RevTree typeTree = ggit.getRepository().getTree(typeRef.getObjectId());
-            Iterator<Ref> it = typeTree.iterator(null);
+            Iterator<NodeRef> it = typeTree.iterator(null);
 
             while (it.hasNext()) {
-                Ref nextRef = it.next();
+                NodeRef nextRef = it.next();
                 treeRefs.add(nextRef);
             }
         }
         return treeRefs;
     }
 
-    private List<Ref> filterIteratorByList(List<Ref> refList, Iterator<Ref> refs) {
+    private List<NodeRef> filterIteratorByList(List<NodeRef> refList, Iterator<NodeRef> refs) {
         Preconditions.checkNotNull(refs);
         Preconditions.checkNotNull(refList);
-        List<Ref> newRefs = new ArrayList<Ref>();
+        List<NodeRef> newRefs = new ArrayList<NodeRef>();
         while (refs.hasNext()) {
-            Ref ref = refs.next();
+            NodeRef ref = refs.next();
             if (refList.contains(ref)) {
                 newRefs.add(ref);
             }
@@ -254,7 +254,7 @@ public class VersionQuery {
      *         if no such feature is found.
      * @throws Exception
      */
-    public Iterator<Ref> get(final ResourceId id) throws Exception {
+    public Iterator<NodeRef> get(final ResourceId id) throws Exception {
         final String featureId = id.getID();
         final String featureVersion = id.getFeatureVersion();
 
@@ -262,7 +262,7 @@ public class VersionQuery {
         final boolean isDateRangeQuery = id.getStartTime() != null || id.getEndTime() != null;
         final boolean isVesionQuery = !version.isEmpty();
 
-        final Ref requestedVersionRef = extractRequestedVersion(ggit, featureId, featureVersion);
+        final NodeRef requestedVersionRef = extractRequestedVersion(ggit, featureId, featureVersion);
         {
             final boolean explicitVersionQuery = !isDateRangeQuery && !isVesionQuery;
             if (explicitVersionQuery) {
@@ -277,7 +277,7 @@ public class VersionQuery {
 
         // at this point is either a version query or a date range query...
 
-        List<Ref> result = new ArrayList<Ref>(5);
+        List<NodeRef> result = new ArrayList<NodeRef>(5);
 
         // filter commits that affect the requested feature
         final List<String> path = path(featureId);
@@ -298,7 +298,8 @@ public class VersionQuery {
         Iterator<RevCommit> featureCommits = logOp.call();
 
         if (isDateRangeQuery) {
-            List<Ref> allInAscendingOrder = getAllInAscendingOrder(ggit, featureCommits, featureId);
+            List<NodeRef> allInAscendingOrder = getAllInAscendingOrder(ggit, featureCommits,
+                    featureId);
             result.addAll(allInAscendingOrder);
         } else if (isVesionQuery) {
             if (version.isDateTime()) {
@@ -312,7 +313,7 @@ public class VersionQuery {
                 final int requestIndex = version.getIndex().intValue();
                 final int listIndex = requestIndex - 1;// version indexing
                                                        // starts at 1
-                List<Ref> allVersions = getAllInAscendingOrder(ggit, featureCommits, featureId);
+                List<NodeRef> allVersions = getAllInAscendingOrder(ggit, featureCommits, featureId);
                 if (allVersions.size() > 0) {
                     if (allVersions.size() >= requestIndex) {
                         result.add(allVersions.get(listIndex));
@@ -322,7 +323,7 @@ public class VersionQuery {
                 }
             } else if (version.isVersionAction()) {
                 final Action versionAction = version.getVersionAction();
-                List<Ref> allInAscendingOrder = getAllInAscendingOrder(ggit, featureCommits,
+                List<NodeRef> allInAscendingOrder = getAllInAscendingOrder(ggit, featureCommits,
                         featureId);
                 switch (versionAction) {
                 case ALL:
@@ -339,13 +340,13 @@ public class VersionQuery {
                     }
                     break;
                 case NEXT:
-                    Ref next = next(requestedVersionRef, allInAscendingOrder);
+                    NodeRef next = next(requestedVersionRef, allInAscendingOrder);
                     if (next != null) {
                         result.add(next);
                     }
                     break;
                 case PREVIOUS:
-                    Ref previous = previous(requestedVersionRef, allInAscendingOrder);
+                    NodeRef previous = previous(requestedVersionRef, allInAscendingOrder);
                     if (previous != null) {
                         result.add(previous);
                     }
@@ -380,7 +381,7 @@ public class VersionQuery {
         return timeStampMillis / 1000;
     }
 
-    private Ref previous(Ref requestedVersionRef, List<Ref> allVersions) {
+    private NodeRef previous(NodeRef requestedVersionRef, List<NodeRef> allVersions) {
         int idx = locate(requestedVersionRef, allVersions);
         if (idx > 0) {
             return allVersions.get(idx - 1);
@@ -388,7 +389,7 @@ public class VersionQuery {
         return null;
     }
 
-    private Ref next(Ref requestedVersionRef, List<Ref> allVersions) {
+    private NodeRef next(NodeRef requestedVersionRef, List<NodeRef> allVersions) {
         int idx = locate(requestedVersionRef, allVersions);
         if (idx > -1 && idx < allVersions.size() - 1) {
             return allVersions.get(idx + 1);
@@ -396,12 +397,12 @@ public class VersionQuery {
         return null;
     }
 
-    private int locate(final Ref requestedVersionRef, List<Ref> allVersions) {
+    private int locate(final NodeRef requestedVersionRef, List<NodeRef> allVersions) {
         if (requestedVersionRef == null) {
             return -1;
         }
         for (int i = 0; i < allVersions.size(); i++) {
-            Ref ref = allVersions.get(i);
+            NodeRef ref = allVersions.get(i);
             if (requestedVersionRef.equals(ref)) {
                 return i;
             }
@@ -409,10 +410,10 @@ public class VersionQuery {
         return -1;
     }
 
-    private List<Ref> getAllInAscendingOrder(final GeoGIT ggit, final Iterator<RevCommit> commits,
-            final String featureId) throws Exception {
+    private List<NodeRef> getAllInAscendingOrder(final GeoGIT ggit,
+            final Iterator<RevCommit> commits, final String featureId) throws Exception {
 
-        LinkedList<Ref> featureRefs = new LinkedList<Ref>();
+        LinkedList<NodeRef> featureRefs = new LinkedList<NodeRef>();
 
         final List<String> path = path(featureId);
         // find all commits where this feature is touched
@@ -446,7 +447,7 @@ public class VersionQuery {
      *         geogit HEAD if {@code version == null}, or {@code null} if such a feature does not
      *         exist.
      */
-    private Ref extractRequestedVersion(final GeoGIT ggit, final String featureId,
+    private NodeRef extractRequestedVersion(final GeoGIT ggit, final String featureId,
             final String version) {
         final Repository repository = ggit.getRepository();
         if (version != null) {
@@ -456,13 +457,13 @@ public class VersionQuery {
             boolean exists = stagingDatabase.exists(versionedId);
             // Ref rootTreeChild = repository.getRootTreeChild(path(featureId));
             if (exists) {
-                return new Ref(featureId, versionedId, TYPE.BLOB);
+                return new NodeRef(featureId, versionedId, TYPE.BLOB);
             }
             return null;
         }
         // no version specified, find out the latest
         List<String> path = path(featureId);
-        Ref currFeatureRef = repository.getRootTreeChild(path);
+        NodeRef currFeatureRef = repository.getRootTreeChild(path);
         if (currFeatureRef == null) {
             // feature does not exist at the current repository state
             return null;

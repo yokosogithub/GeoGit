@@ -17,10 +17,10 @@ import org.apache.commons.io.FileUtils;
 import org.geogit.api.DefaultPlatform;
 import org.geogit.api.GeoGIT;
 import org.geogit.api.GeogitModule;
+import org.geogit.api.NodeRef;
 import org.geogit.api.ObjectId;
 import org.geogit.api.Platform;
 import org.geogit.api.PorcelainCommands;
-import org.geogit.api.Ref;
 import org.geogit.api.RevCommit;
 import org.geogit.command.plumbing.PlumbingCommands;
 import org.geogit.repository.Repository;
@@ -266,8 +266,8 @@ public abstract class RepositoryTestCase {
         String localPart = name.getLocalPart();
         String id = f.getIdentifier().getID();
 
-        Ref ref = index.inserted(getRepository().newFeatureWriter(f), f.getBounds(), namespaceURI,
-                localPart, id);
+        NodeRef ref = index.inserted(getRepository().newFeatureWriter(f), f.getBounds(),
+                namespaceURI, localPart, id);
         ObjectId objectId = ref.getObjectId();
         return objectId;
     }

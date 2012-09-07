@@ -8,7 +8,10 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 
+import javax.annotation.Nullable;
+
 import org.geogit.api.MutableTree;
+import org.geogit.api.NodeRef;
 import org.geogit.api.ObjectId;
 import org.geogit.api.Ref;
 import org.geogit.api.RevObject.TYPE;
@@ -18,6 +21,7 @@ import org.geogit.storage.ObjectSerialisingFactory;
 import org.geogit.storage.RefDatabase;
 import org.geogit.storage.RevSHA1Tree;
 
+import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.collect.Iterators;
@@ -72,7 +76,7 @@ public class JERefDatabase implements RefDatabase {
     private void condCreate(final String refName, TYPE type) {
         RevTree refsTree = getRefsTree();
 
-        Ref child = refsTree.get(refName);
+        NodeRef child = refsTree.get(refName);
         if (null == child) {
             put(new Ref(refName, ObjectId.NULL, type));
         }
@@ -119,8 +123,9 @@ public class JERefDatabase implements RefDatabase {
     public Ref getRef(final String name) {
         Preconditions.checkNotNull(name, "Ref name can't be null");
         RevTree refsTree = getRefsTree();
-        Ref child = refsTree.get(name);
-        return child;
+        NodeRef child = refsTree.get(name);
+        return child == null ? null
+                : new Ref(child.getName(), child.getObjectId(), child.getType());
     }
 
     /**
@@ -134,13 +139,20 @@ public class JERefDatabase implements RefDatabase {
         List<Ref> refs = new LinkedList<Ref>();
         RevTree refsTree = getRefsTree();
 
-        Iterator<Ref> iterator = refsTree.iterator(new Predicate<Ref>() {
-            public boolean apply(Ref input) {
+        Iterator<NodeRef> iterator = refsTree.iterator(new Predicate<NodeRef>() {
+            public boolean apply(NodeRef input) {
                 return input.getName().startsWith(prefix);
             }
         });
 
-        Iterators.addAll(refs, iterator);
+        Iterators.addAll(refs, Iterators.transform(iterator, new Function<NodeRef, Ref>() {
+
+            @Override
+            public Ref apply(@Nullable NodeRef input) {
+                return input == null ? null : new Ref(input.getName(), input.getObjectId(), input
+                        .getType());
+            }
+        }));
         return refs;
     }
 
@@ -171,12 +183,12 @@ public class JERefDatabase implements RefDatabase {
         Preconditions.checkNotNull(ref.getObjectId());
 
         RevTree refsTree = getRefsTree();
-        Ref oldTarget = refsTree.get(ref.getName());
-        if (oldTarget != null && oldTarget.equals(ref)) {
+        NodeRef oldTarget = refsTree.get(ref.getName());
+        if (oldTarget != null && oldTarget.getObjectId().equals(ref.getObjectId())) {
             return false;
         }
         refsTree = refsTree.mutable();
-        ((MutableTree) refsTree).put(ref);
+        ((MutableTree) refsTree).put(new NodeRef(ref.getName(), ref.getObjectId(), ref.getType()));
         try {
             refsDb.put(REFS_TREE_ID, serialFactory.createRevTreeWriter(refsTree));
             // db.put(REFS_TREE_ID, new BxmlRevTreeWriter(refsTree));

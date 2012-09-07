@@ -20,8 +20,8 @@ import java.io.IOException;
 import java.util.Iterator;
 
 import org.geogit.api.GeoGIT;
+import org.geogit.api.NodeRef;
 import org.geogit.api.ObjectId;
-import org.geogit.api.Ref;
 import org.geogit.storage.ObjectReader;
 import org.geogit.storage.StagingDatabase;
 import org.geotools.data.Query;
@@ -49,34 +49,34 @@ public class QueryFeatureCollector implements Iterable<Feature> {
     public Iterator<Feature> iterator() {
 
         VersionQuery versionQuery = new VersionQuery(geogit, featureType.getName());
-        Iterator<Ref> featureRefs;
+        Iterator<NodeRef> featureNodeRefs;
         try {
-            featureRefs = versionQuery.getByQuery(query);
+            featureNodeRefs = versionQuery.getByQuery(query);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
 
-        Iterator<Feature> features = Iterators.transform(featureRefs, new RefToFeature(geogit,
-                featureType));
+        Iterator<Feature> features = Iterators.transform(featureNodeRefs, new NodeRefToFeature(
+                geogit, featureType));
 
         return features;
     }
 
-    private final class RefToFeature implements Function<Ref, Feature> {
+    private final class NodeRefToFeature implements Function<NodeRef, Feature> {
 
         private final GeoGIT geogit;
 
         private final FeatureType type;
 
-        public RefToFeature(final GeoGIT repo, final FeatureType type) {
+        public NodeRefToFeature(final GeoGIT repo, final FeatureType type) {
             this.geogit = repo;
             this.type = type;
         }
 
         @Override
-        public Feature apply(final Ref featureRef) {
-            String featureId = featureRef.getName();
-            ObjectId contentId = featureRef.getObjectId();
+        public Feature apply(final NodeRef featureNodeRef) {
+            String featureId = featureNodeRef.getName();
+            ObjectId contentId = featureNodeRef.getObjectId();
             StagingDatabase database = geogit.getRepository().getIndex().getDatabase();
             Feature feature;
             try {
@@ -89,7 +89,7 @@ public class QueryFeatureCollector implements Iterable<Feature> {
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
-            return VersionedFeatureWrapper.wrap(feature, featureRef.getObjectId().toString());
+            return VersionedFeatureWrapper.wrap(feature, featureNodeRef.getObjectId().toString());
         }
 
     }

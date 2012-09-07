@@ -21,9 +21,9 @@ import javax.xml.parsers.DocumentBuilderFactory;
 
 import org.custommonkey.xmlunit.XMLAssert;
 import org.geogit.api.MutableTree;
+import org.geogit.api.NodeRef;
 import org.geogit.api.ObjectId;
 import org.geogit.api.PrintTreeVisitor;
-import org.geogit.api.Ref;
 import org.geogit.api.RevObject.TYPE;
 import org.geogit.api.RevTree;
 import org.geogit.api.TreeVisitor;
@@ -89,7 +89,7 @@ public class RevSHA1TreeTest extends RepositoryTestCase {
             }
             String key = "Feature." + i;
             ObjectId oid = ObjectId.forString(key);
-            Ref ref = tree.get(key);
+            NodeRef ref = tree.get(key);
             assertNotNull(ref);
             assertEquals(key, oid, ref.getObjectId());
         }
@@ -114,7 +114,7 @@ public class RevSHA1TreeTest extends RepositoryTestCase {
                 return true;
             }
 
-            public boolean visitEntry(final Ref entry) {
+            public boolean visitEntry(final NodeRef entry) {
                 if (i % 10 == 0) {
                     removedKeys.add(entry.getName());
                 }
@@ -188,7 +188,7 @@ public class RevSHA1TreeTest extends RepositoryTestCase {
         for (int i = 0; i < size / 2; i += 2) {
             String key = "Feature." + i;
             ObjectId otherId = ObjectId.forString(key + "changed");
-            ((MutableTree) tree).put(new Ref(key, otherId, TYPE.BLOB));
+            ((MutableTree) tree).put(new NodeRef(key, otherId, TYPE.BLOB));
         }
         final int expected = size;
         size = tree.size().intValue();
@@ -208,7 +208,7 @@ public class RevSHA1TreeTest extends RepositoryTestCase {
         ObjectId treeId = createAndSaveTree(numEntries, true);
         RevTree tree = odb.get(treeId, getRepository().newRevTreeReader(odb, 0));
 
-        Iterator<Ref> iterator = tree.iterator(null);
+        Iterator<NodeRef> iterator = tree.iterator(null);
         assertNotNull(iterator);
         int count = 0;
         while (iterator.hasNext()) {
@@ -291,7 +291,7 @@ public class RevSHA1TreeTest extends RepositoryTestCase {
         ObjectId oid;
         key = "Feature." + i;
         oid = ObjectId.forString(key);
-        tree.put(new Ref(key, oid, TYPE.BLOB));
+        tree.put(new NodeRef(key, oid, TYPE.BLOB));
     }
 
     public static void main(String[] argv) {

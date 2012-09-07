@@ -8,8 +8,8 @@ import java.io.IOException;
 import java.io.OutputStream;
 
 import org.geogit.api.MutableTree;
+import org.geogit.api.NodeRef;
 import org.geogit.api.ObjectId;
-import org.geogit.api.Ref;
 import org.geogit.api.RevTree;
 import org.geogit.api.TreeVisitor;
 import org.geogit.storage.ObjectWriter;
@@ -58,9 +58,9 @@ class HessianRevTreeWriter extends HessianRevWriter implements ObjectWriter<RevT
         }
 
         @Override
-        public boolean visitEntry(Ref ref) {
+        public boolean visitEntry(NodeRef ref) {
             try {
-                HessianRevTreeWriter.this.writeRef(hout, ref);
+                HessianRevTreeWriter.this.writeNodeRef(hout, ref);
             } catch (IOException ex) {
                 Throwables.propagate(ex);
             }

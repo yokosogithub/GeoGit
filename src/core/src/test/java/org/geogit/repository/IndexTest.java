@@ -13,6 +13,7 @@ import static org.junit.Assert.assertTrue;
 import java.io.PrintWriter;
 
 import org.geogit.api.DiffEntry;
+import org.geogit.api.NodeRef;
 import org.geogit.api.ObjectId;
 import org.geogit.api.PrintVisitor;
 import org.geogit.api.Ref;
@@ -161,7 +162,7 @@ public class IndexTest extends RepositoryTestCase {
         // staged2.accept(new PrintVisitor(index.getDatabase(), new PrintWriter(System.err)));
 
         // check feature1_2, feature1_3 and feature2_1
-        Ref treeChild;
+        NodeRef treeChild;
         assertNotNull(treeChild = indexDb.findStaged(pointsNs, pointsName, idP2).getNewObject());
         assertEquals(oId1_2, treeChild.getObjectId());
 
@@ -251,7 +252,7 @@ public class IndexTest extends RepositoryTestCase {
             newRepoTree.accept(new PrintVisitor(repo, new PrintWriter(System.err)));
 
             // check feature1_2, feature1_2 and feature2_1
-            Ref treeChild;
+            NodeRef treeChild;
             assertNotNull(treeChild = repoDb.getTreeChild(newRepoTree, pointsNs, pointsName, idP2));
             assertEquals(oId1_2, treeChild.getObjectId());
 

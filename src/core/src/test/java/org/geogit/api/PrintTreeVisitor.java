@@ -35,9 +35,10 @@ public class PrintTreeVisitor implements TreeVisitor {
     }
 
     /**
-     * @see org.geogit.api.TreeVisitor#visitEntry(org.geogit.api.Ref)
+     * @see org.geogit.api.TreeVisitor#visitEntry(NodeRef)
      */
-    public boolean visitEntry(final Ref ref) {
+    @Override
+    public boolean visitEntry(final NodeRef ref) {
         visitedEntries++;
         subtreeEntries++;
         printlimit++;
@@ -51,6 +52,7 @@ public class PrintTreeVisitor implements TreeVisitor {
         return true;
     }
 
+    @Override
     public boolean visitSubTree(final int bucket, final ObjectId treeId) {
 
         // if (unprinted > 0) {

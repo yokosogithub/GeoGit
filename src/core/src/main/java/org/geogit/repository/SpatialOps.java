@@ -4,7 +4,7 @@
  */
 package org.geogit.repository;
 
-import org.geogit.api.Ref;
+import org.geogit.api.NodeRef;
 import org.geogit.api.SpatialRef;
 import org.geotools.geometry.jts.JTS;
 import org.geotools.geometry.jts.ReferencedEnvelope;
@@ -68,7 +68,7 @@ public class SpatialOps {
         return target;
     }
 
-    public static BoundingBox aggregatedBounds(Ref oldObject, Ref newObject) {
+    public static BoundingBox aggregatedBounds(NodeRef oldObject, NodeRef newObject) {
         if (!(oldObject instanceof SpatialRef)) {
             return boundsOf(newObject);
         }
@@ -81,7 +81,7 @@ public class SpatialOps {
         return expandToInclude(bounds1, bounds2);
     }
 
-    private static BoundingBox boundsOf(Ref ref) {
+    private static BoundingBox boundsOf(NodeRef ref) {
         if (!(ref instanceof SpatialRef)) {
             return null;
         }

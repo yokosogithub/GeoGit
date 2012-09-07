@@ -19,7 +19,8 @@ package org.geotools.data.versioning.decorator;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
 
-import org.geogit.api.Ref;
+import org.geogit.api.NodeRef;
+import org.geogit.api.ObjectId;
 import org.geogit.api.RevTree;
 import org.geotools.feature.FeatureCollection;
 import org.geotools.feature.FeatureIterator;
@@ -69,7 +70,7 @@ class ResourceIdAssigningFeatureCollection<T extends FeatureType, F extends Feat
             }
             F next = iterator.next();
             String featureId = next.getIdentifier().getID();
-            Ref ref = currentTypeTree.get(featureId);
+            NodeRef ref = currentTypeTree.get(featureId);
             String versionId = ref == null ? null : ref.getObjectId().toString();
             return VersionedFeatureWrapper.wrap(next, versionId);
         }
@@ -108,7 +109,7 @@ class ResourceIdAssigningFeatureCollection<T extends FeatureType, F extends Feat
         public G next() throws NoSuchElementException {
             G next = features.next();
             String featureId = next.getIdentifier().getID();
-            Ref ref = typeTree.get(featureId);
+            NodeRef ref = typeTree.get(featureId);
             String versionId = ref == null ? null : ref.getObjectId().toString();
             return VersionedFeatureWrapper.wrap(next, versionId);
         }

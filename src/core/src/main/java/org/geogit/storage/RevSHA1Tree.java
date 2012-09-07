@@ -15,8 +15,8 @@ import java.util.TreeMap;
 
 import org.geogit.api.AbstractRevObject;
 import org.geogit.api.MutableTree;
+import org.geogit.api.NodeRef;
 import org.geogit.api.ObjectId;
-import org.geogit.api.Ref;
 import org.geogit.api.RevTree;
 import org.geogit.api.TreeVisitor;
 
@@ -47,9 +47,9 @@ public class RevSHA1Tree extends AbstractRevObject implements RevTree {
      * If split == true, holds references to other trees, if split == false, holds references to
      * data elements
      */
-    protected final TreeMap<String, Ref> myEntries;
+    protected final TreeMap<String, NodeRef> myEntries;
 
-    protected final TreeMap<Integer, Ref> mySubTrees;
+    protected final TreeMap<Integer, NodeRef> mySubTrees;
 
     public RevSHA1Tree(final ObjectDatabase db) {
         this(null, db, 0);
@@ -60,12 +60,13 @@ public class RevSHA1Tree extends AbstractRevObject implements RevTree {
     }
 
     public RevSHA1Tree(final ObjectId id, final ObjectDatabase db, final int order) {
-        this(id, db, order, new TreeMap<String, Ref>(), new TreeMap<Integer, Ref>(),
+        this(id, db, order, new TreeMap<String, NodeRef>(), new TreeMap<Integer, NodeRef>(),
                 BigInteger.ZERO);
     }
 
     public RevSHA1Tree(final ObjectId id, final ObjectDatabase db, final int order,
-            TreeMap<String, Ref> references, TreeMap<Integer, Ref> subTrees, final BigInteger size) {
+            TreeMap<String, NodeRef> references, TreeMap<Integer, NodeRef> subTrees,
+            final BigInteger size) {
         super(id, TYPE.TREE);
         this.db = db;
         this.depth = order;
@@ -97,13 +98,13 @@ public class RevSHA1Tree extends AbstractRevObject implements RevTree {
         if (mySubTrees.size() > 0) {
             final int childDepth = this.depth + 1;
             Integer bucket;
-            Ref subtreeRef;
+            NodeRef subtreeRef;
             ObjectId subtreeId;
             RevSHA1Tree subtree;
 
             ObjectSerialisingFactory serialFactory = db.getSerialFactory();
 
-            for (Map.Entry<Integer, Ref> e : mySubTrees.entrySet()) {
+            for (Map.Entry<Integer, NodeRef> e : mySubTrees.entrySet()) {
                 bucket = e.getKey();
                 subtreeRef = e.getValue();
                 subtreeId = subtreeRef.getObjectId();
@@ -116,14 +117,14 @@ public class RevSHA1Tree extends AbstractRevObject implements RevTree {
         }
     }
 
-    private void accept(final TreeVisitor visitor, final Map<String, Ref> ignore) {
+    private void accept(final TreeVisitor visitor, final Map<String, NodeRef> ignore) {
         if (myEntries.size() > 0) {
-            for (Map.Entry<String, Ref> e : myEntries.entrySet()) {
+            for (Map.Entry<String, NodeRef> e : myEntries.entrySet()) {
                 String key = e.getKey();
                 if (ignore.containsKey(key)) {
                     continue;
                 }
-                Ref value = e.getValue();
+                NodeRef value = e.getValue();
                 if (!visitor.visitEntry(value)) {
                     return;
                 }
@@ -132,7 +133,7 @@ public class RevSHA1Tree extends AbstractRevObject implements RevTree {
     }
 
     void put(Integer bucket, ObjectId subtreeId) {
-        mySubTrees.put(bucket, new Ref("", subtreeId, TYPE.TREE));
+        mySubTrees.put(bucket, new NodeRef("", subtreeId, TYPE.TREE));
     }
 
     protected final Integer computeBucket(final String key) {
@@ -153,8 +154,8 @@ public class RevSHA1Tree extends AbstractRevObject implements RevTree {
      * @return
      */
     @Override
-    public Ref get(final String key) {
-        Ref value = null;
+    public NodeRef get(final String key) {
+        NodeRef value = null;
         if (myEntries.containsKey(key)) {
             value = myEntries.get(key);
             if (value == null) {
@@ -164,7 +165,7 @@ public class RevSHA1Tree extends AbstractRevObject implements RevTree {
         }
         if (value == null) {
             final Integer bucket = computeBucket(key);
-            final Ref subTreeRef = mySubTrees.get(bucket);
+            final NodeRef subTreeRef = mySubTrees.get(bucket);
             if (subTreeRef == null) {
                 value = null;
             } else {
@@ -216,7 +217,7 @@ public class RevSHA1Tree extends AbstractRevObject implements RevTree {
      */
     @SuppressWarnings("unchecked")
     @Override
-    public Iterator<Ref> iterator(Predicate<Ref> filter) {
+    public Iterator<NodeRef> iterator(Predicate<NodeRef> filter) {
         Preconditions
                 .checkState(isNormalized(),
                         "iterator() should only be called on a normalized tree to account for element deletions");
@@ -228,9 +229,9 @@ public class RevSHA1Tree extends AbstractRevObject implements RevTree {
             return Collections.EMPTY_SET.iterator();
         }
         if (!mySubTrees.isEmpty()) {
-            Iterator<Ref>[] iterators = new Iterator[mySubTrees.size()];
+            Iterator<NodeRef>[] iterators = new Iterator[mySubTrees.size()];
             int i = 0;
-            for (Ref subtreeRef : mySubTrees.values()) {
+            for (NodeRef subtreeRef : mySubTrees.values()) {
                 iterators[i] = new LazySubtreeIterator(this.db, subtreeRef.getObjectId(),
                         this.depth + 1, filter);
                 i++;
@@ -239,8 +240,8 @@ public class RevSHA1Tree extends AbstractRevObject implements RevTree {
         }
 
         // we have only content entries, return them in our internal order
-        Map<ObjectId, Ref> sorted = new TreeMap<ObjectId, Ref>();
-        for (Ref ref : myEntries.values()) {
+        Map<ObjectId, NodeRef> sorted = new TreeMap<ObjectId, NodeRef>();
+        for (NodeRef ref : myEntries.values()) {
             if (filter.apply(ref)) {
                 sorted.put(ObjectId.forString(ref.getName()), ref);
             }
@@ -248,7 +249,7 @@ public class RevSHA1Tree extends AbstractRevObject implements RevTree {
         return sorted.values().iterator();
     }
 
-    private class LazySubtreeIterator implements Iterator<Ref> {
+    private class LazySubtreeIterator implements Iterator<NodeRef> {
 
         private final ObjectDatabase db;
 
@@ -256,12 +257,12 @@ public class RevSHA1Tree extends AbstractRevObject implements RevTree {
 
         private final int depth;
 
-        private final Predicate<Ref> filter;
+        private final Predicate<NodeRef> filter;
 
-        private Iterator<Ref> subject;
+        private Iterator<NodeRef> subject;
 
         public LazySubtreeIterator(ObjectDatabase db, ObjectId objectId, int depth,
-                Predicate<Ref> filter) {
+                Predicate<NodeRef> filter) {
             this.db = db;
             this.objectId = objectId;
             this.depth = depth;
@@ -278,7 +279,7 @@ public class RevSHA1Tree extends AbstractRevObject implements RevTree {
             return subject.hasNext();
         }
 
-        public Ref next() {
+        public NodeRef next() {
             return subject.next();
         }
 

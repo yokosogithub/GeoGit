@@ -54,20 +54,20 @@ public class CommitOpTest extends RepositoryTestCase {
         RevTree root = repo.getTree(treeId);
         assertNotNull(root);
 
-        Ref nsTreeId = root.get(pointsNs);
+        NodeRef nsTreeId = root.get(pointsNs);
         assertNotNull(nsTreeId);
         // BLOBS.print(repo.getRawObject(nsTreeId), System.err);
         RevTree nstree = repo.getTree(nsTreeId.getObjectId());
         assertNotNull(nstree);
 
-        Ref typeTreeId = nstree.get(pointsName);
+        NodeRef typeTreeId = nstree.get(pointsName);
         assertNotNull(typeTreeId);
         // BLOBS.print(repo.getRawObject(typeTreeId), System.err);
         RevTree typeTree = repo.getTree(typeTreeId.getObjectId());
         assertNotNull(typeTree);
 
         String featureId = points1.getIdentifier().getID();
-        Ref featureBlobId = typeTree.get(featureId);
+        NodeRef featureBlobId = typeTree.get(featureId);
         assertNotNull(featureBlobId);
         assertEquals(oid1, featureBlobId.getObjectId());
 

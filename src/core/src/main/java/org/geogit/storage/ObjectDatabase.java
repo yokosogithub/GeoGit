@@ -9,8 +9,8 @@ import java.io.InputStream;
 import java.util.List;
 
 import org.geogit.api.MutableTree;
+import org.geogit.api.NodeRef;
 import org.geogit.api.ObjectId;
-import org.geogit.api.Ref;
 import org.geogit.api.RevTree;
 
 public interface ObjectDatabase {
@@ -87,9 +87,9 @@ public interface ObjectDatabase {
      */
     public MutableTree newTree();
 
-    public Ref getTreeChild(RevTree root, String... path);
+    public NodeRef getTreeChild(RevTree root, String... path);
 
-    public Ref getTreeChild(RevTree root, List<String> path);
+    public NodeRef getTreeChild(RevTree root, List<String> path);
 
     // public RevTree getTree(final ObjectId treeId);
     //

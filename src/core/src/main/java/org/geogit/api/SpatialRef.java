@@ -7,7 +7,7 @@ package org.geogit.api;
 import org.geogit.api.RevObject.TYPE;
 import org.opengis.geometry.BoundingBox;
 
-public class SpatialRef extends Ref {
+public class SpatialRef extends NodeRef {
 
     private BoundingBox bounds;
 

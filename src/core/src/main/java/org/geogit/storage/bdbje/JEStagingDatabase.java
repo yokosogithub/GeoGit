@@ -15,8 +15,8 @@ import java.util.SortedMap;
 
 import org.geogit.api.DiffEntry;
 import org.geogit.api.MutableTree;
+import org.geogit.api.NodeRef;
 import org.geogit.api.ObjectId;
-import org.geogit.api.Ref;
 import org.geogit.api.RevObject.TYPE;
 import org.geogit.api.RevTree;
 import org.geogit.api.SpatialRef;
@@ -228,8 +228,8 @@ public class JEStagingDatabase implements ObjectDatabase, StagingDatabase {
         public DiffEntry entryToObject(TupleInput input) {
 
             final List<String> path = pathBinding.entryToObject(input);
-            final Ref oldObject;
-            final Ref newObject;
+            final NodeRef oldObject;
+            final NodeRef newObject;
 
             boolean refPresent = input.readByte() == 1;
             if (refPresent) {
@@ -252,8 +252,8 @@ public class JEStagingDatabase implements ObjectDatabase, StagingDatabase {
         @Override
         public void objectToEntry(DiffEntry object, TupleOutput output) {
             final List<String> path = object.getPath();
-            final Ref oldObject = object.getOldObject();
-            final Ref newObject = object.getNewObject();
+            final NodeRef oldObject = object.getOldObject();
+            final NodeRef newObject = object.getNewObject();
 
             pathBinding.objectToEntry(path, output);
 
@@ -296,13 +296,13 @@ public class JEStagingDatabase implements ObjectDatabase, StagingDatabase {
         }
     }
 
-    private static class RefBinding extends TupleBinding<Ref> {
+    private static class RefBinding extends TupleBinding<NodeRef> {
         private static final int REF = 0;
 
         private static final int SPATIAL_REF = 1;
 
         @Override
-        public Ref entryToObject(TupleInput input) {
+        public NodeRef entryToObject(TupleInput input) {
             String name = input.readString();
             String typeStr = input.readString();
             TYPE type = TYPE.valueOf(typeStr);
@@ -311,7 +311,7 @@ public class JEStagingDatabase implements ObjectDatabase, StagingDatabase {
             input.readFast(raw);
             ObjectId objectId = new ObjectId(raw);
 
-            Ref ref;
+            NodeRef ref;
             final int trailingMark = input.readByte();
             if (SPATIAL_REF == trailingMark) {
                 String srs = input.readString();
@@ -331,13 +331,13 @@ public class JEStagingDatabase implements ObjectDatabase, StagingDatabase {
 
                 ref = new SpatialRef(name, objectId, type, bounds);
             } else {
-                ref = new Ref(name, objectId, type);
+                ref = new NodeRef(name, objectId, type);
             }
             return ref;
         }
 
         @Override
-        public void objectToEntry(Ref ref, TupleOutput output) {
+        public void objectToEntry(NodeRef ref, TupleOutput output) {
             String name = ref.getName();
             ObjectId objectId = ref.getObjectId();
             TYPE type = ref.getType();
@@ -621,7 +621,7 @@ public class JEStagingDatabase implements ObjectDatabase, StagingDatabase {
      */
     @Override
     public MutableTree getOrCreateSubTree(RevTree parent, List<String> childPath) {
-        Ref treeChild = repositoryDb.getTreeChild(parent, childPath);
+        NodeRef treeChild = repositoryDb.getTreeChild(parent, childPath);
         if (null != treeChild) {
             return repositoryDb.getOrCreateSubTree(parent, childPath);
         }
@@ -645,7 +645,7 @@ public class JEStagingDatabase implements ObjectDatabase, StagingDatabase {
      *      java.lang.String)
      */
     @Override
-    public Ref getTreeChild(RevTree root, String... path) {
+    public NodeRef getTreeChild(RevTree root, String... path) {
         return getTreeChild(root, Arrays.asList(path));
     }
 
@@ -656,8 +656,8 @@ public class JEStagingDatabase implements ObjectDatabase, StagingDatabase {
      * @see org.geogit.storage.StagingDatabase#getTreeChild(org.geogit.api.RevTree, java.util.List)
      */
     @Override
-    public Ref getTreeChild(RevTree root, List<String> path) {
-        Ref treeChild = stagingDb.getTreeChild(root, path);
+    public NodeRef getTreeChild(RevTree root, List<String> path) {
+        NodeRef treeChild = stagingDb.getTreeChild(root, path);
         if (null != treeChild) {
             return treeChild;
         }

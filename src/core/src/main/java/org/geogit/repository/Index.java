@@ -17,6 +17,7 @@ import javax.annotation.Nullable;
 import org.geogit.api.DiffEntry;
 import org.geogit.api.DiffEntry.ChangeType;
 import org.geogit.api.MutableTree;
+import org.geogit.api.NodeRef;
 import org.geogit.api.ObjectId;
 import org.geogit.api.Ref;
 import org.geogit.api.RevCommit;
@@ -59,9 +60,9 @@ import com.google.inject.Inject;
  * walk) the unstaged changes tree and the staged changes tree. And finding out what changes are
  * staged to be committed is performed through a diff tree walk comparing the staged changes tree
  * and the repository's head tree (or any other repository tree reference given to
- * {@link #writeTree(Ref)}).
+ * {@link #writeTree(NodeRef)}).
  * <p>
- * When staged changes are to be committed to the repository, the {@link #writeTree(Ref)} method
+ * When staged changes are to be committed to the repository, the {@link #writeTree(NodeRef)} method
  * shall be called with a reference to the repository root tree that the staged changes tree is to
  * be compared against (usually the HEAD tree ref).
  * 
@@ -112,7 +113,7 @@ public class Index implements StagingArea {
         ObjectWriter<RevTree> treeWriter;
         treeWriter = repository.newRevTreeWriter(emptyTree);
         ObjectId emptyTreeId = indexDatabase.getObjectDatabase().put(treeWriter);
-        Ref newTreeRef = new Ref(nodeId, emptyTreeId, TYPE.TREE);
+        NodeRef newTreeRef = new NodeRef(nodeId, emptyTreeId, TYPE.TREE);
 
         DiffEntry entry = DiffEntry.newInstance(null, newTreeRef, newTreePath);
         indexDatabase.putUnstaged(entry);
@@ -129,7 +130,7 @@ public class Index implements StagingArea {
 
         unstagedEntry = indexDatabase.findUnstaged(searchPath);
         if (unstagedEntry != null) {
-            Ref oldObject = null;
+            NodeRef oldObject = null;
             switch (unstagedEntry.getType()) {
             case DELETE:
                 // delete already unstaged
@@ -147,7 +148,7 @@ public class Index implements StagingArea {
             indexDatabase.putUnstaged(diffEntry);
             return true;
         } else if (null != (stagedEntry = indexDatabase.findStaged(searchPath))) {
-            Ref oldObject;
+            NodeRef oldObject;
             switch (stagedEntry.getType()) {
             case DELETE:
                 return false;
@@ -164,10 +165,10 @@ public class Index implements StagingArea {
             return true;
         }
 
-        Ref existingOrStaged = repository.getRootTreeChild(path);
+        NodeRef existingOrStaged = repository.getRootTreeChild(path);
         if (existingOrStaged != null) {
-            final Ref oldObject = existingOrStaged;
-            final Ref newObject = null;
+            final NodeRef oldObject = existingOrStaged;
+            final NodeRef newObject = null;
             DiffEntry deleteEntry = DiffEntry.newInstance(oldObject, newObject, searchPath);
             indexDatabase.putUnstaged(deleteEntry);
             return true;
@@ -176,7 +177,8 @@ public class Index implements StagingArea {
     }
 
     @Override
-    public Ref inserted(ObjectWriter<?> blob, BoundingBox bounds, String... path) throws Exception {
+    public NodeRef inserted(ObjectWriter<?> blob, BoundingBox bounds, String... path)
+            throws Exception {
 
         Preconditions.checkNotNull(blob);
         Preconditions.checkNotNull(path);
@@ -185,7 +187,7 @@ public class Index implements StagingArea {
         tuple = new Triplet<ObjectWriter<?>, BoundingBox, List<String>>(blob, bounds,
                 Arrays.asList(path));
 
-        List<Ref> inserted = new ArrayList<Ref>(1);
+        List<NodeRef> inserted = new ArrayList<NodeRef>(1);
 
         inserted(Iterators.singletonIterator(tuple), new NullProgressListener(), null, inserted);
         return inserted.get(0);
@@ -195,7 +197,7 @@ public class Index implements StagingArea {
     public void inserted(
             final Iterator<Triplet<ObjectWriter<?>, BoundingBox, List<String>>> objects,//
             final ProgressListener progress,//
-            final @Nullable Integer size, @Nullable final List<Ref> target) throws Exception {
+            final @Nullable Integer size, @Nullable final List<NodeRef> target) throws Exception {
 
         Preconditions.checkNotNull(objects);
         Preconditions.checkNotNull(progress);
@@ -222,9 +224,9 @@ public class Index implements StagingArea {
             final String nodeId = path.get(path.size() - 1);
 
             ObjectId objectId = indexDatabase.getObjectDatabase().put(object);
-            Ref objectRef;
+            NodeRef objectRef;
             if (bounds == null) {
-                objectRef = new Ref(nodeId, objectId, TYPE.BLOB);
+                objectRef = new NodeRef(nodeId, objectId, TYPE.BLOB);
             } else {
                 objectRef = new SpatialRef(nodeId, objectId, TYPE.BLOB, bounds);
             }
@@ -270,6 +272,10 @@ public class Index implements StagingArea {
         return writeTree(targetRef, new NullProgressListener());
     }
 
+    /**
+     * REVISIT: the Ref should be resolved by the caller and we should get the actual
+     * {@link RevTree} here instead
+     */
     @Override
     public Tuple<ObjectId, BoundingBox> writeTree(final Ref targetRef,
             final ProgressListener progress) throws Exception {
@@ -331,8 +337,8 @@ public class Index implements StagingArea {
                 changedTrees.put(entryParentPath, parentTree);
             }
 
-            final Ref oldObject = diffEntry.getOldObject();
-            final Ref newObject = diffEntry.getNewObject();
+            final NodeRef oldObject = diffEntry.getOldObject();
+            final NodeRef newObject = diffEntry.getNewObject();
             final ChangeType type = diffEntry.getType();
             switch (type) {
             case ADD:
@@ -376,8 +382,8 @@ public class Index implements StagingArea {
      * @param repositoryObjectInserter
      * @throws Exception
      */
-    private void deepMove(final Ref objectRef, final ObjectDatabase from, final ObjectDatabase to)
-            throws Exception {
+    private void deepMove(final NodeRef objectRef, final ObjectDatabase from,
+            final ObjectDatabase to) throws Exception {
 
         final InputStream raw = from.getRaw(objectRef.getObjectId());
         final ObjectId insertedId;
@@ -397,7 +403,7 @@ public class Index implements StagingArea {
             tree.accept(new TreeVisitor() {
 
                 @Override
-                public boolean visitEntry(final Ref ref) {
+                public boolean visitEntry(final NodeRef ref) {
                     try {
                         deepMove(ref, from, to);
                     } catch (Exception e) {

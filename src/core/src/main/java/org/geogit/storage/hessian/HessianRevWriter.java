@@ -9,6 +9,7 @@ import java.util.Collections;
 import java.util.Map;
 
 import org.apache.commons.collections.map.LRUMap;
+import org.geogit.api.NodeRef;
 import org.geogit.api.ObjectId;
 import org.geogit.api.Ref;
 import org.geogit.api.SpatialRef;
@@ -45,6 +46,13 @@ class HessianRevWriter {
     }
 
     protected void writeRef(Hessian2Output hout, Ref ref) throws IOException {
+        hout.writeInt(HessianRevReader.Node.REF.getValue());
+        hout.writeInt(ref.getType().value());
+        hout.writeString(ref.getName());
+        writeObjectId(hout, ref.getObjectId());
+    }
+
+    protected void writeNodeRef(Hessian2Output hout, NodeRef ref) throws IOException {
         BoundingBox bounds = null;
         if (ref instanceof SpatialRef) {
             bounds = ((SpatialRef) ref).getBounds();

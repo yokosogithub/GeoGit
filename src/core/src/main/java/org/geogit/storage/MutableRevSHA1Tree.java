@@ -15,8 +15,8 @@ import java.util.Set;
 import java.util.TreeMap;
 
 import org.geogit.api.MutableTree;
+import org.geogit.api.NodeRef;
 import org.geogit.api.ObjectId;
-import org.geogit.api.Ref;
 import org.geogit.api.RevTree;
 
 import com.google.common.base.Preconditions;
@@ -67,7 +67,7 @@ class MutableRevSHA1Tree extends RevSHA1Tree implements MutableTree {
     }
 
     void put(Integer bucket, ObjectId subtreeId) {
-        mySubTrees.put(bucket, new Ref("", subtreeId, TYPE.TREE));
+        mySubTrees.put(bucket, new NodeRef("", subtreeId, TYPE.TREE));
     }
 
     /**
@@ -82,10 +82,10 @@ class MutableRevSHA1Tree extends RevSHA1Tree implements MutableTree {
      * @param value non null
      */
     @Override
-    public void put(final Ref ref) {
+    public void put(final NodeRef ref) {
         Preconditions.checkNotNull(ref, "ref can't be null");
 
-        Ref oldCachedValue = myEntries.put(ref.getName(), ref);
+        NodeRef oldCachedValue = myEntries.put(ref.getName(), ref);
         if (myEntries.size() >= SPLIT_FACTOR) {
             // hit the split factor modification tolerance, lets normalize
             normalize();
@@ -107,19 +107,19 @@ class MutableRevSHA1Tree extends RevSHA1Tree implements MutableTree {
     }
 
     @Override
-    public Ref remove(final String key) {
+    public NodeRef remove(final String key) {
         Preconditions.checkNotNull(key, "key can't be null");
         final Integer bucket = computeBucket(key);
         if (null == mySubTrees.get(bucket)) {
             // we don't even have a subtree for this key's bucket, it's sure this tree doesn't
             // already hold a value for it
-            Ref removed = myEntries.remove(key);
+            NodeRef removed = myEntries.remove(key);
             if (removed != null) {
                 this.mutableSize = size().subtract(BigInteger.ONE);
             }
             return removed;
         } else {
-            Ref ref = this.get(key);
+            NodeRef ref = this.get(key);
             // there's a subtree this key's bucket, we don't know if the subtree contains it at all
             // and it'd be too expensive to find out just now, use null value signaling the removal
             // of the entry. normalize() is gonna take care of removing it from the subtree
@@ -164,12 +164,12 @@ class MutableRevSHA1Tree extends RevSHA1Tree implements MutableTree {
 
             // ignore this subtrees for computing the size later as by that time their size has been
             // already added
-            Set<Ref> ignoreForSizeComputation = new HashSet<Ref>();
+            Set<NodeRef> ignoreForSizeComputation = new HashSet<NodeRef>();
 
             // for each bucket retrieve/create the bucket's subtree and set its entries
             Iterator<Map.Entry<Integer, Set<String>>> it = entriesByBucket.entrySet().iterator();
 
-            Ref subtreeRef;
+            NodeRef subtreeRef;
             ObjectId subtreeId;
             MutableTree subtree;
 
@@ -190,7 +190,7 @@ class MutableRevSHA1Tree extends RevSHA1Tree implements MutableTree {
                     // subtree = db.get(subtreeId, new BxmlRevTreeReader(db, childOrder)).mutable();
                 }
                 for (String key : keys) {
-                    Ref value = myEntries.remove(key);
+                    NodeRef value = myEntries.remove(key);
                     if (value == null) {
                         subtree.remove(key);
                     } else {
@@ -200,7 +200,7 @@ class MutableRevSHA1Tree extends RevSHA1Tree implements MutableTree {
                 size = size.add(subtree.size());
                 subtreeId = this.db.put(serialFactory.createRevTreeWriter(subtree));
                 // subtreeId = this.db.put(new BxmlRevTreeWriter(subtree));
-                subtreeRef = new Ref("", subtreeId, TYPE.TREE);
+                subtreeRef = new NodeRef("", subtreeId, TYPE.TREE);
                 ignoreForSizeComputation.add(subtreeRef);
                 mySubTrees.put(bucket, subtreeRef);
             }
@@ -216,11 +216,11 @@ class MutableRevSHA1Tree extends RevSHA1Tree implements MutableTree {
     }
 
     private BigInteger computeSize(final BigInteger initialSize,
-            final Set<Ref> ignoreForSizeComputation) throws IOException {
+            final Set<NodeRef> ignoreForSizeComputation) throws IOException {
         final int childOrder = this.depth + 1;
         ObjectId subtreeId;
         BigInteger size = initialSize;
-        for (Ref ref : mySubTrees.values()) {
+        for (NodeRef ref : mySubTrees.values()) {
             if (ignoreForSizeComputation.contains(ref)) {
                 continue;
             }

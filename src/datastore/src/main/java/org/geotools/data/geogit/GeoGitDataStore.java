@@ -25,6 +25,7 @@ import java.util.logging.Logger;
 
 import org.geogit.api.GeoGIT;
 import org.geogit.api.MutableTree;
+import org.geogit.api.NodeRef;
 import org.geogit.api.ObjectId;
 import org.geogit.api.Ref;
 import org.geogit.api.RevObject.TYPE;
@@ -138,13 +139,13 @@ public class GeoGitDataStore implements VersioningDataStore {
                 + typesTreeRef);
 
         List<Name> names = new ArrayList<Name>();
-        for (Iterator<Ref> namespaces = namespacesTree.iterator(null); namespaces.hasNext();) {
-            final Ref namespaceRef = namespaces.next();
+        for (Iterator<NodeRef> namespaces = namespacesTree.iterator(null); namespaces.hasNext();) {
+            final NodeRef namespaceRef = namespaces.next();
             Preconditions.checkState(TYPE.TREE.equals(namespaceRef.getType()));
             final String nsUri = namespaceRef.getName();
             final RevTree typesTree = geogit.getRepository().getTree(namespaceRef.getObjectId());
-            for (Iterator<Ref> simpleNames = typesTree.iterator(null); simpleNames.hasNext();) {
-                final Ref typeNameRef = simpleNames.next();
+            for (Iterator<NodeRef> simpleNames = typesTree.iterator(null); simpleNames.hasNext();) {
+                final NodeRef typeNameRef = simpleNames.next();
                 final String simpleTypeName = typeNameRef.getName();
                 names.add(new NameImpl(nsUri, simpleTypeName));
             }
@@ -233,7 +234,7 @@ public class GeoGitDataStore implements VersioningDataStore {
             MutableTree namespaceTree = objectDatabase.getOrCreateSubTree(namespacesRootTree,
                     namespaceTreePath);
 
-            namespaceTree.put(new Ref(localName, featureTypeBlobId, TYPE.BLOB));
+            namespaceTree.put(new NodeRef(localName, featureTypeBlobId, TYPE.BLOB));
 
             final MutableTree root = namespacesRootTree.mutable();
             final ObjectId newTypeRefsTreeId;
@@ -270,7 +271,7 @@ public class GeoGitDataStore implements VersioningDataStore {
                 name.getNamespaceURI() == null ? NULL_NAMESPACE : name.getNamespaceURI(),
                 name.getLocalPart() };
 
-        final Ref typeRef = objectDatabase.getTreeChild(namespacesRootTree, path);
+        final NodeRef typeRef = objectDatabase.getTreeChild(namespacesRootTree, path);
         if (typeRef == null) {
             throw new SchemaNotFoundException(name.toString());
         }

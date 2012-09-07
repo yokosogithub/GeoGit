@@ -9,8 +9,8 @@ import java.io.InputStream;
 import java.math.BigInteger;
 import java.util.TreeMap;
 
+import org.geogit.api.NodeRef;
 import org.geogit.api.ObjectId;
-import org.geogit.api.Ref;
 import org.geogit.api.RevObject.TYPE;
 import org.geogit.api.RevTree;
 import org.geogit.storage.ObjectDatabase;
@@ -48,8 +48,8 @@ class HessianRevTreeReader extends HessianRevReader implements ObjectReader<RevT
 
             BigInteger size = new BigInteger(hin.readBytes());
 
-            TreeMap<String, Ref> references = new TreeMap<String, Ref>();
-            TreeMap<Integer, Ref> subtrees = new TreeMap<Integer, Ref>();
+            TreeMap<String, NodeRef> references = new TreeMap<String, NodeRef>();
+            TreeMap<Integer, NodeRef> subtrees = new TreeMap<Integer, NodeRef>();
 
             while (true) {
                 Node type = null;
@@ -59,7 +59,7 @@ class HessianRevTreeReader extends HessianRevReader implements ObjectReader<RevT
                     ex.printStackTrace();
                 }
                 if (type.equals(Node.REF)) {
-                    Ref entryRef = readRef(hin);
+                    NodeRef entryRef = readNodeRef(hin);
                     references.put(entryRef.getName(), entryRef);
                 } else if (type.equals(Node.TREE)) {
                     parseAndSetSubTree(hin, subtrees);
@@ -77,10 +77,10 @@ class HessianRevTreeReader extends HessianRevReader implements ObjectReader<RevT
         }
     }
 
-    private void parseAndSetSubTree(Hessian2Input hin, TreeMap<Integer, Ref> subtrees)
+    private void parseAndSetSubTree(Hessian2Input hin, TreeMap<Integer, NodeRef> subtrees)
             throws IOException {
         int bucket = hin.readInt();
         ObjectId id = readObjectId(hin);
-        subtrees.put(Integer.valueOf(bucket), new Ref("", id, TYPE.TREE));
+        subtrees.put(Integer.valueOf(bucket), new NodeRef("", id, TYPE.TREE));
     }
 }

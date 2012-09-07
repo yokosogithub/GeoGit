@@ -7,6 +7,7 @@ package org.geogit.repository;
 import java.util.Iterator;
 import java.util.List;
 
+import org.geogit.api.NodeRef;
 import org.geogit.api.ObjectId;
 import org.geogit.api.Ref;
 import org.geogit.api.RevTree;
@@ -50,7 +51,7 @@ public interface StagingArea {
      * @return the reference to the newly inserted object.
      * @throws Exception
      */
-    public abstract Ref inserted(final ObjectWriter<?> blob, final BoundingBox bounds,
+    public abstract NodeRef inserted(final ObjectWriter<?> blob, final BoundingBox bounds,
             final String... path) throws Exception;
 
     /**
@@ -64,7 +65,7 @@ public interface StagingArea {
      */
     public abstract void inserted(
             final Iterator<Triplet<ObjectWriter<?>, BoundingBox, List<String>>> objects,
-            final ProgressListener progress, final Integer size, final List<Ref> target)
+            final ProgressListener progress, final Integer size, final List<NodeRef> target)
             throws Exception;
 
     /**

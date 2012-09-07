@@ -28,6 +28,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import org.geogit.api.NodeRef;
 import org.geogit.api.Ref;
 import org.geogit.api.RevObject.TYPE;
 import org.geogit.api.RevTree;
@@ -94,7 +95,7 @@ public class GeoGitDataStoreTest extends RepositoryTestCase {
             List<String> path = Arrays.asList(typeName.getNamespaceURI(), typeName.getLocalPart());
             ObjectDatabase objectDatabase = repo.getObjectDatabase();
 
-            Ref typeRef = objectDatabase.getTreeChild(typesTree, path);
+            NodeRef typeRef = objectDatabase.getTreeChild(typesTree, path);
             assertNotNull(typeRef);
             assertEquals(TYPE.BLOB, typeRef.getType());
 

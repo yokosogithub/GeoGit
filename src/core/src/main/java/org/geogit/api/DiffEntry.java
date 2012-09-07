@@ -31,9 +31,9 @@ public class DiffEntry {
         DELETE
     }
 
-    private final Ref oldObject;
+    private final NodeRef oldObject;
 
-    private final Ref newObject;
+    private final NodeRef newObject;
 
     private final ChangeType type;
 
@@ -49,8 +49,8 @@ public class DiffEntry {
 
     private final BoundingBox where;
 
-    public DiffEntry(ChangeType type, ObjectId oldCommitId, ObjectId newCommitId, Ref oldObject,
-            Ref newObject, BoundingBox where, List<String> path) {
+    public DiffEntry(ChangeType type, ObjectId oldCommitId, ObjectId newCommitId,
+            NodeRef oldObject, NodeRef newObject, BoundingBox where, List<String> path) {
         this.type = type;
         this.oldCommitId = oldCommitId;
         this.newCommitId = newCommitId;
@@ -71,7 +71,7 @@ public class DiffEntry {
     /**
      * @return the old object, or {@code null} if {@link #getType()} is {@code ADD}
      */
-    public Ref getOldObject() {
+    public NodeRef getOldObject() {
         return oldObject;
     }
 
@@ -87,7 +87,7 @@ public class DiffEntry {
      * @return the id of the new version of the object, or {@code null} if {@link #getType()} is
      *         {@code DELETE}
      */
-    public Ref getNewObject() {
+    public NodeRef getNewObject() {
         return newObject;
     }
 
@@ -125,13 +125,13 @@ public class DiffEntry {
         return new StringBuilder(getType().toString()).append(' ').append(getPath()).toString();
     }
 
-    public static DiffEntry newInstance(final Ref oldObject, final Ref newObject,
+    public static DiffEntry newInstance(final NodeRef oldObject, final NodeRef newObject,
             final List<String> path) {
         return newInstance(null, null, oldObject, newObject, path);
     }
 
     public static DiffEntry newInstance(final ObjectId fromCommit, final ObjectId toCommit,
-            final Ref oldObject, final Ref newObject, final List<String> path) {
+            final NodeRef oldObject, final NodeRef newObject, final List<String> path) {
 
         Preconditions.checkArgument(oldObject != null || newObject != null);
 

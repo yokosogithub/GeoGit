@@ -35,9 +35,9 @@ public class DiffTreeWalk {
 
     private List<String> basePath;
 
-    private Ref oldObject;
+    private NodeRef oldObject;
 
-    private Ref newObject;
+    private NodeRef newObject;
 
     private ObjectId idFilter;
 
@@ -57,7 +57,7 @@ public class DiffTreeWalk {
         this.basePath = Collections.emptyList();
     }
 
-    public DiffTreeWalk(final ObjectDatabase db, final Ref oldObject, final Ref newObject) {
+    public DiffTreeWalk(final ObjectDatabase db, final NodeRef oldObject, final NodeRef newObject) {
         Preconditions.checkNotNull(db);
         Preconditions.checkNotNull(oldObject);
         Preconditions.checkNotNull(newObject);
@@ -150,21 +150,21 @@ public class DiffTreeWalk {
      * @param commitId
      * @throws IOException
      */
-    private Ref getFilteredObject(final ObjectId commitId) throws IOException {
+    private NodeRef getFilteredObject(final ObjectId commitId) throws IOException {
         if (commitId.isNull()) {
-            return new Ref("", ObjectId.NULL, TYPE.TREE);
+            return new NodeRef("", ObjectId.NULL, TYPE.TREE);
         }
         final RevCommit commit = objectDb.get(commitId, repo.newCommitReader());
         final ObjectId treeId = commit.getTreeId();
 
-        Ref ref;
+        NodeRef ref;
 
         final DepthSearch search = new DepthSearch(objectDb, repo.getSerializationFactory());
         if (!basePath.isEmpty()) {
             ref = search.find(treeId, basePath);
         } else if (idFilter != null) {
             RevTree tree = objectDb.get(treeId, repo.newRevTreeReader(objectDb));
-            Tuple<List<String>, Ref> found = search.find(tree, idFilter);
+            Tuple<List<String>, NodeRef> found = search.find(tree, idFilter);
             if (found != null) {
                 this.basePath = found.getFirst();
                 ref = found.getMiddle();
@@ -172,7 +172,7 @@ public class DiffTreeWalk {
                 ref = null;
             }
         } else {
-            ref = new Ref("", treeId, TYPE.TREE);
+            ref = new NodeRef("", treeId, TYPE.TREE);
         }
         return ref;
     }
@@ -222,7 +222,7 @@ public class DiffTreeWalk {
 
         public AddRemoveAllTreeIterator(final DiffEntry.ChangeType changeType,
                 final List<String> basePath, final ObjectId fromCommit, final ObjectId toCommit,
-                final Iterator<Ref> treeIterator, final ObjectDatabase db) {
+                final Iterator<NodeRef> treeIterator, final ObjectDatabase db) {
             super(basePath);
             this.oldCommit = fromCommit;
             this.newCommit = toCommit;
@@ -242,9 +242,9 @@ public class DiffTreeWalk {
                 return (DiffEntry) nextObj;
             }
 
-            Preconditions.checkState(nextObj instanceof Ref);
+            Preconditions.checkState(nextObj instanceof NodeRef);
 
-            final Ref next = (Ref) nextObj;
+            final NodeRef next = (NodeRef) nextObj;
             final List<String> childPath = childPath(next.getName());
 
             if (TYPE.TREE.equals(next.getType())) {
@@ -252,7 +252,7 @@ public class DiffTreeWalk {
 
                 tree = objectDb.get(next.getObjectId(), repo.newRevTreeReader(objectDb));
 
-                Predicate<Ref> filter = null;// TODO: propagate filter?
+                Predicate<NodeRef> filter = null;// TODO: propagate filter?
                 Iterator<?> childTreeIterator;
                 childTreeIterator = new AddRemoveAllTreeIterator(this.changeType, childPath,
                         oldCommit, newCommit, tree, objectDb);
@@ -262,8 +262,8 @@ public class DiffTreeWalk {
 
             Preconditions.checkState(TYPE.BLOB.equals(next.getType()));
 
-            Ref oldObject = null;
-            Ref newObject = null;
+            NodeRef oldObject = null;
+            NodeRef newObject = null;
             String name = next.getName();
             if (changeType == ChangeType.ADD) {
                 newObject = next;
@@ -299,9 +299,9 @@ public class DiffTreeWalk {
 
         private Iterator<DiffEntry> currSubTree;
 
-        private RewindableIterator<Ref> oldEntries;
+        private RewindableIterator<NodeRef> oldEntries;
 
-        private RewindableIterator<Ref> newEntries;
+        private RewindableIterator<NodeRef> newEntries;
 
         private final ObjectDatabase objectDb;
 
@@ -314,8 +314,8 @@ public class DiffTreeWalk {
             this.oldTree = fromTree;
             this.newTree = toTree;
             this.objectDb = db;
-            this.oldEntries = new RewindableIterator<Ref>(oldTree.iterator(null));
-            this.newEntries = new RewindableIterator<Ref>(newTree.iterator(null));
+            this.oldEntries = new RewindableIterator<NodeRef>(oldTree.iterator(null));
+            this.newEntries = new RewindableIterator<NodeRef>(newTree.iterator(null));
         }
 
         @Override
@@ -338,8 +338,8 @@ public class DiffTreeWalk {
             }
             Preconditions.checkState(currSubTree == null || !currSubTree.hasNext());
             Preconditions.checkState(oldEntries.hasNext() && newEntries.hasNext());
-            Ref nextOld = oldEntries.next();
-            Ref nextNew = newEntries.next();
+            NodeRef nextOld = oldEntries.next();
+            NodeRef nextNew = newEntries.next();
 
             while (nextOld.equals(nextNew)) {
                 // no change, keep going, but avoid too much recursion
@@ -355,7 +355,7 @@ public class DiffTreeWalk {
             final String newEntryName = nextNew.getName();
 
             final ChangeType changeType;
-            final Ref oldRef, newRef;
+            final NodeRef oldRef, newRef;
             final RevObject.TYPE objectType;
             final List<String> childPath;
 

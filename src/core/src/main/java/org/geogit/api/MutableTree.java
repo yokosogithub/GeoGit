@@ -6,9 +6,9 @@ package org.geogit.api;
 
 public interface MutableTree extends RevTree {
 
-    public abstract void put(final Ref ref);
+    public abstract void put(final NodeRef ref);
 
-    public abstract Ref remove(final String key);
+    public abstract NodeRef remove(final String key);
 
     public abstract void normalize();
 

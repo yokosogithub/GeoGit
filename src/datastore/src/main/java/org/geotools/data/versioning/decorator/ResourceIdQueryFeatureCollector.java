@@ -20,8 +20,8 @@ import java.util.Iterator;
 import java.util.Set;
 
 import org.geogit.api.GeoGIT;
+import org.geogit.api.NodeRef;
 import org.geogit.api.ObjectId;
-import org.geogit.api.Ref;
 import org.geogit.storage.ObjectReader;
 import org.geogit.storage.StagingDatabase;
 import org.geotools.data.Query;
@@ -53,42 +53,42 @@ public class ResourceIdQueryFeatureCollector implements Iterable<Feature> {
     @Override
     public Iterator<Feature> iterator() {
 
-        Iterator<Ref> featureRefs = Iterators.emptyIterator();
+        Iterator<NodeRef> featureNodeRefs = Iterators.emptyIterator();
 
         VersionQuery versionQuery = new VersionQuery(geogit, featureType.getName());
         try {
             for (ResourceId rid : resourceIds) {
-                Iterator<Ref> ridIterator;
+                Iterator<NodeRef> ridIterator;
                 ridIterator = versionQuery.get(rid);
-                featureRefs = Iterators.concat(featureRefs, ridIterator);
+                featureNodeRefs = Iterators.concat(featureNodeRefs, ridIterator);
             }
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
 
-        featureRefs = versionQuery.filterByQueryVersion(featureRefs, query);
+        featureNodeRefs = versionQuery.filterByQueryVersion(featureNodeRefs, query);
 
-        Iterator<Feature> features = Iterators.transform(featureRefs, new RefToFeature(geogit,
-                featureType));
+        Iterator<Feature> features = Iterators.transform(featureNodeRefs, new NodeRefToFeature(
+                geogit, featureType));
 
         return features;
     }
 
-    private final class RefToFeature implements Function<Ref, Feature> {
+    private final class NodeRefToFeature implements Function<NodeRef, Feature> {
 
         private final GeoGIT geogit;
 
         private final FeatureType type;
 
-        public RefToFeature(final GeoGIT geogit, final FeatureType type) {
+        public NodeRefToFeature(final GeoGIT geogit, final FeatureType type) {
             this.geogit = geogit;
             this.type = type;
         }
 
         @Override
-        public Feature apply(final Ref featureRef) {
-            String featureId = featureRef.getName();
-            ObjectId contentId = featureRef.getObjectId();
+        public Feature apply(final NodeRef featureNodeRef) {
+            String featureId = featureNodeRef.getName();
+            ObjectId contentId = featureNodeRef.getObjectId();
             StagingDatabase database = geogit.getRepository().getIndex().getDatabase();
             Feature feature;
 
@@ -96,7 +96,7 @@ public class ResourceIdQueryFeatureCollector implements Iterable<Feature> {
                     featureId);
             feature = database.get(contentId, featureReader);
 
-            return VersionedFeatureWrapper.wrap(feature, featureRef.getObjectId().toString());
+            return VersionedFeatureWrapper.wrap(feature, featureNodeRef.getObjectId().toString());
         }
 
     }

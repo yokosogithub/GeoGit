@@ -9,6 +9,7 @@ import java.util.Collections;
 import java.util.Map;
 
 import org.apache.commons.collections.map.LRUMap;
+import org.geogit.api.NodeRef;
 import org.geogit.api.ObjectId;
 import org.geogit.api.Ref;
 import org.geogit.api.RevObject.TYPE;
@@ -78,11 +79,20 @@ abstract class HessianRevReader {
         TYPE type = TYPE.valueOf(hin.readInt());
         String name = hin.readString();
         ObjectId id = readObjectId(hin);
+
+        Ref ref = new Ref(name, id, type);
+        return ref;
+    }
+
+    protected NodeRef readNodeRef(Hessian2Input hin) throws IOException {
+        TYPE type = TYPE.valueOf(hin.readInt());
+        String name = hin.readString();
+        ObjectId id = readObjectId(hin);
         BoundingBox bbox = readBBox(hin);
 
-        Ref ref;
+        NodeRef ref;
         if (bbox == null) {
-            ref = new Ref(name, id, type);
+            ref = new NodeRef(name, id, type);
         } else {
             ref = new SpatialRef(name, id, type, bbox);
         }

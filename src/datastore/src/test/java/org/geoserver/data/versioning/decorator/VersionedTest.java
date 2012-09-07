@@ -28,8 +28,8 @@ import java.util.List;
 import java.util.Set;
 
 import org.geogit.api.LogOp;
+import org.geogit.api.NodeRef;
 import org.geogit.api.ObjectId;
-import org.geogit.api.Ref;
 import org.geogit.api.RevCommit;
 import org.geogit.api.RevTree;
 import org.geotools.data.Query;
@@ -426,14 +426,14 @@ public class VersionedTest extends DecoratedTestCase {
     private List<SimpleFeature> getFeaturesFromLog(LogOp logOp, SimpleFeatureType featureType) {
         Name typeName = featureType.getName();
         try {
-            Set<Ref> refs = new HashSet<Ref>();
+            Set<NodeRef> refs = new HashSet<NodeRef>();
             Iterator<RevCommit> featureCommits = logOp.call();
             while (featureCommits.hasNext()) {
                 RevCommit cmt = featureCommits.next();
-                refs.addAll(getRefsByCommit(cmt, typeName));
+                refs.addAll(getNodeRefsByCommit(cmt, typeName));
             }
             List<SimpleFeature> feats = new ArrayList<SimpleFeature>();
-            for (Ref ref : refs) {
+            for (NodeRef ref : refs) {
                 SimpleFeature feat = (SimpleFeature) repo.getFeature(featureType, ref.getName(),
                         ref.getObjectId());
                 feats.add(feat);
@@ -447,22 +447,22 @@ public class VersionedTest extends DecoratedTestCase {
         }
     }
 
-    private List<Ref> getRefsByCommit(RevCommit commit, Name typeName) {
-        List<Ref> treeRefs = new ArrayList<Ref>();
+    private List<NodeRef> getNodeRefsByCommit(RevCommit commit, Name typeName) {
+        List<NodeRef> treeNodeRefs = new ArrayList<NodeRef>();
         if (commit != null) {
             ObjectId commitTreeId = commit.getTreeId();
             RevTree commitTree = repo.getTree(commitTreeId);
-            Ref nsRef = commitTree.get(typeName.getNamespaceURI());
-            RevTree nsTree = repo.getTree(nsRef.getObjectId());
-            Ref typeRef = nsTree.get(typeName.getLocalPart());
-            RevTree typeTree = repo.getTree(typeRef.getObjectId());
-            Iterator<Ref> it = typeTree.iterator(null);
+            NodeRef nsNodeRef = commitTree.get(typeName.getNamespaceURI());
+            RevTree nsTree = repo.getTree(nsNodeRef.getObjectId());
+            NodeRef typeNodeRef = nsTree.get(typeName.getLocalPart());
+            RevTree typeTree = repo.getTree(typeNodeRef.getObjectId());
+            Iterator<NodeRef> it = typeTree.iterator(null);
 
             while (it.hasNext()) {
-                Ref nextRef = it.next();
-                treeRefs.add(nextRef);
+                NodeRef nextNodeRef = it.next();
+                treeNodeRefs.add(nextNodeRef);
             }
         }
-        return treeRefs;
+        return treeNodeRefs;
     }
 }

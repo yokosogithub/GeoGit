@@ -31,7 +31,7 @@ public class PrintVisitor implements TreeVisitor {
     }
 
     @Override
-    public boolean visitEntry(Ref ref) {
+    public boolean visitEntry(NodeRef ref) {
         indent();
         println(ref.toString());
         if (ref.getType().equals(RevObject.TYPE.TREE)) {

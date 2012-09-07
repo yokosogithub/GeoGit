@@ -19,8 +19,8 @@ import javax.annotation.Nullable;
 
 import org.geogit.api.DiffEntry;
 import org.geogit.api.MutableTree;
+import org.geogit.api.NodeRef;
 import org.geogit.api.ObjectId;
-import org.geogit.api.Ref;
 import org.geogit.api.RevTree;
 import org.geogit.storage.ObjectDatabase;
 import org.geogit.storage.ObjectInserter;
@@ -348,7 +348,7 @@ public class HeapStagingDatabase implements ObjectDatabase, StagingDatabase {
 
     @Override
     public MutableTree getOrCreateSubTree(RevTree parent, List<String> childPath) {
-        Ref treeChild = repositoryDb.getTreeChild(parent, childPath);
+        NodeRef treeChild = repositoryDb.getTreeChild(parent, childPath);
         if (null != treeChild) {
             return repositoryDb.getOrCreateSubTree(parent, childPath);
         }
@@ -361,13 +361,13 @@ public class HeapStagingDatabase implements ObjectDatabase, StagingDatabase {
     }
 
     @Override
-    public Ref getTreeChild(RevTree root, String... path) {
+    public NodeRef getTreeChild(RevTree root, String... path) {
         return getTreeChild(root, Arrays.asList(path));
     }
 
     @Override
-    public Ref getTreeChild(RevTree root, List<String> path) {
-        Ref treeChild = stagingDb.getTreeChild(root, path);
+    public NodeRef getTreeChild(RevTree root, List<String> path) {
+        NodeRef treeChild = stagingDb.getTreeChild(root, path);
         if (null != treeChild) {
             return treeChild;
         }
