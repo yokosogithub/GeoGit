@@ -114,6 +114,7 @@ public class GeoGIT {
         if (repoFound) {
             try {
                 repository = injector.getInstance(Repository.class);
+                repository.create();
             } catch (Exception e) {
                 throw Throwables.propagate(e);
             }
