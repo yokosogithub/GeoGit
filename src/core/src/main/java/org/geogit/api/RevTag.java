@@ -16,8 +16,15 @@ public class RevTag extends AbstractRevObject {
 
     private ObjectId commit;
 
-    public RevTag(ObjectId id) {
+    public RevTag(final ObjectId id, final String name, final ObjectId commitId) {
         super(id, TYPE.TAG);
     }
 
+    public String getName() {
+        return name;
+    }
+
+    public ObjectId getCommitId() {
+        return commit;
+    }
 }

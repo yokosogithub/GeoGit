@@ -27,12 +27,12 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.logging.Logger;
 
-import org.geogit.api.CommitOp;
-import org.geogit.api.CommitStateResolver;
 import org.geogit.api.GeoGIT;
 import org.geogit.api.NodeRef;
-import org.geogit.api.NothingToCommitException;
 import org.geogit.api.RevCommit;
+import org.geogit.api.porcelain.CommitOp;
+import org.geogit.api.porcelain.CommitStateResolver;
+import org.geogit.api.porcelain.NothingToCommitException;
 import org.geogit.repository.StagingArea;
 import org.geogit.repository.WorkingTree;
 import org.geotools.data.Transaction;

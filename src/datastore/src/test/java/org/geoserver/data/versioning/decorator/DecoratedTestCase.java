@@ -48,7 +48,7 @@ import org.opengis.filter.Filter;
 import org.opengis.filter.FilterFactory2;
 import org.opengis.filter.identity.FeatureId;
 
-public abstract class DecoratedTestCase extends org.geogit.test.RepositoryTestCase {
+public abstract class DecoratedTestCase extends org.geogit.test.integration.RepositoryTestCase {
 
     protected static final String idS1 = "Sample.1";
 

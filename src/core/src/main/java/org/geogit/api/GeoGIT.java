@@ -9,9 +9,17 @@ import static com.google.common.base.Preconditions.checkState;
 import java.io.File;
 import java.net.URL;
 
-import org.geogit.command.plumbing.PlumbingCommands;
-import org.geogit.command.plumbing.ResolveGeogitDir;
-import org.geogit.command.porcelain.InitOp;
+import org.geogit.api.plumbing.ResolveGeogitDir;
+import org.geogit.api.porcelain.AddOp;
+import org.geogit.api.porcelain.CheckoutOp;
+import org.geogit.api.porcelain.CommitOp;
+import org.geogit.api.porcelain.CommitStateResolver;
+import org.geogit.api.porcelain.DiffOp;
+import org.geogit.api.porcelain.InitOp;
+import org.geogit.api.porcelain.LogOp;
+import org.geogit.di.GeogitModule;
+import org.geogit.di.PlumbingCommands;
+import org.geogit.di.PorcelainCommands;
 import org.geogit.repository.Repository;
 
 import com.google.common.base.Throwables;
@@ -126,7 +134,7 @@ public class GeoGIT {
      * Add a transaction record to the index
      */
     public AddOp add() {
-        return new AddOp(repository);
+        return command(AddOp.class);
     }
 
     /**
@@ -135,28 +143,29 @@ public class GeoGIT {
      * @return commit id
      */
     public CommitOp commit() {
-        return new CommitOp(repository, commitStateResolver);
+        CommitOp command = command(CommitOp.class);
+        return command;
     }
 
     /**
      * Check out a branch to the working tree
      */
     public CheckoutOp checkout() {
-        return new CheckoutOp(repository);
+        return command(CheckoutOp.class);
     }
 
     /**
      * Show changes between commits, commit and working tree, etc
      */
     public DiffOp diff() {
-        return new DiffOp(repository);
+        return command(DiffOp.class);
     }
 
     /**
      * Show commit logs
      */
     public LogOp log() {
-        return new LogOp(repository);
+        return command(LogOp.class);
     }
 
     /**

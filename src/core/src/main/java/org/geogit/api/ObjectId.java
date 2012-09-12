@@ -8,7 +8,6 @@ import java.security.MessageDigest;
 import java.util.Arrays;
 
 import com.google.common.base.Preconditions;
-import com.sleepycat.persist.model.Persistent;
 
 /**
  * A semi-mutable SHA-1 abstraction.
@@ -16,7 +15,6 @@ import com.sleepycat.persist.model.Persistent;
  * An ObjectId is mutable as long as it has not been assigned a raw value already
  * </p>
  */
-@Persistent
 public class ObjectId implements Comparable<ObjectId> {
     public static final ObjectId NULL = new ObjectId(new byte[20]);
 
@@ -29,7 +27,7 @@ public class ObjectId implements Comparable<ObjectId> {
     public ObjectId(byte[] raw) {
         Preconditions.checkNotNull(raw);
         Preconditions.checkArgument(raw.length == 20);
-        this.raw = raw;
+        this.raw = raw.clone();
     }
 
     public boolean isNull() {
@@ -68,7 +66,8 @@ public class ObjectId implements Comparable<ObjectId> {
      */
     public static ObjectId valueOf(final String hash) {
         Preconditions.checkNotNull(hash);
-        Preconditions.checkArgument(hash.length() == 40);
+        Preconditions.checkArgument(hash.length() == 40, hash,
+                String.format("Invalid hash string %s", hash));
 
         // this is perhaps the worse way of doing this...
 

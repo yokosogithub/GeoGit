@@ -10,7 +10,7 @@ package org.geogit.api;
  * @author groldan
  * @see RevCommit
  * @see RevTree
- * @see RevBlob
+ * @see RevFeature
  * @see RevTag
  */
 public interface RevObject {

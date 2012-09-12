@@ -218,11 +218,9 @@ public abstract class AbstractObjectDatabase implements ObjectDatabase {
      * @param tree
      * @param pathToTree
      * @return the id of the saved state of the modified root
-     * @throws Exception
      */
     @Override
-    public ObjectId writeBack(MutableTree root, final RevTree tree, final List<String> pathToTree)
-            throws Exception {
+    public ObjectId writeBack(MutableTree root, final RevTree tree, final List<String> pathToTree) {
 
         final ObjectId treeId = put(serialFactory.createRevTreeWriter(tree));
         final String treeName = pathToTree.get(pathToTree.size() - 1);

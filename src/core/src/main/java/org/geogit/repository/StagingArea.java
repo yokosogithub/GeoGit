@@ -119,4 +119,13 @@ public interface StagingArea {
     public Tuple<ObjectId, BoundingBox> writeTree(final Ref targetRef,
             final ProgressListener progress) throws Exception;
 
+    /**
+     * @param targetTreeId
+     * @param progress
+     * @return
+     * @throws Exception
+     */
+    Tuple<ObjectId, BoundingBox> writeTree(ObjectId targetTreeId, ProgressListener progress)
+            throws Exception;
+
 }

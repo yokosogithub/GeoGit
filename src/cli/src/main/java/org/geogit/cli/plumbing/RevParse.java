@@ -11,9 +11,9 @@ import java.net.URL;
 import jline.console.ConsoleReader;
 
 import org.geogit.api.GeoGIT;
+import org.geogit.api.plumbing.ResolveGeogitDir;
 import org.geogit.cli.AbstractCommand;
 import org.geogit.cli.GeogitCLI;
-import org.geogit.command.plumbing.ResolveGeogitDir;
 
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.Parameters;
@@ -58,7 +58,10 @@ public class RevParse extends AbstractCommand {
     private void resolveGeogitDir(GeogitCLI cli) throws Exception {
         ConsoleReader console = cli.getConsole();
 
-        GeoGIT geoGIT = new GeoGIT(cli.getPlatform().pwd());
+        GeoGIT geoGIT = cli.getGeogit();
+        if (geoGIT == null) {
+            geoGIT = new GeoGIT(cli.getPlatform().pwd());
+        }
         URL repoUrl = geoGIT.command(ResolveGeogitDir.class).call();
         if (null == repoUrl) {
             File currDir = cli.getPlatform().pwd();

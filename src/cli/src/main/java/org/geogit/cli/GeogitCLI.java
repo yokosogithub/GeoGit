@@ -21,7 +21,11 @@ import jline.console.CursorBuffer;
 import org.geogit.api.DefaultPlatform;
 import org.geogit.api.GeoGIT;
 import org.geogit.api.Platform;
-import org.geogit.command.plumbing.ResolveGeogitDir;
+import org.geogit.api.plumbing.ResolveGeogitDir;
+import org.geogit.di.GeogitModule;
+import org.geogit.di.PlumbingCommands;
+import org.geogit.di.PorcelainCommands;
+import org.geogit.storage.bdbje.JEStorageModule;
 import org.geotools.util.DefaultProgressListener;
 import org.geotools.util.logging.Logging;
 import org.opengis.util.ProgressListener;
@@ -103,7 +107,9 @@ public class GeogitCLI {
      *         directory.
      */
     private GeoGIT loadRepository() {
-        GeoGIT geogit = new GeoGIT(platform.pwd());
+        Injector inj = Guice.createInjector(new JEStorageModule(), new GeogitModule(),
+                new PlumbingCommands(), new PorcelainCommands());
+        GeoGIT geogit = new GeoGIT(inj, platform.pwd());
 
         if (null != geogit.command(ResolveGeogitDir.class).call()) {
             geogit.getRepository();

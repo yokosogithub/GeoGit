@@ -18,6 +18,7 @@ import java.io.IOException;
 
 import org.apache.commons.io.FileUtils;
 import org.geogit.api.Platform;
+import org.geogit.api.porcelain.InitOp;
 import org.geogit.repository.Repository;
 import org.junit.Before;
 import org.junit.Test;

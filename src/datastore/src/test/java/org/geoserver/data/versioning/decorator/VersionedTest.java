@@ -27,11 +27,11 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
-import org.geogit.api.LogOp;
 import org.geogit.api.NodeRef;
 import org.geogit.api.ObjectId;
 import org.geogit.api.RevCommit;
 import org.geogit.api.RevTree;
+import org.geogit.api.porcelain.LogOp;
 import org.geotools.data.Query;
 import org.geotools.data.simple.SimpleFeatureCollection;
 import org.geotools.data.simple.SimpleFeatureIterator;
@@ -410,7 +410,7 @@ public class VersionedTest extends DecoratedTestCase {
     private List<SimpleFeature> getLatestFeatures(SimpleFeatureType featureType) {
         Name typeName = featureType.getName();
 
-        LogOp logOp = new LogOp(repo);
+        LogOp logOp = geogit.command(LogOp.class);
         logOp.addPath(typeName.getNamespaceURI(), typeName.getLocalPart()).setLimit(1);
         return getFeaturesFromLog(logOp, featureType);
     }
@@ -418,7 +418,7 @@ public class VersionedTest extends DecoratedTestCase {
     private List<SimpleFeature> getAllFeatures(SimpleFeatureType featureType) {
         Name typeName = featureType.getName();
 
-        LogOp logOp = new LogOp(repo);
+        LogOp logOp = geogit.command(LogOp.class);
         logOp.addPath(typeName.getNamespaceURI(), typeName.getLocalPart());
         return getFeaturesFromLog(logOp, featureType);
     }
@@ -440,6 +440,7 @@ public class VersionedTest extends DecoratedTestCase {
             }
             return feats;
         } catch (Exception ex) {
+            ex.printStackTrace();
             /*
              * Need some logging.
              */

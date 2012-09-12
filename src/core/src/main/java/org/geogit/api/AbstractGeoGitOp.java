@@ -7,11 +7,12 @@ package org.geogit.api;
 import java.util.concurrent.Callable;
 import java.util.logging.Logger;
 
-import org.geogit.repository.Repository;
 import org.geotools.util.NullProgressListener;
 import org.geotools.util.SubProgressListener;
 import org.geotools.util.logging.Logging;
 import org.opengis.util.ProgressListener;
+
+import com.google.inject.Inject;
 
 public abstract class AbstractGeoGitOp<T> implements Callable<T> {
 
@@ -19,17 +20,21 @@ public abstract class AbstractGeoGitOp<T> implements Callable<T> {
 
     protected final Logger LOGGER;
 
-    private final Repository repository;
-
     private ProgressListener progressListener = NULL_PROGRESS_LISTENER;
 
-    public AbstractGeoGitOp(final Repository repository) {
-        this.repository = repository;
+    private CommandLocator commandLocator;
+
+    public AbstractGeoGitOp() {
         LOGGER = Logging.getLogger(getClass());
     }
 
-    public Repository getRepository() {
-        return repository;
+    public <T extends AbstractGeoGitOp<?>> T command(Class<T> commandClass) {
+        return commandLocator.command(commandClass);
+    }
+
+    @Inject
+    public void setCommandLocator(CommandLocator locator) {
+        this.commandLocator = locator;
     }
 
     public AbstractGeoGitOp<T> setProgressListener(final ProgressListener listener) {

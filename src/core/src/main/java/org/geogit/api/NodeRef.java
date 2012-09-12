@@ -16,12 +16,21 @@ public class NodeRef implements Comparable<NodeRef> {
 
     private ObjectId objectId;
 
+    private ObjectId metadataId;
+
     public NodeRef(final String name, final ObjectId oid, final RevObject.TYPE type) {
+        this(name, oid, ObjectId.NULL, type);
+    }
+
+    public NodeRef(final String name, final ObjectId oid, final ObjectId metadataId,
+            final RevObject.TYPE type) {
         checkNotNull(name);
         checkNotNull(oid);
+        checkNotNull(metadataId);
         checkNotNull(type);
         this.name = name;
         this.objectId = oid;
+        this.metadataId = ObjectId.NULL;
         this.type = type;
     }
 
@@ -37,6 +46,10 @@ public class NodeRef implements Comparable<NodeRef> {
      */
     public ObjectId getObjectId() {
         return objectId;
+    }
+
+    public ObjectId getMetadataId() {
+        return metadataId;
     }
 
     public RevObject.TYPE getType() {
@@ -74,7 +87,7 @@ public class NodeRef implements Comparable<NodeRef> {
 
     @Override
     public String toString() {
-        return new StringBuilder("Ref").append('[').append(name).append(" -> ").append(objectId)
-                .append(']').toString();
+        return new StringBuilder("NodeRef").append('[').append(name).append(" -> ")
+                .append(objectId).append(']').toString();
     }
 }

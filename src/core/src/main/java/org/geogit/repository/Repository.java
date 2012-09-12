@@ -4,20 +4,23 @@
  */
 package org.geogit.repository;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
 import java.util.NoSuchElementException;
 
+import org.geogit.api.AbstractGeoGitOp;
 import org.geogit.api.NodeRef;
 import org.geogit.api.ObjectId;
 import org.geogit.api.Ref;
-import org.geogit.api.RevBlob;
 import org.geogit.api.RevCommit;
+import org.geogit.api.RevFeature;
 import org.geogit.api.RevObject;
 import org.geogit.api.RevTag;
 import org.geogit.api.RevTree;
+import org.geogit.api.plumbing.RefParse;
+import org.geogit.api.plumbing.RevObjectParse;
+import org.geogit.api.plumbing.RevParse;
 import org.geogit.storage.BlobPrinter;
 import org.geogit.storage.BlobReader;
 import org.geogit.storage.ObjectDatabase;
@@ -30,10 +33,9 @@ import org.geotools.factory.Hints;
 import org.opengis.feature.Feature;
 import org.opengis.feature.simple.SimpleFeatureType;
 import org.opengis.feature.type.FeatureType;
-import org.opengis.feature.type.Name;
 
-import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
+import com.google.inject.Injector;
 
 /**
  * A repository is a collection of commits, each of which is an archive of what the project's
@@ -58,12 +60,8 @@ public class Repository {
     @Inject
     private ObjectSerialisingFactory serialFactory;
 
-    /**
-     * This is stored here for the convenience of knowing where to load the configuration file from
-     * 
-     * @deprecated
-     */
-    private File repositoryHome;
+    @Inject
+    private Injector injector;
 
     @Inject
     private RefDatabase refDatabase;
@@ -98,6 +96,13 @@ public class Repository {
         index.getDatabase().close();
     }
 
+    /**
+     * @param commandClass
+     */
+    public <T extends AbstractGeoGitOp<?>> T command(Class<T> commandClass) {
+        return injector.getInstance(commandClass);
+    }
+
     public WorkingTree getWorkingTree() {
         return workingTree;
     }
@@ -125,7 +130,7 @@ public class Repository {
                         return (T) getCommit(oid);
                     } else if (RevTree.class.equals(type)) {
                         return (T) getTree(oid);
-                    } else if (RevBlob.class.equals(type)) {
+                    } else if (RevFeature.class.equals(type)) {
                         return (T) getBlob(oid);
                     }
                 } catch (Exception wrongType) {
@@ -141,35 +146,36 @@ public class Repository {
      * @return the object the resolved reference points to.
      * @throws NoSuchElementException if {@code revstr} dosn't resolve to any object
      * @throws IllegalArgumentException if {@code revstr} resolves to more than one object.
+     * @deprecated use revpa
      */
-    public RevObject resolve(final String revstr) {
-        Ref ref = getRef(revstr);
-        if (ref != null) {
-            return parse(ref);
-        }
+    // public RevObject resolve(final String revstr) {
+    // Ref ref = getRef(revstr);
+    // if (ref != null) {
+    // return parse(ref);
+    // }
+    //
+    // // not a ref name, may be a partial object id?
+    // List<ObjectId> lookUp = getObjectDatabase().lookUp(revstr);
+    // if (lookUp.size() == 1) {
+    // final ObjectId objectId = lookUp.get(0);
+    // try {
+    // return getCommit(objectId);
+    // } catch (Exception e) {
+    // try {
+    // return getTree(objectId);
+    // } catch (Exception e2) {
+    // return getBlob(objectId);
+    // }
+    // }
+    // }
+    // if (lookUp.size() > 1) {
+    // throw new IllegalArgumentException("revstr '" + revstr
+    // + "' resolves to more than one object: " + lookUp);
+    // }
+    // throw new NoSuchElementException();
+    // }
 
-        // not a ref name, may be a partial object id?
-        List<ObjectId> lookUp = getObjectDatabase().lookUp(revstr);
-        if (lookUp.size() == 1) {
-            final ObjectId objectId = lookUp.get(0);
-            try {
-                return getCommit(objectId);
-            } catch (Exception e) {
-                try {
-                    return getTree(objectId);
-                } catch (Exception e2) {
-                    return getBlob(objectId);
-                }
-            }
-        }
-        if (lookUp.size() > 1) {
-            throw new IllegalArgumentException("revstr '" + revstr
-                    + "' resolves to more than one object: " + lookUp);
-        }
-        throw new NoSuchElementException();
-    }
-
-    public RevBlob getBlob(ObjectId objectId) {
+    public RevFeature getBlob(ObjectId objectId) {
         return getObjectDatabase().get(objectId, new BlobReader());
     }
 
@@ -203,20 +209,17 @@ public class Repository {
         }
     }
 
+    /**
+     */
     public Ref getRef(final String revStr) {
-        return getRefDatabase().getRef(revStr);
+        Ref ref = command(RefParse.class).setName(revStr).call();
+        return ref;
     }
 
+    /**
+     */
     public Ref getHead() {
         return getRef(Ref.HEAD);
-    }
-
-    public synchronized Ref updateRef(final Ref ref) {
-        boolean updated = getRefDatabase().put(ref);
-        Preconditions.checkState(updated);
-        Ref ref2 = getRef(ref.getName());
-        Preconditions.checkState(ref.equals(ref2));
-        return ref;
     }
 
     public boolean commitExists(final ObjectId id) {
@@ -264,18 +267,14 @@ public class Repository {
 
     public ObjectId getRootTreeId() {
         // find the root tree
-        Ref head = getRef(Ref.HEAD);
-        if (head == null) {
-            throw new IllegalStateException("Repository has no HEAD");
+        ObjectId commitId = command(RevParse.class).setRefSpec(Ref.HEAD).call();
+        if (commitId.isNull()) {
+            return commitId;
         }
-
-        final ObjectId headCommitId = head.getObjectId();
-        if (headCommitId.isNull()) {
-            return ObjectId.NULL;
-        }
-        final RevCommit lastCommit = getCommit(headCommitId);
-        final ObjectId rootTreeId = lastCommit.getTreeId();
-        return rootTreeId;
+        RevCommit commit = (RevCommit) command(RevObjectParse.class)
+                .setRefSpec(commitId.toString()).call();
+        ObjectId treeId = commit.getTreeId();
+        return treeId;
     }
 
     /**
@@ -327,16 +326,6 @@ public class Repository {
         return getObjectDatabase().getTreeChild(root, path);
     }
 
-    /**
-     * Get this repositories home directory on disk
-     * 
-     * @deprecated needs to be replaced by ConfigDatabase and/or RefDatabase
-     */
-    @Deprecated
-    public File getRepositoryHome() {
-        return repositoryHome;
-    }
-
     public ObjectWriter<RevCommit> newCommitWriter(RevCommit commit) {
         return serialFactory.createCommitWriter(commit);
     }
@@ -378,8 +367,8 @@ public class Repository {
         return serialFactory.createSimpleFeatureTypeWriter(type);
     }
 
-    public ObjectReader<SimpleFeatureType> newSimpleFeatureTypeReader(Name name) {
-        return serialFactory.createSimpleFeatureTypeReader(name);
+    public ObjectReader<SimpleFeatureType> newSimpleFeatureTypeReader() {
+        return serialFactory.createSimpleFeatureTypeReader();
     }
 
     public ObjectSerialisingFactory getSerializationFactory() {

@@ -1,18 +1,6 @@
-/*
- *    GeoTools - The Open Source Java GIS Toolkit
- *    http://geotools.org
- *
- *    (C) 2002-2011, Open Source Geospatial Foundation (OSGeo)
- *
- *    This library is free software; you can redistribute it and/or
- *    modify it under the terms of the GNU Lesser General Public
- *    License as published by the Free Software Foundation;
- *    version 2.1 of the License.
- *
- *    This library is distributed in the hope that it will be useful,
- *    but WITHOUT ANY WARRANTY; without even the implied warranty of
- *    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- *    Lesser General Public License for more details.
+/* Copyright (c) 2011 TOPP - www.openplans.org. All rights reserved.
+ * This code is licensed under the LGPL 2.1 license, available at the root
+ * application directory.
  */
 package org.geogit.api;
 
@@ -21,14 +9,15 @@ package org.geogit.api;
  */
 public class SymRef extends Ref {
 
-    private String target;
+    private Ref target;
 
-    public SymRef(String name, String target) {
-        super(name, ObjectId.NULL, null);
+    public SymRef(String name, Ref target) {
+        super(name, target.getObjectId(), target.getType());
         this.target = target;
     }
 
     public String getTarget() {
-        return target;
+        return target.getName();
     }
+
 }

@@ -25,20 +25,15 @@ import org.opengis.referencing.crs.CoordinateReferenceSystem;
 import org.opengis.util.InternationalString;
 
 import com.caucho.hessian.io.Hessian2Input;
-import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
 
 public class HessianSimpleFeatureTypeReader implements ObjectReader<SimpleFeatureType> {
-
-    private Name typeName;
 
     private SimpleFeatureTypeBuilder builder;
 
     private FeatureTypeFactory typeFactory;
 
-    public HessianSimpleFeatureTypeReader(final Name typeName) {
-        Preconditions.checkNotNull(typeName);
-        this.typeName = typeName;
+    public HessianSimpleFeatureTypeReader() {
         this.builder = new SimpleFeatureTypeBuilder();
         this.typeFactory = builder.getFeatureTypeFactory();
     }

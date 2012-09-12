@@ -65,10 +65,8 @@ public interface ObjectDatabase {
      * @param tree
      * @param pathToTree
      * @return the id of the saved state of the modified root
-     * @throws Exception
      */
-    public ObjectId writeBack(MutableTree root, final RevTree tree, final List<String> pathToTree)
-            throws Exception;
+    public ObjectId writeBack(MutableTree root, final RevTree tree, final List<String> pathToTree);
 
     public abstract ObjectInserter newObjectInserter();
 

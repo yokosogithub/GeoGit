@@ -20,6 +20,11 @@
       <artifactId>geogit-core</artifactId>
       <version>${project.version}</version>
     </dependency>
+    <dependency>
+      <groupId>org.geogit</groupId>
+      <artifactId>geogit-bdbje</artifactId>
+      <version>${project.version}</version>
+    </dependency>
         
     <dependency>
       <groupId>com.beust</groupId>

@@ -1,0 +1,142 @@
+/* Copyright (c) 2011 TOPP - www.openplans.org. All rights reserved.
+ * This code is licensed under the LGPL 2.1 license, available at the root
+ * application directory.
+ */
+
+package org.geogit.api.plumbing;
+
+import static org.geogit.api.ObjectId.forString;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+import static org.mockito.Matchers.anyObject;
+import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+
+import java.util.Map;
+
+import org.geogit.api.CommandLocator;
+import org.geogit.api.ObjectId;
+import org.geogit.api.Ref;
+import org.geogit.api.RevObject.TYPE;
+import org.geogit.api.SymRef;
+import org.geogit.storage.RefDatabase;
+import org.junit.Before;
+import org.junit.Test;
+
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableMap.Builder;
+
+/**
+ *
+ */
+public class RefParseTest {
+
+    private RefDatabase mockRefDb;
+
+    private RefParse command;
+
+    @Before
+    public void setUp() {
+
+        mockRefDb = mock(RefDatabase.class);
+
+        Builder<String, String> builder = ImmutableMap.builder();
+        Map<String, String> allRefs = builder//
+                .put("refs/heads/master", forString("refs/heads/master").toString())//
+                .put("refs/heads/branch1", forString("refs/heads/branch1").toString())//
+                .put("refs/heads/v1.1", forString("refs/heads/v1.1").toString())//
+                .put("refs/tags/tag1", forString("refs/tags/tag1").toString())//
+                .put("refs/tags/v1.1", forString("refs/tags/v1.1").toString())//
+                .put("refs/remotes/origin/master",
+                        forString("refs/remotes/origin/master").toString())//
+                .put("refs/remotes/origin/branch1",
+                        forString("refs/remotes/origin/branch1").toString())//
+                .put("refs/remotes/juan/master", forString("refs/remotes/juan/master").toString())//
+                .put("refs/remotes/juan/v1.1", forString("refs/remotes/juan/v1.1").toString())//
+                .build();
+
+        when(mockRefDb.getAll()).thenReturn(allRefs);
+        command = new RefParse(mockRefDb);
+        for (String name : allRefs.keySet()) {
+            when(mockRefDb.getRef(eq(name))).thenReturn(allRefs.get(name));
+        }
+
+        CommandLocator mockCommandLocator = mock(CommandLocator.class);
+        command.setCommandLocator(mockCommandLocator);
+        ResolveObjectType mockResolveObjectType = mock(ResolveObjectType.class);
+        when(mockCommandLocator.command(eq(ResolveObjectType.class))).thenReturn(
+                mockResolveObjectType);
+
+        when(mockResolveObjectType.setObjectId((ObjectId) anyObject())).thenReturn(
+                mockResolveObjectType);
+        when(mockResolveObjectType.call()).thenReturn(TYPE.COMMIT);
+    }
+
+    @Test
+    public void testPreconditions() {
+        try {
+            command.call();
+            fail("expected ISE");
+        } catch (IllegalStateException e) {
+            assertTrue(e.getMessage().contains("name has not been set"));
+        }
+    }
+
+    @Test
+    public void testNonExistentRef() {
+        assertNull(command.setName("HEADs").call());
+        assertNull(command.setName("remotes/upstream").call());
+        assertNull(command.setName("refs/remotes/origin/badbranch").call());
+    }
+
+    @Test
+    public void testParseCompleteRef() {
+        String refName = "refs/heads/master";
+
+        Ref ref = command.setName(refName).call();
+        assertNotNull(ref);
+        assertEquals(refName, ref.getName());
+        assertEquals(TYPE.COMMIT, ref.getType());
+        assertEquals(forString(refName), ref.getObjectId());
+
+        refName = "refs/remotes/juan/v1.1";
+
+        testRsolvePartial(refName, refName);
+    }
+
+    @Test
+    public void testResolvePartial() {
+        testRsolvePartial("master", "refs/heads/master");
+        testRsolvePartial("heads/master", "refs/heads/master");
+        testRsolvePartial("branch1", "refs/heads/branch1");
+        testRsolvePartial("v1.1", "refs/heads/v1.1");
+        testRsolvePartial("remotes/juan/master", "refs/remotes/juan/master");
+        testRsolvePartial("juan/master", "refs/remotes/juan/master");
+        testRsolvePartial("tags/v1.1", "refs/tags/v1.1");
+        testRsolvePartial("tag1", "refs/tags/tag1");
+    }
+
+    private void testRsolvePartial(String refSpec, String refName) {
+        Ref ref;
+        ref = command.setName(refSpec).call();
+        assertNotNull(ref);
+        assertEquals(refName, ref.getName());
+        assertEquals(TYPE.COMMIT, ref.getType());
+        assertEquals(forString(refName), ref.getObjectId());
+    }
+
+    @Test
+    public void testResolveSymbolicRef() {
+        when(mockRefDb.getRef(eq("HEAD"))).thenThrow(new IllegalArgumentException());
+        when(mockRefDb.getSymRef(eq("HEAD"))).thenReturn("refs/heads/branch1");
+        Ref ref = command.setName("HEAD").call();
+        assertNotNull(ref);
+        assertTrue(ref instanceof SymRef);
+        assertEquals("HEAD", ref.getName());
+        assertEquals("refs/heads/branch1", ((SymRef) ref).getTarget());
+    }
+}

@@ -29,9 +29,17 @@ public class RevSHA1Tree extends AbstractRevObject implements RevTree {
 
     /**
      * How many children to hold before splitting myself into subtrees
+     * 
+     * @todo make this configurable
      */
     public static final int SPLIT_FACTOR = 64 * 1024;
 
+    /**
+     * The canonical max size of a tree, hard limit, can't be changed or would affect the hash of
+     * trees
+     * 
+     * @todo evaluate what a good compromise would be re memory usagge/speed
+     */
     protected static final int NORMALIZED_SIZE_LIMIT = 4 * 1024;
 
     protected final int depth;

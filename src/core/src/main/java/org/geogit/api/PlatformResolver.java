@@ -4,10 +4,12 @@
  */
 package org.geogit.api;
 
+import org.geogit.api.porcelain.CommitStateResolver;
+
 public class PlatformResolver implements CommitStateResolver {
 
     /**
-     * @see org.CommitStateResolver.data.versioning.AuthenticationResolver#getAuthor()
+     * @see org.geogit.api.porcelain.CommitStateResolver.data.versioning.AuthenticationResolver#getAuthor()
      */
     @Override
     public String getAuthor() {

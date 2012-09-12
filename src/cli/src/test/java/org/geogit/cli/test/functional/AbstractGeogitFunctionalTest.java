@@ -21,11 +21,17 @@ import jline.console.ConsoleReader;
 import org.geogit.api.GeoGIT;
 import org.geogit.api.Platform;
 import org.geogit.cli.GeogitCLI;
+import org.geogit.di.GeogitModule;
+import org.geogit.di.PlumbingCommands;
+import org.geogit.di.PorcelainCommands;
+import org.geogit.storage.bdbje.JEStorageModule;
 import org.geotools.util.logging.Logging;
 
 import com.google.common.io.ByteStreams;
 import com.google.common.io.CharStreams;
 import com.google.common.io.InputSupplier;
+import com.google.inject.Guice;
+import com.google.inject.Injector;
 
 public abstract class AbstractGeogitFunctionalTest {
 
@@ -57,7 +63,9 @@ public abstract class AbstractGeogitFunctionalTest {
 
         ConsoleReader consoleReader = new ConsoleReader(stdIn, stdOut, new UnsupportedTerminal());
 
-        GeoGIT geogit = new GeoGIT(currentDirectory);
+        Injector injector = Guice.createInjector(new GeogitModule(), new JEStorageModule(),
+                new PlumbingCommands(), new PorcelainCommands());
+        GeoGIT geogit = new GeoGIT(injector, currentDirectory);
         try {
             GeogitCLI cli = new GeogitCLI(consoleReader);
             cli.setGeogit(geogit);

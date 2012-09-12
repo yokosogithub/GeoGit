@@ -19,7 +19,7 @@ package org.geotools.data.geogit;
 import java.util.Date;
 import java.util.logging.Logger;
 
-import org.geogit.api.CommitStateResolver;
+import org.geogit.api.porcelain.CommitStateResolver;
 import org.geotools.data.Transaction;
 import org.geotools.feature.type.DateUtil;
 import org.geotools.util.logging.Logging;

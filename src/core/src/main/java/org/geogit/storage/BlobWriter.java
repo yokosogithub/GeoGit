@@ -7,9 +7,9 @@ package org.geogit.storage;
 import java.io.IOException;
 import java.io.OutputStream;
 
-import org.geogit.api.RevBlob;
+import org.geogit.api.RevFeature;
 
-public class BlobWriter implements ObjectWriter<RevBlob> {
+public class BlobWriter implements ObjectWriter<RevFeature> {
 
     private final byte[] blob;
 

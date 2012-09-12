@@ -1,22 +1,11 @@
-/*
- *    GeoTools - The Open Source Java GIS Toolkit
- *    http://geotools.org
- *
- *    (C) 2002-2011, Open Source Geospatial Foundation (OSGeo)
- *
- *    This library is free software; you can redistribute it and/or
- *    modify it under the terms of the GNU Lesser General Public
- *    License as published by the Free Software Foundation;
- *    version 2.1 of the License.
- *
- *    This library is distributed in the hope that it will be useful,
- *    but WITHOUT ANY WARRANTY; without even the implied warranty of
- *    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- *    Lesser General Public License for more details.
+/* Copyright (c) 2011 TOPP - www.openplans.org. All rights reserved.
+ * This code is licensed under the LGPL 2.1 license, available at the root
+ * application directory.
  */
 package org.geogit.storage.memory;
 
-import java.util.List;
+import static com.google.common.base.Preconditions.checkNotNull;
+
 import java.util.Map;
 
 import org.geogit.api.ObjectId;
@@ -24,7 +13,9 @@ import org.geogit.api.Ref;
 import org.geogit.api.RevObject.TYPE;
 import org.geogit.storage.RefDatabase;
 
-import com.google.common.collect.Lists;
+import com.google.common.base.Preconditions;
+import com.google.common.base.Predicate;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
 
 /**
@@ -32,7 +23,7 @@ import com.google.common.collect.Maps;
  */
 public class HeapRefDatabase implements RefDatabase {
 
-    private Map<String, Ref> refs;
+    private Map<String, String> refs;
 
     /**
      * 
@@ -51,9 +42,9 @@ public class HeapRefDatabase implements RefDatabase {
     }
 
     private void condCreate(final String refName, TYPE type) {
-        Ref child = refs.get(refName);
+        String child = refs.get(refName);
         if (null == child) {
-            put(new Ref(refName, ObjectId.NULL, type));
+            putRef(refName, ObjectId.NULL.toString());
         }
     }
 
@@ -75,40 +66,8 @@ public class HeapRefDatabase implements RefDatabase {
      * @see org.geogit.storage.RefDatabase#getRef(java.lang.String)
      */
     @Override
-    public Ref getRef(String name) {
+    public String getRef(String name) {
         return refs.get(name);
-    }
-
-    /**
-     * @param prefix
-     * @return
-     * @see org.geogit.storage.RefDatabase#getRefs(java.lang.String)
-     */
-    @Override
-    public List<Ref> getRefs(String prefix) {
-        List<Ref> matches = Lists.newLinkedList();
-        for (Ref ref : refs.values()) {
-            if (ref.getName().startsWith(prefix)) {
-                matches.add(ref);
-            }
-        }
-        return matches;
-    }
-
-    /**
-     * @param oid
-     * @return
-     * @see org.geogit.storage.RefDatabase#getRefsPontingTo(org.geogit.api.ObjectId)
-     */
-    @Override
-    public List<Ref> getRefsPontingTo(ObjectId oid) {
-        List<Ref> matches = Lists.newLinkedList();
-        for (Ref ref : refs.values()) {
-            if (ref.getObjectId().equals(oid)) {
-                matches.add(ref);
-            }
-        }
-        return matches;
     }
 
     /**
@@ -117,13 +76,48 @@ public class HeapRefDatabase implements RefDatabase {
      * @see org.geogit.storage.RefDatabase#put(org.geogit.api.Ref)
      */
     @Override
-    public boolean put(Ref ref) {
-        Ref existing = refs.get(ref.getName());
-        if (existing != null && existing.equals(ref)) {
-            return false;
-        }
-        refs.put(ref.getName(), ref);
-        return true;
+    public String putRef(String name, String value) {
+        checkNotNull(name);
+        checkNotNull(value);
+        ObjectId.valueOf(value);
+        return refs.put(name, value);
+    }
+
+    @Override
+    public String remove(String refName) {
+        checkNotNull(refName);
+        String oldValue = refs.remove(refName);
+        return oldValue;
+    }
+
+    @Override
+    public String getSymRef(String name) {
+        checkNotNull(name);
+        String value = refs.get(name);
+        Preconditions.checkArgument(value == null || value.startsWith("ref: "),
+                "Not a symbolic reference: " + name);
+        return value == null ? null : value.substring("ref: ".length());
+    }
+
+    @Override
+    public String putSymRef(String name, String val) {
+        checkNotNull(name);
+        checkNotNull(val);
+        val = "ref: " + val;
+        return refs.put(name, val);
+    }
+
+    @Override
+    public Map<String, String> getAll() {
+
+        Predicate<String> keyPredicate = new Predicate<String>() {
+
+            @Override
+            public boolean apply(String refName) {
+                return refName.startsWith("refs/");
+            }
+        };
+        return Maps.filterKeys(ImmutableMap.copyOf(this.refs), keyPredicate);
     }
 
 }

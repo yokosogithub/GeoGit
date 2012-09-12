@@ -1,25 +1,10 @@
-/*
- *    GeoTools - The Open Source Java GIS Toolkit
- *    http://geotools.org
- *
- *    (C) 2002-2011, Open Source Geospatial Foundation (OSGeo)
- *
- *    This library is free software; you can redistribute it and/or
- *    modify it under the terms of the GNU Lesser General Public
- *    License as published by the Free Software Foundation;
- *    version 2.1 of the License.
- *
- *    This library is distributed in the hope that it will be useful,
- *    but WITHOUT ANY WARRANTY; without even the implied warranty of
- *    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- *    Lesser General Public License for more details.
+/* Copyright (c) 2011 TOPP - www.openplans.org. All rights reserved.
+ * This code is licensed under the LGPL 2.1 license, available at the root
+ * application directory.
  */
 package org.geogit.storage;
 
-import java.util.List;
-
-import org.geogit.api.ObjectId;
-import org.geogit.api.Ref;
+import java.util.Map;
 
 /**
  * @author groldan
@@ -31,17 +16,37 @@ public interface RefDatabase {
 
     public abstract void close();
 
-    public abstract Ref getRef(String name);
+    /**
+     * @param name the name of the ref (e.g. {@code "refs/remotes/origin"}, etc).
+     * @return the ref, or {@code null} if it doesn't exist
+     */
+    public abstract String getRef(String name);
 
-    public abstract List<Ref> getRefs(String prefix);
-
-    public abstract List<Ref> getRefsPontingTo(ObjectId oid);
+    /**
+     * @param name the name of the symbolic ref (e.g. {@code "HEAD"}, etc).
+     * @return the ref, or {@code null} if it doesn't exist
+     */
+    public abstract String getSymRef(String name);
 
     /**
      * @param ref
-     * @return {@code true} if the ref was inserted, {@code false} if it already existed and pointed
-     *         to the same object
+     * @return {@code null} if the ref didn't exist already, its old value otherwise
      */
-    public abstract boolean put(Ref ref);
+    public abstract String putRef(String refName, String refValue);
+
+    public abstract String putSymRef(String name, String val);
+
+    /**
+     * @param refName the name of the ref to remove (e.g. {@code "HEAD"},
+     *        {@code "refs/remotes/origin"}, etc).
+     * @return the value of the ref before removing it, or {@code null} if it didn't exist
+     */
+    public abstract String remove(String refName);
+
+    /**
+     * @return all known references under the "refs" namespace (i.e. not top level ones like HEAD,
+     *         etc), key'ed by ref name
+     */
+    public abstract Map<String, String> getAll();
 
 }

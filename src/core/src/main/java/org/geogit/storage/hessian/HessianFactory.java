@@ -5,6 +5,7 @@
 package org.geogit.storage.hessian;
 
 import org.geogit.api.RevCommit;
+import org.geogit.api.RevObject;
 import org.geogit.api.RevTree;
 import org.geogit.storage.BlobPrinter;
 import org.geogit.storage.ObjectDatabase;
@@ -15,7 +16,6 @@ import org.geotools.factory.Hints;
 import org.opengis.feature.Feature;
 import org.opengis.feature.simple.SimpleFeatureType;
 import org.opengis.feature.type.FeatureType;
-import org.opengis.feature.type.Name;
 
 public class HessianFactory implements ObjectSerialisingFactory {
 
@@ -73,11 +73,15 @@ public class HessianFactory implements ObjectSerialisingFactory {
     /**
      * @param name
      * @return
-     * @see org.geogit.storage.ObjectSerialisingFactory#createSimpleFeatureTypeReader(org.opengis.feature.type.Name)
+     * @see org.geogit.storage.ObjectSerialisingFactory#createSimpleFeatureTypeReader()
      */
     @Override
-    public ObjectReader<SimpleFeatureType> createSimpleFeatureTypeReader(Name name) {
-        return new HessianSimpleFeatureTypeReader(name);
+    public ObjectReader<SimpleFeatureType> createSimpleFeatureTypeReader() {
+        return new HessianSimpleFeatureTypeReader();
+    }
+
+    public ObjectReader<RevObject.TYPE> createObjectTypeReader() {
+        return new HessianObjectTypeReader();
     }
 
 }

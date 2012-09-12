@@ -32,9 +32,9 @@ import org.geogit.api.NodeRef;
 import org.geogit.api.Ref;
 import org.geogit.api.RevObject.TYPE;
 import org.geogit.api.RevTree;
+import org.geogit.api.plumbing.RefParse;
 import org.geogit.storage.ObjectDatabase;
-import org.geogit.storage.RefDatabase;
-import org.geogit.test.RepositoryTestCase;
+import org.geogit.test.integration.RepositoryTestCase;
 import org.geotools.data.SchemaNotFoundException;
 import org.geotools.data.geogit.GeoGitDataStore;
 import org.geotools.data.geogit.GeoGitFeatureSource;
@@ -59,8 +59,9 @@ public class GeoGitDataStoreTest extends RepositoryTestCase {
 
     @Test
     public void testCreateSchema() throws IOException {
-        final RefDatabase refDatabase = repo.getRefDatabase();
-        final Ref initialTypesTreeRef = refDatabase.getRef(GeoGitDataStore.TYPE_NAMES_REF_TREE);
+
+        final Ref initialTypesTreeRef = geogit.command(RefParse.class)
+                .setName(GeoGitDataStore.TYPE_NAMES_REF_TREE).call();
         assertNotNull(initialTypesTreeRef);
 
         final SimpleFeatureType featureType = super.linesType;
@@ -84,11 +85,11 @@ public class GeoGitDataStoreTest extends RepositoryTestCase {
     }
 
     private void assertTypeRefs(Set<SimpleFeatureType> expectedTypes) throws IOException {
-        final RefDatabase refDatabase = repo.getRefDatabase();
 
         for (SimpleFeatureType featureType : expectedTypes) {
             final Name typeName = featureType.getName();
-            final Ref typesTreeRef = refDatabase.getRef(GeoGitDataStore.TYPE_NAMES_REF_TREE);
+            final Ref typesTreeRef = geogit.command(RefParse.class)
+                    .setName(GeoGitDataStore.TYPE_NAMES_REF_TREE).call();
             assertNotNull(typesTreeRef);
 
             RevTree typesTree = repo.getTree(typesTreeRef.getObjectId());
@@ -100,7 +101,7 @@ public class GeoGitDataStoreTest extends RepositoryTestCase {
             assertEquals(TYPE.BLOB, typeRef.getType());
 
             SimpleFeatureType readType = objectDatabase.get(typeRef.getObjectId(), getRepository()
-                    .newSimpleFeatureTypeReader(featureType.getName()));
+                    .newSimpleFeatureTypeReader());
 
             assertEquals(featureType, readType);
 

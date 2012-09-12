@@ -4,6 +4,8 @@
  */
 package org.geogit.api;
 
+import javax.annotation.Nullable;
+
 import com.google.common.base.Preconditions;
 
 /**
@@ -21,12 +23,22 @@ public class Ref implements Comparable<Ref> {
     /**
      * By convention, name of the main branch
      */
-    public static final String MASTER = "master";
+    public static final String MASTER = "refs/heads/master";
 
     /**
      * Pointer to the latest commit in the current branch
      */
     public static final String HEAD = "HEAD";
+
+    /**
+     * Pointer to the current tree in the staging index
+     */
+    public static final String STAGE_HEAD = "STAGE_HEAD";
+
+    /**
+     * Pointer to the current tree in the working directory
+     */
+    public static final String WORK_HEAD = "WORK_HEAD";
 
     public static final String REFS_PREFIX = "refs/";
 
@@ -36,7 +48,7 @@ public class Ref implements Comparable<Ref> {
 
     public static final String HEADS_PREFIX = REFS_PREFIX + "heads/";
 
-    public static final String ORIGIN = "origin/";
+    public static final String ORIGIN = "refs/remotes/origin";
 
     private String name;
 
@@ -44,10 +56,10 @@ public class Ref implements Comparable<Ref> {
 
     private ObjectId objectId;
 
-    public Ref(final String name, final ObjectId oid, final RevObject.TYPE type) {
+    public Ref(final String name, final ObjectId oid, @Nullable final RevObject.TYPE type) {
         Preconditions.checkNotNull(name);
         Preconditions.checkNotNull(oid);
-        Preconditions.checkNotNull(type);
+        Preconditions.checkArgument(oid.isNull() || type != null);
         this.name = name;
         this.objectId = oid;
         this.type = type;

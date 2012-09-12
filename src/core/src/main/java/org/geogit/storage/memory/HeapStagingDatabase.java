@@ -28,7 +28,6 @@ import org.geogit.storage.ObjectReader;
 import org.geogit.storage.ObjectSerialisingFactory;
 import org.geogit.storage.ObjectWriter;
 import org.geogit.storage.StagingDatabase;
-import org.geogit.storage.bdbje.EnvironmentBuilder;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -55,8 +54,7 @@ public class HeapStagingDatabase implements ObjectDatabase, StagingDatabase {
      * @param stagingDb
      */
     @Inject
-    public HeapStagingDatabase(final ObjectDatabase repositoryDb,
-            final EnvironmentBuilder envBuilder) {
+    public HeapStagingDatabase(final ObjectDatabase repositoryDb) {
         this.repositoryDb = repositoryDb;
     }
 
@@ -336,8 +334,7 @@ public class HeapStagingDatabase implements ObjectDatabase, StagingDatabase {
     }
 
     @Override
-    public ObjectId writeBack(MutableTree root, RevTree tree, List<String> pathToTree)
-            throws Exception {
+    public ObjectId writeBack(MutableTree root, RevTree tree, List<String> pathToTree) {
         return stagingDb.writeBack(root, tree, pathToTree);
     }
 

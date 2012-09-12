@@ -9,14 +9,15 @@ import java.io.IOException;
 import java.io.InputStream;
 
 import org.geogit.api.ObjectId;
-import org.geogit.api.RevBlob;
+import org.geogit.api.RevFeature;
 
 import com.google.common.base.Throwables;
 
-public class BlobReader implements ObjectReader<RevBlob> {
+@Deprecated
+public class BlobReader implements ObjectReader<RevFeature> {
 
     @Override
-    public RevBlob read(ObjectId id, InputStream rawData) throws IllegalArgumentException {
+    public RevFeature read(ObjectId id, InputStream rawData) throws IllegalArgumentException {
         ByteArrayOutputStream output = new ByteArrayOutputStream();
         int c;
         try {
@@ -26,7 +27,7 @@ public class BlobReader implements ObjectReader<RevBlob> {
         } catch (IOException e) {
             throw Throwables.propagate(e);
         }
-        return new RevBlob(id, output.toByteArray());
+        return new RevFeature(id, output.toByteArray());
     }
 
 }

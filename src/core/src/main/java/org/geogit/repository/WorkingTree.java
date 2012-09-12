@@ -21,15 +21,17 @@ import org.geogit.api.DiffEntry;
 import org.geogit.api.MutableTree;
 import org.geogit.api.NodeRef;
 import org.geogit.api.ObjectId;
+import org.geogit.api.RevObject.TYPE;
 import org.geogit.api.RevTree;
 import org.geogit.api.TreeVisitor;
+import org.geogit.storage.ObjectReader;
 import org.geogit.storage.ObjectWriter;
 import org.geogit.storage.StagingDatabase;
 import org.geotools.factory.Hints;
 import org.geotools.feature.FeatureCollection;
 import org.geotools.feature.FeatureIterator;
-import org.geotools.feature.NameImpl;
 import org.opengis.feature.Feature;
+import org.opengis.feature.simple.SimpleFeatureType;
 import org.opengis.feature.type.FeatureType;
 import org.opengis.feature.type.Name;
 import org.opengis.filter.Filter;
@@ -39,6 +41,7 @@ import org.opengis.util.ProgressListener;
 import com.google.common.base.Function;
 import com.google.common.base.Predicate;
 import com.google.common.collect.Iterators;
+import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 
 /**
@@ -224,20 +227,47 @@ public class WorkingTree {
     public List<Name> getFeatureTypeNames() {
         List<Name> names = new ArrayList<Name>();
         RevTree root = repository.getHeadTree();
+        final List<Name> typeNames = Lists.newLinkedList();
         if (root != null) {
-            Iterator<NodeRef> namespaces = root.iterator(null);
-            while (namespaces.hasNext()) {
-                final NodeRef nsRef = namespaces.next();
-                final String nsUri = nsRef.getName();
-                final ObjectId nsTreeId = nsRef.getObjectId();
-                final RevTree nsTree = repository.getTree(nsTreeId);
-                final Iterator<NodeRef> typeNameRefs = nsTree.iterator(null);
-                while (typeNameRefs.hasNext()) {
-                    Name typeName = new NameImpl(nsUri, typeNameRefs.next().getName());
-                    names.add(typeName);
+            root.accept(new TreeVisitor() {
+
+                @Override
+                public boolean visitSubTree(int bucket, ObjectId treeId) {
+                    return false;
                 }
-            }
+
+                @Override
+                public boolean visitEntry(NodeRef ref) {
+                    if (TYPE.TREE.equals(ref.getType())) {
+                        if (!ref.getMetadataId().isNull()) {
+                            ObjectId metadataId = ref.getMetadataId();
+                            ObjectReader<SimpleFeatureType> typeReader = index.getDatabase()
+                                    .getSerialFactory().createSimpleFeatureTypeReader();
+                            StagingDatabase database = index.getDatabase();
+                            SimpleFeatureType type = database.get(metadataId, typeReader);
+                            typeNames.add(type.getName());
+                        }
+                        return true;
+                    } else {
+                        return false;
+                    }
+                }
+            });
         }
+        // if (root != null) {
+        // Iterator<NodeRef> namespaces = root.iterator(null);
+        // while (namespaces.hasNext()) {
+        // final NodeRef nsRef = namespaces.next();
+        // final String nsUri = nsRef.getName();
+        // final ObjectId nsTreeId = nsRef.getObjectId();
+        // final RevTree nsTree = repository.getTree(nsTreeId);
+        // final Iterator<NodeRef> typeNameRefs = nsTree.iterator(null);
+        // while (typeNameRefs.hasNext()) {
+        // Name typeName = new NameImpl(nsUri, typeNameRefs.next().getName());
+        // names.add(typeName);
+        // }
+        // }
+        // }
         return names;
     }
 
