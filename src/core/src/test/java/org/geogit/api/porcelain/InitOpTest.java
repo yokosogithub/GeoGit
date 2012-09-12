@@ -3,7 +3,7 @@
  * application directory.
  */
 
-package org.geogit.command.porcelain;
+package org.geogit.api.porcelain;
 
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertSame;

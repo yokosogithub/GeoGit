@@ -2,7 +2,7 @@
  * This code is licensed under the LGPL 2.1 license, available at the root
  * application directory.
  */
-package org.geogit.command.plumbing;
+package org.geogit.api.plumbing;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
