@@ -16,8 +16,6 @@ import org.geogit.cli.AbstractCommand;
 import org.geogit.cli.CLICommand;
 import org.geogit.cli.GeogitCLI;
 import org.geogit.di.GeogitModule;
-import org.geogit.di.PlumbingCommands;
-import org.geogit.di.PorcelainCommands;
 import org.geogit.repository.Repository;
 import org.geogit.storage.bdbje.JEStorageModule;
 
@@ -58,8 +56,7 @@ public class Init extends AbstractCommand implements CLICommand {
                 }
             }
             GeoGIT geogit = new GeoGIT(Guice.createInjector(new GeogitModule(),
-                    new JEStorageModule(), new PlumbingCommands(), new PorcelainCommands()),
-                    repoDir);
+                    new JEStorageModule()), repoDir);
 
             Repository repository = geogit.command(InitOp.class).call();
             final boolean repoExisted = repository == null;

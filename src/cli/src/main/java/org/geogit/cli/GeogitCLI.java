@@ -23,8 +23,6 @@ import org.geogit.api.GeoGIT;
 import org.geogit.api.Platform;
 import org.geogit.api.plumbing.ResolveGeogitDir;
 import org.geogit.di.GeogitModule;
-import org.geogit.di.PlumbingCommands;
-import org.geogit.di.PorcelainCommands;
 import org.geogit.storage.bdbje.JEStorageModule;
 import org.geotools.util.DefaultProgressListener;
 import org.geotools.util.logging.Logging;
@@ -107,8 +105,7 @@ public class GeogitCLI {
      *         directory.
      */
     private GeoGIT loadRepository() {
-        Injector inj = Guice.createInjector(new JEStorageModule(), new GeogitModule(),
-                new PlumbingCommands(), new PorcelainCommands());
+        Injector inj = Guice.createInjector(new JEStorageModule(), new GeogitModule());
         GeoGIT geogit = new GeoGIT(inj, platform.pwd());
 
         if (null != geogit.command(ResolveGeogitDir.class).call()) {

@@ -18,8 +18,6 @@ import org.geogit.api.porcelain.DiffOp;
 import org.geogit.api.porcelain.InitOp;
 import org.geogit.api.porcelain.LogOp;
 import org.geogit.di.GeogitModule;
-import org.geogit.di.PlumbingCommands;
-import org.geogit.di.PorcelainCommands;
 import org.geogit.repository.Repository;
 
 import com.google.common.base.Throwables;
@@ -46,8 +44,7 @@ public class GeoGIT {
     private Repository repository;
 
     public GeoGIT() {
-        injector = Guice.createInjector(new GeogitModule(), new PlumbingCommands(),
-                new PorcelainCommands());
+        injector = Guice.createInjector(new GeogitModule());
     }
 
     public GeoGIT(File workingDir) {

@@ -21,8 +21,6 @@ import org.geogit.api.ObjectId;
 import org.geogit.api.Platform;
 import org.geogit.api.RevCommit;
 import org.geogit.di.GeogitModule;
-import org.geogit.di.PlumbingCommands;
-import org.geogit.di.PorcelainCommands;
 import org.geogit.repository.Repository;
 import org.geogit.repository.StagingArea;
 import org.geogit.repository.Triplet;
@@ -171,8 +169,7 @@ public abstract class RepositoryTestCase {
     }
 
     protected Injector createInjector() {
-        return Guice.createInjector(Modules.override(new GeogitModule()).with(new TestModule()),
-                new PlumbingCommands(), new PorcelainCommands());
+        return Guice.createInjector(Modules.override(new GeogitModule()).with(new TestModule()));
     }
 
     @After
