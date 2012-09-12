@@ -406,6 +406,6 @@
    <module>core</module>
    <module>storage</module>
    <module>cli</module>
-   <module>datastore</module>
+   <!--module>datastore</module-->
   </modules>
 </project>
