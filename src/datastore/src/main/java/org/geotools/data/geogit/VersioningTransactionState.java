@@ -17,8 +17,6 @@
 package org.geotools.data.geogit;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -47,6 +45,7 @@ import org.opengis.filter.identity.FeatureId;
 import org.opengis.util.ProgressListener;
 
 import com.google.common.base.Function;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 
 @SuppressWarnings("rawtypes")
@@ -223,21 +222,12 @@ public class VersioningTransactionState implements Transaction.State {
 
         StagingArea index = geoGit.getRepository().getIndex();
 
-        final String namespaceURI = typeName.getNamespaceURI();
         final String localPart = typeName.getLocalPart();
 
-        List<String> from = Arrays.asList(namespaceURI, localPart, oldFid);
-        List<String> to = Arrays.asList(namespaceURI, localPart, newFid);
+        List<String> from = ImmutableList.of(localPart, oldFid);
+        List<String> to = ImmutableList.of(localPart, newFid);
 
         index.renamed(from, to);
     }
 
-    private List<String> path(final Name typeName) {
-        List<String> path = new ArrayList<String>(2);
-        if (typeName.getNamespaceURI() != null) {
-            path.add(typeName.getNamespaceURI());
-        }
-        path.add(typeName.getLocalPart());
-        return path;
-    }
 }

@@ -6,7 +6,6 @@ package org.geogit.repository;
 
 import java.math.BigInteger;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -40,6 +39,7 @@ import org.opengis.util.ProgressListener;
 
 import com.google.common.base.Function;
 import com.google.common.base.Predicate;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterators;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
@@ -79,19 +79,16 @@ public class WorkingTree {
     public void init(final FeatureType featureType) throws Exception {
 
         final Name typeName = featureType.getName();
-        List<String> path = Arrays.asList(typeName.getNamespaceURI(), typeName.getLocalPart());
+        List<String> path = ImmutableList.of(typeName.getLocalPart());
         index.created(path);
     }
 
     public void delete(final Name typeName) throws Exception {
-        index.deleted(typeName.getNamespaceURI(), typeName.getLocalPart());
+        index.deleted(typeName.getLocalPart());
     }
 
     private List<String> path(final Name typeName, final String id) {
         List<String> path = new ArrayList<String>(3);
-        if (typeName.getNamespaceURI() != null) {
-            path.add(typeName.getNamespaceURI());
-        }
         path.add(typeName.getLocalPart());
         if (id != null) {
             path.add(id);
@@ -170,8 +167,7 @@ public class WorkingTree {
                     id = UUID.randomUUID().toString();
                 }
             }
-            final List<String> path = Arrays.asList(typeName.getNamespaceURI(),
-                    typeName.getLocalPart(), id);
+            final List<String> path = ImmutableList.of(typeName.getLocalPart(), id);
 
             return new Triplet<ObjectWriter<?>, BoundingBox, List<String>>(featureWriter, bounds,
                     path);
@@ -198,9 +194,8 @@ public class WorkingTree {
     }
 
     public boolean hasRoot(final Name typeName) {
-        String namespaceURI = typeName.getNamespaceURI() == null ? "" : typeName.getNamespaceURI();
         String localPart = typeName.getLocalPart();
-        NodeRef typeNameTreeRef = repository.getRootTreeChild(namespaceURI, localPart);
+        NodeRef typeNameTreeRef = repository.getRootTreeChild(localPart);
         return typeNameTreeRef != null;
     }
 
@@ -208,13 +203,12 @@ public class WorkingTree {
             final FeatureCollection affectedFeatures) throws Exception {
 
         final StagingArea index = repository.getIndex();
-        String namespaceURI = typeName.getNamespaceURI();
         String localPart = typeName.getLocalPart();
         FeatureIterator iterator = affectedFeatures.features();
         try {
             while (iterator.hasNext()) {
                 String id = iterator.next().getIdentifier().getID();
-                index.deleted(namespaceURI, localPart, id);
+                index.deleted(localPart, id);
             }
         } finally {
             iterator.close();

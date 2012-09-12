@@ -337,7 +337,7 @@ public class GeoGitFeatureSourceTest extends RepositoryTestCase {
             ids.add(identifier);
         }
 
-        NodeRef typeTreeRef = repo.getRootTreeChild(pointsNs, pointsName);
+        NodeRef typeTreeRef = repo.getRootTreeChild(pointsName);
         RevTree tree = repo.getTree(typeTreeRef.getObjectId());
 
         List<NodeRef> refs = toList(tree.iterator(null));

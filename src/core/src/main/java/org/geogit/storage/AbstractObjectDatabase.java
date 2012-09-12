@@ -21,6 +21,7 @@ import org.geogit.repository.DepthSearch;
 
 import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
+import com.google.common.collect.ImmutableList;
 import com.google.common.io.Closeables;
 import com.google.inject.Inject;
 import com.ning.compress.lzf.LZFInputStream;
@@ -257,7 +258,8 @@ public abstract class AbstractObjectDatabase implements ObjectDatabase {
      */
     @Override
     public NodeRef getTreeChild(RevTree root, List<String> path) {
-        NodeRef treeRef = new DepthSearch(this, serialFactory).find(root, path);
+        NodeRef treeRef = new DepthSearch(this, serialFactory).find(root,
+                ImmutableList.copyOf(path));
         return treeRef;
     }
 

@@ -121,7 +121,7 @@ public class LogOpTest extends RepositoryTestCase {
             }
         }
 
-        String[] path = { linesNs, linesName, lines1.getIdentifier().getID() };
+        String[] path = { linesName, lines1.getIdentifier().getID() };
 
         List<RevCommit> feature2_1Commits = toList(logOp.addPath(path).call());
         assertEquals(1, feature2_1Commits.size());
@@ -147,7 +147,7 @@ public class LogOpTest extends RepositoryTestCase {
         }
 
         // path to filter commits on type1
-        String[] path = { pointsNs, pointsName };
+        String[] path = { pointsName };
 
         List<RevCommit> logCommits = toList(logOp.addPath(path).call());
         assertEquals(typeName1Commits.size(), logCommits.size());

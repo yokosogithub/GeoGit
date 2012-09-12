@@ -60,13 +60,7 @@ public class CommitOpTest extends RepositoryTestCase {
         RevTree root = repo.getTree(treeId);
         assertNotNull(root);
 
-        NodeRef nsTreeId = root.get(pointsNs);
-        assertNotNull(nsTreeId);
-        // BLOBS.print(repo.getRawObject(nsTreeId), System.err);
-        RevTree nstree = repo.getTree(nsTreeId.getObjectId());
-        assertNotNull(nstree);
-
-        NodeRef typeTreeId = nstree.get(pointsName);
+        NodeRef typeTreeId = root.get(pointsName);
         assertNotNull(typeTreeId);
         // BLOBS.print(repo.getRawObject(typeTreeId), System.err);
         RevTree typeTree = repo.getTree(typeTreeId.getObjectId());
@@ -92,7 +86,7 @@ public class CommitOpTest extends RepositoryTestCase {
         {
             assertCommit(commit1, ObjectId.NULL, "groldan", null);
             // check points1 is there
-            assertEquals(oId1_1, repo.getRootTreeChild(pointsNs, pointsName, idP1).getObjectId());
+            assertEquals(oId1_1, repo.getRootTreeChild(pointsName, idP1).getObjectId());
             // and check the objects were actually copied
             assertNotNull(repo.getObjectDatabase().getRaw(oId1_1));
         }
@@ -110,16 +104,16 @@ public class CommitOpTest extends RepositoryTestCase {
             // new PrintVisitor(repo.getObjectDatabase(), new PrintWriter(System.out)));
 
             // check points2, points3 and lines1
-            assertEquals(oId1_2, repo.getRootTreeChild(pointsNs, pointsName, idP2).getObjectId());
-            assertEquals(oId1_3, repo.getRootTreeChild(pointsNs, pointsName, idP3).getObjectId());
-            assertEquals(oId2_1, repo.getRootTreeChild(linesNs, linesName, idL1).getObjectId());
+            assertEquals(oId1_2, repo.getRootTreeChild(pointsName, idP2).getObjectId());
+            assertEquals(oId1_3, repo.getRootTreeChild(pointsName, idP3).getObjectId());
+            assertEquals(oId2_1, repo.getRootTreeChild(linesName, idL1).getObjectId());
             // and check the objects were actually copied
             assertNotNull(repo.getObjectDatabase().getRaw(oId1_2));
             assertNotNull(repo.getObjectDatabase().getRaw(oId1_3));
             assertNotNull(repo.getObjectDatabase().getRaw(oId2_1));
 
             // as well as feature1_1 from the previous commit
-            assertEquals(oId1_1, repo.getRootTreeChild(pointsNs, pointsName, idP1).getObjectId());
+            assertEquals(oId1_1, repo.getRootTreeChild(pointsName, idP1).getObjectId());
         }
         // delete feature1_1, feature1_3, and feature2_1
         assertTrue(deleteAndAdd(points1));
@@ -137,12 +131,12 @@ public class CommitOpTest extends RepositoryTestCase {
             // new PrintVisitor(repo.getObjectDatabase(), new PrintWriter(System.out)));
 
             // check only points2 and lines2 remain
-            assertNull(repo.getRootTreeChild(pointsNs, pointsName, idP1));
-            assertNull(repo.getRootTreeChild(pointsNs, pointsName, idP3));
-            assertNull(repo.getRootTreeChild(linesNs, linesName, idL3));
+            assertNull(repo.getRootTreeChild(pointsName, idP1));
+            assertNull(repo.getRootTreeChild(pointsName, idP3));
+            assertNull(repo.getRootTreeChild(linesName, idL3));
 
-            assertEquals(oId1_2, repo.getRootTreeChild(pointsNs, pointsName, idP2).getObjectId());
-            assertEquals(oId2_2, repo.getRootTreeChild(linesNs, linesName, idL2).getObjectId());
+            assertEquals(oId1_2, repo.getRootTreeChild(pointsName, idP2).getObjectId());
+            assertEquals(oId2_2, repo.getRootTreeChild(linesName, idL2).getObjectId());
             // and check the objects were actually copied
             assertNotNull(repo.getObjectDatabase().getRaw(oId1_2));
             assertNotNull(repo.getObjectDatabase().getRaw(oId2_2));

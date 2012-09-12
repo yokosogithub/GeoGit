@@ -86,10 +86,10 @@ public class DiffOpFilterByIdTest extends RepositoryTestCase {
         commit2Id = commit2.getId();
         commit3Id = commit3.getId();
 
-        P1Path = Arrays.asList(pointsNs, pointsName, idP1);
-        P2Path = Arrays.asList(pointsNs, pointsName, idP2);
-        L1Path = Arrays.asList(linesNs, linesName, idL1);
-        L2Path = Arrays.asList(linesNs, linesName, idL2);
+        P1Path = Arrays.asList(pointsName, idP1);
+        P2Path = Arrays.asList(pointsName, idP2);
+        L1Path = Arrays.asList(linesName, idL1);
+        L2Path = Arrays.asList(linesName, idL2);
     }
 
     @Test

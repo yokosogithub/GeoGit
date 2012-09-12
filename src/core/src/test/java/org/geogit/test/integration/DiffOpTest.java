@@ -11,10 +11,8 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import java.util.Arrays;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Set;
 
 import org.geogit.api.DiffEntry;
 import org.geogit.api.DiffEntry.ChangeType;
@@ -101,8 +99,7 @@ public class DiffOpTest extends RepositoryTestCase {
         assertEquals(1, difflist.size());
         DiffEntry de = difflist.get(0);
 
-        List<String> expectedPath = Arrays.asList(pointsNs, pointsName, points1.getIdentifier()
-                .getID());
+        List<String> expectedPath = Arrays.asList(pointsName, points1.getIdentifier().getID());
         assertEquals(expectedPath, de.getPath());
 
         assertEquals(DiffEntry.ChangeType.ADD, de.getType());
@@ -145,8 +142,7 @@ public class DiffOpTest extends RepositoryTestCase {
         List<DiffEntry> difflist = toList(diffOp.setOldVersion(addCommit.getId())
                 .setNewVersion(deleteCommit.getId()).call());
 
-        final List<String> path = Arrays.asList(pointsNs, pointsName, points1.getIdentifier()
-                .getID());
+        final List<String> path = Arrays.asList(pointsName, points1.getIdentifier().getID());
 
         assertNotNull(difflist);
         assertEquals(1, difflist.size());
@@ -175,8 +171,7 @@ public class DiffOpTest extends RepositoryTestCase {
         List<DiffEntry> difflist = toList(diffOp.setOldVersion(deleteCommit.getId())
                 .setNewVersion(addCommit.getId()).call());
 
-        final List<String> path = Arrays.asList(pointsNs, pointsName, points1.getIdentifier()
-                .getID());
+        final List<String> path = Arrays.asList(pointsName, points1.getIdentifier().getID());
 
         // then the diff should report an ADD instead of a DELETE
         assertNotNull(difflist);
@@ -213,7 +208,7 @@ public class DiffOpTest extends RepositoryTestCase {
         assertNotNull(difflist);
         assertEquals(1, difflist.size());
         DiffEntry de = difflist.get(0);
-        List<String> expectedPath = Arrays.asList(pointsNs, pointsName, featureId);
+        List<String> expectedPath = Arrays.asList(pointsName, featureId);
         assertEquals(expectedPath, de.getPath());
 
         assertEquals(DiffEntry.ChangeType.MODIFY, de.getType());
@@ -235,7 +230,7 @@ public class DiffOpTest extends RepositoryTestCase {
         final RevCommit commit2 = geogit.commit().setAll(true).call();
 
         diffOp.setOldVersion(commit1.getId()).setNewVersion(commit2.getId());
-        diffOp.setFilter(pointsNs);
+        diffOp.setFilter(pointsName);
 
         Iterator<DiffEntry> diffs = diffOp.call();
         assertFalse(diffs.hasNext());
@@ -252,7 +247,7 @@ public class DiffOpTest extends RepositoryTestCase {
         final RevCommit commit2 = geogit.commit().setAll(true).call();
 
         diffOp.setOldVersion(commit1.getId()).setNewVersion(commit2.getId());
-        diffOp.setFilter(pointsNs, pointsName);
+        diffOp.setFilter(pointsName);
 
         Iterator<DiffEntry> diffs = diffOp.call();
         assertFalse(diffs.hasNext());
@@ -271,7 +266,7 @@ public class DiffOpTest extends RepositoryTestCase {
         // set a filter that doesn't produce any match
 
         diffOp.setOldVersion(commit1.getId()).setNewVersion(commit2.getId());
-        diffOp.setFilter(pointsNs, pointsName, "nonExistentId");
+        diffOp.setFilter(pointsName, "nonExistentId");
 
         Iterator<DiffEntry> diffs = diffOp.call();
         assertNotNull(diffs);
@@ -291,7 +286,7 @@ public class DiffOpTest extends RepositoryTestCase {
         // filter on feature1_1, it didn't change between commit2 and commit1
 
         diffOp.setOldVersion(commit1.getId()).setNewVersion(commit2.getId());
-        diffOp.setFilter(pointsNs, pointsName, points1.getIdentifier().getID());
+        diffOp.setFilter(pointsName, points1.getIdentifier().getID());
 
         Iterator<DiffEntry> diffs = diffOp.call();
         assertFalse(diffs.hasNext());
@@ -310,7 +305,7 @@ public class DiffOpTest extends RepositoryTestCase {
         final RevCommit commit3 = geogit.commit().setAll(true).call();
 
         diffOp.setOldVersion(commit1.getId()).setNewVersion(commit3.getId());
-        diffOp.setFilter(pointsNs, pointsName, points1.getIdentifier().getID());
+        diffOp.setFilter(pointsName, points1.getIdentifier().getID());
 
         List<DiffEntry> diffs;
         DiffEntry diff;
@@ -325,7 +320,7 @@ public class DiffOpTest extends RepositoryTestCase {
         assertTrue(deleteAndAdd(points1));
         final RevCommit commit4 = geogit.commit().setAll(true).call();
         diffOp.setOldVersion(commit2.getId()).setNewVersion(commit4.getId());
-        diffOp.setFilter(pointsNs, pointsName, points1.getIdentifier().getID());
+        diffOp.setFilter(pointsName, points1.getIdentifier().getID());
         diffs = toList(diffOp.call());
         assertEquals(1, diffs.size());
         diff = diffs.get(0);
@@ -335,7 +330,7 @@ public class DiffOpTest extends RepositoryTestCase {
 
         // invert the order of old and new commit
         diffOp.setOldVersion(commit4.getId()).setNewVersion(commit1.getId());
-        diffOp.setFilter(pointsNs, pointsName, points1.getIdentifier().getID());
+        diffOp.setFilter(pointsName, points1.getIdentifier().getID());
         diffs = toList(diffOp.call());
         assertEquals(1, diffs.size());
         diff = diffs.get(0);
@@ -345,7 +340,7 @@ public class DiffOpTest extends RepositoryTestCase {
 
         // different commit range
         diffOp.setOldVersion(commit4.getId()).setNewVersion(commit3.getId());
-        diffOp.setFilter(pointsNs, pointsName, points1.getIdentifier().getID());
+        diffOp.setFilter(pointsName, points1.getIdentifier().getID());
         diffs = toList(diffOp.call());
         assertEquals(1, diffs.size());
         diff = diffs.get(0);
@@ -354,48 +349,48 @@ public class DiffOpTest extends RepositoryTestCase {
         assertEquals(modifiedOid, diff.getNewObjectId());
     }
 
-    @Test
-    public void testFilterAddressesNamespaceTree() throws Exception {
-
-        // two commits on different trees
-        final ObjectId oid11 = insertAndAdd(points1);
-        final ObjectId oid12 = insertAndAdd(points2);
-        final RevCommit commit1 = geogit.commit().setAll(true).call();
-
-        final ObjectId oid21 = insertAndAdd(lines1);
-        final ObjectId oid22 = insertAndAdd(lines2);
-        final RevCommit commit2 = geogit.commit().setAll(true).call();
-
-        List<DiffEntry> diffs;
-
-        // filter on namespace1, no changes between commit1 and commit2
-        diffOp.setOldVersion(commit1.getId());
-        diffOp.setFilter(pointsNs);
-
-        diffs = toList(diffOp.call());
-        assertEquals(0, diffs.size());
-
-        // filter on namespace2, all additions between commit1 and commit2
-        diffOp.setOldVersion(commit1.getId());
-        diffOp.setFilter(linesNs);
-
-        diffs = toList(diffOp.call());
-        assertEquals(2, diffs.size());
-        assertEquals(ChangeType.ADD, diffs.get(0).getType());
-        assertEquals(ChangeType.ADD, diffs.get(1).getType());
-
-        assertEquals(ObjectId.NULL, diffs.get(0).getOldObjectId());
-        assertEquals(ObjectId.NULL, diffs.get(1).getOldObjectId());
-
-        // don't care about order
-        Set<ObjectId> expected = new HashSet<ObjectId>();
-        expected.add(oid21);
-        expected.add(oid22);
-        Set<ObjectId> actual = new HashSet<ObjectId>();
-        actual.add(diffs.get(0).getNewObjectId());
-        actual.add(diffs.get(1).getNewObjectId());
-        assertEquals(expected, actual);
-    }
+    // @Test
+    // public void testFilterAddressesNamespaceTree() throws Exception {
+    //
+    // // two commits on different trees
+    // final ObjectId oid11 = insertAndAdd(points1);
+    // final ObjectId oid12 = insertAndAdd(points2);
+    // final RevCommit commit1 = geogit.commit().setAll(true).call();
+    //
+    // final ObjectId oid21 = insertAndAdd(lines1);
+    // final ObjectId oid22 = insertAndAdd(lines2);
+    // final RevCommit commit2 = geogit.commit().setAll(true).call();
+    //
+    // List<DiffEntry> diffs;
+    //
+    // // filter on namespace1, no changes between commit1 and commit2
+    // diffOp.setOldVersion(commit1.getId());
+    // diffOp.setFilter(pointsNs);
+    //
+    // diffs = toList(diffOp.call());
+    // assertEquals(0, diffs.size());
+    //
+    // // filter on namespace2, all additions between commit1 and commit2
+    // diffOp.setOldVersion(commit1.getId());
+    // diffOp.setFilter(linesNs);
+    //
+    // diffs = toList(diffOp.call());
+    // assertEquals(2, diffs.size());
+    // assertEquals(ChangeType.ADD, diffs.get(0).getType());
+    // assertEquals(ChangeType.ADD, diffs.get(1).getType());
+    //
+    // assertEquals(ObjectId.NULL, diffs.get(0).getOldObjectId());
+    // assertEquals(ObjectId.NULL, diffs.get(1).getOldObjectId());
+    //
+    // // don't care about order
+    // Set<ObjectId> expected = new HashSet<ObjectId>();
+    // expected.add(oid21);
+    // expected.add(oid22);
+    // Set<ObjectId> actual = new HashSet<ObjectId>();
+    // actual.add(diffs.get(0).getNewObjectId());
+    // actual.add(diffs.get(1).getNewObjectId());
+    // assertEquals(expected, actual);
+    // }
 
     @Test
     public void testMultipleDeletes() throws Exception {
@@ -417,7 +412,7 @@ public class DiffOpTest extends RepositoryTestCase {
 
         // filter on namespace1, no changes between commit1 and commit2
         diffOp.setOldVersion(commit1.getId()).setNewVersion(commit3.getId());
-        diffOp.setFilter(pointsNs);
+        diffOp.setFilter(pointsName);
 
         diffs = toList(diffOp.call());
         assertEquals(2, diffs.size());
@@ -450,7 +445,7 @@ public class DiffOpTest extends RepositoryTestCase {
 
         // filter on namespace1, no changes between commit1 and commit2
         diffOp.setOldVersion(commit1.getId());
-        diffOp.setFilter(pointsNs);
+        diffOp.setFilter(pointsName);
 
         diffs = toList(diffOp.call());
         assertEquals(3, diffs.size());

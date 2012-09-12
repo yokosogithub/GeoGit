@@ -6,7 +6,6 @@ package org.geogit.api;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -23,6 +22,8 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.base.Throwables;
 import com.google.common.collect.AbstractIterator;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableList.Builder;
 import com.google.common.collect.Iterators;
 
 public class DiffTreeWalk {
@@ -74,7 +75,8 @@ public class DiffTreeWalk {
         if (path == null || path.length == 0) {
             this.basePath = Collections.emptyList();
         } else {
-            this.basePath = Arrays.asList(path);
+            Builder<String> builder = ImmutableList.builder();
+            this.basePath = builder.add(path).build();
         }
     }
 

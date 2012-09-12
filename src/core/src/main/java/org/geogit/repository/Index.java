@@ -37,6 +37,7 @@ import org.opengis.util.ProgressListener;
 
 import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterators;
 import com.google.inject.Inject;
 
@@ -124,7 +125,7 @@ public class Index implements StagingArea {
     @Override
     public boolean deleted(String... path) throws Exception {
         Preconditions.checkNotNull(path);
-        final List<String> searchPath = Arrays.asList(path);
+        final List<String> searchPath = ImmutableList.copyOf(Arrays.asList(path));
         checkValidPath(searchPath);
 
         DiffEntry unstagedEntry;
@@ -187,7 +188,7 @@ public class Index implements StagingArea {
 
         Triplet<ObjectWriter<?>, BoundingBox, List<String>> tuple;
         tuple = new Triplet<ObjectWriter<?>, BoundingBox, List<String>>(blob, bounds,
-                Arrays.asList(path));
+                ImmutableList.copyOf(Arrays.asList(path)));
 
         List<NodeRef> inserted = new ArrayList<NodeRef>(1);
 
@@ -243,10 +244,11 @@ public class Index implements StagingArea {
 
     @Override
     public void stage(final ProgressListener progress, final String... path) throws Exception {
-        List<String> path2 = path == null ? null : Arrays.asList(path);
+        List<String> path2 = path == null ? null : ImmutableList.copyOf(Arrays.asList(path));
         final int numChanges = indexDatabase.countUnstaged(path2);
         int i = 0;
         progress.started();
+        // System.err.println("staging with path: " + path2 + ". Matches: " + numChanges);
         Iterator<DiffEntry> unstaged = indexDatabase.getUnstaged(path2);
         while (unstaged.hasNext()) {
             i++;

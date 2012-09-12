@@ -4,13 +4,13 @@
  */
 package org.geogit.api;
 
-import java.util.Collections;
 import java.util.List;
 
 import org.geogit.repository.SpatialOps;
 import org.opengis.geometry.BoundingBox;
 
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
 
 public class DiffEntry {
 
@@ -57,7 +57,7 @@ public class DiffEntry {
         this.oldObject = oldObject;
         this.newObject = newObject;
         this.where = where;
-        this.path = Collections.unmodifiableList(path);
+        this.path = ImmutableList.copyOf(path);
     }
 
     /**

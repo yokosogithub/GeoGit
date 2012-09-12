@@ -411,7 +411,7 @@ public class VersionedTest extends DecoratedTestCase {
         Name typeName = featureType.getName();
 
         LogOp logOp = geogit.command(LogOp.class);
-        logOp.addPath(typeName.getNamespaceURI(), typeName.getLocalPart()).setLimit(1);
+        logOp.addPath(typeName.getLocalPart()).setLimit(1);
         return getFeaturesFromLog(logOp, featureType);
     }
 
@@ -419,7 +419,7 @@ public class VersionedTest extends DecoratedTestCase {
         Name typeName = featureType.getName();
 
         LogOp logOp = geogit.command(LogOp.class);
-        logOp.addPath(typeName.getNamespaceURI(), typeName.getLocalPart());
+        logOp.addPath(typeName.getLocalPart());
         return getFeaturesFromLog(logOp, featureType);
     }
 
@@ -453,9 +453,7 @@ public class VersionedTest extends DecoratedTestCase {
         if (commit != null) {
             ObjectId commitTreeId = commit.getTreeId();
             RevTree commitTree = repo.getTree(commitTreeId);
-            NodeRef nsNodeRef = commitTree.get(typeName.getNamespaceURI());
-            RevTree nsTree = repo.getTree(nsNodeRef.getObjectId());
-            NodeRef typeNodeRef = nsTree.get(typeName.getLocalPart());
+            NodeRef typeNodeRef = commitTree.get(typeName.getLocalPart());
             RevTree typeTree = repo.getTree(typeNodeRef.getObjectId());
             Iterator<NodeRef> it = typeTree.iterator(null);
 

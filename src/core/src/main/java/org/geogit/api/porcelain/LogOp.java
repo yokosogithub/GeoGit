@@ -4,7 +4,6 @@
  */
 package org.geogit.api.porcelain;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.HashSet;
@@ -25,6 +24,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.base.Throwables;
 import com.google.common.collect.AbstractIterator;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterators;
 import com.google.inject.Inject;
 
@@ -117,7 +117,7 @@ public class LogOp extends AbstractGeoGitOp<Iterator<RevCommit>> {
         if (this.paths == null) {
             this.paths = new HashSet<List<String>>();
         }
-        this.paths.add(new ArrayList<String>(path));
+        this.paths.add(ImmutableList.copyOf(path));
         return this;
     }
 

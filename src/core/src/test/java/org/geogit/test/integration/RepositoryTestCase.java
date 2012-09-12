@@ -49,6 +49,7 @@ import org.opengis.geometry.BoundingBox;
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
 
 import com.google.common.base.Function;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Iterators;
 import com.google.inject.AbstractModule;
@@ -78,7 +79,7 @@ public abstract class RepositoryTestCase {
 
     protected static final String pointsTypeSpec = "sp:String,ip:Integer,pp:Point:srid=4326";
 
-    protected static final Name pointsTypeName = new NameImpl(pointsNs, pointsName);
+    protected static final Name pointsTypeName = new NameImpl("http://geogit.points", pointsName);
 
     protected SimpleFeatureType pointsType;
 
@@ -94,7 +95,7 @@ public abstract class RepositoryTestCase {
 
     protected static final String linesTypeSpec = "sp:String,ip:Integer,pp:LineString:srid=4326";
 
-    protected static final Name linesTypeName = new NameImpl(linesNs, linesName);
+    protected static final Name linesTypeName = new NameImpl("http://geogit.lines", linesName);
 
     protected SimpleFeatureType linesType;
 
@@ -261,13 +262,12 @@ public abstract class RepositoryTestCase {
     protected ObjectId insert(Feature f) throws Exception {
         final StagingArea index = getRepository().getIndex();
         Name name = f.getType().getName();
-        String namespaceURI = name.getNamespaceURI();
         String localPart = name.getLocalPart();
         String id = f.getIdentifier().getID();
 
         ObjectWriter<Feature> writer = getRepository().newFeatureWriter(f);
         BoundingBox bounds = f.getBounds();
-        NodeRef ref = index.inserted(writer, bounds, namespaceURI, localPart, id);
+        NodeRef ref = index.inserted(writer, bounds, localPart, id);
         ObjectId objectId = ref.getObjectId();
         return objectId;
     }
@@ -287,14 +287,13 @@ public abstract class RepositoryTestCase {
             @Override
             public Triplet<ObjectWriter<?>, BoundingBox, List<String>> apply(final Feature f) {
                 Name name = f.getType().getName();
-                String namespaceURI = name.getNamespaceURI();
                 String localPart = name.getLocalPart();
                 String id = f.getIdentifier().getID();
 
                 Triplet<ObjectWriter<?>, BoundingBox, List<String>> tuple;
                 ObjectWriter<?> writer = getRepository().newFeatureWriter(f);
                 BoundingBox bounds = f.getBounds();
-                List<String> path = Arrays.asList(namespaceURI, localPart, id);
+                List<String> path = ImmutableList.of(localPart, id);
                 tuple = new Triplet<ObjectWriter<?>, BoundingBox, List<String>>(writer, bounds,
                         path);
                 return tuple;
@@ -326,10 +325,9 @@ public abstract class RepositoryTestCase {
     protected boolean delete(Feature f) throws Exception {
         final StagingArea index = getRepository().getIndex();
         Name name = f.getType().getName();
-        String namespaceURI = name.getNamespaceURI();
         String localPart = name.getLocalPart();
         String id = f.getIdentifier().getID();
-        boolean existed = index.deleted(namespaceURI, localPart, id);
+        boolean existed = index.deleted(localPart, id);
         return existed;
     }
 

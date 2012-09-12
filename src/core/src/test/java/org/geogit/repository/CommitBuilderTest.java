@@ -4,13 +4,14 @@
  */
 package org.geogit.repository;
 
-import java.util.Arrays;
 import java.util.List;
 
 import junit.framework.TestCase;
 
 import org.geogit.api.ObjectId;
 import org.geogit.api.RevCommit;
+
+import com.google.common.collect.ImmutableList;
 
 public class CommitBuilderTest extends TestCase {
 
@@ -50,7 +51,7 @@ public class CommitBuilderTest extends TestCase {
 
         ObjectId parentId1 = ObjectId.forString("fake parent content 1");
         ObjectId parentId2 = ObjectId.forString("fake parent content 2");
-        List<ObjectId> parentIds = Arrays.asList(parentId1, parentId2);
+        List<ObjectId> parentIds = ImmutableList.of(parentId1, parentId2);
         b.setParentIds(parentIds);
 
         RevCommit build = b.build(commitId);

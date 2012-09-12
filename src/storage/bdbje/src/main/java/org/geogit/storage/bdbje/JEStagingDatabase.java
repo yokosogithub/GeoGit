@@ -339,7 +339,9 @@ public class JEStagingDatabase implements ObjectDatabase, StagingDatabase {
         if (pathFilter == null || pathFilter.size() == 0) {
             return unstaged.values().iterator();
         }
-        SortedMap<List<String>, DiffEntry> subMap = unstaged.tailMap(pathFilter, true);
+        SortedMap<List<String>, DiffEntry> subMap = unstaged.subMap(pathFilter, true, pathFilter,
+                true);
+        // SortedMap<List<String>, DiffEntry> subMap = unstaged.tailMap(pathFilter, true);
         return subMap.values().iterator();
     }
 
@@ -353,7 +355,9 @@ public class JEStagingDatabase implements ObjectDatabase, StagingDatabase {
         if (pathFilter == null || pathFilter.size() == 0) {
             return staged.values().iterator();
         }
-        SortedMap<List<String>, DiffEntry> subMap = staged.tailMap(pathFilter, true);
+        SortedMap<List<String>, DiffEntry> subMap = staged.subMap(pathFilter, true, pathFilter,
+                true);
+        // SortedMap<List<String>, DiffEntry> subMap = staged.tailMap(pathFilter, true);
         return subMap.values().iterator();
     }
 
@@ -367,7 +371,8 @@ public class JEStagingDatabase implements ObjectDatabase, StagingDatabase {
         SortedMap<List<String>, DiffEntry> subMap = staged;
 
         if (pathFilter != null && pathFilter.size() > 0) {
-            subMap = staged.tailMap(pathFilter, true);
+            subMap = staged.subMap(pathFilter, true, pathFilter, true);
+            // subMap = staged.tailMap(pathFilter, true);
         }
         int size = subMap.size();
         subMap.clear();
@@ -384,7 +389,8 @@ public class JEStagingDatabase implements ObjectDatabase, StagingDatabase {
         SortedMap<List<String>, DiffEntry> subMap = unstaged;
 
         if (pathFilter != null && pathFilter.size() > 0) {
-            subMap = staged.subMap(pathFilter, true, pathFilter, true);
+            subMap = unstaged.subMap(pathFilter, true, pathFilter, true);
+            // subMap = unstaged.subMap(pathFilter, true, pathFilter, true);
         }
         int size = subMap.size();
         subMap.clear();

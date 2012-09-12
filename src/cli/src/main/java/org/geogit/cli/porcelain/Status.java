@@ -118,13 +118,25 @@ public class Status implements CLICommand {
             path = entry.getPath();
 
             sb.setLength(0);
-            ansi.a("#      ").fg(color).a(type.toString().charAt(0)).a("  ").a(path).reset();
+            ansi.a("#      ").fg(color).a(type.toString().charAt(0)).a("  ").a(format(path))
+                    .reset();
             console.println(ansi.toString());
         }
 
         sb.setLength(0);
         ansi.a("# ").a(total).reset().a(" total.");
         console.println(ansi.toString());
+    }
+
+    private String format(List<String> path) {
+        StringBuilder sb = new StringBuilder();
+        for (Iterator<String> i = path.iterator(); i.hasNext();) {
+            sb.append(i.next());
+            if (i.hasNext()) {
+                sb.append('/');
+            }
+        }
+        return sb.toString();
     }
 
 }

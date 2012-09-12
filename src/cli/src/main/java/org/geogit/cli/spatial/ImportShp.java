@@ -18,7 +18,6 @@ import org.geogit.repository.WorkingTree;
 import org.geotools.data.DataStore;
 import org.geotools.data.shapefile.ShapefileDataStoreFactory;
 import org.geotools.data.simple.SimpleFeatureCollection;
-import org.geotools.feature.NameImpl;
 import org.opengis.feature.type.Name;
 
 import com.beust.jcommander.Parameter;
@@ -69,10 +68,6 @@ public class ImportShp extends AbstractCommand implements CLICommand {
 
         DataStore dataStore = new ShapefileDataStoreFactory().createDataStore(params);
         Name typeName = dataStore.getNames().get(0);
-        if (null == typeName.getNamespaceURI()) {
-            typeName = new NameImpl("http://www.opengis.net/gml", typeName.getLocalPart());
-        }
-        System.err.println(typeName);
 
         WorkingTree workingTree = cli.getGeogit().getRepository().getWorkingTree();
 
