@@ -16,6 +16,7 @@ import org.geogit.api.RevObject.TYPE;
 import org.geogit.api.SymRef;
 import org.geogit.storage.RefDatabase;
 
+import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.collect.Collections2;
@@ -25,7 +26,7 @@ import com.google.inject.Inject;
 /**
  * Resolve a ref name to the stored {@link Ref reference} object
  */
-public class RefParse extends AbstractGeoGitOp<Ref> {
+public class RefParse extends AbstractGeoGitOp<Optional<Ref>> {
 
     private static final Set<String> STANDARD_REFS = ImmutableSet.of(Ref.HEAD, Ref.MASTER,
             Ref.ORIGIN, Ref.STAGE_HEAD, Ref.WORK_HEAD);
@@ -40,7 +41,7 @@ public class RefParse extends AbstractGeoGitOp<Ref> {
     }
 
     /**
-     * @param name the name of the ref to update
+     * @param name the name of the ref to parse
      */
     public RefParse setName(String name) {
         this.refSpec = name;
@@ -64,7 +65,7 @@ public class RefParse extends AbstractGeoGitOp<Ref> {
      *         namespace
      */
     @Override
-    public Ref call() {
+    public Optional<Ref> call() {
         Preconditions.checkState(refSpec != null, "name has not been set");
 
         if (STANDARD_REFS.contains(refSpec) || refSpec.startsWith("refs/")) {
@@ -73,8 +74,8 @@ public class RefParse extends AbstractGeoGitOp<Ref> {
 
         // is it a top level ref?
         if (!refSpec.startsWith("refs/")) {
-            Ref ref = getRef(refSpec);
-            if (ref != null) {
+            Optional<Ref> ref = getRef(refSpec);
+            if (ref.isPresent()) {
                 return ref;
             }
         }
@@ -115,7 +116,7 @@ public class RefParse extends AbstractGeoGitOp<Ref> {
             refName = resolveSingle(remotes);
         }
         if (refName == null) {
-            return null;
+            return Optional.absent();
         }
         return getRef(refName);
     }
@@ -130,7 +131,7 @@ public class RefParse extends AbstractGeoGitOp<Ref> {
         throw new IllegalArgumentException(refSpec + " resolves to more than one ref: " + refNames);
     }
 
-    private Ref getRef(final String name) {
+    private Optional<Ref> getRef(final String name) {
         String storedValue;
         boolean sym = false;
         try {
@@ -138,26 +139,27 @@ public class RefParse extends AbstractGeoGitOp<Ref> {
         } catch (IllegalArgumentException notARef) {
             storedValue = refDb.getSymRef(name);
             if (null == storedValue) {
-                return null;
+                return Optional.absent();
             }
             sym = true;
         }
         if (null == storedValue) {
             storedValue = refDb.getSymRef(name);
             if (null == storedValue) {
-                return null;
+                return Optional.absent();
             }
             sym = true;
         }
 
         if (sym) {
-            Ref target = getRef(storedValue);
-            return new SymRef(name, target);
+            Optional<Ref> target = getRef(storedValue);
+            Ref resolved = new SymRef(name, target.get());
+            return Optional.of(resolved);
         }
         ObjectId objectId = ObjectId.valueOf(storedValue);
         TYPE type = objectId.isNull() ? null : command(ResolveObjectType.class).setObjectId(
                 objectId).call();
-        return new Ref(name, objectId, type);
+        return Optional.of(new Ref(name, objectId, type));
     }
 
 }

@@ -10,6 +10,7 @@ import org.geogit.api.ObjectId;
 import org.geogit.api.Ref;
 import org.geogit.storage.RefDatabase;
 
+import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 
@@ -18,7 +19,7 @@ import com.google.inject.Inject;
  * <p>
  * 
  */
-public class UpdateRef extends AbstractGeoGitOp<Ref> {
+public class UpdateRef extends AbstractGeoGitOp<Optional<Ref>> {
 
     private String name;
 
@@ -82,10 +83,10 @@ public class UpdateRef extends AbstractGeoGitOp<Ref> {
     }
 
     /**
-     * @return the new ref
+     * @return the new value of the ref
      */
     @Override
-    public Ref call() {
+    public Optional<Ref> call() {
         Preconditions.checkState(name != null, "name has not been set");
         Preconditions.checkState(delete || newValue != null, "value has not been set");
 

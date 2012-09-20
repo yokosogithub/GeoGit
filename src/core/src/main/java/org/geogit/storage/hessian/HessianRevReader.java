@@ -70,7 +70,7 @@ abstract class HessianRevReader {
     protected ObjectId readObjectId(Hessian2Input hin) throws IOException {
         byte[] bytes = hin.readBytes();
         if (bytes.length == 0)
-            return null;
+            return ObjectId.NULL;
         ObjectId id = new ObjectId(bytes);
         return id;
     }
@@ -88,13 +88,14 @@ abstract class HessianRevReader {
         TYPE type = TYPE.valueOf(hin.readInt());
         String name = hin.readString();
         ObjectId id = readObjectId(hin);
+        ObjectId metadataId = readObjectId(hin);
         BoundingBox bbox = readBBox(hin);
 
         NodeRef ref;
         if (bbox == null) {
-            ref = new NodeRef(name, id, type);
+            ref = new NodeRef(name, id, metadataId, type);
         } else {
-            ref = new SpatialRef(name, id, type, bbox);
+            ref = new SpatialRef(name, id, metadataId, type, bbox);
         }
 
         return ref;

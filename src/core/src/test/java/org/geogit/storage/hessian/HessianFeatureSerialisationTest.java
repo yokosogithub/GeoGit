@@ -62,7 +62,8 @@ public class HessianFeatureSerialisationTest extends TestCase {
         HessianFeatureReader reader = new HessianFeatureReader(featureType1, feature1_1
                 .getIdentifier().getID(), null);
         ByteArrayInputStream input = new ByteArrayInputStream(data);
-        Feature feat = reader.read(ObjectId.forString(feature1_1.getIdentifier().getID()), input);
+        Feature feat = reader.read(ObjectId.forString(feature1_1.getIdentifier().getID()), input)
+                .feature();
 
         assertNotNull(feat);
         assertTrue(feat instanceof SimpleFeature);

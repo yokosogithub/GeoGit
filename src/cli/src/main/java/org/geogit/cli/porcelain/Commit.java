@@ -67,14 +67,14 @@ public class Commit extends AbstractCommand implements CLICommand {
         DiffEntry diffEntry;
         while (diff.hasNext()) {
             diffEntry = diff.next();
-            switch (diffEntry.getType()) {
-            case ADD:
+            switch (diffEntry.changeType()) {
+            case ADDED:
                 ++adds;
                 break;
-            case DELETE:
+            case REMOVED:
                 ++deletes;
                 break;
-            case MODIFY:
+            case MODIFIED:
                 ++changes;
                 break;
             }

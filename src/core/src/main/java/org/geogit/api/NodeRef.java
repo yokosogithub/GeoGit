@@ -4,23 +4,44 @@
  */
 package org.geogit.api;
 
+import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
+
+import java.util.List;
+
+import javax.annotation.Nullable;
+
+import com.google.common.collect.Lists;
 
 /**
  */
 public class NodeRef implements Comparable<NodeRef> {
 
-    private String name;
+    /**
+     * The character '/' used to separate paths (e.g. {@code path/to/node})
+     */
+    public static final char PATH_SEPARATOR = '/';
 
+    /**
+     * Full path from the root tree to the object this ref points to
+     */
+    private String path;
+
+    /**
+     * type of object this ref points to
+     */
     private RevObject.TYPE type;
 
+    /**
+     * Id of the object this ref points to
+     */
     private ObjectId objectId;
 
+    /**
+     * possibly {@link ObjectId#NULL NULL} id for the object describing the object this ref points
+     * to
+     */
     private ObjectId metadataId;
-
-    public NodeRef(final String name, final ObjectId oid, final RevObject.TYPE type) {
-        this(name, oid, ObjectId.NULL, type);
-    }
 
     public NodeRef(final String name, final ObjectId oid, final ObjectId metadataId,
             final RevObject.TYPE type) {
@@ -28,17 +49,17 @@ public class NodeRef implements Comparable<NodeRef> {
         checkNotNull(oid);
         checkNotNull(metadataId);
         checkNotNull(type);
-        this.name = name;
+        this.path = name;
         this.objectId = oid;
-        this.metadataId = ObjectId.NULL;
+        this.metadataId = metadataId;
         this.type = type;
     }
 
     /**
-     * The name of this edge
+     * Full path from the root tree to the object this ref points to
      */
-    public String getName() {
-        return name;
+    public String getPath() {
+        return path;
     }
 
     /**
@@ -48,10 +69,17 @@ public class NodeRef implements Comparable<NodeRef> {
         return objectId;
     }
 
+    /**
+     * possibly {@link ObjectId#NULL NULL} id for the object describing the object this ref points
+     * to
+     */
     public ObjectId getMetadataId() {
         return metadataId;
     }
 
+    /**
+     * type of object this ref points to
+     */
     public RevObject.TYPE getType() {
         return type;
     }
@@ -65,8 +93,8 @@ public class NodeRef implements Comparable<NodeRef> {
             return false;
         }
         NodeRef r = (NodeRef) o;
-        return name.equals(r.getName()) && type.equals(r.getType())
-                && objectId.equals(r.getObjectId());
+        return path.equals(r.getPath()) && type.equals(r.getType())
+                && objectId.equals(r.getObjectId()) && metadataId.equals(r.getMetadataId());
     }
 
     /**
@@ -74,7 +102,7 @@ public class NodeRef implements Comparable<NodeRef> {
      */
     @Override
     public int hashCode() {
-        return name.hashCode() * objectId.hashCode();
+        return 17 ^ path.hashCode() * objectId.hashCode() * metadataId.hashCode();
     }
 
     /**
@@ -82,12 +110,113 @@ public class NodeRef implements Comparable<NodeRef> {
      */
     @Override
     public int compareTo(NodeRef o) {
-        return name.compareTo(o.getName());
+        return path.compareTo(o.getPath());
     }
 
     @Override
     public String toString() {
-        return new StringBuilder("NodeRef").append('[').append(name).append(" -> ")
+        return new StringBuilder("NodeRef").append('[').append(path).append(" -> ")
                 .append(objectId).append(']').toString();
+    }
+
+    /**
+     * @deprecated remove once fully moved from {@code List<String>} paths to plain {@code String}
+     *             with only full paths
+     */
+    @Deprecated
+    public static String toPath(List<String> path, @Nullable String... extraPath) {
+        StringBuilder sb = new StringBuilder();
+        {
+            int size = path.size();
+            for (int i = 0; i < size; i++) {
+                sb.append(path.get(i));
+                if (i < size - 1) {
+                    sb.append(PATH_SEPARATOR);
+                }
+            }
+        }
+        {
+            if (extraPath != null && extraPath.length > 0) {
+                sb.append(PATH_SEPARATOR);
+                for (int i = 0; i < extraPath.length; i++) {
+                    checkArgument(extraPath[i] != null, "extra path cannot have null elements");
+                    sb.append(extraPath[i]);
+                    if (i < extraPath.length - 1) {
+                        sb.append(PATH_SEPARATOR);
+                    }
+                }
+            }
+        }
+        return sb.toString();
+    }
+
+    /**
+     * Returns the parent path of {@code fullPath}.
+     * <p>
+     * Given {@code fullPath == "path/to/node"} returns {@code "path/to"}, given {@code "node"}
+     * returns {@code ""}, given {@code null} returns {@code null}
+     * 
+     * @param fullPath the full path to extract the parent path from
+     * @return non null parent path, empty string if {@code fullPath} has no children (i.e. no
+     *         {@link #PATH_SEPARATOR}).
+     */
+    public static @Nullable
+    String parentPath(@Nullable String fullPath) {
+        if (fullPath == null || fullPath.isEmpty()) {
+            return null;
+        }
+        int idx = fullPath.lastIndexOf(PATH_SEPARATOR);
+        if (idx == -1) {
+            return "";
+        }
+        return fullPath.substring(0, idx);
+    }
+
+    /**
+     * @return true of {@code nodePath} is a direct child of {@code parentPath}, {@code false} if
+     *         unrelated, sibling, same path, or nested child
+     */
+    public static boolean isDirectChild(String parentPath, String nodePath) {
+        checkNotNull(parentPath, "parentPath");
+        checkNotNull(nodePath, "nodePath");
+        int idx = nodePath.lastIndexOf(PATH_SEPARATOR);
+        if (parentPath.isEmpty()) {
+            return !nodePath.isEmpty() && idx == -1;
+        }
+        return idx == parentPath.length();
+    }
+
+    /**
+     * Given {@code path == "path/to/node"} returns {@code ["path", "path/to", "path/to/node"]}
+     * 
+     * @return a sorted list of all paths that lead to the given path
+     */
+    public static List<String> allPathsTo(final String path) {
+        checkNotNull(path);
+        checkArgument(!path.isEmpty());
+
+        StringBuilder sb = new StringBuilder();
+        List<String> paths = Lists.newArrayList();
+
+        final String[] steps = path.split("" + PATH_SEPARATOR);
+
+        int i = 0;
+        do {
+            sb.append(steps[i]);
+            paths.add(sb.toString());
+            sb.append(PATH_SEPARATOR);
+            i++;
+        } while (i < steps.length);
+        return paths;
+    }
+
+    /**
+     * Returns a new full path made by appending {@code childName} to {@code parentTreePath}
+     */
+    public static String appendChild(String parentTreePath, String childName) {
+        checkNotNull(parentTreePath);
+        checkNotNull(childName);
+        return new StringBuilder(parentTreePath).append(PATH_SEPARATOR).append(childName)
+                .toString();
     }
 }

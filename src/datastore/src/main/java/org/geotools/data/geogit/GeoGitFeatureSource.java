@@ -24,6 +24,8 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
+import javax.xml.namespace.QName;
+
 import org.geogit.api.GeoGIT;
 import org.geogit.api.ObjectId;
 import org.geogit.api.RevTree;
@@ -82,7 +84,8 @@ public class GeoGitFeatureSource implements SimpleVersioningFeatureSource {
         try {
             final Name typeName = this.type.getName();
             GeoGIT geogit = dataStore.getGeogit();
-            RevTree typeTree = geogit.getRepository().getWorkingTree().getHeadVersion(typeName);
+            RevTree typeTree = geogit.getRepository().getWorkingTree()
+                    .getHeadVersion(new QName(typeName.getNamespaceURI(), typeName.getLocalPart()));
             return typeTree;
         } catch (Exception e) {
             throw new RuntimeException(e);

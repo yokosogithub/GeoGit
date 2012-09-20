@@ -21,6 +21,8 @@ import static org.geotools.data.Transaction.AUTO_COMMIT;
 import java.io.IOException;
 import java.util.List;
 
+import javax.xml.namespace.QName;
+
 import org.geogit.api.GeoGIT;
 import org.geogit.api.NodeRef;
 import org.geogit.api.ObjectId;
@@ -74,7 +76,8 @@ public class GeoGitFeatureStore extends GeoGitFeatureSource implements SimpleVer
             final Name typeName = this.type.getName();
             GeoGIT geogit = dataStore.getGeogit();
             WorkingTree workingTree = geogit.getRepository().getWorkingTree();
-            RevTree typeTree = workingTree.getStagedVersion(typeName);
+            RevTree typeTree = workingTree.getStagedVersion(new QName(typeName.getNamespaceURI(),
+                    typeName.getLocalPart()));
             return typeTree;
         } catch (Exception e) {
             throw new RuntimeException(e);

@@ -30,6 +30,7 @@ import com.google.common.io.CharStreams;
 import com.google.common.io.InputSupplier;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
+import com.google.inject.util.Modules;
 
 public abstract class AbstractGeogitFunctionalTest {
 
@@ -61,7 +62,8 @@ public abstract class AbstractGeogitFunctionalTest {
 
         ConsoleReader consoleReader = new ConsoleReader(stdIn, stdOut, new UnsupportedTerminal());
 
-        Injector injector = Guice.createInjector(new GeogitModule(), new JEStorageModule());
+        Injector injector = Guice.createInjector(Modules.override(new GeogitModule()).with(
+                new JEStorageModule()));
         GeoGIT geogit = new GeoGIT(injector, currentDirectory);
         try {
             GeogitCLI cli = new GeogitCLI(consoleReader);

@@ -11,12 +11,8 @@ public class SpatialRef extends NodeRef {
 
     private BoundingBox bounds;
 
-    public SpatialRef(String name, ObjectId oid, TYPE type, BoundingBox bounds) {
-        this(name, oid, ObjectId.NULL, type, bounds);
-    }
-
-    public SpatialRef(String name, ObjectId oid, ObjectId metadataId, TYPE type, BoundingBox bounds) {
-        super(name, oid, metadataId, type);
+    public SpatialRef(String path, ObjectId oid, ObjectId metadataId, TYPE type, BoundingBox bounds) {
+        super(path, oid, metadataId, type);
         this.bounds = bounds;
     }
 

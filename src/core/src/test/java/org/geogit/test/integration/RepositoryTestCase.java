@@ -20,14 +20,14 @@ import org.geogit.api.NodeRef;
 import org.geogit.api.ObjectId;
 import org.geogit.api.Platform;
 import org.geogit.api.RevCommit;
+import org.geogit.api.RevFeature;
 import org.geogit.di.GeogitModule;
 import org.geogit.repository.Repository;
 import org.geogit.repository.StagingArea;
-import org.geogit.repository.Triplet;
 import org.geogit.storage.ObjectDatabase;
-import org.geogit.storage.ObjectWriter;
 import org.geogit.storage.StagingDatabase;
-import org.geogit.storage.memory.HeapObjectDatabse;
+import org.geogit.storage.fs.FileObjectDatabase;
+import org.geogit.storage.hessian.GeoToolsRevFeature;
 import org.geogit.storage.memory.HeapStagingDatabase;
 import org.geotools.data.DataUtilities;
 import org.geotools.feature.NameImpl;
@@ -35,7 +35,6 @@ import org.geotools.feature.simple.SimpleFeatureBuilder;
 import org.geotools.geometry.jts.ReferencedEnvelope;
 import org.geotools.geometry.jts.WKTReader2;
 import org.geotools.referencing.CRS;
-import org.geotools.util.NullProgressListener;
 import org.geotools.util.logging.Logging;
 import org.junit.After;
 import org.junit.Before;
@@ -46,8 +45,6 @@ import org.opengis.feature.type.Name;
 import org.opengis.geometry.BoundingBox;
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
 
-import com.google.common.base.Function;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Iterators;
 import com.google.inject.AbstractModule;
@@ -125,7 +122,8 @@ public abstract class RepositoryTestCase {
         @Override
         protected void configure() {
             bind(Platform.class).to(TestPlatform.class).in(Scopes.SINGLETON);
-            bind(ObjectDatabase.class).to(HeapObjectDatabse.class).in(Scopes.SINGLETON);
+            // bind(ObjectDatabase.class).to(HeapObjectDatabse.class).in(Scopes.SINGLETON);
+            bind(ObjectDatabase.class).to(FileObjectDatabase.class).in(Scopes.SINGLETON);
             // bind(RefDatabase.class).to(HeapRefDatabase.class).in(Scopes.SINGLETON);
             bind(StagingDatabase.class).to(HeapStagingDatabase.class).in(Scopes.SINGLETON);
         }
@@ -259,12 +257,9 @@ public abstract class RepositoryTestCase {
     protected ObjectId insert(Feature f) throws Exception {
         final StagingArea index = getRepository().getIndex();
         Name name = f.getType().getName();
-        String localPart = name.getLocalPart();
-        String id = f.getIdentifier().getID();
-
-        ObjectWriter<Feature> writer = getRepository().newFeatureWriter(f);
-        BoundingBox bounds = f.getBounds();
-        NodeRef ref = index.inserted(writer, bounds, localPart, id);
+        String parentPath = name.getLocalPart();
+        RevFeature rf = new GeoToolsRevFeature(f);
+        NodeRef ref = index.insert(parentPath, rf);
         ObjectId objectId = ref.getObjectId();
         return objectId;
     }
@@ -275,32 +270,9 @@ public abstract class RepositoryTestCase {
     }
 
     protected void insert(Feature... features) throws Exception {
-
-        final StagingArea index = getRepository().getIndex();
-
-        Iterator<Triplet<ObjectWriter<?>, BoundingBox, List<String>>> iterator;
-        Function<Feature, Triplet<ObjectWriter<?>, BoundingBox, List<String>>> function = new Function<Feature, Triplet<ObjectWriter<?>, BoundingBox, List<String>>>() {
-
-            @Override
-            public Triplet<ObjectWriter<?>, BoundingBox, List<String>> apply(final Feature f) {
-                Name name = f.getType().getName();
-                String localPart = name.getLocalPart();
-                String id = f.getIdentifier().getID();
-
-                Triplet<ObjectWriter<?>, BoundingBox, List<String>> tuple;
-                ObjectWriter<?> writer = getRepository().newFeatureWriter(f);
-                BoundingBox bounds = f.getBounds();
-                List<String> path = ImmutableList.of(localPart, id);
-                tuple = new Triplet<ObjectWriter<?>, BoundingBox, List<String>>(writer, bounds,
-                        path);
-                return tuple;
-            }
-        };
-
-        iterator = Iterators.transform(Iterators.forArray(features), function);
-
-        index.inserted(iterator, new NullProgressListener(), null, null);
-
+        for (Feature f : features) {
+            insert(f);
+        }
     }
 
     /**
@@ -324,7 +296,8 @@ public abstract class RepositoryTestCase {
         Name name = f.getType().getName();
         String localPart = name.getLocalPart();
         String id = f.getIdentifier().getID();
-        boolean existed = index.deleted(localPart, id);
+        String path = NodeRef.appendChild(localPart, id);
+        boolean existed = index.deleted(path);
         return existed;
     }
 

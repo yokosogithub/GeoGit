@@ -6,7 +6,6 @@ package org.geogit.cli.porcelain;
 
 import java.io.IOException;
 import java.util.Iterator;
-import java.util.List;
 
 import jline.console.ConsoleReader;
 
@@ -15,6 +14,9 @@ import org.fusesource.jansi.Ansi.Color;
 import org.geogit.api.DiffEntry;
 import org.geogit.api.DiffEntry.ChangeType;
 import org.geogit.api.GeoGIT;
+import org.geogit.api.NodeRef;
+import org.geogit.api.plumbing.DiffIndex;
+import org.geogit.api.plumbing.DiffWorkTree;
 import org.geogit.cli.AnsiDecorator;
 import org.geogit.cli.CLICommand;
 import org.geogit.cli.GeogitCLI;
@@ -51,7 +53,7 @@ public class Status implements CLICommand {
 
         final StagingDatabase indexDb = geogit.getRepository().getIndex().getDatabase();
 
-        List<String> pathFilter = null;
+        String pathFilter = null;
         final int countStaged = indexDb.countStaged(pathFilter);
         final int countUnstaged = indexDb.countUnstaged(pathFilter);
 
@@ -63,7 +65,8 @@ public class Status implements CLICommand {
         }
 
         if (countStaged > 0) {
-            Iterator<DiffEntry> staged = indexDb.getStaged(pathFilter);
+            Iterator<DiffEntry> staged = geogit.command(DiffIndex.class).setFilter(pathFilter)
+                    .call();
 
             console.println("# Changes to be committed:");
             console.println("#   (use \"geogit reset HEAD <path/to/fid>...\" to unstage)");
@@ -76,7 +79,8 @@ public class Status implements CLICommand {
         }
 
         if (countUnstaged > 0) {
-            Iterator<DiffEntry> unstaged = indexDb.getUnstaged(pathFilter);
+            Iterator<DiffEntry> unstaged = geogit.command(DiffWorkTree.class).setFilter(pathFilter)
+                    .call();
             console.println("# Changes not staged for commit:");
             console.println("#   (use \"geogit add <path/to/fid>...\" to update what will be committed");
             console.println("#   (use \"geogit checkout -- <path/to/fid>...\" to discard changes in working directory");
@@ -108,18 +112,17 @@ public class Status implements CLICommand {
 
         DiffEntry entry;
         ChangeType type;
-        List<String> path;
+        String path;
         int cnt = 0;
         while (changes.hasNext() && cnt < limit) {
             ++cnt;
 
             entry = changes.next();
-            type = entry.getType();
-            path = entry.getPath();
+            type = entry.changeType();
+            path = formatPath(entry);
 
             sb.setLength(0);
-            ansi.a("#      ").fg(color).a(type.toString().charAt(0)).a("  ").a(format(path))
-                    .reset();
+            ansi.a("#      ").fg(color).a(type.toString().toLowerCase()).a("  ").a(path).reset();
             console.println(ansi.toString());
         }
 
@@ -128,15 +131,21 @@ public class Status implements CLICommand {
         console.println(ansi.toString());
     }
 
-    private String format(List<String> path) {
-        StringBuilder sb = new StringBuilder();
-        for (Iterator<String> i = path.iterator(); i.hasNext();) {
-            sb.append(i.next());
-            if (i.hasNext()) {
-                sb.append('/');
+    private String formatPath(DiffEntry entry) {
+        String path;
+        NodeRef oldObject = entry.getOldObject();
+        NodeRef newObject = entry.getNewObject();
+        if (oldObject == null) {
+            path = newObject.getPath();
+        } else if (newObject == null) {
+            path = oldObject.getPath();
+        } else {
+            if (oldObject.getPath().equals(newObject.getPath())) {
+                path = oldObject.getPath();
+            } else {
+                path = oldObject.getPath() + " -> " + newObject.getPath();
             }
         }
-        return sb.toString();
+        return path;
     }
-
 }

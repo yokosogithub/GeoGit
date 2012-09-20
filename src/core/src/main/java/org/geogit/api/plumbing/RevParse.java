@@ -5,7 +5,8 @@
 
 package org.geogit.api.plumbing;
 
-import java.io.IOException;
+import static com.google.common.base.Preconditions.checkState;
+
 import java.util.List;
 import java.util.regex.Pattern;
 
@@ -14,6 +15,7 @@ import org.geogit.api.ObjectId;
 import org.geogit.api.Ref;
 import org.geogit.storage.StagingDatabase;
 
+import com.google.common.base.Optional;
 import com.google.inject.Inject;
 
 /**
@@ -70,26 +72,21 @@ public class RevParse extends AbstractGeoGitOp<ObjectId> {
      * <li><b>ref@{time}</b>: value of ref at the designated time</li>
      * </ul>
      * 
-     * @param revstr A git object references expression
-     * @return an ObjectId or null if revstr can't be resolved to any ObjectId
-     * @throws AmbiguousObjectException {@code revstr} contains an abbreviated ObjectId and this
-     *         repository contains more than one object which match to the input abbreviation.
-     * @throws IncorrectObjectTypeException the id parsed does not meet the type required to finish
-     *         applying the operators in the expression.
-     * @throws RevisionSyntaxException the expression is not supported by this implementation, or
-     *         does not meet the standard syntax.
-     * @throws IOException on serious errors
-     * @return the resolved object id or {@link ObjectId#NULL}
+     * @param revstr A geogit object references expression
+     * @throws IllegalArgumentException if the ref spec doesn't resolve to any object in the
+     *         respository
+     * @return the resolved object id, may be {@link ObjectId#NULL}
      */
     @Override
     public ObjectId call() {
+        checkState(refSpec != null);
         ObjectId resolvedTo = ObjectId.NULL;
         // TODO: handle other kinds of ref specs
 
         // is it a ref?
-        Ref ref = command(RefParse.class).setName(refSpec).call();
-        if (ref != null) {
-            resolvedTo = ref.getObjectId();
+        Optional<Ref> ref = command(RefParse.class).setName(refSpec).call();
+        if (ref.isPresent()) {
+            resolvedTo = ref.get().getObjectId();
         } else {
             // does it look like an object id hash?
             boolean hexPatternMatches = HEX_PATTERN.matcher(refSpec).matches();

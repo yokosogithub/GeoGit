@@ -24,6 +24,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import javax.xml.namespace.QName;
+
 import org.geogit.api.GeoGIT;
 import org.geotools.data.DataAccess;
 import org.geotools.data.FeatureLocking;
@@ -42,8 +44,6 @@ import org.opengis.feature.type.Name;
 import org.opengis.filter.Id;
 import org.opengis.filter.identity.Identifier;
 import org.opengis.filter.identity.ResourceId;
-
-import com.google.common.base.Throwables;
 
 /**
  * Decorator around an unversioned DataAccess allowing it to be used in conjunction with a GeoGit
@@ -76,7 +76,8 @@ public class DataAccessDecorator<T extends FeatureType, F extends Feature> imple
     }
 
     public boolean isVersioned(Name name) {
-        boolean isVersioned = geogit.getRepository().getWorkingTree().hasRoot(name);
+        boolean isVersioned = geogit.getRepository().getWorkingTree()
+                .hasRoot(new QName(name.getNamespaceURI(), name.getLocalPart()));
         return isVersioned;
     }
 
@@ -119,13 +120,13 @@ public class DataAccessDecorator<T extends FeatureType, F extends Feature> imple
     @Override
     public void createSchema(T featureType) throws IOException {
         unversioned.createSchema(featureType);
-        try {
-            geogit.getRepository().getWorkingTree().init(featureType);
-            geogit.add().call();
-            geogit.commit().call();
-        } catch (Exception e) {
-            Throwables.propagate(e);
-        }
+        // try {
+        // geogit.getRepository().getWorkingTree().init(new GeoToolsRevFeatureType(featureType));
+        // geogit.add().call();
+        // geogit.commit().call();
+        // } catch (Exception e) {
+        // Throwables.propagate(e);
+        // }
     }
 
     /**

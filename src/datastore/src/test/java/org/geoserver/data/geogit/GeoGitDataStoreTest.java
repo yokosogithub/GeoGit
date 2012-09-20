@@ -93,15 +93,15 @@ public class GeoGitDataStoreTest extends RepositoryTestCase {
             assertNotNull(typesTreeRef);
 
             RevTree typesTree = repo.getTree(typesTreeRef.getObjectId());
-            List<String> path = Arrays.asList(typeName.getLocalPart());
+            String path = typeName.getLocalPart();
             ObjectDatabase objectDatabase = repo.getObjectDatabase();
 
             NodeRef typeRef = objectDatabase.getTreeChild(typesTree, path);
             assertNotNull(typeRef);
-            assertEquals(TYPE.BLOB, typeRef.getType());
+            assertEquals(TYPE.FEATURE, typeRef.getType());
 
-            SimpleFeatureType readType = objectDatabase.get(typeRef.getObjectId(), getRepository()
-                    .newSimpleFeatureTypeReader());
+            SimpleFeatureType readType = (SimpleFeatureType) objectDatabase.get(
+                    typeRef.getObjectId(), getRepository().newFeatureTypeReader()).type();
 
             assertEquals(featureType, readType);
 

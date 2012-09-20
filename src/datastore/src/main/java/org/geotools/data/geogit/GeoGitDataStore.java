@@ -27,6 +27,7 @@ import org.geogit.api.MutableTree;
 import org.geogit.api.NodeRef;
 import org.geogit.api.ObjectId;
 import org.geogit.api.Ref;
+import org.geogit.api.RevFeatureType;
 import org.geogit.api.RevObject.TYPE;
 import org.geogit.api.RevTree;
 import org.geogit.api.plumbing.RefParse;
@@ -34,6 +35,7 @@ import org.geogit.api.plumbing.UpdateRef;
 import org.geogit.storage.ObjectDatabase;
 import org.geogit.storage.ObjectReader;
 import org.geogit.storage.ObjectWriter;
+import org.geogit.storage.hessian.GeoToolsRevFeatureType;
 import org.geotools.data.DefaultServiceInfo;
 import org.geotools.data.FeatureReader;
 import org.geotools.data.FeatureWriter;
@@ -46,6 +48,7 @@ import org.geotools.data.versioning.VersioningDataStore;
 import org.geotools.util.logging.Logging;
 import org.opengis.feature.simple.SimpleFeature;
 import org.opengis.feature.simple.SimpleFeatureType;
+import org.opengis.feature.type.FeatureType;
 import org.opengis.feature.type.Name;
 import org.opengis.filter.Filter;
 
@@ -135,12 +138,9 @@ public class GeoGitDataStore implements VersioningDataStore {
         List<Name> names = new ArrayList<Name>();
         for (Iterator<NodeRef> simpleNames = typesTree.iterator(null); simpleNames.hasNext();) {
             final NodeRef typeNameRef = simpleNames.next();
-            SimpleFeatureType featureType = geogit
-                    .getRepository()
-                    .getObjectDatabase()
-                    .get(typeNameRef.getObjectId(),
-                            geogit.getRepository().newSimpleFeatureTypeReader());
-            names.add(featureType.getName());
+            RevFeatureType featureType = geogit.getRepository().getObjectDatabase()
+                    .get(typeNameRef.getObjectId(), geogit.getRepository().newFeatureTypeReader());
+            names.add(((FeatureType) featureType.type()).getName());
         }
 
         return names;
@@ -215,10 +215,10 @@ public class GeoGitDataStore implements VersioningDataStore {
         try {
             final ObjectId featureTypeBlobId;
             ObjectDatabase objectDatabase = geogit.getRepository().getObjectDatabase();
-            featureTypeBlobId = objectDatabase.put(geogit.getRepository()
-                    .newSimpleFeatureTypeWriter(createType));
+            featureTypeBlobId = objectDatabase.put(geogit.getRepository().newFeatureTypeWriter(
+                    new GeoToolsRevFeatureType(createType)));
 
-            typesTree.put(new NodeRef(localName, featureTypeBlobId, TYPE.BLOB));
+            typesTree.put(new NodeRef(localName, featureTypeBlobId, TYPE.FEATURE));
 
             final ObjectId newTypeRefsTreeId;
             newTypeRefsTreeId = objectDatabase.put(geogit.getRepository().newRevTreeWriter(
@@ -250,17 +250,18 @@ public class GeoGitDataStore implements VersioningDataStore {
                 typesTreeRef.getObjectId());
         Preconditions.checkState(namespacesRootTree != null);
 
-        final String[] path = { name.getLocalPart() };
+        final String path = name.getLocalPart();
 
         final NodeRef typeRef = objectDatabase.getTreeChild(namespacesRootTree, path);
         if (typeRef == null) {
             throw new SchemaNotFoundException(name.toString());
         }
-        Preconditions.checkState(TYPE.BLOB.equals(typeRef.getType()));
+        Preconditions.checkState(TYPE.FEATURE.equals(typeRef.getType()));
         final ObjectId objectId = typeRef.getObjectId();
-        final ObjectReader<SimpleFeatureType> reader = getGeogit().getRepository()
-                .newSimpleFeatureTypeReader();
-        final SimpleFeatureType featureType = objectDatabase.get(objectId, reader);
+        final ObjectReader<RevFeatureType> reader = getGeogit().getRepository()
+                .newFeatureTypeReader();
+        final SimpleFeatureType featureType = (SimpleFeatureType) objectDatabase.get(objectId,
+                reader).type();
         return featureType;
     }
 

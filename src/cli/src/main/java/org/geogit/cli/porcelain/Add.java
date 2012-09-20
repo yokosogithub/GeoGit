@@ -20,7 +20,6 @@ import org.geogit.repository.StagingArea;
 
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.Parameters;
-import com.google.common.collect.ImmutableList;
 
 /**
  *
@@ -40,10 +39,9 @@ public class Add extends AbstractCommand implements CLICommand {
 
         ConsoleReader console = cli.getConsole();
 
-        List<String> pathFilter = null;
+        String pathFilter = null;
         if (patterns.size() == 1) {
-            String[] pattern = patterns.get(0).split("/");
-            pathFilter = ImmutableList.copyOf(pattern);
+            pathFilter = patterns.get(0);
         } else if (patterns.size() > 1) {
             throw new UnsupportedOperationException("Only a single path is supported so far");
         }

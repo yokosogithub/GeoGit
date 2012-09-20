@@ -36,6 +36,7 @@ import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Key;
 import com.google.inject.Module;
+import com.google.inject.util.Modules;
 
 /**
  * Command Line Interface for geogit.
@@ -105,7 +106,8 @@ public class GeogitCLI {
      *         directory.
      */
     private GeoGIT loadRepository() {
-        Injector inj = Guice.createInjector(new JEStorageModule(), new GeogitModule());
+        Injector inj = Guice.createInjector(Modules.override(new GeogitModule()).with(
+                new JEStorageModule()));
         GeoGIT geogit = new GeoGIT(inj, platform.pwd());
 
         if (null != geogit.command(ResolveGeogitDir.class).call()) {

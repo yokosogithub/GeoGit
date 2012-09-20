@@ -7,11 +7,12 @@ package org.geogit.api;
 import java.math.BigInteger;
 import java.util.Iterator;
 
+import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
 
 public interface RevTree extends RevObject {
 
-    public abstract NodeRef get(final String key);
+    public abstract Optional<NodeRef> get(final String key);
 
     public abstract void accept(TreeVisitor visitor);
 
@@ -21,5 +22,5 @@ public interface RevTree extends RevObject {
 
     public abstract boolean isNormalized();
 
-    public abstract MutableTree mutable();
+    public abstract MutableTree mutable() throws UnsupportedOperationException;
 }

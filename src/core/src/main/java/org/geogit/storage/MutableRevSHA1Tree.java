@@ -19,6 +19,7 @@ import org.geogit.api.NodeRef;
 import org.geogit.api.ObjectId;
 import org.geogit.api.RevTree;
 
+import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
 
@@ -66,10 +67,6 @@ class MutableRevSHA1Tree extends RevSHA1Tree implements MutableTree {
         return mutableSize;
     }
 
-    void put(Integer bucket, ObjectId subtreeId) {
-        mySubTrees.put(bucket, new NodeRef("", subtreeId, TYPE.TREE));
-    }
-
     /**
      * Adds or replaces an element in the tree with the given key.
      * <p>
@@ -85,7 +82,7 @@ class MutableRevSHA1Tree extends RevSHA1Tree implements MutableTree {
     public void put(final NodeRef ref) {
         Preconditions.checkNotNull(ref, "ref can't be null");
 
-        NodeRef oldCachedValue = myEntries.put(ref.getName(), ref);
+        NodeRef oldCachedValue = myEntries.put(ref.getPath(), ref);
         if (myEntries.size() >= SPLIT_FACTOR) {
             // hit the split factor modification tolerance, lets normalize
             normalize();
@@ -107,7 +104,7 @@ class MutableRevSHA1Tree extends RevSHA1Tree implements MutableTree {
     }
 
     @Override
-    public NodeRef remove(final String key) {
+    public Optional<NodeRef> remove(final String key) {
         Preconditions.checkNotNull(key, "key can't be null");
         final Integer bucket = computeBucket(key);
         if (null == mySubTrees.get(bucket)) {
@@ -117,17 +114,19 @@ class MutableRevSHA1Tree extends RevSHA1Tree implements MutableTree {
             if (removed != null) {
                 this.mutableSize = size().subtract(BigInteger.ONE);
             }
-            return removed;
+            return Optional.fromNullable(removed);
         } else {
-            NodeRef ref = this.get(key);
-            // there's a subtree this key's bucket, we don't know if the subtree contains it at all
-            // and it'd be too expensive to find out just now, use null value signaling the removal
-            // of the entry. normalize() is gonna take care of removing it from the subtree
-            // subsequently
-            myEntries.put(key, null);
-            mutableSize = null; // I'm not sure what my size is anymore
-            if (myEntries.size() >= SPLIT_FACTOR) {
-                normalize();
+            Optional<NodeRef> ref = this.get(key);
+            if (ref.isPresent()) {
+                // use null value signaling the removal
+                // of the entry. normalize() is gonna take care of removing it from the subtree
+                // subsequently
+                myEntries.put(key, null);
+                this.mutableSize = size().subtract(BigInteger.ONE);
+                // mutableSize = null; // I'm not sure what my size is anymore
+                if (myEntries.size() >= SPLIT_FACTOR) {
+                    normalize();
+                }
             }
             return ref;
         }
@@ -200,7 +199,7 @@ class MutableRevSHA1Tree extends RevSHA1Tree implements MutableTree {
                 size = size.add(subtree.size());
                 subtreeId = this.db.put(serialFactory.createRevTreeWriter(subtree));
                 // subtreeId = this.db.put(new BxmlRevTreeWriter(subtree));
-                subtreeRef = new NodeRef("", subtreeId, TYPE.TREE);
+                subtreeRef = new NodeRef("", subtreeId, ObjectId.NULL, TYPE.TREE);
                 ignoreForSizeComputation.add(subtreeRef);
                 mySubTrees.put(bucket, subtreeRef);
             }

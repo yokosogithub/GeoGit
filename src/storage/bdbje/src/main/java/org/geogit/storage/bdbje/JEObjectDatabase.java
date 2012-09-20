@@ -78,9 +78,6 @@ public class JEObjectDatabase extends AbstractObjectDatabase implements ObjectDa
         return env;
     }
 
-    /**
-     * @see org.geogit.storage.ObjectDatabase#close()
-     */
     @Override
     public void close() {
         // System.err.println("CLOSE");
@@ -97,9 +94,6 @@ public class JEObjectDatabase extends AbstractObjectDatabase implements ObjectDa
         }
     }
 
-    /**
-     * @see org.geogit.storage.ObjectDatabase#create()
-     */
     @Override
     public void create() {
         if (objectDb != null) {
@@ -179,9 +173,6 @@ public class JEObjectDatabase extends AbstractObjectDatabase implements ObjectDa
         return SUCCESS == status;
     }
 
-    /**
-     * @see org.geogit.storage.ObjectDatabase#getRaw(org.geogit.api.ObjectId)
-     */
     @Override
     protected InputStream getRawInternal(final ObjectId id) {
         Preconditions.checkNotNull(id, "id");
@@ -199,21 +190,14 @@ public class JEObjectDatabase extends AbstractObjectDatabase implements ObjectDa
         return new ByteArrayInputStream(cData);
     }
 
-    /**
-     * @see org.geogit.storage.ObjectDatabase#put(org.geogit.storage.ObjectWriter)
-     */
     @Override
-    protected boolean putInternal(final ObjectId id, final byte[] rawData, final boolean override) {
+    protected boolean putInternal(final ObjectId id, final byte[] rawData) {
         final byte[] rawKey = id.getRawValue();
         DatabaseEntry key = new DatabaseEntry(rawKey);
         DatabaseEntry data = new DatabaseEntry(rawData);
 
         OperationStatus status;
-        if (override) {
-            status = objectDb.put(txn.getTransaction(), key, data);
-        } else {
-            status = objectDb.putNoOverwrite(txn.getTransaction(), key, data);
-        }
+        status = objectDb.putNoOverwrite(txn.getTransaction(), key, data);
         final boolean didntExist = SUCCESS.equals(status);
 
         if (LOGGER.isLoggable(Level.FINER)) {
@@ -234,10 +218,6 @@ public class JEObjectDatabase extends AbstractObjectDatabase implements ObjectDa
         return SUCCESS.equals(status);
     }
 
-    /**
-     * @return
-     * @see org.geogit.storage.ObjectDatabase#getSerialFactory()
-     */
     @Override
     public ObjectSerialisingFactory getSerialFactory() {
         return serialFactory;

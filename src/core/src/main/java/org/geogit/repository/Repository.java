@@ -6,8 +6,8 @@ package org.geogit.repository;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.List;
-import java.util.NoSuchElementException;
+import java.io.Serializable;
+import java.util.Map;
 
 import org.geogit.api.AbstractGeoGitOp;
 import org.geogit.api.NodeRef;
@@ -15,25 +15,20 @@ import org.geogit.api.ObjectId;
 import org.geogit.api.Ref;
 import org.geogit.api.RevCommit;
 import org.geogit.api.RevFeature;
-import org.geogit.api.RevObject;
-import org.geogit.api.RevTag;
+import org.geogit.api.RevFeatureType;
 import org.geogit.api.RevTree;
 import org.geogit.api.plumbing.RefParse;
 import org.geogit.api.plumbing.RevObjectParse;
 import org.geogit.api.plumbing.RevParse;
 import org.geogit.storage.BlobPrinter;
-import org.geogit.storage.BlobReader;
 import org.geogit.storage.ObjectDatabase;
 import org.geogit.storage.ObjectInserter;
 import org.geogit.storage.ObjectReader;
 import org.geogit.storage.ObjectSerialisingFactory;
 import org.geogit.storage.ObjectWriter;
 import org.geogit.storage.RefDatabase;
-import org.geotools.factory.Hints;
-import org.opengis.feature.Feature;
-import org.opengis.feature.simple.SimpleFeatureType;
-import org.opengis.feature.type.FeatureType;
 
+import com.google.common.base.Optional;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 
@@ -111,74 +106,6 @@ public class Repository {
         return getObjectDatabase().getRaw(oid);
     }
 
-    @SuppressWarnings("unchecked")
-    public <T extends RevObject> T resolve(final String revstr, Class<T> type) {
-        Ref ref = getRef(revstr);
-        if (ref != null) {
-            RevObject parsed = parse(ref);
-            if (!type.isAssignableFrom(parsed.getClass())) {
-                return (T) parsed;
-            }
-        }
-
-        // not a ref name, may be a partial object id?
-        List<ObjectId> lookUp = getObjectDatabase().lookUp(revstr);
-        if (!lookUp.isEmpty()) {
-            for (ObjectId oid : lookUp) {
-                try {
-                    if (RevCommit.class.equals(type) || RevTag.class.equals(type)) {
-                        return (T) getCommit(oid);
-                    } else if (RevTree.class.equals(type)) {
-                        return (T) getTree(oid);
-                    } else if (RevFeature.class.equals(type)) {
-                        return (T) getBlob(oid);
-                    }
-                } catch (Exception wrongType) {
-                    // ignore
-                }
-            }
-        }
-        throw new NoSuchElementException();
-    }
-
-    /**
-     * @param revstr an object reference expression
-     * @return the object the resolved reference points to.
-     * @throws NoSuchElementException if {@code revstr} dosn't resolve to any object
-     * @throws IllegalArgumentException if {@code revstr} resolves to more than one object.
-     * @deprecated use revpa
-     */
-    // public RevObject resolve(final String revstr) {
-    // Ref ref = getRef(revstr);
-    // if (ref != null) {
-    // return parse(ref);
-    // }
-    //
-    // // not a ref name, may be a partial object id?
-    // List<ObjectId> lookUp = getObjectDatabase().lookUp(revstr);
-    // if (lookUp.size() == 1) {
-    // final ObjectId objectId = lookUp.get(0);
-    // try {
-    // return getCommit(objectId);
-    // } catch (Exception e) {
-    // try {
-    // return getTree(objectId);
-    // } catch (Exception e2) {
-    // return getBlob(objectId);
-    // }
-    // }
-    // }
-    // if (lookUp.size() > 1) {
-    // throw new IllegalArgumentException("revstr '" + revstr
-    // + "' resolves to more than one object: " + lookUp);
-    // }
-    // throw new NoSuchElementException();
-    // }
-
-    public RevFeature getBlob(ObjectId objectId) {
-        return getObjectDatabase().get(objectId, new BlobReader());
-    }
-
     /**
      * Test if a blob exists in the object database
      * 
@@ -186,39 +113,19 @@ public class Repository {
      * @return true if the blob exists with the parameter ID, false otherwise
      */
     public boolean blobExists(final ObjectId id) {
-        try {
-            getBlob(id);
-        } catch (IllegalArgumentException e) {
-            return false;
-        }
-        return true;
-    }
-
-    private RevObject parse(final Ref ref) {
-        final ObjectDatabase objectDatabase = getObjectDatabase();
-        switch (ref.getType()) {
-        case BLOB:
-            return getBlob(ref.getObjectId());
-        case COMMIT:
-        case TAG:
-            return getCommit(ref.getObjectId());
-        case TREE:
-            return getTree(ref.getObjectId());
-        default:
-            throw new IllegalArgumentException("Unknown ref type: " + ref);
-        }
+        return getObjectDatabase().exists(id);
     }
 
     /**
      */
-    public Ref getRef(final String revStr) {
-        Ref ref = command(RefParse.class).setName(revStr).call();
+    public Optional<Ref> getRef(final String revStr) {
+        Optional<Ref> ref = command(RefParse.class).setName(revStr).call();
         return ref;
     }
 
     /**
      */
-    public Ref getHead() {
+    public Optional<Ref> getHead() {
         return getRef(Ref.HEAD);
     }
 
@@ -300,13 +207,13 @@ public class Repository {
         return getObjectDatabase().newObjectInserter();
     }
 
-    public Feature getFeature(final FeatureType featureType, final String featureId,
+    public RevFeature getFeature(final RevFeatureType featureType, final String featureId,
             final ObjectId contentId) {
-        ObjectReader<Feature> reader = newFeatureReader(featureType, featureId);
+        ObjectReader<RevFeature> reader = newFeatureReader(featureType, featureId);
 
-        Feature feature = getObjectDatabase().get(contentId, reader);
+        RevFeature revFeature = getObjectDatabase().get(contentId, reader);
 
-        return feature;
+        return revFeature;
     }
 
     /**
@@ -316,12 +223,7 @@ public class Repository {
         return getObjectDatabase().newTree();
     }
 
-    public NodeRef getRootTreeChild(List<String> path) {
-        RevTree root = getHeadTree();
-        return getObjectDatabase().getTreeChild(root, path);
-    }
-
-    public NodeRef getRootTreeChild(String... path) {
+    public Optional<NodeRef> getRootTreeChild(String path) {
         RevTree root = getHeadTree();
         return getObjectDatabase().getTreeChild(root, path);
     }
@@ -350,25 +252,26 @@ public class Repository {
         return serialFactory.createCommitReader();
     }
 
-    public ObjectReader<Feature> newFeatureReader(FeatureType featureType, String featureId) {
-        return serialFactory.createFeatureReader(featureType, featureId);
+    public ObjectReader<RevFeature> newFeatureReader(RevFeatureType featureType, String featureId) {
+        ObjectReader<RevFeature> reader = serialFactory.createFeatureReader(featureType, featureId);
+        return reader;
     }
 
-    public ObjectReader<Feature> newFeatureReader(final FeatureType featureType,
-            final String featureId, final Hints hints) {
+    public ObjectReader<RevFeature> newFeatureReader(final RevFeatureType featureType,
+            final String featureId, final Map<String, Serializable> hints) {
         return serialFactory.createFeatureReader(featureType, featureId, hints);
     }
 
-    public ObjectWriter<Feature> newFeatureWriter(Feature feature) {
+    public ObjectWriter<RevFeature> newFeatureWriter(RevFeature feature) {
         return serialFactory.createFeatureWriter(feature);
     }
 
-    public ObjectWriter<SimpleFeatureType> newSimpleFeatureTypeWriter(SimpleFeatureType type) {
-        return serialFactory.createSimpleFeatureTypeWriter(type);
+    public ObjectWriter<RevFeatureType> newFeatureTypeWriter(RevFeatureType type) {
+        return serialFactory.createFeatureTypeWriter(type);
     }
 
-    public ObjectReader<SimpleFeatureType> newSimpleFeatureTypeReader() {
-        return serialFactory.createSimpleFeatureTypeReader();
+    public ObjectReader<RevFeatureType> newFeatureTypeReader() {
+        return serialFactory.createFeatureTypeReader();
     }
 
     public ObjectSerialisingFactory getSerializationFactory() {

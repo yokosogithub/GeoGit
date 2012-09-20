@@ -8,7 +8,19 @@ import java.io.InputStream;
 
 import org.geogit.api.ObjectId;
 
+import com.vividsolutions.jts.geom.GeometryFactory;
+
 public interface ObjectReader<T> {
+
+    /**
+     * Hint of type {@link GeometryFactory}
+     */
+    public static final String JTS_GEOMETRY_FACTORY = "JTS_GEOMETRY_FACTORY";
+
+    /**
+     * Hint of type Boolean
+     */
+    public static final String USE_PROVIDED_FID = "USE_PROVIDED_FID";
 
     /**
      * @param id

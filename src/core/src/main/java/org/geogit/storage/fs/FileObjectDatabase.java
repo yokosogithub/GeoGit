@@ -4,30 +4,50 @@
  */
 package org.geogit.storage.fs;
 
+import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkNotNull;
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URISyntaxException;
+import java.net.URL;
 import java.util.List;
 
 import org.geogit.api.ObjectId;
+import org.geogit.api.Platform;
+import org.geogit.api.plumbing.ResolveGeogitDir;
 import org.geogit.storage.AbstractObjectDatabase;
 import org.geogit.storage.ObjectDatabase;
-import org.geogit.storage.ObjectSerialisingFactory;
 
 import com.google.common.base.Throwables;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableList.Builder;
+import com.google.inject.Inject;
 
 public class FileObjectDatabase extends AbstractObjectDatabase implements ObjectDatabase {
 
-    private final File environment;
+    private final Platform platform;
 
-    private final String environmentPath;
+    private final String databaseName;
 
-    public FileObjectDatabase(final File environment) {
-        this.environment = environment;
-        this.environmentPath = environment.getAbsolutePath();
+    private File dataRoot;
+
+    private String dataRootPath;
+
+    @Inject
+    public FileObjectDatabase(final Platform platform) {
+        this(platform, "objects");
+    }
+
+    protected FileObjectDatabase(final Platform platform, final String databaseName) {
+        checkNotNull(platform);
+        checkNotNull(databaseName);
+        this.platform = platform;
+        this.databaseName = databaseName;
     }
 
     @Override
@@ -35,20 +55,40 @@ public class FileObjectDatabase extends AbstractObjectDatabase implements Object
         // TODO Auto-generated method stub
     }
 
+    protected File getDataRoot() {
+        return dataRoot;
+    }
+
+    protected String getDataRootPath() {
+        return dataRootPath;
+    }
+
     @Override
     public void create() {
-        if (!environment.exists() && !environment.mkdirs()) {
+        final URL repoUrl = new ResolveGeogitDir(platform).call();
+        if (repoUrl == null) {
+            throw new IllegalStateException("Can't find geogit repository home");
+        }
+
+        try {
+            dataRoot = new File(new File(repoUrl.toURI()), databaseName);
+        } catch (URISyntaxException e) {
+            throw Throwables.propagate(e);
+        }
+
+        if (!dataRoot.exists() && !dataRoot.mkdirs()) {
             throw new IllegalStateException("Can't create environment: "
-                    + environment.getAbsolutePath());
+                    + dataRoot.getAbsolutePath());
         }
-        if (!environment.isDirectory()) {
+        if (!dataRoot.isDirectory()) {
             throw new IllegalStateException("Environment but is not a directory: "
-                    + environment.getAbsolutePath());
+                    + dataRoot.getAbsolutePath());
         }
-        if (!environment.canWrite()) {
+        if (!dataRoot.canWrite()) {
             throw new IllegalStateException("Environment is not writable: "
-                    + environment.getAbsolutePath());
+                    + dataRoot.getAbsolutePath());
         }
+        dataRootPath = dataRoot.getAbsolutePath();
     }
 
     @Override
@@ -71,9 +111,9 @@ public class FileObjectDatabase extends AbstractObjectDatabase implements Object
      * @see org.geogit.storage.AbstractObjectDatabase#putInternal(org.geogit.api.ObjectId, byte[])
      */
     @Override
-    protected boolean putInternal(final ObjectId id, final byte[] rawData, final boolean override) {
+    protected boolean putInternal(final ObjectId id, final byte[] rawData) {
         final File f = filePath(id);
-        if (!override && f.exists()) {
+        if (f.exists()) {
             return false;
         }
 
@@ -103,36 +143,52 @@ public class FileObjectDatabase extends AbstractObjectDatabase implements Object
 
     @Override
     public boolean delete(ObjectId objectId) {
-        return filePath(objectId).delete();
+        File filePath = filePath(objectId);
+        boolean delete = filePath.delete();
+        return delete;
     }
 
     private File filePath(final ObjectId id) {
         final String idName = id.toString();
+        return filePath(idName);
+    }
+
+    private File filePath(final String objectId) {
+        checkNotNull(objectId);
+        checkArgument(objectId.length() > 4, "partial object id is too short");
+
         final char[] path1 = new char[2];
         final char[] path2 = new char[2];
-        idName.getChars(0, 2, path1, 0);
-        idName.getChars(2, 4, path2, 0);
+        objectId.getChars(0, 2, path1, 0);
+        objectId.getChars(2, 4, path2, 0);
 
-        StringBuilder sb = new StringBuilder(environmentPath);
+        StringBuilder sb = new StringBuilder(dataRootPath);
         sb.append(File.separatorChar).append(path1).append(File.separatorChar).append(path2)
-                .append(File.separatorChar).append(idName);
+                .append(File.separatorChar).append(objectId);
         String filePath = sb.toString();
         return new File(filePath);
     }
 
     @Override
-    protected List<ObjectId> lookUpInternal(byte[] raw) {
-        throw new UnsupportedOperationException("This method is not yet implemented");
+    public List<ObjectId> lookUp(final String partialId) {
+        File parent = filePath(partialId).getParentFile();
+        String[] list = parent.list();
+        if (null == list) {
+            return ImmutableList.of();
+        }
+        Builder<ObjectId> builder = ImmutableList.builder();
+        for (String oid : list) {
+            if (oid.startsWith(partialId)) {
+                builder.add(ObjectId.valueOf(oid));
+            }
+        }
+        return builder.build();
     }
 
-    /**
-     * @return
-     * @see org.geogit.storage.ObjectDatabase#getSerialFactory()
-     */
     @Override
-    public ObjectSerialisingFactory getSerialFactory() {
-        // TODO Auto-generated method stub
-        return null;
+    protected List<ObjectId> lookUpInternal(byte[] raw) {
+        throw new UnsupportedOperationException(
+                "This method should not be called, we override lookUp(String) directly");
     }
 
 }

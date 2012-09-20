@@ -38,10 +38,9 @@ public class AddOp extends AbstractGeoGitOp<StagingArea> {
      */
     public StagingArea call() throws Exception {
         // this is add all, TODO: implement partial adds
-        String[] path = null;
+        String path = null;
         if (patterns.size() == 1) {
-            String pattern = patterns.iterator().next();
-            path = pattern.split("/");
+            path = patterns.iterator().next();
         }
         index.stage(getProgressListener(), path);
         return index;

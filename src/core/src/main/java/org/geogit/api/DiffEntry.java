@@ -4,13 +4,16 @@
  */
 package org.geogit.api;
 
-import java.util.List;
+import static com.google.common.base.Preconditions.checkArgument;
+
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
+import javax.annotation.meta.When;
 
 import org.geogit.repository.SpatialOps;
 import org.opengis.geometry.BoundingBox;
 
 import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableList;
 
 public class DiffEntry {
 
@@ -18,58 +21,76 @@ public class DiffEntry {
         /**
          * Add a new Feature
          */
-        ADD,
+        ADDED {
+            @Override
+            public int value() {
+                return 0;
+            }
+        },
 
         /**
          * Modify an existing Feature
          */
-        MODIFY,
+        MODIFIED {
+            @Override
+            public int value() {
+                return 1;
+            }
+        },
 
         /**
          * Delete an existing Feature
          */
-        DELETE
+        REMOVED {
+            @Override
+            public int value() {
+                return 2;
+            }
+        };
+
+        public abstract int value();
+
+        public static ChangeType valueOf(int value) {
+            // relying in the enum ordinal, beware
+            return ChangeType.values()[value];
+        }
     }
 
     private final NodeRef oldObject;
 
     private final NodeRef newObject;
 
-    private final ChangeType type;
+    public DiffEntry(@Nonnull(when = When.MAYBE) NodeRef oldObject,
+            @Nonnull(when = When.MAYBE) NodeRef newObject) {
 
-    /**
-     * Path to object. Basically a three step path name made of
-     * {@code [namespace, FeatureType name, Feature ID]}
-     */
-    private final List<String> path;
+        Preconditions.checkArgument(oldObject != null || newObject != null,
+                "Either oldObject or newObject shall not be null");
 
-    private final ObjectId oldCommitId;
+        if (oldObject != null && oldObject.equals(newObject)) {
+            throw new IllegalArgumentException(
+                    "Trying to create a DiffEntry for the same object id, means the object didn't change: "
+                            + oldObject.toString());
+        }
+        if (oldObject != null && newObject != null) {
+            checkArgument(oldObject.getType().equals(newObject.getType()), String.format(
+                    "Types don't match: %s : %s", oldObject.getType().toString(), newObject
+                            .getType().toString()));
+        }
 
-    private final ObjectId newCommitId;
-
-    private final BoundingBox where;
-
-    public DiffEntry(ChangeType type, ObjectId oldCommitId, ObjectId newCommitId,
-            NodeRef oldObject, NodeRef newObject, BoundingBox where, List<String> path) {
-        this.type = type;
-        this.oldCommitId = oldCommitId;
-        this.newCommitId = newCommitId;
         this.oldObject = oldObject;
         this.newObject = newObject;
-        this.where = where;
-        this.path = ImmutableList.copyOf(path);
     }
 
     /**
      * @return the id of the old version id of the object, or {@link ObjectId#NULL} if
-     *         {@link #getType()} is {@code ADD}
+     *         {@link #changeType()} is {@code ADD}
      */
-    public ObjectId getOldObjectId() {
+    public ObjectId oldObjectId() {
         return oldObject == null ? ObjectId.NULL : oldObject.getObjectId();
     }
 
     /**
-     * @return the old object, or {@code null} if {@link #getType()} is {@code ADD}
+     * @return the old object, or {@code null} if {@link #changeType()} is {@code ADD}
      */
     public NodeRef getOldObject() {
         return oldObject;
@@ -77,84 +98,57 @@ public class DiffEntry {
 
     /**
      * @return the id of the new version id of the object, or {@link ObjectId#NULL} if
-     *         {@link #getType()} is {@code DELETE}
+     *         {@link #changeType()} is {@code DELETE}
      */
-    public ObjectId getNewObjectId() {
+    public ObjectId newObjectId() {
         return newObject == null ? ObjectId.NULL : newObject.getObjectId();
     }
 
     /**
-     * @return the id of the new version of the object, or {@code null} if {@link #getType()} is
+     * @return the id of the new version of the object, or {@code null} if {@link #changeType()} is
      *         {@code DELETE}
      */
     public NodeRef getNewObject() {
         return newObject;
     }
 
-    public ObjectId getOldCommitId() {
-        return oldCommitId;
-    }
-
-    public ObjectId getNewCommitId() {
-        return newCommitId;
-    }
-
     /**
      * @return the type of change
      */
-    public ChangeType getType() {
+    public ChangeType changeType() {
+        ChangeType type;
+        if (oldObject == null || oldObject.getObjectId().isNull()) {
+            type = ChangeType.ADDED;
+        } else if (newObject == null || newObject.getObjectId().isNull()) {
+            type = ChangeType.REMOVED;
+        } else {
+            type = ChangeType.MODIFIED;
+        }
+
         return type;
     }
 
     /**
      * @return the affected geographic region of the change, may be {@code null}
      */
-    public BoundingBox getWhere() {
-        return where;
-    }
-
-    /**
-     * @return Path to object. Basically a three step path name made of
-     *         {@code [<namespace>, <FeatureType name>, <Feature ID>]}
-     */
-    public List<String> getPath() {
-        return path;
-    }
-
-    public String toString() {
-        return new StringBuilder(getType().toString()).append(' ').append(getPath()).toString();
-    }
-
-    public static DiffEntry newInstance(final NodeRef oldObject, final NodeRef newObject,
-            final List<String> path) {
-        return newInstance(null, null, oldObject, newObject, path);
-    }
-
-    public static DiffEntry newInstance(final ObjectId fromCommit, final ObjectId toCommit,
-            final NodeRef oldObject, final NodeRef newObject, final List<String> path) {
-
-        Preconditions.checkArgument(oldObject != null || newObject != null);
-
-        if (oldObject != null && oldObject.equals(newObject)) {
-            throw new IllegalArgumentException(
-                    "Trying to create a DiffEntry for the same object id, means the object didn't change: "
-                            + oldObject.toString());
-        }
-
+    public BoundingBox where() {
         BoundingBox bounds = SpatialOps.aggregatedBounds(oldObject, newObject);
+        return bounds;
+    }
 
-        ChangeType type;
+    @Override
+    public String toString() {
+        return new StringBuilder(changeType().toString()).append(" [").append(oldObject)
+                .append("] -> [").append(newObject).append("]").toString();
+    }
 
-        if (oldObject == null || oldObject.getObjectId().isNull()) {
-            type = ChangeType.ADD;
-        } else if (newObject == null || newObject.getObjectId().isNull()) {
-            type = ChangeType.DELETE;
-        } else {
-            type = ChangeType.MODIFY;
-        }
+    public @Nullable
+    String oldPath() {
+        return oldObject == null ? null : oldObject.getPath();
+    }
 
-        DiffEntry entry = new DiffEntry(type, fromCommit, toCommit, oldObject, newObject, bounds,
-                path);
-        return entry;
+    public @Nullable
+    String newPath() {
+        return newObject == null ? null : newObject.getPath();
     }
 }

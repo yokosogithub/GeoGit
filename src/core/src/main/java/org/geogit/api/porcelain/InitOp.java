@@ -13,10 +13,16 @@ import java.net.URISyntaxException;
 import java.net.URL;
 
 import org.geogit.api.AbstractGeoGitOp;
+import org.geogit.api.ObjectId;
 import org.geogit.api.Platform;
+import org.geogit.api.Ref;
+import org.geogit.api.plumbing.RefParse;
 import org.geogit.api.plumbing.ResolveGeogitDir;
+import org.geogit.api.plumbing.UpdateRef;
+import org.geogit.api.plumbing.UpdateSymRef;
 import org.geogit.repository.Repository;
 
+import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
 import com.google.inject.Inject;
@@ -32,6 +38,9 @@ import com.google.inject.Injector;
  * If no repository directory is found, then a new one is created on the current directory.
  * 
  * @see ResolveGeogitDir
+ * @see RefParse
+ * @see UpdateRef
+ * @see UpdateSymRef
  */
 public class InitOp extends AbstractGeoGitOp<Repository> {
 
@@ -96,6 +105,7 @@ public class InitOp extends AbstractGeoGitOp<Repository> {
         try {
             repository = injector.getInstance(Repository.class);
             repository.create();
+            createDefaultRefs();
         } catch (RuntimeException e) {
             throw new IllegalStateException("Can't access repository at '"
                     + envHome.getAbsolutePath() + "'", e);
@@ -104,4 +114,20 @@ public class InitOp extends AbstractGeoGitOp<Repository> {
         return repoExisted ? null : repository;
     }
 
+    /**
+     * @param refDatabase
+     * 
+     */
+    private void createDefaultRefs() {
+        Optional<Ref> master = command(RefParse.class).setName(Ref.MASTER).call();
+        if (!master.isPresent()) {
+            master = command(UpdateRef.class).setName(Ref.MASTER).setNewValue(ObjectId.NULL)
+                    .setReason("Repository initialization").call();
+            Optional<Ref> head = command(RefParse.class).setName(Ref.HEAD).call();
+            if (!head.isPresent()) {
+                command(UpdateSymRef.class).setName(Ref.HEAD).setNewValue(Ref.MASTER)
+                        .setReason("Repository initialization").call();
+            }
+        }
+    }
 }

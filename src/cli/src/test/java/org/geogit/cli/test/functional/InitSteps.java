@@ -25,7 +25,7 @@ import cucumber.annotation.en.When;
 /**
  *
  */
-public class RepoStateSituationStepDefs extends AbstractGeogitFunctionalTest {
+public class InitSteps extends AbstractGeogitFunctionalTest {
 
     @Given("^I am in an empty directory$")
     public void I_am_in_an_empty_directory() throws Throwable {

@@ -5,17 +5,19 @@
 package org.geogit.api.porcelain;
 
 import java.util.Iterator;
-import java.util.List;
+
+import javax.annotation.Nullable;
 
 import org.geogit.api.AbstractGeoGitOp;
 import org.geogit.api.DiffEntry;
-import org.geogit.api.DiffTreeWalk;
 import org.geogit.api.ObjectId;
 import org.geogit.api.Ref;
-import org.geogit.api.plumbing.RevParse;
-import org.geogit.repository.Repository;
-import org.geogit.storage.ObjectDatabase;
+import org.geogit.api.plumbing.DiffIndex;
+import org.geogit.api.plumbing.DiffTree;
+import org.geogit.api.plumbing.DiffWorkTree;
+import org.geogit.api.plumbing.ResolveTreeish;
 
+import com.google.common.base.Optional;
 import com.google.inject.Inject;
 
 /**
@@ -24,27 +26,37 @@ import com.google.inject.Inject;
  */
 public class DiffOp extends AbstractGeoGitOp<Iterator<DiffEntry>> {
 
-    private ObjectId oldCommit;
+    private String oldRevObjectSpec;
 
-    private ObjectId newCommit;
+    private String newRevObjectSpec;
 
-    private String[] pathFilter;
+    private String pathFilter;
 
-    private ObjectId idFilter;
-
-    private Repository repo;
+    private boolean cached;
 
     @Inject
-    public DiffOp(Repository repository) {
-        this.repo = repository;
+    public DiffOp() {
+    }
+
+    public void setCompareIndex(boolean compareIndex) {
+        this.cached = compareIndex;
     }
 
     /**
      * @param commitId the oldVersion to set
      * @return
      */
-    public DiffOp setOldVersion(ObjectId commitId) {
-        this.oldCommit = commitId;
+    public DiffOp setOldVersion(@Nullable String revObjectSpec) {
+        this.oldRevObjectSpec = revObjectSpec;
+        return this;
+    }
+
+    public DiffOp setOldVersion(ObjectId treeishOid) {
+        return setOldVersion(treeishOid.toString());
+    }
+
+    public DiffOp setOldVersion(Optional<String> oldVersion) {
+
         return this;
     }
 
@@ -52,63 +64,58 @@ public class DiffOp extends AbstractGeoGitOp<Iterator<DiffEntry>> {
      * @param commitId the newVersion to set
      * @return
      */
-    public DiffOp setNewVersion(ObjectId commitId) {
-        this.newCommit = commitId;
+    public DiffOp setNewVersion(String revObjectSpec) {
+        this.newRevObjectSpec = revObjectSpec;
         return this;
     }
 
-    public DiffOp setFilter(String... pathFilter) {
+    public DiffOp setNewVersion(ObjectId treeishOid) {
+        return setNewVersion(treeishOid.toString());
+    }
+
+    public DiffOp setFilter(String pathFilter) {
         this.pathFilter = pathFilter;
-        return this;
-    }
-
-    public DiffOp setFilter(List<String> pathFilter) {
-        this.pathFilter = pathFilter.toArray(new String[pathFilter.size()]);
-        return this;
-    }
-
-    /**
-     * Filter on diffs that affect the given blob id
-     * 
-     * @param blobId
-     * @return
-     */
-    public DiffOp setFilter(final ObjectId blobId) {
-        this.idFilter = blobId;
         return this;
     }
 
     @Override
     public Iterator<DiffEntry> call() throws Exception {
-        if (oldCommit == null) {
-            throw new IllegalStateException("Old version not specified");
-        }
-        if (newCommit == null) {
-            /*
-             * new version not specified, assume head
-             */
-            newCommit = command(RevParse.class).setRefSpec(Ref.HEAD).call();
-        }
-        if (!oldCommit.isNull() && !repo.commitExists(oldCommit)) {
-            throw new IllegalArgumentException("oldVersion commit set to diff op does not exist: "
-                    + oldCommit.toString());
-        }
-        if (!newCommit.isNull() && !repo.commitExists(newCommit)) {
-            throw new IllegalArgumentException("newVersion commit set to diff op does not exist: "
-                    + newCommit.toString());
+
+        if (cached) {
+            // compare the tree-ish (default to HEAD) and the index
+            DiffIndex diffIndex = command(DiffIndex.class);
+            diffIndex.setFilter(this.pathFilter);
+            if (oldRevObjectSpec != null) {
+                ObjectId treeId = command(ResolveTreeish.class).setTreeish(oldRevObjectSpec).call();
+                diffIndex.setRootTree(treeId);
+            }
+            return diffIndex.call();
         }
 
-        ObjectDatabase readFrom = repo.getObjectDatabase();
-        DiffTreeWalk diffReader = new DiffTreeWalk(repo, readFrom, oldCommit, newCommit);
-
-        if (pathFilter != null) {
-            diffReader.setFilter(pathFilter);
-        }
-        if (idFilter != null) {
-            diffReader.setFilter(idFilter);
+        if (newRevObjectSpec == null && oldRevObjectSpec == null) {
+            DiffWorkTree workTreeIndexDiff = command(DiffWorkTree.class).setFilter(pathFilter);
+            return workTreeIndexDiff.call();
         }
 
-        Iterator<DiffEntry> iterator = diffReader.get();
+        final String oldSpec;
+        final String newSpec;
+        if (oldRevObjectSpec == null) {
+            throw new IllegalArgumentException("old commit not specified");
+        } else {
+            oldSpec = oldRevObjectSpec;
+        }
+
+        if (newRevObjectSpec == null) {
+            newSpec = Ref.HEAD;
+        } else {
+            newSpec = newRevObjectSpec;
+        }
+
+        final ObjectId oldTreeId = command(ResolveTreeish.class).setTreeish(oldSpec).call();
+        final ObjectId newTreeId = command(ResolveTreeish.class).setTreeish(newSpec).call();
+
+        Iterator<DiffEntry> iterator = command(DiffTree.class).setOldTree(oldTreeId)
+                .setNewTree(newTreeId).setFilterPath(pathFilter).call();
 
         return iterator;
     }

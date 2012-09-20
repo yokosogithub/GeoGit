@@ -23,6 +23,7 @@ import com.beust.jcommander.Parameter;
 import com.beust.jcommander.Parameters;
 import com.google.common.base.Throwables;
 import com.google.inject.Guice;
+import com.google.inject.util.Modules;
 
 /**
  * CLI proxy for {@link InitOp}
@@ -55,8 +56,8 @@ public class Init extends AbstractCommand implements CLICommand {
                     repoDir = currDir;
                 }
             }
-            GeoGIT geogit = new GeoGIT(Guice.createInjector(new GeogitModule(),
-                    new JEStorageModule()), repoDir);
+            GeoGIT geogit = new GeoGIT(Guice.createInjector(Modules.override(new GeogitModule())
+                    .with(new JEStorageModule())), repoDir);
 
             Repository repository = geogit.command(InitOp.class).call();
             final boolean repoExisted = repository == null;

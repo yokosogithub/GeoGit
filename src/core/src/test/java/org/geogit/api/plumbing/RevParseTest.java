@@ -24,6 +24,7 @@ import org.geogit.storage.StagingDatabase;
 import org.junit.Before;
 import org.junit.Test;
 
+import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 
 /**
@@ -55,7 +56,7 @@ public class RevParseTest {
     public void testParseRef() {
 
         ObjectId oid = ObjectId.forString("hash me out");
-        Ref ref = new Ref(Ref.MASTER, oid, TYPE.COMMIT);
+        Optional<Ref> ref = Optional.of(new Ref(Ref.MASTER, oid, TYPE.COMMIT));
         when(mockRefParse.call()).thenReturn(ref);
 
         ObjectId objectId = command.setRefSpec(Ref.MASTER).call();
@@ -65,7 +66,10 @@ public class RevParseTest {
     @Test
     public void testResolveToNothing() throws Exception {
 
+        Optional<Ref> ref = Optional.absent();
+        when(mockRefParse.call()).thenReturn(ref);
         assertSame(ObjectId.NULL, command.setRefSpec("abcNotAHash").call());
+
         assertSame(ObjectId.NULL, command.setRefSpec("refs/norARef").call());
 
         String validHashButNonExistent = ObjectId.forString("hash me").toString();
@@ -81,6 +85,9 @@ public class RevParseTest {
     public void testResolveObjectId() throws Exception {
         byte[] raw1 = { 'a', 'b', 'c', 'd', 4, 5, 6, 7, 8, 9, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 };
         byte[] raw2 = { 'a', 'b', 'c', 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
+
+        Optional<Ref> ref = Optional.absent();
+        when(mockRefParse.call()).thenReturn(ref);
 
         ObjectId id1 = new ObjectId(raw1);
         ObjectId id2 = new ObjectId(raw2);
@@ -102,6 +109,9 @@ public class RevParseTest {
     public void testResolveMultiple() throws Exception {
         byte[] raw1 = { 'a', 'b', 'c', 'd', 4, 5, 6, 7, 8, 9, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 };
         byte[] raw2 = { 'a', 'b', 'c', 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
+
+        Optional<Ref> ref = Optional.absent();
+        when(mockRefParse.call()).thenReturn(ref);
 
         ObjectId id1 = new ObjectId(raw1);
         ObjectId id2 = new ObjectId(raw2);

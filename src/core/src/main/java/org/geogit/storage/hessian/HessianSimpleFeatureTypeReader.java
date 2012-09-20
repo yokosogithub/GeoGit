@@ -9,6 +9,7 @@ import java.io.InputStream;
 import java.util.List;
 
 import org.geogit.api.ObjectId;
+import org.geogit.api.RevFeatureType;
 import org.geogit.storage.ObjectReader;
 import org.geotools.feature.NameImpl;
 import org.geotools.feature.simple.SimpleFeatureTypeBuilder;
@@ -27,7 +28,7 @@ import org.opengis.util.InternationalString;
 import com.caucho.hessian.io.Hessian2Input;
 import com.google.common.base.Throwables;
 
-public class HessianSimpleFeatureTypeReader implements ObjectReader<SimpleFeatureType> {
+public class HessianSimpleFeatureTypeReader implements ObjectReader<RevFeatureType> {
 
     private SimpleFeatureTypeBuilder builder;
 
@@ -39,10 +40,16 @@ public class HessianSimpleFeatureTypeReader implements ObjectReader<SimpleFeatur
     }
 
     @Override
-    public SimpleFeatureType read(ObjectId id, InputStream rawData) {
+    public GeoToolsRevFeatureType read(ObjectId id, InputStream rawData) {
         Hessian2Input hin = new Hessian2Input(rawData);
         try {
             hin.startMessage();
+            BlobType blobType = BlobType.fromValue(hin.readInt());
+            if (blobType != BlobType.FEATURETYPE) {
+                throw new IllegalArgumentException("Could not parse blob of type " + blobType
+                        + " as a feature type.");
+            }
+
             String typeNamespace = hin.readString();
             String typeName = hin.readString();
             int attributeCount = hin.readInt();
@@ -58,7 +65,7 @@ public class HessianSimpleFeatureTypeReader implements ObjectReader<SimpleFeatur
 
             builder.setName(new NameImpl("".equals(typeNamespace) ? null : typeNamespace, typeName));
             SimpleFeatureType type = builder.buildFeatureType();
-            return type;
+            return new GeoToolsRevFeatureType(type);
         } catch (Exception e) {
             throw Throwables.propagate(e);
         } finally {

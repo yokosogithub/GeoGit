@@ -27,6 +27,8 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.logging.Logger;
 
+import javax.xml.namespace.QName;
+
 import org.geogit.api.GeoGIT;
 import org.geogit.api.RevTree;
 import org.geogit.repository.WorkingTree;
@@ -82,7 +84,8 @@ public class FeatureSourceDecorator<T extends FeatureType, F extends Feature> im
 
     public static boolean isVersioned(final Name typeName, final GeoGIT repository) {
         final WorkingTree workingTree = repository.getRepository().getWorkingTree();
-        final boolean isVersioned = workingTree.hasRoot(typeName);
+        final boolean isVersioned = workingTree.hasRoot(new QName(typeName.getNamespaceURI(),
+                typeName.getLocalPart()));
         return isVersioned;
     }
 
@@ -91,7 +94,8 @@ public class FeatureSourceDecorator<T extends FeatureType, F extends Feature> im
      */
     public RevTree getCurrentVersion() {
         final Name name = getName();
-        RevTree headVersion = geogit.getRepository().getWorkingTree().getHeadVersion(name);
+        RevTree headVersion = geogit.getRepository().getWorkingTree()
+                .getHeadVersion(new QName(name.getNamespaceURI(), name.getLocalPart()));
         return headVersion;
     }
 

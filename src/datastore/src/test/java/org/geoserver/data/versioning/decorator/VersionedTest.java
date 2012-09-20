@@ -32,6 +32,7 @@ import org.geogit.api.ObjectId;
 import org.geogit.api.RevCommit;
 import org.geogit.api.RevTree;
 import org.geogit.api.porcelain.LogOp;
+import org.geogit.storage.hessian.GeoToolsRevFeatureType;
 import org.geotools.data.Query;
 import org.geotools.data.simple.SimpleFeatureCollection;
 import org.geotools.data.simple.SimpleFeatureIterator;
@@ -434,8 +435,9 @@ public class VersionedTest extends DecoratedTestCase {
             }
             List<SimpleFeature> feats = new ArrayList<SimpleFeature>();
             for (NodeRef ref : refs) {
-                SimpleFeature feat = (SimpleFeature) repo.getFeature(featureType, ref.getName(),
-                        ref.getObjectId());
+                SimpleFeature feat = (SimpleFeature) repo.getFeature(
+                        new GeoToolsRevFeatureType(featureType), ref.getPath(), ref.getObjectId())
+                        .feature();
                 feats.add(feat);
             }
             return feats;

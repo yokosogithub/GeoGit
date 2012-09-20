@@ -345,7 +345,7 @@ public class GeoGitFeatureSourceTest extends RepositoryTestCase {
 
         Map<String, NodeRef> expected = new HashMap<String, NodeRef>();
         for (NodeRef ref : refs) {
-            expected.put(ref.getName(), ref);
+            expected.put(ref.getPath(), ref);
         }
 
         for (FeatureId id : ids) {

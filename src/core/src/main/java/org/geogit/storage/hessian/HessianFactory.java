@@ -4,7 +4,12 @@
  */
 package org.geogit.storage.hessian;
 
+import java.io.Serializable;
+import java.util.Map;
+
 import org.geogit.api.RevCommit;
+import org.geogit.api.RevFeature;
+import org.geogit.api.RevFeatureType;
 import org.geogit.api.RevObject;
 import org.geogit.api.RevTree;
 import org.geogit.storage.BlobPrinter;
@@ -12,7 +17,6 @@ import org.geogit.storage.ObjectDatabase;
 import org.geogit.storage.ObjectReader;
 import org.geogit.storage.ObjectSerialisingFactory;
 import org.geogit.storage.ObjectWriter;
-import org.geotools.factory.Hints;
 import org.opengis.feature.Feature;
 import org.opengis.feature.simple.SimpleFeatureType;
 import org.opengis.feature.type.FeatureType;
@@ -35,19 +39,22 @@ public class HessianFactory implements ObjectSerialisingFactory {
     }
 
     @Override
-    public ObjectReader<Feature> createFeatureReader(FeatureType featureType, String featureId) {
-        return new HessianFeatureReader(featureType, featureId, null);
+    public ObjectReader<RevFeature> createFeatureReader(RevFeatureType featureType, String featureId) {
+        FeatureType simpleType = (FeatureType) featureType;
+        ObjectReader<RevFeature> reader = new HessianFeatureReader(simpleType, featureId, null);
+        return reader;
     }
 
     @Override
-    public ObjectReader<Feature> createFeatureReader(FeatureType featureType, String featureId,
-            Hints hints) {
-        return new HessianFeatureReader(featureType, featureId, hints);
+    public ObjectReader<RevFeature> createFeatureReader(final RevFeatureType featureType,
+            final String featureId, final Map<String, Serializable> hints) {
+        FeatureType simpleType = (FeatureType) featureType;
+        return new HessianFeatureReader(simpleType, featureId, hints);
     }
 
     @Override
-    public ObjectWriter<Feature> createFeatureWriter(Feature feature) {
-        return new HessianFeatureWriter(feature);
+    public ObjectWriter<RevFeature> createFeatureWriter(RevFeature feature) {
+        return new HessianFeatureWriter((Feature) feature.feature());
     }
 
     @Override
@@ -66,17 +73,17 @@ public class HessianFactory implements ObjectSerialisingFactory {
     }
 
     @Override
-    public ObjectWriter<SimpleFeatureType> createSimpleFeatureTypeWriter(SimpleFeatureType type) {
-        return new HessianSimpleFeatureTypeWriter(type);
+    public ObjectWriter<RevFeatureType> createFeatureTypeWriter(RevFeatureType type) {
+        return new HessianSimpleFeatureTypeWriter((SimpleFeatureType) type.type());
     }
 
     /**
      * @param name
      * @return
-     * @see org.geogit.storage.ObjectSerialisingFactory#createSimpleFeatureTypeReader()
+     * @see org.geogit.storage.ObjectSerialisingFactory#createFeatureTypeReader()
      */
     @Override
-    public ObjectReader<SimpleFeatureType> createSimpleFeatureTypeReader() {
+    public ObjectReader<RevFeatureType> createFeatureTypeReader() {
         return new HessianSimpleFeatureTypeReader();
     }
 

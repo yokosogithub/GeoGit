@@ -8,6 +8,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.util.List;
 
+import org.geogit.api.RevFeatureType;
 import org.geogit.storage.ObjectWriter;
 import org.geotools.referencing.CRS;
 import org.geotools.referencing.wkt.Formattable;
@@ -21,7 +22,7 @@ import org.opengis.referencing.crs.CoordinateReferenceSystem;
 import com.caucho.hessian.io.Hessian2Output;
 import com.google.common.base.Preconditions;
 
-public class HessianSimpleFeatureTypeWriter implements ObjectWriter<SimpleFeatureType> {
+public class HessianSimpleFeatureTypeWriter implements ObjectWriter<RevFeatureType> {
 
     private SimpleFeatureType type;
 
@@ -35,6 +36,7 @@ public class HessianSimpleFeatureTypeWriter implements ObjectWriter<SimpleFeatur
         Hessian2Output hout = new Hessian2Output(out);
         try {
             hout.startMessage();
+            hout.writeInt(BlobType.FEATURETYPE.getValue());
             Name typeName = type.getName();
             hout.writeString(typeName.getNamespaceURI() == null ? "" : typeName.getNamespaceURI());
             hout.writeString(typeName.getLocalPart());

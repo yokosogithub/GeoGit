@@ -9,7 +9,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.security.DigestOutputStream;
 import java.security.MessageDigest;
-import java.util.Arrays;
 import java.util.List;
 
 import org.geogit.api.MutableTree;
@@ -19,9 +18,9 @@ import org.geogit.api.RevObject.TYPE;
 import org.geogit.api.RevTree;
 import org.geogit.repository.DepthSearch;
 
+import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
-import com.google.common.collect.ImmutableList;
 import com.google.common.io.Closeables;
 import com.google.inject.Inject;
 import com.ning.compress.lzf.LZFInputStream;
@@ -29,7 +28,6 @@ import com.ning.compress.lzf.LZFOutputStream;
 
 public abstract class AbstractObjectDatabase implements ObjectDatabase {
 
-    @Inject
     protected ObjectSerialisingFactory serialFactory;
 
     public AbstractObjectDatabase() {
@@ -46,6 +44,11 @@ public abstract class AbstractObjectDatabase implements ObjectDatabase {
         byte[] raw = ObjectId.toRaw(partialId);
 
         return lookUpInternal(raw);
+    }
+
+    @Inject
+    public void setSerialFactory(ObjectSerialisingFactory serialFactory) {
+        this.serialFactory = serialFactory;
     }
 
     protected abstract List<ObjectId> lookUpInternal(byte[] raw);
@@ -73,7 +76,7 @@ public abstract class AbstractObjectDatabase implements ObjectDatabase {
      * @see org.geogit.storage.ObjectDatabase#getRaw(org.geogit.api.ObjectId)
      */
     @Override
-    public final InputStream getRaw(final ObjectId id) throws IllegalArgumentException {
+    public InputStream getRaw(final ObjectId id) throws IllegalArgumentException {
         InputStream in = getRawInternal(id);
         try {
             return new LZFInputStream(in);
@@ -116,7 +119,7 @@ public abstract class AbstractObjectDatabase implements ObjectDatabase {
         final byte[] rawData = rawOut.toByteArray();
         final byte[] rawKey = keyGenOut.getMessageDigest().digest();
         final ObjectId id = new ObjectId(rawKey);
-        putInternal(id, rawData, false);
+        putInternal(id, rawData);
         return id;
     }
 
@@ -146,18 +149,14 @@ public abstract class AbstractObjectDatabase implements ObjectDatabase {
             }
         }
         final byte[] rawData = rawOut.toByteArray();
-        return putInternal(id, rawData, true);
+        return putInternal(id, rawData);
     }
 
     /**
-     * @param id
-     * @param rawData
-     * @param override if {@code true} an a record with the given id already exists, it shall be
-     *        overriden. If {@code false} and a record with the given id already exists, it shall
-     *        not be overriden.
-     * @return
+     * Stores the raw data for the given id <em>only if it does not exist</em> already, and returns
+     * whether the object was actually inserted.
      */
-    protected abstract boolean putInternal(ObjectId id, byte[] rawData, final boolean override);
+    protected abstract boolean putInternal(ObjectId id, byte[] rawData);
 
     /**
      * @see org.geogit.storage.ObjectDatabase#newObjectInserter()
@@ -184,17 +183,17 @@ public abstract class AbstractObjectDatabase implements ObjectDatabase {
      *         type {@code TREE}
      */
     @Override
-    public MutableTree getOrCreateSubTree(final RevTree parent, List<String> childPath) {
-        NodeRef treeChildRef = getTreeChild(parent, childPath);
-        if (treeChildRef == null) {
-            return newTree();
-        }
-        if (!TYPE.TREE.equals(treeChildRef.getType())) {
-            throw new IllegalArgumentException("Object exsits as child of tree " + parent.getId()
-                    + " but is not a tree: " + treeChildRef);
-        }
+    public MutableTree getOrCreateSubTree(final RevTree rootTree, String childPath) {
+        Optional<NodeRef> treeChildRef = getTreeChild(rootTree, childPath);
+        if (treeChildRef.isPresent()) {
+            if (!TYPE.TREE.equals(treeChildRef.get().getType())) {
+                throw new IllegalArgumentException("Object exsits as child of tree "
+                        + rootTree.getId() + " but is not a tree: " + treeChildRef);
+            }
 
-        return getTree(treeChildRef.getObjectId()).mutable();
+            return getTree(treeChildRef.get().getObjectId()).mutable();
+        }
+        return newTree();
     }
 
     protected RevTree getTree(final ObjectId treeId) {
@@ -214,53 +213,34 @@ public abstract class AbstractObjectDatabase implements ObjectDatabase {
         return tree;
     }
 
-    /**
-     * @param root
-     * @param tree
-     * @param pathToTree
-     * @return the id of the saved state of the modified root
-     */
     @Override
-    public ObjectId writeBack(MutableTree root, final RevTree tree, final List<String> pathToTree) {
+    public ObjectId writeBack(MutableTree root, final RevTree tree, final String pathToTree) {
 
         final ObjectId treeId = put(serialFactory.createRevTreeWriter(tree));
-        final String treeName = pathToTree.get(pathToTree.size() - 1);
 
-        if (pathToTree.size() == 1) {
-            root.put(new NodeRef(treeName, treeId, TYPE.TREE));
+        final boolean isDirectChild = pathToTree.indexOf('/') == -1;
+        if (isDirectChild) {
+            root.put(new NodeRef(pathToTree, treeId, ObjectId.NULL, TYPE.TREE));
             ObjectId newRootId = put(serialFactory.createRevTreeWriter(root));
             return newRootId;
         }
-        final List<String> parentPath = pathToTree.subList(0, pathToTree.size() - 1);
-        NodeRef parentRef = getTreeChild(root, parentPath);
+
+        final String parentPath = NodeRef.parentPath(pathToTree);
+        Optional<NodeRef> parentRef = getTreeChild(root, parentPath);
         MutableTree parent;
-        if (parentRef == null) {
-            parent = newTree();
-        } else {
-            ObjectId parentId = parentRef.getObjectId();
+        if (parentRef.isPresent()) {
+            ObjectId parentId = parentRef.get().getObjectId();
             parent = getTree(parentId).mutable();
+        } else {
+            parent = newTree();
         }
-        parent.put(new NodeRef(treeName, treeId, TYPE.TREE));
+        parent.put(new NodeRef(pathToTree, treeId, ObjectId.NULL, TYPE.TREE));
         return writeBack(root, parent, parentPath);
     }
 
-    /**
-     * @see org.geogit.storage.ObjectDatabase#getTreeChild(org.geogit.api.RevTree,
-     *      java.lang.String[])
-     */
     @Override
-    public NodeRef getTreeChild(RevTree root, String... path) {
-        return getTreeChild(root, Arrays.asList(path));
-    }
-
-    /**
-     * @see org.geogit.storage.ObjectDatabase#getTreeChild(org.geogit.api.RevTree, java.util.List)
-     */
-    @Override
-    public NodeRef getTreeChild(RevTree root, List<String> path) {
-        NodeRef treeRef = new DepthSearch(this, serialFactory).find(root,
-                ImmutableList.copyOf(path));
-        return treeRef;
+    public Optional<NodeRef> getTreeChild(RevTree root, String path) {
+        return new DepthSearch(this, serialFactory).find(root, path);
     }
 
     public ObjectSerialisingFactory getSerialFactory() {

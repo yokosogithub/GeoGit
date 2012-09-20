@@ -3,7 +3,7 @@
  * application directory.
  */
 
-package org.geogit.storage;
+package org.geogit.storage.fs;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -16,8 +16,8 @@ import java.util.Map;
 
 import org.geogit.api.ObjectId;
 import org.geogit.api.Platform;
-import org.geogit.api.Ref;
 import org.geogit.api.plumbing.ResolveGeogitDir;
+import org.geogit.storage.RefDatabase;
 
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableMap;
@@ -60,20 +60,6 @@ public class FileRefDatabase implements RefDatabase {
         if (!refs.exists() && !refs.mkdir()) {
             throw new IllegalStateException("Cannot create refs directory '"
                     + refs.getAbsolutePath() + "'");
-        }
-        condCreate("refs/heads/master", ObjectId.NULL.toString());
-        condCreateSym(Ref.HEAD, "refs/heads/master");
-    }
-
-    private void condCreate(String name, String val) {
-        if (null == getRef(name)) {
-            putRef(name, val);
-        }
-    }
-
-    private void condCreateSym(String name, String val) {
-        if (null == getSymRef(name)) {
-            putSymRef(name, val);
         }
     }
 
@@ -192,7 +178,7 @@ public class FileRefDatabase implements RefDatabase {
 
         try {
             Files.createParentDirs(refFile);
-            Files.write(refValue, refFile, CHARSET);
+            Files.write(refValue + "\n", refFile, CHARSET);
         } catch (IOException e) {
             throw Throwables.propagate(e);
         }

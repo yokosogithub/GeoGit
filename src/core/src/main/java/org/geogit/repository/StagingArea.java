@@ -7,52 +7,40 @@ package org.geogit.repository;
 import java.util.Iterator;
 import java.util.List;
 
+import javax.annotation.Nullable;
+
 import org.geogit.api.NodeRef;
 import org.geogit.api.ObjectId;
 import org.geogit.api.Ref;
+import org.geogit.api.RevFeature;
 import org.geogit.api.RevTree;
-import org.geogit.storage.ObjectWriter;
 import org.geogit.storage.StagingDatabase;
-import org.opengis.geometry.BoundingBox;
 import org.opengis.util.ProgressListener;
 
 public interface StagingArea {
 
     public StagingDatabase getDatabase();
 
-    /**
-     * @see #created(List)
-     */
-    public abstract void created(final String... newTreePath) throws Exception;
-
-    /**
-     * Creates an empty unstaged tree at the given path
-     * 
-     * @param newTreePath
-     * @throws Exception if an error happens writing the new tree
-     * @throws IllegalArgumentException if a tree or blob already exists at the given path
-     */
-    public abstract void created(final List<String> newTreePath) throws Exception;
+    // /**
+    // * Creates an empty unstaged tree at the given path
+    // *
+    // * @param newTreePath the path of the new tree
+    // * @param metadataId the object id of the tree's metadata (i.e. feature type blob id)
+    // * @return the reference pointing to the newly created tree
+    // * @throws Exception if an error happens writing the new tree
+    // * @throws IllegalArgumentException if a tree or blob already exists at the given path
+    // */
+    // public abstract NodeRef created(final String newTreePath, ObjectId metadataId) throws
+    // Exception;
 
     /**
      * Marks the object (tree or feature) addressed by {@code path} as an unstaged delete.
      * 
-     * @param path
+     * @param featurePath
      * @return
      * @throws Exception
      */
-    public abstract boolean deleted(final String... path) throws Exception;
-
-    /**
-     * Inserts an object into de index database and marks it as unstaged.
-     * 
-     * @param blob the writer for the object to be inserted.
-     * @param path the path from the repository root to the name of the object to be inserted.
-     * @return the reference to the newly inserted object.
-     * @throws Exception
-     */
-    public abstract NodeRef inserted(final ObjectWriter<?> blob, final BoundingBox bounds,
-            final String... path) throws Exception;
+    public abstract boolean deleted(final String featurePath) throws Exception;
 
     /**
      * Inserts the given objects into the index database and marks them as unstaged.
@@ -63,13 +51,15 @@ public interface StagingArea {
      *         the listener
      * @throws Exception
      */
-    public abstract void inserted(
-            final Iterator<Triplet<ObjectWriter<?>, BoundingBox, List<String>>> objects,
-            final ProgressListener progress, final Integer size, final List<NodeRef> target)
-            throws Exception;
+    public void insert(final String treePath, final Iterator<RevFeature> features,
+            final ProgressListener progress, final @Nullable Integer size,
+            @Nullable final List<NodeRef> target) throws Exception;
+
+    public NodeRef insert(final String parentTreePath, final RevFeature feature) throws Exception;
 
     /**
-     * Stages the object addressed by path to be added, if it's marked as an unstaged change. Does
+     * Stages the object addressed by {@code pathFilter}, or all unstaged objects if
+     * {@code pathFilter == null} to be added, if it is/they are marked as an unstaged change. Does
      * nothing otherwise.
      * <p>
      * To stage changes not yet staged, a diff tree walk is performed using the current staged
@@ -78,11 +68,12 @@ public interface StagingArea {
      * reported by the diff walk (neat).
      * </p>
      * 
-     * @param path
+     * @param pathFilter
      * @param progressListener
      * @throws Exception
      */
-    public abstract void stage(ProgressListener progress, final String... path) throws Exception;
+    public abstract void stage(ProgressListener progress, final @Nullable String pathFilter)
+            throws Exception;
 
     /**
      * Marks an object rename (in practice, it's used to change the feature id of a Feature once it
@@ -91,7 +82,7 @@ public interface StagingArea {
      * @param from old path to featureId
      * @param to new path to featureId
      */
-    public abstract void renamed(final List<String> from, final List<String> to);
+    public abstract void renamed(final String fromPath, final String toPath);
 
     /**
      * Discards any staged change.
@@ -102,7 +93,7 @@ public interface StagingArea {
      */
     public abstract void reset();
 
-    public Tuple<ObjectId, BoundingBox> writeTree(final Ref targetRef) throws Exception;
+    public ObjectId writeTree(final Ref targetRef) throws Exception;
 
     /**
      * Updates the repository target HEAD tree given by {@code targetRootRef} with the staged
@@ -111,13 +102,12 @@ public interface StagingArea {
      * @param targetRef reference to either a commit or a tree that's the root of the head to be
      *        updated
      * @param objectInserter
-     * @return non-null tuple, but possibly with null elements, containing the id of the new top
-     *         level tree created on the repository after applying the staged changes, and the
-     *         aggregated bounds of the changes, if any.
+     * @return the id of the top level tree created on the repository after applying the staged
+     *         changes, or the same tree id if no changes were written.
      * @throws Exception
      */
-    public Tuple<ObjectId, BoundingBox> writeTree(final Ref targetRef,
-            final ProgressListener progress) throws Exception;
+    public ObjectId writeTree(final Ref targetRef, final ProgressListener progress)
+            throws Exception;
 
     /**
      * @param targetTreeId
@@ -125,7 +115,6 @@ public interface StagingArea {
      * @return
      * @throws Exception
      */
-    Tuple<ObjectId, BoundingBox> writeTree(ObjectId targetTreeId, ProgressListener progress)
-            throws Exception;
+    public ObjectId writeTree(ObjectId targetTreeId, ProgressListener progress) throws Exception;
 
 }

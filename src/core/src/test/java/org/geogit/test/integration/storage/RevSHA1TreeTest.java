@@ -5,8 +5,9 @@
 package org.geogit.test.integration.storage;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -30,9 +31,11 @@ import org.geogit.storage.ObjectDatabase;
 import org.geogit.storage.RevSHA1Tree;
 import org.geogit.test.integration.PrintTreeVisitor;
 import org.geogit.test.integration.RepositoryTestCase;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.w3c.dom.Document;
 
+import com.google.common.base.Optional;
 import com.google.common.base.Stopwatch;
 
 public class RevSHA1TreeTest extends RepositoryTestCase {
@@ -90,9 +93,9 @@ public class RevSHA1TreeTest extends RepositoryTestCase {
             }
             String key = "Feature." + i;
             ObjectId oid = ObjectId.forString(key);
-            NodeRef ref = tree.get(key);
-            assertNotNull(ref);
-            assertEquals(key, oid, ref.getObjectId());
+            Optional<NodeRef> ref = tree.get(key);
+            assertTrue(ref.isPresent());
+            assertEquals(key, oid, ref.get().getObjectId());
         }
         sw.stop();
         System.err.println("\nGot " + numEntries + " in " + sw.elapsedMillis() + "ms ("
@@ -117,11 +120,14 @@ public class RevSHA1TreeTest extends RepositoryTestCase {
 
             public boolean visitEntry(final NodeRef entry) {
                 if (i % 10 == 0) {
-                    removedKeys.add(entry.getName());
+                    removedKeys.add(entry.getPath());
                 }
+                i++;
                 return true;
             }
         });
+
+        assertEquals(100, removedKeys.size());
 
         tree = tree.mutable();
         for (String key : removedKeys) {
@@ -129,18 +135,62 @@ public class RevSHA1TreeTest extends RepositoryTestCase {
         }
 
         for (String key : removedKeys) {
-            assertNull(tree.get(key));
+            assertFalse(tree.get(key).isPresent());
         }
 
         final ObjectId newTreeId = odb.put(getRepository().newRevTreeWriter(tree));
         RevTree tree2 = odb.get(newTreeId, getRepository().newRevTreeReader(odb, 0));
 
         for (String key : removedKeys) {
-            assertNull(tree2.get(key));
+            assertFalse(tree2.get(key).isPresent());
         }
     }
 
     @Test
+    public void testRemoveSplittedTree() throws Exception {
+        final int numEntries = RevSHA1Tree.SPLIT_FACTOR + 100;
+        ObjectId treeId = createAndSaveTree(numEntries, true);
+        RevTree tree = odb.get(treeId, getRepository().newRevTreeReader(odb, 0));
+
+        // collect some keys to remove
+        final Set<String> removedKeys = new HashSet<String>();
+        tree.accept(new TreeVisitor() {
+            int i = 0;
+
+            public boolean visitSubTree(int bucket, ObjectId treeId) {
+                return true;
+            }
+
+            public boolean visitEntry(final NodeRef entry) {
+                if (i % 10 == 0) {
+                    removedKeys.add(entry.getPath());
+                }
+                i++;
+                return true;
+            }
+        });
+
+        assertTrue(removedKeys.size() > 0);
+
+        tree = tree.mutable();
+        for (String key : removedKeys) {
+            ((MutableTree) tree).remove(key);
+        }
+
+        for (String key : removedKeys) {
+            assertFalse(tree.get(key).isPresent());
+        }
+
+        final ObjectId newTreeId = odb.put(getRepository().newRevTreeWriter(tree));
+        RevTree tree2 = odb.get(newTreeId, getRepository().newRevTreeReader(odb, 0));
+
+        for (String key : removedKeys) {
+            assertFalse(tree2.get(key).isPresent());
+        }
+    }
+
+    @Test
+    @Ignore
     public void testSize() throws Exception {
         Stopwatch sw = new Stopwatch().start();
         final int numEntries = RevSHA1Tree.SPLIT_FACTOR + 1000;
@@ -154,7 +204,7 @@ public class RevSHA1TreeTest extends RepositoryTestCase {
         final int added = 25000;
         tree = tree.mutable();
         for (int i = numEntries; i < numEntries + added; i++) {
-            put((MutableTree) tree, i);
+            addNodeRef((MutableTree) tree, i);
         }
 
         size = tree.size().intValue();
@@ -185,10 +235,13 @@ public class RevSHA1TreeTest extends RepositoryTestCase {
 
         // replacing an existing key should not change size
         tree = tree.mutable();
+
+        final ObjectId fakeMetadataId = ObjectId.forString("FeatureType");
+
         for (int i = 0; i < size / 2; i += 2) {
             String key = "Feature." + i;
             ObjectId otherId = ObjectId.forString(key + "changed");
-            ((MutableTree) tree).put(new NodeRef(key, otherId, TYPE.BLOB));
+            ((MutableTree) tree).put(new NodeRef(key, otherId, fakeMetadataId, TYPE.FEATURE));
         }
         final int expected = size;
         size = tree.size().intValue();
@@ -275,7 +328,7 @@ public class RevSHA1TreeTest extends RepositoryTestCase {
 
         int c = 0;
         for (int i = from; i != breakAt; i += increment, c++) {
-            put(tree, i);
+            addNodeRef(tree, i);
             if ((c + 1) % (numEntries / 10) == 0) {
                 System.err.print("#" + (c + 1));
             } else if ((c + 1) % (numEntries / 100) == 0) {
@@ -286,12 +339,11 @@ public class RevSHA1TreeTest extends RepositoryTestCase {
         return tree;
     }
 
-    private void put(MutableTree tree, int i) {
-        String key;
-        ObjectId oid;
-        key = "Feature." + i;
-        oid = ObjectId.forString(key);
-        tree.put(new NodeRef(key, oid, TYPE.BLOB));
+    private void addNodeRef(MutableTree tree, int i) {
+        String key = "Feature." + i;
+        ObjectId oid = ObjectId.forString(key);
+        ObjectId metadataId = ObjectId.forString("FeatureType");
+        tree.put(new NodeRef(key, oid, metadataId, TYPE.FEATURE));
     }
 
     public static void main(String[] argv) {

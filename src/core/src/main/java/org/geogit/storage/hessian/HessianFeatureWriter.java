@@ -11,6 +11,7 @@ import java.math.BigInteger;
 import java.util.Collection;
 import java.util.UUID;
 
+import org.geogit.api.RevFeature;
 import org.geogit.storage.ObjectWriter;
 import org.geotools.referencing.CRS;
 import org.opengis.feature.Feature;
@@ -39,8 +40,9 @@ import com.vividsolutions.jts.io.WKBWriter;
  * 
  * @author mleslie
  */
-class HessianFeatureWriter implements ObjectWriter<Feature> {
-    Feature feat;
+class HessianFeatureWriter implements ObjectWriter<RevFeature> {
+
+    private Feature feat;
 
     public HessianFeatureWriter(final Feature feature) {
         this.feat = feature;

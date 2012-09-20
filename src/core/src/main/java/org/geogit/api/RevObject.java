@@ -28,7 +28,7 @@ public interface RevObject {
                 return 1;
             }
         },
-        BLOB {
+        FEATURE {
             @Override
             public int value() {
                 return 2;
@@ -38,6 +38,12 @@ public interface RevObject {
             @Override
             public int value() {
                 return 3;
+            }
+        },
+        FEATURETYPE {
+            @Override
+            public int value() {
+                return 4;
             }
         };
 

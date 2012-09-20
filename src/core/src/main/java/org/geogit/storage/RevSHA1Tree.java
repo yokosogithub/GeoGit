@@ -20,6 +20,7 @@ import org.geogit.api.ObjectId;
 import org.geogit.api.RevTree;
 import org.geogit.api.TreeVisitor;
 
+import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
@@ -140,10 +141,6 @@ public class RevSHA1Tree extends AbstractRevObject implements RevTree {
         }
     }
 
-    void put(Integer bucket, ObjectId subtreeId) {
-        mySubTrees.put(bucket, new NodeRef("", subtreeId, TYPE.TREE));
-    }
-
     protected final Integer computeBucket(final String key) {
         byte[] hashedKey = hashKey(key);
         // int ch1 = hashedKey[2 * this.order] & 0xFF;
@@ -162,13 +159,13 @@ public class RevSHA1Tree extends AbstractRevObject implements RevTree {
      * @return
      */
     @Override
-    public NodeRef get(final String key) {
+    public Optional<NodeRef> get(final String key) {
         NodeRef value = null;
         if (myEntries.containsKey(key)) {
             value = myEntries.get(key);
             if (value == null) {
                 // key is marked as removed
-                return null;
+                return Optional.absent();
             }
         }
         if (value == null) {
@@ -181,10 +178,10 @@ public class RevSHA1Tree extends AbstractRevObject implements RevTree {
                 ObjectSerialisingFactory serialFactory = db.getSerialFactory();
                 RevTree subTree = db.get(subtreeId,
                         serialFactory.createRevTreeReader(db, this.depth + 1));
-                value = subTree.get(key);
+                return subTree.get(key);
             }
         }
-        return value;
+        return Optional.fromNullable(value);
     }
 
     private synchronized byte[] hashKey(final String key) {
@@ -251,7 +248,7 @@ public class RevSHA1Tree extends AbstractRevObject implements RevTree {
         Map<ObjectId, NodeRef> sorted = new TreeMap<ObjectId, NodeRef>();
         for (NodeRef ref : myEntries.values()) {
             if (filter.apply(ref)) {
-                sorted.put(ObjectId.forString(ref.getName()), ref);
+                sorted.put(ObjectId.forString(ref.getPath()), ref);
             }
         }
         return sorted.values().iterator();

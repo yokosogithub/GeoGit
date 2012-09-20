@@ -18,6 +18,7 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 
+import org.geogit.api.NodeRef;
 import org.geogit.api.ObjectId;
 import org.geogit.api.RevCommit;
 import org.geogit.api.porcelain.LogOp;
@@ -109,7 +110,7 @@ public class LogOpTest extends RepositoryTestCase {
     public void testPathFilterSingleFeature() throws Exception {
 
         List<Feature> features = Arrays.asList(points1, lines1, points2, lines2, points3, lines3);
-
+        List<RevCommit> allCommits = Lists.newArrayList();
         RevCommit expectedCommit = null;
 
         for (Feature f : features) {
@@ -119,9 +120,10 @@ public class LogOpTest extends RepositoryTestCase {
             if (id.equals(lines1.getIdentifier().getID())) {
                 expectedCommit = commit;
             }
+            allCommits.add(commit);
         }
 
-        String[] path = { linesName, lines1.getIdentifier().getID() };
+        String path = NodeRef.appendChild(linesName, lines1.getIdentifier().getID());
 
         List<RevCommit> feature2_1Commits = toList(logOp.addPath(path).call());
         assertEquals(1, feature2_1Commits.size());
@@ -147,7 +149,7 @@ public class LogOpTest extends RepositoryTestCase {
         }
 
         // path to filter commits on type1
-        String[] path = { pointsName };
+        String path = pointsName;
 
         List<RevCommit> logCommits = toList(logOp.addPath(path).call());
         assertEquals(typeName1Commits.size(), logCommits.size());

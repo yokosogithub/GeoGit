@@ -27,9 +27,11 @@ class HessianObjectTypeReader extends HessianRevReader implements ObjectReader<R
             case COMMIT:
                 return RevObject.TYPE.COMMIT;
             case FEATURE:
-                return RevObject.TYPE.BLOB;
+                return RevObject.TYPE.FEATURE;
             case REVTREE:
                 return RevObject.TYPE.TREE;
+            case FEATURETYPE:
+                return RevObject.TYPE.FEATURETYPE;
             default:
                 throw new IllegalArgumentException("Unknown object type " + type);
             }

@@ -84,7 +84,7 @@ public class HeapObjectDatabse extends AbstractObjectDatabase implements ObjectD
     }
 
     @Override
-    public final List<ObjectId> lookUp(final String partialId) {
+    public List<ObjectId> lookUp(final String partialId) {
         Preconditions.checkNotNull(partialId);
         List<ObjectId> matches = Lists.newLinkedList();
         for (ObjectId id : objects.keySet()) {
@@ -95,12 +95,6 @@ public class HeapObjectDatabse extends AbstractObjectDatabase implements ObjectD
         return matches;
     }
 
-    /**
-     * @param id
-     * @return
-     * @throws IllegalArgumentException
-     * @see org.geogit.storage.AbstractObjectDatabase#getRawInternal(org.geogit.api.ObjectId)
-     */
     @Override
     protected InputStream getRawInternal(ObjectId id) throws IllegalArgumentException {
         byte[] data = objects.get(id);
@@ -110,17 +104,9 @@ public class HeapObjectDatabse extends AbstractObjectDatabase implements ObjectD
         return new ByteArrayInputStream(data);
     }
 
-    /**
-     * @param id
-     * @param rawData
-     * @param override
-     * @return
-     * @see org.geogit.storage.AbstractObjectDatabase#putInternal(org.geogit.api.ObjectId, byte[],
-     *      boolean)
-     */
     @Override
-    protected boolean putInternal(ObjectId id, byte[] rawData, boolean override) {
-        if (!override && exists(id)) {
+    protected boolean putInternal(ObjectId id, byte[] rawData) {
+        if (exists(id)) {
             return false;
         }
         objects.put(id, rawData);

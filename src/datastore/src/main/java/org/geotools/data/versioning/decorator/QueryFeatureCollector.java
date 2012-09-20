@@ -22,8 +22,10 @@ import java.util.Iterator;
 import org.geogit.api.GeoGIT;
 import org.geogit.api.NodeRef;
 import org.geogit.api.ObjectId;
+import org.geogit.api.RevFeature;
 import org.geogit.storage.ObjectReader;
 import org.geogit.storage.StagingDatabase;
+import org.geogit.storage.hessian.GeoToolsRevFeatureType;
 import org.geotools.data.Query;
 import org.opengis.feature.Feature;
 import org.opengis.feature.type.FeatureType;
@@ -75,13 +77,13 @@ public class QueryFeatureCollector implements Iterable<Feature> {
 
         @Override
         public Feature apply(final NodeRef featureNodeRef) {
-            String featureId = featureNodeRef.getName();
+            String featureId = featureNodeRef.getPath();
             ObjectId contentId = featureNodeRef.getObjectId();
             StagingDatabase database = geogit.getRepository().getIndex().getDatabase();
-            Feature feature;
+            RevFeature feature;
             try {
-                ObjectReader<Feature> featureReader = geogit.getRepository().newFeatureReader(type,
-                        featureId);
+                ObjectReader<RevFeature> featureReader = geogit.getRepository().newFeatureReader(
+                        new GeoToolsRevFeatureType(type), featureId);
                 feature = database.get(contentId, featureReader);
                 if (!feature.getType().equals(type)) {
                     throw new IOException("Invalid feature type returned.");
@@ -89,7 +91,8 @@ public class QueryFeatureCollector implements Iterable<Feature> {
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
-            return VersionedFeatureWrapper.wrap(feature, featureNodeRef.getObjectId().toString());
+            return VersionedFeatureWrapper.wrap((Feature) feature.feature(), featureNodeRef
+                    .getObjectId().toString());
         }
 
     }

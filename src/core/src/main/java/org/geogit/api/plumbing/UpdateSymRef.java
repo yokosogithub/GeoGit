@@ -11,6 +11,7 @@ import org.geogit.api.Ref;
 import org.geogit.api.SymRef;
 import org.geogit.storage.RefDatabase;
 
+import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 
@@ -19,7 +20,7 @@ import com.google.inject.Inject;
  * <p>
  * 
  */
-public class UpdateSymRef extends AbstractGeoGitOp<SymRef> {
+public class UpdateSymRef extends AbstractGeoGitOp<Optional<SymRef>> {
 
     private String name;
 
@@ -86,7 +87,7 @@ public class UpdateSymRef extends AbstractGeoGitOp<SymRef> {
      * The new ref
      */
     @Override
-    public SymRef call() throws Exception {
+    public Optional<SymRef> call() {
         Preconditions.checkState(name != null, "name has not been set");
         Preconditions.checkState(delete || newValue != null, "value has not been set");
 
@@ -99,8 +100,11 @@ public class UpdateSymRef extends AbstractGeoGitOp<SymRef> {
         } else {
             refDb.putSymRef(name, newValue);
         }
-        Ref ref = command(RefParse.class).setName(name).call();
-        return (SymRef) ref;
+        Optional<Ref> ref = command(RefParse.class).setName(name).call();
+        if (!ref.isPresent()) {
+            return Optional.absent();
+        }
+        return Optional.of((SymRef) ref.get());
     }
 
 }

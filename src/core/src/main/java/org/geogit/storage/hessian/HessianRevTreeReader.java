@@ -60,7 +60,7 @@ class HessianRevTreeReader extends HessianRevReader implements ObjectReader<RevT
                 }
                 if (type.equals(Node.REF)) {
                     NodeRef entryRef = readNodeRef(hin);
-                    references.put(entryRef.getName(), entryRef);
+                    references.put(entryRef.getPath(), entryRef);
                 } else if (type.equals(Node.TREE)) {
                     parseAndSetSubTree(hin, subtrees);
                 } else if (type.equals(Node.END)) {
@@ -81,6 +81,6 @@ class HessianRevTreeReader extends HessianRevReader implements ObjectReader<RevT
             throws IOException {
         int bucket = hin.readInt();
         ObjectId id = readObjectId(hin);
-        subtrees.put(Integer.valueOf(bucket), new NodeRef("", id, TYPE.TREE));
+        subtrees.put(Integer.valueOf(bucket), new NodeRef("", id, ObjectId.NULL, TYPE.TREE));
     }
 }

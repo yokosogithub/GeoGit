@@ -13,6 +13,8 @@ import org.geogit.api.NodeRef;
 import org.geogit.api.ObjectId;
 import org.geogit.api.RevTree;
 
+import com.google.common.base.Optional;
+
 public interface ObjectDatabase {
 
     public abstract void close();
@@ -66,28 +68,27 @@ public interface ObjectDatabase {
      * @param pathToTree
      * @return the id of the saved state of the modified root
      */
-    public ObjectId writeBack(MutableTree root, final RevTree tree, final List<String> pathToTree);
+    public ObjectId writeBack(MutableTree root, final RevTree tree, final String pathToTree);
 
     public abstract ObjectInserter newObjectInserter();
 
     /**
      * If a child tree of {@code parent} addressed by the given {@code childPath} exists, returns
-     * it's mutable copy, otherwise just returns a new mutable tree without any modification to
-     * root.
+     * it's mutable copy, otherwise just returns a new mutable tree without any modification to root
+     * or any intermadiate tree between root and the requested tree path.
      * 
      * @throws IllegalArgumentException if an reference exists for {@code childPath} but is not of
      *         type {@code TREE}
+     * @todo: this should be taken off the objectdatabase interface and make it a command
      */
-    public MutableTree getOrCreateSubTree(final RevTree parent, List<String> childPath);
+    public MutableTree getOrCreateSubTree(final RevTree rootTree, final String treePath);
 
     /**
      * Creates and return a new, empty tree, that stores to this {@link ObjectDatabase}
      */
     public MutableTree newTree();
 
-    public NodeRef getTreeChild(RevTree root, String... path);
-
-    public NodeRef getTreeChild(RevTree root, List<String> path);
+    public Optional<NodeRef> getTreeChild(RevTree root, String path);
 
     // public RevTree getTree(final ObjectId treeId);
     //

@@ -19,23 +19,29 @@ package org.geotools.data.geogit;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 import java.util.logging.Logger;
 
+import javax.xml.namespace.QName;
+
 import org.geogit.api.GeoGIT;
 import org.geogit.api.NodeRef;
 import org.geogit.api.RevCommit;
+import org.geogit.api.RevFeature;
 import org.geogit.api.porcelain.CommitOp;
 import org.geogit.api.porcelain.CommitStateResolver;
 import org.geogit.api.porcelain.NothingToCommitException;
 import org.geogit.repository.StagingArea;
 import org.geogit.repository.WorkingTree;
+import org.geogit.storage.hessian.GeoToolsRevFeature;
 import org.geotools.data.Transaction;
 import org.geotools.factory.CommonFactoryFinder;
 import org.geotools.feature.FeatureCollection;
+import org.geotools.feature.FeatureIterator;
 import org.geotools.util.NullProgressListener;
 import org.geotools.util.logging.Logging;
 import org.opengis.feature.type.Name;
@@ -45,7 +51,7 @@ import org.opengis.filter.identity.FeatureId;
 import org.opengis.util.ProgressListener;
 
 import com.google.common.base.Function;
-import com.google.common.collect.ImmutableList;
+import com.google.common.collect.AbstractIterator;
 import com.google.common.collect.Lists;
 
 @SuppressWarnings("rawtypes")
@@ -177,7 +183,7 @@ public class VersioningTransactionState implements Transaction.State {
 
         @Override
         public FeatureId apply(NodeRef input) {
-            return filterFactory.featureId(input.getName(), input.getObjectId().toString());
+            return filterFactory.featureId(input.getPath(), input.getObjectId().toString());
         }
 
     };
@@ -190,8 +196,16 @@ public class VersioningTransactionState implements Transaction.State {
         WorkingTree workingTree = geoGit.getRepository().getWorkingTree();
         List<NodeRef> inserted = new LinkedList<NodeRef>();
 
-        workingTree
-                .insert(affectedFeatures, forceUseProvidedFIDs, NULL_PROGRESS_LISTENER, inserted);
+        int collectionSize = affectedFeatures.size();
+        String treePath = typeName.getLocalPart();
+        final FeatureIterator features = affectedFeatures.features();
+        try {
+            Iterator<RevFeature> iterator = new RevFeatureIterator(features);
+            workingTree.insert(treePath, iterator, forceUseProvidedFIDs, NULL_PROGRESS_LISTENER,
+                    inserted, collectionSize);
+        } finally {
+            features.close();
+        }
         geoGit.add().call();
         return Lists.transform(inserted, NodeRefToFeatureId);
     }
@@ -202,7 +216,16 @@ public class VersioningTransactionState implements Transaction.State {
         changedTypes.add(typeName);
 
         WorkingTree workingTree = geoGit.getRepository().getWorkingTree();
-        workingTree.update(newValues, NULL_PROGRESS_LISTENER);
+
+        final FeatureIterator features = newValues.features();
+        try {
+            Integer size = newValues.size();
+            String treePath = typeName.getLocalPart();
+            workingTree.update(treePath, new RevFeatureIterator(features), NULL_PROGRESS_LISTENER,
+                    size);
+        } finally {
+            features.close();
+        }
         geoGit.add().call();
     }
 
@@ -212,10 +235,35 @@ public class VersioningTransactionState implements Transaction.State {
         changedTypes.add(typeName);
 
         WorkingTree workingTree = geoGit.getRepository().getWorkingTree();
-        workingTree.delete(typeName, filter, affectedFeatures);
+        QName qName = new QName(typeName.getNamespaceURI(), typeName.getLocalPart());
+
+        final FeatureIterator features = affectedFeatures.features();
+        try {
+            workingTree.delete(qName, filter, new RevFeatureIterator(features));
+        } finally {
+            features.close();
+        }
 
         geoGit.add().call();
 
+    }
+
+    private static class RevFeatureIterator extends AbstractIterator<RevFeature> implements
+            Iterator<RevFeature> {
+
+        private FeatureIterator features;
+
+        public RevFeatureIterator(final FeatureIterator features) {
+            this.features = features;
+        }
+
+        @Override
+        protected RevFeature computeNext() {
+            if (!features.hasNext()) {
+                return super.endOfData();
+            }
+            return new GeoToolsRevFeature(features.next());
+        }
     }
 
     public void stageRename(final Name typeName, final String oldFid, final String newFid) {
@@ -224,8 +272,8 @@ public class VersioningTransactionState implements Transaction.State {
 
         final String localPart = typeName.getLocalPart();
 
-        List<String> from = ImmutableList.of(localPart, oldFid);
-        List<String> to = ImmutableList.of(localPart, newFid);
+        String from = NodeRef.appendChild(localPart, oldFid);
+        String to = NodeRef.appendChild(localPart, newFid);
 
         index.renamed(from, to);
     }

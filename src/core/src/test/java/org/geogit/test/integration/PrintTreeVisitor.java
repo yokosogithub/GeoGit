@@ -48,7 +48,7 @@ public class PrintTreeVisitor implements TreeVisitor {
         printlimit++;
         if (printlimit <= 1) {
             indent();
-            println(ref.getName());
+            println(ref.getPath());
             writer.flush();
         } else {
             unprinted++;

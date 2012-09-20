@@ -17,30 +17,33 @@
 package org.geotools.data.geogit;
 
 import java.io.IOException;
+import java.io.Serializable;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.NoSuchElementException;
 
 import org.geogit.api.GeoGIT;
 import org.geogit.api.NodeRef;
 import org.geogit.api.ObjectId;
+import org.geogit.api.RevFeature;
 import org.geogit.api.RevTree;
 import org.geogit.api.SpatialRef;
 import org.geogit.storage.ObjectDatabase;
 import org.geogit.storage.ObjectReader;
+import org.geogit.storage.hessian.GeoToolsRevFeatureType;
 import org.geotools.data.simple.SimpleFeatureCollection;
 import org.geotools.data.simple.SimpleFeatureIterator;
-import org.geotools.factory.Hints;
 import org.geotools.feature.CollectionListener;
 import org.geotools.feature.FeatureCollection;
 import org.geotools.feature.FeatureIterator;
 import org.geotools.geometry.jts.JTS;
 import org.geotools.geometry.jts.ReferencedEnvelope;
 import org.geotools.referencing.CRS;
-import org.opengis.feature.Feature;
 import org.opengis.feature.FeatureVisitor;
 import org.opengis.feature.simple.SimpleFeature;
 import org.opengis.feature.simple.SimpleFeatureType;
@@ -63,6 +66,7 @@ import com.google.common.base.Predicate;
 import com.google.common.base.Throwables;
 import com.google.common.collect.AbstractIterator;
 import com.google.common.collect.Iterators;
+import com.google.common.collect.Maps;
 import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.geom.GeometryFactory;
 
@@ -423,19 +427,20 @@ public class GeoGitSimpleFeatureCollection implements SimpleFeatureCollection {
 
         @Override
         protected SimpleFeature computeNext() {
-            Hints hints = new Hints();
+            Map<String, Serializable> hints = Collections.emptyMap();
             if (null != geometryFactory) {
-                hints.put(Hints.GEOMETRY_FACTORY, geometryFactory);
+                hints = Maps.newHashMap();
+                hints.put(ObjectReader.JTS_GEOMETRY_FACTORY, geometryFactory);
             }
             try {
                 while (featureRefs.hasNext()) {
                     NodeRef featureRef = featureRefs.next();
-                    String featureId = featureRef.getName();
+                    String featureId = featureRef.getPath();
                     ObjectId contentId = featureRef.getObjectId();
 
                     SimpleFeature feature;
-                    ObjectReader<Feature> featureReader = geogit.getRepository().newFeatureReader(
-                            type, featureId, hints);
+                    ObjectReader<RevFeature> featureReader = geogit.getRepository()
+                            .newFeatureReader(new GeoToolsRevFeatureType(type), featureId, hints);
 
                     feature = (SimpleFeature) odb.get(contentId, featureReader);
                     feature = reprojector.reproject(feature);

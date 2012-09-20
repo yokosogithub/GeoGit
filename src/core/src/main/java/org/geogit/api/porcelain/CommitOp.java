@@ -21,10 +21,9 @@ import org.geogit.api.plumbing.UpdateSymRef;
 import org.geogit.repository.CommitBuilder;
 import org.geogit.repository.Repository;
 import org.geogit.repository.StagingArea;
-import org.geogit.repository.Tuple;
 import org.geogit.storage.ObjectInserter;
-import org.opengis.geometry.BoundingBox;
 
+import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 
@@ -144,21 +143,18 @@ public class CommitOp extends AbstractGeoGitOp<RevCommit> {
             return null;
         }
 
-        final Ref currHead = command(RefParse.class).setName(Ref.HEAD).call();
-        Preconditions.checkState(currHead != null, "Repository has no HEAD, can't commit");
+        final Optional<Ref> currHead = command(RefParse.class).setName(Ref.HEAD).call();
+        Preconditions.checkState(currHead.isPresent(), "Repository has no HEAD, can't commit");
 
         final ObjectId currHeadCommitId = command(RevParse.class).setRefSpec(Ref.HEAD).call();
         parents.add(currHeadCommitId);
 
         final StagingArea index = repository.getIndex();
 
-        Tuple<ObjectId, BoundingBox> result = index.writeTree(currHead, subProgress(49f));
+        final ObjectId newTreeId = index.writeTree(currHead.get(), subProgress(49f));
         if (getProgressListener().isCanceled()) {
             return null;
         }
-
-        final ObjectId newTreeId = result.getFirst();
-        final BoundingBox affectedArea = result.getMiddle();
 
         final ObjectId currentRootTreeId = repository.getRootTreeId();
         if (currentRootTreeId.equals(newTreeId)) {
@@ -185,16 +181,16 @@ public class CommitOp extends AbstractGeoGitOp<RevCommit> {
         final RevCommit commit = repository.getCommit(commitId);
         // set the HEAD pointing to the new commit
         final String branch = "refs/heads/master";
-        final Ref branchHead = command(UpdateRef.class).setName(branch).setNewValue(commitId)
-                .call();
-        Preconditions.checkState(commitId.equals(branchHead.getObjectId()));
+        final Optional<Ref> branchHead = command(UpdateRef.class).setName(branch)
+                .setNewValue(commitId).call();
+        Preconditions.checkState(commitId.equals(branchHead.get().getObjectId()));
         LOGGER.fine("New head: " + branchHead);
 
-        final SymRef newHead = command(UpdateSymRef.class).setName(Ref.HEAD).setNewValue(branch)
-                .call();
-        Preconditions.checkState(branch.equals(newHead.getTarget()));
+        final Optional<SymRef> newHead = command(UpdateSymRef.class).setName(Ref.HEAD)
+                .setNewValue(branch).call();
+        Preconditions.checkState(branch.equals(newHead.get().getTarget()));
 
-        ObjectId treeId = repository.getCommit(branchHead.getObjectId()).getTreeId();
+        ObjectId treeId = repository.getCommit(branchHead.get().getObjectId()).getTreeId();
         Preconditions.checkState(newTreeId.equals(treeId));
 
         getProgressListener().complete();

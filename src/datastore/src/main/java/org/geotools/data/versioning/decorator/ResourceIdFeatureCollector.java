@@ -22,8 +22,10 @@ import java.util.Set;
 import org.geogit.api.GeoGIT;
 import org.geogit.api.NodeRef;
 import org.geogit.api.ObjectId;
+import org.geogit.api.RevFeature;
 import org.geogit.storage.ObjectReader;
 import org.geogit.storage.StagingDatabase;
+import org.geogit.storage.hessian.GeoToolsRevFeatureType;
 import org.opengis.feature.Feature;
 import org.opengis.feature.type.FeatureType;
 import org.opengis.filter.identity.ResourceId;
@@ -81,16 +83,17 @@ public class ResourceIdFeatureCollector implements Iterable<Feature> {
 
         @Override
         public Feature apply(final NodeRef featureRef) {
-            String featureId = featureRef.getName();
+            String featureId = featureRef.getPath();
             ObjectId contentId = featureRef.getObjectId();
             StagingDatabase database = repo.getRepository().getIndex().getDatabase();
-            Feature feature;
+            RevFeature feature;
 
-            ObjectReader<Feature> featureReader = geogit.getRepository().newFeatureReader(type,
-                    featureId);
+            ObjectReader<RevFeature> featureReader = geogit.getRepository().newFeatureReader(
+                    new GeoToolsRevFeatureType(type), featureId);
             feature = database.get(contentId, featureReader);
 
-            return VersionedFeatureWrapper.wrap(feature, featureRef.getObjectId().toString());
+            return VersionedFeatureWrapper.wrap((Feature) feature.feature(), featureRef
+                    .getObjectId().toString());
         }
 
     }

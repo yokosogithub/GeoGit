@@ -13,10 +13,11 @@ import java.io.PrintStream;
 import javax.xml.parsers.DocumentBuilderFactory;
 
 import org.custommonkey.xmlunit.XMLAssert;
+import org.geogit.api.RevFeature;
 import org.geogit.storage.ObjectWriter;
+import org.geogit.storage.hessian.GeoToolsRevFeature;
 import org.geogit.test.integration.RepositoryTestCase;
 import org.junit.Test;
-import org.opengis.feature.Feature;
 import org.w3c.dom.Document;
 
 public class FeaturePrintTest extends RepositoryTestCase {
@@ -24,7 +25,8 @@ public class FeaturePrintTest extends RepositoryTestCase {
     @Test
     public void testPrint() throws Exception {
         ByteArrayOutputStream bout = new ByteArrayOutputStream();
-        ObjectWriter<Feature> writ = getRepository().newFeatureWriter(lines1);
+        ObjectWriter<RevFeature> writ = getRepository().newFeatureWriter(
+                new GeoToolsRevFeature(lines1));
         writ.write(bout);
 
         byte[] bytes = bout.toByteArray();

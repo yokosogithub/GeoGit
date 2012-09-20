@@ -4,11 +4,13 @@
  */
 package org.geogit.api;
 
+import com.google.common.base.Optional;
+
 public interface MutableTree extends RevTree {
 
     public abstract void put(final NodeRef ref);
 
-    public abstract NodeRef remove(final String key);
+    public abstract Optional<NodeRef> remove(final String key);
 
     public abstract void normalize();
 

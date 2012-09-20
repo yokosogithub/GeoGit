@@ -5,6 +5,8 @@
 
 package org.geogit.api.plumbing;
 
+import static com.google.common.base.Preconditions.checkArgument;
+
 import org.geogit.api.AbstractGeoGitOp;
 import org.geogit.api.ObjectId;
 import org.geogit.api.RevObject;
@@ -45,24 +47,26 @@ public class RevObjectParse extends AbstractGeoGitOp<RevObject> {
     }
 
     /**
-     * @return the resolved object id or {@link ObjectId#NULL}
+     * @return the resolved object id
+     * @throws IllegalArgumentException if the provided refspec doesn't resolve to any known object
      */
     @Override
-    public RevObject call() {
+    public RevObject call() throws IllegalArgumentException {
         ObjectId resolvedObjectId;
         if (objectId == null) {
             resolvedObjectId = command(RevParse.class).setRefSpec(refSpec).call();
         } else {
             resolvedObjectId = objectId;
         }
-        if (resolvedObjectId.isNull()) {
-            return null;
-        }
+
+        checkArgument(!resolvedObjectId.isNull(),
+                String.format("refspec ('%s') did not resolve to any object", refSpec));
+
         final TYPE type = command(ResolveObjectType.class).setObjectId(resolvedObjectId).call();
         ObjectSerialisingFactory factory = indexDb.getSerialFactory();
         ObjectReader<? extends RevObject> reader;
         switch (type) {
-        case BLOB:
+        case FEATURE:
             throw new UnsupportedOperationException("not yet implemented");
             // break;
         case COMMIT:
@@ -73,6 +77,9 @@ public class RevObjectParse extends AbstractGeoGitOp<RevObject> {
             // break;
         case TREE:
             reader = factory.createRevTreeReader(indexDb);
+            break;
+        case FEATURETYPE:
+            reader = factory.createFeatureTypeReader();
             break;
         default:
             throw new IllegalArgumentException("Unknown object type " + type);

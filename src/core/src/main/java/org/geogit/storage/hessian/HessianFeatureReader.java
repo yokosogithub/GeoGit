@@ -6,18 +6,19 @@ package org.geogit.storage.hessian;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.Serializable;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 import org.geogit.api.ObjectId;
+import org.geogit.api.RevFeature;
 import org.geogit.storage.ObjectReader;
 import org.geotools.factory.CommonFactoryFinder;
-import org.geotools.factory.Hints;
 import org.geotools.feature.simple.SimpleFeatureImpl;
-import org.opengis.feature.Feature;
 import org.opengis.feature.simple.SimpleFeature;
 import org.opengis.feature.simple.SimpleFeatureType;
 import org.opengis.feature.type.FeatureType;
@@ -38,7 +39,7 @@ import com.vividsolutions.jts.io.WKBReader;
  * 
  * @author mleslie
  */
-class HessianFeatureReader implements ObjectReader<Feature> {
+class HessianFeatureReader implements ObjectReader<RevFeature> {
 
     private static final FilterFactory2 FILTER_FAC = CommonFactoryFinder.getFilterFactory2(null);
 
@@ -49,25 +50,27 @@ class HessianFeatureReader implements ObjectReader<Feature> {
     private static GeometryFactory geometryFactory = new GeometryFactory();
 
     public HessianFeatureReader(final FeatureType featureType, final String featureId,
-            final Hints hints) {
+            final Map<String, Serializable> hints) {
         this.featureType = featureType;
         this.featureId = featureId;
         if (hints != null) {
-            GeometryFactory gf = (GeometryFactory) hints.get(Hints.GEOMETRY_FACTORY);
+            GeometryFactory gf = (GeometryFactory) hints.get(ObjectReader.JTS_GEOMETRY_FACTORY);
             if (gf != null) {
                 geometryFactory = gf;
             }
         }
     }
 
-    public Feature read(ObjectId id, InputStream rawData) throws IllegalArgumentException {
+    public GeoToolsRevFeature read(ObjectId id, InputStream rawData)
+            throws IllegalArgumentException {
         try {
             Hessian2Input in = new Hessian2Input(rawData);
             in.startMessage();
             BlobType type = BlobType.fromValue(in.readInt());
-            if (type != BlobType.FEATURE)
+            if (type != BlobType.FEATURE) {
                 throw new IllegalArgumentException("Could not parse blob of type " + type
                         + " as a feature.");
+            }
             List<Object> values = new ArrayList<Object>();
             String typeString = in.readString();
             int attrCount = in.readInt();
@@ -78,7 +81,7 @@ class HessianFeatureReader implements ObjectReader<Feature> {
             in.completeMessage();
             FeatureId fid = FILTER_FAC.featureId(featureId, id.toString());
             SimpleFeature feat = new SimpleFeatureImpl(values, (SimpleFeatureType) featureType, fid);
-            return feat;
+            return new GeoToolsRevFeature(id, feat);
         } catch (Exception e) {
             throw Throwables.propagate(e);
         }

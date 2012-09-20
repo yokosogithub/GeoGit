@@ -4,10 +4,9 @@
  */
 package org.geogit.storage.memory;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Comparator;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -17,36 +16,36 @@ import java.util.SortedMap;
 
 import javax.annotation.Nullable;
 
-import org.geogit.api.DiffEntry;
+import org.geogit.api.CommandLocator;
 import org.geogit.api.MutableTree;
 import org.geogit.api.NodeRef;
 import org.geogit.api.ObjectId;
+import org.geogit.api.Ref;
 import org.geogit.api.RevTree;
+import org.geogit.api.plumbing.RefParse;
+import org.geogit.api.plumbing.ResolveTreeish;
+import org.geogit.api.plumbing.UpdateRef;
 import org.geogit.storage.ObjectDatabase;
 import org.geogit.storage.ObjectInserter;
 import org.geogit.storage.ObjectReader;
-import org.geogit.storage.ObjectSerialisingFactory;
-import org.geogit.storage.ObjectWriter;
 import org.geogit.storage.StagingDatabase;
 
+import com.google.common.base.Optional;
+import com.google.common.base.Throwables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.inject.Inject;
+import com.ning.compress.lzf.LZFInputStream;
 
-public class HeapStagingDatabase implements ObjectDatabase, StagingDatabase {
+public class HeapStagingDatabase extends HeapObjectDatabse implements StagingDatabase {
 
-    private SortedMap<List<String>, DiffEntry> staged;
+    private SortedMap<String, NodeRef> staged;
 
-    private SortedMap<List<String>, DiffEntry> unstaged;
-
-    // /////////////////////////////////////////
-    /**
-     * The staging area object database, contains only differences between the index and the
-     * repository
-     */
-    private ObjectDatabase stagingDb;
+    private SortedMap<String, NodeRef> unstaged;
 
     private ObjectDatabase repositoryDb;
+
+    private CommandLocator commandLocator;
 
     /**
      * @param referenceDatabase the repository reference database, used to get the head re
@@ -54,28 +53,43 @@ public class HeapStagingDatabase implements ObjectDatabase, StagingDatabase {
      * @param stagingDb
      */
     @Inject
-    public HeapStagingDatabase(final ObjectDatabase repositoryDb) {
+    public HeapStagingDatabase(final ObjectDatabase repositoryDb,
+            final CommandLocator commandLocator) {
         this.repositoryDb = repositoryDb;
+        this.commandLocator = commandLocator;
     }
 
+    // /////////////////////////////////////////
     /**
      * 
      * @see org.geogit.storage.StagingDatabase#create()
      */
     @Override
     public void create() {
-        if (stagingDb == null) {
-            stagingDb = new HeapObjectDatabse();
-            stagingDb.create();
-
-            Comparator<List<String>> pathComparator = new Comparator<List<String>>() {
-                @Override
-                public int compare(List<String> o1, List<String> o2) {
-                    return o1.toString().compareTo(o2.toString());
-                }
-            };
-            unstaged = Maps.newTreeMap(pathComparator);
-            staged = Maps.newTreeMap(pathComparator);
+        super.create();
+        unstaged = Maps.newTreeMap();
+        staged = Maps.newTreeMap();
+        {
+            Optional<Ref> stageHead = commandLocator.command(RefParse.class)
+                    .setName(Ref.STAGE_HEAD).call();
+            if (!stageHead.isPresent()) {
+                // resolve to current head
+                ObjectId headTreeId = commandLocator.command(ResolveTreeish.class)
+                        .setTreeish(Ref.HEAD).call();
+                commandLocator.command(UpdateRef.class).setName(Ref.STAGE_HEAD)
+                        .setNewValue(headTreeId).call();
+            }
+        }
+        {
+            Optional<Ref> workTreeHead = commandLocator.command(RefParse.class)
+                    .setName(Ref.WORK_HEAD).call();
+            if (!workTreeHead.isPresent()) {
+                // resolve to current head
+                ObjectId stageTreeId = commandLocator.command(ResolveTreeish.class)
+                        .setTreeish(Ref.STAGE_HEAD).call();
+                commandLocator.command(UpdateRef.class).setName(Ref.WORK_HEAD)
+                        .setNewValue(stageTreeId).call();
+            }
         }
     }
 
@@ -84,13 +98,12 @@ public class HeapStagingDatabase implements ObjectDatabase, StagingDatabase {
      */
     @Override
     public void close() {
-        if (stagingDb != null) {
+        super.close();
+        if (staged != null) {
             staged.clear();
             unstaged.clear();
-            stagingDb.close();
             staged = null;
             unstaged = null;
-            stagingDb = null;
         }
     }
 
@@ -121,99 +134,71 @@ public class HeapStagingDatabase implements ObjectDatabase, StagingDatabase {
 
     // //////////////////////////////////////////////////////////////////////////////////////////
 
-    /**
-     * @param diffEntry
-     * @see org.geogit.storage.StagingDatabase#putUnstaged(org.geogit.api.DiffEntry)
-     */
     @Override
-    public synchronized void putUnstaged(final DiffEntry diffEntry) {
-        unstaged.put(diffEntry.getPath(), diffEntry);
+    public synchronized void putUnstaged(final NodeRef entry) {
+        String path = entry.getPath();
+        unstaged.put(path, entry);
     }
 
-    /**
-     * @param diffEntry
-     * @see org.geogit.storage.StagingDatabase#stage(org.geogit.api.DiffEntry)
-     */
     @Override
-    public synchronized void stage(DiffEntry diffEntry) {
-        List<String> path = diffEntry.getPath();
-        DiffEntry remove = unstaged.remove(path);
+    public synchronized void stage(NodeRef entry) {
+        String path = entry.getPath();
+        NodeRef remove = unstaged.remove(path);
         if (remove != null) {
-            staged.put(path, diffEntry);
+            staged.put(path, entry);
         }
     }
 
-    /**
-     * @param pathFilter
-     * @return
-     * @see org.geogit.storage.StagingDatabase#countUnstaged(java.util.List)
-     */
     @Override
-    public synchronized int countUnstaged(final List<String> pathFilter) {
-        if (pathFilter == null || pathFilter.size() == 0) {
+    public synchronized int countUnstaged(final String pathFilter) {
+        if (pathFilter == null || pathFilter.isEmpty()) {
             return unstaged.size();
         }
-        List<DiffEntry> matches = filter(unstaged, pathFilter);
+        List<NodeRef> matches = filter(unstaged, pathFilter);
         return matches.size();
     }
 
-    /**
-     * @param pathFilter
-     * @return
-     * @see org.geogit.storage.StagingDatabase#countStaged(java.util.List)
-     */
     @Override
-    public synchronized int countStaged(final List<String> pathFilter) {
-        if (pathFilter == null || pathFilter.size() == 0) {
+    public synchronized int countStaged(final String pathFilter) {
+        if (pathFilter == null || pathFilter.isEmpty()) {
             return staged.size();
         }
-        List<DiffEntry> matches = filter(staged, pathFilter);
+        List<NodeRef> matches = filter(staged, pathFilter);
         return matches.size();
     }
 
-    /**
-     * @see org.geogit.storage.StagingDatabase#getUnstaged(java.util.List)
-     */
     @Override
-    public synchronized Iterator<DiffEntry> getUnstaged(@Nullable final List<String> pathFilter) {
-        if (pathFilter == null || pathFilter.size() == 0) {
+    public synchronized Iterator<NodeRef> getUnstaged(@Nullable final String pathFilter) {
+        if (pathFilter == null || pathFilter.isEmpty()) {
             return Lists.newArrayList(unstaged.values()).iterator();
         }
-        List<DiffEntry> matches = filter(unstaged, pathFilter);
+        List<NodeRef> matches = filter(unstaged, pathFilter);
         return matches.iterator();
     }
 
-    /**
-     * @see org.geogit.storage.StagingDatabase#getStaged(java.util.List)
-     */
     @Override
-    public synchronized Iterator<DiffEntry> getStaged(@Nullable final List<String> pathFilter) {
-        if (pathFilter == null || pathFilter.size() == 0) {
+    public synchronized Iterator<NodeRef> getStaged(@Nullable final String pathFilter) {
+        if (pathFilter == null || pathFilter.isEmpty()) {
             return Lists.newArrayList(staged.values()).iterator();
         }
-        List<DiffEntry> matches = filter(staged, pathFilter);
+        List<NodeRef> matches = filter(staged, pathFilter);
         return matches.iterator();
     }
 
-    private synchronized List<DiffEntry> filter(SortedMap<List<String>, DiffEntry> map,
-            List<String> pathFilter) {
-        List<DiffEntry> matches = Lists.newLinkedList();
+    private synchronized List<NodeRef> filter(SortedMap<String, NodeRef> map, String pathFilter) {
+        List<NodeRef> matches = Lists.newLinkedList();
 
-        for (Map.Entry<List<String>, DiffEntry> e : map.entrySet()) {
-            List<String> path = e.getKey();
-            if (path.size() >= pathFilter.size()
-                    && pathFilter.equals(path.subList(0, pathFilter.size()))) {
+        for (Map.Entry<String, NodeRef> e : map.entrySet()) {
+            String path = e.getKey();
+            if (path.startsWith(pathFilter)) {
                 matches.add(e.getValue());
             }
         }
         return matches;
     }
 
-    /**
-     * @see org.geogit.storage.StagingDatabase#removeStaged(java.util.List)
-     */
     @Override
-    public synchronized int removeStaged(final List<String> pathFilter) {
+    public synchronized int removeStaged(final String pathFilter) {
         return remove(staged, pathFilter);
     }
 
@@ -221,79 +206,48 @@ public class HeapStagingDatabase implements ObjectDatabase, StagingDatabase {
      * @see org.geogit.storage.StagingDatabase#removeUnStaged(java.util.List)
      */
     @Override
-    public synchronized int removeUnStaged(final List<String> pathFilter) {
+    public synchronized int removeUnStaged(final String pathFilter) {
         return remove(unstaged, pathFilter);
     }
 
     /**
-     * @return
+     * @return number of entries removed
      */
-    private int remove(SortedMap<List<String>, DiffEntry> map, List<String> pathFilter) {
+    private int remove(SortedMap<String, NodeRef> map, @Nullable String pathFilter) {
         int size = 0;
         if (pathFilter == null || pathFilter.isEmpty()) {
             size = map.size();
             map.clear();
         } else {
-            for (List<String> key : Lists.newArrayList(map.keySet())) {
-                if (key.size() >= pathFilter.size()
-                        && pathFilter.equals(key.subList(0, pathFilter.size()))) {
+            for (String path : map.tailMap(pathFilter).keySet()) {
+                if (path.startsWith(pathFilter)) {
                     size++;
-                    map.remove(key);
+                    map.remove(path);
+                } else {
+                    break;
                 }
             }
         }
         return size;
     }
 
-    /**
-     * @see org.geogit.storage.StagingDatabase#findStaged(java.lang.String)
-     */
     @Override
-    public synchronized DiffEntry findStaged(final String... path) {
-        return findStaged(Arrays.asList(path));
+    public synchronized Optional<NodeRef> findStaged(final String path) {
+        NodeRef entry = staged.get(path);
+        return Optional.fromNullable(entry);
     }
 
-    /**
-     * @see org.geogit.storage.StagingDatabase#findStaged(java.util.List)
-     */
     @Override
-    public synchronized DiffEntry findStaged(final List<String> path) {
-        DiffEntry diffEntry = staged.get(path);
-        return diffEntry;
-    }
-
-    /**
-     * @see org.geogit.storage.StagingDatabase#findUnstaged(java.lang.String)
-     */
-    @Override
-    public synchronized DiffEntry findUnstaged(final String... path) {
-        return findUnstaged(Arrays.asList(path));
-
-    }
-
-    /**
-     * @see org.geogit.storage.StagingDatabase#findUnstaged(java.util.List)
-     */
-    @Override
-    public synchronized DiffEntry findUnstaged(final List<String> path) {
-        DiffEntry diffEntry = unstaged.get(path);
-        return diffEntry;
-    }
-
-    /**
-     * @return
-     * @see org.geogit.storage.StagingDatabase#getObjectDatabase()
-     */
-    @Override
-    public ObjectDatabase getObjectDatabase() {
-        return this.stagingDb;
+    public synchronized Optional<NodeRef> findUnstaged(final String path) {
+        NodeRef entry = unstaged.get(path);
+        return Optional.fromNullable(entry);
     }
 
     // /////////////////////////////////////////////////////////////////////
 
     @Override
     public boolean exists(ObjectId id) {
-        boolean exists = stagingDb.exists(id);
+        boolean exists = super.exists(id);
         if (!exists) {
             exists = repositoryDb.exists(id);
         }
@@ -301,71 +255,76 @@ public class HeapStagingDatabase implements ObjectDatabase, StagingDatabase {
     }
 
     @Override
-    public InputStream getRaw(ObjectId id) {
-        if (stagingDb.exists(id)) {
-            return stagingDb.getRaw(id);
+    public final InputStream getRaw(final ObjectId id) throws IllegalArgumentException {
+        InputStream in = getRawInternal(id);
+        if (in != null) {
+            try {
+                return new LZFInputStream(in);
+            } catch (IOException e) {
+                throw Throwables.propagate(e);
+            }
         }
         return repositoryDb.getRaw(id);
     }
 
     @Override
+    protected InputStream getRawInternal(ObjectId id) throws IllegalArgumentException {
+        if (super.exists(id)) {
+            return super.getRawInternal(id);
+        }
+        return null;
+    }
+
+    @Override
     public List<ObjectId> lookUp(String partialId) {
-        Set<ObjectId> lookUp = new HashSet<ObjectId>(stagingDb.lookUp(partialId));
+        Set<ObjectId> lookUp = new HashSet<ObjectId>(super.lookUp(partialId));
         lookUp.addAll(repositoryDb.lookUp(partialId));
         return new ArrayList<ObjectId>(lookUp);
     }
 
     @Override
     public <T> T get(ObjectId id, ObjectReader<T> reader) {
-        if (stagingDb.exists(id)) {
-            return stagingDb.get(id, reader);
+        if (super.exists(id)) {
+            return super.get(id, reader);
         }
         return repositoryDb.get(id, reader);
     }
 
     @Override
-    public <T> ObjectId put(ObjectWriter<T> writer) {
-        return stagingDb.put(writer);
-    }
-
-    @Override
-    public boolean put(ObjectId id, ObjectWriter<?> writer) {
-        return stagingDb.put(id, writer);
-    }
-
-    @Override
-    public ObjectId writeBack(MutableTree root, RevTree tree, List<String> pathToTree) {
-        return stagingDb.writeBack(root, tree, pathToTree);
+    public ObjectId writeBack(MutableTree root, RevTree tree, String pathToTree) {
+        return super.writeBack(root, tree, pathToTree);
     }
 
     @Override
     public ObjectInserter newObjectInserter() {
-        return stagingDb.newObjectInserter();
+        return super.newObjectInserter();
     }
 
     @Override
-    public MutableTree getOrCreateSubTree(RevTree parent, List<String> childPath) {
-        NodeRef treeChild = repositoryDb.getTreeChild(parent, childPath);
-        if (null != treeChild) {
+    public MutableTree getOrCreateSubTree(RevTree parent, String childPath) {
+        {
+            Optional<NodeRef> override = super.getTreeChild(parent, childPath);
+            if (override.isPresent()) {
+                return super.getOrCreateSubTree(parent, childPath);
+            }
+        }
+
+        Optional<NodeRef> treeChild = repositoryDb.getTreeChild(parent, childPath);
+        if (treeChild.isPresent()) {
             return repositoryDb.getOrCreateSubTree(parent, childPath);
         }
-        return stagingDb.getOrCreateSubTree(parent, childPath);
+        return super.getOrCreateSubTree(parent, childPath);
     }
 
     @Override
     public MutableTree newTree() {
-        return stagingDb.newTree();
+        return super.newTree();
     }
 
     @Override
-    public NodeRef getTreeChild(RevTree root, String... path) {
-        return getTreeChild(root, Arrays.asList(path));
-    }
-
-    @Override
-    public NodeRef getTreeChild(RevTree root, List<String> path) {
-        NodeRef treeChild = stagingDb.getTreeChild(root, path);
-        if (null != treeChild) {
+    public Optional<NodeRef> getTreeChild(RevTree root, String path) {
+        Optional<NodeRef> treeChild = super.getTreeChild(root, path);
+        if (treeChild.isPresent()) {
             return treeChild;
         }
         return repositoryDb.getTreeChild(root, path);
@@ -373,11 +332,7 @@ public class HeapStagingDatabase implements ObjectDatabase, StagingDatabase {
 
     @Override
     public boolean delete(ObjectId objectId) {
-        return stagingDb.delete(objectId);
+        return super.delete(objectId);
     }
 
-    @Override
-    public ObjectSerialisingFactory getSerialFactory() {
-        return repositoryDb.getSerialFactory();
-    }
 }

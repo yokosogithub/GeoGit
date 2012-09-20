@@ -28,7 +28,7 @@ public abstract class AbstractGeoGitOp<T> implements Callable<T> {
         LOGGER = Logging.getLogger(getClass());
     }
 
-    public <T extends AbstractGeoGitOp<?>> T command(Class<T> commandClass) {
+    public <C extends AbstractGeoGitOp<?>> C command(Class<C> commandClass) {
         return commandLocator.command(commandClass);
     }
 

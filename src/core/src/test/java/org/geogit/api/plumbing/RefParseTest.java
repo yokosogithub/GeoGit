@@ -7,8 +7,7 @@ package org.geogit.api.plumbing;
 
 import static org.geogit.api.ObjectId.forString;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static org.mockito.Matchers.anyObject;
@@ -27,6 +26,7 @@ import org.geogit.storage.RefDatabase;
 import org.junit.Before;
 import org.junit.Test;
 
+import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMap.Builder;
 
@@ -88,20 +88,20 @@ public class RefParseTest {
 
     @Test
     public void testNonExistentRef() {
-        assertNull(command.setName("HEADs").call());
-        assertNull(command.setName("remotes/upstream").call());
-        assertNull(command.setName("refs/remotes/origin/badbranch").call());
+        assertFalse(command.setName("HEADs").call().isPresent());
+        assertFalse(command.setName("remotes/upstream").call().isPresent());
+        assertFalse(command.setName("refs/remotes/origin/badbranch").call().isPresent());
     }
 
     @Test
     public void testParseCompleteRef() {
         String refName = "refs/heads/master";
 
-        Ref ref = command.setName(refName).call();
-        assertNotNull(ref);
-        assertEquals(refName, ref.getName());
-        assertEquals(TYPE.COMMIT, ref.getType());
-        assertEquals(forString(refName), ref.getObjectId());
+        Optional<Ref> ref = command.setName(refName).call();
+        assertTrue(ref.isPresent());
+        assertEquals(refName, ref.get().getName());
+        assertEquals(TYPE.COMMIT, ref.get().getType());
+        assertEquals(forString(refName), ref.get().getObjectId());
 
         refName = "refs/remotes/juan/v1.1";
 
@@ -121,22 +121,22 @@ public class RefParseTest {
     }
 
     private void testRsolvePartial(String refSpec, String refName) {
-        Ref ref;
+        Optional<Ref> ref;
         ref = command.setName(refSpec).call();
-        assertNotNull(ref);
-        assertEquals(refName, ref.getName());
-        assertEquals(TYPE.COMMIT, ref.getType());
-        assertEquals(forString(refName), ref.getObjectId());
+        assertTrue(ref.isPresent());
+        assertEquals(refName, ref.get().getName());
+        assertEquals(TYPE.COMMIT, ref.get().getType());
+        assertEquals(forString(refName), ref.get().getObjectId());
     }
 
     @Test
     public void testResolveSymbolicRef() {
         when(mockRefDb.getRef(eq("HEAD"))).thenThrow(new IllegalArgumentException());
         when(mockRefDb.getSymRef(eq("HEAD"))).thenReturn("refs/heads/branch1");
-        Ref ref = command.setName("HEAD").call();
-        assertNotNull(ref);
-        assertTrue(ref instanceof SymRef);
-        assertEquals("HEAD", ref.getName());
-        assertEquals("refs/heads/branch1", ((SymRef) ref).getTarget());
+        Optional<Ref> ref = command.setName("HEAD").call();
+        assertTrue(ref.isPresent());
+        assertTrue(ref.get() instanceof SymRef);
+        assertEquals("HEAD", ref.get().getName());
+        assertEquals("refs/heads/branch1", ((SymRef) ref.get()).getTarget());
     }
 }

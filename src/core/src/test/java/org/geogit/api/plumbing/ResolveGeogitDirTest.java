@@ -13,7 +13,6 @@ import java.io.File;
 import java.net.URL;
 
 import org.geogit.api.Platform;
-import org.geogit.api.plumbing.ResolveGeogitDir;
 import org.junit.Test;
 
 /**

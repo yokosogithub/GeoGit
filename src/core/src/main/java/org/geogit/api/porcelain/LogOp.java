@@ -4,7 +4,6 @@
  */
 package org.geogit.api.porcelain;
 
-import java.util.Arrays;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -24,7 +23,6 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.base.Throwables;
 import com.google.common.collect.AbstractIterator;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterators;
 import com.google.inject.Inject;
 
@@ -57,7 +55,7 @@ public class LogOp extends AbstractGeoGitOp<Iterator<RevCommit>> {
 
     private ObjectId until;
 
-    private Set<List<String>> paths;
+    private Set<String> paths;
 
     private Repository repository;
 
@@ -98,26 +96,18 @@ public class LogOp extends AbstractGeoGitOp<Iterator<RevCommit>> {
     }
 
     /**
-     * @see #addPath(List)
-     */
-    public LogOp addPath(final String... path) {
-        Preconditions.checkNotNull(path);
-        return addPath(Arrays.asList(path));
-    }
-
-    /**
      * Show only commits that affect any of the specified paths.
      * 
      * @param path
      * @return
      */
-    public LogOp addPath(final List<String> path) {
+    public LogOp addPath(final String path) {
         Preconditions.checkNotNull(path);
 
         if (this.paths == null) {
-            this.paths = new HashSet<List<String>>();
+            this.paths = new HashSet<String>();
         }
-        this.paths.add(ImmutableList.copyOf(path));
+        this.paths.add(path);
         return this;
     }
 
@@ -210,7 +200,7 @@ public class LogOp extends AbstractGeoGitOp<Iterator<RevCommit>> {
      * 
      * @return {@code true} if the commit satisfies the filter criteria set to this op
      */
-    private static class LogFilter implements Predicate<RevCommit> {
+    private class LogFilter implements Predicate<RevCommit> {
 
         private boolean toReached;
 
@@ -218,7 +208,7 @@ public class LogOp extends AbstractGeoGitOp<Iterator<RevCommit>> {
 
         private final Range<Long> timeRange;
 
-        private final Set<List<String>> paths;
+        private final Set<String> paths;
 
         private final Repository repo;
 
@@ -230,7 +220,7 @@ public class LogOp extends AbstractGeoGitOp<Iterator<RevCommit>> {
          *        of the provided paths
          */
         public LogFilter(final Repository repo, final ObjectId oldestCommitId,
-                final Range<Long> timeRange, final Set<List<String>> paths) {
+                final Range<Long> timeRange, final Set<String> paths) {
             Preconditions.checkNotNull(repo);
             Preconditions.checkNotNull(oldestCommitId);
             Preconditions.checkNotNull(timeRange);
@@ -260,8 +250,8 @@ public class LogOp extends AbstractGeoGitOp<Iterator<RevCommit>> {
             }
             if (paths != null && paths.size() > 0) {
                 // did this commit touch any of the paths?
-                for (List<String> path : paths) {
-                    DiffOp diff = new DiffOp(repo);
+                for (String path : paths) {
+                    DiffOp diff = command(DiffOp.class);
                     ObjectId parentId = commit.getParentIds().get(0);
                     Iterator<DiffEntry> diffResult;
                     try {

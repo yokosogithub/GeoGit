@@ -9,10 +9,12 @@ import org.geogit.storage.bdbje.JEStorageModule;
 
 import com.google.inject.Guice;
 import com.google.inject.Injector;
+import com.google.inject.util.Modules;
 
 public class JEIndexTest extends org.geogit.test.integration.repository.IndexTest {
     @Override
     protected Injector createInjector() {
-        return Guice.createInjector(new GeogitModule(), new JEStorageModule());
+        return Guice.createInjector(Modules.override(new GeogitModule())
+                .with(new JEStorageModule()));
     }
 }

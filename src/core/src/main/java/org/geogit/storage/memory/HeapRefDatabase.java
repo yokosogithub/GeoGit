@@ -9,8 +9,6 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import java.util.Map;
 
 import org.geogit.api.ObjectId;
-import org.geogit.api.Ref;
-import org.geogit.api.RevObject.TYPE;
 import org.geogit.storage.RefDatabase;
 
 import com.google.common.base.Preconditions;
@@ -33,18 +31,6 @@ public class HeapRefDatabase implements RefDatabase {
     public void create() {
         if (refs == null) {
             refs = Maps.newTreeMap();
-
-            final String headRefName = Ref.HEAD;
-            condCreate(headRefName, TYPE.COMMIT);
-            final String master = Ref.MASTER;
-            condCreate(master, TYPE.COMMIT);
-        }
-    }
-
-    private void condCreate(final String refName, TYPE type) {
-        String child = refs.get(refName);
-        if (null == child) {
-            putRef(refName, ObjectId.NULL.toString());
         }
     }
 

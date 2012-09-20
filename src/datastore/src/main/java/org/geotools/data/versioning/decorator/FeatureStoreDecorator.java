@@ -24,6 +24,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import javax.xml.namespace.QName;
+
 import org.geogit.api.GeoGIT;
 import org.geogit.api.NodeRef;
 import org.geogit.api.RevTree;
@@ -66,7 +68,8 @@ public class FeatureStoreDecorator<T extends FeatureType, F extends Feature> ext
             return super.getCurrentVersion();
         }
         final Name name = getName();
-        RevTree headVersion = geogit.getRepository().getWorkingTree().getStagedVersion(name);
+        RevTree headVersion = geogit.getRepository().getWorkingTree()
+                .getStagedVersion(new QName(name.getNamespaceURI(), name.getLocalPart()));
         return headVersion;
     }
 

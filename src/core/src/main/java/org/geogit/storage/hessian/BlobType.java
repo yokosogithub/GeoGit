@@ -21,7 +21,11 @@ enum BlobType {
     /**
      * Blob encodes a Commit
      */
-    COMMIT(2);
+    COMMIT(2),
+    /**
+     * Blob encodes a Commit
+     */
+    FEATURETYPE(3);
 
     private int value;
 

@@ -18,6 +18,7 @@ import org.opengis.geometry.BoundingBox;
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
 
 import com.caucho.hessian.io.Hessian2Output;
+import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
 
 class HessianRevWriter {
@@ -38,7 +39,8 @@ class HessianRevWriter {
      * @throws IOException
      */
     protected void writeObjectId(Hessian2Output hout, ObjectId id) throws IOException {
-        if (id == null) {
+        Preconditions.checkNotNull(id);
+        if (id.isNull()) {
             hout.writeBytes(new byte[0]);
         } else {
             hout.writeBytes(id.getRawValue());
@@ -59,8 +61,9 @@ class HessianRevWriter {
         }
         hout.writeInt(HessianRevReader.Node.REF.getValue());
         hout.writeInt(ref.getType().value());
-        hout.writeString(ref.getName());
+        hout.writeString(ref.getPath());
         writeObjectId(hout, ref.getObjectId());
+        writeObjectId(hout, ref.getMetadataId());
         writeBBox(hout, bounds);
     }
 

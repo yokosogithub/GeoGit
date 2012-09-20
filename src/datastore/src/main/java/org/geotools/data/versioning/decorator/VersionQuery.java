@@ -278,7 +278,7 @@ public class VersionQuery {
         List<NodeRef> result = new ArrayList<NodeRef>(5);
 
         // filter commits that affect the requested feature
-        final List<String> path = path(featureId);
+        final String path = path(featureId);
         LogOp logOp = ggit.log().addPath(path);
 
         if (isDateRangeQuery) {
@@ -413,7 +413,7 @@ public class VersionQuery {
 
         LinkedList<NodeRef> featureRefs = new LinkedList<NodeRef>();
 
-        final List<String> path = path(featureId);
+        final String path = path(featureId);
         // find all commits where this feature is touched
         while (commits.hasNext()) {
             RevCommit commit = commits.next();
@@ -425,12 +425,12 @@ public class VersionQuery {
             Preconditions.checkState(diffs.hasNext());
             DiffEntry diff = diffs.next();
             Preconditions.checkState(!diffs.hasNext());
-            switch (diff.getType()) {
-            case ADD:
-            case MODIFY:
+            switch (diff.changeType()) {
+            case ADDED:
+            case MODIFIED:
                 featureRefs.addFirst(diff.getNewObject());
                 break;
-            case DELETE:
+            case REMOVED:
                 break;
             }
         }
@@ -455,12 +455,12 @@ public class VersionQuery {
             boolean exists = stagingDatabase.exists(versionedId);
             // Ref rootTreeChild = repository.getRootTreeChild(path(featureId));
             if (exists) {
-                return new NodeRef(featureId, versionedId, TYPE.BLOB);
+                return new NodeRef(featureId, versionedId, TYPE.FEATURE);
             }
             return null;
         }
         // no version specified, find out the latest
-        List<String> path = path(featureId);
+        String path = path(featureId);
         NodeRef currFeatureRef = repository.getRootTreeChild(path);
         if (currFeatureRef == null) {
             // feature does not exist at the current repository state
@@ -469,20 +469,12 @@ public class VersionQuery {
         return currFeatureRef;
     }
 
-    private List<String> typeNamePath() {
-        List<String> path = new ArrayList<String>(3);
-        // if (null != typeName.getNamespaceURI()) {
-        // path.add(typeName.getNamespaceURI());
-        // }
-        path.add(typeName.getLocalPart());
-        return path;
+    private String typeNamePath() {
+        return typeName.getLocalPart();
     }
 
-    private List<String> path(final String featureId) {
-        List<String> path = typeNamePath();
-        path.add(featureId);
-
-        return path;
+    private String path(final String featureId) {
+        return NodeRef.appendChild(typeNamePath(), featureId);
     }
 
 }

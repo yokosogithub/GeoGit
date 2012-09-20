@@ -4,13 +4,14 @@
  */
 package org.geogit.storage;
 
+import java.io.Serializable;
+import java.util.Map;
+
 import org.geogit.api.RevCommit;
+import org.geogit.api.RevFeature;
+import org.geogit.api.RevFeatureType;
 import org.geogit.api.RevObject;
 import org.geogit.api.RevTree;
-import org.geotools.factory.Hints;
-import org.opengis.feature.Feature;
-import org.opengis.feature.simple.SimpleFeatureType;
-import org.opengis.feature.type.FeatureType;
 
 /**
  * The ObjectSerialisingFactory is used to create instances of the various writers and readers used
@@ -68,7 +69,7 @@ public interface ObjectSerialisingFactory {
      * @param feature Feature to be written
      * @return feature writer
      */
-    public ObjectWriter<Feature> createFeatureWriter(final Feature feature);
+    public ObjectWriter<RevFeature> createFeatureWriter(final RevFeature feature);
 
     /**
      * Creates an instance of a Feature reader that can parse features of the given feature type.
@@ -77,7 +78,7 @@ public interface ObjectSerialisingFactory {
      * @param featureId String representation of the feature id
      * @return feature reader
      */
-    public ObjectReader<Feature> createFeatureReader(final FeatureType featureType,
+    public ObjectReader<RevFeature> createFeatureReader(final RevFeatureType featureType,
             final String featureId);
 
     /**
@@ -87,10 +88,9 @@ public interface ObjectSerialisingFactory {
      * @param featureId String representation of the feature id
      * @param hints feature creation hints
      * @return feature reader
-     * @see Hints#GEOMETRY_FACTORY
      */
-    public ObjectReader<Feature> createFeatureReader(final FeatureType featureType,
-            final String featureId, final Hints hints);
+    public ObjectReader<RevFeature> createFeatureReader(final RevFeatureType featureType,
+            final String featureId, final Map<String, Serializable> hints);
 
     /**
      * Creates a BlobPrinter that can parse serialised elements into a human-readable(ish)
@@ -104,12 +104,12 @@ public interface ObjectSerialisingFactory {
      * @param type
      * @return
      */
-    public ObjectWriter<SimpleFeatureType> createSimpleFeatureTypeWriter(SimpleFeatureType type);
+    public ObjectWriter<RevFeatureType> createFeatureTypeWriter(RevFeatureType type);
 
     /**
      * @return
      */
-    public ObjectReader<SimpleFeatureType> createSimpleFeatureTypeReader();
+    public ObjectReader<RevFeatureType> createFeatureTypeReader();
 
     public ObjectReader<RevObject.TYPE> createObjectTypeReader();
 }
