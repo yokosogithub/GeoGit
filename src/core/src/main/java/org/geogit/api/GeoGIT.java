@@ -13,7 +13,6 @@ import org.geogit.api.plumbing.ResolveGeogitDir;
 import org.geogit.api.porcelain.AddOp;
 import org.geogit.api.porcelain.CheckoutOp;
 import org.geogit.api.porcelain.CommitOp;
-import org.geogit.api.porcelain.CommitStateResolver;
 import org.geogit.api.porcelain.DiffOp;
 import org.geogit.api.porcelain.InitOp;
 import org.geogit.api.porcelain.LogOp;
@@ -34,10 +33,6 @@ import com.google.inject.Injector;
  * @author groldan
  */
 public class GeoGIT {
-
-    public static final CommitStateResolver DEFAULT_COMMIT_RESOLVER = new PlatformResolver();
-
-    private static CommitStateResolver commitStateResolver = DEFAULT_COMMIT_RESOLVER;
 
     private final Injector injector;
 
@@ -73,14 +68,6 @@ public class GeoGIT {
      */
     public <T extends AbstractGeoGitOp<?>> T command(Class<T> commandClass) {
         return injector.getInstance(commandClass);
-    }
-
-    public static CommitStateResolver getCommitStateResolver() {
-        return commitStateResolver;
-    }
-
-    public static void setCommitStateResolver(CommitStateResolver resolver) {
-        commitStateResolver = resolver == null ? new PlatformResolver() : resolver;
     }
 
     /**

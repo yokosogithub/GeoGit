@@ -13,10 +13,10 @@ import jline.console.ConsoleReader;
 
 import org.fusesource.jansi.Ansi;
 import org.fusesource.jansi.Ansi.Color;
-import org.geogit.api.DiffEntry;
 import org.geogit.api.GeoGIT;
 import org.geogit.api.ObjectId;
 import org.geogit.api.RevCommit;
+import org.geogit.api.plumbing.diff.DiffEntry;
 import org.geogit.api.porcelain.NothingToCommitException;
 import org.geogit.cli.AbstractCommand;
 import org.geogit.cli.AnsiDecorator;

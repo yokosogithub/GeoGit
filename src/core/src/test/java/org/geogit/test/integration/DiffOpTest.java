@@ -14,12 +14,12 @@ import static org.junit.Assert.fail;
 import java.util.Iterator;
 import java.util.List;
 
-import org.geogit.api.DiffEntry;
-import org.geogit.api.DiffEntry.ChangeType;
 import org.geogit.api.NodeRef;
 import org.geogit.api.ObjectId;
 import org.geogit.api.RevCommit;
+import org.geogit.api.plumbing.diff.DiffEntry;
 import org.geogit.api.plumbing.diff.DiffTreeWalk;
+import org.geogit.api.plumbing.diff.DiffEntry.ChangeType;
 import org.geogit.api.porcelain.DiffOp;
 import org.junit.Test;
 import org.opengis.feature.Feature;

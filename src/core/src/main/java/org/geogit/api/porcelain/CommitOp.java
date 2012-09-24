@@ -10,7 +10,7 @@ import java.util.List;
 
 import org.geogit.api.AbstractGeoGitOp;
 import org.geogit.api.ObjectId;
-import org.geogit.api.PlatformResolver;
+import org.geogit.api.Platform;
 import org.geogit.api.Ref;
 import org.geogit.api.RevCommit;
 import org.geogit.api.SymRef;
@@ -59,23 +59,14 @@ public class CommitOp extends AbstractGeoGitOp<RevCommit> {
     // like the -a option in git commit
     private boolean all;
 
-    private CommitStateResolver stateResolver;
-
     private Repository repository;
 
+    private Platform platform;
+
     @Inject
-    public CommitOp(final Repository repository) {
-        this(repository, new PlatformResolver());
-    }
-
-    public CommitOp(final Repository repository, final CommitStateResolver authResolver) {
+    public CommitOp(final Repository repository, final Platform platform) {
         this.repository = repository;
-        this.stateResolver = authResolver;
-    }
-
-    public CommitOp setStateResolver(final CommitStateResolver auth) {
-        this.stateResolver = auth == null ? new PlatformResolver() : auth;
-        return this;
+        this.platform = platform;
     }
 
     public CommitOp setAuthor(final String author) {
@@ -199,18 +190,18 @@ public class CommitOp extends AbstractGeoGitOp<RevCommit> {
     }
 
     private long getTimeStamp() {
-        return timeStamp == null ? stateResolver.getCommitTimeMillis() : timeStamp.longValue();
+        return timeStamp == null ? platform.currentTimeMillis() : timeStamp.longValue();
     }
 
     private String getMessage() {
-        return message == null ? stateResolver.getCommitMessage() : message;
+        return message;
     }
 
     private String getCommitter() {
-        return committer == null ? stateResolver.getCommitter() : committer;
+        return committer;
     }
 
     private String getAuthor() {
-        return author == null ? stateResolver.getAuthor() : author;
+        return author;
     }
 }

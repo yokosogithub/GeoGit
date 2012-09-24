@@ -11,11 +11,11 @@ import java.util.List;
 import java.util.Set;
 
 import org.geogit.api.AbstractGeoGitOp;
-import org.geogit.api.DiffEntry;
 import org.geogit.api.ObjectId;
 import org.geogit.api.Ref;
 import org.geogit.api.RevCommit;
 import org.geogit.api.plumbing.RevParse;
+import org.geogit.api.plumbing.diff.DiffEntry;
 import org.geogit.repository.Repository;
 import org.geotools.util.Range;
 

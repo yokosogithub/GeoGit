@@ -9,13 +9,13 @@ import java.util.Iterator;
 import javax.annotation.Nullable;
 
 import org.geogit.api.AbstractGeoGitOp;
-import org.geogit.api.DiffEntry;
 import org.geogit.api.ObjectId;
 import org.geogit.api.Ref;
 import org.geogit.api.plumbing.DiffIndex;
 import org.geogit.api.plumbing.DiffTree;
 import org.geogit.api.plumbing.DiffWorkTree;
 import org.geogit.api.plumbing.ResolveTreeish;
+import org.geogit.api.plumbing.diff.DiffEntry;
 
 import com.google.common.base.Optional;
 import com.google.inject.Inject;

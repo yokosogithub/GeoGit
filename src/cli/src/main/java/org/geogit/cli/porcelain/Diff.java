@@ -19,8 +19,8 @@ package org.geogit.cli.porcelain;
 import static org.fusesource.jansi.Ansi.Color.GREEN;
 import static org.fusesource.jansi.Ansi.Color.RED;
 import static org.fusesource.jansi.Ansi.Color.YELLOW;
-import static org.geogit.api.DiffEntry.ChangeType.ADDED;
-import static org.geogit.api.DiffEntry.ChangeType.MODIFIED;
+import static org.geogit.api.plumbing.diff.DiffEntry.ChangeType.ADDED;
+import static org.geogit.api.plumbing.diff.DiffEntry.ChangeType.MODIFIED;
 
 import java.io.IOException;
 import java.util.Iterator;
@@ -29,11 +29,11 @@ import java.util.List;
 import jline.console.ConsoleReader;
 
 import org.fusesource.jansi.Ansi;
-import org.geogit.api.DiffEntry;
 import org.geogit.api.GeoGIT;
 import org.geogit.api.NodeRef;
 import org.geogit.api.ObjectId;
 import org.geogit.api.RevCommit;
+import org.geogit.api.plumbing.diff.DiffEntry;
 import org.geogit.api.porcelain.DiffOp;
 import org.geogit.cli.AbstractCommand;
 import org.geogit.cli.AnsiDecorator;

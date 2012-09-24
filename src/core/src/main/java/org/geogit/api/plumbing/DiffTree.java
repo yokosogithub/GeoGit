@@ -10,9 +10,9 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import java.util.Iterator;
 
 import org.geogit.api.AbstractGeoGitOp;
-import org.geogit.api.DiffEntry;
 import org.geogit.api.ObjectId;
 import org.geogit.api.RevTree;
+import org.geogit.api.plumbing.diff.DiffEntry;
 import org.geogit.api.plumbing.diff.DiffTreeWalk;
 import org.geogit.storage.ObjectDatabase;
 

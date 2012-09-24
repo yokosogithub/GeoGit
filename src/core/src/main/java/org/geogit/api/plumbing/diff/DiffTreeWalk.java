@@ -13,12 +13,11 @@ import java.util.LinkedList;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
-import org.geogit.api.DiffEntry;
-import org.geogit.api.DiffEntry.ChangeType;
 import org.geogit.api.NodeRef;
 import org.geogit.api.ObjectId;
 import org.geogit.api.RevObject;
 import org.geogit.api.RevObject.TYPE;
+import org.geogit.api.plumbing.diff.DiffEntry.ChangeType;
 import org.geogit.api.RevTree;
 import org.geogit.repository.DepthSearch;
 import org.geogit.storage.ObjectDatabase;

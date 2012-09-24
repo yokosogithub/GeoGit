@@ -11,11 +11,11 @@ import java.util.Map;
 import javax.annotation.Nullable;
 
 import org.geogit.api.AbstractGeoGitOp;
-import org.geogit.api.DiffEntry;
 import org.geogit.api.NodeRef;
 import org.geogit.api.ObjectId;
 import org.geogit.api.Ref;
 import org.geogit.api.RevTree;
+import org.geogit.api.plumbing.diff.DiffEntry;
 import org.geogit.api.plumbing.diff.DiffTreeIterator;
 import org.geogit.api.plumbing.diff.DiffTreeView;
 import org.geogit.repository.StagingArea;

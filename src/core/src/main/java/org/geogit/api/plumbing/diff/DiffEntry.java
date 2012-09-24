@@ -2,7 +2,7 @@
  * This code is licensed under the LGPL 2.1 license, available at the root
  * application directory.
  */
-package org.geogit.api;
+package org.geogit.api.plumbing.diff;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
@@ -10,6 +10,8 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import javax.annotation.meta.When;
 
+import org.geogit.api.NodeRef;
+import org.geogit.api.ObjectId;
 import org.geogit.repository.SpatialOps;
 import org.opengis.geometry.BoundingBox;
 

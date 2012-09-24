@@ -7,7 +7,6 @@ package org.geogit.api.plumbing.diff;
 
 import java.util.Iterator;
 
-import org.geogit.api.DiffEntry;
 import org.geogit.api.NodeRef;
 import org.geogit.api.RevTree;
 import org.geogit.repository.DepthSearch;

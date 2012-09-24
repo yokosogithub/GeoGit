@@ -33,7 +33,6 @@ import org.geogit.api.NodeRef;
 import org.geogit.api.RevCommit;
 import org.geogit.api.RevFeature;
 import org.geogit.api.porcelain.CommitOp;
-import org.geogit.api.porcelain.CommitStateResolver;
 import org.geogit.api.porcelain.NothingToCommitException;
 import org.geogit.repository.StagingArea;
 import org.geogit.repository.WorkingTree;
@@ -81,14 +80,6 @@ public class VersioningTransactionState implements Transaction.State {
 
     };
 
-    static {
-        // only set resolver if not overriden by application
-        CommitStateResolver current = GeoGIT.getCommitStateResolver();
-        if (GeoGIT.DEFAULT_COMMIT_RESOLVER.equals(current)) {
-            GeoGIT.setCommitStateResolver(new GeoToolsCommitStateResolver());
-        }
-    }
-
     private static final ProgressListener NULL_PROGRESS_LISTENER = new NullProgressListener();
 
     private static final Logger LOGGER = Logging.getLogger(VersioningTransactionState.class);
@@ -132,7 +123,7 @@ public class VersioningTransactionState implements Transaction.State {
     public void commit() throws IOException {
         LOGGER.info("Committing changeset " + id);
         try {
-            GeoToolsCommitStateResolver.CURRENT_TRANSACTION.set(transaction);
+            // GeoToolsCommitStateResolver.CURRENT_TRANSACTION.set(transaction);
             // final NodeRef branch =
             // geoGit.checkout().setName(transactionID).call();
             // commit to the branch
@@ -156,7 +147,7 @@ public class VersioningTransactionState implements Transaction.State {
                 throw new IOException(e);
             }
         } finally {
-            GeoToolsCommitStateResolver.CURRENT_TRANSACTION.remove();
+            // GeoToolsCommitStateResolver.CURRENT_TRANSACTION.remove();
         }
     }
 
