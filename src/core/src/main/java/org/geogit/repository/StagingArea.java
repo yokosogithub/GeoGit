@@ -21,18 +21,6 @@ public interface StagingArea {
 
     public StagingDatabase getDatabase();
 
-    // /**
-    // * Creates an empty unstaged tree at the given path
-    // *
-    // * @param newTreePath the path of the new tree
-    // * @param metadataId the object id of the tree's metadata (i.e. feature type blob id)
-    // * @return the reference pointing to the newly created tree
-    // * @throws Exception if an error happens writing the new tree
-    // * @throws IllegalArgumentException if a tree or blob already exists at the given path
-    // */
-    // public abstract NodeRef created(final String newTreePath, ObjectId metadataId) throws
-    // Exception;
-
     /**
      * Marks the object (tree or feature) addressed by {@code path} as an unstaged delete.
      * 
@@ -74,15 +62,6 @@ public interface StagingArea {
      */
     public abstract void stage(ProgressListener progress, final @Nullable String pathFilter)
             throws Exception;
-
-    /**
-     * Marks an object rename (in practice, it's used to change the feature id of a Feature once it
-     * was committed and the DataStore generated FID is obtained)
-     * 
-     * @param from old path to featureId
-     * @param to new path to featureId
-     */
-    public abstract void renamed(final String fromPath, final String toPath);
 
     /**
      * Discards any staged change.

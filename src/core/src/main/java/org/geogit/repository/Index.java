@@ -212,11 +212,6 @@ public class Index implements StagingArea {
     }
 
     @Override
-    public void renamed(final String fromPath, final String toPath) {
-        throw new UnsupportedOperationException("not implemented");
-    }
-
-    @Override
     public void reset() {
         indexDatabase.reset();
     }
