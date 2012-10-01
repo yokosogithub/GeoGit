@@ -11,6 +11,7 @@ import java.io.InputStream;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.Properties;
+import java.util.concurrent.TimeUnit;
 
 import org.geogit.api.Platform;
 import org.geogit.api.plumbing.ResolveGeogitDir;
@@ -19,6 +20,8 @@ import com.google.common.base.Throwables;
 import com.google.common.io.Closeables;
 import com.google.inject.Inject;
 import com.google.inject.Provider;
+import com.sleepycat.je.CacheMode;
+import com.sleepycat.je.Durability;
 import com.sleepycat.je.Environment;
 import com.sleepycat.je.EnvironmentConfig;
 
@@ -95,16 +98,16 @@ public class EnvironmentBuilder implements Provider<Environment> {
             // use the default settings
             envCfg = new EnvironmentConfig();
             envCfg.setAllowCreate(true);
-            // envCfg.setCacheMode(CacheMode.MAKE_COLD);
-            // envCfg.setLockTimeout(1000, TimeUnit.MILLISECONDS);
-            // envCfg.setDurability(Durability.COMMIT_WRITE_NO_SYNC);
-            // envCfg.setSharedCache(true);
+            envCfg.setCacheMode(CacheMode.MAKE_COLD);
+            envCfg.setLockTimeout(1000, TimeUnit.MILLISECONDS);
+            envCfg.setDurability(Durability.COMMIT_WRITE_NO_SYNC);
+            envCfg.setSharedCache(true);
             envCfg.setTransactional(true);
-            envCfg.setConfigParam("je.log.fileMax", String.valueOf(100 * 1024 * 1024));
+            envCfg.setCachePercent(50);// Use up to 50% of the heap size for the shared db cache
+            // envCfg.setConfigParam("je.log.fileMax", String.valueOf(100 * 1024 * 1024));
             // check <http://www.oracle.com/technetwork/database/berkeleydb/je-faq-096044.html#35>
-            // envCfg.setConfigParam("je.evictor.lruOnly", "false");
-            // envCfg.setConfigParam("je.evictor.nodesPerScan", "100");
-            // envCfg.setCachePercent(50);// Use up to 50% of the heap size for the shared db cache
+            envCfg.setConfigParam("je.evictor.lruOnly", "false");
+            envCfg.setConfigParam("je.evictor.nodesPerScan", "100");
         }
 
         Environment env = new Environment(storeDirectory, envCfg);
