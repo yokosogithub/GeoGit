@@ -14,21 +14,18 @@ import java.util.Iterator;
 import java.util.List;
 
 import org.apache.commons.io.FileUtils;
-import org.geogit.api.DefaultPlatform;
 import org.geogit.api.GeoGIT;
+import org.geogit.api.MemoryModule;
 import org.geogit.api.NodeRef;
 import org.geogit.api.ObjectId;
 import org.geogit.api.Platform;
 import org.geogit.api.RevCommit;
 import org.geogit.api.RevFeature;
+import org.geogit.api.TestPlatform;
 import org.geogit.di.GeogitModule;
 import org.geogit.repository.Repository;
 import org.geogit.repository.StagingArea;
-import org.geogit.storage.ObjectDatabase;
-import org.geogit.storage.StagingDatabase;
-import org.geogit.storage.fs.FileObjectDatabase;
 import org.geogit.storage.hessian.GeoToolsRevFeature;
-import org.geogit.storage.memory.HeapStagingDatabase;
 import org.geotools.data.DataUtilities;
 import org.geotools.feature.NameImpl;
 import org.geotools.feature.simple.SimpleFeatureBuilder;
@@ -47,10 +44,8 @@ import org.opengis.referencing.crs.CoordinateReferenceSystem;
 
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Iterators;
-import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
-import com.google.inject.Scopes;
 import com.google.inject.util.Modules;
 import com.vividsolutions.jts.io.ParseException;
 
@@ -111,26 +106,6 @@ public abstract class RepositoryTestCase {
 
     Injector injector;
 
-    public static class TestPlatform extends DefaultPlatform {
-        @Override
-        public File pwd() {
-            return envHome;
-        }
-    }
-
-    public static class TestModule extends AbstractModule {
-        @Override
-        protected void configure() {
-            bind(Platform.class).to(TestPlatform.class).in(Scopes.SINGLETON);
-
-            bind(ObjectDatabase.class).to(FileObjectDatabase.class).in(Scopes.SINGLETON);
-            // bind(ObjectDatabase.class).to(HeapObjectDatabse.class).in(Scopes.SINGLETON);
-
-            // bind(RefDatabase.class).to(HeapRefDatabase.class).in(Scopes.SINGLETON);
-            bind(StagingDatabase.class).to(HeapStagingDatabase.class).in(Scopes.SINGLETON);
-        }
-    }
-
     @Before
     public final void setUp() throws Exception {
         if (setup) {
@@ -169,7 +144,9 @@ public abstract class RepositoryTestCase {
     }
 
     protected Injector createInjector() {
-        return Guice.createInjector(Modules.override(new GeogitModule()).with(new TestModule()));
+        Platform testPlatform = new TestPlatform(envHome);
+        return Guice.createInjector(Modules.override(new GeogitModule()).with(
+                new MemoryModule(testPlatform)));
     }
 
     @After

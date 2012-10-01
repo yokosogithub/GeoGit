@@ -11,7 +11,6 @@ import java.util.Map;
 import org.geogit.api.ObjectId;
 import org.geogit.storage.RefDatabase;
 
-import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
@@ -53,7 +52,16 @@ public class HeapRefDatabase implements RefDatabase {
      */
     @Override
     public String getRef(String name) {
-        return refs.get(name);
+        String val = refs.get(name);
+        if (val == null) {
+            return null;
+        }
+        try {
+            ObjectId.valueOf(val);
+        } catch (IllegalArgumentException e) {
+            throw e;
+        }
+        return val;
     }
 
     /**
@@ -80,17 +88,28 @@ public class HeapRefDatabase implements RefDatabase {
     public String getSymRef(String name) {
         checkNotNull(name);
         String value = refs.get(name);
-        Preconditions.checkArgument(value == null || value.startsWith("ref: "),
-                "Not a symbolic reference: " + name);
-        return value == null ? null : value.substring("ref: ".length());
+        if (value == null) {
+            return null;
+        }
+        if (!value.startsWith("ref: ")) {
+            throw new IllegalArgumentException(name + " is not a symbolic ref: '" + value + "'");
+        }
+        return value.substring("ref: ".length());
     }
 
     @Override
     public String putSymRef(String name, String val) {
         checkNotNull(name);
         checkNotNull(val);
+        String old;
+        try {
+            old = getSymRef(name);
+        } catch (IllegalArgumentException e) {
+            old = null;
+        }
         val = "ref: " + val;
-        return refs.put(name, val);
+        refs.put(name, val);
+        return old;
     }
 
     @Override

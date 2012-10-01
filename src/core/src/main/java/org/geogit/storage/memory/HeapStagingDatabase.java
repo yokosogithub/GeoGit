@@ -19,10 +19,6 @@ import javax.annotation.Nullable;
 import org.geogit.api.CommandLocator;
 import org.geogit.api.NodeRef;
 import org.geogit.api.ObjectId;
-import org.geogit.api.Ref;
-import org.geogit.api.plumbing.RefParse;
-import org.geogit.api.plumbing.ResolveTreeish;
-import org.geogit.api.plumbing.UpdateRef;
 import org.geogit.storage.ObjectDatabase;
 import org.geogit.storage.ObjectInserter;
 import org.geogit.storage.ObjectReader;
@@ -67,28 +63,28 @@ public class HeapStagingDatabase extends HeapObjectDatabse implements StagingDat
         super.open();
         unstaged = Maps.newTreeMap();
         staged = Maps.newTreeMap();
-        {
-            Optional<Ref> stageHead = commandLocator.command(RefParse.class)
-                    .setName(Ref.STAGE_HEAD).call();
-            if (!stageHead.isPresent()) {
-                // resolve to current head
-                ObjectId headTreeId = commandLocator.command(ResolveTreeish.class)
-                        .setTreeish(Ref.HEAD).call();
-                commandLocator.command(UpdateRef.class).setName(Ref.STAGE_HEAD)
-                        .setNewValue(headTreeId).call();
-            }
-        }
-        {
-            Optional<Ref> workTreeHead = commandLocator.command(RefParse.class)
-                    .setName(Ref.WORK_HEAD).call();
-            if (!workTreeHead.isPresent()) {
-                // resolve to current head
-                ObjectId stageTreeId = commandLocator.command(ResolveTreeish.class)
-                        .setTreeish(Ref.STAGE_HEAD).call();
-                commandLocator.command(UpdateRef.class).setName(Ref.WORK_HEAD)
-                        .setNewValue(stageTreeId).call();
-            }
-        }
+        // {
+        // Optional<Ref> stageHead = commandLocator.command(RefParse.class)
+        // .setName(Ref.STAGE_HEAD).call();
+        // if (!stageHead.isPresent()) {
+        // // resolve to current head
+        // ObjectId headTreeId = commandLocator.command(ResolveTreeish.class)
+        // .setTreeish(Ref.HEAD).call();
+        // commandLocator.command(UpdateRef.class).setName(Ref.STAGE_HEAD)
+        // .setNewValue(headTreeId).call();
+        // }
+        // }
+        // {
+        // Optional<Ref> workTreeHead = commandLocator.command(RefParse.class)
+        // .setName(Ref.WORK_HEAD).call();
+        // if (!workTreeHead.isPresent()) {
+        // // resolve to current head
+        // ObjectId stageTreeId = commandLocator.command(ResolveTreeish.class)
+        // .setTreeish(Ref.STAGE_HEAD).call();
+        // commandLocator.command(UpdateRef.class).setName(Ref.WORK_HEAD)
+        // .setNewValue(stageTreeId).call();
+        // }
+        // }
     }
 
     /**

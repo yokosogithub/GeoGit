@@ -20,9 +20,20 @@ import com.google.inject.Scopes;
  */
 public class MemoryModule extends AbstractModule {
 
+    private Platform testPlatform;
+
+    /**
+     * @param testPlatform
+     */
+    public MemoryModule(Platform testPlatform) {
+        this.testPlatform = testPlatform;
+    }
+
     @Override
     protected void configure() {
-
+        if (testPlatform != null) {
+            bind(Platform.class).toInstance(testPlatform);
+        }
         bind(ObjectDatabase.class).to(HeapObjectDatabse.class).in(Scopes.SINGLETON);
         bind(StagingDatabase.class).to(HeapStagingDatabase.class).in(Scopes.SINGLETON);
         bind(RefDatabase.class).to(HeapRefDatabase.class).in(Scopes.SINGLETON);

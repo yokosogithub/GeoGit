@@ -12,13 +12,19 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
+import java.io.File;
+import java.io.IOException;
+
+import org.apache.commons.io.FileUtils;
 import org.geogit.api.GeoGIT;
 import org.geogit.api.MemoryModule;
 import org.geogit.api.MutableTree;
 import org.geogit.api.NodeRef;
 import org.geogit.api.ObjectId;
+import org.geogit.api.Platform;
 import org.geogit.api.RevObject.TYPE;
 import org.geogit.api.RevTree;
+import org.geogit.api.TestPlatform;
 import org.geogit.api.plumbing.CreateTree;
 import org.geogit.api.plumbing.RevObjectParse;
 import org.geogit.api.plumbing.WriteBack;
@@ -50,9 +56,15 @@ public class DepthSearchTest {
     private ObjectId rootTreeId;
 
     @Before
-    public void setUp() {
+    public void setUp() throws IOException {
+        File envHome = new File("target", "temprepo");
+        FileUtils.deleteDirectory(envHome);
+        assertFalse(envHome.exists());
+        assertTrue(envHome.mkdirs());
+
+        Platform testPlatform = new TestPlatform(envHome);
         Injector injector = Guice.createInjector(Modules.override(new GeogitModule()).with(
-                new MemoryModule()));
+                new MemoryModule(testPlatform)));
 
         fakeGeogit = new GeoGIT(injector);
         Repository fakeRepo = fakeGeogit.getOrCreateRepository();
