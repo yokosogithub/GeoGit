@@ -62,7 +62,4 @@ public interface ObjectDatabase {
     public ObjectInserter newObjectInserter();
 
     public boolean delete(ObjectId objectId);
-
-    public ObjectSerialisingFactory getSerialFactory();
-
 }

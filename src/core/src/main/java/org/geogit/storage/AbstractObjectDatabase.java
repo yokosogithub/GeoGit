@@ -16,13 +16,10 @@ import org.geogit.api.ObjectId;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
 import com.google.common.io.Closeables;
-import com.google.inject.Inject;
 import com.ning.compress.lzf.LZFInputStream;
 import com.ning.compress.lzf.LZFOutputStream;
 
 public abstract class AbstractObjectDatabase implements ObjectDatabase {
-
-    protected ObjectSerialisingFactory serialFactory;
 
     public AbstractObjectDatabase() {
         // TODO: use an external cache
@@ -38,11 +35,6 @@ public abstract class AbstractObjectDatabase implements ObjectDatabase {
         byte[] raw = ObjectId.toRaw(partialId);
 
         return lookUpInternal(raw);
-    }
-
-    @Inject
-    public void setSerialFactory(ObjectSerialisingFactory serialFactory) {
-        this.serialFactory = serialFactory;
     }
 
     protected abstract List<ObjectId> lookUpInternal(byte[] raw);
@@ -158,9 +150,5 @@ public abstract class AbstractObjectDatabase implements ObjectDatabase {
     @Override
     public ObjectInserter newObjectInserter() {
         return new ObjectInserter(this);
-    }
-
-    public ObjectSerialisingFactory getSerialFactory() {
-        return serialFactory;
     }
 }

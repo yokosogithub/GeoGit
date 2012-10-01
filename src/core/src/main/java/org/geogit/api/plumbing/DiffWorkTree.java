@@ -20,6 +20,7 @@ import org.geogit.api.plumbing.diff.DiffTreeIterator;
 import org.geogit.api.plumbing.diff.DiffTreeView;
 import org.geogit.repository.StagingArea;
 import org.geogit.repository.WorkingTree;
+import org.geogit.storage.ObjectSerialisingFactory;
 import org.geogit.storage.StagingDatabase;
 
 import com.google.common.base.Function;
@@ -36,9 +37,12 @@ public class DiffWorkTree extends AbstractGeoGitOp<Iterator<DiffEntry>> {
 
     private String pathFilter;
 
+    private ObjectSerialisingFactory serialFactory;
+
     @Inject
-    public DiffWorkTree(StagingDatabase index) {
+    public DiffWorkTree(StagingDatabase index, ObjectSerialisingFactory serialFactory) {
         this.indexDb = index;
+        this.serialFactory = serialFactory;
     }
 
     public DiffWorkTree setFilter(@Nullable String path) {
@@ -52,7 +56,7 @@ public class DiffWorkTree extends AbstractGeoGitOp<Iterator<DiffEntry>> {
         Iterator<NodeRef> unstaged = indexDb.getUnstaged(pathFilter);
 
         RevTree stagedTree = getStagedTree();
-        return new DiffTreeIterator(indexDb, stagedTree, unstaged);
+        return new DiffTreeIterator(indexDb, stagedTree, unstaged, serialFactory);
     }
 
     /**

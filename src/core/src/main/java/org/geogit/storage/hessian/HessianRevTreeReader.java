@@ -27,13 +27,16 @@ class HessianRevTreeReader extends HessianRevReader implements ObjectReader<RevT
 
     private int order;
 
-    public HessianRevTreeReader(ObjectDatabase objectDb) {
-        this(objectDb, 0);
+    private HessianFactory hessianFactory;
+
+    public HessianRevTreeReader(ObjectDatabase objectDb, HessianFactory hessianFactory) {
+        this(objectDb, 0, hessianFactory);
     }
 
-    public HessianRevTreeReader(ObjectDatabase objectDb, int order) {
+    public HessianRevTreeReader(ObjectDatabase objectDb, int order, HessianFactory hessianFactory) {
         this.objectDb = objectDb;
         this.order = order;
+        this.hessianFactory = hessianFactory;
     }
 
     @Override
@@ -70,7 +73,8 @@ class HessianRevTreeReader extends HessianRevReader implements ObjectReader<RevT
 
             hin.completeMessage();
 
-            RevSHA1Tree tree = new RevSHA1Tree(id, objectDb, order, references, subtrees, size);
+            RevSHA1Tree tree = new RevSHA1Tree(id, objectDb, order, references, subtrees, size,
+                    hessianFactory);
             return tree;
         } catch (Exception e) {
             throw Throwables.propagate(e);

@@ -9,7 +9,6 @@ import java.util.Map;
 import org.geogit.api.ObjectId;
 import org.geogit.storage.AbstractObjectDatabase;
 import org.geogit.storage.ObjectDatabase;
-import org.geogit.storage.ObjectSerialisingFactory;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
@@ -70,15 +69,6 @@ public class HeapObjectDatabse extends AbstractObjectDatabase implements ObjectD
     @Override
     public boolean delete(ObjectId objectId) {
         return objects.remove(objectId) != null;
-    }
-
-    /**
-     * @return
-     * @see org.geogit.storage.ObjectDatabase#getSerialFactory()
-     */
-    @Override
-    public ObjectSerialisingFactory getSerialFactory() {
-        return serialFactory;
     }
 
     /**

@@ -48,14 +48,18 @@ public class DiffTreeWalk {
     @Nullable
     private String pathFilter;
 
+    private ObjectSerialisingFactory serialFactory;
+
     public DiffTreeWalk(final ObjectDatabase db, final RevTree fromRootTree,
-            final RevTree toRootTree) {
+            final RevTree toRootTree, final ObjectSerialisingFactory serialFactory) {
         Preconditions.checkNotNull(db);
         Preconditions.checkNotNull(fromRootTree);
         Preconditions.checkNotNull(toRootTree);
+        Preconditions.checkNotNull(serialFactory);
         this.objectDb = db;
         this.fromRootTree = fromRootTree;
         this.toRootTree = toRootTree;
+        this.serialFactory = serialFactory;
         this.pathFilter = "";// root
     }
 
@@ -94,7 +98,6 @@ public class DiffTreeWalk {
                 return Iterators.singletonIterator(new DiffEntry(oldObjectRef.orNull(),
                         newObjectRef.orNull()));
             case TREE:
-                ObjectSerialisingFactory serialFactory = objectDb.getSerialFactory();
                 if (oldObjectRef.isPresent()) {
                     oldTree = objectDb.get(oldObjectRef.get().getObjectId(),
                             serialFactory.createRevTreeReader(objectDb));
@@ -137,7 +140,7 @@ public class DiffTreeWalk {
     private Optional<NodeRef> getFilteredObjectRef(RevTree tree) {
         checkState(!pathFilter.isEmpty());
 
-        final DepthSearch search = new DepthSearch(objectDb, objectDb.getSerialFactory());
+        final DepthSearch search = new DepthSearch(objectDb, serialFactory);
         Optional<NodeRef> ref = search.find(tree, pathFilter);
         return ref;
     }
@@ -146,7 +149,7 @@ public class DiffTreeWalk {
      * 
      * @author groldan
      */
-    private static class AddRemoveAllTreeIterator extends AbstractIterator<DiffEntry> {
+    private class AddRemoveAllTreeIterator extends AbstractIterator<DiffEntry> {
 
         private Iterator<?> treeIterator;
 
@@ -186,7 +189,6 @@ public class DiffTreeWalk {
             if (TYPE.TREE.equals(next.getType())) {
                 RevTree tree;
 
-                ObjectSerialisingFactory serialFactory = objectDb.getSerialFactory();
                 tree = objectDb
                         .get(next.getObjectId(), serialFactory.createRevTreeReader(objectDb));
 
@@ -221,7 +223,7 @@ public class DiffTreeWalk {
      * @author groldan
      * 
      */
-    private static class TreeDiffEntryIterator extends AbstractIterator<DiffEntry> {
+    private class TreeDiffEntryIterator extends AbstractIterator<DiffEntry> {
 
         private final RevTree oldTree;
 
@@ -331,7 +333,6 @@ public class DiffTreeWalk {
             Iterator<DiffEntry> changesIterator;
 
             try {
-                ObjectSerialisingFactory serialFactory = objectDb.getSerialFactory();
                 switch (changeType) {
                 case ADDED:
                 case REMOVED: {

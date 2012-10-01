@@ -28,6 +28,7 @@ import org.geogit.api.RevObject.TYPE;
 import org.geogit.api.RevTree;
 import org.geogit.api.TreeVisitor;
 import org.geogit.storage.ObjectDatabase;
+import org.geogit.storage.ObjectSerialisingFactory;
 import org.geogit.storage.RevSHA1Tree;
 import org.geogit.test.integration.PrintTreeVisitor;
 import org.geogit.test.integration.RepositoryTestCase;
@@ -42,9 +43,12 @@ public class RevSHA1TreeTest extends RepositoryTestCase {
 
     private ObjectDatabase odb;
 
+    private ObjectSerialisingFactory serialFactory;
+
     @Override
     protected void setUpInternal() throws Exception {
         odb = repo.getObjectDatabase();
+        serialFactory = repo.getSerializationFactory();
     }
 
     @Test
@@ -320,7 +324,7 @@ public class RevSHA1TreeTest extends RepositoryTestCase {
     }
 
     private RevTree createTree(final int numEntries, final boolean insertInAscendingKeyOrder) {
-        MutableTree tree = new RevSHA1Tree(odb).mutable();
+        MutableTree tree = new RevSHA1Tree(odb, serialFactory).mutable();
 
         final int increment = insertInAscendingKeyOrder ? 1 : -1;
         final int from = insertInAscendingKeyOrder ? 0 : numEntries - 1;

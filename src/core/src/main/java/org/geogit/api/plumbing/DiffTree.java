@@ -15,6 +15,7 @@ import org.geogit.api.RevTree;
 import org.geogit.api.plumbing.diff.DiffEntry;
 import org.geogit.api.plumbing.diff.DiffTreeWalk;
 import org.geogit.storage.ObjectDatabase;
+import org.geogit.storage.ObjectSerialisingFactory;
 
 import com.google.inject.Inject;
 
@@ -32,9 +33,12 @@ public class DiffTree extends AbstractGeoGitOp<Iterator<DiffEntry>> {
 
     private String path;
 
+    private ObjectSerialisingFactory serialFactory;
+
     @Inject
-    public DiffTree(ObjectDatabase objectDb) {
+    public DiffTree(ObjectDatabase objectDb, ObjectSerialisingFactory serialFactory) {
         this.objectDb = objectDb;
+        this.serialFactory = serialFactory;
     }
 
     /**
@@ -77,7 +81,7 @@ public class DiffTree extends AbstractGeoGitOp<Iterator<DiffEntry>> {
         } else {
             newTree = (RevTree) command(RevObjectParse.class).setObjectId(newTreeId).call();
         }
-        DiffTreeWalk treeWalk = new DiffTreeWalk(objectDb, oldTree, newTree);
+        DiffTreeWalk treeWalk = new DiffTreeWalk(objectDb, oldTree, newTree, serialFactory);
         treeWalk.setFilter(this.path);
         return treeWalk.get();
     }

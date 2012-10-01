@@ -26,15 +26,18 @@ import com.google.inject.Inject;
  */
 public class RevObjectParse extends AbstractGeoGitOp<RevObject> {
 
-    private String refSpec;
-
     private StagingDatabase indexDb;
+
+    private ObjectSerialisingFactory serialFactory;
 
     private ObjectId objectId;
 
+    private String refSpec;
+
     @Inject
-    public RevObjectParse(StagingDatabase indexDb) {
+    public RevObjectParse(StagingDatabase indexDb, ObjectSerialisingFactory serialFactory) {
         this.indexDb = indexDb;
+        this.serialFactory = serialFactory;
     }
 
     public RevObjectParse setRefSpec(final String refSpec) {
@@ -70,23 +73,22 @@ public class RevObjectParse extends AbstractGeoGitOp<RevObject> {
                 String.format("refspec ('%s') did not resolve to any object", refSpec));
 
         final TYPE type = command(ResolveObjectType.class).setObjectId(resolvedObjectId).call();
-        ObjectSerialisingFactory factory = indexDb.getSerialFactory();
         ObjectReader<? extends RevObject> reader;
         switch (type) {
         case FEATURE:
             throw new UnsupportedOperationException("not yet implemented");
             // break;
         case COMMIT:
-            reader = factory.createCommitReader();
+            reader = serialFactory.createCommitReader();
             break;
         case TAG:
             throw new UnsupportedOperationException("not yet implemented");
             // break;
         case TREE:
-            reader = factory.createRevTreeReader(indexDb);
+            reader = serialFactory.createRevTreeReader(indexDb);
             break;
         case FEATURETYPE:
-            reader = factory.createFeatureTypeReader();
+            reader = serialFactory.createFeatureTypeReader();
             break;
         default:
             throw new IllegalArgumentException("Unknown object type " + type);

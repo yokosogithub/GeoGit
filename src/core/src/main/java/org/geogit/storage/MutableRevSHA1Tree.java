@@ -31,15 +31,16 @@ class MutableRevSHA1Tree extends RevSHA1Tree implements MutableTree {
     /**
      * Copy constructor
      */
-    public MutableRevSHA1Tree(final RevSHA1Tree copy) {
-        super(copy.getId(), copy.db, copy.depth);
+    public MutableRevSHA1Tree(final RevSHA1Tree copy, final ObjectSerialisingFactory serialFactory) {
+        super(copy.getId(), copy.db, copy.depth, serialFactory);
         this.mutableSize = copy.size();
         super.myEntries.putAll(copy.myEntries);
         super.mySubTrees.putAll(copy.mySubTrees);
     }
 
-    MutableRevSHA1Tree(ObjectDatabase db, int childOrder) {
-        super(db, childOrder);
+    MutableRevSHA1Tree(ObjectDatabase db, int childOrder,
+            final ObjectSerialisingFactory serialFactory) {
+        super(db, childOrder, serialFactory);
     }
 
     /**
@@ -186,7 +187,6 @@ class MutableRevSHA1Tree extends RevSHA1Tree implements MutableTree {
             ObjectId subtreeId;
             MutableTree subtree;
 
-            ObjectSerialisingFactory serialFactory = db.getSerialFactory();
             while (it.hasNext()) {
                 Entry<Integer, Set<String>> e = it.next();
                 Integer bucket = e.getKey();
@@ -194,7 +194,7 @@ class MutableRevSHA1Tree extends RevSHA1Tree implements MutableTree {
                 it.remove();
                 subtreeId = mySubTrees.get(bucket);
                 if (subtreeId == null) {
-                    subtree = new MutableRevSHA1Tree(db, childOrder);
+                    subtree = new MutableRevSHA1Tree(db, childOrder, serialFactory);
                 } else {
                     ObjectReader<RevTree> reader = serialFactory
                             .createRevTreeReader(db, childOrder);
@@ -234,7 +234,6 @@ class MutableRevSHA1Tree extends RevSHA1Tree implements MutableTree {
             if (ignoreForSizeComputation.contains(subtreeId)) {
                 continue;
             }
-            ObjectSerialisingFactory serialFactory = db.getSerialFactory();
             ObjectReader<RevTree> reader = serialFactory.createRevTreeReader(db, childOrder);
             RevTree cached = db.get(subtreeId, reader);
             size = size.add(cached.size());

@@ -67,6 +67,9 @@ public class Index implements StagingArea {
     @Inject
     private StagingDatabase indexDatabase;
 
+    @Inject
+    private ObjectSerialisingFactory serialFactory;
+
     public Index() {
     }
 
@@ -118,7 +121,6 @@ public class Index implements StagingArea {
         checkValidPath(parentTreePath);
         checkNotNull(feature);
 
-        ObjectSerialisingFactory serialFactory = getDatabase().getSerialFactory();
         final ObjectWriter<?> featureWriter = serialFactory.createFeatureWriter(feature);
 
         final RevFeatureType featureType = feature.getFeatureType();

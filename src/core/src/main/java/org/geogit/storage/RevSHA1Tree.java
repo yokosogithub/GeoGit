@@ -61,33 +61,39 @@ public class RevSHA1Tree extends AbstractRevObject implements RevTree {
 
     protected final TreeMap<Integer, ObjectId> mySubTrees;
 
-    public RevSHA1Tree(final ObjectDatabase db) {
-        this(null, db, 0);
+    protected final ObjectSerialisingFactory serialFactory;
+
+    public RevSHA1Tree(final ObjectDatabase db, final ObjectSerialisingFactory serialFactory) {
+        this(null, db, 0, serialFactory);
     }
 
-    RevSHA1Tree(final ObjectDatabase db, final int order) {
-        this(null, db, order);
+    RevSHA1Tree(final ObjectDatabase db, final int order,
+            final ObjectSerialisingFactory serialFactory) {
+        this(null, db, order, serialFactory);
     }
 
-    public RevSHA1Tree(final ObjectId id, final ObjectDatabase db, final int order) {
+    public RevSHA1Tree(final ObjectId id, final ObjectDatabase db, final int order,
+            final ObjectSerialisingFactory serialFactory) {
         this(id, db, order, new TreeMap<String, NodeRef>(), new TreeMap<Integer, ObjectId>(),
-                BigInteger.ZERO);
+                BigInteger.ZERO, serialFactory);
     }
 
     public RevSHA1Tree(final ObjectId id, final ObjectDatabase db, final int order,
             TreeMap<String, NodeRef> references, TreeMap<Integer, ObjectId> subTrees,
-            final BigInteger size) {
+            final BigInteger size, final ObjectSerialisingFactory serialFactory) {
+
         super(id, TYPE.TREE);
         this.db = db;
         this.depth = order;
         this.myEntries = references;
         this.mySubTrees = subTrees;
         this.size = size;
+        this.serialFactory = serialFactory;
     }
 
     @Override
     public MutableTree mutable() {
-        return new MutableRevSHA1Tree(this);
+        return new MutableRevSHA1Tree(this, serialFactory);
     }
 
     /**
@@ -110,8 +116,6 @@ public class RevSHA1Tree extends AbstractRevObject implements RevTree {
             Integer bucket;
             ObjectId subtreeId;
             RevSHA1Tree subtree;
-
-            ObjectSerialisingFactory serialFactory = db.getSerialFactory();
 
             for (Entry<Integer, ObjectId> e : mySubTrees.entrySet()) {
                 bucket = e.getKey();
@@ -173,7 +177,6 @@ public class RevSHA1Tree extends AbstractRevObject implements RevTree {
             if (subtreeId == null) {
                 value = null;
             } else {
-                ObjectSerialisingFactory serialFactory = db.getSerialFactory();
                 RevTree subTree = db.get(subtreeId,
                         serialFactory.createRevTreeReader(db, this.depth + 1));
                 return subTree.get(key);
@@ -275,7 +278,6 @@ public class RevSHA1Tree extends AbstractRevObject implements RevTree {
         public boolean hasNext() {
             if (subject == null) {
                 RevTree subtree;
-                ObjectSerialisingFactory serialFactory = db.getSerialFactory();
                 subtree = db.get(objectId, serialFactory.createRevTreeReader(db, depth));
                 subject = subtree.iterator(filter);
             }

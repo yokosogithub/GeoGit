@@ -60,7 +60,7 @@ public class DepthSearchTest {
         serialFactory = fakeRepo.getSerializationFactory();
         search = new DepthSearch(odb, serialFactory);
 
-        MutableTree root = new RevSHA1Tree(odb).mutable();
+        MutableTree root = new RevSHA1Tree(odb, serialFactory).mutable();
         root = addTree(root, "path/to/tree1", "node11", "node12", "node13");
         root = addTree(root, "path/to/tree2", "node21", "node22", "node23");
         root = addTree(root, "tree3", "node31", "node32", "node33");
@@ -69,7 +69,7 @@ public class DepthSearchTest {
 
     private MutableTree addTree(MutableTree root, final String treePath, String... singleNodeNames) {
 
-        MutableTree subTree = new CreateTree(odb, null).setIndex(false).call();
+        MutableTree subTree = new CreateTree(odb, null, serialFactory).setIndex(false).call();
         if (singleNodeNames != null) {
             for (String singleNodeName : singleNodeNames) {
                 String nodePath = NodeRef.appendChild(treePath, singleNodeName);

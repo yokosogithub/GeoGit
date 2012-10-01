@@ -163,7 +163,7 @@ public class WorkingTree {
                         if (!ref.getMetadataId().isNull()) {
                             ObjectId metadataId = ref.getMetadataId();
                             ObjectSerialisingFactory serialFactory;
-                            serialFactory = index.getDatabase().getSerialFactory();
+                            serialFactory = repository.getSerializationFactory();
                             ObjectReader<RevFeatureType> typeReader = serialFactory
                                     .createFeatureTypeReader();
                             StagingDatabase database = index.getDatabase();

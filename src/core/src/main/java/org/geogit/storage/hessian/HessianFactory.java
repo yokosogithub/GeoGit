@@ -59,12 +59,12 @@ public class HessianFactory implements ObjectSerialisingFactory {
 
     @Override
     public ObjectReader<RevTree> createRevTreeReader(ObjectDatabase objectDb) {
-        return new HessianRevTreeReader(objectDb);
+        return new HessianRevTreeReader(objectDb, this);
     }
 
     @Override
     public ObjectReader<RevTree> createRevTreeReader(ObjectDatabase objectDb, int order) {
-        return new HessianRevTreeReader(objectDb, order);
+        return new HessianRevTreeReader(objectDb, order, this);
     }
 
     @Override

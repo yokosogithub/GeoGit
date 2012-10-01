@@ -109,6 +109,8 @@ public class JEStagingDatabase implements ObjectDatabase, StagingDatabase {
 
     private CommandLocator commands;
 
+    private ObjectSerialisingFactory serialFactory;
+
     /**
      * @param referenceDatabase the repository reference database, used to get the head re
      * @param repoDb
@@ -116,10 +118,12 @@ public class JEStagingDatabase implements ObjectDatabase, StagingDatabase {
      */
     @Inject
     public JEStagingDatabase(final ObjectDatabase repositoryDb,
-            final EnvironmentBuilder envBuilder, final CommandLocator commands) {
+            final EnvironmentBuilder envBuilder, final CommandLocator commands,
+            final ObjectSerialisingFactory serialFactory) {
         this.repositoryDb = repositoryDb;
         this.envProvider = envBuilder;
         this.commands = commands;
+        this.serialFactory = serialFactory;
     }
 
     @Override
@@ -220,8 +224,8 @@ public class JEStagingDatabase implements ObjectDatabase, StagingDatabase {
         if (headCommitId.isNull()) {
             headTreeId = ObjectId.NULL;
         } else {
-            RevCommit headCommit = repositoryDb.get(headCommitId, getSerialFactory()
-                    .createCommitReader());
+            RevCommit headCommit = repositoryDb.get(headCommitId,
+                    serialFactory.createCommitReader());
             headTreeId = headCommit.getTreeId();
         }
         return headTreeId;
@@ -382,11 +386,6 @@ public class JEStagingDatabase implements ObjectDatabase, StagingDatabase {
     @Override
     public boolean delete(ObjectId objectId) {
         return stagingDb.delete(objectId);
-    }
-
-    @Override
-    public ObjectSerialisingFactory getSerialFactory() {
-        return repositoryDb.getSerialFactory();
     }
 
     private static class ObjectIdBinding extends TupleBinding<ObjectId> {

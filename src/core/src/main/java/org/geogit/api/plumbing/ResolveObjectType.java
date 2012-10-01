@@ -21,11 +21,14 @@ public class ResolveObjectType extends AbstractGeoGitOp<RevObject.TYPE> {
 
     private StagingDatabase indexDb;
 
+    private ObjectSerialisingFactory serialFactory;
+
     private ObjectId oid;
 
     @Inject
-    public ResolveObjectType(StagingDatabase indexDb) {
+    public ResolveObjectType(StagingDatabase indexDb, ObjectSerialisingFactory serialFactory) {
         this.indexDb = indexDb;
+        this.serialFactory = serialFactory;
     }
 
     public ResolveObjectType setObjectId(ObjectId oid) {
@@ -38,7 +41,6 @@ public class ResolveObjectType extends AbstractGeoGitOp<RevObject.TYPE> {
      */
     @Override
     public TYPE call() throws IllegalArgumentException {
-        ObjectSerialisingFactory serialFactory = indexDb.getSerialFactory();
         TYPE type = indexDb.get(oid, serialFactory.createObjectTypeReader());
         return type;
     }

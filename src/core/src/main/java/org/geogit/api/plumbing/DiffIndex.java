@@ -17,6 +17,7 @@ import org.geogit.api.RevTree;
 import org.geogit.api.plumbing.diff.DiffEntry;
 import org.geogit.api.plumbing.diff.DiffTreeIterator;
 import org.geogit.storage.ObjectDatabase;
+import org.geogit.storage.ObjectSerialisingFactory;
 import org.geogit.storage.StagingDatabase;
 
 import com.google.inject.Inject;
@@ -34,10 +35,14 @@ public class DiffIndex extends AbstractGeoGitOp<Iterator<DiffEntry>> {
 
     private StagingDatabase indexDb;
 
+    private ObjectSerialisingFactory serialFactory;
+
     @Inject
-    public DiffIndex(ObjectDatabase repoDb, StagingDatabase index) {
+    public DiffIndex(ObjectDatabase repoDb, StagingDatabase index,
+            ObjectSerialisingFactory serialFactory) {
         this.repoDb = repoDb;
         this.indexDb = index;
+        this.serialFactory = serialFactory;
     }
 
     /**
@@ -75,6 +80,6 @@ public class DiffIndex extends AbstractGeoGitOp<Iterator<DiffEntry>> {
         }
 
         Iterator<NodeRef> staged = indexDb.getStaged(pathFilter);
-        return new DiffTreeIterator(repoDb, rootTree, staged);
+        return new DiffTreeIterator(repoDb, rootTree, staged, serialFactory);
     }
 }

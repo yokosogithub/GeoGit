@@ -9,6 +9,7 @@ import org.geogit.api.AbstractGeoGitOp;
 import org.geogit.api.MutableTree;
 import org.geogit.api.ObjectId;
 import org.geogit.storage.ObjectDatabase;
+import org.geogit.storage.ObjectSerialisingFactory;
 import org.geogit.storage.RevSHA1Tree;
 import org.geogit.storage.StagingDatabase;
 
@@ -26,10 +27,14 @@ public class CreateTree extends AbstractGeoGitOp<MutableTree> {
 
     private StagingDatabase indexDb;
 
+    private ObjectSerialisingFactory serialFactory;
+
     @Inject
-    public CreateTree(ObjectDatabase odb, StagingDatabase indexDb) {
+    public CreateTree(ObjectDatabase odb, StagingDatabase indexDb,
+            ObjectSerialisingFactory serialFactory) {
         this.odb = odb;
         this.indexDb = indexDb;
+        this.serialFactory = serialFactory;
     }
 
     /**
@@ -45,7 +50,7 @@ public class CreateTree extends AbstractGeoGitOp<MutableTree> {
     public MutableTree call() {
         ObjectDatabase storage = index ? indexDb : odb;
 
-        return new RevSHA1Tree(ObjectId.NULL, storage, 0).mutable();
+        return new RevSHA1Tree(ObjectId.NULL, storage, 0, serialFactory).mutable();
     }
 
 }

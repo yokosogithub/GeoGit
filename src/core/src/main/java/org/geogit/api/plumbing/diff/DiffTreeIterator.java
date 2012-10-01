@@ -11,6 +11,7 @@ import org.geogit.api.NodeRef;
 import org.geogit.api.RevTree;
 import org.geogit.repository.DepthSearch;
 import org.geogit.storage.ObjectDatabase;
+import org.geogit.storage.ObjectSerialisingFactory;
 
 import com.google.common.base.Optional;
 import com.google.common.collect.AbstractIterator;
@@ -23,10 +24,14 @@ public class DiffTreeIterator extends AbstractIterator<DiffEntry> {
 
     private Iterator<NodeRef> changes;
 
-    public DiffTreeIterator(ObjectDatabase lookupDb, RevTree rootTree, Iterator<NodeRef> changes) {
+    private ObjectSerialisingFactory serialFactory;
+
+    public DiffTreeIterator(ObjectDatabase lookupDb, RevTree rootTree, Iterator<NodeRef> changes,
+            ObjectSerialisingFactory serialFactory) {
         this.lookupDb = lookupDb;
         this.rootTree = rootTree;
         this.changes = changes;
+        this.serialFactory = serialFactory;
     }
 
     @Override
@@ -35,7 +40,7 @@ public class DiffTreeIterator extends AbstractIterator<DiffEntry> {
             return super.endOfData();
         }
         NodeRef change = changes.next();
-        final DepthSearch search = new DepthSearch(lookupDb, lookupDb.getSerialFactory());
+        final DepthSearch search = new DepthSearch(lookupDb, serialFactory);
         final Optional<NodeRef> original = search.find(rootTree, change.getPath());
         final DiffEntry diff;
         if (original.isPresent()) {
