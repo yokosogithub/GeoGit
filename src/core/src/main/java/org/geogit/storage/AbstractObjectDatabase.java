@@ -11,14 +11,8 @@ import java.security.DigestOutputStream;
 import java.security.MessageDigest;
 import java.util.List;
 
-import org.geogit.api.MutableTree;
-import org.geogit.api.NodeRef;
 import org.geogit.api.ObjectId;
-import org.geogit.api.RevObject.TYPE;
-import org.geogit.api.RevTree;
-import org.geogit.repository.DepthSearch;
 
-import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
 import com.google.common.io.Closeables;
@@ -164,83 +158,6 @@ public abstract class AbstractObjectDatabase implements ObjectDatabase {
     @Override
     public ObjectInserter newObjectInserter() {
         return new ObjectInserter(this);
-    }
-
-    /**
-     * @see org.geogit.storage.ObjectDatabase#newTree()
-     */
-    @Override
-    public MutableTree newTree() {
-        return new RevSHA1Tree(this).mutable();
-    }
-
-    /**
-     * If a child tree of {@code parent} addressed by the given {@code childPath} exists, returns
-     * it's mutable copy, otherwise just returns a new mutable tree without any modification to
-     * root.
-     * 
-     * @throws IllegalArgumentException if an reference exists for {@code childPath} but is not of
-     *         type {@code TREE}
-     */
-    @Override
-    public MutableTree getOrCreateSubTree(final RevTree rootTree, String childPath) {
-        Optional<NodeRef> treeChildRef = getTreeChild(rootTree, childPath);
-        if (treeChildRef.isPresent()) {
-            if (!TYPE.TREE.equals(treeChildRef.get().getType())) {
-                throw new IllegalArgumentException("Object exsits as child of tree "
-                        + rootTree.getId() + " but is not a tree: " + treeChildRef);
-            }
-
-            return getTree(treeChildRef.get().getObjectId()).mutable();
-        }
-        return newTree();
-    }
-
-    protected RevTree getTree(final ObjectId treeId) {
-        if (treeId.isNull()) {
-            return newTree();
-        }
-        RevTree tree = this.get(treeId, serialFactory.createRevTreeReader(this));
-
-        return tree;
-    }
-
-    protected RevTree getTree(final ObjectId treeId, int assignedDepth) {
-        if (treeId.isNull()) {
-            return newTree();
-        }
-        RevTree tree = this.get(treeId, serialFactory.createRevTreeReader(this, assignedDepth));
-        return tree;
-    }
-
-    @Override
-    public ObjectId writeBack(MutableTree root, final RevTree tree, final String pathToTree) {
-
-        final ObjectId treeId = put(serialFactory.createRevTreeWriter(tree));
-
-        final boolean isDirectChild = pathToTree.indexOf('/') == -1;
-        if (isDirectChild) {
-            root.put(new NodeRef(pathToTree, treeId, ObjectId.NULL, TYPE.TREE));
-            ObjectId newRootId = put(serialFactory.createRevTreeWriter(root));
-            return newRootId;
-        }
-
-        final String parentPath = NodeRef.parentPath(pathToTree);
-        Optional<NodeRef> parentRef = getTreeChild(root, parentPath);
-        MutableTree parent;
-        if (parentRef.isPresent()) {
-            ObjectId parentId = parentRef.get().getObjectId();
-            parent = getTree(parentId).mutable();
-        } else {
-            parent = newTree();
-        }
-        parent.put(new NodeRef(pathToTree, treeId, ObjectId.NULL, TYPE.TREE));
-        return writeBack(root, parent, parentPath);
-    }
-
-    @Override
-    public Optional<NodeRef> getTreeChild(RevTree root, String path) {
-        return new DepthSearch(this, serialFactory).find(root, path);
     }
 
     public ObjectSerialisingFactory getSerialFactory() {

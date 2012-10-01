@@ -12,24 +12,34 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
+import org.geogit.api.GeoGIT;
+import org.geogit.api.MemoryModule;
 import org.geogit.api.MutableTree;
 import org.geogit.api.NodeRef;
 import org.geogit.api.ObjectId;
 import org.geogit.api.RevObject.TYPE;
-import org.geogit.storage.AbstractObjectDatabase;
+import org.geogit.api.RevTree;
+import org.geogit.api.plumbing.CreateTree;
+import org.geogit.api.plumbing.RevObjectParse;
+import org.geogit.api.plumbing.WriteBack;
+import org.geogit.di.GeogitModule;
 import org.geogit.storage.ObjectDatabase;
 import org.geogit.storage.ObjectSerialisingFactory;
-import org.geogit.storage.hessian.HessianFactory;
-import org.geogit.storage.memory.HeapObjectDatabse;
+import org.geogit.storage.RevSHA1Tree;
 import org.junit.Before;
 import org.junit.Test;
 
 import com.google.common.base.Optional;
+import com.google.inject.Guice;
+import com.google.inject.Injector;
+import com.google.inject.util.Modules;
 
 /**
  *
  */
 public class DepthSearchTest {
+
+    private GeoGIT fakeGeogit;
 
     private ObjectDatabase odb;
 
@@ -41,14 +51,16 @@ public class DepthSearchTest {
 
     @Before
     public void setUp() {
-        serialFactory = new HessianFactory();
-        odb = new HeapObjectDatabse();
-        ((AbstractObjectDatabase) odb).setSerialFactory(serialFactory);
-        odb.create();
+        Injector injector = Guice.createInjector(Modules.override(new GeogitModule()).with(
+                new MemoryModule()));
 
+        fakeGeogit = new GeoGIT(injector);
+        Repository fakeRepo = fakeGeogit.getOrCreateRepository();
+        odb = fakeRepo.getObjectDatabase();
+        serialFactory = fakeRepo.getSerializationFactory();
         search = new DepthSearch(odb, serialFactory);
 
-        MutableTree root = odb.newTree();
+        MutableTree root = new RevSHA1Tree(odb).mutable();
         root = addTree(root, "path/to/tree1", "node11", "node12", "node13");
         root = addTree(root, "path/to/tree2", "node21", "node22", "node23");
         root = addTree(root, "tree3", "node31", "node32", "node33");
@@ -57,7 +69,7 @@ public class DepthSearchTest {
 
     private MutableTree addTree(MutableTree root, final String treePath, String... singleNodeNames) {
 
-        MutableTree subTree = odb.getOrCreateSubTree(root, treePath);
+        MutableTree subTree = new CreateTree(odb, null).setIndex(false).call();
         if (singleNodeNames != null) {
             for (String singleNodeName : singleNodeNames) {
                 String nodePath = NodeRef.appendChild(treePath, singleNodeName);
@@ -66,8 +78,11 @@ public class DepthSearchTest {
                 subTree.put(new NodeRef(nodePath, fakeFeatureOId, fakeTypeOId, TYPE.FEATURE));
             }
         }
-        ObjectId newRoot = odb.writeBack(root, subTree, treePath);
-        return odb.get(newRoot, serialFactory.createRevTreeReader(odb)).mutable();
+
+        ObjectId newRootId = fakeGeogit.command(WriteBack.class).setAncestor(root)
+                .setChildPath(treePath).setTree(subTree).call();
+        return fakeGeogit.command(RevObjectParse.class).setObjectId(newRootId).call(RevTree.class)
+                .mutable();
     }
 
     @Test

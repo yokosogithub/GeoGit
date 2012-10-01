@@ -2,6 +2,7 @@ package org.geogit.storage.memory;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -33,15 +34,22 @@ public class HeapObjectDatabse extends AbstractObjectDatabase implements ObjectD
         }
     }
 
+    @Override
+    public boolean isOpen() {
+        return objects != null;
+    }
+
     /**
      * 
-     * @see org.geogit.storage.ObjectDatabase#create()
+     * @see org.geogit.storage.ObjectDatabase#open()
      */
     @Override
-    public void create() {
-        if (objects == null) {
-            objects = Maps.newTreeMap();
+    public void open() {
+        if (isOpen()) {
+            return;
         }
+        Map<ObjectId, byte[]> map = Maps.newTreeMap();
+        objects = Collections.synchronizedMap(map);
     }
 
     /**

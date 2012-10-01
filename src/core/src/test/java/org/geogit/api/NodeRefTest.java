@@ -6,9 +6,9 @@
 package org.geogit.api;
 
 import static org.geogit.api.NodeRef.allPathsTo;
+import static org.geogit.api.NodeRef.isChild;
 import static org.geogit.api.NodeRef.isDirectChild;
 import static org.geogit.api.NodeRef.parentPath;
-import static org.geogit.api.NodeRef.toPath;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
@@ -20,26 +20,6 @@ import org.junit.Test;
 import com.google.common.collect.ImmutableList;
 
 public class NodeRefTest {
-
-    /**
-     * Test method for {@link org.geogit.api.NodeRef#toPath(java.util.List, java.lang.String[])}.
-     */
-    @SuppressWarnings("deprecation")
-    @Test
-    public void testToPath() {
-        assertEquals("path", toPath(ImmutableList.of("path")));
-        assertEquals("path", toPath(ImmutableList.of("path"), null));
-        assertEquals("path/to", toPath(ImmutableList.of("path", "to"), null));
-        assertEquals("path/to/node", toPath(ImmutableList.of("path", "to", "node"), null));
-        assertEquals("path/to/node", toPath(ImmutableList.of("path", "to"), "node"));
-        assertEquals("path/to/node", toPath(ImmutableList.of("path"), "to", "node"));
-        try {
-            toPath(ImmutableList.of("path", "to"), (String) null);
-            fail("Expected precondition violation");
-        } catch (IllegalArgumentException e) {
-            assertTrue(e.getMessage(), e.getMessage().contains("cannot have null"));
-        }
-    }
 
     /**
      * Test method for {@link org.geogit.api.NodeRef#parentPath(java.lang.String)}.
@@ -78,8 +58,7 @@ public class NodeRefTest {
     }
 
     /**
-     * Test method for {@link org.geogit.api.NodeRef#isDirectChild(String, String)
-
+     * Test method for {@link org.geogit.api.NodeRef#isDirectChild(String, String)}
      */
     @Test
     public void testIsDirectChild() {
@@ -99,5 +78,27 @@ public class NodeRefTest {
 
         assertTrue(isDirectChild("path/to", "path/to/node"));
 
+    }
+
+    /**
+     * Test method for {@link org.geogit.api.NodeRef#isChild(String, String)}
+     */
+    @Test
+    public void testIsChild() {
+        assertFalse(isChild("", ""));
+        assertTrue(isChild("", "path"));
+        assertTrue(isChild("", "path/to"));
+
+        assertFalse(isChild("path", "path"));
+        assertFalse(isChild("path", ""));
+        assertTrue(isChild("path", "path/to"));
+        assertTrue(isChild("path", "path/to/node"));
+
+        assertFalse(isChild("path/to", ""));
+        assertFalse(isChild("path/to", "path"));
+        assertFalse(isChild("path/to", "path/to"));
+        assertFalse(isChild("path/to", "path2/to"));
+
+        assertTrue(isChild("path/to", "path/to/node"));
     }
 }

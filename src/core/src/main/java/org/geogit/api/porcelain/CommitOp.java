@@ -13,18 +13,24 @@ import org.geogit.api.ObjectId;
 import org.geogit.api.Platform;
 import org.geogit.api.Ref;
 import org.geogit.api.RevCommit;
+import org.geogit.api.RevTree;
 import org.geogit.api.SymRef;
+import org.geogit.api.plumbing.CreateTree;
 import org.geogit.api.plumbing.RefParse;
+import org.geogit.api.plumbing.ResolveTreeish;
+import org.geogit.api.plumbing.RevObjectParse;
 import org.geogit.api.plumbing.RevParse;
 import org.geogit.api.plumbing.UpdateRef;
 import org.geogit.api.plumbing.UpdateSymRef;
+import org.geogit.api.plumbing.WriteTree;
 import org.geogit.repository.CommitBuilder;
 import org.geogit.repository.Repository;
-import org.geogit.repository.StagingArea;
 import org.geogit.storage.ObjectInserter;
 
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Supplier;
+import com.google.common.base.Suppliers;
 import com.google.inject.Inject;
 
 /**
@@ -140,9 +146,10 @@ public class CommitOp extends AbstractGeoGitOp<RevCommit> {
         final ObjectId currHeadCommitId = command(RevParse.class).setRefSpec(Ref.HEAD).call();
         parents.add(currHeadCommitId);
 
-        final StagingArea index = repository.getIndex();
+        // final ObjectId newTreeId = index.writeTree(currHead.get(), subProgress(49f));
+        final ObjectId newTreeId = command(WriteTree.class).setOldRoot(resolveOldRoot())
+                .setProgressListener(subProgress(49f)).call();
 
-        final ObjectId newTreeId = index.writeTree(currHead.get(), subProgress(49f));
         if (getProgressListener().isCanceled()) {
             return null;
         }
@@ -187,6 +194,20 @@ public class CommitOp extends AbstractGeoGitOp<RevCommit> {
         getProgressListener().complete();
 
         return commit;
+    }
+
+    private Supplier<RevTree> resolveOldRoot() {
+        Supplier<RevTree> supplier = new Supplier<RevTree>() {
+            @Override
+            public RevTree get() {
+                ObjectId id = command(ResolveTreeish.class).setTreeish(Ref.HEAD).call();
+                if (id.isNull()) {
+                    return command(CreateTree.class).setIndex(false).call();
+                }
+                return (RevTree) command(RevObjectParse.class).setObjectId(id).call();
+            }
+        };
+        return Suppliers.memoize(supplier);
     }
 
     private long getTimeStamp() {

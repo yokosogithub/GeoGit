@@ -95,8 +95,13 @@ public class JEObjectDatabase extends AbstractObjectDatabase implements ObjectDa
     }
 
     @Override
-    public void create() {
-        if (objectDb != null) {
+    public boolean isOpen() {
+        return objectDb != null;
+    }
+
+    @Override
+    public void open() {
+        if (isOpen()) {
             return;
         }
         // System.err.println("OPEN");

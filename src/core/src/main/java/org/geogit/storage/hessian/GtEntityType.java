@@ -20,6 +20,7 @@ import com.vividsolutions.jts.geom.Geometry;
  * 
  * @author mleslie
  */
+@SuppressWarnings("rawtypes")
 enum GtEntityType implements Serializable {
     STRING(0, String.class), BOOLEAN(1, Boolean.class), BYTE(2, Byte.class), DOUBLE(3, Double.class), BIGDECIMAL(
             4, BigDecimal.class), FLOAT(5, Float.class), INT(6, Integer.class), BIGINT(7,
@@ -95,6 +96,7 @@ enum GtEntityType implements Serializable {
         return this.binding;
     }
 
+    @SuppressWarnings("unchecked")
     public static GtEntityType fromBinding(Class cls) {
         if (cls == null)
             return NULL;

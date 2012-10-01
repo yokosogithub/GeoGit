@@ -17,11 +17,9 @@ import java.util.SortedMap;
 import javax.annotation.Nullable;
 
 import org.geogit.api.CommandLocator;
-import org.geogit.api.MutableTree;
 import org.geogit.api.NodeRef;
 import org.geogit.api.ObjectId;
 import org.geogit.api.Ref;
-import org.geogit.api.RevTree;
 import org.geogit.api.plumbing.RefParse;
 import org.geogit.api.plumbing.ResolveTreeish;
 import org.geogit.api.plumbing.UpdateRef;
@@ -62,11 +60,11 @@ public class HeapStagingDatabase extends HeapObjectDatabse implements StagingDat
     // /////////////////////////////////////////
     /**
      * 
-     * @see org.geogit.storage.StagingDatabase#create()
+     * @see org.geogit.storage.StagingDatabase#open()
      */
     @Override
-    public void create() {
-        super.create();
+    public void open() {
+        super.open();
         unstaged = Maps.newTreeMap();
         staged = Maps.newTreeMap();
         {
@@ -291,43 +289,8 @@ public class HeapStagingDatabase extends HeapObjectDatabse implements StagingDat
     }
 
     @Override
-    public ObjectId writeBack(MutableTree root, RevTree tree, String pathToTree) {
-        return super.writeBack(root, tree, pathToTree);
-    }
-
-    @Override
     public ObjectInserter newObjectInserter() {
         return super.newObjectInserter();
-    }
-
-    @Override
-    public MutableTree getOrCreateSubTree(RevTree parent, String childPath) {
-        {
-            Optional<NodeRef> override = super.getTreeChild(parent, childPath);
-            if (override.isPresent()) {
-                return super.getOrCreateSubTree(parent, childPath);
-            }
-        }
-
-        Optional<NodeRef> treeChild = repositoryDb.getTreeChild(parent, childPath);
-        if (treeChild.isPresent()) {
-            return repositoryDb.getOrCreateSubTree(parent, childPath);
-        }
-        return super.getOrCreateSubTree(parent, childPath);
-    }
-
-    @Override
-    public MutableTree newTree() {
-        return super.newTree();
-    }
-
-    @Override
-    public Optional<NodeRef> getTreeChild(RevTree root, String path) {
-        Optional<NodeRef> treeChild = super.getTreeChild(root, path);
-        if (treeChild.isPresent()) {
-            return treeChild;
-        }
-        return repositoryDb.getTreeChild(root, path);
     }
 
     @Override

@@ -17,7 +17,10 @@ import org.geogit.api.RevCommit;
 import org.geogit.api.RevFeature;
 import org.geogit.api.RevFeatureType;
 import org.geogit.api.RevTree;
+import org.geogit.api.plumbing.CreateTree;
+import org.geogit.api.plumbing.FindTreeChild;
 import org.geogit.api.plumbing.RefParse;
+import org.geogit.api.plumbing.ResolveTreeish;
 import org.geogit.api.plumbing.RevObjectParse;
 import org.geogit.api.plumbing.RevParse;
 import org.geogit.storage.BlobPrinter;
@@ -69,8 +72,8 @@ public class Repository {
 
     public void create() {
         refDatabase.create();
-        objectDatabase.create();
-        index.getDatabase().create();
+        objectDatabase.open();
+        index.getDatabase().open();
     }
 
     public RefDatabase getRefDatabase() {
@@ -145,17 +148,6 @@ public class Repository {
         return commit;
     }
 
-    public RevTree getTree(final ObjectId treeId) {
-        if (treeId.isNull()) {
-            return newTree();
-        }
-        RevTree tree;
-        ObjectDatabase odb = getObjectDatabase();
-        tree = odb.get(treeId, newRevTreeReader(odb));
-
-        return tree;
-    }
-
     /**
      * Test if a tree exists in the object database
      * 
@@ -185,22 +177,6 @@ public class Repository {
     }
 
     /**
-     * @return the root tree for the current HEAD
-     */
-    public RevTree getHeadTree() {
-
-        RevTree root;
-
-        ObjectId rootTreeId = getRootTreeId();
-        if (rootTreeId.isNull()) {
-            return newTree();
-        }
-        root = getObjectDatabase().get(rootTreeId, newRevTreeReader(getObjectDatabase()));
-
-        return root;
-    }
-
-    /**
      * @return an {@link ObjectInserter} to insert objects into the object database
      */
     public ObjectInserter newObjectInserter() {
@@ -214,18 +190,6 @@ public class Repository {
         RevFeature revFeature = getObjectDatabase().get(contentId, reader);
 
         return revFeature;
-    }
-
-    /**
-     * Creates and return a new, empty tree, that stores to this repository's {@link ObjectDatabase}
-     */
-    public RevTree newTree() {
-        return getObjectDatabase().newTree();
-    }
-
-    public Optional<NodeRef> getRootTreeChild(String path) {
-        RevTree root = getHeadTree();
-        return getObjectDatabase().getTreeChild(root, path);
     }
 
     public ObjectWriter<RevCommit> newCommitWriter(RevCommit commit) {
@@ -276,6 +240,33 @@ public class Repository {
 
     public ObjectSerialisingFactory getSerializationFactory() {
         return serialFactory;
+    }
+
+    /**
+     * @return
+     */
+    public RevTree getOrCreateHeadTree() {
+        ObjectId headTreeId = command(ResolveTreeish.class).setTreeish(Ref.HEAD).call();
+        if (headTreeId.isNull()) {
+            return command(CreateTree.class).call();
+        }
+        return getTree(headTreeId);
+    }
+
+    /**
+     * @param treeId
+     * @return
+     */
+    public RevTree getTree(ObjectId treeId) {
+        return (RevTree) command(RevObjectParse.class).setObjectId(treeId).call();
+    }
+
+    public Optional<NodeRef> getRootTreeChild(String path) {
+        return command(FindTreeChild.class).setChildPath(path).call();
+    }
+
+    public Optional<NodeRef> getTreeChild(RevTree tree, String childPath) {
+        return command(FindTreeChild.class).setParent(tree).setChildPath(childPath).call();
     }
 
 }

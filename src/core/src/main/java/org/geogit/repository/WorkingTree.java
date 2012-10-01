@@ -20,6 +20,7 @@ import org.geogit.api.RevFeatureType;
 import org.geogit.api.RevObject.TYPE;
 import org.geogit.api.RevTree;
 import org.geogit.api.TreeVisitor;
+import org.geogit.api.plumbing.FindTreeChild;
 import org.geogit.storage.ObjectReader;
 import org.geogit.storage.ObjectSerialisingFactory;
 import org.geogit.storage.StagingDatabase;
@@ -120,7 +121,8 @@ public class WorkingTree {
 
     public boolean hasRoot(final QName typeName) {
         String localPart = typeName.getLocalPart();
-        Optional<NodeRef> typeNameTreeRef = repository.getRootTreeChild(localPart);
+        Optional<NodeRef> typeNameTreeRef = repository.command(FindTreeChild.class)
+                .setChildPath(localPart).call();
         return typeNameTreeRef.isPresent();
     }
 
@@ -144,7 +146,8 @@ public class WorkingTree {
      */
     public List<QName> getFeatureTypeNames() {
         List<QName> names = new ArrayList<QName>();
-        RevTree root = repository.getHeadTree();
+        RevTree root = repository.getOrCreateHeadTree();
+
         final List<QName> typeNames = Lists.newLinkedList();
         if (root != null) {
             root.accept(new TreeVisitor() {

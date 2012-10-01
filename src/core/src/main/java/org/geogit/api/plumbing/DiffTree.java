@@ -19,7 +19,8 @@ import org.geogit.storage.ObjectDatabase;
 import com.google.inject.Inject;
 
 /**
- * Compares the content and metadata links of blobs found via two tree objects
+ * Compares the content and metadata links of blobs found via two tree objects on the repository's
+ * {@link ObjectDatabase}
  */
 public class DiffTree extends AbstractGeoGitOp<Iterator<DiffEntry>> {
 
@@ -67,12 +68,12 @@ public class DiffTree extends AbstractGeoGitOp<Iterator<DiffEntry>> {
         final RevTree oldTree;
         final RevTree newTree;
         if (oldTreeId.isNull()) {
-            oldTree = objectDb.newTree();
+            oldTree = RevTree.NULL;
         } else {
             oldTree = (RevTree) command(RevObjectParse.class).setObjectId(oldTreeId).call();
         }
         if (newTreeId.isNull()) {
-            newTree = objectDb.newTree();
+            newTree = RevTree.NULL;
         } else {
             newTree = (RevTree) command(RevObjectParse.class).setObjectId(newTreeId).call();
         }

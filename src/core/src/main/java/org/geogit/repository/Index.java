@@ -6,41 +6,26 @@ package org.geogit.repository;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
-import static com.google.common.base.Preconditions.checkState;
 
-import java.io.IOException;
-import java.io.InputStream;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 
 import javax.annotation.Nullable;
 
-import org.geogit.api.MutableTree;
 import org.geogit.api.NodeRef;
 import org.geogit.api.ObjectId;
-import org.geogit.api.Ref;
-import org.geogit.api.RevCommit;
 import org.geogit.api.RevFeature;
 import org.geogit.api.RevFeatureType;
 import org.geogit.api.RevObject.TYPE;
-import org.geogit.api.RevTree;
 import org.geogit.api.SpatialRef;
-import org.geogit.api.TreeVisitor;
-import org.geogit.api.plumbing.ResolveObjectType;
-import org.geogit.api.plumbing.RevParse;
-import org.geogit.storage.ObjectDatabase;
+import org.geogit.api.plumbing.FindTreeChild;
 import org.geogit.storage.ObjectSerialisingFactory;
 import org.geogit.storage.ObjectWriter;
-import org.geogit.storage.RawObjectWriter;
 import org.geogit.storage.StagingDatabase;
-import org.geotools.util.NullProgressListener;
 import org.opengis.geometry.BoundingBox;
 import org.opengis.util.ProgressListener;
 
 import com.google.common.base.Optional;
-import com.google.common.base.Throwables;
-import com.google.common.collect.Maps;
 import com.google.inject.Inject;
 
 /**
@@ -104,7 +89,8 @@ public class Index implements StagingArea {
             if (stagedEntry.isPresent()) {
                 oldEntry = stagedEntry.get();
             } else {
-                Optional<NodeRef> repoEntry = repository.getRootTreeChild(path);
+                Optional<NodeRef> repoEntry = repository.command(FindTreeChild.class)
+                        .setChildPath(path).call();
                 if (repoEntry.isPresent()) {
                     oldEntry = repoEntry.get();
                 }
@@ -214,179 +200,6 @@ public class Index implements StagingArea {
     @Override
     public void reset() {
         indexDatabase.reset();
-    }
-
-    @Override
-    public ObjectId writeTree(Ref targetRef) throws Exception {
-        return writeTree(targetRef, new NullProgressListener());
-    }
-
-    /**
-     * REVISIT: the Ref should be resolved by the caller and we should get the actual
-     * {@link RevTree} here instead
-     */
-    @Override
-    public ObjectId writeTree(final Ref targetRef, final ProgressListener progress)
-            throws Exception {
-
-        checkNotNull(targetRef, "null targetRef");
-        checkNotNull(progress, "null ProgressListener. Use new NullProgressListener() instead");
-
-        // resolve target ref to the target root tree id
-        final Ref targetRootTreeRef;
-
-        final ObjectId targetObjectId = repository.command(RevParse.class)
-                .setRefSpec(targetRef.getName()).call();
-
-        if (targetObjectId.isNull()) {
-            targetRootTreeRef = new Ref(targetRef.getName(), ObjectId.NULL, TYPE.TREE);
-        } else {
-            final TYPE type = repository.command(ResolveObjectType.class)
-                    .setObjectId(targetObjectId).call();
-
-            if (TYPE.TREE.equals(type)) {
-                targetRootTreeRef = targetRef;
-            } else if (TYPE.COMMIT.equals(type)) {
-                RevCommit commit = repository.getCommit(targetObjectId);
-                ObjectId targetTeeId = commit.getTreeId();
-                targetRootTreeRef = new Ref(targetRef.getName(), targetTeeId, TYPE.TREE);
-            } else {
-                throw new IllegalStateException("target ref is not a commit nor a tree");
-            }
-        }
-
-        final ObjectId toTreeId = targetRootTreeRef.getObjectId();
-        return writeTree(toTreeId, progress);
-    }
-
-    @Override
-    public ObjectId writeTree(final ObjectId targetTreeId, final ProgressListener progress)
-            throws Exception {
-
-        final ObjectDatabase repositoryDatabase = repository.getObjectDatabase();
-
-        final RevTree oldRoot = repository.getTree(targetTreeId);
-
-        String pathFilter = null;
-        final int numChanges = indexDatabase.countStaged(pathFilter);
-        if (numChanges == 0) {
-            return targetTreeId;
-        }
-        if (progress.isCanceled()) {
-            return null;
-        }
-
-        Iterator<NodeRef> staged = indexDatabase.getStaged(pathFilter);
-
-        Map<String, MutableTree> changedTrees = Maps.newHashMap();
-
-        NodeRef ref;
-        int i = 0;
-        while (staged.hasNext()) {
-            progress.progress((float) (++i * 100) / numChanges);
-            if (progress.isCanceled()) {
-                return null;
-            }
-
-            ref = staged.next();
-
-            final String parentPath = NodeRef.parentPath(ref.getPath());
-
-            MutableTree parentTree = parentPath == null ? null : changedTrees.get(parentPath);
-
-            if (parentPath != null && parentTree == null) {
-                parentTree = repositoryDatabase.getOrCreateSubTree(oldRoot, parentPath);
-                changedTrees.put(parentPath, parentTree);
-            }
-
-            final boolean isDelete = ObjectId.NULL.equals(ref.getObjectId());
-            if (isDelete) {
-                parentTree.remove(ref.getPath());
-            } else {
-                deepMove(ref, indexDatabase, repositoryDatabase);
-                parentTree.put(ref);
-            }
-        }
-
-        if (progress.isCanceled()) {
-            return null;
-        }
-        // now write back all changed trees
-        ObjectId newTargetRootId = targetTreeId;
-        for (Map.Entry<String, MutableTree> e : changedTrees.entrySet()) {
-            String treePath = e.getKey();
-            MutableTree tree = e.getValue();
-            RevTree newRoot = repository.getTree(newTargetRootId);
-            newTargetRootId = repositoryDatabase.writeBack(newRoot.mutable(), tree, treePath);
-        }
-
-        indexDatabase.removeStaged(pathFilter);
-
-        progress.complete();
-
-        return newTargetRootId;
-    }
-
-    /**
-     * Transfers the object referenced by {@code objectRef} from the given object database to the
-     * given objectInserter as well as any child object if {@code objectRef} references a tree.
-     * 
-     * @param newObject
-     * @param repositoryObjectInserter
-     * @throws Exception
-     */
-    private void deepMove(final NodeRef objectRef, final ObjectDatabase from,
-            final ObjectDatabase to) throws Exception {
-
-        final ObjectId objectId = objectRef.getObjectId();
-        final ObjectId metadataId = objectRef.getMetadataId();
-        moveObject(objectId, from, to, true);
-        if (!metadataId.isNull()) {
-            moveObject(metadataId, from, to, false);
-        }
-
-        if (TYPE.TREE.equals(objectRef.getType())) {
-            RevTree tree = from.get(objectId, repository.newRevTreeReader(from));
-            tree.accept(new TreeVisitor() {
-
-                @Override
-                public boolean visitEntry(final NodeRef ref) {
-                    try {
-                        deepMove(ref, from, to);
-                    } catch (Exception e) {
-                        Throwables.propagate(e);
-                    }
-                    return true;
-                }
-
-                @Override
-                public boolean visitSubTree(int bucket, ObjectId treeId) {
-                    return true;
-                }
-            });
-        }
-    }
-
-    private void moveObject(final ObjectId objectId, final ObjectDatabase from,
-            final ObjectDatabase to, boolean failIfNotPresent) throws IOException {
-
-        if (to.exists(objectId)) {
-            from.delete(objectId);
-            return;
-        }
-
-        final InputStream raw = from.getRaw(objectId);
-        final ObjectId insertedId;
-        try {
-            insertedId = to.put(new RawObjectWriter(raw));
-            from.delete(objectId);
-
-            checkState(objectId.equals(insertedId));
-            checkState(to.exists(insertedId));
-
-        } finally {
-            raw.close();
-        }
     }
 
     private void checkValidPath(final String path) {

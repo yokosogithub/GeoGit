@@ -20,6 +20,9 @@ import com.google.inject.Inject;
 /**
  * Resolves the reference given by a ref spec to the {@link RevObject} it finally points to,
  * dereferencing symbolic refs as necessary.
+ * 
+ * @see RevParse
+ * @see ResolveObjectType
  */
 public class RevObjectParse extends AbstractGeoGitOp<RevObject> {
 
@@ -52,6 +55,10 @@ public class RevObjectParse extends AbstractGeoGitOp<RevObject> {
      */
     @Override
     public RevObject call() throws IllegalArgumentException {
+        return call(RevObject.class);
+    }
+
+    public <T extends RevObject> T call(Class<T> clazz) throws IllegalArgumentException {
         ObjectId resolvedObjectId;
         if (objectId == null) {
             resolvedObjectId = command(RevParse.class).setRefSpec(refSpec).call();
@@ -86,6 +93,6 @@ public class RevObjectParse extends AbstractGeoGitOp<RevObject> {
         }
 
         RevObject revObject = indexDb.get(resolvedObjectId, reader);
-        return revObject;
+        return clazz.cast(revObject);
     }
 }

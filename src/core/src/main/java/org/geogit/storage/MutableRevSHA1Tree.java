@@ -22,6 +22,7 @@ import org.geogit.api.RevTree;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
+import com.google.common.collect.Sets;
 
 class MutableRevSHA1Tree extends RevSHA1Tree implements MutableTree {
 
@@ -41,9 +42,23 @@ class MutableRevSHA1Tree extends RevSHA1Tree implements MutableTree {
         super(db, childOrder);
     }
 
+    /**
+     * @return {@code this}
+     */
     @Override
     public MutableTree mutable() {
         return this;
+    }
+
+    /**
+     * Overrides {@link RevSHA1Tree#isNormalized()} to account for the mutable state of this tree
+     */
+    @Override
+    public boolean isNormalized() {
+        boolean normalized = (myEntries.size() <= NORMALIZED_SIZE_LIMIT && mySubTrees.isEmpty())
+                || (myEntries.isEmpty() && mySubTrees.isEmpty())
+                || (myEntries.isEmpty() && !mySubTrees.isEmpty());
+        return normalized;
     }
 
     /**
@@ -163,12 +178,11 @@ class MutableRevSHA1Tree extends RevSHA1Tree implements MutableTree {
 
             // ignore this subtrees for computing the size later as by that time their size has been
             // already added
-            Set<NodeRef> ignoreForSizeComputation = new HashSet<NodeRef>();
+            Set<ObjectId> ignoreForSizeComputation = Sets.newHashSet();
 
             // for each bucket retrieve/create the bucket's subtree and set its entries
             Iterator<Map.Entry<Integer, Set<String>>> it = entriesByBucket.entrySet().iterator();
 
-            NodeRef subtreeRef;
             ObjectId subtreeId;
             MutableTree subtree;
 
@@ -178,11 +192,10 @@ class MutableRevSHA1Tree extends RevSHA1Tree implements MutableTree {
                 Integer bucket = e.getKey();
                 Set<String> keys = e.getValue();
                 it.remove();
-                subtreeRef = mySubTrees.get(bucket);
-                if (subtreeRef == null) {
+                subtreeId = mySubTrees.get(bucket);
+                if (subtreeId == null) {
                     subtree = new MutableRevSHA1Tree(db, childOrder);
                 } else {
-                    subtreeId = subtreeRef.getObjectId();
                     ObjectReader<RevTree> reader = serialFactory
                             .createRevTreeReader(db, childOrder);
                     subtree = db.get(subtreeId, reader).mutable();
@@ -199,9 +212,8 @@ class MutableRevSHA1Tree extends RevSHA1Tree implements MutableTree {
                 size = size.add(subtree.size());
                 subtreeId = this.db.put(serialFactory.createRevTreeWriter(subtree));
                 // subtreeId = this.db.put(new BxmlRevTreeWriter(subtree));
-                subtreeRef = new NodeRef("", subtreeId, ObjectId.NULL, TYPE.TREE);
-                ignoreForSizeComputation.add(subtreeRef);
-                mySubTrees.put(bucket, subtreeRef);
+                ignoreForSizeComputation.add(subtreeId);
+                mySubTrees.put(bucket, subtreeId);
             }
 
             // compute the overall size
@@ -215,15 +227,13 @@ class MutableRevSHA1Tree extends RevSHA1Tree implements MutableTree {
     }
 
     private BigInteger computeSize(final BigInteger initialSize,
-            final Set<NodeRef> ignoreForSizeComputation) throws IOException {
+            final Set<ObjectId> ignoreForSizeComputation) throws IOException {
         final int childOrder = this.depth + 1;
-        ObjectId subtreeId;
         BigInteger size = initialSize;
-        for (NodeRef ref : mySubTrees.values()) {
-            if (ignoreForSizeComputation.contains(ref)) {
+        for (ObjectId subtreeId : mySubTrees.values()) {
+            if (ignoreForSizeComputation.contains(subtreeId)) {
                 continue;
             }
-            subtreeId = ref.getObjectId();
             ObjectSerialisingFactory serialFactory = db.getSerialFactory();
             ObjectReader<RevTree> reader = serialFactory.createRevTreeReader(db, childOrder);
             RevTree cached = db.get(subtreeId, reader);

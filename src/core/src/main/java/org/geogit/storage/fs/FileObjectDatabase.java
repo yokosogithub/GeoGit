@@ -50,11 +50,6 @@ public class FileObjectDatabase extends AbstractObjectDatabase implements Object
         this.databaseName = databaseName;
     }
 
-    @Override
-    public void close() {
-        // TODO Auto-generated method stub
-    }
-
     protected File getDataRoot() {
         return dataRoot;
     }
@@ -64,7 +59,15 @@ public class FileObjectDatabase extends AbstractObjectDatabase implements Object
     }
 
     @Override
-    public void create() {
+    public boolean isOpen() {
+        return dataRoot != null;
+    }
+
+    @Override
+    public void open() {
+        if (isOpen()) {
+            return;
+        }
         final URL repoUrl = new ResolveGeogitDir(platform).call();
         if (repoUrl == null) {
             throw new IllegalStateException("Can't find geogit repository home");
@@ -89,6 +92,12 @@ public class FileObjectDatabase extends AbstractObjectDatabase implements Object
                     + dataRoot.getAbsolutePath());
         }
         dataRootPath = dataRoot.getAbsolutePath();
+    }
+
+    @Override
+    public void close() {
+        dataRoot = null;
+        dataRootPath = null;
     }
 
     @Override
@@ -190,5 +199,4 @@ public class FileObjectDatabase extends AbstractObjectDatabase implements Object
         throw new UnsupportedOperationException(
                 "This method should not be called, we override lookUp(String) directly");
     }
-
 }

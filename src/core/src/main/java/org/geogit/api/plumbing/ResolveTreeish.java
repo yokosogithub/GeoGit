@@ -15,7 +15,8 @@ import org.geogit.api.RevObject.TYPE;
 import org.geogit.api.RevTag;
 
 /**
- * Resolves the given "ref spec" to a tree id in the repository's object database
+ * Resolves the given "ref spec" to a tree id in the repository's object database, or
+ * {@link ObjectId#NULL} if not found.
  */
 public class ResolveTreeish extends AbstractGeoGitOp<ObjectId> {
 

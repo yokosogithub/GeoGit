@@ -25,9 +25,11 @@ import org.geogit.di.GeogitModule;
 import org.geogit.repository.Repository;
 import org.geogit.repository.StagingArea;
 import org.geogit.storage.ObjectDatabase;
+import org.geogit.storage.RefDatabase;
 import org.geogit.storage.StagingDatabase;
 import org.geogit.storage.fs.FileObjectDatabase;
 import org.geogit.storage.hessian.GeoToolsRevFeature;
+import org.geogit.storage.memory.HeapRefDatabase;
 import org.geogit.storage.memory.HeapStagingDatabase;
 import org.geotools.data.DataUtilities;
 import org.geotools.feature.NameImpl;
@@ -122,9 +124,11 @@ public abstract class RepositoryTestCase {
         @Override
         protected void configure() {
             bind(Platform.class).to(TestPlatform.class).in(Scopes.SINGLETON);
-            // bind(ObjectDatabase.class).to(HeapObjectDatabse.class).in(Scopes.SINGLETON);
+
             bind(ObjectDatabase.class).to(FileObjectDatabase.class).in(Scopes.SINGLETON);
-            // bind(RefDatabase.class).to(HeapRefDatabase.class).in(Scopes.SINGLETON);
+            //bind(ObjectDatabase.class).to(HeapObjectDatabse.class).in(Scopes.SINGLETON);
+            
+            //bind(RefDatabase.class).to(HeapRefDatabase.class).in(Scopes.SINGLETON);
             bind(StagingDatabase.class).to(HeapStagingDatabase.class).in(Scopes.SINGLETON);
         }
     }

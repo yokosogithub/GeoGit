@@ -17,8 +17,8 @@ import org.geogit.api.NodeRef;
 import org.geogit.api.ObjectId;
 import org.geogit.api.RevObject;
 import org.geogit.api.RevObject.TYPE;
-import org.geogit.api.plumbing.diff.DiffEntry.ChangeType;
 import org.geogit.api.RevTree;
+import org.geogit.api.plumbing.diff.DiffEntry.ChangeType;
 import org.geogit.repository.DepthSearch;
 import org.geogit.storage.ObjectDatabase;
 import org.geogit.storage.ObjectSerialisingFactory;
@@ -99,13 +99,13 @@ public class DiffTreeWalk {
                     oldTree = objectDb.get(oldObjectRef.get().getObjectId(),
                             serialFactory.createRevTreeReader(objectDb));
                 } else {
-                    oldTree = objectDb.newTree();
+                    oldTree = RevTree.NULL;
                 }
                 if (newObjectRef.isPresent()) {
                     newTree = objectDb.get(newObjectRef.get().getObjectId(),
                             serialFactory.createRevTreeReader(objectDb));
                 } else {
-                    newTree = objectDb.newTree();
+                    newTree = RevTree.NULL;
                 }
                 break;
             default:

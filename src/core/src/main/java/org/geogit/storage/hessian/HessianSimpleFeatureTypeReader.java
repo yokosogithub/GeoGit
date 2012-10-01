@@ -94,6 +94,7 @@ public class HessianSimpleFeatureTypeReader implements ObjectReader<RevFeatureTy
      * 
      * @param hout
      */
+    @SuppressWarnings("rawtypes")
     private AttributeDescriptor readDescriptor(Hessian2Input hin) throws IOException,
             FactoryException {
         int typeValue = hin.readInt();
@@ -106,7 +107,6 @@ public class HessianSimpleFeatureTypeReader implements ObjectReader<RevFeatureTy
         int minOccurs = hin.readInt();
         String tNamespace = hin.readString();
         String tName = hin.readString();
-        String geomTypeName = null;
         String crsText = null;
         boolean crsCode = false;
         if (GtEntityType.GEOMETRY.equals(type)) {

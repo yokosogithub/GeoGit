@@ -11,7 +11,6 @@ import java.util.TreeMap;
 
 import org.geogit.api.NodeRef;
 import org.geogit.api.ObjectId;
-import org.geogit.api.RevObject.TYPE;
 import org.geogit.api.RevTree;
 import org.geogit.storage.ObjectDatabase;
 import org.geogit.storage.ObjectReader;
@@ -20,6 +19,7 @@ import org.geogit.storage.RevSHA1Tree;
 import com.caucho.hessian.io.Hessian2Input;
 import com.caucho.hessian.io.HessianProtocolException;
 import com.google.common.base.Throwables;
+import com.google.common.collect.Maps;
 
 class HessianRevTreeReader extends HessianRevReader implements ObjectReader<RevTree> {
 
@@ -48,8 +48,8 @@ class HessianRevTreeReader extends HessianRevReader implements ObjectReader<RevT
 
             BigInteger size = new BigInteger(hin.readBytes());
 
-            TreeMap<String, NodeRef> references = new TreeMap<String, NodeRef>();
-            TreeMap<Integer, NodeRef> subtrees = new TreeMap<Integer, NodeRef>();
+            TreeMap<String, NodeRef> references = Maps.newTreeMap();
+            TreeMap<Integer, ObjectId> subtrees = Maps.newTreeMap();
 
             while (true) {
                 Node type = null;
@@ -77,10 +77,10 @@ class HessianRevTreeReader extends HessianRevReader implements ObjectReader<RevT
         }
     }
 
-    private void parseAndSetSubTree(Hessian2Input hin, TreeMap<Integer, NodeRef> subtrees)
+    private void parseAndSetSubTree(Hessian2Input hin, TreeMap<Integer, ObjectId> subtrees)
             throws IOException {
         int bucket = hin.readInt();
         ObjectId id = readObjectId(hin);
-        subtrees.put(Integer.valueOf(bucket), new NodeRef("", id, ObjectId.NULL, TYPE.TREE));
+        subtrees.put(Integer.valueOf(bucket), id);
     }
 }

@@ -257,16 +257,4 @@ public class VersioningTransactionState implements Transaction.State {
         }
     }
 
-    public void stageRename(final Name typeName, final String oldFid, final String newFid) {
-
-        StagingArea index = geoGit.getRepository().getIndex();
-
-        final String localPart = typeName.getLocalPart();
-
-        String from = NodeRef.appendChild(localPart, oldFid);
-        String to = NodeRef.appendChild(localPart, newFid);
-
-        index.renamed(from, to);
-    }
-
 }

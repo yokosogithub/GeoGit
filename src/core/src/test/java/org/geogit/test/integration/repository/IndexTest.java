@@ -17,9 +17,12 @@ import org.geogit.api.ObjectId;
 import org.geogit.api.Ref;
 import org.geogit.api.RevCommit;
 import org.geogit.api.RevTree;
+import org.geogit.api.plumbing.CreateTree;
+import org.geogit.api.plumbing.FindTreeChild;
+import org.geogit.api.plumbing.RevObjectParse;
 import org.geogit.api.plumbing.UpdateRef;
+import org.geogit.api.plumbing.WriteTree;
 import org.geogit.repository.StagingArea;
-import org.geogit.storage.ObjectDatabase;
 import org.geogit.storage.ObjectInserter;
 import org.geogit.storage.StagingDatabase;
 import org.geogit.test.integration.PrintVisitor;
@@ -30,6 +33,8 @@ import org.opengis.feature.Feature;
 import org.opengis.feature.simple.SimpleFeature;
 
 import com.google.common.base.Optional;
+import com.google.common.base.Supplier;
+import com.google.common.base.Suppliers;
 
 public class IndexTest extends RepositoryTestCase {
 
@@ -75,7 +80,8 @@ public class IndexTest extends RepositoryTestCase {
 
         // this new root tree must exist on the repo db, but is not set as the current head. In
         // fact, it is headless, as there's no commit pointing to it. CommitOp does that.
-        ObjectId newRootTreeId = index.writeTree(repo.getHead().get());
+        ObjectId newRootTreeId = geogit.command(WriteTree.class)
+                .setOldRoot(tree(repo.getHead().get().getObjectId())).call();
 
         assertNotNull(newRootTreeId);
         assertFalse(repo.getRootTreeId().equals(newRootTreeId));
@@ -85,13 +91,13 @@ public class IndexTest extends RepositoryTestCase {
         RevTree tree = repo.getTree(newRootTreeId);
         assertEquals(2, tree.size().intValue());
 
-        ObjectDatabase odb = repo.getObjectDatabase();
+        String path = appendChild(pointsName, points1.getIdentifier().getID());
+        assertTrue(repo.command(FindTreeChild.class).setParent(tree).setChildPath(path).call()
+                .isPresent());
 
-        assertNotNull(odb.getTreeChild(tree,
-                appendChild(pointsName, points1.getIdentifier().getID())));
-
-        assertNotNull(odb
-                .getTreeChild(tree, appendChild(linesName, lines1.getIdentifier().getID())));
+        path = appendChild(linesName, lines1.getIdentifier().getID());
+        assertTrue(repo.command(FindTreeChild.class).setParent(tree).setChildPath(path).call()
+                .isPresent());
 
         // simulate a commit so the repo head points to this new tree
         ObjectInserter objectInserter = repo.newObjectInserter();
@@ -105,21 +111,35 @@ public class IndexTest extends RepositoryTestCase {
         index.deleted(appendChild(linesName, lines1.getIdentifier().getID()));
         index.stage(new NullProgressListener(), null);
 
-        newRootTreeId = index.writeTree(newRootTreeId, new NullProgressListener());
+        newRootTreeId = geogit.command(WriteTree.class).setOldRoot(tree(newRootTreeId)).call();
+        // newRootTreeId = index.writeTree(newRootTreeId, new NullProgressListener());
 
         assertNotNull(newRootTreeId);
         assertFalse(repo.getRootTreeId().equals(newRootTreeId));
 
         tree = repo.getTree(newRootTreeId);
-        assertNotNull(odb.getTreeChild(tree,
-                appendChild(pointsName, points1.getIdentifier().getID())));
 
-        Optional<NodeRef> treeChild = odb.getTreeChild(tree,
-                appendChild(linesName, lines1.getIdentifier().getID()));
+        path = appendChild(pointsName, points1.getIdentifier().getID());
+        assertTrue(repo.command(FindTreeChild.class).setParent(tree).setChildPath(path).call()
+                .isPresent());
 
-        // assertNull(String.valueOf(treeChild), treeChild);
-        assertNotNull(treeChild);
-        assertFalse(treeChild.isPresent());
+        path = appendChild(linesName, lines1.getIdentifier().getID());
+        assertFalse(repo.command(FindTreeChild.class).setParent(tree).setChildPath(path).call()
+                .isPresent());
+    }
+
+    private Supplier<RevTree> tree(final ObjectId treeId) {
+        Supplier<RevTree> delegate = new Supplier<RevTree>() {
+
+            @Override
+            public RevTree get() {
+                if (treeId.isNull()) {
+                    return geogit.command(CreateTree.class).setIndex(true).call();
+                }
+                return (RevTree) geogit.command(RevObjectParse.class).setObjectId(treeId).call();
+            }
+        };
+        return Suppliers.memoize(delegate);
     }
 
     @Test
@@ -190,14 +210,13 @@ public class IndexTest extends RepositoryTestCase {
     @Test
     public void testWriteTree2() throws Exception {
 
-        final ObjectDatabase repoDb = repo.getObjectDatabase();
-
         // insert and commit feature1_1
         final ObjectId oId1_1 = insertAndAdd(points1);
 
         final ObjectId newRepoTreeId1;
         {
-            newRepoTreeId1 = index.writeTree(repo.getHead().get());
+            newRepoTreeId1 = geogit.command(WriteTree.class)
+                    .setOldRoot(tree(repo.getHead().get().getObjectId())).call();
 
             // assertEquals(index.getDatabase().getStagedRootRef().getObjectId(), newRepoTreeId1);
 
@@ -206,7 +225,7 @@ public class IndexTest extends RepositoryTestCase {
             System.err.println("++++++++++ new repo tree 1: " + newRepoTreeId1 + " ++++++++++++");
             newRepoTree.accept(new PrintVisitor(repo, new PrintWriter(System.err)));
             // check feature1_1 is there
-            assertEquals(oId1_1, repoDb.getTreeChild(newRepoTree, appendChild(pointsName, idP1))
+            assertEquals(oId1_1, repo.getTreeChild(newRepoTree, appendChild(pointsName, idP1))
                     .get().getObjectId());
 
         }
@@ -223,13 +242,15 @@ public class IndexTest extends RepositoryTestCase {
             ObjectId commitId = objectInserter.insert(getRepository().newCommitWriter(commit));
             Optional<Ref> newHead = geogit.command(UpdateRef.class).setName("refs/heads/master")
                     .setNewValue(commitId).call();
+            assertTrue(newHead.isPresent());
         }
 
         final ObjectId newRepoTreeId2;
         {
             // write comparing the the previously generated tree instead of the repository HEAD, as
             // it was not updated (no commit op was performed)
-            newRepoTreeId2 = index.writeTree(newRepoTreeId1, new NullProgressListener());
+            newRepoTreeId2 = geogit.command(WriteTree.class).setOldRoot(tree(newRepoTreeId1))
+                    .call();
 
             // assertEquals(index.getDatabase().getStagedRootRef().getObjectId(), newRepoTreeId2);
 
@@ -240,21 +261,17 @@ public class IndexTest extends RepositoryTestCase {
 
             // check feature1_2, feature1_2 and feature2_1
             Optional<NodeRef> treeChild;
-            assertNotNull(treeChild = repoDb.getTreeChild(newRepoTree,
-                    appendChild(pointsName, idP2)));
+            assertNotNull(treeChild = repo.getTreeChild(newRepoTree, appendChild(pointsName, idP2)));
             assertEquals(oId1_2, treeChild.get().getObjectId());
 
-            assertNotNull(treeChild = repoDb.getTreeChild(newRepoTree,
-                    appendChild(pointsName, idP3)));
+            assertNotNull(treeChild = repo.getTreeChild(newRepoTree, appendChild(pointsName, idP3)));
             assertEquals(oId1_3, treeChild.get().getObjectId());
 
-            assertNotNull(treeChild = repoDb
-                    .getTreeChild(newRepoTree, appendChild(linesName, idL1)));
+            assertNotNull(treeChild = repo.getTreeChild(newRepoTree, appendChild(linesName, idL1)));
             assertEquals(oId2_1, treeChild.get().getObjectId());
 
             // as well as feature1_1 from the previous commit
-            assertNotNull(treeChild = repoDb.getTreeChild(newRepoTree,
-                    appendChild(pointsName, idP1)));
+            assertNotNull(treeChild = repo.getTreeChild(newRepoTree, appendChild(pointsName, idP1)));
             assertEquals(oId1_1, treeChild.get().getObjectId());
         }
 
@@ -265,6 +282,7 @@ public class IndexTest extends RepositoryTestCase {
             ObjectId commitId = objectInserter.insert(getRepository().newCommitWriter(commit));
             Optional<Ref> newHead = geogit.command(UpdateRef.class).setName("refs/heads/master")
                     .setNewValue(commitId).call();
+            assertTrue(newHead.isPresent());
         }
 
         // delete feature1_1, feature1_3, and feature2_1
@@ -278,7 +296,8 @@ public class IndexTest extends RepositoryTestCase {
         {
             // write comparing the the previously generated tree instead of the repository HEAD, as
             // it was not updated (no commit op was performed)
-            newRepoTreeId3 = index.writeTree(newRepoTreeId2, new NullProgressListener());
+            newRepoTreeId3 = geogit.command(WriteTree.class).setOldRoot(tree(newRepoTreeId2))
+                    .call();
 
             // assertEquals(index.getDatabase().getStagedRootRef().getObjectId(), newRepoTreeId3);
 
@@ -288,14 +307,14 @@ public class IndexTest extends RepositoryTestCase {
             newRepoTree.accept(new PrintVisitor(repo, new PrintWriter(System.err)));
 
             // and check only feature1_2 and feature2_2 remain
-            assertFalse(repoDb.getTreeChild(newRepoTree, appendChild(pointsName, idP1)).isPresent());
-            assertFalse(repoDb.getTreeChild(newRepoTree, appendChild(pointsName, idP3)).isPresent());
-            assertFalse(repoDb.getTreeChild(newRepoTree, appendChild(linesName, idL3)).isPresent());
+            assertFalse(repo.getTreeChild(newRepoTree, appendChild(pointsName, idP1)).isPresent());
+            assertFalse(repo.getTreeChild(newRepoTree, appendChild(pointsName, idP3)).isPresent());
+            assertFalse(repo.getTreeChild(newRepoTree, appendChild(linesName, idL3)).isPresent());
 
-            assertEquals(oId1_2, repoDb.getTreeChild(newRepoTree, appendChild(pointsName, idP2))
+            assertEquals(oId1_2, repo.getTreeChild(newRepoTree, appendChild(pointsName, idP2))
                     .get().getObjectId());
-            assertEquals(oId2_2, repoDb.getTreeChild(newRepoTree, appendChild(linesName, idL2))
-                    .get().getObjectId());
+            assertEquals(oId2_2, repo.getTreeChild(newRepoTree, appendChild(linesName, idL2)).get()
+                    .getObjectId());
         }
     }
 

@@ -16,7 +16,6 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 import org.geogit.api.CommandLocator;
-import org.geogit.api.MutableTree;
 import org.geogit.api.NodeRef;
 import org.geogit.api.ObjectId;
 import org.geogit.api.Ref;
@@ -124,14 +123,19 @@ public class JEStagingDatabase implements ObjectDatabase, StagingDatabase {
     }
 
     @Override
-    public void create() {
-        if (stagingDb != null) {
+    public boolean isOpen() {
+        return stagingDb != null;
+    }
+
+    @Override
+    public void open() {
+        if (isOpen()) {
             return;
         }
         envProvider.setRelativePath("index");
         Environment environment = envProvider.get();
         stagingDb = new JEObjectDatabase(environment);
-        stagingDb.create();
+        stagingDb.open();
         {
             DatabaseConfig unstagedDbConfig = new DatabaseConfig();
             unstagedDbConfig.setAllowCreate(true);
@@ -371,36 +375,8 @@ public class JEStagingDatabase implements ObjectDatabase, StagingDatabase {
     }
 
     @Override
-    public ObjectId writeBack(MutableTree root, RevTree tree, String pathToTree) {
-        return stagingDb.writeBack(root, tree, pathToTree);
-    }
-
-    @Override
     public ObjectInserter newObjectInserter() {
         return stagingDb.newObjectInserter();
-    }
-
-    @Override
-    public MutableTree getOrCreateSubTree(RevTree root, String childPath) {
-        Optional<NodeRef> treeChild = repositoryDb.getTreeChild(root, childPath);
-        if (treeChild.isPresent()) {
-            return repositoryDb.getOrCreateSubTree(root, childPath);
-        }
-        return stagingDb.getOrCreateSubTree(root, childPath);
-    }
-
-    @Override
-    public MutableTree newTree() {
-        return stagingDb.newTree();
-    }
-
-    @Override
-    public Optional<NodeRef> getTreeChild(RevTree root, String path) {
-        Optional<NodeRef> treeChild = stagingDb.getTreeChild(root, path);
-        if (treeChild.isPresent()) {
-            return treeChild;
-        }
-        return repositoryDb.getTreeChild(root, path);
     }
 
     @Override
@@ -516,4 +492,5 @@ public class JEStagingDatabase implements ObjectDatabase, StagingDatabase {
             }
         }
     }
+
 }

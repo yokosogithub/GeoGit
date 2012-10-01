@@ -10,8 +10,6 @@ import java.util.List;
 import javax.annotation.Nullable;
 
 import org.geogit.api.NodeRef;
-import org.geogit.api.ObjectId;
-import org.geogit.api.Ref;
 import org.geogit.api.RevFeature;
 import org.geogit.api.RevTree;
 import org.geogit.storage.StagingDatabase;
@@ -71,29 +69,5 @@ public interface StagingArea {
      *        inserted to the database too
      */
     public abstract void reset();
-
-    public ObjectId writeTree(final Ref targetRef) throws Exception;
-
-    /**
-     * Updates the repository target HEAD tree given by {@code targetRootRef} with the staged
-     * changes in this index.
-     * 
-     * @param targetRef reference to either a commit or a tree that's the root of the head to be
-     *        updated
-     * @param objectInserter
-     * @return the id of the top level tree created on the repository after applying the staged
-     *         changes, or the same tree id if no changes were written.
-     * @throws Exception
-     */
-    public ObjectId writeTree(final Ref targetRef, final ProgressListener progress)
-            throws Exception;
-
-    /**
-     * @param targetTreeId
-     * @param progress
-     * @return
-     * @throws Exception
-     */
-    public ObjectId writeTree(ObjectId targetTreeId, ProgressListener progress) throws Exception;
 
 }

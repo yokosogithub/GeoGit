@@ -87,9 +87,8 @@ public class GeoGIT {
             } catch (Exception e) {
                 throw Throwables.propagate(e);
             }
-            return repository;
         }
-        throw new IllegalStateException();
+        return repository;
     }
 
     /**

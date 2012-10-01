@@ -120,37 +120,6 @@ public class NodeRef implements Comparable<NodeRef> {
     }
 
     /**
-     * @deprecated remove once fully moved from {@code List<String>} paths to plain {@code String}
-     *             with only full paths
-     */
-    @Deprecated
-    public static String toPath(List<String> path, @Nullable String... extraPath) {
-        StringBuilder sb = new StringBuilder();
-        {
-            int size = path.size();
-            for (int i = 0; i < size; i++) {
-                sb.append(path.get(i));
-                if (i < size - 1) {
-                    sb.append(PATH_SEPARATOR);
-                }
-            }
-        }
-        {
-            if (extraPath != null && extraPath.length > 0) {
-                sb.append(PATH_SEPARATOR);
-                for (int i = 0; i < extraPath.length; i++) {
-                    checkArgument(extraPath[i] != null, "extra path cannot have null elements");
-                    sb.append(extraPath[i]);
-                    if (i < extraPath.length - 1) {
-                        sb.append(PATH_SEPARATOR);
-                    }
-                }
-            }
-        }
-        return sb.toString();
-    }
-
-    /**
      * Returns the parent path of {@code fullPath}.
      * <p>
      * Given {@code fullPath == "path/to/node"} returns {@code "path/to"}, given {@code "node"}
@@ -187,6 +156,18 @@ public class NodeRef implements Comparable<NodeRef> {
     }
 
     /**
+     * @return true of {@code nodePath} is a child of {@code parentPath} at any depth level,
+     *         {@code false} if unrelated, sibling, or same path
+     */
+    public static boolean isChild(String parentPath, String nodePath) {
+        checkNotNull(parentPath, "parentPath");
+        checkNotNull(nodePath, "nodePath");
+        return nodePath.length() > parentPath.length()
+                && (parentPath.isEmpty() || nodePath.charAt(parentPath.length()) == PATH_SEPARATOR)
+                && nodePath.startsWith(parentPath);
+    }
+
+    /**
      * Given {@code path == "path/to/node"} returns {@code ["path", "path/to", "path/to/node"]}
      * 
      * @return a sorted list of all paths that lead to the given path
@@ -219,4 +200,5 @@ public class NodeRef implements Comparable<NodeRef> {
         return new StringBuilder(parentTreePath).append(PATH_SEPARATOR).append(childName)
                 .toString();
     }
+
 }

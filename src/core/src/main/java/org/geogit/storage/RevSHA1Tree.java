@@ -11,6 +11,7 @@ import java.security.NoSuchAlgorithmException;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.TreeMap;
 
 import org.geogit.api.AbstractRevObject;
@@ -58,7 +59,7 @@ public class RevSHA1Tree extends AbstractRevObject implements RevTree {
      */
     protected final TreeMap<String, NodeRef> myEntries;
 
-    protected final TreeMap<Integer, NodeRef> mySubTrees;
+    protected final TreeMap<Integer, ObjectId> mySubTrees;
 
     public RevSHA1Tree(final ObjectDatabase db) {
         this(null, db, 0);
@@ -69,12 +70,12 @@ public class RevSHA1Tree extends AbstractRevObject implements RevTree {
     }
 
     public RevSHA1Tree(final ObjectId id, final ObjectDatabase db, final int order) {
-        this(id, db, order, new TreeMap<String, NodeRef>(), new TreeMap<Integer, NodeRef>(),
+        this(id, db, order, new TreeMap<String, NodeRef>(), new TreeMap<Integer, ObjectId>(),
                 BigInteger.ZERO);
     }
 
     public RevSHA1Tree(final ObjectId id, final ObjectDatabase db, final int order,
-            TreeMap<String, NodeRef> references, TreeMap<Integer, NodeRef> subTrees,
+            TreeMap<String, NodeRef> references, TreeMap<Integer, ObjectId> subTrees,
             final BigInteger size) {
         super(id, TYPE.TREE);
         this.db = db;
@@ -107,16 +108,14 @@ public class RevSHA1Tree extends AbstractRevObject implements RevTree {
         if (mySubTrees.size() > 0) {
             final int childDepth = this.depth + 1;
             Integer bucket;
-            NodeRef subtreeRef;
             ObjectId subtreeId;
             RevSHA1Tree subtree;
 
             ObjectSerialisingFactory serialFactory = db.getSerialFactory();
 
-            for (Map.Entry<Integer, NodeRef> e : mySubTrees.entrySet()) {
+            for (Entry<Integer, ObjectId> e : mySubTrees.entrySet()) {
                 bucket = e.getKey();
-                subtreeRef = e.getValue();
-                subtreeId = subtreeRef.getObjectId();
+                subtreeId = e.getValue();
                 if (visitor.visitSubTree(bucket, subtreeId)) {
                     subtree = (RevSHA1Tree) db.get(subtreeId,
                             serialFactory.createRevTreeReader(db, childDepth));
@@ -170,11 +169,10 @@ public class RevSHA1Tree extends AbstractRevObject implements RevTree {
         }
         if (value == null) {
             final Integer bucket = computeBucket(key);
-            final NodeRef subTreeRef = mySubTrees.get(bucket);
-            if (subTreeRef == null) {
+            final ObjectId subtreeId = mySubTrees.get(bucket);
+            if (subtreeId == null) {
                 value = null;
             } else {
-                ObjectId subtreeId = subTreeRef.getObjectId();
                 ObjectSerialisingFactory serialFactory = db.getSerialFactory();
                 RevTree subTree = db.get(subtreeId,
                         serialFactory.createRevTreeReader(db, this.depth + 1));
@@ -200,12 +198,13 @@ public class RevSHA1Tree extends AbstractRevObject implements RevTree {
         }
     }
 
+    /**
+     * Returns {@code true}, since this is an immutable tree. {@link MutableRevSHA1Tree} overrides
+     * this method to check against its mutable state.
+     */
     @Override
     public boolean isNormalized() {
-        boolean normalized = (myEntries.size() <= NORMALIZED_SIZE_LIMIT && mySubTrees.isEmpty())
-                || (myEntries.isEmpty() && mySubTrees.isEmpty())
-                || (myEntries.isEmpty() && !mySubTrees.isEmpty());
-        return normalized;
+        return true;
     }
 
     @Override
@@ -236,9 +235,8 @@ public class RevSHA1Tree extends AbstractRevObject implements RevTree {
         if (!mySubTrees.isEmpty()) {
             Iterator<NodeRef>[] iterators = new Iterator[mySubTrees.size()];
             int i = 0;
-            for (NodeRef subtreeRef : mySubTrees.values()) {
-                iterators[i] = new LazySubtreeIterator(this.db, subtreeRef.getObjectId(),
-                        this.depth + 1, filter);
+            for (ObjectId subtreeId : mySubTrees.values()) {
+                iterators[i] = new LazySubtreeIterator(this.db, subtreeId, this.depth + 1, filter);
                 i++;
             }
             return Iterators.concat(iterators);
