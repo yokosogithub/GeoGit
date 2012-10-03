@@ -69,6 +69,8 @@ public class CommitOp extends AbstractGeoGitOp<RevCommit> {
 
     private Platform platform;
 
+    private boolean allowEmpty;
+
     @Inject
     public CommitOp(final Repository repository, final Platform platform) {
         this.repository = repository;
@@ -156,7 +158,9 @@ public class CommitOp extends AbstractGeoGitOp<RevCommit> {
 
         final ObjectId currentRootTreeId = repository.getRootTreeId();
         if (currentRootTreeId.equals(newTreeId)) {
-            throw new NothingToCommitException("Nothing to commit after " + currHeadCommitId);
+            if (!allowEmpty) {
+                throw new NothingToCommitException("Nothing to commit after " + currHeadCommitId);
+            }
         }
 
         final ObjectId commitId;
@@ -224,5 +228,17 @@ public class CommitOp extends AbstractGeoGitOp<RevCommit> {
 
     private String getAuthor() {
         return author;
+    }
+
+    /**
+     * @param allowEmptyCommit whether to allow a commit that represents no changes over its parent
+     */
+    public CommitOp setAllowEmpty(boolean allowEmptyCommit) {
+        this.allowEmpty = allowEmptyCommit;
+        return this;
+    }
+
+    public boolean isAllowEmpty() {
+        return allowEmpty;
     }
 }

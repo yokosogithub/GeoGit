@@ -79,7 +79,7 @@ public class Index implements StagingArea {
     }
 
     @Override
-    public boolean deleted(final String path) throws Exception {
+    public boolean deleted(final String path) {
         checkValidPath(path);
 
         NodeRef oldEntry = null;
@@ -117,7 +117,7 @@ public class Index implements StagingArea {
     }
 
     @Override
-    public NodeRef insert(final String parentTreePath, final RevFeature feature) throws Exception {
+    public NodeRef insert(final String parentTreePath, final RevFeature feature) {
         checkValidPath(parentTreePath);
         checkNotNull(feature);
 
@@ -182,8 +182,7 @@ public class Index implements StagingArea {
     }
 
     @Override
-    public void stage(final ProgressListener progress, final @Nullable String pathFilter)
-            throws Exception {
+    public void stage(final ProgressListener progress, final @Nullable String pathFilter) {
         final int numChanges = indexDatabase.countUnstaged(pathFilter);
         int i = 0;
         progress.started();

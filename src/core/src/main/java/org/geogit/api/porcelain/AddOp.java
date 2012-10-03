@@ -36,7 +36,7 @@ public class AddOp extends AbstractGeoGitOp<StagingArea> {
     /**
      * @see java.util.concurrent.Callable#call()
      */
-    public StagingArea call() throws Exception {
+    public StagingArea call() {
         // this is add all, TODO: implement partial adds
         String path = null;
         if (patterns.size() == 1) {

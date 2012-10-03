@@ -24,9 +24,8 @@ public interface StagingArea {
      * 
      * @param featurePath
      * @return
-     * @throws Exception
      */
-    public abstract boolean deleted(final String featurePath) throws Exception;
+    public abstract boolean deleted(final String featurePath);
 
     /**
      * Inserts the given objects into the index database and marks them as unstaged.
@@ -41,7 +40,7 @@ public interface StagingArea {
             final ProgressListener progress, final @Nullable Integer size,
             @Nullable final List<NodeRef> target) throws Exception;
 
-    public NodeRef insert(final String parentTreePath, final RevFeature feature) throws Exception;
+    public NodeRef insert(final String parentTreePath, final RevFeature feature);
 
     /**
      * Stages the object addressed by {@code pathFilter}, or all unstaged objects if
@@ -56,10 +55,8 @@ public interface StagingArea {
      * 
      * @param pathFilter
      * @param progressListener
-     * @throws Exception
      */
-    public abstract void stage(ProgressListener progress, final @Nullable String pathFilter)
-            throws Exception;
+    public abstract void stage(ProgressListener progress, final @Nullable String pathFilter);
 
     /**
      * Discards any staged change.
