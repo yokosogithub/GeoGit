@@ -104,7 +104,7 @@ public class EnvironmentBuilder implements Provider<Environment> {
             envCfg.setSharedCache(true);
             envCfg.setTransactional(true);
             envCfg.setCachePercent(50);// Use up to 50% of the heap size for the shared db cache
-            // envCfg.setConfigParam("je.log.fileMax", String.valueOf(100 * 1024 * 1024));
+            envCfg.setConfigParam("je.log.fileMax", String.valueOf(256 * 1024 * 1024));
             // check <http://www.oracle.com/technetwork/database/berkeleydb/je-faq-096044.html#35>
             envCfg.setConfigParam("je.evictor.lruOnly", "false");
             envCfg.setConfigParam("je.evictor.nodesPerScan", "100");
