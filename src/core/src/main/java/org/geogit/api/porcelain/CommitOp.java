@@ -134,7 +134,9 @@ public class CommitOp extends AbstractGeoGitOp<RevCommit> {
         // TODO: check repository is in a state that allows committing
 
         getProgressListener().started();
+        float writeTreeProgress = 99f;
         if (all) {
+            writeTreeProgress = 50f;
             command(AddOp.class).addPattern(".").setUpdateOnly(true)
                     .setProgressListener(subProgress(49f)).call();
         }
@@ -150,7 +152,7 @@ public class CommitOp extends AbstractGeoGitOp<RevCommit> {
 
         // final ObjectId newTreeId = index.writeTree(currHead.get(), subProgress(49f));
         final ObjectId newTreeId = command(WriteTree.class).setOldRoot(resolveOldRoot())
-                .setProgressListener(subProgress(49f)).call();
+                .setProgressListener(subProgress(writeTreeProgress)).call();
 
         if (getProgressListener().isCanceled()) {
             return null;
@@ -195,6 +197,7 @@ public class CommitOp extends AbstractGeoGitOp<RevCommit> {
         ObjectId treeId = repository.getCommit(branchHead.get().getObjectId()).getTreeId();
         Preconditions.checkState(newTreeId.equals(treeId));
 
+        getProgressListener().progress(100f);
         getProgressListener().complete();
 
         return commit;
