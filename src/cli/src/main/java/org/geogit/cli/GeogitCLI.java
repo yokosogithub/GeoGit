@@ -8,6 +8,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.io.IOException;
 import java.text.NumberFormat;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -194,7 +195,7 @@ public class GeogitCLI {
         System.exit(exitCode);
     }
 
-    public Collection<Key<?>> findCommands() {
+    private Collection<Key<?>> findCommands() {
         Map<Key<?>, Binding<?>> commands = injector.getBindings();
         return commands.keySet();
     }
@@ -204,7 +205,7 @@ public class GeogitCLI {
         jc.setProgramName("geogit");
         for (Key<?> cmd : findCommands()) {
             Object obj = injector.getInstance(cmd);
-            if (obj instanceof CLICommand) {
+            if (obj instanceof CLICommand || obj instanceof CLICommandExtension) {
                 jc.addCommand(obj);
             }
         }
@@ -215,13 +216,33 @@ public class GeogitCLI {
      * @param args
      */
     public void execute(String... args) throws Exception {
-        JCommander jc = newCommandParser();
-        jc.parse(args);
-        final String parsedCommand = jc.getParsedCommand();
+        JCommander mainCommander = newCommandParser();
+        if (null == args || args.length == 0) {
+            mainCommander.usage();
+            return;
+        }
+        {
+            final String commandName = args[0];
+            JCommander commandParser = mainCommander.getCommands().get(commandName);
+            if (commandParser == null) {
+                mainCommander.parse(args);// make it fail with a reasonable error message
+                return;
+            }
+
+            Object object = commandParser.getObjects().get(0);
+            if (object instanceof CLICommandExtension) {
+                args = Arrays.asList(args).subList(1, args.length)
+                        .toArray(new String[args.length - 1]);
+                mainCommander = ((CLICommandExtension) object).getCommandParser();
+            }
+        }
+
+        mainCommander.parse(args);
+        final String parsedCommand = mainCommander.getParsedCommand();
         if (null == parsedCommand) {
-            jc.usage();
+            mainCommander.usage();
         } else {
-            JCommander jCommander = jc.getCommands().get(parsedCommand);
+            JCommander jCommander = mainCommander.getCommands().get(parsedCommand);
             List<Object> objects = jCommander.getObjects();
             CLICommand cliCommand = (CLICommand) objects.get(0);
             cliCommand.run(this);
