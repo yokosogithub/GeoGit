@@ -23,6 +23,15 @@ import org.opengis.feature.type.FeatureType;
 
 public class HessianFactory implements ObjectSerialisingFactory {
 
+    /** HESSIAN_OBJECT_TYPE_READER */
+    private static final HessianObjectTypeReader OBJECT_TYPE_READER = new HessianObjectTypeReader();
+
+    /** HESSIAN_SIMPLE_FEATURE_TYPE_READER */
+    private static final HessianSimpleFeatureTypeReader SIMPLE_FEATURE_TYPE_READER = new HessianSimpleFeatureTypeReader();
+
+    /** HESSIAN_COMMIT_READER */
+    private static final HessianCommitReader COMMIT_READER = new HessianCommitReader();
+
     @Override
     public BlobPrinter createBlobPrinter() {
         return new HessianBlobPrinter();
@@ -30,7 +39,7 @@ public class HessianFactory implements ObjectSerialisingFactory {
 
     @Override
     public ObjectReader<RevCommit> createCommitReader() {
-        return new HessianCommitReader();
+        return COMMIT_READER;
     }
 
     @Override
@@ -40,7 +49,7 @@ public class HessianFactory implements ObjectSerialisingFactory {
 
     @Override
     public ObjectReader<RevFeature> createFeatureReader(RevFeatureType featureType, String featureId) {
-        FeatureType simpleType = (FeatureType) featureType;
+        FeatureType simpleType = (FeatureType) featureType.type();
         ObjectReader<RevFeature> reader = new HessianFeatureReader(simpleType, featureId, null);
         return reader;
     }
@@ -84,11 +93,11 @@ public class HessianFactory implements ObjectSerialisingFactory {
      */
     @Override
     public ObjectReader<RevFeatureType> createFeatureTypeReader() {
-        return new HessianSimpleFeatureTypeReader();
+        return SIMPLE_FEATURE_TYPE_READER;
     }
 
     public ObjectReader<RevObject.TYPE> createObjectTypeReader() {
-        return new HessianObjectTypeReader();
+        return OBJECT_TYPE_READER;
     }
 
 }
