@@ -12,10 +12,12 @@ import jline.Terminal;
 import jline.console.ConsoleReader;
 
 import org.fusesource.jansi.Ansi;
+import org.fusesource.jansi.Ansi.Attribute;
 import org.fusesource.jansi.Ansi.Color;
 import org.geogit.api.GeoGIT;
 import org.geogit.api.Platform;
 import org.geogit.api.RevCommit;
+import org.geogit.api.RevPerson;
 import org.geogit.cli.AbstractCommand;
 import org.geogit.cli.AnsiDecorator;
 import org.geogit.cli.CLICommand;
@@ -93,7 +95,8 @@ public class Log extends AbstractCommand implements CLICommand {
 
                     ansi.a("Commit:  ").fg(Color.YELLOW).a(commit.getId().toString()).reset()
                             .newline();
-                    ansi.a("Author:  ").fg(Color.GREEN).a(commit.getAuthor()).reset().newline();
+                    ansi.a("Author:  ").fg(Color.GREEN).a(formatPerson(commit.getAuthor())).reset()
+                            .newline();
                     ansi.a("Date:    (").fg(Color.RED)
                             .a(estimateSince(platform, commit.getTimestamp())).reset().a(") ")
                             .a(new Date(commit.getTimestamp())).newline();
@@ -112,6 +115,14 @@ public class Log extends AbstractCommand implements CLICommand {
         } catch (Exception e) {
             throw Throwables.propagate(e);
         }
+    }
+
+    private String formatPerson(RevPerson person) {
+        StringBuilder sb = new StringBuilder(person.getName());
+        if (person.getEmail() != null) {
+            sb.append(" <").append(person.getEmail()).append(">");
+        }
+        return sb.toString();
     }
 
     private String estimateSince(Platform platform, long timestamp) {

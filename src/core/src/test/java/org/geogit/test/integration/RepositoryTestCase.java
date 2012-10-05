@@ -22,6 +22,8 @@ import org.geogit.api.Platform;
 import org.geogit.api.RevCommit;
 import org.geogit.api.RevFeature;
 import org.geogit.api.TestPlatform;
+import org.geogit.api.porcelain.ConfigOp;
+import org.geogit.api.porcelain.ConfigOp.ConfigAction;
 import org.geogit.di.GeogitModule;
 import org.geogit.repository.Repository;
 import org.geogit.repository.StagingArea;
@@ -124,6 +126,10 @@ public abstract class RepositoryTestCase {
 
         geogit = new GeoGIT(injector, envHome);
         repo = geogit.getOrCreateRepository();
+        repo.command(ConfigOp.class).setAction(ConfigAction.CONFIG_SET).setName("user.name")
+                .setValue("Gabriel Roldan").call();
+        repo.command(ConfigOp.class).setAction(ConfigAction.CONFIG_SET).setName("user.email")
+                .setValue("groldan@opengeo.org").call();
 
         pointsType = DataUtilities.createType(pointsNs, pointsName, pointsTypeSpec);
 

@@ -7,6 +7,9 @@ package org.geogit.api.porcelain;
 import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
+
+import javax.annotation.Nullable;
 
 import org.geogit.api.AbstractGeoGitOp;
 import org.geogit.api.ObjectId;
@@ -23,6 +26,7 @@ import org.geogit.api.plumbing.RevParse;
 import org.geogit.api.plumbing.UpdateRef;
 import org.geogit.api.plumbing.UpdateSymRef;
 import org.geogit.api.plumbing.WriteTree;
+import org.geogit.api.porcelain.ConfigOp.ConfigAction;
 import org.geogit.repository.CommitBuilder;
 import org.geogit.repository.Repository;
 import org.geogit.storage.ObjectInserter;
@@ -48,9 +52,9 @@ import com.google.inject.Inject;
  */
 public class CommitOp extends AbstractGeoGitOp<RevCommit> {
 
-    private String author;
+    private String authorName;
 
-    private String committer;
+    private String authorEmail;
 
     private String message;
 
@@ -77,13 +81,13 @@ public class CommitOp extends AbstractGeoGitOp<RevCommit> {
         this.platform = platform;
     }
 
-    public CommitOp setAuthor(final String author) {
-        this.author = author;
-        return this;
-    }
-
-    public CommitOp setCommitter(final String committer) {
-        this.committer = committer;
+    /**
+     * If set, overrides the author's name from the configuration
+     */
+    public CommitOp setAuthor(final String authorName, @Nullable final String authorEmail) {
+        Preconditions.checkNotNull(authorName);
+        this.authorName = authorName;
+        this.authorEmail = authorEmail;
         return this;
     }
 
@@ -93,7 +97,7 @@ public class CommitOp extends AbstractGeoGitOp<RevCommit> {
      * @param message description of the changes to record the commit with.
      * @return {@code this}, to ease command chaining
      */
-    public CommitOp setMessage(final String message) {
+    public CommitOp setMessage(@Nullable final String message) {
         this.message = message;
         return this;
     }
@@ -105,7 +109,7 @@ public class CommitOp extends AbstractGeoGitOp<RevCommit> {
      * @param timestamp commit timestamp, in milliseconds, as in {@link Date#getTime()}
      * @return {@code this}, to ease command chaining
      */
-    public CommitOp setTimestamp(final Long timestamp) {
+    public CommitOp setTimestamp(@Nullable final Long timestamp) {
         this.timeStamp = timestamp;
         return this;
     }
@@ -131,7 +135,10 @@ public class CommitOp extends AbstractGeoGitOp<RevCommit> {
      *         staging tree and the repository HEAD tree.
      */
     public RevCommit call() throws Exception {
-        // TODO: check repository is in a state that allows committing
+        final String committer = resolveCommitter();
+        final String committerEmail = resolveCommitterEmail();
+        final String author = resolveAuthor();
+        final String authorEmail = resolveAuthorEmail();
 
         getProgressListener().started();
         float writeTreeProgress = 99f;
@@ -168,8 +175,10 @@ public class CommitOp extends AbstractGeoGitOp<RevCommit> {
         final ObjectId commitId;
         {
             CommitBuilder cb = new CommitBuilder();
-            cb.setAuthor(getAuthor());
-            cb.setCommitter(getCommitter());
+            cb.setAuthor(author);
+            cb.setAuthorEmail(authorEmail);
+            cb.setCommitter(committer);
+            cb.setCommitterEmail(committerEmail);
             cb.setMessage(getMessage());
             cb.setParentIds(parents);
             cb.setTreeId(newTreeId);
@@ -225,12 +234,35 @@ public class CommitOp extends AbstractGeoGitOp<RevCommit> {
         return message;
     }
 
-    private String getCommitter() {
-        return committer;
+    private String resolveCommitter() {
+        String key = "user.name";
+        Optional<Map<String, String>> result = command(ConfigOp.class)
+                .setAction(ConfigAction.CONFIG_GET).setName(key).call();
+        if (result.isPresent()) {
+            return result.get().get(key);
+        }
+        throw new IllegalStateException(key + " not found in config. "
+                + "Use geogit config [--global] user.name <your name> to configure it.");
     }
 
-    private String getAuthor() {
-        return author;
+    private String resolveCommitterEmail() {
+        String key = "user.email";
+        Optional<Map<String, String>> result = command(ConfigOp.class)
+                .setAction(ConfigAction.CONFIG_GET).setName(key).call();
+        if (result.isPresent()) {
+            return result.get().get(key);
+        }
+        throw new IllegalStateException(key + " not found in config. "
+                + "Use geogit config [--global] user.name <your name> to configure it.");
+    }
+
+    private String resolveAuthor() {
+        return authorName == null ? resolveCommitter() : authorName;
+    }
+
+    private String resolveAuthorEmail() {
+        // only use provided authorEmail if authorName was provided
+        return authorName == null ? resolveCommitterEmail() : authorEmail;
     }
 
     /**
