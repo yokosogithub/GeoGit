@@ -21,8 +21,12 @@ public class HessianCommitSerialisationTest extends TestCase {
         CommitBuilder builder = new CommitBuilder();
         String author = "groldan";
         builder.setAuthor(author);
+        String authorEmail = "groldan@opengeo.org";
+        builder.setAuthorEmail(authorEmail);
         String committer = "mleslie";
         builder.setCommitter(committer);
+        String committerEmail = "mleslie@opengeo.org";
+        builder.setCommitterEmail(committerEmail);
         builder.setTimestamp(currentTime);
 
         ObjectId commitId = ObjectId.forString("Fake commit");
@@ -51,8 +55,10 @@ public class HessianCommitSerialisationTest extends TestCase {
 
         assertEquals(treeId, cmtOut.getTreeId());
         assertEquals(parents, cmtOut.getParentIds());
-        assertEquals(committer, cmtOut.getCommitter());
-        assertEquals(author, cmtOut.getAuthor());
+        assertEquals(author, cmtOut.getAuthor().getName());
+        assertEquals(authorEmail, cmtOut.getAuthor().getEmail());
+        assertEquals(committer, cmtOut.getCommitter().getName());
+        assertEquals(committerEmail, cmtOut.getCommitter().getEmail());
         assertEquals(currentTime, cmtOut.getTimestamp());
 
     }

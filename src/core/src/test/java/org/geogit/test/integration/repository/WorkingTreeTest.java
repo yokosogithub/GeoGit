@@ -6,6 +6,7 @@
 package org.geogit.test.integration.repository;
 
 import org.geogit.test.integration.RepositoryTestCase;
+import org.junit.Test;
 
 /**
  *
@@ -17,14 +18,14 @@ public class WorkingTreeTest extends RepositoryTestCase {
         //
     }
 
-    // @Test
-    // public void testInitFeatureType() throws Exception {
-    // WorkingTree workingTree = getRepository().getWorkingTree();
-    // RevFeatureType revFeatureType = new GeoToolsRevFeatureType(pointsType);
-    // NodeRef treeRef = workingTree.init(revFeatureType);
-    // assertNotNull(treeRef);
-    //
-    // RevObject metadataObject = geogit.command(RevObjectParse.class)
-    // .setObjectId(treeRef.getMetadataId()).call();
-    // }
+    @Test
+    public void testInitFeatureType() throws Exception {
+        // WorkingTree workingTree = getRepository().getWorkingTree();
+        // RevFeatureType revFeatureType = new GeoToolsRevFeatureType(pointsType);
+        // NodeRef treeRef = workingTree.init(revFeatureType);
+        // assertNotNull(treeRef);
+        //
+        // RevObject metadataObject = geogit.command(RevObjectParse.class)
+        // .setObjectId(treeRef.getMetadataId()).call();
+    }
 }

@@ -40,7 +40,9 @@ public class CommitBuilderTest extends TestCase {
     public void testBuildFull() throws Exception {
         CommitBuilder b = new CommitBuilder();
         b.setAuthor("groldan");
+        b.setAuthorEmail("groldan@opengeo.org");
         b.setCommitter("jdeolive");
+        b.setCommitterEmail("jdeolive@opengeo.org");
         b.setMessage("cool this works");
         b.setTimestamp(1000);
 
@@ -59,8 +61,10 @@ public class CommitBuilderTest extends TestCase {
         assertEquals(commitId, build.getId());
         assertEquals(treeId, build.getTreeId());
         assertEquals(parentIds, build.getParentIds());
-        assertEquals("groldan", build.getAuthor());
-        assertEquals("jdeolive", build.getCommitter());
+        assertEquals("groldan", build.getAuthor().getName());
+        assertEquals("groldan@opengeo.org", build.getAuthor().getEmail());
+        assertEquals("jdeolive", build.getCommitter().getName());
+        assertEquals("jdeolive@opengeo.org", build.getCommitter().getEmail());
         assertEquals("cool this works", build.getMessage());
         assertEquals(1000L, build.getTimestamp());
     }

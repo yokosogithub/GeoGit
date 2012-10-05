@@ -10,8 +10,8 @@
   </parent>
 
   <groupId>org.geogit</groupId>
-  <artifactId>geogit-cli</artifactId>
-  <packaging>jar</packaging>
+	<artifactId>geogit-cli</artifactId>
+    <packaging>jar</packaging>
   <name>GeoGit Command Line Interface</name>
   
   <dependencies>

@@ -106,9 +106,7 @@ public class GeogitCLI {
      *         directory.
      */
     private GeoGIT loadRepository() {
-        Injector inj = Guice.createInjector(Modules.override(new GeogitModule()).with(
-                new JEStorageModule()));
-        GeoGIT geogit = new GeoGIT(inj, platform.pwd());
+        GeoGIT geogit = newGeoGIT();
 
         if (null != geogit.command(ResolveGeogitDir.class).call()) {
             geogit.getRepository();
@@ -116,6 +114,12 @@ public class GeogitCLI {
         }
 
         return null;
+    }
+
+    public GeoGIT newGeoGIT() {
+        Injector inj = Guice.createInjector(Modules.override(new GeogitModule()).with(
+                new JEStorageModule()));
+        return new GeoGIT(inj, platform.pwd());
     }
 
     public ConsoleReader getConsole() {

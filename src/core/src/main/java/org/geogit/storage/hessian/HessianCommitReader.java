@@ -38,7 +38,9 @@ class HessianCommitReader extends HessianRevReader implements ObjectReader<RevCo
             }
             builder.setParentIds(pIds);
             builder.setAuthor(hin.readString());
+            builder.setAuthorEmail(hin.readString());
             builder.setCommitter(hin.readString());
+            builder.setCommitterEmail(hin.readString());
             builder.setMessage(hin.readString());
             builder.setTimestamp(hin.readLong());
 

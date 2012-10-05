@@ -8,6 +8,7 @@ import java.util.List;
 
 import org.geogit.api.ObjectId;
 import org.geogit.api.RevCommit;
+import org.geogit.api.RevPerson;
 
 import com.google.common.base.Preconditions;
 
@@ -19,7 +20,11 @@ public final class CommitBuilder {
 
     private String author;
 
+    private String authorEmail;
+
     private String committer;
+
+    private String committerEmail;
 
     private String message;
 
@@ -64,10 +69,24 @@ public final class CommitBuilder {
     }
 
     /**
+     * @return the author's email
+     */
+    public String getAuthorEmail() {
+        return authorEmail;
+    }
+
+    /**
      * @param author the author to set
      */
     public void setAuthor(String author) {
         this.author = author;
+    }
+
+    /**
+     * @param author the author's email to set
+     */
+    public void setAuthorEmail(String email) {
+        this.authorEmail = email;
     }
 
     /**
@@ -78,10 +97,24 @@ public final class CommitBuilder {
     }
 
     /**
+     * @return the committer's email
+     */
+    public String getCommitterEmail() {
+        return committerEmail;
+    }
+
+    /**
      * @param committer the committer to set
      */
     public void setCommitter(String committer) {
         this.committer = committer;
+    }
+
+    /**
+     * @param committer the committer's email to set
+     */
+    public void setCommitterEmail(String email) {
+        this.committerEmail = email;
     }
 
     /**
@@ -119,14 +152,7 @@ public final class CommitBuilder {
         if (treeId == null) {
             throw new IllegalStateException("No tree id set");
         }
-        RevCommit commit = new RevCommit(id);
-        commit.setAuthor(author);
-        commit.setCommitter(committer);
-        commit.setMessage(message);
-        commit.setParentIds(parentIds);
-        commit.setTimestamp(getTimestamp());
-        commit.setTreeId(treeId);
-
-        return commit;
+        return new RevCommit(id, treeId, parentIds, new RevPerson(author, authorEmail),
+                new RevPerson(committer, committerEmail), message, getTimestamp());
     }
 }

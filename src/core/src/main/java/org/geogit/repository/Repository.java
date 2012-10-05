@@ -24,6 +24,7 @@ import org.geogit.api.plumbing.ResolveTreeish;
 import org.geogit.api.plumbing.RevObjectParse;
 import org.geogit.api.plumbing.RevParse;
 import org.geogit.storage.BlobPrinter;
+import org.geogit.storage.ConfigDatabase;
 import org.geogit.storage.ObjectDatabase;
 import org.geogit.storage.ObjectInserter;
 import org.geogit.storage.ObjectReader;
@@ -62,6 +63,9 @@ public class Repository {
     private Injector injector;
 
     @Inject
+    private ConfigDatabase configDatabase;
+
+    @Inject
     private RefDatabase refDatabase;
 
     @Inject
@@ -74,6 +78,10 @@ public class Repository {
         refDatabase.create();
         objectDatabase.open();
         index.getDatabase().open();
+    }
+
+    public ConfigDatabase getConfigDatabase() {
+        return configDatabase;
     }
 
     public RefDatabase getRefDatabase() {

@@ -101,8 +101,7 @@ public class IndexTest extends RepositoryTestCase {
 
         // simulate a commit so the repo head points to this new tree
         ObjectInserter objectInserter = repo.newObjectInserter();
-        RevCommit commit = new RevCommit(ObjectId.NULL);
-        commit.setTreeId(newRootTreeId);
+        RevCommit commit = new RevCommit(ObjectId.NULL, newRootTreeId, null, null, null, null, 0);
         ObjectId commitId = objectInserter.insert(getRepository().newCommitWriter(commit));
         Optional<Ref> newHead = geogit.command(UpdateRef.class).setName("refs/heads/master")
                 .setNewValue(commitId).call();
@@ -237,8 +236,8 @@ public class IndexTest extends RepositoryTestCase {
 
         {// simulate a commit so the repo head points to this new tree
             ObjectInserter objectInserter = repo.newObjectInserter();
-            RevCommit commit = new RevCommit(ObjectId.NULL);
-            commit.setTreeId(newRepoTreeId1);
+            RevCommit commit = new RevCommit(ObjectId.NULL, newRepoTreeId1, null, null, null, null,
+                    0);
             ObjectId commitId = objectInserter.insert(getRepository().newCommitWriter(commit));
             Optional<Ref> newHead = geogit.command(UpdateRef.class).setName("refs/heads/master")
                     .setNewValue(commitId).call();
@@ -277,8 +276,8 @@ public class IndexTest extends RepositoryTestCase {
 
         {// simulate a commit so the repo head points to this new tree
             ObjectInserter objectInserter = repo.newObjectInserter();
-            RevCommit commit = new RevCommit(ObjectId.NULL);
-            commit.setTreeId(newRepoTreeId2);
+            RevCommit commit = new RevCommit(ObjectId.NULL, newRepoTreeId2, null, null, null, null,
+                    0);
             ObjectId commitId = objectInserter.insert(getRepository().newCommitWriter(commit));
             Optional<Ref> newHead = geogit.command(UpdateRef.class).setName("refs/heads/master")
                     .setNewValue(commitId).call();

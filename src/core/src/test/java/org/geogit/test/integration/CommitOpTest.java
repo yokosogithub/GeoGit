@@ -27,13 +27,18 @@ public class CommitOpTest extends RepositoryTestCase {
 
     @Override
     protected void setUpInternal() throws Exception {
+        // These values should be used during a commit to set author/committer
+        // TODO: author/committer roles need to be defined better, but for
+        // now they are the same thing.
+        repo.getConfigDatabase().put("user.name", "groldan");
+        repo.getConfigDatabase().put("user.email", "groldan@opengeo.org");
     }
 
     @Test
     public void testInitialCommit() throws Exception {
         try {
             geogit.add().addPattern(".").call();
-            geogit.commit().setAuthor("groldan").call();
+            geogit.commit().call();
             fail("expected NothingToCommitException");
         } catch (NothingToCommitException e) {
             assertTrue(true);
@@ -48,13 +53,14 @@ public class CommitOpTest extends RepositoryTestCase {
         // BLOBS.print(repo.getRawObject(insertedId2), System.err);
 
         geogit.add().addPattern(".").call();
-        RevCommit commit = geogit.commit().setAuthor("groldan").call();
+        RevCommit commit = geogit.commit().call();
         assertNotNull(commit);
         assertNotNull(commit.getParentIds());
         assertEquals(1, commit.getParentIds().size());
         assertTrue(commit.getParentIds().get(0).isNull());
         assertNotNull(commit.getId());
-        assertEquals("groldan", commit.getAuthor());
+        assertEquals("groldan", commit.getAuthor().getName());
+        assertEquals("groldan@opengeo.org", commit.getAuthor().getEmail());
 
         ObjectId treeId = commit.getTreeId();
         // BLOBS.print(repo.getRawObject(treeId), System.err);
@@ -85,9 +91,9 @@ public class CommitOpTest extends RepositoryTestCase {
         final ObjectId oId1_1 = insertAndAdd(points1);
 
         geogit.add().call();
-        final RevCommit commit1 = geogit.commit().setAuthor("groldan").call();
+        final RevCommit commit1 = geogit.commit().call();
         {
-            assertCommit(commit1, ObjectId.NULL, "groldan", null);
+            assertCommit(commit1, ObjectId.NULL, null, null);
             // check points1 is there
             assertEquals(oId1_1, repo.getRootTreeChild(appendChild(pointsName, idP1)).get()
                     .getObjectId());
@@ -100,7 +106,7 @@ public class CommitOpTest extends RepositoryTestCase {
         final ObjectId oId2_1 = insertAndAdd(lines1);
 
         geogit.add().call();
-        final RevCommit commit2 = geogit.commit().setAuthor("groldan").setMessage("msg").call();
+        final RevCommit commit2 = geogit.commit().setMessage("msg").call();
         {
             assertCommit(commit2, commit1.getId(), "groldan", "msg");
 
@@ -131,7 +137,7 @@ public class CommitOpTest extends RepositoryTestCase {
         final ObjectId oId2_2 = insertAndAdd(lines2);
 
         geogit.add().call();
-        final RevCommit commit3 = geogit.commit().setAuthor("groldan").call();
+        final RevCommit commit3 = geogit.commit().call();
         {
             assertCommit(commit3, commit2.getId(), "groldan", null);
 
@@ -160,7 +166,7 @@ public class CommitOpTest extends RepositoryTestCase {
         assertNotNull(commit.getTreeId());
         assertNotNull(commit.getId());
         if (author != null) {
-            assertEquals(author, commit.getAuthor());
+            assertEquals(author, commit.getAuthor().getName());
         }
         if (message != null) {
             assertEquals(message, commit.getMessage());

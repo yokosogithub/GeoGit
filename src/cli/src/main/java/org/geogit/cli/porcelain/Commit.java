@@ -46,10 +46,9 @@ public class Commit extends AbstractCommand implements CLICommand {
 
         Ansi ansi = AnsiDecorator.newAnsi(console.getTerminal().isAnsiSupported());
 
-        // TODO: get committer from config db
         RevCommit commit;
         try {
-            commit = geogit.commit().setAuthor("Gabriel Roldan").setMessage(message)
+            commit = geogit.commit().setMessage(message)
                     .setProgressListener(cli.getProgressListener()).call();
         } catch (NothingToCommitException noChanges) {
             console.println(ansi.fg(Color.RED).a(noChanges.getMessage()).reset().toString());

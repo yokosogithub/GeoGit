@@ -21,9 +21,9 @@ public class RevCommit extends AbstractRevObject {
 
     private List<ObjectId> parentIds;
 
-    private String author;
+    private RevPerson author;
 
-    private String committer;
+    private RevPerson committer;
 
     private String message;
 
@@ -33,18 +33,23 @@ public class RevCommit extends AbstractRevObject {
         super(id, TYPE.COMMIT);
     }
 
+    public RevCommit(final ObjectId id, ObjectId treeId, List<ObjectId> parentIds,
+            RevPerson author, RevPerson committer, String message, long timestamp) {
+        this(id);
+
+        this.treeId = treeId;
+        this.parentIds = parentIds;
+        this.author = author;
+        this.committer = committer;
+        this.message = message;
+        this.timestamp = timestamp;
+    }
+
     /**
      * @return the id of the tree this commit points to
      */
     public ObjectId getTreeId() {
         return treeId;
-    }
-
-    /**
-     * @param treeId the treeId to set
-     */
-    public void setTreeId(ObjectId treeId) {
-        this.treeId = treeId;
     }
 
     /**
@@ -56,38 +61,17 @@ public class RevCommit extends AbstractRevObject {
     }
 
     /**
-     * @param parentIds the parentIds to set
-     */
-    public void setParentIds(List<ObjectId> parentIds) {
-        this.parentIds = parentIds;
-    }
-
-    /**
      * @return the author
      */
-    public String getAuthor() {
+    public RevPerson getAuthor() {
         return author;
-    }
-
-    /**
-     * @param author the author to set
-     */
-    public void setAuthor(String author) {
-        this.author = author;
     }
 
     /**
      * @return the committer
      */
-    public String getCommitter() {
+    public RevPerson getCommitter() {
         return committer;
-    }
-
-    /**
-     * @param committer the committer to set
-     */
-    public void setCommitter(String committer) {
-        this.committer = committer;
     }
 
     /**
@@ -98,26 +82,12 @@ public class RevCommit extends AbstractRevObject {
     }
 
     /**
-     * @param message the message to set
-     */
-    public void setMessage(String message) {
-        this.message = message;
-    }
-
-    /**
      * Returns the commit time stamp in UTC milliseconds
      * 
      * @return the commit's time stamp
      */
     public long getTimestamp() {
         return timestamp;
-    }
-
-    /**
-     * @param timestamp the timestamp to set
-     */
-    public void setTimestamp(long timestamp) {
-        this.timestamp = timestamp;
     }
 
     @Override

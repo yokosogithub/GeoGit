@@ -10,6 +10,7 @@ import java.util.List;
 
 import org.geogit.api.ObjectId;
 import org.geogit.api.RevCommit;
+import org.geogit.api.RevPerson;
 import org.geogit.storage.ObjectWriter;
 
 import com.caucho.hessian.io.Hessian2Output;
@@ -36,8 +37,9 @@ class HessianCommitWriter extends HessianRevWriter implements ObjectWriter<RevCo
         for (ObjectId pId : parentIds) {
             writeObjectId(hout, pId);
         }
-        hout.writeString(commit.getAuthor());
-        hout.writeString(commit.getCommitter());
+
+        writePerson(hout, commit.getAuthor());
+        writePerson(hout, commit.getCommitter());
         hout.writeString(commit.getMessage());
         long timestamp = commit.getTimestamp();
         if (timestamp <= 0) {
@@ -48,6 +50,16 @@ class HessianCommitWriter extends HessianRevWriter implements ObjectWriter<RevCo
         hout.completeMessage();
 
         hout.flush();
+    }
+
+    private void writePerson(Hessian2Output hout, RevPerson person) throws IOException {
+        if (person != null) {
+            hout.writeString(person.getName());
+            hout.writeString(person.getEmail());
+        } else {
+            hout.writeNull();
+            hout.writeNull();
+        }
     }
 
 }

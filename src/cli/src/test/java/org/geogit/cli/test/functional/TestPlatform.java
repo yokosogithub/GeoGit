@@ -21,4 +21,9 @@ public class TestPlatform extends DefaultPlatform implements Platform {
     public File pwd() {
         return workingDirectory;
     }
+
+    @Override
+    public File getUserHome() {
+        return new File(workingDirectory, "userhome");
+    }
 }

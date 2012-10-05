@@ -40,7 +40,9 @@ public class CommitReaderWriterTest extends RepositoryTestCase {
     protected void setUpInternal() throws Exception {
         CommitBuilder b = new CommitBuilder();
         b.setAuthor("groldan");
+        b.setAuthorEmail("groldan@opengeo.org");
         b.setCommitter("jdeolive");
+        b.setCommitterEmail("jdeolive@opengeo.org");
         b.setMessage("cool this works");
         b.setTimestamp(1000);
 
@@ -75,8 +77,10 @@ public class CommitReaderWriterTest extends RepositoryTestCase {
         XMLAssert.assertXpathEvaluatesTo("0000000000000000000000000000000000000000",
                 "/commit/tree/objectid", dom);
         XMLAssert.assertXpathExists("/commit/parentids", dom);
-        XMLAssert.assertXpathExists("/commit/author/null", dom);
-        XMLAssert.assertXpathExists("/commit/committer/null", dom);
+        XMLAssert.assertXpathExists("/commit/author/name/null", dom);
+        XMLAssert.assertXpathExists("/commit/author/email/null", dom);
+        XMLAssert.assertXpathExists("/commit/committer/name/null", dom);
+        XMLAssert.assertXpathExists("/commit/committer/email/null", dom);
         XMLAssert.assertXpathExists("/commit/message/null", dom);
         XMLAssert.assertXpathExists("/commit/timestamp", dom);
     }
@@ -98,8 +102,11 @@ public class CommitReaderWriterTest extends RepositoryTestCase {
                 .assertXpathEvaluatesTo(parentId1.toString(), "/commit/parentids/objectid[1]", dom);
         XMLAssert
                 .assertXpathEvaluatesTo(parentId2.toString(), "/commit/parentids/objectid[2]", dom);
-        XMLAssert.assertXpathEvaluatesTo("groldan", "/commit/author/string", dom);
-        XMLAssert.assertXpathEvaluatesTo("jdeolive", "/commit/committer/string", dom);
+        XMLAssert.assertXpathEvaluatesTo("groldan", "/commit/author/name/string", dom);
+        XMLAssert.assertXpathEvaluatesTo("groldan@opengeo.org", "/commit/author/email/string", dom);
+        XMLAssert.assertXpathEvaluatesTo("jdeolive", "/commit/committer/name/string", dom);
+        XMLAssert.assertXpathEvaluatesTo("jdeolive@opengeo.org", "/commit/committer/email/string",
+                dom);
         XMLAssert.assertXpathEvaluatesTo("cool this works", "/commit/message/string", dom);
         XMLAssert.assertXpathEvaluatesTo("1000", "/commit/timestamp/long", dom);
     }
