@@ -7,6 +7,7 @@
     <groupId>org.geogit</groupId>
     <artifactId>geogit</artifactId>
     <version>0.1-SNAPSHOT</version>
+    <relativePath>../parent/pom.xml</relativePath>
   </parent>
 
   <groupId>org.geotools.unsupported</groupId>

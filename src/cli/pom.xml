@@ -7,11 +7,11 @@
     <groupId>org.geogit</groupId>
     <artifactId>geogit</artifactId>
     <version>0.1-SNAPSHOT</version>
+    <relativePath>../parent/pom.xml</relativePath>
   </parent>
 
-  <groupId>org.geogit</groupId>
-	<artifactId>geogit-cli</artifactId>
-    <packaging>jar</packaging>
+  <artifactId>geogit-cli</artifactId>
+  <packaging>jar</packaging>
   <name>GeoGit Command Line Interface</name>
   
   <dependencies>
