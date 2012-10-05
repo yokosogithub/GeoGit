@@ -75,6 +75,10 @@ public class CommitOp extends AbstractGeoGitOp<RevCommit> {
 
     private boolean allowEmpty;
 
+    private String committerName;
+
+    private String committerEmail;
+
     @Inject
     public CommitOp(final Repository repository, final Platform platform) {
         this.repository = repository;
@@ -89,6 +93,15 @@ public class CommitOp extends AbstractGeoGitOp<RevCommit> {
         this.authorName = authorName;
         this.authorEmail = authorEmail;
         return this;
+    }
+
+    /**
+     * If set, overrides the committer's name from the configuration
+     */
+    public void setCommitter(String committerName, @Nullable String committerEmail) {
+        Preconditions.checkNotNull(committerName);
+        this.committerName = committerName;
+        this.committerEmail = committerEmail;
     }
 
     /**
@@ -235,6 +248,9 @@ public class CommitOp extends AbstractGeoGitOp<RevCommit> {
     }
 
     private String resolveCommitter() {
+        if (committerName != null) {
+            return committerName;
+        }
         String key = "user.name";
         Optional<Map<String, String>> result = command(ConfigOp.class)
                 .setAction(ConfigAction.CONFIG_GET).setName(key).call();
@@ -246,6 +262,9 @@ public class CommitOp extends AbstractGeoGitOp<RevCommit> {
     }
 
     private String resolveCommitterEmail() {
+        if (committerEmail != null) {
+            return committerEmail;
+        }
         String key = "user.email";
         Optional<Map<String, String>> result = command(ConfigOp.class)
                 .setAction(ConfigAction.CONFIG_GET).setName(key).call();
