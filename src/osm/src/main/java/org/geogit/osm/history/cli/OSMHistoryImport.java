@@ -14,10 +14,13 @@ import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.management.relation.Relation;
 import javax.xml.namespace.QName;
@@ -215,15 +218,23 @@ public class OSMHistoryImport extends AbstractCommand implements CLICommand {
         }
     }
 
+    private final AtomicBoolean hasMore = new AtomicBoolean();
+
+    private final BlockingQueue<Change> queue = new LinkedBlockingQueue<Change>(100);
+
     /**
      * @param cli
      * @param changes
      * @throws IOException
      */
-    private void insertAndAddChanges(GeogitCLI cli, Iterator<Change> changes) throws IOException {
-        GeoGIT geogit = cli.getGeogit();
-        Repository repository = geogit.getRepository();
-        StagingArea index = repository.getIndex();
+    private void insertAndAddChanges(GeogitCLI cli, final Iterator<Change> changes)
+            throws IOException {
+        if (!changes.hasNext()) {
+            return;
+        }
+        final GeoGIT geogit = cli.getGeogit();
+        final Repository repository = geogit.getRepository();
+        final StagingArea index = repository.getIndex();
 
         Map<Long, Coordinate> thisChangePointCache = new LinkedHashMap<Long, Coordinate>() {
             /** serialVersionUID */
@@ -235,29 +246,78 @@ public class OSMHistoryImport extends AbstractCommand implements CLICommand {
             }
         };
 
+        final ExecutorService executor = Executors.newFixedThreadPool(2);
+        hasMore.set(true);
+
+        executor.submit(new Runnable() {
+
+            @Override
+            public void run() {
+                try {
+                    while (changes.hasNext()) {
+                        Change change = changes.next();
+                        queue.put(change);
+                    }
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                    return;
+                } finally {
+                    hasMore.set(false);
+                }
+            }
+        });
+
         int cnt = 0;
-        while (changes.hasNext()) {
-            Change change = changes.next();
-            String featurePath = featurePath(change);
+        while (hasMore.get() || queue.size() > 0) {
+            Change change;
+            try {
+                change = queue.poll(100, TimeUnit.MILLISECONDS);
+                if (change == null) {
+                    continue;
+                }
+            } catch (InterruptedException e) {
+                throw Throwables.propagate(e);
+            }
+            final String featurePath = featurePath(change);
             if (featurePath == null) {
                 continue;// ignores relations
             }
             cnt++;
             if (Change.Type.delete.equals(change.getType())) {
-                index.deleted(featurePath);
+                executor.submit(new Runnable() {
+                    @Override
+                    public void run() {
+                        index.deleted(featurePath);
+                    }
+                });
             } else {
-                Primitive primitive = change.getNode().isPresent() ? change.getNode().get()
+                final Primitive primitive = change.getNode().isPresent() ? change.getNode().get()
                         : change.getWay().get();
-                Geometry geom = parseGeometry(geogit, primitive, thisChangePointCache);
+                final Geometry geom = parseGeometry(geogit, primitive, thisChangePointCache);
                 if (geom instanceof Point) {
                     thisChangePointCache.put(Long.valueOf(primitive.getId()),
                             ((Point) geom).getCoordinate());
                 }
-                RevFeature feature = new OsmRevFeature(primitive, geom);
-                String parentPath = NodeRef.parentPath(featurePath);
-                index.insert(parentPath, feature);
+                executor.submit(new Runnable() {
+                    @Override
+                    public void run() {
+                        RevFeature feature = new OsmRevFeature(primitive, geom);
+                        String parentPath = NodeRef.parentPath(featurePath);
+                        index.insert(parentPath, feature);
+                    }
+                });
             }
         }
+
+        executor.shutdown();
+        try {
+            while (!executor.awaitTermination(100, TimeUnit.MILLISECONDS)) {
+                ;
+            }
+        } catch (InterruptedException e) {
+            throw Throwables.propagate(e);
+        }
+
         ConsoleReader console = cli.getConsole();
         console.print("Inserted " + cnt + " changes, staging...");
         console.flush();

@@ -265,7 +265,7 @@ class ChangesetDownloader {
         if (conn instanceof HttpURLConnection) {
             InputStream errorStream = ((HttpURLConnection) conn).getErrorStream();
             try {
-                while (errorStream.read() != -1) {
+                while (errorStream != null && errorStream.read() != -1) {
                     ;
                 }
             } catch (IOException e1) {
