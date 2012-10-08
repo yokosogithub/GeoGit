@@ -5,21 +5,14 @@
 
 package org.geogit.pg.cli;
 
-import com.beust.jcommander.Parameter;
 import com.beust.jcommander.ParametersDelegate;
 
 /**
  *
  */
-public class PGImportArgs {
+public class PGListArgs {
 
     @ParametersDelegate
     public PGCommonArgs common = new PGCommonArgs();
-
-    @Parameter(names = { "--table", "-t" }, description = "Table to import.")
-    public String table = "";
-
-    @Parameter(names = "--all", description = "Import all tables.")
-    public boolean all = false;
 
 }

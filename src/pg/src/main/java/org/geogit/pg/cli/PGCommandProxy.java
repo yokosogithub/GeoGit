@@ -23,6 +23,8 @@ public class PGCommandProxy implements CLICommandExtension {
         JCommander commander = new JCommander();
         commander.setProgramName("geogit pg");
         commander.addCommand("import", new PGImport());
+        commander.addCommand("list", new PGList());
+        commander.addCommand("describe", new PGDescribe());
         return commander;
     }
 }

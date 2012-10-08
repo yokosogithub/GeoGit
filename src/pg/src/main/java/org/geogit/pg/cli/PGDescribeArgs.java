@@ -11,15 +11,12 @@ import com.beust.jcommander.ParametersDelegate;
 /**
  *
  */
-public class PGImportArgs {
+public class PGDescribeArgs {
 
     @ParametersDelegate
     public PGCommonArgs common = new PGCommonArgs();
 
-    @Parameter(names = { "--table", "-t" }, description = "Table to import.")
+    @Parameter(names = { "--table", "-t" }, description = "Table to describe.", required = true)
     public String table = "";
-
-    @Parameter(names = "--all", description = "Import all tables.")
-    public boolean all = false;
 
 }
