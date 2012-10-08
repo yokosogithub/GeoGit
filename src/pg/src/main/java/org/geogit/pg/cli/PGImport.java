@@ -3,7 +3,7 @@
  * application directory.
  */
 
-package org.geogit.pg.commands.cli;
+package org.geogit.pg.cli;
 
 import java.io.IOException;
 import java.io.Serializable;
@@ -53,6 +53,9 @@ public class PGImport extends AbstractCommand implements CLICommand {
         Preconditions.checkState(cli.getGeogit() != null, "Not a geogit repository: "
                 + cli.getPlatform().pwd());
 
+        Preconditions.checkState(args.all == true && !args.table.isEmpty(),
+                "Specify --all or --table, both cannot be set.");
+
         try {
             doImport(cli);
         } catch (Exception e) {
@@ -83,6 +86,9 @@ public class PGImport extends AbstractCommand implements CLICommand {
 
         List<Name> typeNames = dataStore.getNames();
         for (Name typeName : typeNames) {
+            if (!args.all && !typeName.equals(args.table))
+                continue;
+
             WorkingTree workingTree = cli.getGeogit().getRepository().getWorkingTree();
 
             SimpleFeatureSource featureSource = dataStore.getFeatureSource(typeName);

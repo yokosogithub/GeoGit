@@ -6,7 +6,6 @@
 package org.geogit.pg.cli;
 
 import org.geogit.cli.CLICommandExtension;
-import org.geogit.pg.commands.cli.PGImport;
 
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameters;

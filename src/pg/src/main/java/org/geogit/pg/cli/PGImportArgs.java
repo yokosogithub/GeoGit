@@ -3,7 +3,7 @@
  * application directory.
  */
 
-package org.geogit.pg.commands.cli;
+package org.geogit.pg.cli;
 
 import com.beust.jcommander.Parameter;
 
@@ -29,5 +29,11 @@ public class PGImportArgs {
 
     @Parameter(names = "--password", description = "Password.  Default: <no password>")
     public String password = "";
+    
+    @Parameter(names = {"--table","-t"}, description= "Table to import.")
+    public String table = "";
+    
+    @Parameter(names = "--all", description = "Import all tables.")
+    public boolean all = false;
 
 }
