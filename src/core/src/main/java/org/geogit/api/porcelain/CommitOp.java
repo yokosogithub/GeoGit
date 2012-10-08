@@ -52,9 +52,9 @@ import com.google.inject.Inject;
  */
 public class CommitOp extends AbstractGeoGitOp<RevCommit> {
 
-    private String authorName;
+    private Optional<String> authorName;
 
-    private String authorEmail;
+    private Optional<String> authorEmail;
 
     private String message;
 
@@ -88,10 +88,9 @@ public class CommitOp extends AbstractGeoGitOp<RevCommit> {
     /**
      * If set, overrides the author's name from the configuration
      */
-    public CommitOp setAuthor(final String authorName, @Nullable final String authorEmail) {
-        Preconditions.checkNotNull(authorName);
-        this.authorName = authorName;
-        this.authorEmail = authorEmail;
+    public CommitOp setAuthor(final @Nullable String authorName, @Nullable final String authorEmail) {
+        this.authorName = Optional.fromNullable(authorName);
+        this.authorEmail = Optional.fromNullable(authorEmail);
         return this;
     }
 
@@ -276,12 +275,12 @@ public class CommitOp extends AbstractGeoGitOp<RevCommit> {
     }
 
     private String resolveAuthor() {
-        return authorName == null ? resolveCommitter() : authorName;
+        return authorName == null ? resolveCommitter() : authorName.orNull();
     }
 
     private String resolveAuthorEmail() {
         // only use provided authorEmail if authorName was provided
-        return authorName == null ? resolveCommitterEmail() : authorEmail;
+        return authorName == null ? resolveCommitterEmail() : authorEmail.orNull();
     }
 
     /**
