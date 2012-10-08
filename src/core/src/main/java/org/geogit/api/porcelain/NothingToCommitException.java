@@ -11,7 +11,7 @@ package org.geogit.api.porcelain;
  * @author groldan
  * 
  */
-public class NothingToCommitException extends Exception {
+public class NothingToCommitException extends RuntimeException {
 
     private static final long serialVersionUID = 1L;
 

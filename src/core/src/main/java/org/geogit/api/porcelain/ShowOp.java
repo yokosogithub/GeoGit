@@ -4,6 +4,7 @@
  */
 package org.geogit.api.porcelain;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintStream;
 
@@ -11,6 +12,7 @@ import org.geogit.api.AbstractGeoGitOp;
 import org.geogit.api.ObjectId;
 import org.geogit.repository.Repository;
 
+import com.google.common.base.Throwables;
 import com.google.inject.Inject;
 
 public class ShowOp extends AbstractGeoGitOp<Void> {
@@ -38,15 +40,18 @@ public class ShowOp extends AbstractGeoGitOp<Void> {
     }
 
     @Override
-    public Void call() throws Exception {
-        final InputStream raw = repo.getRawObject(oid);
-        final PrintStream out = this.out;
+    public Void call() {
         try {
-            repo.newBlobPrinter().print(raw, out);
-        } finally {
-            raw.close();
+            final InputStream raw = repo.getRawObject(oid);
+            final PrintStream out = this.out;
+            try {
+                repo.newBlobPrinter().print(raw, out);
+            } finally {
+                raw.close();
+            }
+        } catch (IOException e) {
+            Throwables.propagate(e);
         }
-
         return null;
     }
 

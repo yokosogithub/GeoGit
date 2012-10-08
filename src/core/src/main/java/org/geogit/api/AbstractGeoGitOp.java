@@ -53,6 +53,6 @@ public abstract class AbstractGeoGitOp<T> implements Callable<T> {
     /**
      * @see java.util.concurrent.Callable#call()
      */
-    public abstract T call() throws Exception;
+    public abstract T call();
 
 }

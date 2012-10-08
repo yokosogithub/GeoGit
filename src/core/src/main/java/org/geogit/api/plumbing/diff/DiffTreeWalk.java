@@ -6,7 +6,6 @@ package org.geogit.api.plumbing.diff;
 
 import static com.google.common.base.Preconditions.checkState;
 
-import java.io.IOException;
 import java.util.Iterator;
 import java.util.LinkedList;
 
@@ -71,7 +70,7 @@ public class DiffTreeWalk {
         }
     }
 
-    public Iterator<DiffEntry> get() throws IOException {
+    public Iterator<DiffEntry> get() {
 
         RevTree oldTree = this.fromRootTree;
         RevTree newTree = this.toRootTree;

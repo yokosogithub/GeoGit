@@ -79,7 +79,7 @@ public class DiffOp extends AbstractGeoGitOp<Iterator<DiffEntry>> {
     }
 
     @Override
-    public Iterator<DiffEntry> call() throws Exception {
+    public Iterator<DiffEntry> call() {
 
         if (cached) {
             // compare the tree-ish (default to HEAD) and the index

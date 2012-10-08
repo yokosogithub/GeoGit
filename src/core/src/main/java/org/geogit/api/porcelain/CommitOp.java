@@ -146,7 +146,7 @@ public class CommitOp extends AbstractGeoGitOp<RevCommit> {
      * @throws NothingToCommitException if there are no staged changes by comparing the index
      *         staging tree and the repository HEAD tree.
      */
-    public RevCommit call() throws Exception {
+    public RevCommit call() throws NothingToCommitException {
         final String committer = resolveCommitter();
         final String committerEmail = resolveCommitterEmail();
         final String author = resolveAuthor();

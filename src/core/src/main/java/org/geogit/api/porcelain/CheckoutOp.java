@@ -19,7 +19,7 @@ public class CheckoutOp extends AbstractGeoGitOp<Ref> {
         return this;
     }
 
-    public Ref call() throws Exception {
+    public Ref call() {
         throw new UnsupportedOperationException("not yet implemented");
     }
 

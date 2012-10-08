@@ -64,7 +64,7 @@ public class DiffIndex extends AbstractGeoGitOp<Iterator<DiffEntry>> {
     }
 
     @Override
-    public Iterator<DiffEntry> call() throws Exception {
+    public Iterator<DiffEntry> call() {
         final ObjectId treeId;
         if (rootTreeId == null) {
             treeId = command(ResolveTreeish.class).setTreeish(Ref.HEAD).call();

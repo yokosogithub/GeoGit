@@ -19,7 +19,7 @@ public class BranchDeleteOp extends AbstractGeoGitOp<String> {
      * @return the name of the branch deleted
      * @see java.util.concurrent.Callable#call()
      */
-    public String call() throws Exception {
+    public String call() {
         throw new UnsupportedOperationException("not yet implemented");
     }
 

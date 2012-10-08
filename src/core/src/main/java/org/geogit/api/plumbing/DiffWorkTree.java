@@ -51,7 +51,7 @@ public class DiffWorkTree extends AbstractGeoGitOp<Iterator<DiffEntry>> {
     }
 
     @Override
-    public Iterator<DiffEntry> call() throws Exception {
+    public Iterator<DiffEntry> call() {
 
         Iterator<NodeRef> unstaged = indexDb.getUnstaged(pathFilter);
 

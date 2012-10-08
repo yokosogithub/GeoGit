@@ -29,7 +29,7 @@ public class RebaseOp extends AbstractGeoGitOp<Boolean> {
     }
 
     @Override
-    public Boolean call() throws Exception {
+    public Boolean call() {
         // Ref newRef = new Ref(Ref.HEAD, branch.getObjectId(), TYPE.COMMIT);
         // getRepository().updateRef(newRef);
         // LOGGER.info("Rebased master branch -> " + branch.getName());

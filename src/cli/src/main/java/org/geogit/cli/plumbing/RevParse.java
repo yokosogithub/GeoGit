@@ -32,39 +32,37 @@ public class RevParse extends AbstractCommand {
 
     @Override
     protected void runInternal(GeogitCLI cli) throws Exception {
-
+        GeoGIT geogit = cli.getGeogit();
+        if (null == geogit) {
+            geogit = cli.newGeoGIT();
+        }
         if (resolve_geogit_dir) {
-            resolveGeogitDir(cli);
+            resolveGeogitDir(cli.getConsole(), geogit);
         } else if (is_inside_work_tree) {
-            isInsideWorkTree(cli);
+            isInsideWorkTree(cli.getConsole(), geogit);
         }
 
     }
 
-    private void isInsideWorkTree(GeogitCLI cli) throws Exception {
-        GeoGIT geoGIT = new GeoGIT(cli.getPlatform().pwd());
-        URL repoUrl = geoGIT.command(ResolveGeogitDir.class).call();
+    private void isInsideWorkTree(ConsoleReader console, GeoGIT geogit) throws Exception {
+        URL repoUrl = geogit.command(ResolveGeogitDir.class).call();
+
+        File pwd = geogit.getPlatform().pwd();
 
         if (null == repoUrl) {
-            cli.getConsole().println(
-                    "Error: not a geogit repository (or any parent) '"
-                            + cli.getPlatform().pwd().getAbsolutePath() + "'");
+            console.println("Error: not a geogit repository (or any parent) '"
+                    + pwd.getAbsolutePath() + "'");
         } else {
-            boolean insideWorkTree = !cli.getPlatform().pwd().getAbsolutePath().contains(".geogit");
-            cli.getConsole().println(String.valueOf(insideWorkTree));
+            boolean insideWorkTree = !pwd.getAbsolutePath().contains(".geogit");
+            console.println(String.valueOf(insideWorkTree));
         }
     }
 
-    private void resolveGeogitDir(GeogitCLI cli) throws Exception {
-        ConsoleReader console = cli.getConsole();
+    private void resolveGeogitDir(ConsoleReader console, GeoGIT geogit) throws Exception {
 
-        GeoGIT geoGIT = cli.getGeogit();
-        if (geoGIT == null) {
-            geoGIT = new GeoGIT(cli.getPlatform().pwd());
-        }
-        URL repoUrl = geoGIT.command(ResolveGeogitDir.class).call();
+        URL repoUrl = geogit.command(ResolveGeogitDir.class).call();
         if (null == repoUrl) {
-            File currDir = cli.getPlatform().pwd();
+            File currDir = geogit.getPlatform().pwd();
             console.println("Error: not a geogit dir '"
                     + currDir.getCanonicalFile().getAbsolutePath() + "'");
         } else if ("file:".equals(repoUrl.getProtocol())) {

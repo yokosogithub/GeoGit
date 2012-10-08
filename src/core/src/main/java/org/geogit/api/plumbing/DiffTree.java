@@ -65,7 +65,7 @@ public class DiffTree extends AbstractGeoGitOp<Iterator<DiffEntry>> {
     }
 
     @Override
-    public Iterator<DiffEntry> call() throws Exception {
+    public Iterator<DiffEntry> call() {
         checkNotNull(oldTreeId);
         checkNotNull(newTreeId);
 
