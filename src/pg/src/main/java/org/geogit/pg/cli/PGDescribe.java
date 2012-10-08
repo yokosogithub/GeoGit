@@ -7,6 +7,7 @@ package org.geogit.pg.cli;
 
 import java.io.IOException;
 import java.io.Serializable;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
@@ -15,6 +16,7 @@ import jline.console.ConsoleReader;
 import org.geogit.cli.AbstractCommand;
 import org.geogit.cli.CLICommand;
 import org.geogit.cli.GeogitCLI;
+import org.geogit.storage.hessian.GeoToolsRevFeatureType;
 
 import org.geotools.data.DataStore;
 import org.geotools.data.ResourceInfo;
@@ -22,6 +24,7 @@ import org.geotools.data.postgis.PostgisNGDataStoreFactory;
 import org.geotools.data.simple.SimpleFeatureSource;
 
 import org.opengis.feature.type.Name;
+import org.opengis.feature.type.PropertyDescriptor;
 
 import com.beust.jcommander.Parameters;
 import com.beust.jcommander.ParametersDelegate;
@@ -78,10 +81,18 @@ public class PGDescribe extends AbstractCommand implements CLICommand {
                 continue;
 
             SimpleFeatureSource featureSource = dataStore.getFeatureSource(typeName);
-            ResourceInfo info = featureSource.getInfo();
-            console.println("Name : " + info.getName());
-            // TODO : Print table property names/types
+            GeoToolsRevFeatureType revType = new GeoToolsRevFeatureType(featureSource.getSchema());
 
+            ResourceInfo info = featureSource.getInfo();
+            console.println("Table : " + info.getName());
+            Collection<PropertyDescriptor> descriptors = revType.type().getDescriptors();
+            console.println("----------------------------------------");
+            for (PropertyDescriptor descriptor : descriptors) {
+                console.println("\tProperty  : " + descriptor.getName());
+                console.println("\tType      : "
+                        + descriptor.getType().getBinding().getSimpleName());
+                console.println("----------------------------------------");
+            }
         }
     }
 }
