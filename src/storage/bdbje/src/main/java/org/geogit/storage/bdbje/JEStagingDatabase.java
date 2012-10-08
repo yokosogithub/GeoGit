@@ -143,7 +143,7 @@ public class JEStagingDatabase implements ObjectDatabase, StagingDatabase {
         {
             DatabaseConfig unstagedDbConfig = new DatabaseConfig();
             unstagedDbConfig.setAllowCreate(true);
-            unstagedDbConfig.setTransactional(true);
+            unstagedDbConfig.setTransactional(environment.getConfig().getTransactional());
             // unstagedDbConfig.setDeferredWrite(true);
             unstagedDbConfig.setSortedDuplicates(false);
             unstagedEntries = environment.openDatabase(null, "UnstagedDb", unstagedDbConfig);
@@ -154,7 +154,7 @@ public class JEStagingDatabase implements ObjectDatabase, StagingDatabase {
         {
             DatabaseConfig stagedDbConfig = new DatabaseConfig();
             stagedDbConfig.setAllowCreate(true);
-            stagedDbConfig.setTransactional(true);
+            stagedDbConfig.setTransactional(environment.getConfig().getTransactional());
             // stagedDbConfig.setDeferredWrite(true);
             stagedDbConfig.setSortedDuplicates(false);
             stagedEntries = environment.openDatabase(null, "StagedDb", stagedDbConfig);

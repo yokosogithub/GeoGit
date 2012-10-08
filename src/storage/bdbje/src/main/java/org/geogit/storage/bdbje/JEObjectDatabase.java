@@ -16,6 +16,8 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import javax.annotation.Nullable;
+
 import org.geogit.api.ObjectId;
 import org.geogit.storage.AbstractObjectDatabase;
 import org.geogit.storage.ObjectDatabase;
@@ -50,6 +52,7 @@ public class JEObjectDatabase extends AbstractObjectDatabase implements ObjectDa
 
     private Database objectDb;
 
+    @Nullable
     private CurrentTransaction txn;
 
     @Inject
@@ -103,6 +106,7 @@ public class JEObjectDatabase extends AbstractObjectDatabase implements ObjectDa
         Environment environment = getEnvironment();
         // System.err.println("--> " + environment.getHome());
         txn = CurrentTransaction.getInstance(environment);
+        
         DatabaseConfig dbConfig = new DatabaseConfig();
         dbConfig.setAllowCreate(true);
         boolean transactional = getEnvironment().getConfig().getTransactional();
@@ -129,7 +133,8 @@ public class JEObjectDatabase extends AbstractObjectDatabase implements ObjectDa
         cursorConfig.setReadCommitted(true);
         cursorConfig.setReadUncommitted(false);
 
-        Cursor cursor = objectDb.openCursor(txn.getTransaction(), cursorConfig);
+        Transaction transaction = txn == null? null : txn.getTransaction();
+        Cursor cursor = objectDb.openCursor(transaction, cursorConfig);
         try {
             // position cursor at the first closest key to the one looked up
             OperationStatus status = cursor.getSearchKeyRange(key, data, LockMode.DEFAULT);
@@ -168,8 +173,8 @@ public class JEObjectDatabase extends AbstractObjectDatabase implements ObjectDa
         data.setPartial(0, 0, true);
 
         final LockMode lockMode = LockMode.DEFAULT;
-        CurrentTransaction.getInstance(getEnvironment());
-        OperationStatus status = objectDb.get(txn.getTransaction(), key, data, lockMode);
+        Transaction transaction = txn == null? null : txn.getTransaction();
+        OperationStatus status = objectDb.get(transaction, key, data, lockMode);
         return SUCCESS == status;
     }
 
@@ -180,7 +185,7 @@ public class JEObjectDatabase extends AbstractObjectDatabase implements ObjectDa
         DatabaseEntry data = new DatabaseEntry();
 
         final LockMode lockMode = LockMode.READ_COMMITTED;
-        Transaction transaction = txn.getTransaction();
+        Transaction transaction = txn == null? null : txn.getTransaction();
         OperationStatus operationStatus = objectDb.get(transaction, key, data, lockMode);
         if (NOTFOUND.equals(operationStatus)) {
             throw new IllegalArgumentException("Object does not exist: " + id.toString());
@@ -197,7 +202,8 @@ public class JEObjectDatabase extends AbstractObjectDatabase implements ObjectDa
         DatabaseEntry data = new DatabaseEntry(rawData);
 
         OperationStatus status;
-        status = objectDb.putNoOverwrite(txn.getTransaction(), key, data);
+        Transaction transaction = txn == null? null : txn.getTransaction();
+        status = objectDb.putNoOverwrite(transaction, key, data);
         final boolean didntExist = SUCCESS.equals(status);
 
         if (LOGGER.isLoggable(Level.FINER)) {
@@ -213,7 +219,8 @@ public class JEObjectDatabase extends AbstractObjectDatabase implements ObjectDa
         final byte[] rawKey = id.getRawValue();
         final DatabaseEntry key = new DatabaseEntry(rawKey);
 
-        final OperationStatus status = objectDb.delete(txn.getTransaction(), key);
+        Transaction transaction = txn == null? null : txn.getTransaction();
+        final OperationStatus status = objectDb.delete(transaction, key);
 
         return SUCCESS.equals(status);
     }
