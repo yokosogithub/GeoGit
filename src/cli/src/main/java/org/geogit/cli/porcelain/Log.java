@@ -12,7 +12,6 @@ import jline.Terminal;
 import jline.console.ConsoleReader;
 
 import org.fusesource.jansi.Ansi;
-import org.fusesource.jansi.Ansi.Attribute;
 import org.fusesource.jansi.Ansi.Color;
 import org.geogit.api.GeoGIT;
 import org.geogit.api.Platform;
@@ -118,7 +117,12 @@ public class Log extends AbstractCommand implements CLICommand {
     }
 
     private String formatPerson(RevPerson person) {
-        StringBuilder sb = new StringBuilder(person.getName());
+        StringBuilder sb = new StringBuilder();
+        if (person.getName() == null) {
+            sb.append("<name not set>");
+        } else {
+            sb.append(person.getName());
+        }
         if (person.getEmail() != null) {
             sb.append(" <").append(person.getEmail()).append(">");
         }
