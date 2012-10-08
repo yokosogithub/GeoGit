@@ -53,7 +53,8 @@ public class PGImport extends AbstractCommand implements CLICommand {
         Preconditions.checkState(cli.getGeogit() != null, "Not a geogit repository: "
                 + cli.getPlatform().pwd());
 
-        Preconditions.checkState(args.all == true && !args.table.isEmpty(),
+        Preconditions.checkState((args.all == true && args.table.isEmpty())
+                || (args.all == false && !args.table.isEmpty()),
                 "Specify --all or --table, both cannot be set.");
 
         try {
@@ -86,7 +87,7 @@ public class PGImport extends AbstractCommand implements CLICommand {
 
         List<Name> typeNames = dataStore.getNames();
         for (Name typeName : typeNames) {
-            if (!args.all && !typeName.equals(args.table))
+            if (!args.all && !args.table.equals(typeName.toString()))
                 continue;
 
             WorkingTree workingTree = cli.getGeogit().getRepository().getWorkingTree();

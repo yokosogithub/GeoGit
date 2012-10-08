@@ -74,13 +74,12 @@ public class PGDescribe extends AbstractCommand implements CLICommand {
 
         List<Name> typeNames = dataStore.getNames();
         for (Name typeName : typeNames) {
-            if (!typeName.equals(args.table))
+            if (!args.table.equals(typeName.toString()))
                 continue;
 
             SimpleFeatureSource featureSource = dataStore.getFeatureSource(typeName);
             ResourceInfo info = featureSource.getInfo();
             console.println("Name : " + info.getName());
-            console.println("Description : " + info.getDescription());
             // TODO : Print table property names/types
 
         }
