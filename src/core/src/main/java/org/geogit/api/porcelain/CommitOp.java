@@ -262,7 +262,7 @@ public class CommitOp extends AbstractGeoGitOp<RevCommit> {
             return result.get().get(key);
         }
         throw new IllegalStateException(key + " not found in config. "
-                + "Use geogit config [--global] user.name <your name> to configure it.");
+                + "Use geogit config [--global] " + key + " <your name> to configure it.");
     }
 
     private String resolveCommitterEmail() {
@@ -276,7 +276,7 @@ public class CommitOp extends AbstractGeoGitOp<RevCommit> {
             return result.get().get(key);
         }
         throw new IllegalStateException(key + " not found in config. "
-                + "Use geogit config [--global] user.name <your name> to configure it.");
+                + "Use geogit config [--global] " + key + " <your email> to configure it.");
     }
 
     private String resolveAuthor() {
