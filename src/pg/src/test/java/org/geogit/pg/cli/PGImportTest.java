@@ -3,7 +3,7 @@
  * application directory.
  */
 
-package org.geogit.pg.commands.cli;
+package org.geogit.pg.cli;
 
 import java.io.File;
 
