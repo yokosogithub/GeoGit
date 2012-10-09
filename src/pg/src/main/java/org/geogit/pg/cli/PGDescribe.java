@@ -18,6 +18,7 @@ import org.geogit.cli.CLICommand;
 import org.geogit.cli.GeogitCLI;
 import org.geogit.storage.hessian.GeoToolsRevFeatureType;
 
+import org.geotools.data.AbstractDataStoreFactory;
 import org.geotools.data.DataStore;
 import org.geotools.data.ResourceInfo;
 import org.geotools.data.postgis.PostgisNGDataStoreFactory;
@@ -42,10 +43,14 @@ public class PGDescribe extends AbstractCommand implements CLICommand {
     @ParametersDelegate
     public PGDescribeArgs args = new PGDescribeArgs();
 
+    public AbstractDataStoreFactory dataStoreFactory = new PostgisNGDataStoreFactory();
+
     @Override
     protected void runInternal(GeogitCLI cli) throws Exception {
         Preconditions.checkState(cli.getGeogit() != null, "Not a geogit repository: "
                 + cli.getPlatform().pwd());
+
+        Preconditions.checkState(!args.table.isEmpty(), "No table supplied");
 
         try {
             doDescribe(cli);
@@ -64,16 +69,7 @@ public class PGDescribe extends AbstractCommand implements CLICommand {
         final ConsoleReader console = cli.getConsole();
         console.println("Fetching table...");
 
-        Map<String, Serializable> params = Maps.newHashMap();
-        params.put(PostgisNGDataStoreFactory.DBTYPE.key, "postgis");
-        params.put(PostgisNGDataStoreFactory.HOST.key, args.common.host);
-        params.put(PostgisNGDataStoreFactory.PORT.key, args.common.port.toString());
-        params.put(PostgisNGDataStoreFactory.SCHEMA.key, args.common.schema);
-        params.put(PostgisNGDataStoreFactory.DATABASE.key, args.common.database);
-        params.put(PostgisNGDataStoreFactory.USER.key, args.common.username);
-        params.put(PostgisNGDataStoreFactory.PASSWD.key, args.common.password);
-
-        DataStore dataStore = new PostgisNGDataStoreFactory().createDataStore(params);
+        DataStore dataStore = getDataStore();
 
         List<Name> typeNames = dataStore.getNames();
         for (Name typeName : typeNames) {
@@ -94,5 +90,20 @@ public class PGDescribe extends AbstractCommand implements CLICommand {
                 console.println("----------------------------------------");
             }
         }
+    }
+
+    private DataStore getDataStore() throws Exception {
+        Map<String, Serializable> params = Maps.newHashMap();
+        params.put(PostgisNGDataStoreFactory.DBTYPE.key, "postgis");
+        params.put(PostgisNGDataStoreFactory.HOST.key, args.common.host);
+        params.put(PostgisNGDataStoreFactory.PORT.key, args.common.port.toString());
+        params.put(PostgisNGDataStoreFactory.SCHEMA.key, args.common.schema);
+        params.put(PostgisNGDataStoreFactory.DATABASE.key, args.common.database);
+        params.put(PostgisNGDataStoreFactory.USER.key, args.common.username);
+        params.put(PostgisNGDataStoreFactory.PASSWD.key, args.common.password);
+
+        DataStore dataStore = dataStoreFactory.createDataStore(params);
+
+        return dataStore;
     }
 }

@@ -16,6 +16,7 @@ import org.geogit.cli.AbstractCommand;
 import org.geogit.cli.CLICommand;
 import org.geogit.cli.GeogitCLI;
 
+import org.geotools.data.AbstractDataStoreFactory;
 import org.geotools.data.DataStore;
 import org.geotools.data.postgis.PostgisNGDataStoreFactory;
 
@@ -36,6 +37,8 @@ public class PGList extends AbstractCommand implements CLICommand {
 
     @ParametersDelegate
     public PGListArgs args = new PGListArgs();
+
+    public AbstractDataStoreFactory dataStoreFactory = new PostgisNGDataStoreFactory();
 
     @Override
     protected void runInternal(GeogitCLI cli) throws Exception {
@@ -59,6 +62,15 @@ public class PGList extends AbstractCommand implements CLICommand {
         final ConsoleReader console = cli.getConsole();
         console.println("Fetching Feature Types...");
 
+        DataStore dataStore = getDataStore();
+
+        List<Name> typeNames = dataStore.getNames();
+        for (Name typeName : typeNames) {
+            console.println(" - " + typeName);
+        }
+    }
+
+    private DataStore getDataStore() throws Exception {
         Map<String, Serializable> params = Maps.newHashMap();
         params.put(PostgisNGDataStoreFactory.DBTYPE.key, "postgis");
         params.put(PostgisNGDataStoreFactory.HOST.key, args.common.host);
@@ -68,11 +80,8 @@ public class PGList extends AbstractCommand implements CLICommand {
         params.put(PostgisNGDataStoreFactory.USER.key, args.common.username);
         params.put(PostgisNGDataStoreFactory.PASSWD.key, args.common.password);
 
-        DataStore dataStore = new PostgisNGDataStoreFactory().createDataStore(params);
+        DataStore dataStore = dataStoreFactory.createDataStore(params);
 
-        List<Name> typeNames = dataStore.getNames();
-        for (Name typeName : typeNames) {
-            console.println(" - " + typeName);
-        }
+        return dataStore;
     }
 }
