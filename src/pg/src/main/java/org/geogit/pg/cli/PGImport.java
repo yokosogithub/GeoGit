@@ -21,6 +21,7 @@ import org.geogit.repository.WorkingTree;
 import org.geogit.storage.hessian.GeoToolsRevFeature;
 import org.geogit.storage.hessian.GeoToolsRevFeatureType;
 
+import org.geotools.data.AbstractDataStoreFactory;
 import org.geotools.data.DataStore;
 import org.geotools.data.postgis.PostgisNGDataStoreFactory;
 import org.geotools.data.simple.SimpleFeatureCollection;
@@ -48,6 +49,8 @@ public class PGImport extends AbstractCommand implements CLICommand {
     @ParametersDelegate
     public PGImportArgs args = new PGImportArgs();
 
+    public AbstractDataStoreFactory dataStoreFactory = new PostgisNGDataStoreFactory();
+
     @Override
     protected void runInternal(GeogitCLI cli) throws Exception {
         Preconditions.checkState(cli.getGeogit() != null, "Not a geogit repository: "
@@ -74,16 +77,7 @@ public class PGImport extends AbstractCommand implements CLICommand {
         final ConsoleReader console = cli.getConsole();
         console.println("Importing database " + args.common.database);
 
-        Map<String, Serializable> params = Maps.newHashMap();
-        params.put(PostgisNGDataStoreFactory.DBTYPE.key, "postgis");
-        params.put(PostgisNGDataStoreFactory.HOST.key, args.common.host);
-        params.put(PostgisNGDataStoreFactory.PORT.key, args.common.port.toString());
-        params.put(PostgisNGDataStoreFactory.SCHEMA.key, args.common.schema);
-        params.put(PostgisNGDataStoreFactory.DATABASE.key, args.common.database);
-        params.put(PostgisNGDataStoreFactory.USER.key, args.common.username);
-        params.put(PostgisNGDataStoreFactory.PASSWD.key, args.common.password);
-
-        DataStore dataStore = new PostgisNGDataStoreFactory().createDataStore(params);
+        DataStore dataStore = getDataStore();
 
         List<Name> typeNames = dataStore.getNames();
         for (Name typeName : typeNames) {
@@ -120,5 +114,20 @@ public class PGImport extends AbstractCommand implements CLICommand {
                 featureIterator.close();
             }
         }
+    }
+
+    private DataStore getDataStore() throws Exception {
+        Map<String, Serializable> params = Maps.newHashMap();
+        params.put(PostgisNGDataStoreFactory.DBTYPE.key, "postgis");
+        params.put(PostgisNGDataStoreFactory.HOST.key, args.common.host);
+        params.put(PostgisNGDataStoreFactory.PORT.key, args.common.port.toString());
+        params.put(PostgisNGDataStoreFactory.SCHEMA.key, args.common.schema);
+        params.put(PostgisNGDataStoreFactory.DATABASE.key, args.common.database);
+        params.put(PostgisNGDataStoreFactory.USER.key, args.common.username);
+        params.put(PostgisNGDataStoreFactory.PASSWD.key, args.common.password);
+
+        DataStore dataStore = dataStoreFactory.createDataStore(params);
+
+        return dataStore;
     }
 }
