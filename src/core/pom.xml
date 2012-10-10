@@ -21,11 +21,11 @@
     
     mvn clean install
   
-  Online tests avaialble using:
+  Online tests available using:
     
     mvn -Ponline
   
-  Corertura is configufred for a test coverage report:
+  Corertura is configured for a test coverage report:
     
     mvn cobertura:cobertura
     open target/site/cobertura/index.html
