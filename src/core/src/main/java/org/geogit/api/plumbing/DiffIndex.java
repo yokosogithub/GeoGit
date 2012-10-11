@@ -21,6 +21,7 @@ import org.geogit.storage.ObjectSerialisingFactory;
 import org.geogit.storage.StagingDatabase;
 
 import com.google.common.base.Optional;
+import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 
 /**
@@ -67,13 +68,15 @@ public class DiffIndex extends AbstractGeoGitOp<Iterator<DiffEntry>> {
     @Override
     public Iterator<DiffEntry> call() {
         final String oldVersion = Optional.fromNullable(refSpec).or(Ref.HEAD);
-        final ObjectId rootTreeId = command(ResolveTreeish.class).setTreeish(oldVersion).call();
+        final Optional<ObjectId> rootTreeId;
+        rootTreeId = command(ResolveTreeish.class).setTreeish(oldVersion).call();
+        Preconditions.checkArgument(rootTreeId.isPresent(), "refSpec did not resolve to a tree");
 
         final RevTree rootTree;
-        if (rootTreeId.isNull()) {
+        if (rootTreeId.get().isNull()) {
             rootTree = RevTree.NULL;
         } else {
-            rootTree = (RevTree) command(RevObjectParse.class).setObjectId(rootTreeId).call();
+            rootTree = command(RevObjectParse.class).setObjectId(rootTreeId.get()).call(RevTree.class).get();
         }
 
         Iterator<NodeRef> staged = indexDb.getStaged(pathFilter);

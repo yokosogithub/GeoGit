@@ -18,13 +18,9 @@ import javax.annotation.Nullable;
 import org.geogit.api.CommandLocator;
 import org.geogit.api.NodeRef;
 import org.geogit.api.ObjectId;
-import org.geogit.api.Ref;
-import org.geogit.api.RevCommit;
 import org.geogit.api.RevObject.TYPE;
 import org.geogit.api.RevTree;
 import org.geogit.api.SpatialRef;
-import org.geogit.api.plumbing.RevParse;
-import org.geogit.api.plumbing.UpdateRef;
 import org.geogit.storage.ObjectDatabase;
 import org.geogit.storage.ObjectInserter;
 import org.geogit.storage.ObjectReader;
@@ -107,23 +103,15 @@ public class JEStagingDatabase implements ObjectDatabase, StagingDatabase {
      */
     private ObjectDatabase repositoryDb;
 
-    private CommandLocator commands;
-
-    private ObjectSerialisingFactory serialFactory;
-
     /**
      * @param referenceDatabase the repository reference database, used to get the head re
      * @param repoDb
      * @param stagingDb
      */
     @Inject
-    public JEStagingDatabase(final ObjectDatabase repositoryDb,
-            final EnvironmentBuilder envBuilder, final CommandLocator commands,
-            final ObjectSerialisingFactory serialFactory) {
+    public JEStagingDatabase(final ObjectDatabase repositoryDb, final EnvironmentBuilder envBuilder) {
         this.repositoryDb = repositoryDb;
         this.envProvider = envBuilder;
-        this.commands = commands;
-        this.serialFactory = serialFactory;
     }
 
     @Override
@@ -161,27 +149,6 @@ public class JEStagingDatabase implements ObjectDatabase, StagingDatabase {
             staged = new StoredSortedMap<String, NodeRef>(this.stagedEntries, this.keyPathBinding,
                     this.refBinding, true);
         }
-        // //
-
-        ObjectId stageRootId = getStagedTreeId();
-        if (stageRootId.isNull()) {
-            resetStaged();
-        }
-
-        ObjectId workdirRootId = getWorkdirTreeId();
-        if (workdirRootId.isNull()) {
-            resetWorkdir();
-        }
-    }
-
-    private ObjectId getWorkdirTreeId() {
-        ObjectId workdirRootId = commands.command(RevParse.class).setRefSpec(Ref.WORK_HEAD).call();
-        return workdirRootId;
-    }
-
-    private ObjectId getStagedTreeId() {
-        ObjectId stageRootId = commands.command(RevParse.class).setRefSpec(Ref.STAGE_HEAD).call();
-        return stageRootId;
     }
 
     @Override
@@ -200,45 +167,14 @@ public class JEStagingDatabase implements ObjectDatabase, StagingDatabase {
 
     @Override
     public void reset() {
-        resetStaged();
-        resetWorkdir();
-    }
-
-    private void resetStaged() {
-        final ObjectId headTreeId = getCurrentHeadTreeId();
-        Optional<Ref> ref = commands.command(UpdateRef.class).setName(Ref.STAGE_HEAD)
-                .setNewValue(headTreeId).call();
-        assert ref.isPresent();
-    }
-
-    private void resetWorkdir() {
-        final ObjectId headTreeId = getCurrentHeadTreeId();
-        Optional<Ref> ref = commands.command(UpdateRef.class).setName(Ref.WORK_HEAD)
-                .setNewValue(headTreeId).call();
-        assert ref.isPresent();
-    }
-
-    private ObjectId getCurrentHeadTreeId() {
-        final ObjectId headTreeId;
-        ObjectId headCommitId = commands.command(RevParse.class).setRefSpec(Ref.HEAD).call();
-        if (headCommitId.isNull()) {
-            headTreeId = ObjectId.NULL;
-        } else {
-            RevCommit headCommit = repositoryDb.get(headCommitId,
-                    serialFactory.createCommitReader());
-            headTreeId = headCommit.getTreeId();
-        }
-        return headTreeId;
     }
 
     @Override
     public void clearUnstaged() {
-        resetWorkdir();
     }
 
     @Override
     public void clearStaged() {
-        resetStaged();
     }
 
     // //////////////////////////////////////////////////////////////////////////////////////////

@@ -5,7 +5,7 @@
 
 package org.geogit.api.plumbing;
 
-import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.common.base.Preconditions.*;
 
 import java.util.Iterator;
 
@@ -17,6 +17,7 @@ import org.geogit.api.plumbing.diff.DiffTreeWalk;
 import org.geogit.storage.ObjectDatabase;
 import org.geogit.storage.ObjectSerialisingFactory;
 
+import com.google.common.base.Optional;
 import com.google.inject.Inject;
 
 /**
@@ -83,25 +84,24 @@ public class DiffTree extends AbstractGeoGitOp<Iterator<DiffEntry>> {
     }
 
     @Override
-    public Iterator<DiffEntry> call() {
+    public Iterator<DiffEntry> call() throws IllegalArgumentException {
         checkNotNull(oldRefSpec, "old version not specified");
         checkNotNull(newRefSpec, "new version not specified");
 
-        final ObjectId oldTreeId = command(ResolveTreeish.class).setTreeish(oldRefSpec).call();
-        final ObjectId newTreeId = command(ResolveTreeish.class).setTreeish(newRefSpec).call();
+        final Optional<ObjectId> oldTreeId = command(ResolveTreeish.class).setTreeish(oldRefSpec)
+                .call();
+        final Optional<ObjectId> newTreeId = command(ResolveTreeish.class).setTreeish(newRefSpec)
+                .call();
+        checkArgument(oldTreeId.isPresent(), oldRefSpec + " did not resolve to a tree");
+        checkArgument(newTreeId.isPresent(), newRefSpec + " did not resolve to a tree");
 
         final RevTree oldTree;
         final RevTree newTree;
-        if (oldTreeId.isNull()) {
-            oldTree = RevTree.NULL;
-        } else {
-            oldTree = (RevTree) command(RevObjectParse.class).setObjectId(oldTreeId).call();
-        }
-        if (newTreeId.isNull()) {
-            newTree = RevTree.NULL;
-        } else {
-            newTree = (RevTree) command(RevObjectParse.class).setObjectId(newTreeId).call();
-        }
+        oldTree = command(RevObjectParse.class).setObjectId(oldTreeId.get()).call(RevTree.class)
+                .or(RevTree.NULL);
+        newTree = command(RevObjectParse.class).setObjectId(newTreeId.get()).call(RevTree.class)
+                .or(RevTree.NULL);
+
         DiffTreeWalk treeWalk = new DiffTreeWalk(objectDb, oldTree, newTree, serialFactory);
         treeWalk.setFilter(this.path);
         return treeWalk.get();

@@ -15,6 +15,7 @@ import org.geogit.storage.ObjectReader;
 import org.geogit.storage.ObjectSerialisingFactory;
 import org.geogit.storage.StagingDatabase;
 
+import com.google.common.base.Optional;
 import com.google.inject.Inject;
 
 /**
@@ -24,7 +25,7 @@ import com.google.inject.Inject;
  * @see RevParse
  * @see ResolveObjectType
  */
-public class RevObjectParse extends AbstractGeoGitOp<RevObject> {
+public class RevObjectParse extends AbstractGeoGitOp<Optional<RevObject>> {
 
     private StagingDatabase indexDb;
 
@@ -57,20 +58,25 @@ public class RevObjectParse extends AbstractGeoGitOp<RevObject> {
      * @throws IllegalArgumentException if the provided refspec doesn't resolve to any known object
      */
     @Override
-    public RevObject call() throws IllegalArgumentException {
+    public Optional<RevObject> call() throws IllegalArgumentException {
         return call(RevObject.class);
     }
 
-    public <T extends RevObject> T call(Class<T> clazz) throws IllegalArgumentException {
-        ObjectId resolvedObjectId;
+    public <T extends RevObject> Optional<T> call(Class<T> clazz) {
+        final ObjectId resolvedObjectId;
         if (objectId == null) {
-            resolvedObjectId = command(RevParse.class).setRefSpec(refSpec).call();
+            Optional<ObjectId> parsed = command(RevParse.class).setRefSpec(refSpec).call();
+            if (parsed.isPresent()) {
+                resolvedObjectId = parsed.get();
+            } else {
+                resolvedObjectId = ObjectId.NULL;
+            }
         } else {
             resolvedObjectId = objectId;
         }
-
-        checkArgument(!resolvedObjectId.isNull(),
-                String.format("refspec ('%s') did not resolve to any object", refSpec));
+        if (resolvedObjectId.isNull()) {
+            return Optional.absent();
+        }
 
         final TYPE type = command(ResolveObjectType.class).setObjectId(resolvedObjectId).call();
         ObjectReader<? extends RevObject> reader;
@@ -95,6 +101,6 @@ public class RevObjectParse extends AbstractGeoGitOp<RevObject> {
         }
 
         RevObject revObject = indexDb.get(resolvedObjectId, reader);
-        return clazz.cast(revObject);
+        return Optional.of(clazz.cast(revObject));
     }
 }

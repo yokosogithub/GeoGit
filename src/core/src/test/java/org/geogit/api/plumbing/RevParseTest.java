@@ -5,7 +5,7 @@
 
 package org.geogit.api.plumbing;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.*;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
@@ -59,8 +59,8 @@ public class RevParseTest {
         Optional<Ref> ref = Optional.of(new Ref(Ref.MASTER, oid, TYPE.COMMIT));
         when(mockRefParse.call()).thenReturn(ref);
 
-        ObjectId objectId = command.setRefSpec(Ref.MASTER).call();
-        assertEquals(oid, objectId);
+        Optional<ObjectId> objectId = command.setRefSpec(Ref.MASTER).call();
+        assertEquals(oid, objectId.get());
     }
 
     @Test
@@ -68,15 +68,15 @@ public class RevParseTest {
 
         Optional<Ref> ref = Optional.absent();
         when(mockRefParse.call()).thenReturn(ref);
-        assertSame(ObjectId.NULL, command.setRefSpec("abcNotAHash").call());
+        assertFalse(command.setRefSpec("abcNotAHash").call().isPresent());
 
-        assertSame(ObjectId.NULL, command.setRefSpec("refs/norARef").call());
+        assertFalse(command.setRefSpec("refs/norARef").call().isPresent());
 
         String validHashButNonExistent = ObjectId.forString("hash me").toString();
         ImmutableList<ObjectId> empty = ImmutableList.of();
         when(mockIndexDb.lookUp(eq(validHashButNonExistent))).thenReturn(empty);
 
-        assertSame(ObjectId.NULL, command.setRefSpec(validHashButNonExistent).call());
+        assertFalse(command.setRefSpec(validHashButNonExistent).call().isPresent());
 
         verify(mockIndexDb, atLeast(1)).lookUp(eq(validHashButNonExistent));
     }
@@ -98,10 +98,10 @@ public class RevParseTest {
         when(mockIndexDb.lookUp(eq(hash2))).thenReturn(ImmutableList.of(id2));
 
         ObjectId objectId;
-        objectId = command.setRefSpec(hash1).call();
+        objectId = command.setRefSpec(hash1).call().get();
         assertEquals(id1, objectId);
 
-        objectId = command.setRefSpec(hash2).call();
+        objectId = command.setRefSpec(hash2).call().get();
         assertEquals(id2, objectId);
     }
 
@@ -135,12 +135,12 @@ public class RevParseTest {
 
         prefixSearch = hash1.substring(0, 7);
         when(mockIndexDb.lookUp(eq(prefixSearch))).thenReturn(ImmutableList.of(id1));
-        ObjectId objectId = command.setRefSpec(prefixSearch).call();
+        ObjectId objectId = command.setRefSpec(prefixSearch).call().get();
         assertEquals(id1, objectId);
 
         prefixSearch = hash2.substring(0, 7);
         when(mockIndexDb.lookUp(eq(prefixSearch))).thenReturn(ImmutableList.of(id2));
-        objectId = command.setRefSpec(prefixSearch).call();
+        objectId = command.setRefSpec(prefixSearch).call().get();
         assertEquals(id2, objectId);
     }
 

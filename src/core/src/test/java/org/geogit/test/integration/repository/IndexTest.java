@@ -135,7 +135,7 @@ public class IndexTest extends RepositoryTestCase {
                 if (treeId.isNull()) {
                     return geogit.command(CreateTree.class).setIndex(true).call();
                 }
-                return (RevTree) geogit.command(RevObjectParse.class).setObjectId(treeId).call();
+                return geogit.command(RevObjectParse.class).setObjectId(treeId).call(RevTree.class).get();
             }
         };
         return Suppliers.memoize(delegate);

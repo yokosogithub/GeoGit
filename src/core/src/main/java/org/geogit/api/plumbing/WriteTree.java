@@ -137,7 +137,7 @@ public class WriteTree extends AbstractGeoGitOp<ObjectId> {
         if (treeId.isNull()) {
             return command(CreateTree.class).call();
         }
-        return command(RevObjectParse.class).setObjectId(treeId).call(RevTree.class);
+        return command(RevObjectParse.class).setObjectId(treeId).call(RevTree.class).get();
     }
 
     private void deepMove(NodeRef ref, StagingDatabase indexDatabase2,
@@ -156,7 +156,7 @@ public class WriteTree extends AbstractGeoGitOp<ObjectId> {
             RevTree rootTree = oldRoot.get();
             return rootTree.getId();
         }
-        ObjectId targetTreeId = command(ResolveTreeish.class).setTreeish(Ref.HEAD).call();
+        ObjectId targetTreeId = command(ResolveTreeish.class).setTreeish(Ref.HEAD).call().get();
         return targetTreeId;
     }
 
@@ -171,7 +171,7 @@ public class WriteTree extends AbstractGeoGitOp<ObjectId> {
         if (targetTreeId.isNull()) {
             return command(CreateTree.class).call();
         }
-        return command(RevObjectParse.class).setObjectId(targetTreeId).call(RevTree.class)
+        return command(RevObjectParse.class).setObjectId(targetTreeId).call(RevTree.class).get()
                 .mutable();
     }
 

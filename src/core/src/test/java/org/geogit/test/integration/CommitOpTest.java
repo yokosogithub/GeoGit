@@ -80,7 +80,7 @@ public class CommitOpTest extends RepositoryTestCase {
         assertTrue(featureBlobId.isPresent());
         assertEquals(oid1, featureBlobId.get().getObjectId());
 
-        ObjectId commitId = geogit.command(RevParse.class).setRefSpec(Ref.HEAD).call();
+        ObjectId commitId = geogit.command(RevParse.class).setRefSpec(Ref.HEAD).call().get();
         assertEquals(commit.getId(), commitId);
     }
 

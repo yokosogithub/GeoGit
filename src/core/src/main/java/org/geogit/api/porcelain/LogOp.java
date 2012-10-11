@@ -133,7 +133,7 @@ public class LogOp extends AbstractGeoGitOp<Iterator<RevCommit>> {
         ObjectId oldestCommitId;
         {
             if (this.until == null) {
-                newestCommitId = command(RevParse.class).setRefSpec(Ref.HEAD).call();
+                newestCommitId = command(RevParse.class).setRefSpec(Ref.HEAD).call().get();
             } else {
                 if (!repository.commitExists(this.until)) {
                     throw new IllegalStateException("Provided 'until' commit id does not exist: "

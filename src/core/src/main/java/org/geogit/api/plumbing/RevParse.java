@@ -22,7 +22,7 @@ import com.google.inject.Inject;
  * Resolves the reference given by a ref spec to the {@link ObjectId} it finally points to,
  * dereferencing symbolic refs as necessary.
  */
-public class RevParse extends AbstractGeoGitOp<ObjectId> {
+public class RevParse extends AbstractGeoGitOp<Optional<ObjectId>> {
 
     private String refSpec;
 
@@ -75,12 +75,12 @@ public class RevParse extends AbstractGeoGitOp<ObjectId> {
      * @param revstr A geogit object references expression
      * @throws IllegalArgumentException if the ref spec doesn't resolve to any object in the
      *         respository
-     * @return the resolved object id, may be {@link ObjectId#NULL}
+     * @return the resolved object id, may be {@link Optional#absent() absent}
      */
     @Override
-    public ObjectId call() {
+    public Optional<ObjectId> call() {
         checkState(refSpec != null);
-        ObjectId resolvedTo = ObjectId.NULL;
+        ObjectId resolvedTo = null;
         // TODO: handle other kinds of ref specs
 
         // is it a ref?
@@ -91,6 +91,13 @@ public class RevParse extends AbstractGeoGitOp<ObjectId> {
             // does it look like an object id hash?
             boolean hexPatternMatches = HEX_PATTERN.matcher(refSpec).matches();
             if (hexPatternMatches) {
+                try {
+                    if (ObjectId.valueOf(refSpec).isNull()) {
+                        return Optional.of(ObjectId.NULL);
+                    }
+                } catch (IllegalArgumentException ignore) {
+                    // its a partial id
+                }
                 List<ObjectId> hashMatches = indexDb.lookUp(refSpec);
                 if (hashMatches.size() > 1) {
                     throw new IllegalArgumentException(String.format(
@@ -102,6 +109,6 @@ public class RevParse extends AbstractGeoGitOp<ObjectId> {
                 }
             }
         }
-        return resolvedTo;
+        return Optional.fromNullable(resolvedTo);
     }
 }

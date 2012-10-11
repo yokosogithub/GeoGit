@@ -22,7 +22,6 @@ import org.geogit.api.plumbing.CreateTree;
 import org.geogit.api.plumbing.RefParse;
 import org.geogit.api.plumbing.ResolveTreeish;
 import org.geogit.api.plumbing.RevObjectParse;
-import org.geogit.api.plumbing.RevParse;
 import org.geogit.api.plumbing.UpdateRef;
 import org.geogit.api.plumbing.UpdateSymRef;
 import org.geogit.api.plumbing.WriteTree;
@@ -165,8 +164,12 @@ public class CommitOp extends AbstractGeoGitOp<RevCommit> {
 
         final Optional<Ref> currHead = command(RefParse.class).setName(Ref.HEAD).call();
         Preconditions.checkState(currHead.isPresent(), "Repository has no HEAD, can't commit");
+        final Ref headRef = currHead.get();
+        Preconditions
+                .checkState(headRef instanceof SymRef,//
+                        "HEAD is in a dettached state, cannot commit. Create a branch from it before committing");
 
-        final ObjectId currHeadCommitId = command(RevParse.class).setRefSpec(Ref.HEAD).call();
+        final ObjectId currHeadCommitId = headRef.getObjectId();
         parents.add(currHeadCommitId);
 
         // final ObjectId newTreeId = index.writeTree(currHead.get(), subProgress(49f));
@@ -177,7 +180,8 @@ public class CommitOp extends AbstractGeoGitOp<RevCommit> {
             return null;
         }
 
-        final ObjectId currentRootTreeId = repository.getRootTreeId();
+        final ObjectId currentRootTreeId = command(ResolveTreeish.class)
+                .setTreeish(currHeadCommitId.toString()).call().or(ObjectId.NULL);
         if (currentRootTreeId.equals(newTreeId)) {
             if (!allowEmpty) {
                 throw new NothingToCommitException("Nothing to commit after " + currHeadCommitId);
@@ -228,11 +232,12 @@ public class CommitOp extends AbstractGeoGitOp<RevCommit> {
         Supplier<RevTree> supplier = new Supplier<RevTree>() {
             @Override
             public RevTree get() {
-                ObjectId id = command(ResolveTreeish.class).setTreeish(Ref.HEAD).call();
+                Optional<ObjectId> head = command(ResolveTreeish.class).setTreeish(Ref.HEAD).call();
+                ObjectId id = head.get();
                 if (id.isNull()) {
                     return command(CreateTree.class).setIndex(false).call();
                 }
-                return (RevTree) command(RevObjectParse.class).setObjectId(id).call();
+                return command(RevObjectParse.class).setObjectId(id).call(RevTree.class).get();
             }
         };
         return Suppliers.memoize(supplier);

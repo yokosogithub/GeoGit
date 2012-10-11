@@ -174,12 +174,12 @@ public class Repository {
 
     public ObjectId getRootTreeId() {
         // find the root tree
-        ObjectId commitId = command(RevParse.class).setRefSpec(Ref.HEAD).call();
+        ObjectId commitId = command(RevParse.class).setRefSpec(Ref.HEAD).call().get();
         if (commitId.isNull()) {
             return commitId;
         }
-        RevCommit commit = (RevCommit) command(RevObjectParse.class)
-                .setRefSpec(commitId.toString()).call();
+        RevCommit commit = command(RevObjectParse.class).setRefSpec(commitId.toString())
+                .call(RevCommit.class).get();
         ObjectId treeId = commit.getTreeId();
         return treeId;
     }
@@ -254,11 +254,11 @@ public class Repository {
      * @return
      */
     public RevTree getOrCreateHeadTree() {
-        ObjectId headTreeId = command(ResolveTreeish.class).setTreeish(Ref.HEAD).call();
-        if (headTreeId.isNull()) {
+        Optional<ObjectId> headTreeId = command(ResolveTreeish.class).setTreeish(Ref.HEAD).call();
+        if (!headTreeId.isPresent()) {
             return command(CreateTree.class).call();
         }
-        return getTree(headTreeId);
+        return getTree(headTreeId.get());
     }
 
     /**
@@ -266,7 +266,7 @@ public class Repository {
      * @return
      */
     public RevTree getTree(ObjectId treeId) {
-        return (RevTree) command(RevObjectParse.class).setObjectId(treeId).call();
+        return command(RevObjectParse.class).setObjectId(treeId).call(RevTree.class).get();
     }
 
     public Optional<NodeRef> getRootTreeChild(String path) {

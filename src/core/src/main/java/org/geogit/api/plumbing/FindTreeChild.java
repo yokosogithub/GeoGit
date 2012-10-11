@@ -94,11 +94,11 @@ public class FindTreeChild extends AbstractGeoGitOp<Optional<NodeRef>> {
         checkNotNull(childPath, "childPath");
         final RevTree tree;
         if (parent == null) {
-            ObjectId rootTreeId = command(ResolveTreeish.class).setTreeish(Ref.HEAD).call();
+            ObjectId rootTreeId = command(ResolveTreeish.class).setTreeish(Ref.HEAD).call().get();
             if (rootTreeId.isNull()) {
                 return Optional.absent();
             }
-            tree = command(RevObjectParse.class).setObjectId(rootTreeId).call(RevTree.class);
+            tree = command(RevObjectParse.class).setObjectId(rootTreeId).call(RevTree.class).get();
         } else {
             tree = parent.get();
         }
