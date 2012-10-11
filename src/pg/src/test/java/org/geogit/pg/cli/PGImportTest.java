@@ -152,6 +152,14 @@ public class PGImportTest extends Assert {
         importCommand.run(cli);
     }
 
+    @Test
+    public void testNullDataStore() throws Exception {
+        PGImport importCommand = new PGImport();
+        importCommand.args.all = true;
+        importCommand.dataStoreFactory = PGTestHelper.createNullTestFactory();
+        importCommand.run(cli);
+    }
+
     private void setUpGeogit(GeogitCLI cli) throws Exception {
         final File userhome = tempFolder.newFolder("mockUserHomeDir");
         final File workingDir = tempFolder.newFolder("mockWorkingDir");

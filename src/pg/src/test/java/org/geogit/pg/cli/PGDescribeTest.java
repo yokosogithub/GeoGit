@@ -97,6 +97,14 @@ public class PGDescribeTest extends Assert {
     }
 
     @Test
+    public void testNullDataStore() throws Exception {
+        PGDescribe describeCommand = new PGDescribe();
+        describeCommand.args.table = "table1";
+        describeCommand.dataStoreFactory = PGTestHelper.createNullTestFactory();
+        describeCommand.run(cli);
+    }
+
+    @Test
     public void testNoRepository() throws Exception {
         ConsoleReader consoleReader = new ConsoleReader(System.in, System.out,
                 new UnsupportedTerminal());

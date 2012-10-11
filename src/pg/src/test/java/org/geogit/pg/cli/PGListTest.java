@@ -88,6 +88,13 @@ public class PGListTest extends Assert {
     }
 
     @Test
+    public void testNullDataStore() throws Exception {
+        PGList listCommand = new PGList();
+        listCommand.dataStoreFactory = PGTestHelper.createNullTestFactory();
+        listCommand.run(cli);
+    }
+
+    @Test
     public void testListException() throws Exception {
         ConsoleReader consoleReader = new ConsoleReader(System.in, System.out,
                 new UnsupportedTerminal());
