@@ -5,28 +5,25 @@
 
 package org.geogit.pg.cli;
 
-import java.io.IOException;
-import java.io.Serializable;
+import java.sql.Connection;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
+import java.net.ConnectException;
 
 import jline.console.ConsoleReader;
 
 import org.geogit.api.RevFeature;
-import org.geogit.cli.AbstractCommand;
 import org.geogit.cli.CLICommand;
 import org.geogit.cli.GeogitCLI;
 import org.geogit.repository.WorkingTree;
 import org.geogit.storage.hessian.GeoToolsRevFeature;
 import org.geogit.storage.hessian.GeoToolsRevFeatureType;
 
-import org.geotools.data.AbstractDataStoreFactory;
 import org.geotools.data.DataStore;
-import org.geotools.data.postgis.PostgisNGDataStoreFactory;
 import org.geotools.data.simple.SimpleFeatureCollection;
 import org.geotools.data.simple.SimpleFeatureIterator;
 import org.geotools.data.simple.SimpleFeatureSource;
+import org.geotools.jdbc.JDBCDataStore;
 
 import org.opengis.feature.simple.SimpleFeature;
 import org.opengis.feature.type.Name;
@@ -34,55 +31,69 @@ import org.opengis.util.ProgressListener;
 
 import com.beust.jcommander.Parameters;
 import com.beust.jcommander.ParametersDelegate;
-import com.beust.jcommander.internal.Maps;
 
-import com.google.common.base.Preconditions;
-import com.google.common.base.Throwables;
 import com.google.common.collect.AbstractIterator;
 
 /**
  *
  */
 @Parameters(commandNames = "import", commandDescription = "Import PostGIS database")
-public class PGImport extends AbstractCommand implements CLICommand {
+public class PGImport extends AbstractPGCommand implements CLICommand {
 
     @ParametersDelegate
     public PGImportArgs args = new PGImportArgs();
 
-    public AbstractDataStoreFactory dataStoreFactory = new PostgisNGDataStoreFactory();
-
     @Override
     protected void runInternal(GeogitCLI cli) throws Exception {
-        Preconditions.checkState(cli.getGeogit() != null, "Not a geogit repository: "
-                + cli.getPlatform().pwd());
+        if (cli.getGeogit() == null) {
+            cli.getConsole().println("Not a geogit repository: " + cli.getPlatform().pwd());
+            return;
+        }
+        if ((args.all == true && !args.table.isEmpty())
+                || (args.all == false && args.table.isEmpty())) {
+            cli.getConsole().println("Specify --all or --table, both cannot be set.");
+            return;
+        }
 
-        Preconditions.checkState((args.all == true && args.table.isEmpty())
-                || (args.all == false && !args.table.isEmpty()),
-                "Specify --all or --table, both cannot be set.");
-
+        DataStore dataStore = null;
         try {
-            doImport(cli);
-        } catch (Exception e) {
-            throw Throwables.propagate(e);
-        } finally {
-            try {
-                cli.getConsole().flush();
-            } catch (IOException e) {
-                throw Throwables.propagate(e);
+
+            dataStore = getDataStore();
+            if (dataStore instanceof JDBCDataStore) {
+                Connection con = null;
+                try {
+                    con = ((JDBCDataStore) dataStore).getDataSource().getConnection();
+                } catch (Exception e) {
+                    throw new ConnectException();
+                }
+
+                ((JDBCDataStore) dataStore).closeSafe(con);
             }
+
+            doImport(cli, dataStore);
+        } catch (ConnectException e) {
+            cli.getConsole().println("Unable to connect using the specified database parameters.");
+        } finally {
+            if (dataStore != null) {
+                dataStore.dispose();
+            }
+            cli.getConsole().flush();
         }
     }
 
-    private void doImport(GeogitCLI cli) throws Exception {
+    private void doImport(GeogitCLI cli, DataStore dataStore) throws Exception {
         final ConsoleReader console = cli.getConsole();
-        console.println("Importing database " + args.common.database);
 
-        DataStore dataStore = getDataStore();
+        console.println("Importing database " + commonArgs.database);
+
+        boolean foundTable = false;
 
         List<Name> typeNames = dataStore.getNames();
         for (Name typeName : typeNames) {
             if (!args.all && !args.table.equals(typeName.toString()))
                 continue;
+
+            foundTable = true;
 
             WorkingTree workingTree = cli.getGeogit().getRepository().getWorkingTree();
 
@@ -114,20 +125,12 @@ public class PGImport extends AbstractCommand implements CLICommand {
                 featureIterator.close();
             }
         }
-    }
-
-    private DataStore getDataStore() throws Exception {
-        Map<String, Serializable> params = Maps.newHashMap();
-        params.put(PostgisNGDataStoreFactory.DBTYPE.key, "postgis");
-        params.put(PostgisNGDataStoreFactory.HOST.key, args.common.host);
-        params.put(PostgisNGDataStoreFactory.PORT.key, args.common.port.toString());
-        params.put(PostgisNGDataStoreFactory.SCHEMA.key, args.common.schema);
-        params.put(PostgisNGDataStoreFactory.DATABASE.key, args.common.database);
-        params.put(PostgisNGDataStoreFactory.USER.key, args.common.username);
-        params.put(PostgisNGDataStoreFactory.PASSWD.key, args.common.password);
-
-        DataStore dataStore = dataStoreFactory.createDataStore(params);
-
-        return dataStore;
+        if (!foundTable) {
+            if (args.all) {
+                console.println("No features were found in the database.");
+            } else {
+                console.println("Could not find the specified table.");
+            }
+        }
     }
 }

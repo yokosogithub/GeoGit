@@ -8,10 +8,8 @@ package org.geogit.pg.cli;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static org.mockito.Mockito.spy;
-import static org.mockito.Mockito.doThrow;
 
 import java.io.File;
-import java.io.IOException;
 
 import jline.UnsupportedTerminal;
 import jline.console.ConsoleReader;
@@ -73,7 +71,6 @@ public class PGImportTest extends Assert {
         importCommand.args.all = false;
         importCommand.args.table = "";
         importCommand.dataStoreFactory = factory;
-        exception.expect(Exception.class);
         importCommand.run(cli);
     }
 
@@ -83,7 +80,6 @@ public class PGImportTest extends Assert {
         importCommand.args.all = true;
         importCommand.args.table = "table1";
         importCommand.dataStoreFactory = factory;
-        exception.expect(Exception.class);
         importCommand.run(cli);
     }
 
@@ -96,7 +92,6 @@ public class PGImportTest extends Assert {
         PGImport importCommand = new PGImport();
         importCommand.args.all = true;
         importCommand.dataStoreFactory = factory;
-        exception.expect(IllegalStateException.class);
         importCommand.run(cli);
     }
 
@@ -106,6 +101,21 @@ public class PGImportTest extends Assert {
         importCommand.args.all = false;
         importCommand.args.table = "table1";
         importCommand.dataStoreFactory = factory;
+        importCommand.run(cli);
+    }
+
+    @Test
+    public void testImportHelp() throws Exception {
+        PGImport importCommand = new PGImport();
+        importCommand.help = true;
+        importCommand.run(cli);
+    }
+
+    @Test
+    public void testInvalidDatabaseParams() throws Exception {
+        PGImport importCommand = new PGImport();
+        importCommand.commonArgs.host = "nonexistant";
+        importCommand.args.all = true;
         importCommand.run(cli);
     }
 
@@ -126,20 +136,20 @@ public class PGImportTest extends Assert {
     }
 
     @Test
-    public void testFlushException() throws Exception {
-        ConsoleReader consoleReader = spy(new ConsoleReader(System.in, System.out,
-                new UnsupportedTerminal()));
-        GeogitCLI testCli = new GeogitCLI(consoleReader);
+    public void testImportNonExistantTable() throws Exception {
+        PGImport importCommand = new PGImport();
+        importCommand.args.all = false;
+        importCommand.args.table = "nonexistant";
+        importCommand.dataStoreFactory = factory;
+        importCommand.run(cli);
+    }
 
-        setUpGeogit(testCli);
-
-        doThrow(new IOException("Exception")).when(consoleReader).flush();
-
+    @Test
+    public void testEmptyTable() throws Exception {
         PGImport importCommand = new PGImport();
         importCommand.args.all = true;
-        importCommand.dataStoreFactory = factory;
-        exception.expect(Exception.class);
-        importCommand.run(testCli);
+        importCommand.dataStoreFactory = PGTestHelper.createEmptyTestFactory();
+        importCommand.run(cli);
     }
 
     private void setUpGeogit(GeogitCLI cli) throws Exception {

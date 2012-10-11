@@ -5,14 +5,9 @@
 
 package org.geogit.pg.cli;
 
-import com.beust.jcommander.ParametersDelegate;
-
 /**
  *
  */
 public class PGListArgs {
-
-    @ParametersDelegate
-    public PGCommonArgs common = new PGCommonArgs();
 
 }

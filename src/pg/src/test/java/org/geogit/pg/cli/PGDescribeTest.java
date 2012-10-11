@@ -66,11 +66,33 @@ public class PGDescribeTest extends Assert {
     }
 
     @Test
+    public void testDescribeHelp() throws Exception {
+        PGDescribe describeCommand = new PGDescribe();
+        describeCommand.help = true;
+        describeCommand.run(cli);
+    }
+
+    @Test
+    public void testInvalidDatabaseParams() throws Exception {
+        PGDescribe describeCommand = new PGDescribe();
+        describeCommand.commonArgs.host = "nonexistant";
+        describeCommand.args.table = "table1";
+        describeCommand.run(cli);
+    }
+
+    @Test
+    public void testDescribeNonexistantTable() throws Exception {
+        PGDescribe describeCommand = new PGDescribe();
+        describeCommand.args.table = "nonexistant";
+        describeCommand.dataStoreFactory = factory;
+        describeCommand.run(cli);
+    }
+
+    @Test
     public void testNoTable() throws Exception {
         PGDescribe describeCommand = new PGDescribe();
         describeCommand.args.table = "";
         describeCommand.dataStoreFactory = factory;
-        exception.expect(Exception.class);
         describeCommand.run(cli);
     }
 
@@ -83,7 +105,6 @@ public class PGDescribeTest extends Assert {
         PGDescribe describeCommand = new PGDescribe();
         describeCommand.args.table = "table1";
         describeCommand.dataStoreFactory = factory;
-        exception.expect(IllegalStateException.class);
         describeCommand.run(cli);
     }
 

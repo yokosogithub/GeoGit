@@ -55,4 +55,15 @@ public class PGTestHelper {
         return factory;
     }
 
+    public static AbstractDataStoreFactory createEmptyTestFactory() throws Exception {
+
+        MemoryDataStore testDataStore = new MemoryDataStore();
+
+        final AbstractDataStoreFactory factory = mock(AbstractDataStoreFactory.class);
+        Map<String, Serializable> dataStoreParams = anyMapOf(String.class, Serializable.class);
+        when(factory.createDataStore(dataStoreParams)).thenReturn(testDataStore);
+
+        return factory;
+    }
+
 }

@@ -5,13 +5,11 @@
 
 package org.geogit.pg.cli;
 
-import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
 
 import java.io.File;
-import java.io.IOException;
 
 import jline.UnsupportedTerminal;
 import jline.console.ConsoleReader;
@@ -58,9 +56,23 @@ public class PGListTest extends Assert {
     }
 
     @Test
-    public void testDescribe() throws Exception {
+    public void testList() throws Exception {
         PGList listCommand = new PGList();
         listCommand.dataStoreFactory = factory;
+        listCommand.run(cli);
+    }
+
+    @Test
+    public void testListHelp() throws Exception {
+        PGList listCommand = new PGList();
+        listCommand.help = true;
+        listCommand.run(cli);
+    }
+
+    @Test
+    public void testInvalidDatabaseParams() throws Exception {
+        PGList listCommand = new PGList();
+        listCommand.commonArgs.host = "nonexistant";
         listCommand.run(cli);
     }
 
@@ -72,12 +84,11 @@ public class PGListTest extends Assert {
 
         PGList listCommand = new PGList();
         listCommand.dataStoreFactory = factory;
-        exception.expect(IllegalStateException.class);
         listCommand.run(cli);
     }
 
     @Test
-    public void testDescribeException() throws Exception {
+    public void testListException() throws Exception {
         ConsoleReader consoleReader = new ConsoleReader(System.in, System.out,
                 new UnsupportedTerminal());
         GeogitCLI mockCli = spy(new GeogitCLI(consoleReader));
@@ -89,22 +100,6 @@ public class PGListTest extends Assert {
         listCommand.dataStoreFactory = factory;
         exception.expect(MockitoException.class);
         listCommand.run(mockCli);
-    }
-
-    @Test
-    public void testFlushException() throws Exception {
-        ConsoleReader consoleReader = spy(new ConsoleReader(System.in, System.out,
-                new UnsupportedTerminal()));
-        GeogitCLI testCli = new GeogitCLI(consoleReader);
-
-        setUpGeogit(testCli);
-
-        doThrow(new IOException("Exception")).when(consoleReader).flush();
-
-        PGList listCommand = new PGList();
-        listCommand.dataStoreFactory = factory;
-        exception.expect(Exception.class);
-        listCommand.run(testCli);
     }
 
     private void setUpGeogit(GeogitCLI cli) throws Exception {
