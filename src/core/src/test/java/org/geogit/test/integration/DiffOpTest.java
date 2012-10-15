@@ -16,6 +16,7 @@ import java.util.List;
 
 import org.geogit.api.NodeRef;
 import org.geogit.api.ObjectId;
+import org.geogit.api.Ref;
 import org.geogit.api.RevCommit;
 import org.geogit.api.plumbing.diff.DiffEntry;
 import org.geogit.api.plumbing.diff.DiffEntry.ChangeType;
@@ -50,7 +51,7 @@ public class DiffOpTest extends RepositoryTestCase {
         final ObjectId oid1 = insertAndAdd(points1);
         final RevCommit commit1_1 = geogit.commit().call();
         try {
-            diffOp.setOldVersion(oid1.toString()).call();
+            diffOp.setOldVersion(oid1.toString()).setNewVersion(Ref.HEAD).call();
             fail("Expected IAE as oldVersion is not a commit");
         } catch (IllegalArgumentException e) {
             assertTrue(e.getMessage(), e.getMessage().contains(oid1.toString()));
@@ -91,7 +92,8 @@ public class DiffOpTest extends RepositoryTestCase {
         final ObjectId newOid = insertAndAdd(points1);
         geogit.commit().setAll(true).call();
 
-        List<DiffEntry> difflist = toList(diffOp.setOldVersion(ObjectId.NULL).call());
+        List<DiffEntry> difflist = toList(diffOp.setOldVersion(ObjectId.NULL)
+                .setNewVersion(Ref.HEAD).call());
 
         assertNotNull(difflist);
         assertEquals(1, difflist.size());
@@ -442,6 +444,7 @@ public class DiffOpTest extends RepositoryTestCase {
 
         // filter on namespace1, no changes between commit1 and commit2
         diffOp.setOldVersion(commit1.getId());
+        diffOp.setNewVersion(Ref.HEAD);
         diffOp.setFilter(pointsName);
 
         diffs = toList(diffOp.call());

@@ -24,12 +24,14 @@ import org.geogit.storage.ObjectSerialisingFactory;
 import org.geogit.storage.StagingDatabase;
 
 import com.google.common.base.Function;
+import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
 import com.google.inject.Inject;
 
 /**
  * Compares the features in the {@link WorkingTree working tree} and the {@link StagingArea index}
+ * or a given root tree-ish.
  */
 public class DiffWorkTree extends AbstractGeoGitOp<Iterator<DiffEntry>> {
 
@@ -39,10 +41,20 @@ public class DiffWorkTree extends AbstractGeoGitOp<Iterator<DiffEntry>> {
 
     private ObjectSerialisingFactory serialFactory;
 
+    private String refSpec;
+
     @Inject
     public DiffWorkTree(StagingDatabase index, ObjectSerialisingFactory serialFactory) {
         this.indexDb = index;
         this.serialFactory = serialFactory;
+    }
+
+    /**
+     * @param oldRefSpec
+     */
+    public DiffWorkTree setOldVersion(@Nullable String refSpec) {
+        this.refSpec = refSpec;
+        return this;
     }
 
     public DiffWorkTree setFilter(@Nullable String path) {
@@ -50,19 +62,27 @@ public class DiffWorkTree extends AbstractGeoGitOp<Iterator<DiffEntry>> {
         return this;
     }
 
+    /**
+     * If no {@link #setOldVersion(String) old version} was set, returns the differences between the
+     * working tree and the index, otherwise the differences between the working tree and the
+     * specified revision.
+     */
     @Override
     public Iterator<DiffEntry> call() {
 
         Iterator<NodeRef> unstaged = indexDb.getUnstaged(pathFilter);
 
-        RevTree stagedTree = getStagedTree();
+        RevTree stagedTree = getOldTree();
         return new DiffTreeIterator(indexDb, stagedTree, unstaged, serialFactory);
     }
 
     /**
      * @return
      */
-    private RevTree getStagedTree() {
+    private RevTree getOldTree() {
+
+        final String oldVersion = Optional.fromNullable(refSpec).or(Ref.HEAD);
+
         ObjectId headTreeId = command(ResolveTreeish.class).setTreeish(Ref.HEAD).call();
         final RevTree headTree;
         if (headTreeId.isNull()) {

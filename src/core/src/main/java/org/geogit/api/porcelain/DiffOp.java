@@ -4,31 +4,54 @@
  */
 package org.geogit.api.porcelain;
 
+import static com.google.common.base.Preconditions.checkArgument;
+
 import java.util.Iterator;
 
 import javax.annotation.Nullable;
 
 import org.geogit.api.AbstractGeoGitOp;
 import org.geogit.api.ObjectId;
-import org.geogit.api.Ref;
 import org.geogit.api.plumbing.DiffIndex;
 import org.geogit.api.plumbing.DiffTree;
 import org.geogit.api.plumbing.DiffWorkTree;
 import org.geogit.api.plumbing.ResolveTreeish;
 import org.geogit.api.plumbing.diff.DiffEntry;
 
-import com.google.common.base.Optional;
 import com.google.inject.Inject;
 
 /**
  * Perform a diff between trees pointed out by two commits
+ * <p>
+ * Usage:
+ * <ul>
+ * <li>
+ * <code>{@link #setOldVersion(String) oldVersion} == null && {@link #setNewVersion(String) newVersion} == null</code>
+ * : compare working tree and index
+ * <li>
+ * <code>{@link #setOldVersion(String) oldVersion} != null && {@link #setNewVersion(String) newVersion} == null</code>
+ * : compare the working tree with the given commit
+ * <li>
+ * <code>{@link #setCompareIndex(boolean) compareIndex} == true && {@link #setOldVersion(String) oldVersion} == null && {@link #setNewVersion(String) newVersion} == null</code>
+ * : compare the index with the HEAD commit
+ * <li>
+ * <code>{@link #setCompareIndex(boolean) compareIndex} == true && {@link #setOldVersion(String) oldVersion} != null && {@link #setNewVersion(String) newVersion} == null</code>
+ * : compare the index with the given commit
+ * <li>
+ * <code>{@link #setOldVersion(String) oldVersion} != null && {@link #setNewVersion(String) newVersion} != null</code>
+ * : compare {@code commit1} with {@code commit2}, where {@code commit1} is the eldest or left side
+ * of the diff.
+ * </ul>
  * 
+ * @see DiffWorkTree
+ * @see DiffIndex
+ * @see DiffTree
  */
 public class DiffOp extends AbstractGeoGitOp<Iterator<DiffEntry>> {
 
-    private String oldRevObjectSpec;
+    private String oldRefSpec;
 
-    private String newRevObjectSpec;
+    private String newRefSpec;
 
     private String pathFilter;
 
@@ -47,7 +70,7 @@ public class DiffOp extends AbstractGeoGitOp<Iterator<DiffEntry>> {
      * @return
      */
     public DiffOp setOldVersion(@Nullable String revObjectSpec) {
-        this.oldRevObjectSpec = revObjectSpec;
+        this.oldRefSpec = revObjectSpec;
         return this;
     }
 
@@ -55,17 +78,12 @@ public class DiffOp extends AbstractGeoGitOp<Iterator<DiffEntry>> {
         return setOldVersion(treeishOid.toString());
     }
 
-    public DiffOp setOldVersion(Optional<String> oldVersion) {
-
-        return this;
-    }
-
     /**
      * @param commitId the newVersion to set
      * @return
      */
     public DiffOp setNewVersion(String revObjectSpec) {
-        this.newRevObjectSpec = revObjectSpec;
+        this.newRefSpec = revObjectSpec;
         return this;
     }
 
@@ -80,42 +98,32 @@ public class DiffOp extends AbstractGeoGitOp<Iterator<DiffEntry>> {
 
     @Override
     public Iterator<DiffEntry> call() {
+        checkArgument(cached && oldRefSpec == null || !cached, String.format(
+                "compare index allows only one revision to check against, got %s / %s", oldRefSpec,
+                newRefSpec));
+        checkArgument(newRefSpec == null || oldRefSpec != null,
+                "If new rev spec is specified then old rev spec is mandatory");
 
+        Iterator<DiffEntry> iterator;
         if (cached) {
             // compare the tree-ish (default to HEAD) and the index
-            DiffIndex diffIndex = command(DiffIndex.class);
-            diffIndex.setFilter(this.pathFilter);
-            if (oldRevObjectSpec != null) {
-                ObjectId treeId = command(ResolveTreeish.class).setTreeish(oldRevObjectSpec).call();
-                diffIndex.setRootTree(treeId);
+            DiffIndex diffIndex = command(DiffIndex.class).setFilter(this.pathFilter);
+            if (oldRefSpec != null) {
+                diffIndex.setOldVersion(oldRefSpec);
             }
-            return diffIndex.call();
-        }
+            iterator = diffIndex.call();
+        } else if (newRefSpec == null) {
 
-        if (newRevObjectSpec == null && oldRevObjectSpec == null) {
             DiffWorkTree workTreeIndexDiff = command(DiffWorkTree.class).setFilter(pathFilter);
-            return workTreeIndexDiff.call();
-        }
-
-        final String oldSpec;
-        final String newSpec;
-        if (oldRevObjectSpec == null) {
-            throw new IllegalArgumentException("old commit not specified");
+            if (oldRefSpec != null) {
+                workTreeIndexDiff.setOldVersion(oldRefSpec);
+            }
+            iterator = workTreeIndexDiff.call();
         } else {
-            oldSpec = oldRevObjectSpec;
+
+            iterator = command(DiffTree.class).setOldVersion(oldRefSpec).setNewVersion(newRefSpec)
+                    .setFilterPath(pathFilter).call();
         }
-
-        if (newRevObjectSpec == null) {
-            newSpec = Ref.HEAD;
-        } else {
-            newSpec = newRevObjectSpec;
-        }
-
-        final ObjectId oldTreeId = command(ResolveTreeish.class).setTreeish(oldSpec).call();
-        final ObjectId newTreeId = command(ResolveTreeish.class).setTreeish(newSpec).call();
-
-        Iterator<DiffEntry> iterator = command(DiffTree.class).setOldTree(oldTreeId)
-                .setNewTree(newTreeId).setFilterPath(pathFilter).call();
 
         return iterator;
     }

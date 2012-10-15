@@ -32,7 +32,6 @@ import org.fusesource.jansi.Ansi;
 import org.geogit.api.GeoGIT;
 import org.geogit.api.NodeRef;
 import org.geogit.api.ObjectId;
-import org.geogit.api.RevCommit;
 import org.geogit.api.plumbing.diff.DiffEntry;
 import org.geogit.api.porcelain.DiffOp;
 import org.geogit.cli.AbstractCommand;
@@ -45,18 +44,31 @@ import org.geogit.storage.StagingDatabase;
 
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.Parameters;
+import com.google.common.collect.Lists;
 
 /**
- *
+ * Shows changes between commits, commits and working tree, etc.
+ * <p>
+ * Usage:
+ * <ul>
+ * <li> {@code geogit diff [-- <path>...]}: compare working tree and index
+ * <li> {@code geogit diff <commit> [-- <path>...]}: compare the working tree with the given commit
+ * <li> {@code geogit diff --cached [-- <path>...]}: compare the index with the HEAD commit
+ * <li> {@code geogit diff --cached <commit> [-- <path>...]}: compare the index with the given commit
+ * <li> {@code geogit diff <commit1> <commit2> [-- <path>...]}: compare {@code commit1} with
+ * {@code commit2}, where {@code commit1} is the eldest or left side of the diff.
+ * </ul>
+ * 
+ * @see DiffOp
  */
 @Parameters(commandNames = "diff", commandDescription = "Show changes between commits, commit and working tree, etc")
 public class Diff extends AbstractCommand implements CLICommand {
 
     @Parameter(description = "[<commit> [<commit>]] [-- <path>...]", arity = 2)
-    private List<String> refSpec;
+    private List<String> refSpec = Lists.newArrayList();
 
     @Parameter(names = "--", hidden = true, variableArity = true)
-    private List<String> paths;
+    private List<String> paths = Lists.newArrayList();
 
     @Parameter(names = "--cached", description = "compares the specified tree (commit, branch, etc) and the staging area")
     private boolean cached;
@@ -71,15 +83,17 @@ public class Diff extends AbstractCommand implements CLICommand {
      */
     @Override
     protected void runInternal(GeogitCLI cli) throws Exception {
-
+        if (refSpec.size() > 2) {
+            cli.getConsole().println("commit list is too long :" + refSpec);
+        }
         GeoGIT geogit = cli.getGeogit();
 
         DiffOp diff = geogit.command(DiffOp.class);
 
-        ObjectId oldVersion = resolveOldVersion(geogit);
-        ObjectId newVersion = resolveNewVersion(geogit);
+        String oldVersion = resolveOldVersion();
+        String newVersion = resolveNewVersion();
 
-        diff.setOldVersion(oldVersion).setNewVersion(newVersion);
+        diff.setOldVersion(oldVersion).setNewVersion(newVersion).setCompareIndex(cached);
 
         Iterator<DiffEntry> entries = diff.setProgressListener(cli.getProgressListener()).call();
 
@@ -96,24 +110,12 @@ public class Diff extends AbstractCommand implements CLICommand {
         }
     }
 
-    /**
-     * @param geogit
-     * @return
-     */
-    private ObjectId resolveNewVersion(GeoGIT geogit) {
-        return geogit.getRepository().getHead().get().getObjectId();
+    private String resolveOldVersion() {
+        return refSpec.size() > 0 ? refSpec.get(0) : null;
     }
 
-    /**
-     * @param geogit
-     * @return
-     */
-    private ObjectId resolveOldVersion(GeoGIT geogit) {
-        Repository repository = geogit.getRepository();
-        ObjectId objectId = repository.getHead().get().getObjectId();
-        RevCommit commit = repository.getCommit(objectId);
-        ObjectId parentId = commit.getParentIds().get(0);
-        return parentId;
+    private String resolveNewVersion() {
+        return refSpec.size() > 1 ? refSpec.get(1) : null;
     }
 
     private static interface DiffPrinter {

@@ -20,6 +20,7 @@ import org.geogit.storage.ObjectDatabase;
 import org.geogit.storage.ObjectSerialisingFactory;
 import org.geogit.storage.StagingDatabase;
 
+import com.google.common.base.Optional;
 import com.google.inject.Inject;
 
 /**
@@ -27,15 +28,15 @@ import com.google.inject.Inject;
  */
 public class DiffIndex extends AbstractGeoGitOp<Iterator<DiffEntry>> {
 
-    private ObjectId rootTreeId;
-
-    private String pathFilter;
-
     private ObjectDatabase repoDb;
 
     private StagingDatabase indexDb;
 
     private ObjectSerialisingFactory serialFactory;
+
+    private String refSpec;
+
+    private String pathFilter;
 
     @Inject
     public DiffIndex(ObjectDatabase repoDb, StagingDatabase index,
@@ -57,26 +58,22 @@ public class DiffIndex extends AbstractGeoGitOp<Iterator<DiffEntry>> {
      * @param the name of the root tree object in the repository's object database to compare the
      *        index against. If {@code null} or not specified, defaults to the tree object of the
      *        current HEAD commit.
-     * @see RefParse
      */
-    public void setRootTree(@Nullable ObjectId rootTreeId) {
-        this.rootTreeId = rootTreeId;
+    public DiffIndex setOldVersion(@Nullable String refSpec) {
+        this.refSpec = refSpec;
+        return this;
     }
 
     @Override
     public Iterator<DiffEntry> call() {
-        final ObjectId treeId;
-        if (rootTreeId == null) {
-            treeId = command(ResolveTreeish.class).setTreeish(Ref.HEAD).call();
-        } else {
-            treeId = rootTreeId;
-        }
+        final String oldVersion = Optional.fromNullable(refSpec).or(Ref.HEAD);
+        final ObjectId rootTreeId = command(ResolveTreeish.class).setTreeish(oldVersion).call();
 
-        RevTree rootTree;
-        if (treeId.isNull()) {
+        final RevTree rootTree;
+        if (rootTreeId.isNull()) {
             rootTree = RevTree.NULL;
         } else {
-            rootTree = (RevTree) command(RevObjectParse.class).setObjectId(treeId).call();
+            rootTree = (RevTree) command(RevObjectParse.class).setObjectId(rootTreeId).call();
         }
 
         Iterator<NodeRef> staged = indexDb.getStaged(pathFilter);

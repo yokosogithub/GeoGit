@@ -25,15 +25,15 @@ import com.google.inject.Inject;
  */
 public class DiffTree extends AbstractGeoGitOp<Iterator<DiffEntry>> {
 
-    private ObjectId oldTreeId;
-
-    private ObjectId newTreeId;
-
     private ObjectDatabase objectDb;
 
     private String path;
 
     private ObjectSerialisingFactory serialFactory;
+
+    private String oldRefSpec;
+
+    private String newRefSpec;
 
     @Inject
     public DiffTree(ObjectDatabase objectDb, ObjectSerialisingFactory serialFactory) {
@@ -42,11 +42,29 @@ public class DiffTree extends AbstractGeoGitOp<Iterator<DiffEntry>> {
     }
 
     /**
+     * @param oldRefSpec
+     * @return
+     */
+    public DiffTree setOldVersion(String oldRefSpec) {
+        this.oldRefSpec = oldRefSpec;
+        return this;
+    }
+
+    /**
+     * @param newRefSpec
+     * @return
+     */
+    public DiffTree setNewVersion(String newRefSpec) {
+        this.newRefSpec = newRefSpec;
+        return this;
+    }
+
+    /**
      * @param oldTreeId
      * @return
      */
     public DiffTree setOldTree(ObjectId oldTreeId) {
-        this.oldTreeId = oldTreeId;
+        this.oldRefSpec = oldTreeId.toString();
         return this;
     }
 
@@ -55,7 +73,7 @@ public class DiffTree extends AbstractGeoGitOp<Iterator<DiffEntry>> {
      * @return
      */
     public DiffTree setNewTree(ObjectId newTreeId) {
-        this.newTreeId = newTreeId;
+        this.newRefSpec = newTreeId.toString();
         return this;
     }
 
@@ -66,8 +84,11 @@ public class DiffTree extends AbstractGeoGitOp<Iterator<DiffEntry>> {
 
     @Override
     public Iterator<DiffEntry> call() {
-        checkNotNull(oldTreeId);
-        checkNotNull(newTreeId);
+        checkNotNull(oldRefSpec, "old version not specified");
+        checkNotNull(newRefSpec, "new version not specified");
+
+        final ObjectId oldTreeId = command(ResolveTreeish.class).setTreeish(oldRefSpec).call();
+        final ObjectId newTreeId = command(ResolveTreeish.class).setTreeish(newRefSpec).call();
 
         final RevTree oldTree;
         final RevTree newTree;
