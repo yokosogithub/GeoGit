@@ -10,15 +10,13 @@ import java.util.Iterator;
 import javax.annotation.Nullable;
 
 import org.geogit.api.AbstractGeoGitOp;
-import org.geogit.api.NodeRef;
 import org.geogit.api.ObjectId;
 import org.geogit.api.Ref;
 import org.geogit.api.RevTree;
 import org.geogit.api.plumbing.diff.DiffEntry;
-import org.geogit.api.plumbing.diff.DiffTreeIterator;
-import org.geogit.storage.ObjectDatabase;
+import org.geogit.api.plumbing.diff.DiffTreeWalk;
+import org.geogit.repository.StagingArea;
 import org.geogit.storage.ObjectSerialisingFactory;
-import org.geogit.storage.StagingDatabase;
 
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
@@ -29,9 +27,7 @@ import com.google.inject.Inject;
  */
 public class DiffIndex extends AbstractGeoGitOp<Iterator<DiffEntry>> {
 
-    private ObjectDatabase repoDb;
-
-    private StagingDatabase indexDb;
+    private StagingArea index;
 
     private ObjectSerialisingFactory serialFactory;
 
@@ -40,10 +36,8 @@ public class DiffIndex extends AbstractGeoGitOp<Iterator<DiffEntry>> {
     private String pathFilter;
 
     @Inject
-    public DiffIndex(ObjectDatabase repoDb, StagingDatabase index,
-            ObjectSerialisingFactory serialFactory) {
-        this.repoDb = repoDb;
-        this.indexDb = index;
+    public DiffIndex(StagingArea index, ObjectSerialisingFactory serialFactory) {
+        this.index = index;
         this.serialFactory = serialFactory;
     }
 
@@ -56,9 +50,8 @@ public class DiffIndex extends AbstractGeoGitOp<Iterator<DiffEntry>> {
     }
 
     /**
-     * @param the name of the root tree object in the repository's object database to compare the
-     *        index against. If {@code null} or not specified, defaults to the tree object of the
-     *        current HEAD commit.
+     * @param the name of the root tree object in the repository's object database to compare the index against. If {@code null} or not specified,
+     *        defaults to the tree object of the current HEAD commit.
      */
     public DiffIndex setOldVersion(@Nullable String refSpec) {
         this.refSpec = refSpec;
@@ -80,7 +73,11 @@ public class DiffIndex extends AbstractGeoGitOp<Iterator<DiffEntry>> {
                     .call(RevTree.class).get();
         }
 
-        Iterator<NodeRef> staged = indexDb.getStaged(pathFilter);
-        return new DiffTreeIterator(repoDb, rootTree, staged, serialFactory);
+        final RevTree newTree = index.getTree();
+
+        DiffTreeWalk treeWalk = new DiffTreeWalk(index.getDatabase(), rootTree, newTree,
+                serialFactory);
+        treeWalk.setFilter(pathFilter);
+        return treeWalk.get();
     }
 }

@@ -15,7 +15,6 @@ import org.geogit.api.ObjectId;
 import org.geogit.api.plumbing.DiffIndex;
 import org.geogit.api.plumbing.DiffTree;
 import org.geogit.api.plumbing.DiffWorkTree;
-import org.geogit.api.plumbing.ResolveTreeish;
 import org.geogit.api.plumbing.diff.DiffEntry;
 
 import com.google.inject.Inject;
@@ -26,11 +25,11 @@ import com.google.inject.Inject;
  * Usage:
  * <ul>
  * <li>
- * <code>{@link #setOldVersion(String) oldVersion} == null && {@link #setNewVersion(String) newVersion} == null</code>
- * : compare working tree and index
+ * <code>{@link #setOldVersion(String) oldVersion} == null && {@link #setNewVersion(String) newVersion} == null</code> : compare working tree and
+ * index
  * <li>
- * <code>{@link #setOldVersion(String) oldVersion} != null && {@link #setNewVersion(String) newVersion} == null</code>
- * : compare the working tree with the given commit
+ * <code>{@link #setOldVersion(String) oldVersion} != null && {@link #setNewVersion(String) newVersion} == null</code> : compare the working tree with
+ * the given commit
  * <li>
  * <code>{@link #setCompareIndex(boolean) compareIndex} == true && {@link #setOldVersion(String) oldVersion} == null && {@link #setNewVersion(String) newVersion} == null</code>
  * : compare the index with the HEAD commit
@@ -38,9 +37,8 @@ import com.google.inject.Inject;
  * <code>{@link #setCompareIndex(boolean) compareIndex} == true && {@link #setOldVersion(String) oldVersion} != null && {@link #setNewVersion(String) newVersion} == null</code>
  * : compare the index with the given commit
  * <li>
- * <code>{@link #setOldVersion(String) oldVersion} != null && {@link #setNewVersion(String) newVersion} != null</code>
- * : compare {@code commit1} with {@code commit2}, where {@code commit1} is the eldest or left side
- * of the diff.
+ * <code>{@link #setOldVersion(String) oldVersion} != null && {@link #setNewVersion(String) newVersion} != null</code> : compare {@code commit1} with
+ * {@code commit2}, where {@code commit1} is the eldest or left side of the diff.
  * </ul>
  * 
  * @see DiffWorkTree

@@ -8,42 +8,41 @@ import java.util.HashSet;
 import java.util.Set;
 
 import org.geogit.api.AbstractGeoGitOp;
-import org.geogit.repository.StagingArea;
+import org.geogit.repository.WorkingTree;
 
 import com.google.inject.Inject;
 
 /**
- * Manipulates the index (staging area) by setting the unstaged changes that match this operation
- * criteria as staged.
+ * Manipulates the index (staging area) by setting the unstaged changes that match this operation criteria as staged.
  * 
  * @author groldan
  * 
  */
-public class AddOp extends AbstractGeoGitOp<StagingArea> {
+public class AddOp extends AbstractGeoGitOp<WorkingTree> {
 
     private Set<String> patterns;
 
     private boolean updateOnly;
 
-    private StagingArea index;
+    private WorkingTree workTree;
 
     @Inject
-    public AddOp(final StagingArea index) {
-        this.index = index;
+    public AddOp(final WorkingTree workTree) {
+        this.workTree = workTree;
         patterns = new HashSet<String>();
     }
 
     /**
      * @see java.util.concurrent.Callable#call()
      */
-    public StagingArea call() {
+    public WorkingTree call() {
         // this is add all, TODO: implement partial adds
         String path = null;
         if (patterns.size() == 1) {
             path = patterns.iterator().next();
         }
-        index.stage(getProgressListener(), path);
-        return index;
+        workTree.stage(getProgressListener(), path);
+        return workTree;
     }
 
     /**
@@ -56,8 +55,8 @@ public class AddOp extends AbstractGeoGitOp<StagingArea> {
     }
 
     /**
-     * @param updateOnly if {@code true}, only add already tracked features (either for modification
-     *        or deletion), but do not stage any newly added one.
+     * @param updateOnly if {@code true}, only add already tracked features (either for modification or deletion), but do not stage any newly added
+     *        one.
      * @return {@code this}
      */
     public AddOp setUpdateOnly(final boolean updateOnly) {

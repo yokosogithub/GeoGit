@@ -33,10 +33,6 @@ import com.ning.compress.lzf.LZFInputStream;
 
 public class HeapStagingDatabase extends HeapObjectDatabse implements StagingDatabase {
 
-    private SortedMap<String, NodeRef> staged;
-
-    private SortedMap<String, NodeRef> unstaged;
-
     private ObjectDatabase repositoryDb;
 
     private CommandLocator commandLocator;
@@ -61,8 +57,6 @@ public class HeapStagingDatabase extends HeapObjectDatabse implements StagingDat
     @Override
     public void open() {
         super.open();
-        unstaged = Maps.newTreeMap();
-        staged = Maps.newTreeMap();
         // {
         // Optional<Ref> stageHead = commandLocator.command(RefParse.class)
         // .setName(Ref.STAGE_HEAD).call();
@@ -93,91 +87,9 @@ public class HeapStagingDatabase extends HeapObjectDatabse implements StagingDat
     @Override
     public void close() {
         super.close();
-        if (staged != null) {
-            staged.clear();
-            unstaged.clear();
-            staged = null;
-            unstaged = null;
-        }
-    }
-
-    /**
-     * @see org.geogit.storage.StagingDatabase#reset()
-     */
-    @Override
-    public synchronized void reset() {
-        unstaged.clear();
-        staged.clear();
-    }
-
-    /**
-     * @see org.geogit.storage.StagingDatabase#clearUnstaged()
-     */
-    @Override
-    public synchronized void clearUnstaged() {
-        this.unstaged.clear();
-    }
-
-    /**
-     * @see org.geogit.storage.StagingDatabase#clearStaged()
-     */
-    @Override
-    public synchronized void clearStaged() {
-        this.staged.clear();
     }
 
     // //////////////////////////////////////////////////////////////////////////////////////////
-
-    @Override
-    public synchronized void putUnstaged(final NodeRef entry) {
-        String path = entry.getPath();
-        unstaged.put(path, entry);
-    }
-
-    @Override
-    public synchronized void stage(NodeRef entry) {
-        String path = entry.getPath();
-        NodeRef remove = unstaged.remove(path);
-        if (remove != null) {
-            staged.put(path, entry);
-        }
-    }
-
-    @Override
-    public synchronized int countUnstaged(final String pathFilter) {
-        if (pathFilter == null || pathFilter.isEmpty()) {
-            return unstaged.size();
-        }
-        List<NodeRef> matches = filter(unstaged, pathFilter);
-        return matches.size();
-    }
-
-    @Override
-    public synchronized int countStaged(final String pathFilter) {
-        if (pathFilter == null || pathFilter.isEmpty()) {
-            return staged.size();
-        }
-        List<NodeRef> matches = filter(staged, pathFilter);
-        return matches.size();
-    }
-
-    @Override
-    public synchronized Iterator<NodeRef> getUnstaged(@Nullable final String pathFilter) {
-        if (pathFilter == null || pathFilter.isEmpty()) {
-            return Lists.newArrayList(unstaged.values()).iterator();
-        }
-        List<NodeRef> matches = filter(unstaged, pathFilter);
-        return matches.iterator();
-    }
-
-    @Override
-    public synchronized Iterator<NodeRef> getStaged(@Nullable final String pathFilter) {
-        if (pathFilter == null || pathFilter.isEmpty()) {
-            return Lists.newArrayList(staged.values()).iterator();
-        }
-        List<NodeRef> matches = filter(staged, pathFilter);
-        return matches.iterator();
-    }
 
     private synchronized List<NodeRef> filter(SortedMap<String, NodeRef> map, String pathFilter) {
         List<NodeRef> matches = Lists.newLinkedList();
@@ -189,19 +101,6 @@ public class HeapStagingDatabase extends HeapObjectDatabse implements StagingDat
             }
         }
         return matches;
-    }
-
-    @Override
-    public synchronized int removeStaged(final String pathFilter) {
-        return remove(staged, pathFilter);
-    }
-
-    /**
-     * @see org.geogit.storage.StagingDatabase#removeUnStaged(java.util.List)
-     */
-    @Override
-    public synchronized int removeUnStaged(final String pathFilter) {
-        return remove(unstaged, pathFilter);
     }
 
     /**
@@ -223,18 +122,6 @@ public class HeapStagingDatabase extends HeapObjectDatabse implements StagingDat
             }
         }
         return size;
-    }
-
-    @Override
-    public synchronized Optional<NodeRef> findStaged(final String path) {
-        NodeRef entry = staged.get(path);
-        return Optional.fromNullable(entry);
-    }
-
-    @Override
-    public synchronized Optional<NodeRef> findUnstaged(final String path) {
-        NodeRef entry = unstaged.get(path);
-        return Optional.fromNullable(entry);
     }
 
     // /////////////////////////////////////////////////////////////////////

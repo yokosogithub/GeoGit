@@ -5,8 +5,6 @@
 
 package org.geogit.api.plumbing;
 
-import static com.google.common.base.Preconditions.checkArgument;
-
 import org.geogit.api.AbstractGeoGitOp;
 import org.geogit.api.ObjectId;
 import org.geogit.api.RevObject;
@@ -19,8 +17,7 @@ import com.google.common.base.Optional;
 import com.google.inject.Inject;
 
 /**
- * Resolves the reference given by a ref spec to the {@link RevObject} it finally points to,
- * dereferencing symbolic refs as necessary.
+ * Resolves the reference given by a ref spec to the {@link RevObject} it finally points to, dereferencing symbolic refs as necessary.
  * 
  * @see RevParse
  * @see ResolveObjectType

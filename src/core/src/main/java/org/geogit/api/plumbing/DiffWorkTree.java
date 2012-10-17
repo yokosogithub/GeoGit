@@ -6,36 +6,30 @@
 package org.geogit.api.plumbing;
 
 import java.util.Iterator;
-import java.util.Map;
 
 import javax.annotation.Nullable;
 
 import org.geogit.api.AbstractGeoGitOp;
-import org.geogit.api.NodeRef;
 import org.geogit.api.ObjectId;
 import org.geogit.api.Ref;
 import org.geogit.api.RevTree;
 import org.geogit.api.plumbing.diff.DiffEntry;
-import org.geogit.api.plumbing.diff.DiffTreeIterator;
-import org.geogit.api.plumbing.diff.DiffTreeView;
+import org.geogit.api.plumbing.diff.DiffTreeWalk;
 import org.geogit.repository.StagingArea;
 import org.geogit.repository.WorkingTree;
 import org.geogit.storage.ObjectSerialisingFactory;
-import org.geogit.storage.StagingDatabase;
 
-import com.google.common.base.Function;
 import com.google.common.base.Optional;
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Maps;
 import com.google.inject.Inject;
 
 /**
- * Compares the features in the {@link WorkingTree working tree} and the {@link StagingArea index}
- * or a given root tree-ish.
+ * Compares the features in the {@link WorkingTree working tree} and the {@link StagingArea index} or a given root tree-ish.
  */
 public class DiffWorkTree extends AbstractGeoGitOp<Iterator<DiffEntry>> {
 
-    private StagingDatabase indexDb;
+    private StagingArea index;
+
+    private WorkingTree workTree;
 
     private String pathFilter;
 
@@ -44,8 +38,10 @@ public class DiffWorkTree extends AbstractGeoGitOp<Iterator<DiffEntry>> {
     private String refSpec;
 
     @Inject
-    public DiffWorkTree(StagingDatabase index, ObjectSerialisingFactory serialFactory) {
-        this.indexDb = index;
+    public DiffWorkTree(StagingArea index, WorkingTree workTree,
+            ObjectSerialisingFactory serialFactory) {
+        this.index = index;
+        this.workTree = workTree;
         this.serialFactory = serialFactory;
     }
 
@@ -63,17 +59,21 @@ public class DiffWorkTree extends AbstractGeoGitOp<Iterator<DiffEntry>> {
     }
 
     /**
-     * If no {@link #setOldVersion(String) old version} was set, returns the differences between the
-     * working tree and the index, otherwise the differences between the working tree and the
-     * specified revision.
+     * If no {@link #setOldVersion(String) old version} was set, returns the differences between the working tree and the index, otherwise the
+     * differences between the working tree and the specified revision.
      */
     @Override
     public Iterator<DiffEntry> call() {
 
-        Iterator<NodeRef> unstaged = indexDb.getUnstaged(pathFilter);
+        final Optional<String> ref = Optional.fromNullable(refSpec);
 
-        RevTree stagedTree = getOldTree();
-        return new DiffTreeIterator(indexDb, stagedTree, unstaged, serialFactory);
+        final RevTree oldTree = ref.isPresent() ? getOldTree() : index.getTree();
+        final RevTree newTree = workTree.getTree();
+
+        DiffTreeWalk treeWalk = new DiffTreeWalk(index.getDatabase(), oldTree, newTree,
+                serialFactory);
+        treeWalk.setFilter(pathFilter);
+        return treeWalk.get();
     }
 
     /**
@@ -81,7 +81,7 @@ public class DiffWorkTree extends AbstractGeoGitOp<Iterator<DiffEntry>> {
      */
     private RevTree getOldTree() {
 
-        final String oldVersion = Optional.fromNullable(refSpec).or(Ref.HEAD);
+        final String oldVersion = Optional.fromNullable(refSpec).or(Ref.STAGE_HEAD);
 
         ObjectId headTreeId = command(ResolveTreeish.class).setTreeish(oldVersion).call().get();
         final RevTree headTree;
@@ -92,21 +92,7 @@ public class DiffWorkTree extends AbstractGeoGitOp<Iterator<DiffEntry>> {
                     .get();
         }
 
-        Iterator<NodeRef> staged = indexDb.getStaged(pathFilter);
-        Map<String, NodeRef> changes = toMap(staged);
-        String rootPath = "";
-        return new DiffTreeView(indexDb, rootPath, headTree, changes);
-    }
-
-    private Map<String, NodeRef> toMap(Iterator<NodeRef> changes) {
-        Function<NodeRef, String> keyFunction = new Function<NodeRef, String>() {
-            @Override
-            public String apply(NodeRef input) {
-                return input.getPath();
-            }
-        };
-        ImmutableMap<String, NodeRef> changesMap = Maps.uniqueIndex(changes, keyFunction);
-        return changesMap;
+        return headTree;
     }
 
 }

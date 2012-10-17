@@ -20,7 +20,8 @@ import org.geogit.api.plumbing.diff.DiffEntry.ChangeType;
 import org.geogit.cli.AnsiDecorator;
 import org.geogit.cli.CLICommand;
 import org.geogit.cli.GeogitCLI;
-import org.geogit.storage.StagingDatabase;
+import org.geogit.repository.StagingArea;
+import org.geogit.repository.WorkingTree;
 
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.Parameters;
@@ -51,11 +52,13 @@ public class Status implements CLICommand {
         ConsoleReader console = cli.getConsole();
         GeoGIT geogit = cli.getGeogit();
 
-        final StagingDatabase indexDb = geogit.getRepository().getIndex().getDatabase();
+        final StagingArea index = geogit.getRepository().getIndex();
+
+        final WorkingTree workTree = geogit.getRepository().getWorkingTree();
 
         String pathFilter = null;
-        final int countStaged = indexDb.countStaged(pathFilter);
-        final int countUnstaged = indexDb.countUnstaged(pathFilter);
+        final int countStaged = index.countStaged(pathFilter);
+        final int countUnstaged = workTree.countUnstaged(pathFilter);
 
         console.println("# On branch <can't know yet>");
 

@@ -23,8 +23,8 @@ import org.geogit.api.plumbing.RevObjectParse;
 import org.geogit.api.plumbing.UpdateRef;
 import org.geogit.api.plumbing.WriteTree;
 import org.geogit.repository.StagingArea;
+import org.geogit.repository.WorkingTree;
 import org.geogit.storage.ObjectInserter;
-import org.geogit.storage.StagingDatabase;
 import org.geogit.test.integration.PrintVisitor;
 import org.geogit.test.integration.RepositoryTestCase;
 import org.geotools.util.NullProgressListener;
@@ -107,11 +107,12 @@ public class IndexTest extends RepositoryTestCase {
                 .setNewValue(commitId).call();
         assertTrue(newHead.isPresent());
 
-        index.deleted(appendChild(linesName, lines1.getIdentifier().getID()));
-        index.stage(new NullProgressListener(), null);
+        WorkingTree workTree = repo.getWorkingTree();
+        workTree.delete(linesName, lines1.getIdentifier().getID());
+        workTree.stage(new NullProgressListener(), null);
 
-        newRootTreeId = geogit.command(WriteTree.class).setOldRoot(tree(newRootTreeId)).call();
-        // newRootTreeId = index.writeTree(newRootTreeId, new NullProgressListener());
+        newRootTreeId = geogit.command(WriteTree.class).setOldRoot(tree(newRootTreeId)).call(); // newRootTreeId = index.writeTree(newRootTreeId, new
+                                                                                                // NullProgressListener());
 
         assertNotNull(newRootTreeId);
         assertFalse(repo.getRootTreeId().equals(newRootTreeId));
@@ -125,6 +126,7 @@ public class IndexTest extends RepositoryTestCase {
         path = appendChild(linesName, lines1.getIdentifier().getID());
         assertFalse(repo.command(FindTreeChild.class).setParent(tree).setChildPath(path).call()
                 .isPresent());
+
     }
 
     private Supplier<RevTree> tree(final ObjectId treeId) {
@@ -145,8 +147,6 @@ public class IndexTest extends RepositoryTestCase {
     @Test
     public void testMultipleStaging() throws Exception {
 
-        final StagingDatabase indexDb = index.getDatabase();
-
         // insert and commit feature1_1
         final ObjectId oId1_1 = insertAndAdd(points1);
 
@@ -154,7 +154,7 @@ public class IndexTest extends RepositoryTestCase {
         // staged1.accept(new PrintVisitor(index.getDatabase(), new PrintWriter(System.err)));
 
         // check feature1_1 is there
-        assertEquals(oId1_1, indexDb.findStaged(appendChild(pointsName, idP1)).get().getObjectId());
+        assertEquals(oId1_1, index.findStaged(appendChild(pointsName, idP1)).get().getObjectId());
 
         // insert and commit feature1_2, feature1_2 and feature2_1
         final ObjectId oId1_2 = insertAndAdd(points2);
@@ -167,20 +167,20 @@ public class IndexTest extends RepositoryTestCase {
         // check feature1_2, feature1_3 and feature2_1
         Optional<NodeRef> treeChild;
 
-        assertNotNull(treeChild = indexDb.findStaged(appendChild(pointsName, idP2)));
+        assertNotNull(treeChild = index.findStaged(appendChild(pointsName, idP2)));
         assertTrue(treeChild.isPresent());
         assertEquals(oId1_2, treeChild.get().getObjectId());
 
-        assertNotNull(treeChild = indexDb.findStaged(appendChild(pointsName, idP3)));
+        assertNotNull(treeChild = index.findStaged(appendChild(pointsName, idP3)));
         assertTrue(treeChild.isPresent());
         assertEquals(oId1_3, treeChild.get().getObjectId());
 
-        assertNotNull(treeChild = indexDb.findStaged(appendChild(linesName, idL1)));
+        assertNotNull(treeChild = index.findStaged(appendChild(linesName, idL1)));
         assertTrue(treeChild.isPresent());
         assertEquals(oId2_1, treeChild.get().getObjectId());
 
         // as well as feature1_1 from the previous commit
-        assertNotNull(treeChild = indexDb.findStaged(appendChild(pointsName, idP1)));
+        assertNotNull(treeChild = index.findStaged(appendChild(pointsName, idP1)));
         assertTrue(treeChild.isPresent());
         assertEquals(oId1_1, treeChild.get().getObjectId());
 
@@ -195,15 +195,12 @@ public class IndexTest extends RepositoryTestCase {
         // staged3.accept(new PrintVisitor(index.getDatabase(), new PrintWriter(System.err)));
 
         // and check only points2 and lines2 remain (i.e. its oids are set to NULL)
-        assertEquals(ObjectId.NULL, indexDb.findStaged(appendChild(pointsName, idP1)).get()
-                .getObjectId());
-        assertEquals(ObjectId.NULL, indexDb.findStaged(appendChild(pointsName, idP3)).get()
-                .getObjectId());
-        assertEquals(ObjectId.NULL, indexDb.findStaged(appendChild(linesName, idL1)).get()
-                .getObjectId());
+        assertFalse(index.findStaged(appendChild(pointsName, idP1)).isPresent());
+        assertFalse(index.findStaged(appendChild(pointsName, idP3)).isPresent());
+        assertFalse(index.findStaged(appendChild(linesName, idL1)).isPresent());
 
-        assertEquals(oId1_2, indexDb.findStaged(appendChild(pointsName, idP2)).get().getObjectId());
-        assertEquals(oId2_2, indexDb.findStaged(appendChild(linesName, idL2)).get().getObjectId());
+        assertEquals(oId1_2, index.findStaged(appendChild(pointsName, idP2)).get().getObjectId());
+        assertEquals(oId2_2, index.findStaged(appendChild(linesName, idL2)).get().getObjectId());
 
     }
 

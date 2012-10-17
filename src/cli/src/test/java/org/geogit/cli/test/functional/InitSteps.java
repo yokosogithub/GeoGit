@@ -44,8 +44,9 @@ public class InitSteps extends AbstractGeogitFunctionalTest {
 
     @Then("^it should answer \"([^\"]*)\"$")
     public void it_should_answer_exactly(String expected) throws Throwable {
-        expected = expected.replace("${currentdir}", currentDirectory.getAbsolutePath());
-        String actual = stdOut.toString().replaceAll("\n", "");
+        expected = expected.replace("${currentdir}", currentDirectory.getAbsolutePath())
+                .toLowerCase();
+        String actual = stdOut.toString().replaceAll("\n", "").toLowerCase();
         assertEquals(expected, actual);
     }
 

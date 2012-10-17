@@ -45,6 +45,7 @@ import org.geogit.osm.history.internal.Primitive;
 import org.geogit.osm.history.internal.Way;
 import org.geogit.repository.Repository;
 import org.geogit.repository.StagingArea;
+import org.geogit.repository.WorkingTree;
 import org.geogit.storage.ObjectReader;
 import org.geogit.storage.ObjectSerialisingFactory;
 import org.geogit.storage.StagingDatabase;
@@ -234,7 +235,7 @@ public class OSMHistoryImport extends AbstractCommand implements CLICommand {
         }
         final GeoGIT geogit = cli.getGeogit();
         final Repository repository = geogit.getRepository();
-        final StagingArea index = repository.getIndex();
+        final WorkingTree workTree = repository.getWorkingTree();
 
         Map<Long, Coordinate> thisChangePointCache = new LinkedHashMap<Long, Coordinate>() {
             /** serialVersionUID */
@@ -287,7 +288,9 @@ public class OSMHistoryImport extends AbstractCommand implements CLICommand {
                 executor.submit(new Runnable() {
                     @Override
                     public void run() {
-                        index.deleted(featurePath);
+                        String parentPath = NodeRef.parentPath(featurePath);
+                        String fid = NodeRef.nodeFromPath(featurePath);
+                        workTree.delete(parentPath, fid);
                     }
                 });
             } else {
@@ -303,7 +306,7 @@ public class OSMHistoryImport extends AbstractCommand implements CLICommand {
                     public void run() {
                         RevFeature feature = new OsmRevFeature(primitive, geom);
                         String parentPath = NodeRef.parentPath(featurePath);
-                        index.insert(parentPath, feature);
+                        workTree.insert(parentPath, feature);
                     }
                 });
             }
@@ -350,7 +353,7 @@ public class OSMHistoryImport extends AbstractCommand implements CLICommand {
 
         final ObjectSerialisingFactory serialFactory = geogit.getRepository()
                 .getSerializationFactory();
-        StagingDatabase index = geogit.getRepository().getIndex().getDatabase();
+        StagingArea index = geogit.getRepository().getIndex();
 
         List<Coordinate> coordinates = Lists.newArrayList(nodes.size());
         for (Long nodeId : nodes) {
@@ -358,18 +361,15 @@ public class OSMHistoryImport extends AbstractCommand implements CLICommand {
             if (coord == null) {
                 String fid = String.valueOf(nodeId);
                 String path = NodeRef.appendChild(NODE_TYPE_NAME, fid);
-                Optional<NodeRef> ref = index.findUnstaged(path);
+                Optional<NodeRef> ref = index.findStaged(path);
                 if (!ref.isPresent()) {
-                    ref = index.findStaged(path);
-                    if (!ref.isPresent()) {
-                        ref = geogit.command(FindTreeChild.class).setChildPath(path).call();
-                    }
+                    ref = geogit.command(FindTreeChild.class).setChildPath(path).call();
                 }
                 if (ref.isPresent()) {
                     NodeRef nodeRef = ref.get();
                     ObjectReader<RevFeature> reader;
                     reader = serialFactory.createFeatureReader(NODE_REV_TYPE, fid);
-                    RevFeature feature = index.get(nodeRef.getObjectId(), reader);
+                    RevFeature feature = index.getDatabase().get(nodeRef.getObjectId(), reader);
                     Point p = (Point) ((SimpleFeature) feature.feature()).getAttribute("location");
                     if (p != null) {
                         coord = p.getCoordinate();

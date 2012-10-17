@@ -27,6 +27,7 @@ import org.geogit.api.porcelain.ConfigOp.ConfigAction;
 import org.geogit.di.GeogitModule;
 import org.geogit.repository.Repository;
 import org.geogit.repository.StagingArea;
+import org.geogit.repository.WorkingTree;
 import org.geogit.storage.hessian.GeoToolsRevFeature;
 import org.geotools.data.DataUtilities;
 import org.geotools.feature.NameImpl;
@@ -240,11 +241,11 @@ public abstract class RepositoryTestCase {
      * Inserts the feature to the index but does not stages it to be committed
      */
     protected ObjectId insert(Feature f) throws Exception {
-        final StagingArea index = getRepository().getIndex();
+        final WorkingTree workTree = getRepository().getWorkingTree();
         Name name = f.getType().getName();
         String parentPath = name.getLocalPart();
         RevFeature rf = new GeoToolsRevFeature(f);
-        NodeRef ref = index.insert(parentPath, rf);
+        NodeRef ref = workTree.insert(parentPath, rf);
         ObjectId objectId = ref.getObjectId();
         return objectId;
     }
@@ -277,12 +278,11 @@ public abstract class RepositoryTestCase {
     }
 
     protected boolean delete(Feature f) throws Exception {
-        final StagingArea index = getRepository().getIndex();
+        final WorkingTree workTree = getRepository().getWorkingTree();
         Name name = f.getType().getName();
         String localPart = name.getLocalPart();
         String id = f.getIdentifier().getID();
-        String path = NodeRef.appendChild(localPart, id);
-        boolean existed = index.deleted(path);
+        boolean existed = workTree.delete(localPart, id);
         return existed;
     }
 

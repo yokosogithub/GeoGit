@@ -16,7 +16,7 @@ import org.geogit.api.porcelain.AddOp;
 import org.geogit.cli.AbstractCommand;
 import org.geogit.cli.CLICommand;
 import org.geogit.cli.GeogitCLI;
-import org.geogit.repository.StagingArea;
+import org.geogit.repository.WorkingTree;
 
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.Parameters;
@@ -47,8 +47,7 @@ public class Add extends AbstractCommand implements CLICommand {
         }
 
         console.print("Counting unstaged features...");
-        int unstaged = cli.getGeogit().getRepository().getIndex().getDatabase()
-                .countUnstaged(pathFilter);
+        int unstaged = cli.getGeogit().getRepository().getWorkingTree().countUnstaged(pathFilter);
         if (0 == unstaged) {
             console.println();
             console.println("No unstaged features, exiting.");
@@ -64,10 +63,10 @@ public class Add extends AbstractCommand implements CLICommand {
         } else if (patterns.size() > 1) {
             throw new UnsupportedOperationException("Only a single path is supported so far");
         }
-        StagingArea index = op.setProgressListener(cli.getProgressListener()).call();
+        WorkingTree workTree = op.setProgressListener(cli.getProgressListener()).call();
 
-        int staged = index.getDatabase().countStaged(null);
-        unstaged = index.getDatabase().countUnstaged(null);
+        int staged = cli.getGeogit().getRepository().getIndex().countStaged(null);
+        unstaged = workTree.countUnstaged(null);
 
         console.println(staged + " features staged for commit");
         console.println(unstaged + " features not staged for commit");

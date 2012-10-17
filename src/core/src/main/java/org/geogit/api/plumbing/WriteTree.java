@@ -14,6 +14,8 @@ import org.geogit.api.NodeRef;
 import org.geogit.api.ObjectId;
 import org.geogit.api.Ref;
 import org.geogit.api.RevTree;
+import org.geogit.api.plumbing.diff.DiffEntry;
+import org.geogit.repository.StagingArea;
 import org.geogit.storage.ObjectDatabase;
 import org.geogit.storage.StagingDatabase;
 import org.opengis.util.ProgressListener;
@@ -31,9 +33,8 @@ import com.google.inject.Inject;
  * 
  * The index must be in a fully merged state.
  * 
- * Conceptually, write-tree sync()s the current index contents into a set of tree objects on the
- * {@link ObjectDatabase}. In order to have that match what is actually in your directory right now,
- * you need to have done a {@link UpdateIndex} phase before you did the write-tree.
+ * Conceptually, write-tree sync()s the current index contents into a set of tree objects on the {@link ObjectDatabase}. In order to have that match
+ * what is actually in your directory right now, you need to have done a {@link UpdateIndex} phase before you did the write-tree.
  * 
  * @see FindOrCreateSubtree
  * @see DeepMove
@@ -45,14 +46,14 @@ public class WriteTree extends AbstractGeoGitOp<ObjectId> {
 
     private ObjectDatabase repositoryDatabase;
 
-    private StagingDatabase indexDatabase;
+    private StagingArea index;
 
     private Supplier<RevTree> oldRoot;
 
     @Inject
-    public WriteTree(ObjectDatabase repositoryDatabase, StagingDatabase indexDatabase) {
+    public WriteTree(ObjectDatabase repositoryDatabase, StagingArea index) {
         this.repositoryDatabase = repositoryDatabase;
-        this.indexDatabase = indexDatabase;
+        this.index = index;
     }
 
     public WriteTree setOldRoot(Supplier<RevTree> oldRoot) {
@@ -68,7 +69,7 @@ public class WriteTree extends AbstractGeoGitOp<ObjectId> {
         final RevTree oldRootTree = resolveRootTree(oldRootTreeId);
 
         String pathFilter = null;
-        final int numChanges = indexDatabase.countStaged(pathFilter);
+        final int numChanges = index.countStaged(pathFilter);
         if (numChanges == 0) {
             return oldRootTreeId;
         }
@@ -76,7 +77,7 @@ public class WriteTree extends AbstractGeoGitOp<ObjectId> {
             return null;
         }
 
-        Iterator<NodeRef> staged = indexDatabase.getStaged(pathFilter);
+        Iterator<DiffEntry> staged = index.getStaged(pathFilter);
 
         Map<String, MutableTree> changedTrees = Maps.newHashMap();
 
@@ -88,7 +89,13 @@ public class WriteTree extends AbstractGeoGitOp<ObjectId> {
                 return null;
             }
 
-            ref = staged.next();
+            DiffEntry diff = staged.next();
+            ref = diff.getNewObject();
+
+            if (ref == null) {
+                ref = new NodeRef(diff.getOldObject().getPath(), ObjectId.NULL, diff.getOldObject()
+                        .getMetadataId(), diff.getOldObject().getType());
+            }
 
             final String parentPath = NodeRef.parentPath(ref.getPath());
 
@@ -108,7 +115,7 @@ public class WriteTree extends AbstractGeoGitOp<ObjectId> {
             if (isDelete) {
                 parentTree.remove(ref.getPath());
             } else {
-                deepMove(ref, indexDatabase, repositoryDatabase);
+                deepMove(ref, index.getDatabase(), repositoryDatabase);
                 parentTree.put(ref);
             }
         }
@@ -125,8 +132,6 @@ public class WriteTree extends AbstractGeoGitOp<ObjectId> {
             RevTree newRoot = getTree(newTargetRootId);
             newTargetRootId = writeBack(newRoot.mutable(), tree, treePath);
         }
-
-        indexDatabase.removeStaged(pathFilter);
 
         progress.complete();
 
