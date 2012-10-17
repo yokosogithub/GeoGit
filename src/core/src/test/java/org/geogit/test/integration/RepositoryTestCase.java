@@ -78,6 +78,8 @@ public abstract class RepositoryTestCase {
 
     protected Feature points1;
 
+    protected Feature points1_modified;
+
     protected Feature points2;
 
     protected Feature points3;
@@ -135,6 +137,8 @@ public abstract class RepositoryTestCase {
         pointsType = DataUtilities.createType(pointsNs, pointsName, pointsTypeSpec);
 
         points1 = feature(pointsType, idP1, "StringProp1_1", new Integer(1000), "POINT(1 1)");
+        points1_modified = feature(pointsType, idP1, "StringProp1_1a", new Integer(1001),
+                "POINT(1 2)");
         points2 = feature(pointsType, idP2, "StringProp1_2", new Integer(2000), "POINT(2 2)");
         points3 = feature(pointsType, idP3, "StringProp1_3", new Integer(3000), "POINT(3 3)");
 

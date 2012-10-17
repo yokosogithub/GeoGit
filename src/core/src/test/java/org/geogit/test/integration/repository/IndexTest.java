@@ -129,6 +129,63 @@ public class IndexTest extends RepositoryTestCase {
 
     }
 
+    @Test
+    public void testReset() throws Exception {
+        ObjectId oId1 = insertAndAdd(points1);
+
+        ObjectId oId2 = insertAndAdd(points2);
+        assertNotNull(oId1);
+        assertNotNull(oId2);
+
+        assertEquals(oId1, index.findStaged(appendChild(pointsName, idP1)).get().getObjectId());
+        assertEquals(oId2, index.findStaged(appendChild(pointsName, idP2)).get().getObjectId());
+
+        index.reset();
+
+        assertFalse(index.findStaged(appendChild(pointsName, idP1)).isPresent());
+        assertFalse(index.findStaged(appendChild(pointsName, idP2)).isPresent());
+    }
+
+    @Test
+    public void testModify() throws Exception {
+        ObjectId oId1 = insertAndAdd(points1);
+        assertNotNull(oId1);
+
+        assertEquals(oId1, index.findStaged(appendChild(pointsName, idP1)).get().getObjectId());
+
+        ObjectId oId1_modified = insertAndAdd(points1_modified);
+        assertNotNull(oId1_modified);
+        assertFalse(oId1.equals(oId1_modified));
+
+        assertFalse(index.findStaged(appendChild(pointsName, idP1)).get().getObjectId()
+                .equals(oId1));
+        assertEquals(oId1_modified, index.findStaged(appendChild(pointsName, idP1)).get()
+                .getObjectId());
+
+    }
+
+    @Test
+    public void testAddMultiple() throws Exception {
+        ObjectId oId1 = insert(points1);
+        ObjectId oId2 = insert(points2);
+        assertNotNull(oId1);
+        assertNotNull(oId2);
+
+        assertFalse(index.findStaged(appendChild(pointsName, idP1)).isPresent());
+        assertFalse(index.findStaged(appendChild(pointsName, idP2)).isPresent());
+
+        assertEquals(oId1, repo.getWorkingTree().findUnstaged(appendChild(pointsName, idP1)).get()
+                .getObjectId());
+        assertEquals(oId2, repo.getWorkingTree().findUnstaged(appendChild(pointsName, idP2)).get()
+                .getObjectId());
+
+        geogit.add().call();
+
+        assertEquals(oId1, index.findStaged(appendChild(pointsName, idP1)).get().getObjectId());
+        assertEquals(oId2, index.findStaged(appendChild(pointsName, idP2)).get().getObjectId());
+
+    }
+
     private Supplier<RevTree> tree(final ObjectId treeId) {
         Supplier<RevTree> delegate = new Supplier<RevTree>() {
 
