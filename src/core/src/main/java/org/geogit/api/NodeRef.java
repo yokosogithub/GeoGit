@@ -139,6 +139,24 @@ public class NodeRef implements Comparable<NodeRef> {
     }
 
     /**
+     * Determines if the input path is valid.
+     * 
+     * @param path
+     * @throws IllegalArgumentException
+     */
+    public static void checkValidPath(final String path) {
+        if (path == null) {
+            throw new IllegalArgumentException("null path");
+        }
+        if (path.isEmpty()) {
+            throw new IllegalArgumentException("empty path");
+        }
+        if (path.charAt(path.length() - 1) == PATH_SEPARATOR) {
+            throw new IllegalArgumentException("path cannot end with path separator: " + path);
+        }
+    }
+
+    /**
      * Returns the node of {@code fullPath}.
      * <p>
      * Given {@code fullPath == "path/to/node"} returns {@code "node" }, given {@code "node"} returns {@code "node"}, given {@code null} returns

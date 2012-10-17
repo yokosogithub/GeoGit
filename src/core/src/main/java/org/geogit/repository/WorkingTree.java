@@ -339,31 +339,13 @@ public class WorkingTree {
     }
 
     /**
-     * Determines if the input path is valid.
-     * 
-     * @param path
-     * @throws IllegalArgumentException
-     */
-    private void checkValidPath(final String path) {
-        if (path == null) {
-            throw new IllegalArgumentException("null path");
-        }
-        if (path.isEmpty()) {
-            throw new IllegalArgumentException("empty path");
-        }
-        if (path.charAt(path.length() - 1) == NodeRef.PATH_SEPARATOR) {
-            throw new IllegalArgumentException("path cannot end with path separator: " + path);
-        }
-    }
-
-    /**
      * Adds a single feature to the staging database.
      * 
      * @param path
      * @return the NodeRef for the inserted feature
      */
     public NodeRef putInDatabase(final String parentTreePath, final RevFeature feature) {
-        checkValidPath(parentTreePath);
+        NodeRef.checkValidPath(parentTreePath);
         checkNotNull(feature);
 
         final ObjectWriter<?> featureWriter = serialFactory.createFeatureWriter(feature);
