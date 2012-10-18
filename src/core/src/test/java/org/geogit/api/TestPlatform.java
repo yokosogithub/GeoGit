@@ -10,6 +10,8 @@ public class TestPlatform extends DefaultPlatform implements Platform {
 
     private File workingDirectory;
 
+    private File userHomeDirectory;
+
     public TestPlatform(final File workingDirectory) {
         this.workingDirectory = workingDirectory;
     }
@@ -17,5 +19,14 @@ public class TestPlatform extends DefaultPlatform implements Platform {
     @Override
     public File pwd() {
         return workingDirectory;
+    }
+
+    public void setUserHome(final File userHomeDirectory) {
+        this.userHomeDirectory = userHomeDirectory;
+    }
+
+    @Override
+    public File getUserHome() {
+        return userHomeDirectory;
     }
 }

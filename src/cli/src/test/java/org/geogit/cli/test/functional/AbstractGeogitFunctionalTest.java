@@ -63,7 +63,7 @@ public abstract class AbstractGeogitFunctionalTest {
         ConsoleReader consoleReader = new ConsoleReader(stdIn, stdOut, new UnsupportedTerminal());
 
         Injector injector = Guice.createInjector(Modules.override(new GeogitModule()).with(
-                new JEStorageModule()));
+                new JEStorageModule(), new TestModule(platform)));
         GeoGIT geogit = new GeoGIT(injector, currentDirectory);
         try {
             GeogitCLI cli = new GeogitCLI(consoleReader);

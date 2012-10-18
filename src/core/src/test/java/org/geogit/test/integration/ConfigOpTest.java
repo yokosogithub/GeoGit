@@ -3,14 +3,13 @@ package org.geogit.test.integration;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 
 import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
 
 import org.geogit.api.Platform;
+import org.geogit.api.TestPlatform;
 import org.geogit.api.porcelain.ConfigException;
 import org.geogit.api.porcelain.ConfigOp;
 import org.geogit.api.porcelain.ConfigOp.ConfigAction;
@@ -33,8 +32,15 @@ public class ConfigOpTest {
     @Rule
     public TemporaryFolder tempFolder = new TemporaryFolder();
 
+    TestPlatform testPlatform;
+
     @Before
     public final void setUp() {
+        final File userhome = tempFolder.newFolder("testUserHomeDir");
+        final File workingDir = tempFolder.newFolder("testWorkingDir");
+        tempFolder.newFolder("testWorkingDir/.geogit");
+        testPlatform = new TestPlatform(workingDir);
+        testPlatform.setUserHome(userhome);
     }
 
     @After
@@ -95,35 +101,17 @@ public class ConfigOpTest {
 
     @Test
     public void testLocal() {
-        final File userhome = tempFolder.newFolder("mockUserHomeDir");
-        final File workingDir = tempFolder.newFolder("mockWorkingDir");
-        tempFolder.newFolder("mockWorkingDir/.geogit");
-
-        final Platform platform = mock(Platform.class);
-        when(platform.pwd()).thenReturn(workingDir);
-        when(platform.getUserHome()).thenReturn(userhome);
-
-        test(platform, false);
+        test(testPlatform, false);
     }
 
     @Test
     public void testGlobal() {
-        final File userhome = tempFolder.newFolder("mockUserHomeDir");
-
-        final Platform platform = mock(Platform.class);
-        when(platform.getUserHome()).thenReturn(userhome);
-
-        test(platform, true);
+        test(testPlatform, true);
     }
 
     @Test
     public void testNullNameValuePairForGet() {
-        final File userhome = tempFolder.newFolder("mockUserHomeDir");
-
-        final Platform platform = mock(Platform.class);
-        when(platform.getUserHome()).thenReturn(userhome);
-
-        final ConfigOp config = new ConfigOp(new IniConfigDatabase(platform));
+        final ConfigOp config = new ConfigOp(new IniConfigDatabase(testPlatform));
 
         exception.expect(ConfigException.class);
         config.setGlobal(true).setAction(ConfigAction.CONFIG_GET).setName(null).setValue(null)
@@ -132,12 +120,7 @@ public class ConfigOpTest {
 
     @Test
     public void testEmptyNameAndValueForGet() {
-        final File userhome = tempFolder.newFolder("mockUserHomeDir");
-
-        final Platform platform = mock(Platform.class);
-        when(platform.getUserHome()).thenReturn(userhome);
-
-        final ConfigOp config = new ConfigOp(new IniConfigDatabase(platform));
+        final ConfigOp config = new ConfigOp(new IniConfigDatabase(testPlatform));
 
         exception.expect(ConfigException.class);
         config.setGlobal(true).setAction(ConfigAction.CONFIG_GET).setName("").setValue("").call();
@@ -145,12 +128,7 @@ public class ConfigOpTest {
 
     @Test
     public void testEmptyNameAndValueForSet() {
-        final File userhome = tempFolder.newFolder("mockUserHomeDir");
-
-        final Platform platform = mock(Platform.class);
-        when(platform.getUserHome()).thenReturn(userhome);
-
-        final ConfigOp config = new ConfigOp(new IniConfigDatabase(platform));
+        final ConfigOp config = new ConfigOp(new IniConfigDatabase(testPlatform));
 
         exception.expect(ConfigException.class);
         config.setGlobal(true).setAction(ConfigAction.CONFIG_SET).setName("").setValue("").call();
@@ -158,12 +136,7 @@ public class ConfigOpTest {
 
     @Test
     public void testEmptyNameForUnset() {
-        final File userhome = tempFolder.newFolder("mockUserHomeDir");
-
-        final Platform platform = mock(Platform.class);
-        when(platform.getUserHome()).thenReturn(userhome);
-
-        final ConfigOp config = new ConfigOp(new IniConfigDatabase(platform));
+        final ConfigOp config = new ConfigOp(new IniConfigDatabase(testPlatform));
 
         exception.expect(ConfigException.class);
         config.setGlobal(true).setAction(ConfigAction.CONFIG_UNSET).setName("").setValue(null)
@@ -172,12 +145,7 @@ public class ConfigOpTest {
 
     @Test
     public void testEmptyNameForRemoveSection() {
-        final File userhome = tempFolder.newFolder("mockUserHomeDir");
-
-        final Platform platform = mock(Platform.class);
-        when(platform.getUserHome()).thenReturn(userhome);
-
-        final ConfigOp config = new ConfigOp(new IniConfigDatabase(platform));
+        final ConfigOp config = new ConfigOp(new IniConfigDatabase(testPlatform));
 
         exception.expect(ConfigException.class);
         config.setGlobal(true).setAction(ConfigAction.CONFIG_REMOVE_SECTION).setName("").call();
@@ -185,12 +153,7 @@ public class ConfigOpTest {
 
     @Test
     public void testNoNameForSet() {
-        final File userhome = tempFolder.newFolder("mockUserHomeDir");
-
-        final Platform platform = mock(Platform.class);
-        when(platform.getUserHome()).thenReturn(userhome);
-
-        final ConfigOp config = new ConfigOp(new IniConfigDatabase(platform));
+        final ConfigOp config = new ConfigOp(new IniConfigDatabase(testPlatform));
 
         exception.expect(ConfigException.class);
         config.setGlobal(true).setAction(ConfigAction.CONFIG_SET).setName(null).setValue(null)
@@ -199,12 +162,7 @@ public class ConfigOpTest {
 
     @Test
     public void testNoNameForUnset() {
-        final File userhome = tempFolder.newFolder("mockUserHomeDir");
-
-        final Platform platform = mock(Platform.class);
-        when(platform.getUserHome()).thenReturn(userhome);
-
-        final ConfigOp config = new ConfigOp(new IniConfigDatabase(platform));
+        final ConfigOp config = new ConfigOp(new IniConfigDatabase(testPlatform));
 
         exception.expect(ConfigException.class);
         config.setGlobal(true).setAction(ConfigAction.CONFIG_UNSET).setName(null).setValue(null)
@@ -213,12 +171,7 @@ public class ConfigOpTest {
 
     @Test
     public void testNoNameForRemoveSection() {
-        final File userhome = tempFolder.newFolder("mockUserHomeDir");
-
-        final Platform platform = mock(Platform.class);
-        when(platform.getUserHome()).thenReturn(userhome);
-
-        final ConfigOp config = new ConfigOp(new IniConfigDatabase(platform));
+        final ConfigOp config = new ConfigOp(new IniConfigDatabase(testPlatform));
 
         exception.expect(ConfigException.class);
         config.setGlobal(true).setAction(ConfigAction.CONFIG_REMOVE_SECTION).setName(null)
@@ -227,12 +180,7 @@ public class ConfigOpTest {
 
     @Test
     public void testRemovingMissingSection() {
-        final File userhome = tempFolder.newFolder("mockUserHomeDir");
-
-        final Platform platform = mock(Platform.class);
-        when(platform.getUserHome()).thenReturn(userhome);
-
-        final ConfigOp config = new ConfigOp(new IniConfigDatabase(platform));
+        final ConfigOp config = new ConfigOp(new IniConfigDatabase(testPlatform));
 
         exception.expect(ConfigException.class);
         config.setGlobal(true).setAction(ConfigAction.CONFIG_REMOVE_SECTION)
@@ -241,12 +189,7 @@ public class ConfigOpTest {
 
     @Test
     public void testInvalidSectionKey() {
-        final File userhome = tempFolder.newFolder("mockUserHomeDir");
-
-        final Platform platform = mock(Platform.class);
-        when(platform.getUserHome()).thenReturn(userhome);
-
-        final ConfigOp config = new ConfigOp(new IniConfigDatabase(platform));
+        final ConfigOp config = new ConfigOp(new IniConfigDatabase(testPlatform));
         Optional<Map<String, String>> result = config.setGlobal(true)
                 .setAction(ConfigAction.CONFIG_GET).setName("doesnt.exist").setValue(null).call();
         assertFalse(result.isPresent());
@@ -254,12 +197,7 @@ public class ConfigOpTest {
 
     @Test
     public void testTooManyArguments() {
-        final File userhome = tempFolder.newFolder("mockUserHomeDir");
-
-        final Platform platform = mock(Platform.class);
-        when(platform.getUserHome()).thenReturn(userhome);
-
-        final ConfigOp config = new ConfigOp(new IniConfigDatabase(platform));
+        final ConfigOp config = new ConfigOp(new IniConfigDatabase(testPlatform));
 
         exception.expect(ConfigException.class);
         config.setGlobal(true).setAction(ConfigAction.CONFIG_GET).setName("too.many")
@@ -268,12 +206,7 @@ public class ConfigOpTest {
 
     @Test
     public void testAccessors() {
-        final File userhome = tempFolder.newFolder("mockUserHomeDir");
-
-        final Platform platform = mock(Platform.class);
-        when(platform.getUserHome()).thenReturn(userhome);
-
-        final ConfigOp config = new ConfigOp(new IniConfigDatabase(platform));
+        final ConfigOp config = new ConfigOp(new IniConfigDatabase(testPlatform));
         config.setGlobal(true);
         assertTrue(config.getGlobal());
 
@@ -292,12 +225,7 @@ public class ConfigOpTest {
 
     @Test
     public void testNoAction() {
-        final File userhome = tempFolder.newFolder("mockUserHomeDir");
-
-        final Platform platform = mock(Platform.class);
-        when(platform.getUserHome()).thenReturn(userhome);
-
-        final ConfigOp config = new ConfigOp(new IniConfigDatabase(platform));
+        final ConfigOp config = new ConfigOp(new IniConfigDatabase(testPlatform));
 
         exception.expect(ConfigException.class);
         config.setAction(ConfigAction.CONFIG_NO_ACTION).setName("section.key").setValue(null)
@@ -306,12 +234,7 @@ public class ConfigOpTest {
 
     @Test
     public void testFallback() {
-        final File userhome = tempFolder.newFolder("mockUserHomeDir");
-
-        final Platform platform = mock(Platform.class);
-        when(platform.getUserHome()).thenReturn(userhome);
-
-        final ConfigOp config = new ConfigOp(new IniConfigDatabase(platform));
+        final ConfigOp config = new ConfigOp(new IniConfigDatabase(testPlatform));
 
         // Set a value in global config, then try to get value from local even though
         // we're not in a valid repository

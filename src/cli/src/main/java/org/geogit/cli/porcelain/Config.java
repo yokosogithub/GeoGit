@@ -70,6 +70,11 @@ public class Config extends AbstractCommand implements CLICommand {
 
             ConfigAction action = resolveConfigAction();
 
+            if (action == ConfigAction.CONFIG_NO_ACTION) {
+                printUsage();
+                return;
+            }
+
             final Optional<Map<String, String>> commandResult = geogit.command(ConfigOp.class)
                     .setGlobal(global).setAction(action).setName(name).setValue(value).call();
 
@@ -155,7 +160,7 @@ public class Config extends AbstractCommand implements CLICommand {
                 throw new ConfigException(StatusCode.TOO_MANY_ACTIONS);
             action = ConfigAction.CONFIG_LIST;
         }
-        if (action == ConfigAction.CONFIG_NO_ACTION) {
+        if (action == ConfigAction.CONFIG_NO_ACTION && nameValuePair != null) {
             if (nameValuePair.size() == 1) {
                 action = ConfigAction.CONFIG_GET;
             } else if (nameValuePair.size() > 1) {

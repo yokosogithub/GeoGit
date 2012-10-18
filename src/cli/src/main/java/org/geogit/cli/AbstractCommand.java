@@ -25,10 +25,7 @@ public abstract class AbstractCommand implements CLICommand {
     @Override
     public void run(GeogitCLI cli) throws Exception {
         if (help) {
-            JCommander jc = new JCommander(this);
-            String commandName = this.getClass().getAnnotation(Parameters.class).commandNames()[0];
-            jc.setProgramName("geogit " + commandName);
-            jc.usage();
+            printUsage();
             return;
         }
 
@@ -40,4 +37,14 @@ public abstract class AbstractCommand implements CLICommand {
      * with {@code --help}
      */
     protected abstract void runInternal(GeogitCLI cli) throws Exception;
+
+    /**
+     * Prints the JCommander usage for this command.
+     */
+    public void printUsage() {
+        JCommander jc = new JCommander(this);
+        String commandName = this.getClass().getAnnotation(Parameters.class).commandNames()[0];
+        jc.setProgramName("geogit " + commandName);
+        jc.usage();
+    }
 }
