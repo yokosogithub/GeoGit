@@ -23,7 +23,8 @@ import com.google.common.base.Optional;
 import com.google.inject.Inject;
 
 /**
- * Compares the features in the {@link WorkingTree working tree} and the {@link StagingArea index} or a given root tree-ish.
+ * Compares the features in the {@link WorkingTree working tree} and the {@link StagingArea index}
+ * or a given root tree-ish.
  */
 public class DiffWorkTree extends AbstractGeoGitOp<Iterator<DiffEntry>> {
 
@@ -59,8 +60,9 @@ public class DiffWorkTree extends AbstractGeoGitOp<Iterator<DiffEntry>> {
     }
 
     /**
-     * If no {@link #setOldVersion(String) old version} was set, returns the differences between the working tree and the index, otherwise the
-     * differences between the working tree and the specified revision.
+     * If no {@link #setOldVersion(String) old version} was set, returns the differences between the
+     * working tree and the index, otherwise the differences between the working tree and the
+     * specified revision.
      */
     @Override
     public Iterator<DiffEntry> call() {

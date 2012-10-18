@@ -24,13 +24,15 @@ public interface StagingArea {
     public StagingDatabase getDatabase();
 
     /**
-     * @return the tree represented by STAGE_HEAD. If there is no tree set at STAGE_HEAD, it will return the HEAD tree (no staged changes).
+     * @return the tree represented by STAGE_HEAD. If there is no tree set at STAGE_HEAD, it will
+     *         return the HEAD tree (no staged changes).
      */
     public RevTree getTree();
 
     /**
      * @param path
-     * @return the NodeRef for the feature at the specified path if it exists in the index, otherwise Optional.absent()
+     * @return the NodeRef for the feature at the specified path if it exists in the index,
+     *         otherwise Optional.absent()
      */
     public abstract Optional<NodeRef> findStaged(final String path);
 
@@ -46,7 +48,8 @@ public interface StagingArea {
 
     /**
      * @param pathFilter
-     * @return an iterator for all of the differences between STAGE_HEAD and HEAD based on the path filter.
+     * @return an iterator for all of the differences between STAGE_HEAD and HEAD based on the path
+     *         filter.
      */
     public abstract Iterator<DiffEntry> getStaged(final @Nullable String pathFilter);
 
@@ -60,7 +63,8 @@ public interface StagingArea {
      * Discards any staged change.
      * 
      * @REVISIT: should this be implemented through ResetOp (GeoGIT.reset()) instead?
-     * @TODO: When we implement transaction management will be the time to discard any needed object inserted to the database too
+     * @TODO: When we implement transaction management will be the time to discard any needed object
+     *        inserted to the database too
      */
     public abstract void reset();
 

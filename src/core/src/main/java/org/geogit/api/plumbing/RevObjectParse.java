@@ -17,7 +17,8 @@ import com.google.common.base.Optional;
 import com.google.inject.Inject;
 
 /**
- * Resolves the reference given by a ref spec to the {@link RevObject} it finally points to, dereferencing symbolic refs as necessary.
+ * Resolves the reference given by a ref spec to the {@link RevObject} it finally points to,
+ * dereferencing symbolic refs as necessary.
  * 
  * @see RevParse
  * @see ResolveObjectType

@@ -37,11 +37,12 @@ import com.google.inject.Inject;
 import com.google.inject.Injector;
 
 /**
- * A repository is a collection of commits, each of which is an archive of what the project's working tree looked like at a past date, whether on your
- * machine or someone else's.
+ * A repository is a collection of commits, each of which is an archive of what the project's
+ * working tree looked like at a past date, whether on your machine or someone else's.
  * <p>
- * It also defines HEAD (see below), which identifies the branch or commit the current working tree stemmed from. Lastly, it contains a set of
- * branches and tags, to identify certain commits by name.
+ * It also defines HEAD (see below), which identifies the branch or commit the current working tree
+ * stemmed from. Lastly, it contains a set of branches and tags, to identify certain commits by
+ * name.
  * </p>
  * 
  * @author Gabriel Roldan

@@ -27,7 +27,6 @@ import org.geogit.repository.WorkingTree;
 import org.geogit.storage.ObjectInserter;
 import org.geogit.test.integration.PrintVisitor;
 import org.geogit.test.integration.RepositoryTestCase;
-import org.geotools.util.NullProgressListener;
 import org.junit.Test;
 import org.opengis.feature.Feature;
 import org.opengis.feature.simple.SimpleFeature;
@@ -111,7 +110,10 @@ public class IndexTest extends RepositoryTestCase {
         workTree.delete(linesName, lines1.getIdentifier().getID());
         geogit.add().call();
 
-        newRootTreeId = geogit.command(WriteTree.class).setOldRoot(tree(newRootTreeId)).call(); // newRootTreeId = index.writeTree(newRootTreeId, new
+        newRootTreeId = geogit.command(WriteTree.class).setOldRoot(tree(newRootTreeId)).call(); // newRootTreeId
+                                                                                                // =
+                                                                                                // index.writeTree(newRootTreeId,
+                                                                                                // new
                                                                                                 // NullProgressListener());
 
         assertNotNull(newRootTreeId);

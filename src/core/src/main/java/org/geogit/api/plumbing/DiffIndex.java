@@ -50,8 +50,9 @@ public class DiffIndex extends AbstractGeoGitOp<Iterator<DiffEntry>> {
     }
 
     /**
-     * @param the name of the root tree object in the repository's object database to compare the index against. If {@code null} or not specified,
-     *        defaults to the tree object of the current HEAD commit.
+     * @param the name of the root tree object in the repository's object database to compare the
+     *        index against. If {@code null} or not specified, defaults to the tree object of the
+     *        current HEAD commit.
      */
     public DiffIndex setOldVersion(@Nullable String refSpec) {
         this.refSpec = refSpec;

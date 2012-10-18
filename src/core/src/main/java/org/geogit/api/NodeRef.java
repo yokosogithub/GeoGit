@@ -38,7 +38,8 @@ public class NodeRef implements Comparable<NodeRef> {
     private ObjectId objectId;
 
     /**
-     * possibly {@link ObjectId#NULL NULL} id for the object describing the object this ref points to
+     * possibly {@link ObjectId#NULL NULL} id for the object describing the object this ref points
+     * to
      */
     private ObjectId metadataId;
 
@@ -69,7 +70,8 @@ public class NodeRef implements Comparable<NodeRef> {
     }
 
     /**
-     * possibly {@link ObjectId#NULL NULL} id for the object describing the object this ref points to
+     * possibly {@link ObjectId#NULL NULL} id for the object describing the object this ref points
+     * to
      */
     public ObjectId getMetadataId() {
         return metadataId;
@@ -120,11 +122,12 @@ public class NodeRef implements Comparable<NodeRef> {
     /**
      * Returns the parent path of {@code fullPath}.
      * <p>
-     * Given {@code fullPath == "path/to/node"} returns {@code "path/to"}, given {@code "node"} returns {@code ""}, given {@code null} returns
-     * {@code null}
+     * Given {@code fullPath == "path/to/node"} returns {@code "path/to"}, given {@code "node"}
+     * returns {@code ""}, given {@code null} returns {@code null}
      * 
      * @param fullPath the full path to extract the parent path from
-     * @return non null parent path, empty string if {@code fullPath} has no children (i.e. no {@link #PATH_SEPARATOR}).
+     * @return non null parent path, empty string if {@code fullPath} has no children (i.e. no
+     *         {@link #PATH_SEPARATOR}).
      */
     public static @Nullable
     String parentPath(@Nullable String fullPath) {
@@ -159,11 +162,12 @@ public class NodeRef implements Comparable<NodeRef> {
     /**
      * Returns the node of {@code fullPath}.
      * <p>
-     * Given {@code fullPath == "path/to/node"} returns {@code "node" }, given {@code "node"} returns {@code "node"}, given {@code null} returns
-     * {@code null}
+     * Given {@code fullPath == "path/to/node"} returns {@code "node" }, given {@code "node"}
+     * returns {@code "node"}, given {@code null} returns {@code null}
      * 
      * @param fullPath the full path to extract the node from
-     * @return non null node, original string if {@code fullPath} has no path (i.e. no {@link #PATH_SEPARATOR}).
+     * @return non null node, original string if {@code fullPath} has no path (i.e. no
+     *         {@link #PATH_SEPARATOR}).
      */
     public static @Nullable
     String nodeFromPath(@Nullable String fullPath) {
@@ -178,7 +182,8 @@ public class NodeRef implements Comparable<NodeRef> {
     }
 
     /**
-     * @return true of {@code nodePath} is a direct child of {@code parentPath}, {@code false} if unrelated, sibling, same path, or nested child
+     * @return true of {@code nodePath} is a direct child of {@code parentPath}, {@code false} if
+     *         unrelated, sibling, same path, or nested child
      */
     public static boolean isDirectChild(String parentPath, String nodePath) {
         checkNotNull(parentPath, "parentPath");
@@ -191,7 +196,8 @@ public class NodeRef implements Comparable<NodeRef> {
     }
 
     /**
-     * @return true of {@code nodePath} is a child of {@code parentPath} at any depth level, {@code false} if unrelated, sibling, or same path
+     * @return true of {@code nodePath} is a child of {@code parentPath} at any depth level,
+     *         {@code false} if unrelated, sibling, or same path
      */
     public static boolean isChild(String parentPath, String nodePath) {
         checkNotNull(parentPath, "parentPath");

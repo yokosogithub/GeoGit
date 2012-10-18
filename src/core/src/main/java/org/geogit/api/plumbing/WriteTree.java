@@ -33,8 +33,9 @@ import com.google.inject.Inject;
  * 
  * The index must be in a fully merged state.
  * 
- * Conceptually, write-tree sync()s the current index contents into a set of tree objects on the {@link ObjectDatabase}. In order to have that match
- * what is actually in your directory right now, you need to have done a {@link UpdateIndex} phase before you did the write-tree.
+ * Conceptually, write-tree sync()s the current index contents into a set of tree objects on the
+ * {@link ObjectDatabase}. In order to have that match what is actually in your directory right now,
+ * you need to have done a {@link UpdateIndex} phase before you did the write-tree.
  * 
  * @see FindOrCreateSubtree
  * @see DeepMove
