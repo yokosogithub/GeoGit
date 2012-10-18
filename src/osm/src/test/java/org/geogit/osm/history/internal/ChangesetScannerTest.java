@@ -38,7 +38,8 @@ public class ChangesetScannerTest extends Assert {
      *  </osm>
      * </code>
      * </pre>
-     * @throws XMLStreamException 
+     * 
+     * @throws XMLStreamException
      */
     @Test
     public void testParseChangeset() throws XMLStreamException {

@@ -88,7 +88,8 @@ public class DiffWorkTree extends AbstractGeoGitOp<Iterator<DiffEntry>> {
         if (headTreeId.isNull()) {
             headTree = RevTree.NULL;
         } else {
-            headTree = command(RevObjectParse.class).setObjectId(headTreeId).call(RevTree.class).get();
+            headTree = command(RevObjectParse.class).setObjectId(headTreeId).call(RevTree.class)
+                    .get();
         }
 
         Iterator<NodeRef> staged = indexDb.getStaged(pathFilter);

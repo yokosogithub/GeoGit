@@ -76,7 +76,8 @@ public class DiffIndex extends AbstractGeoGitOp<Iterator<DiffEntry>> {
         if (rootTreeId.get().isNull()) {
             rootTree = RevTree.NULL;
         } else {
-            rootTree = command(RevObjectParse.class).setObjectId(rootTreeId.get()).call(RevTree.class).get();
+            rootTree = command(RevObjectParse.class).setObjectId(rootTreeId.get())
+                    .call(RevTree.class).get();
         }
 
         Iterator<NodeRef> staged = indexDb.getStaged(pathFilter);

@@ -106,7 +106,7 @@ public class JEObjectDatabase extends AbstractObjectDatabase implements ObjectDa
         Environment environment = getEnvironment();
         // System.err.println("--> " + environment.getHome());
         txn = CurrentTransaction.getInstance(environment);
-        
+
         DatabaseConfig dbConfig = new DatabaseConfig();
         dbConfig.setAllowCreate(true);
         boolean transactional = getEnvironment().getConfig().getTransactional();
@@ -133,7 +133,7 @@ public class JEObjectDatabase extends AbstractObjectDatabase implements ObjectDa
         cursorConfig.setReadCommitted(true);
         cursorConfig.setReadUncommitted(false);
 
-        Transaction transaction = txn == null? null : txn.getTransaction();
+        Transaction transaction = txn == null ? null : txn.getTransaction();
         Cursor cursor = objectDb.openCursor(transaction, cursorConfig);
         try {
             // position cursor at the first closest key to the one looked up
@@ -173,7 +173,7 @@ public class JEObjectDatabase extends AbstractObjectDatabase implements ObjectDa
         data.setPartial(0, 0, true);
 
         final LockMode lockMode = LockMode.DEFAULT;
-        Transaction transaction = txn == null? null : txn.getTransaction();
+        Transaction transaction = txn == null ? null : txn.getTransaction();
         OperationStatus status = objectDb.get(transaction, key, data, lockMode);
         return SUCCESS == status;
     }
@@ -185,7 +185,7 @@ public class JEObjectDatabase extends AbstractObjectDatabase implements ObjectDa
         DatabaseEntry data = new DatabaseEntry();
 
         final LockMode lockMode = LockMode.READ_COMMITTED;
-        Transaction transaction = txn == null? null : txn.getTransaction();
+        Transaction transaction = txn == null ? null : txn.getTransaction();
         OperationStatus operationStatus = objectDb.get(transaction, key, data, lockMode);
         if (NOTFOUND.equals(operationStatus)) {
             throw new IllegalArgumentException("Object does not exist: " + id.toString());
@@ -202,7 +202,7 @@ public class JEObjectDatabase extends AbstractObjectDatabase implements ObjectDa
         DatabaseEntry data = new DatabaseEntry(rawData);
 
         OperationStatus status;
-        Transaction transaction = txn == null? null : txn.getTransaction();
+        Transaction transaction = txn == null ? null : txn.getTransaction();
         status = objectDb.putNoOverwrite(transaction, key, data);
         final boolean didntExist = SUCCESS.equals(status);
 
@@ -219,7 +219,7 @@ public class JEObjectDatabase extends AbstractObjectDatabase implements ObjectDa
         final byte[] rawKey = id.getRawValue();
         final DatabaseEntry key = new DatabaseEntry(rawKey);
 
-        Transaction transaction = txn == null? null : txn.getTransaction();
+        Transaction transaction = txn == null ? null : txn.getTransaction();
         final OperationStatus status = objectDb.delete(transaction, key);
 
         return SUCCESS.equals(status);

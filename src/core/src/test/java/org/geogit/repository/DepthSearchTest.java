@@ -93,8 +93,8 @@ public class DepthSearchTest {
 
         ObjectId newRootId = fakeGeogit.command(WriteBack.class).setAncestor(root)
                 .setChildPath(treePath).setTree(subTree).call();
-        return fakeGeogit.command(RevObjectParse.class).setObjectId(newRootId).call(RevTree.class).get()
-                .mutable();
+        return fakeGeogit.command(RevObjectParse.class).setObjectId(newRootId).call(RevTree.class)
+                .get().mutable();
     }
 
     @Test
