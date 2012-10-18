@@ -8,8 +8,10 @@ package org.geogit.test.integration.repository;
 import static org.geogit.api.NodeRef.appendChild;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -18,6 +20,7 @@ import javax.xml.namespace.QName;
 import org.geogit.api.NodeRef;
 import org.geogit.api.ObjectId;
 import org.geogit.api.RevFeature;
+import org.geogit.api.plumbing.diff.DiffEntry;
 import org.geogit.repository.WorkingTree;
 import org.geogit.storage.hessian.GeoToolsRevFeature;
 import org.geogit.test.integration.RepositoryTestCase;
@@ -360,7 +363,7 @@ public class WorkingTreeTest extends RepositoryTestCase {
     }
 
     @Test
-    public void testStage() throws Exception {
+    public void testGetUnstaged() throws Exception {
         List<RevFeature> featureList = new LinkedList<RevFeature>();
         featureList.add(new GeoToolsRevFeature(points1));
         featureList.add(new GeoToolsRevFeature(points2));
@@ -371,13 +374,66 @@ public class WorkingTreeTest extends RepositoryTestCase {
 
         assertEquals(3, workTree.countUnstaged(null));
 
-        workTree.stage(new NullProgressListener(), null);
+        Iterator<DiffEntry> changes = workTree.getUnstaged(null);
 
-        assertEquals(0, workTree.countUnstaged(null));
+        assertNotNull(changes);
+    }
+
+    @Test
+    public void testInsertMultipleFeatureTypes() throws Exception {
+        List<RevFeature> featureList = new LinkedList<RevFeature>();
+        featureList.add(new GeoToolsRevFeature(points1));
+        featureList.add(new GeoToolsRevFeature(points2));
+        featureList.add(new GeoToolsRevFeature(points3));
+
+        workTree.insert(pointsName, featureList.iterator(), false, new NullProgressListener(),
+                null, 3);
+
+        featureList = new LinkedList<RevFeature>();
+        featureList.add(new GeoToolsRevFeature(lines1));
+        featureList.add(new GeoToolsRevFeature(lines2));
+        featureList.add(new GeoToolsRevFeature(lines3));
+
+        workTree.insert(linesName, featureList.iterator(), false, new NullProgressListener(), null,
+                3);
+
+        assertTrue(workTree.findUnstaged(appendChild(pointsName, idP1)).isPresent());
+        assertTrue(workTree.findUnstaged(appendChild(pointsName, idP2)).isPresent());
+        assertTrue(workTree.findUnstaged(appendChild(pointsName, idP3)).isPresent());
+        assertTrue(workTree.findUnstaged(appendChild(linesName, idL1)).isPresent());
+        assertTrue(workTree.findUnstaged(appendChild(linesName, idL2)).isPresent());
+        assertTrue(workTree.findUnstaged(appendChild(linesName, idL3)).isPresent());
+
     }
 
     @Test
     public void testGetFeatureTypeNames() throws Exception {
+        List<RevFeature> featureList = new LinkedList<RevFeature>();
+        featureList.add(new GeoToolsRevFeature(points1));
+        featureList.add(new GeoToolsRevFeature(points2));
+        featureList.add(new GeoToolsRevFeature(points3));
 
+        workTree.insert(pointsName, featureList.iterator(), false, new NullProgressListener(),
+                null, 3);
+
+        featureList = new LinkedList<RevFeature>();
+        featureList.add(new GeoToolsRevFeature(lines1));
+        featureList.add(new GeoToolsRevFeature(lines2));
+        featureList.add(new GeoToolsRevFeature(lines3));
+
+        workTree.insert(linesName, featureList.iterator(), false, new NullProgressListener(), null,
+                3);
+
+        List<QName> featureTypes = workTree.getFeatureTypeNames();
+
+        assertEquals(2, featureTypes.size());
+
+        List<String> featureTypeNames = new LinkedList<String>();
+        for (QName name : featureTypes) {
+            featureTypeNames.add(name.getLocalPart());
+        }
+
+        assertTrue(featureTypeNames.contains(pointsName));
+        assertTrue(featureTypeNames.contains(linesName));
     }
 }

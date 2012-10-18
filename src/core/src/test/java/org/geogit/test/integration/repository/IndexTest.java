@@ -109,7 +109,7 @@ public class IndexTest extends RepositoryTestCase {
 
         WorkingTree workTree = repo.getWorkingTree();
         workTree.delete(linesName, lines1.getIdentifier().getID());
-        workTree.stage(new NullProgressListener(), null);
+        geogit.add().call();
 
         newRootTreeId = geogit.command(WriteTree.class).setOldRoot(tree(newRootTreeId)).call(); // newRootTreeId = index.writeTree(newRootTreeId, new
                                                                                                 // NullProgressListener());

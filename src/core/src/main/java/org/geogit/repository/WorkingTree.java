@@ -7,9 +7,7 @@ package org.geogit.repository;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
-import java.util.ArrayList;
 import java.util.Iterator;
-import java.util.LinkedList;
 import java.util.List;
 
 import javax.annotation.Nullable;
@@ -33,7 +31,6 @@ import org.geogit.api.plumbing.RevObjectParse;
 import org.geogit.api.plumbing.UpdateRef;
 import org.geogit.api.plumbing.WriteBack;
 import org.geogit.api.plumbing.diff.DiffEntry;
-import org.geogit.storage.ObjectReader;
 import org.geogit.storage.ObjectSerialisingFactory;
 import org.geogit.storage.ObjectWriter;
 import org.geogit.storage.StagingDatabase;
@@ -48,11 +45,13 @@ import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 
 /**
- * A working tree is the collection of Features for a single FeatureType in GeoServer that has a repository associated with it (and hence is subject
- * of synchronization).
+ * A working tree is the collection of Features for a single FeatureType in GeoServer that has a
+ * repository associated with it (and hence is subject of synchronization).
  * <p>
- * It represents the set of Features tracked by some kind of geospatial data repository (like the GeoServer Catalog). It is essentially a "tree" with
- * various roots and only one level of nesting, since the FeatureTypes held in this working tree are the equivalents of files in a git working tree.
+ * It represents the set of Features tracked by some kind of geospatial data repository (like the
+ * GeoServer Catalog). It is essentially a "tree" with various roots and only one level of nesting,
+ * since the FeatureTypes held in this working tree are the equivalents of files in a git working
+ * tree.
  * </p>
  * <p>
  * <ul>
@@ -61,7 +60,8 @@ import com.google.inject.Inject;
  * <li>A Repository holds commits and branches
  * <li>You perform work on the working tree (insert/delete/update features)
  * <li>Then you commit to the current Repository's branch
- * <li>You can checkout a different branch from the Repository and the working tree will be updated to reflect the state of that branch
+ * <li>You can checkout a different branch from the Repository and the working tree will be updated
+ * to reflect the state of that branch
  * </ul>
  * 
  * @param the actual type representing a Feature
@@ -70,9 +70,6 @@ import com.google.inject.Inject;
  * @see Repository
  */
 public class WorkingTree {
-
-    @Inject
-    private StagingArea index;
 
     @Inject
     private StagingDatabase indexDatabase;
@@ -93,7 +90,8 @@ public class WorkingTree {
     }
 
     /**
-     * @return the tree represented by WORK_HEAD. If there is no tree set at WORK_HEAD, it will return the HEAD tree (no unstaged changes).
+     * @return the tree represented by WORK_HEAD. If there is no tree set at WORK_HEAD, it will
+     *         return the HEAD tree (no unstaged changes).
      */
     public RevTree getTree() {
         Optional<ObjectId> workTreeId = repository.command(ResolveTreeish.class)
@@ -152,7 +150,8 @@ public class WorkingTree {
     }
 
     /**
-     * Deletes a collection of features of the same type from the working tree and updates the WORK_HEAD ref.
+     * Deletes a collection of features of the same type from the working tree and updates the
+     * WORK_HEAD ref.
      * 
      * @param typeName
      * @param filter - currently unused
@@ -237,25 +236,16 @@ public class WorkingTree {
         final Integer size = collectionSize == null || collectionSize.intValue() < 1 ? null
                 : collectionSize.intValue();
 
-        List<NodeRef> insertedNodes = new LinkedList<NodeRef>();
-        putInDatabase(treePath, features, listener, size, insertedNodes);
-
         MutableTree parentTree = repository.command(FindOrCreateSubtree.class).setIndex(true)
                 .setParent(Suppliers.ofInstance(Optional.of(getTree()))).setChildPath(treePath)
                 .call().mutable();
 
-        for (NodeRef node : insertedNodes) {
-            parentTree.put(node);
-        }
+        putInDatabase(treePath, features, listener, size, insertedTarget, parentTree);
 
         ObjectId newTree = repository.command(WriteBack.class).setAncestor(getTreeSupplier())
                 .setChildPath(treePath).setIndex(true).setTree(parentTree).call();
 
         updateWorkHead(newTree);
-
-        if (insertedTarget != null) {
-            insertedTarget.addAll(insertedNodes);
-        }
     }
 
     /**
@@ -293,28 +283,9 @@ public class WorkingTree {
     }
 
     /**
-     * Stages the object addressed by {@code pathFilter}, or all unstaged objects if {@code pathFilter == null} to be added, if it is/they are marked
-     * as an unstaged change. Does nothing otherwise.
-     * <p>
-     * To stage changes not yet staged, a diff tree walk is performed using the current staged {@link RevTree} as the old object and the current
-     * unstaged {@link RevTree} as the new object. Then all the differences are traversed and the staged tree is updated with the changes reported by
-     * the diff walk (neat).
-     * </p>
-     * 
      * @param pathFilter
-     * @param progressListener
-     */
-    public void stage(final ProgressListener progress, final @Nullable String pathFilter) {
-        final int numChanges = countUnstaged(pathFilter);
-
-        Iterator<DiffEntry> unstaged = getUnstaged(pathFilter);
-
-        index.stage(progress, unstaged, numChanges);
-    }
-
-    /**
-     * @param pathFilter
-     * @return an iterator for all of the differences between the work tree and the index based on the path filter.
+     * @return an iterator for all of the differences between the work tree and the index based on
+     *         the path filter.
      */
     public Iterator<DiffEntry> getUnstaged(final @Nullable String pathFilter) {
         Iterator<DiffEntry> unstaged = repository.command(DiffWorkTree.class).setFilter(pathFilter)
@@ -338,7 +309,8 @@ public class WorkingTree {
 
     /**
      * @param path
-     * @return the NodeRef for the feature at the specified path if it exists in the work tree, otherwise Optional.absent()
+     * @return the NodeRef for the feature at the specified path if it exists in the work tree,
+     *         otherwise Optional.absent()
      */
     public Optional<NodeRef> findUnstaged(final String path) {
         Optional<NodeRef> entry = repository.command(FindTreeChild.class).setIndex(true)
@@ -352,7 +324,7 @@ public class WorkingTree {
      * @param path
      * @return the NodeRef for the inserted feature
      */
-    public NodeRef putInDatabase(final String parentTreePath, final RevFeature feature) {
+    private NodeRef putInDatabase(final String parentTreePath, final RevFeature feature) {
         NodeRef.checkValidPath(parentTreePath);
         checkNotNull(feature);
 
@@ -393,13 +365,13 @@ public class WorkingTree {
      * @param target
      * @throws Exception
      */
-    public void putInDatabase(final String parentTreePath, final Iterator<RevFeature> objects,
+    private void putInDatabase(final String parentTreePath, final Iterator<RevFeature> objects,
             final ProgressListener progress, final @Nullable Integer size,
-            @Nullable final List<NodeRef> target) throws Exception {
+            @Nullable final List<NodeRef> target, MutableTree parentTree) throws Exception {
 
         checkNotNull(objects);
         checkNotNull(progress);
-        checkArgument(size == null || size.intValue() > 0);
+        checkNotNull(parentTree);
 
         RevFeature revFeature;
         int count = 0;
@@ -416,6 +388,9 @@ public class WorkingTree {
 
             revFeature = objects.next();
             NodeRef objectRef = insert(parentTreePath, revFeature);
+
+            parentTree.put(objectRef);
+
             if (target != null) {
                 target.add(objectRef);
             }
@@ -427,7 +402,7 @@ public class WorkingTree {
      * @return
      */
     public List<QName> getFeatureTypeNames() {
-        List<QName> names = new ArrayList<QName>();
+        // List<QName> names = new ArrayList<QName>();
         RevTree root = getTree();
 
         final List<QName> typeNames = Lists.newLinkedList();
@@ -442,15 +417,16 @@ public class WorkingTree {
                 @Override
                 public boolean visitEntry(NodeRef ref) {
                     if (TYPE.TREE.equals(ref.getType())) {
-                        if (!ref.getMetadataId().isNull()) {
-                            ObjectId metadataId = ref.getMetadataId();
-                            ObjectSerialisingFactory serialFactory;
-                            serialFactory = repository.getSerializationFactory();
-                            ObjectReader<RevFeatureType> typeReader = serialFactory
-                                    .createFeatureTypeReader();
-                            RevFeatureType type = indexDatabase.get(metadataId, typeReader);
-                            typeNames.add(type.getName());
-                        }
+                        typeNames.add(new QName(ref.getPath()));
+                        // if (!ref.getMetadataId().isNull()) {
+                        // ObjectId metadataId = ref.getMetadataId();
+                        // ObjectSerialisingFactory serialFactory;
+                        // serialFactory = repository.getSerializationFactory();
+                        // ObjectReader<RevFeatureType> typeReader = serialFactory
+                        // .createFeatureTypeReader();
+                        // RevFeatureType type = indexDatabase.get(metadataId, typeReader);
+                        // typeNames.add(type.getName());
+                        // }
                         return true;
                     } else {
                         return false;
@@ -458,7 +434,7 @@ public class WorkingTree {
                 }
             });
         }
-        return names;
+        return typeNames;
     }
 
     // public RevTree getHeadVersion(final QName typeName) {
