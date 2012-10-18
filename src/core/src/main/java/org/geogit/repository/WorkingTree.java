@@ -272,11 +272,19 @@ public class WorkingTree {
             throws Exception {
 
         checkArgument(collectionSize == null || collectionSize.intValue() > -1);
-        final int size = collectionSize == null ? -1 : collectionSize.intValue();
+
+        final Integer size = collectionSize == null || collectionSize.intValue() < 1 ? null
+                : collectionSize.intValue();
 
         insert(treePath, features, false, listener, null, size);
     }
 
+    /**
+     * Determines if a specific feature type is versioned (existing in the main repository).
+     * 
+     * @param typeName
+     * @return true if the feature type is versioned, false otherwise.
+     */
     public boolean hasRoot(final QName typeName) {
         String localPart = typeName.getLocalPart();
         Optional<NodeRef> typeNameTreeRef = repository.command(FindTreeChild.class)
@@ -420,7 +428,7 @@ public class WorkingTree {
      */
     public List<QName> getFeatureTypeNames() {
         List<QName> names = new ArrayList<QName>();
-        RevTree root = repository.getOrCreateHeadTree();
+        RevTree root = getTree();
 
         final List<QName> typeNames = Lists.newLinkedList();
         if (root != null) {
