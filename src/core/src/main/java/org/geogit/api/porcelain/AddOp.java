@@ -11,12 +11,17 @@ import java.util.Set;
 import javax.annotation.Nullable;
 
 import org.geogit.api.AbstractGeoGitOp;
+import org.geogit.api.ObjectId;
+import org.geogit.api.Ref;
 import org.geogit.api.RevTree;
+import org.geogit.api.plumbing.RevParse;
+import org.geogit.api.plumbing.UpdateRef;
 import org.geogit.api.plumbing.diff.DiffEntry;
 import org.geogit.repository.StagingArea;
 import org.geogit.repository.WorkingTree;
 import org.opengis.util.ProgressListener;
 
+import com.google.common.base.Optional;
 import com.google.inject.Inject;
 
 /**
@@ -71,6 +76,20 @@ public class AddOp extends AbstractGeoGitOp<WorkingTree> {
      * @param progressListener
      */
     public void stage(final ProgressListener progress, final @Nullable String pathFilter) {
+
+        // short cut for the case where the index is empty and we're staging all changes in the
+        // working tree, so it's just a matter of updating the index ref to working tree RevTree id
+        if (null == pathFilter && !index.getStaged(null).hasNext()) {
+            progress.started();
+            Optional<ObjectId> workHead = command(RevParse.class).setRefSpec(Ref.WORK_HEAD).call();
+            if (workHead.isPresent()) {
+                command(UpdateRef.class).setName(Ref.STAGE_HEAD).setNewValue(workHead.get()).call();
+            }
+            progress.progress(100f);
+            progress.complete();
+            return;
+        }
+
         final int numChanges = workTree.countUnstaged(pathFilter);
 
         Iterator<DiffEntry> unstaged = workTree.getUnstaged(pathFilter);
