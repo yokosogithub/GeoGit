@@ -4,9 +4,6 @@
  */
 package org.geogit.storage;
 
-import java.io.IOException;
-import java.math.BigInteger;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
@@ -21,19 +18,18 @@ import org.geogit.api.RevTree;
 
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Throwables;
 import com.google.common.collect.Sets;
 
 class MutableRevSHA1Tree extends RevSHA1Tree implements MutableTree {
 
-    private BigInteger mutableSize;
+    // private BigInteger mutableSize;
 
     /**
      * Copy constructor
      */
     public MutableRevSHA1Tree(final RevSHA1Tree copy, final ObjectSerialisingFactory serialFactory) {
         super(copy.getId(), copy.db, copy.depth, serialFactory);
-        this.mutableSize = copy.size();
+        // this.mutableSize = copy.size();
         super.myEntries.putAll(copy.myEntries);
         super.mySubTrees.putAll(copy.mySubTrees);
     }
@@ -62,26 +58,27 @@ class MutableRevSHA1Tree extends RevSHA1Tree implements MutableTree {
         return normalized;
     }
 
-    /**
-     * @return the number of elements in the tree, forces {@link #normalize()} if the tree has been
-     *         modified since retrieved from the db
-     */
-    @SuppressWarnings("unchecked")
-    @Override
-    public BigInteger size() {
-        if (mutableSize == null) {
-            if (!isNormalized()) {
-                normalize();
-            } else {
-                try {
-                    this.mutableSize = computeSize(BigInteger.ZERO, Collections.EMPTY_SET);
-                } catch (IOException e) {
-                    Throwables.propagate(e);
-                }
-            }
-        }
-        return mutableSize;
-    }
+    // /**
+    // * @return the number of elements in the tree, forces {@link #normalize()} if the tree has
+    // been
+    // * modified since retrieved from the db
+    // */
+    // @SuppressWarnings("unchecked")
+    // @Override
+    // public BigInteger size() {
+    // if (mutableSize == null) {
+    // if (!isNormalized()) {
+    // normalize();
+    // } else {
+    // try {
+    // this.mutableSize = computeSize(BigInteger.ZERO, Collections.EMPTY_SET);
+    // } catch (IOException e) {
+    // Throwables.propagate(e);
+    // }
+    // }
+    // }
+    // return mutableSize;
+    // }
 
     /**
      * Adds or replaces an element in the tree with the given key.
@@ -103,19 +100,19 @@ class MutableRevSHA1Tree extends RevSHA1Tree implements MutableTree {
             // hit the split factor modification tolerance, lets normalize
             normalize();
         } else {
-            // still can handle more modifications before aut-splitting
-            if (mySubTrees.isEmpty()) {
-                // I'm not yet split into subtrees, can handle size safely
-                if (this.mutableSize == null) {
-                    this.mutableSize = BigInteger.ONE;
-                } else if (oldCachedValue == null) {
-                    // only increment size if it wasn't a replacement operation
-                    this.mutableSize = this.mutableSize.add(BigInteger.ONE);
-                }
-            } else {
-                // I'm not sure what my size is anymore, lets handle it lazily
-                this.mutableSize = null;
-            }
+            // // still can handle more modifications before aut-splitting
+            // if (mySubTrees.isEmpty()) {
+            // // I'm not yet split into subtrees, can handle size safely
+            // if (this.mutableSize == null) {
+            // this.mutableSize = BigInteger.ONE;
+            // } else if (oldCachedValue == null) {
+            // // only increment size if it wasn't a replacement operation
+            // this.mutableSize = this.mutableSize.add(BigInteger.ONE);
+            // }
+            // } else {
+            // // I'm not sure what my size is anymore, lets handle it lazily
+            // this.mutableSize = null;
+            // }
         }
     }
 
@@ -127,9 +124,9 @@ class MutableRevSHA1Tree extends RevSHA1Tree implements MutableTree {
             // we don't even have a subtree for this key's bucket, it's sure this tree doesn't
             // already hold a value for it
             NodeRef removed = myEntries.remove(key);
-            if (removed != null) {
-                this.mutableSize = size().subtract(BigInteger.ONE);
-            }
+            // if (removed != null) {
+            // this.mutableSize = size().subtract(BigInteger.ONE);
+            // }
             return Optional.fromNullable(removed);
         } else {
             Optional<NodeRef> ref = this.get(key);
@@ -138,7 +135,7 @@ class MutableRevSHA1Tree extends RevSHA1Tree implements MutableTree {
                 // of the entry. normalize() is gonna take care of removing it from the subtree
                 // subsequently
                 myEntries.put(key, null);
-                this.mutableSize = size().subtract(BigInteger.ONE);
+                // this.mutableSize = size().subtract(BigInteger.ONE);
                 // mutableSize = null; // I'm not sure what my size is anymore
                 if (myEntries.size() >= SPLIT_FACTOR) {
                     normalize();
@@ -160,7 +157,7 @@ class MutableRevSHA1Tree extends RevSHA1Tree implements MutableTree {
         // System.err.println("spliting tree with order " + this.depth + " having "
         // + this.myEntries.size() + " entries....");
         if (myEntries.size() <= NORMALIZED_SIZE_LIMIT && mySubTrees.size() == 0) {
-            mutableSize = BigInteger.valueOf(myEntries.size());
+            // mutableSize = BigInteger.valueOf(myEntries.size());
             return;
         }
         final int childOrder = this.depth + 1;
@@ -175,7 +172,7 @@ class MutableRevSHA1Tree extends RevSHA1Tree implements MutableTree {
                 entriesByBucket.get(bucket).add((String) key);
             }
 
-            BigInteger size = BigInteger.ZERO;
+            // BigInteger size = BigInteger.ZERO;
 
             // ignore this subtrees for computing the size later as by that time their size has been
             // already added
@@ -209,15 +206,15 @@ class MutableRevSHA1Tree extends RevSHA1Tree implements MutableTree {
                         subtree.put(value);
                     }
                 }
-                size = size.add(subtree.size());
+                // size = size.add(subtree.size());
                 subtreeId = this.db.put(serialFactory.createRevTreeWriter(subtree));
                 // subtreeId = this.db.put(new BxmlRevTreeWriter(subtree));
                 ignoreForSizeComputation.add(subtreeId);
                 mySubTrees.put(bucket, subtreeId);
             }
 
-            // compute the overall size
-            this.mutableSize = computeSize(size, ignoreForSizeComputation);
+            // // compute the overall size
+            // this.mutableSize = computeSize(size, ignoreForSizeComputation);
         } catch (RuntimeException e) {
             throw e;
         } catch (Exception e) {
@@ -226,20 +223,20 @@ class MutableRevSHA1Tree extends RevSHA1Tree implements MutableTree {
         // System.err.println("spliting complete.");
     }
 
-    private BigInteger computeSize(final BigInteger initialSize,
-            final Set<ObjectId> ignoreForSizeComputation) throws IOException {
-        final int childOrder = this.depth + 1;
-        BigInteger size = initialSize;
-        for (ObjectId subtreeId : mySubTrees.values()) {
-            if (ignoreForSizeComputation.contains(subtreeId)) {
-                continue;
-            }
-            ObjectReader<RevTree> reader = serialFactory.createRevTreeReader(db, childOrder);
-            RevTree cached = db.get(subtreeId, reader);
-            size = size.add(cached.size());
-            // size = size.add(db.getCached(subtreeId, new BxmlRevTreeReader(db,
-            // childOrder)).size());
-        }
-        return size;
-    }
+    // private BigInteger computeSize(final BigInteger initialSize,
+    // final Set<ObjectId> ignoreForSizeComputation) throws IOException {
+    // final int childOrder = this.depth + 1;
+    // BigInteger size = initialSize;
+    // for (ObjectId subtreeId : mySubTrees.values()) {
+    // if (ignoreForSizeComputation.contains(subtreeId)) {
+    // continue;
+    // }
+    // ObjectReader<RevTree> reader = serialFactory.createRevTreeReader(db, childOrder);
+    // RevTree cached = db.get(subtreeId, reader);
+    // size = size.add(cached.size());
+    // // size = size.add(db.getCached(subtreeId, new BxmlRevTreeReader(db,
+    // // childOrder)).size());
+    // }
+    // return size;
+    // }
 }

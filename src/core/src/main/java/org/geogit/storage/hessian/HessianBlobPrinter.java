@@ -127,7 +127,8 @@ class HessianBlobPrinter extends HessianRevReader implements BlobPrinter {
      * @throws IOException
      */
     private void printRevTree(Hessian2Input hin, PrintStream out) throws IOException {
-        BigInteger size = new BigInteger(hin.readBytes());
+        // BigInteger size = new BigInteger(hin.readBytes());
+        BigInteger size = BigInteger.ZERO;
         Map<String, String> attr = new HashMap<String, String>();
         attr.put("size", size.toString());
         openTag("tree", attr, out, true, false);

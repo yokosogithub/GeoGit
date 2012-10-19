@@ -32,7 +32,6 @@ import org.geogit.storage.ObjectSerialisingFactory;
 import org.geogit.storage.RevSHA1Tree;
 import org.geogit.test.integration.PrintTreeVisitor;
 import org.geogit.test.integration.RepositoryTestCase;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.w3c.dom.Document;
 
@@ -193,71 +192,71 @@ public class RevSHA1TreeTest extends RepositoryTestCase {
         }
     }
 
-    @Test
-    @Ignore
-    public void testSize() throws Exception {
-        Stopwatch sw = new Stopwatch().start();
-        final int numEntries = RevSHA1Tree.SPLIT_FACTOR + 1000;
-        ObjectId treeId = createAndSaveTree(numEntries, true);
-        RevTree tree = odb.get(treeId, getRepository().newRevTreeReader(odb, 0));
-
-        int size = tree.size().intValue();
-        assertEquals(numEntries, size);
-
-        // add a couple more
-        final int added = 25000;
-        tree = tree.mutable();
-        for (int i = numEntries; i < numEntries + added; i++) {
-            addNodeRef((MutableTree) tree, i);
-        }
-
-        size = tree.size().intValue();
-        assertEquals(numEntries + added, size);
-
-        // save and compute again
-        treeId = odb.put(getRepository().newRevTreeWriter(tree));
-        tree = odb.get(treeId, getRepository().newRevTreeReader(odb, 0));
-
-        size = tree.size().intValue();
-        assertEquals(numEntries + added, size);
-
-        // remove some keys
-        final int removed = RevSHA1Tree.SPLIT_FACTOR;
-        tree = tree.mutable();
-        for (int i = 1; i <= removed; i++) {
-            String key = "Feature." + (size - i);
-            ((MutableTree) tree).remove(key);
-        }
-
-        size = tree.size().intValue();
-        assertEquals(numEntries + added - removed, tree.size().intValue());
-        // save and compute again
-        treeId = odb.put(getRepository().newRevTreeWriter(tree));
-        tree = odb.get(treeId, getRepository().newRevTreeReader(odb, 0));
-        size = tree.size().intValue();
-        assertEquals(numEntries + added - removed, tree.size().intValue());
-
-        // replacing an existing key should not change size
-        tree = tree.mutable();
-
-        final ObjectId fakeMetadataId = ObjectId.forString("FeatureType");
-
-        for (int i = 0; i < size / 2; i += 2) {
-            String key = "Feature." + i;
-            ObjectId otherId = ObjectId.forString(key + "changed");
-            ((MutableTree) tree).put(new NodeRef(key, otherId, fakeMetadataId, TYPE.FEATURE));
-        }
-        final int expected = size;
-        size = tree.size().intValue();
-        assertEquals(expected, tree.size().intValue());
-        // save and compute again
-        treeId = odb.put(getRepository().newRevTreeWriter(tree));
-        tree = odb.get(treeId, getRepository().newRevTreeReader(odb, 0));
-        size = tree.size().intValue();
-        assertEquals(expected, tree.size().intValue());
-        sw.stop();
-        System.err.println("testSize run time: " + sw);
-    }
+    // @Test
+    // @Ignore
+    // public void testSize() throws Exception {
+    // Stopwatch sw = new Stopwatch().start();
+    // final int numEntries = RevSHA1Tree.SPLIT_FACTOR + 1000;
+    // ObjectId treeId = createAndSaveTree(numEntries, true);
+    // RevTree tree = odb.get(treeId, getRepository().newRevTreeReader(odb, 0));
+    //
+    // int size = tree.size().intValue();
+    // assertEquals(numEntries, size);
+    //
+    // // add a couple more
+    // final int added = 25000;
+    // tree = tree.mutable();
+    // for (int i = numEntries; i < numEntries + added; i++) {
+    // addNodeRef((MutableTree) tree, i);
+    // }
+    //
+    // size = tree.size().intValue();
+    // assertEquals(numEntries + added, size);
+    //
+    // // save and compute again
+    // treeId = odb.put(getRepository().newRevTreeWriter(tree));
+    // tree = odb.get(treeId, getRepository().newRevTreeReader(odb, 0));
+    //
+    // size = tree.size().intValue();
+    // assertEquals(numEntries + added, size);
+    //
+    // // remove some keys
+    // final int removed = RevSHA1Tree.SPLIT_FACTOR;
+    // tree = tree.mutable();
+    // for (int i = 1; i <= removed; i++) {
+    // String key = "Feature." + (size - i);
+    // ((MutableTree) tree).remove(key);
+    // }
+    //
+    // size = tree.size().intValue();
+    // assertEquals(numEntries + added - removed, tree.size().intValue());
+    // // save and compute again
+    // treeId = odb.put(getRepository().newRevTreeWriter(tree));
+    // tree = odb.get(treeId, getRepository().newRevTreeReader(odb, 0));
+    // size = tree.size().intValue();
+    // assertEquals(numEntries + added - removed, tree.size().intValue());
+    //
+    // // replacing an existing key should not change size
+    // tree = tree.mutable();
+    //
+    // final ObjectId fakeMetadataId = ObjectId.forString("FeatureType");
+    //
+    // for (int i = 0; i < size / 2; i += 2) {
+    // String key = "Feature." + i;
+    // ObjectId otherId = ObjectId.forString(key + "changed");
+    // ((MutableTree) tree).put(new NodeRef(key, otherId, fakeMetadataId, TYPE.FEATURE));
+    // }
+    // final int expected = size;
+    // size = tree.size().intValue();
+    // assertEquals(expected, tree.size().intValue());
+    // // save and compute again
+    // treeId = odb.put(getRepository().newRevTreeWriter(tree));
+    // tree = odb.get(treeId, getRepository().newRevTreeReader(odb, 0));
+    // size = tree.size().intValue();
+    // assertEquals(expected, tree.size().intValue());
+    // sw.stop();
+    // System.err.println("testSize run time: " + sw);
+    // }
 
     @Test
     public void testIterator() throws Exception {
@@ -281,7 +280,12 @@ public class RevSHA1TreeTest extends RepositoryTestCase {
         ObjectId treeId = createAndSaveTree(numEntries, true);
         InputStream in = odb.getRaw(treeId);
         ByteArrayOutputStream out = new ByteArrayOutputStream();
-        getRepository().newBlobPrinter().print(in, System.out);
+        try {
+            getRepository().newBlobPrinter().print(in, System.out);
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw e;
+        }
 
         in = odb.getRaw(treeId);
         getRepository().newBlobPrinter().print(in, new PrintStream(out));

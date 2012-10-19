@@ -49,7 +49,8 @@ class HessianRevTreeReader extends HessianRevReader implements ObjectReader<RevT
                 throw new IllegalArgumentException("Could not parse blob of type " + blobType
                         + " as rev tree.");
 
-            BigInteger size = new BigInteger(hin.readBytes());
+            // BigInteger size = new BigInteger(hin.readBytes());
+            BigInteger size = BigInteger.ZERO;
 
             TreeMap<String, NodeRef> references = Maps.newTreeMap();
             TreeMap<Integer, ObjectId> subtrees = Maps.newTreeMap();

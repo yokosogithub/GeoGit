@@ -5,7 +5,8 @@
 
 package org.geogit.api.plumbing;
 
-import static com.google.common.base.Preconditions.*;
+import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.util.Iterator;
 

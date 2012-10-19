@@ -26,7 +26,6 @@ import org.geogit.api.porcelain.ConfigOp;
 import org.geogit.api.porcelain.ConfigOp.ConfigAction;
 import org.geogit.di.GeogitModule;
 import org.geogit.repository.Repository;
-import org.geogit.repository.StagingArea;
 import org.geogit.repository.WorkingTree;
 import org.geogit.storage.hessian.GeoToolsRevFeature;
 import org.geotools.data.DataUtilities;

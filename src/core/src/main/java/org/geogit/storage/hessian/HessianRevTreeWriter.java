@@ -37,8 +37,8 @@ class HessianRevTreeWriter extends HessianRevWriter implements ObjectWriter<RevT
             hout.startMessage();
             hout.writeInt(BlobType.REVTREE.getValue());
 
-            byte[] size = revTree.size().toByteArray();
-            hout.writeBytes(size);
+            // byte[] size = revTree.size().toByteArray();
+            // hout.writeBytes(size);
 
             TreeVisitor v = new WritingTreeVisitor(hout);
             revTree.accept(v);

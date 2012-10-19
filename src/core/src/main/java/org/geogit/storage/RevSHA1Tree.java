@@ -51,7 +51,7 @@ public class RevSHA1Tree extends AbstractRevObject implements RevTree {
     protected MessageDigest md;
 
     // aggregated number of leaf nodes (data entries)
-    private final BigInteger size;
+    // private final BigInteger size;
 
     /**
      * If split == true, holds references to other trees, if split == false, holds references to
@@ -87,7 +87,7 @@ public class RevSHA1Tree extends AbstractRevObject implements RevTree {
         this.depth = order;
         this.myEntries = references;
         this.mySubTrees = subTrees;
-        this.size = size;
+        // this.size = size;
         this.serialFactory = serialFactory;
     }
 
@@ -96,13 +96,13 @@ public class RevSHA1Tree extends AbstractRevObject implements RevTree {
         return new MutableRevSHA1Tree(this, serialFactory);
     }
 
-    /**
-     * @return the number of elements in the tree
-     */
-    @Override
-    public BigInteger size() {
-        return size;
-    }
+    // /**
+    // * @return the number of elements in the tree
+    // */
+    // @Override
+    // public BigInteger size() {
+    // return size;
+    // }
 
     @Override
     @SuppressWarnings("unchecked")

@@ -4,7 +4,6 @@
  */
 package org.geogit.api;
 
-import java.math.BigInteger;
 import java.util.Iterator;
 
 import com.google.common.base.Optional;
@@ -25,10 +24,10 @@ public interface RevTree extends RevObject {
             return ObjectId.NULL;
         }
 
-        @Override
-        public BigInteger size() {
-            return BigInteger.ZERO;
-        }
+        // @Override
+        // public BigInteger size() {
+        // return BigInteger.ZERO;
+        // }
 
         @Override
         public MutableTree mutable() throws UnsupportedOperationException {
@@ -60,7 +59,7 @@ public interface RevTree extends RevObject {
 
     public abstract void accept(TreeVisitor visitor);
 
-    public abstract BigInteger size();
+    // public abstract BigInteger size();
 
     public abstract Iterator<NodeRef> iterator(Predicate<NodeRef> filter);
 

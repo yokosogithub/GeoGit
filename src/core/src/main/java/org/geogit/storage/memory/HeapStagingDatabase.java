@@ -8,7 +8,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -24,10 +23,8 @@ import org.geogit.storage.ObjectInserter;
 import org.geogit.storage.ObjectReader;
 import org.geogit.storage.StagingDatabase;
 
-import com.google.common.base.Optional;
 import com.google.common.base.Throwables;
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import com.google.inject.Inject;
 import com.ning.compress.lzf.LZFInputStream;
 
