@@ -387,7 +387,7 @@ public class WorkingTree {
             }
 
             revFeature = objects.next();
-            NodeRef objectRef = insert(parentTreePath, revFeature);
+            NodeRef objectRef = putInDatabase(parentTreePath, revFeature);
 
             parentTree.put(objectRef);
 
