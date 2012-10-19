@@ -39,7 +39,8 @@ public abstract class AbstractPGFunctionalTest {
     }
 
     /**
-     * Runs the given command with its arguments and returns the command output as a list of strings, one per line.
+     * Runs the given command with its arguments and returns the command output as a list of
+     * strings, one per line.
      */
     protected List<String> runAndParseCommand(String... command) throws Exception {
 

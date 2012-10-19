@@ -53,7 +53,8 @@ public abstract class AbstractPGCommand implements CLICommand {
     }
 
     /**
-     * Subclasses shall implement to do the real work, will not be called if the command was invoked with {@code --help}
+     * Subclasses shall implement to do the real work, will not be called if the command was invoked
+     * with {@code --help}
      */
     protected abstract void runInternal(GeogitCLI cli) throws Exception;
 
