@@ -23,6 +23,7 @@ import org.geogit.api.RevObject.TYPE;
 import org.geogit.api.RevTree;
 import org.geogit.api.SpatialRef;
 import org.geogit.api.TreeVisitor;
+import org.geogit.api.plumbing.CreateTree;
 import org.geogit.api.plumbing.DiffWorkTree;
 import org.geogit.api.plumbing.FindOrCreateSubtree;
 import org.geogit.api.plumbing.FindTreeChild;
@@ -31,6 +32,7 @@ import org.geogit.api.plumbing.RevObjectParse;
 import org.geogit.api.plumbing.UpdateRef;
 import org.geogit.api.plumbing.WriteBack;
 import org.geogit.api.plumbing.diff.DiffEntry;
+import org.geogit.storage.ObjectDatabase;
 import org.geogit.storage.ObjectSerialisingFactory;
 import org.geogit.storage.ObjectWriter;
 import org.geogit.storage.StagingDatabase;
@@ -190,8 +192,36 @@ public class WorkingTree {
      * @throws Exception
      */
     public void delete(final QName typeName) throws Exception {
-        // Not implemented
-        throw new UnsupportedOperationException("not yet implemented");
+        MutableTree parentTree = getTree().mutable();
+
+        final boolean isDirectChild = NodeRef.isDirectChild("", typeName.getLocalPart());
+        if (isDirectChild) {
+            parentTree.remove(typeName.getLocalPart());
+            ObjectWriter<RevTree> treeWriter = serialFactory.createRevTreeWriter(parentTree);
+            ObjectId newAncestorId = indexDatabase.put(treeWriter);
+            updateWorkHead(newAncestorId);
+            return;
+        }
+
+        final String parentPath = NodeRef.parentPath(typeName.getLocalPart());
+        Optional<NodeRef> parentRef = repository.command(FindTreeChild.class).setIndex(true)
+                .setParent(parentTree).setChildPath(parentPath).call();
+        MutableTree directParent;
+        if (parentRef.isPresent()) {
+            ObjectId parentId = parentRef.get().getObjectId();
+            if (!parentId.isNull()) {
+                directParent = indexDatabase.get(parentId,
+                        serialFactory.createRevTreeReader(indexDatabase)).mutable();
+
+                directParent.remove(typeName.getLocalPart());
+
+                ObjectId newTree = repository.command(WriteBack.class)
+                        .setAncestor(getTree().mutable()).setChildPath(parentPath).setIndex(true)
+                        .setTree(directParent).call();
+
+                updateWorkHead(newTree);
+            }
+        }
     }
 
     /**

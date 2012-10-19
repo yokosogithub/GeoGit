@@ -119,6 +119,7 @@ public class PGImport extends AbstractPGCommand implements CLICommand {
             ProgressListener progressListener = cli.getProgressListener();
             try {
                 Integer collectionSize = features.size();
+                workingTree.delete(revType.getName());
                 workingTree
                         .insert(treePath, iterator, true, progressListener, null, collectionSize);
             } finally {

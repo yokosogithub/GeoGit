@@ -349,9 +349,37 @@ public class WorkingTreeTest extends RepositoryTestCase {
 
     @Test
     public void testDeleteFeatureType() throws Exception {
-        Name typeName = points1.getName();
-        exception.expect(UnsupportedOperationException.class);
-        workTree.delete(new QName(typeName.getNamespaceURI(), typeName.getLocalPart()));
+        List<RevFeature> featureList = new LinkedList<RevFeature>();
+        featureList.add(new GeoToolsRevFeature(points1));
+        featureList.add(new GeoToolsRevFeature(points2));
+        featureList.add(new GeoToolsRevFeature(points3));
+
+        workTree.insert(pointsName, featureList.iterator(), false, new NullProgressListener(),
+                null, 3);
+
+        featureList = new LinkedList<RevFeature>();
+        featureList.add(new GeoToolsRevFeature(lines1));
+        featureList.add(new GeoToolsRevFeature(lines2));
+        featureList.add(new GeoToolsRevFeature(lines3));
+
+        workTree.insert(linesName, featureList.iterator(), false, new NullProgressListener(), null,
+                3);
+
+        assertTrue(workTree.findUnstaged(appendChild(pointsName, idP1)).isPresent());
+        assertTrue(workTree.findUnstaged(appendChild(pointsName, idP2)).isPresent());
+        assertTrue(workTree.findUnstaged(appendChild(pointsName, idP3)).isPresent());
+        assertTrue(workTree.findUnstaged(appendChild(linesName, idL1)).isPresent());
+        assertTrue(workTree.findUnstaged(appendChild(linesName, idL2)).isPresent());
+        assertTrue(workTree.findUnstaged(appendChild(linesName, idL3)).isPresent());
+
+        workTree.delete(new QName(pointsName));
+
+        assertFalse(workTree.findUnstaged(appendChild(pointsName, idP1)).isPresent());
+        assertFalse(workTree.findUnstaged(appendChild(pointsName, idP2)).isPresent());
+        assertFalse(workTree.findUnstaged(appendChild(pointsName, idP3)).isPresent());
+        assertTrue(workTree.findUnstaged(appendChild(linesName, idL1)).isPresent());
+        assertTrue(workTree.findUnstaged(appendChild(linesName, idL2)).isPresent());
+        assertTrue(workTree.findUnstaged(appendChild(linesName, idL3)).isPresent());
     }
 
     @Test
