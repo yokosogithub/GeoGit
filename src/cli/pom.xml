@@ -86,41 +86,6 @@
 
   <build>
     <plugins>
-      <plugin>
-        <groupId>org.codehaus.mojo</groupId>
-        <artifactId>appassembler-maven-plugin</artifactId>
-        <configuration>
-          <!-- Extra JVM arguments that will be included in the bin scripts -->
-          <extraJvmArguments>-Xmx512m -XX:MaxPermSize=128m</extraJvmArguments>
-          <!-- set alternative assemble directory -->
-          <assembleDirectory>${project.build.directory}/geogit</assembleDirectory>
-          <repositoryLayout>flat</repositoryLayout>
-          <useWildcardClassPath>true</useWildcardClassPath>
-         <useAsterikClassPath>true</useAsterikClassPath>
-          <platforms>
-            <platform>windows</platform>
-            <platform>unix</platform>
-          </platforms>
-          <programs>
-            <program>
-              <mainClass>org.geogit.cli.GeogitCLI</mainClass>
-              <name>geogit</name>
-            </program>
-            <program>
-              <mainClass>org.geogit.cli.GeogitConsole</mainClass>
-              <name>geogit-console</name>
-            </program>
-          </programs>
-        </configuration>
-        <executions>
-          <execution>
-            <id>assemble</id>
-            <goals>
-              <goal>assemble</goal>
-            </goals>
-          </execution>
-        </executions>
-      </plugin>
     </plugins>
   </build>
 </project>

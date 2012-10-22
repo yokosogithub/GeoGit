@@ -423,6 +423,7 @@
    <module>../storage</module>
    <module>../osm</module>
    <module>../cli</module>
+   <module>../cli-app</module>
    <module>../geotools</module>
    <!--module>../datastore</module-->
   </modules>
