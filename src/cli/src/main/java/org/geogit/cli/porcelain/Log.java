@@ -46,7 +46,7 @@ public class Log extends AbstractCommand implements CLICommand {
     @Parameter(names = "--until", description = "Maximum number of commits to log")
     private String until;
 
-    private String paths;
+    // private String paths;
 
     @Parameter(names = "--color", description = "Whether to apply colored output. Possible values are auto|never|always.", converter = ColorArg.Converter.class)
     private ColorArg color = ColorArg.auto;
@@ -65,7 +65,7 @@ public class Log extends AbstractCommand implements CLICommand {
             throw Throwables.propagate(e);
         }
         if (skip != null) {
-            Iterators.skip(log, skip.intValue());
+            Iterators.advance(log, skip.intValue());
         }
         if (limit != null) {
             log = Iterators.limit(log, limit.intValue());

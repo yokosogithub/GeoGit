@@ -162,6 +162,28 @@ public class WorkingTreeTest extends RepositoryTestCase {
     }
 
     @Test
+    public void testInsertDuplicateFeatures() throws Exception {
+        List<RevFeature> featureList = new LinkedList<RevFeature>();
+        featureList.add(new GeoToolsRevFeature(points1));
+        featureList.add(new GeoToolsRevFeature(points2));
+        featureList.add(new GeoToolsRevFeature(points3));
+
+        workTree.insert(pointsName, featureList.iterator(), false, new NullProgressListener(),
+                null, 3);
+
+        ObjectId oID1 = workTree.findUnstaged(appendChild(pointsName, idP1)).get().getObjectId();
+
+        List<RevFeature> modifiedFeatures = new LinkedList<RevFeature>();
+        modifiedFeatures.add(new GeoToolsRevFeature(points1_modified));
+
+        workTree.insert(pointsName, modifiedFeatures.iterator(), false, new NullProgressListener(),
+                null, 1);
+        assertFalse(workTree.findUnstaged(appendChild(pointsName, idP1)).get().getObjectId()
+                .equals(oID1));
+
+    }
+
+    @Test
     public void testUpdateFeatures() throws Exception {
         List<RevFeature> featureList = new LinkedList<RevFeature>();
         featureList.add(new GeoToolsRevFeature(points1));

@@ -34,6 +34,7 @@ public class InitSteps extends AbstractGeogitFunctionalTest {
         assertFalse(currentDirectory.exists());
         assertTrue(currentDirectory.mkdirs());
         assertEquals(0, currentDirectory.list().length);
+        setupGeogit();
     }
 
     @When("^I run the command \"([^\"]*)\"$")
@@ -50,10 +51,22 @@ public class InitSteps extends AbstractGeogitFunctionalTest {
         assertEquals(expected, actual);
     }
 
+    @Then("^the response should contain \"([^\"]*)\"$")
+    public void the_response_should_contain(String expected) throws Throwable {
+        String actual = stdOut.toString().replaceAll("\n", "");
+        assertTrue(actual, actual.contains(expected));
+    }
+
+    @Then("^the response should not contain \"([^\"]*)\"$")
+    public void the_response_should_not_contain(String expected) throws Throwable {
+        String actual = stdOut.toString().replaceAll("\n", "");
+        assertFalse(actual, actual.contains(expected));
+    }
+
     @Then("^the response should start with \"([^\"]*)\"$")
     public void the_response_should_start_with(String expected) throws Throwable {
         String actual = stdOut.toString().replaceAll("\n", "");
-        assertTrue(actual.startsWith(expected));
+        assertTrue(actual, actual.startsWith(expected));
     }
 
     @Then("^the repository directory shall exist$")
@@ -71,14 +84,47 @@ public class InitSteps extends AbstractGeogitFunctionalTest {
 
     @Given("^I have a repository$")
     public void I_have_a_repository() throws Throwable {
+        currentDirectory = new File("target", "testrepo");
         FileUtils.deleteDirectory(currentDirectory);
         assertFalse(currentDirectory.exists());
         assertTrue(currentDirectory.mkdirs());
+        setupGeogit();
 
         List<String> output = runAndParseCommand("init");
         assertEquals(output.toString(), 1, output.size());
         assertNotNull(output.get(0));
         assertTrue(output.get(0), output.get(0).startsWith("Initialized"));
+    }
+
+    @Given("^I have 6 unstaged features$")
+    public void I_have_6_unstaged_features() throws Throwable {
+        insertFeatures();
+    }
+
+    @Given("^I stage 6 features$")
+    public void I_stage_6_features() throws Throwable {
+        insertAndAddFeatures();
+    }
+
+    @Given("^I have several commits")
+    public void I_have_several_commits() throws Throwable {
+        insertAndAdd(points1);
+        insertAndAdd(points2);
+        runCommand(("commit -m Commit1").split(" "));
+        insertAndAdd(points3);
+        insertAndAdd(lines1);
+        runCommand(("commit -m Commit2").split(" "));
+        insertAndAdd(lines2);
+        insertAndAdd(lines3);
+        runCommand(("commit -m Commit3").split(" "));
+        insertAndAdd(points1_modified);
+        runCommand(("commit -m Commit4").split(" "));
+
+    }
+
+    @Given("I modify a feature")
+    public void I_modify_a_feature() throws Throwable {
+        insertAndAdd(points1_modified);
     }
 
     @Then("^if I change to the respository subdirectory \"([^\"]*)\"$")

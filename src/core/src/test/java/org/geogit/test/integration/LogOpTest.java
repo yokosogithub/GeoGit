@@ -22,7 +22,6 @@ import org.geogit.api.NodeRef;
 import org.geogit.api.ObjectId;
 import org.geogit.api.RevCommit;
 import org.geogit.api.porcelain.LogOp;
-import org.geogit.repository.StagingArea;
 import org.geotools.util.Range;
 import org.junit.Test;
 import org.opengis.feature.Feature;
@@ -34,12 +33,9 @@ public class LogOpTest extends RepositoryTestCase {
 
     private LogOp logOp;
 
-    private StagingArea index;
-
     @Override
     protected void setUpInternal() throws Exception {
         logOp = geogit.log();
-        index = geogit.getRepository().getIndex();
     }
 
     @Test
@@ -222,10 +218,10 @@ public class LogOpTest extends RepositoryTestCase {
         final ObjectId oid1_1 = insertAndAdd(points1);
         final RevCommit commit1_1 = geogit.commit().call();
 
-        final ObjectId oid1_2 = insertAndAdd(points2);
+        insertAndAdd(points2);
         final RevCommit commit1_2 = geogit.commit().call();
 
-        final ObjectId oid2_1 = insertAndAdd(lines1);
+        insertAndAdd(lines1);
         final RevCommit commit2_1 = geogit.commit().call();
 
         final ObjectId oid2_2 = insertAndAdd(lines2);

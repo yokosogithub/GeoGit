@@ -8,6 +8,9 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 
+import org.geogit.api.GeoGIT;
+import org.geogit.cli.GeogitCLI;
+
 /**
  */
 public class GlobalState {
@@ -17,5 +20,9 @@ public class GlobalState {
     public static ByteArrayInputStream stdIn;
 
     public static ByteArrayOutputStream stdOut;
+
+    public static GeoGIT geogit;
+
+    public static GeogitCLI geogitCLI;
 
 }

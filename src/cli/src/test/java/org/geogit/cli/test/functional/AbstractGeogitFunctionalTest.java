@@ -5,6 +5,8 @@
 package org.geogit.cli.test.functional;
 
 import static org.geogit.cli.test.functional.GlobalState.currentDirectory;
+import static org.geogit.cli.test.functional.GlobalState.geogit;
+import static org.geogit.cli.test.functional.GlobalState.geogitCLI;
 import static org.geogit.cli.test.functional.GlobalState.stdIn;
 import static org.geogit.cli.test.functional.GlobalState.stdOut;
 import static org.junit.Assert.assertNotNull;
@@ -19,11 +21,24 @@ import jline.UnsupportedTerminal;
 import jline.console.ConsoleReader;
 
 import org.geogit.api.GeoGIT;
+import org.geogit.api.NodeRef;
+import org.geogit.api.ObjectId;
 import org.geogit.api.Platform;
+import org.geogit.api.RevFeature;
 import org.geogit.cli.GeogitCLI;
 import org.geogit.di.GeogitModule;
+import org.geogit.repository.WorkingTree;
 import org.geogit.storage.bdbje.JEStorageModule;
+import org.geogit.storage.hessian.GeoToolsRevFeature;
+import org.geotools.data.DataUtilities;
+import org.geotools.feature.NameImpl;
+import org.geotools.feature.simple.SimpleFeatureBuilder;
+import org.geotools.geometry.jts.WKTReader2;
 import org.geotools.util.logging.Logging;
+import org.opengis.feature.Feature;
+import org.opengis.feature.simple.SimpleFeatureType;
+import org.opengis.feature.type.GeometryDescriptor;
+import org.opengis.feature.type.Name;
 
 import com.google.common.io.ByteStreams;
 import com.google.common.io.CharStreams;
@@ -31,11 +46,83 @@ import com.google.common.io.InputSupplier;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.util.Modules;
+import com.vividsolutions.jts.io.ParseException;
 
 public abstract class AbstractGeogitFunctionalTest {
 
+    protected static final String idL1 = "Lines.1";
+
+    protected static final String idL2 = "Lines.2";
+
+    protected static final String idL3 = "Lines.3";
+
+    protected static final String idP1 = "Points.1";
+
+    protected static final String idP2 = "Points.2";
+
+    protected static final String idP3 = "Points.3";
+
+    protected static final String pointsNs = "http://geogit.points";
+
+    protected static final String pointsName = "Points";
+
+    protected static final String pointsTypeSpec = "sp:String,ip:Integer,pp:Point:srid=4326";
+
+    protected static final Name pointsTypeName = new NameImpl("http://geogit.points", pointsName);
+
+    protected SimpleFeatureType pointsType;
+
+    protected Feature points1;
+
+    protected Feature points1_modified;
+
+    protected Feature points2;
+
+    protected Feature points3;
+
+    protected static final String linesNs = "http://geogit.lines";
+
+    protected static final String linesName = "Lines";
+
+    protected static final String linesTypeSpec = "sp:String,ip:Integer,pp:LineString:srid=4326";
+
+    protected static final Name linesTypeName = new NameImpl("http://geogit.lines", linesName);
+
+    protected SimpleFeatureType linesType;
+
+    protected Feature lines1;
+
+    protected Feature lines2;
+
+    protected Feature lines3;
+
     static {
         Logging.ALL.forceMonolineConsoleOutput(java.util.logging.Level.SEVERE);
+    }
+
+    protected void setupGeogit() throws Exception {
+        assertNotNull(currentDirectory);
+
+        stdIn = new ByteArrayInputStream(new byte[0]);
+        stdOut = new ByteArrayOutputStream();
+
+        Platform platform = new TestPlatform(currentDirectory);
+
+        ConsoleReader consoleReader = new ConsoleReader(stdIn, stdOut, new UnsupportedTerminal());
+
+        Injector injector = Guice.createInjector(Modules.override(new GeogitModule()).with(
+                new JEStorageModule(), new TestModule(platform)));
+        geogit = new GeoGIT(injector, currentDirectory);
+        try {
+            geogitCLI = new GeogitCLI(consoleReader);
+            if (geogit.getRepository() != null) {
+                geogitCLI.setGeogit(geogit);
+            }
+            geogitCLI.setPlatform(platform);
+        } finally {
+            geogit.close();
+        }
+        setupFeatures();
     }
 
     /**
@@ -53,26 +140,123 @@ public abstract class AbstractGeogitFunctionalTest {
 
     protected ByteArrayOutputStream runCommand(String... command) throws Exception {
         // System.err.println("Running command " + Arrays.toString(command));
-        assertNotNull(currentDirectory);
+        assertNotNull(geogitCLI);
 
-        stdIn = new ByteArrayInputStream(new byte[0]);
-        stdOut = new ByteArrayOutputStream();
+        stdOut.reset();
 
-        Platform platform = new TestPlatform(currentDirectory);
+        geogitCLI.processCommand(command);
 
-        ConsoleReader consoleReader = new ConsoleReader(stdIn, stdOut, new UnsupportedTerminal());
-
-        Injector injector = Guice.createInjector(Modules.override(new GeogitModule()).with(
-                new JEStorageModule(), new TestModule(platform)));
-        GeoGIT geogit = new GeoGIT(injector, currentDirectory);
-        try {
-            GeogitCLI cli = new GeogitCLI(consoleReader);
-            cli.setGeogit(geogit);
-            cli.setPlatform(platform);
-            cli.execute(command);
-        } finally {
-            geogit.close();
-        }
         return stdOut;
+    }
+
+    protected void setupFeatures() throws Exception {
+        pointsType = DataUtilities.createType(pointsNs, pointsName, pointsTypeSpec);
+
+        points1 = feature(pointsType, idP1, "StringProp1_1", new Integer(1000), "POINT(1 1)");
+        points1_modified = feature(pointsType, idP1, "StringProp1_1a", new Integer(1001),
+                "POINT(1 2)");
+        points2 = feature(pointsType, idP2, "StringProp1_2", new Integer(2000), "POINT(2 2)");
+        points3 = feature(pointsType, idP3, "StringProp1_3", new Integer(3000), "POINT(3 3)");
+
+        linesType = DataUtilities.createType(linesNs, linesName, linesTypeSpec);
+
+        lines1 = feature(linesType, idL1, "StringProp2_1", new Integer(1000),
+                "LINESTRING (1 1, 2 2)");
+        lines2 = feature(linesType, idL2, "StringProp2_2", new Integer(2000),
+                "LINESTRING (3 3, 4 4)");
+        lines3 = feature(linesType, idL3, "StringProp2_3", new Integer(3000),
+                "LINESTRING (5 5, 6 6)");
+    }
+
+    protected Feature feature(SimpleFeatureType type, String id, Object... values)
+            throws ParseException {
+        SimpleFeatureBuilder builder = new SimpleFeatureBuilder(type);
+        for (int i = 0; i < values.length; i++) {
+            Object value = values[i];
+            if (type.getDescriptor(i) instanceof GeometryDescriptor) {
+                if (value instanceof String) {
+                    value = new WKTReader2().read((String) value);
+                }
+            }
+            builder.set(i, value);
+        }
+        return builder.buildFeature(id);
+    }
+
+    protected void insertFeatures() throws Exception {
+        insert(points1);
+        insert(points2);
+        insert(points3);
+        insert(lines1);
+        insert(lines2);
+        insert(lines3);
+    }
+
+    protected void insertAndAddFeatures() throws Exception {
+        insertAndAdd(points1);
+        insertAndAdd(points2);
+        insertAndAdd(points3);
+        insertAndAdd(lines1);
+        insertAndAdd(lines2);
+        insertAndAdd(lines3);
+    }
+
+    /**
+     * Inserts the Feature to the index and stages it to be committed.
+     */
+    protected ObjectId insertAndAdd(Feature f) throws Exception {
+        ObjectId objectId = insert(f);
+
+        geogit.add().call();
+        return objectId;
+    }
+
+    /**
+     * Inserts the feature to the index but does not stages it to be committed
+     */
+    protected ObjectId insert(Feature f) throws Exception {
+        final WorkingTree workTree = geogit.getRepository().getWorkingTree();
+        Name name = f.getType().getName();
+        String parentPath = name.getLocalPart();
+        RevFeature rf = new GeoToolsRevFeature(f);
+        NodeRef ref = workTree.insert(parentPath, rf);
+        ObjectId objectId = ref.getObjectId();
+        return objectId;
+    }
+
+    protected void insertAndAdd(Feature... features) throws Exception {
+        insert(features);
+        geogit.add().call();
+    }
+
+    protected void insert(Feature... features) throws Exception {
+        for (Feature f : features) {
+            insert(f);
+        }
+    }
+
+    /**
+     * Deletes a feature from the index
+     * 
+     * @param f
+     * @return
+     * @throws Exception
+     */
+    protected boolean deleteAndAdd(Feature f) throws Exception {
+        boolean existed = delete(f);
+        if (existed) {
+            geogit.add().call();
+        }
+
+        return existed;
+    }
+
+    protected boolean delete(Feature f) throws Exception {
+        final WorkingTree workTree = geogit.getRepository().getWorkingTree();
+        Name name = f.getType().getName();
+        String localPart = name.getLocalPart();
+        String id = f.getIdentifier().getID();
+        boolean existed = workTree.delete(localPart, id);
+        return existed;
     }
 }

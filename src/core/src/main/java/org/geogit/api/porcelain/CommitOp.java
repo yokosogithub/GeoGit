@@ -94,12 +94,46 @@ public class CommitOp extends AbstractGeoGitOp<RevCommit> {
     }
 
     /**
+     * @return the author name if set, Optional.absent() if not.
+     */
+    public Optional<String> getAuthorName() {
+        if (authorName == null) {
+            return Optional.absent();
+        }
+        return authorName;
+    }
+
+    /**
+     * @return the author email if set, Optional.absent() if not.
+     */
+    public Optional<String> getAuthorEmail() {
+        if (authorEmail == null) {
+            return Optional.absent();
+        }
+        return authorEmail;
+    }
+
+    /**
      * If set, overrides the committer's name from the configuration
      */
     public void setCommitter(String committerName, @Nullable String committerEmail) {
         Preconditions.checkNotNull(committerName);
         this.committerName = committerName;
         this.committerEmail = committerEmail;
+    }
+
+    /**
+     * @return the committer's name.
+     */
+    public String getCommitterName() {
+        return committerName;
+    }
+
+    /**
+     * @return the committer's email.
+     */
+    public String getCommitterEmail() {
+        return committerEmail;
     }
 
     /**
@@ -139,13 +173,20 @@ public class CommitOp extends AbstractGeoGitOp<RevCommit> {
     }
 
     /**
+     * @return true if the all option is set, false otherwise.
+     */
+    public boolean getAll() {
+        return all;
+    }
+
+    /**
      * @return the commit just applied, or {@code null} iif
      *         {@code getProgressListener().isCanceled()}
      * @see org.geogit.api.AbstractGeoGitOp#call()
      * @throws NothingToCommitException if there are no staged changes by comparing the index
      *         staging tree and the repository HEAD tree.
      */
-    public RevCommit call() throws NothingToCommitException {
+    public RevCommit call() throws RuntimeException {
         final String committer = resolveCommitter();
         final String committerEmail = resolveCommitterEmail();
         final String author = resolveAuthor();
@@ -243,11 +284,11 @@ public class CommitOp extends AbstractGeoGitOp<RevCommit> {
         return Suppliers.memoize(supplier);
     }
 
-    private long getTimeStamp() {
+    public long getTimeStamp() {
         return timeStamp == null ? platform.currentTimeMillis() : timeStamp.longValue();
     }
 
-    private String getMessage() {
+    public String getMessage() {
         return message;
     }
 
@@ -255,12 +296,14 @@ public class CommitOp extends AbstractGeoGitOp<RevCommit> {
         if (committerName != null) {
             return committerName;
         }
+
         String key = "user.name";
         Optional<Map<String, String>> result = command(ConfigOp.class)
                 .setAction(ConfigAction.CONFIG_GET).setName(key).call();
         if (result.isPresent()) {
             return result.get().get(key);
         }
+
         throw new IllegalStateException(key + " not found in config. "
                 + "Use geogit config [--global] " + key + " <your name> to configure it.");
     }
@@ -269,12 +312,14 @@ public class CommitOp extends AbstractGeoGitOp<RevCommit> {
         if (committerEmail != null) {
             return committerEmail;
         }
+
         String key = "user.email";
         Optional<Map<String, String>> result = command(ConfigOp.class)
                 .setAction(ConfigAction.CONFIG_GET).setName(key).call();
         if (result.isPresent()) {
             return result.get().get(key);
         }
+
         throw new IllegalStateException(key + " not found in config. "
                 + "Use geogit config [--global] " + key + " <your email> to configure it.");
     }

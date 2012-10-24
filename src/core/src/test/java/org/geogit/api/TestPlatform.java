@@ -14,6 +14,8 @@ public class TestPlatform extends DefaultPlatform implements Platform {
 
     public TestPlatform(final File workingDirectory) {
         this.workingDirectory = workingDirectory;
+        this.userHomeDirectory = new File(workingDirectory, "userhome");
+        this.userHomeDirectory.mkdir();
     }
 
     @Override
@@ -21,12 +23,12 @@ public class TestPlatform extends DefaultPlatform implements Platform {
         return workingDirectory;
     }
 
-    public void setUserHome(final File userHomeDirectory) {
-        this.userHomeDirectory = userHomeDirectory;
-    }
-
     @Override
     public File getUserHome() {
         return userHomeDirectory;
+    }
+
+    public void setUserHome(File userHomeDirectory) {
+        this.userHomeDirectory = userHomeDirectory;
     }
 }

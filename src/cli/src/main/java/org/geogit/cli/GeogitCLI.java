@@ -158,40 +158,20 @@ public class GeogitCLI {
         }
 
         int exitCode = 0;
-        GeogitCLI cli = null;
+        GeogitCLI cli = new GeogitCLI(consoleReader);
+        cli.processCommand(args);
+
         try {
-            cli = new GeogitCLI(consoleReader);
-            cli.execute(args);
-        } catch (Exception e) {
-            exitCode = -1;
-            try {
-                if (e instanceof ParameterException) {
-                    consoleReader.println(e.getMessage() + ". See geogit --help.");
-                    consoleReader.flush();
-                } else if (e instanceof IllegalArgumentException
-                        || e instanceof IllegalStateException) {
-                    consoleReader.println(e.getMessage());
-                    consoleReader.flush();
-                } else {
-                    e.printStackTrace();
-                }
-            } catch (IOException ioe) {
-                ioe.printStackTrace();
-            }
+            cli.close();
         } finally {
             try {
-                if (cli != null) {
-                    cli.close();
-                }
-            } finally {
-                try {
-                    consoleReader.getTerminal().restore();
-                } catch (Exception e) {
-                    e.printStackTrace();
-                    exitCode = -1;
-                }
+                consoleReader.getTerminal().restore();
+            } catch (Exception e) {
+                e.printStackTrace();
+                exitCode = -1;
             }
         }
+
         System.exit(exitCode);
     }
 
@@ -210,6 +190,36 @@ public class GeogitCLI {
             }
         }
         return jc;
+    }
+
+    /**
+     * Processes a command, catching any exceptions and printing their messages to the console.
+     * 
+     * @param args
+     * @return 0 for normal exit, -1 if there was an exception.
+     */
+    public int processCommand(String... args) {
+        int exitCode = 0;
+        try {
+            execute(args);
+        } catch (Exception e) {
+            exitCode = -1;
+            try {
+                if (e instanceof ParameterException) {
+                    consoleReader.println(e.getMessage() + ". See geogit --help.");
+                    consoleReader.flush();
+                } else if (e instanceof IllegalArgumentException
+                        || e instanceof IllegalStateException) {
+                    consoleReader.println(e.getMessage());
+                    consoleReader.flush();
+                } else {
+                    e.printStackTrace();
+                }
+            } catch (IOException ioe) {
+                ioe.printStackTrace();
+            }
+        }
+        return exitCode;
     }
 
     /**
