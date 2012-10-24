@@ -47,3 +47,8 @@ Feature: "log" command
       And the response should contain "Subject: Commit3"
       And the response should not contain "Subject: Commit4"
       
+  Scenario: Try to show a log from an empty directory
+    Given I am in an empty directory
+     When I run the command "log"
+     Then the response should start with "Not a geogit repository"
+      
