@@ -4,10 +4,13 @@
  */
 package org.geogit.api;
 
-import java.security.MessageDigest;
 import java.util.Arrays;
 
 import com.google.common.base.Preconditions;
+import com.google.common.hash.HashCode;
+import com.google.common.hash.HashCodes;
+import com.google.common.hash.HashFunction;
+import com.google.common.hash.Hashing;
 
 /**
  * A semi-mutable SHA-1 abstraction.
@@ -16,18 +19,34 @@ import com.google.common.base.Preconditions;
  * </p>
  */
 public class ObjectId implements Comparable<ObjectId> {
-    public static final ObjectId NULL = new ObjectId(new byte[20]);
 
-    private byte[] raw;
+    public static final ObjectId NULL;
+
+    public static final HashFunction HASH_FUNCTION;
+
+    private static final int NUM_BYTES;
+
+    private static int NUM_CHARS;
+    static {
+        HASH_FUNCTION = Hashing.sha1();
+
+        NUM_BYTES = HASH_FUNCTION.bits() / 8;
+
+        NUM_CHARS = 2 * NUM_BYTES;
+
+        NULL = new ObjectId(new byte[20]);
+    }
+
+    private final byte[] hashCode;
 
     public ObjectId() {
-        this(NULL.raw);
+        this.hashCode = NULL.hashCode;
     }
 
     public ObjectId(byte[] raw) {
         Preconditions.checkNotNull(raw);
-        Preconditions.checkArgument(raw.length == 20);
-        this.raw = raw.clone();
+        Preconditions.checkArgument(raw.length == NUM_BYTES);
+        this.hashCode = raw.clone();
     }
 
     public boolean isNull() {
@@ -39,13 +58,12 @@ public class ObjectId implements Comparable<ObjectId> {
         if (!(o instanceof ObjectId)) {
             return false;
         }
-        return Arrays.equals(raw, ((ObjectId) o).raw);
+        return Arrays.equals(hashCode, ((ObjectId) o).hashCode);
     }
 
     @Override
     public int hashCode() {
-        final int hashCode = readInt(raw, 4);
-        return hashCode;
+        return Arrays.hashCode(hashCode);
     }
 
     /**
@@ -54,8 +72,7 @@ public class ObjectId implements Comparable<ObjectId> {
      */
     @Override
     public String toString() {
-        final byte[] hash = this.raw;
-        return toString(hash);
+        return HashCodes.fromBytes(hashCode).toString();
     }
 
     /**
@@ -66,14 +83,14 @@ public class ObjectId implements Comparable<ObjectId> {
      */
     public static ObjectId valueOf(final String hash) {
         Preconditions.checkNotNull(hash);
-        Preconditions.checkArgument(hash.length() == 40, hash,
+        Preconditions.checkArgument(hash.length() == NUM_CHARS, hash,
                 String.format("Invalid hash string %s", hash));
 
         // this is perhaps the worse way of doing this...
 
-        final byte[] raw = new byte[20];
+        final byte[] raw = new byte[NUM_BYTES];
         final int radix = 16;
-        for (int i = 0; i < 20; i++) {
+        for (int i = 0; i < NUM_BYTES; i++) {
             raw[i] = (byte) Integer.parseInt(hash.substring(2 * i, 2 * i + 2), radix);
         }
         return new ObjectId(raw);
@@ -97,71 +114,28 @@ public class ObjectId implements Comparable<ObjectId> {
         return raw;
     }
 
-    public static String toString(final byte[] hash) {
-        // not sure if there's an utility someplace to convert the hash to an hex string, took this
-        // from the web
-        StringBuilder buf = new StringBuilder();
-        for (int i = 0; i < hash.length; i++) {
-            int halfbyte = (hash[i] >>> 4) & 0x0F;
-            int two_halfs = 0;
-            do {
-                if ((0 <= halfbyte) && (halfbyte <= 9))
-                    buf.append((char) ('0' + halfbyte));
-                else
-                    buf.append((char) ('a' + (halfbyte - 10)));
-                halfbyte = hash[i] & 0x0F;
-            } while (two_halfs++ < 1);
-        }
-        return buf.toString();
-    }
-
     /**
      * @see java.lang.Comparable#compareTo(java.lang.Object)
      */
     public int compareTo(final ObjectId o) {
+        byte[] left = this.hashCode;
+        byte[] right = o.hashCode;
+        return compare(left, right);
+    }
+
+    private static int compare(byte[] left, byte[] right) {
         int c;
-        for (int i = 0; i < raw.length; i++) {
-            c = raw[i] - o.raw[i];
+        for (int i = 0; i < left.length; i++) {
+            c = left[i] - right[i];
             if (c != 0) {
                 return c;
             }
         }
         return 0;
-        // int i1 = readInt(raw, 0);
-        // int i2 = readInt(o.raw, 0);
-        // if (i1 != i2) {
-        // return i2 - i1;
-        // }
-        //
-        // i1 = readInt(raw, 4);
-        // i2 = readInt(o.raw, 4);
-        // if (i1 != i2) {
-        // return i2 - i1;
-        // }
-        //
-        // i1 = readInt(raw, 8);
-        // i2 = readInt(o.raw, 8);
-        // if (i1 != i2) {
-        // return i2 - i1;
-        // }
-        //
-        // i1 = readInt(raw, 16);
-        // i2 = readInt(o.raw, 16);
-        //
-        // return i2 - i1;
-    }
-
-    private static final int readInt(final byte[] raw, final int from) {
-        int ch1 = raw[from] << 24;
-        int ch2 = raw[from + 1] << 16;
-        int ch3 = raw[from + 2] << 8;
-        int ch4 = raw[from + 3] << 0;
-
-        return ch1 + ch2 + ch3 + ch4;
     }
 
     public byte[] getRawValue() {
-        return raw.clone();
+        return hashCode.clone();
     }
 
     /**
@@ -175,13 +149,8 @@ public class ObjectId implements Comparable<ObjectId> {
      */
     public static ObjectId forString(final String strToHash) {
         Preconditions.checkNotNull(strToHash);
-        try {
-            MessageDigest md = MessageDigest.getInstance("SHA1");
-            byte[] raw = md.digest(strToHash.getBytes("UTF-8"));
-            return new ObjectId(raw);
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
+        HashCode hashCode = HASH_FUNCTION.hashString(strToHash);
+        return new ObjectId(hashCode.asBytes());
     }
 
     /**
@@ -194,4 +163,11 @@ public class ObjectId implements Comparable<ObjectId> {
         return out.substring(0, 7) + ".." + out.substring(out.length() - 7, out.length());
     }
 
+    /**
+     * @param index
+     * @return
+     */
+    public int byteN(int index) {
+        return this.hashCode[index];
+    }
 }

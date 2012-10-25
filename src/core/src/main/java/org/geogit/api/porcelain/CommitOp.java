@@ -181,7 +181,7 @@ public class CommitOp extends AbstractGeoGitOp<RevCommit> {
         }
 
         final ObjectId currentRootTreeId = command(ResolveTreeish.class)
-                .setTreeish(currHeadCommitId.toString()).call().or(ObjectId.NULL);
+                .setTreeish(currHeadCommitId).call().or(ObjectId.NULL);
         if (currentRootTreeId.equals(newTreeId)) {
             if (!allowEmpty) {
                 throw new NothingToCommitException("Nothing to commit after " + currHeadCommitId);
