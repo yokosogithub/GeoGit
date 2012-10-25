@@ -44,36 +44,43 @@
       <groupId>com.google.inject</groupId>
       <artifactId>guice</artifactId>
     </dependency>
-      
+
     <dependency>
       <groupId>org.geotools.jdbc</groupId>
       <artifactId>gt-jdbc-postgis</artifactId>
       <version>${gt.version}</version>
     </dependency>
-      
+
     <dependency>
       <groupId>org.ini4j</groupId>
       <artifactId>ini4j</artifactId>
     </dependency>
-      
+
     <dependency>
       <!-- http://jcommander.org/ -->
       <groupId>com.beust</groupId>
       <artifactId>jcommander</artifactId>
       <version>1.27</version>
     </dependency>
-      
+
     <dependency>
       <!-- https://github.com/jline/jline2 -->
       <groupId>jline</groupId>
       <artifactId>jline</artifactId>
       <version>2.6</version>
     </dependency>
-    
+
     <!-- Test scope dependencies -->
     <dependency>
       <groupId>org.geogit</groupId>
       <artifactId>geogit-core</artifactId>
+      <version>${project.version}</version>
+      <scope>test</scope>
+      <classifier>tests</classifier>
+    </dependency>
+    <dependency>
+      <groupId>org.geogit</groupId>
+      <artifactId>geogit-cli</artifactId>
       <version>${project.version}</version>
       <scope>test</scope>
       <classifier>tests</classifier>
@@ -113,23 +120,4 @@
     </dependency>
   </dependencies>
 
-  <build>
-    <plugins>
-      <plugin>
-        <artifactId>maven-dependency-plugin</artifactId>
-        <executions>
-          <execution>
-            <phase>install</phase>
-            <goals>
-              <goal>copy-dependencies</goal>
-            </goals>
-            <configuration>
-              <outputDirectory>${project.build.directory}/repo</outputDirectory>
-            </configuration>
-          </execution>
-        </executions>
-      </plugin>
-    </plugins>
-  </build>
-    
 </project>
