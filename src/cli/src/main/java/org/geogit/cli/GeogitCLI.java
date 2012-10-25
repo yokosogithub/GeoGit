@@ -312,7 +312,13 @@ public class GeogitCLI {
         mainCommander.parse(args);
         final String parsedCommand = mainCommander.getParsedCommand();
         if (null == parsedCommand) {
-            mainCommander.usage();
+            if (mainCommander.getObjects().get(0) instanceof CLICommandExtension) {
+                CLICommandExtension extension = (CLICommandExtension) mainCommander.getObjects()
+                        .get(0);
+                extension.getCommandParser().usage();
+            } else {
+                mainCommander.usage();
+            }
         } else {
             JCommander jCommander = mainCommander.getCommands().get(parsedCommand);
             List<Object> objects = jCommander.getObjects();

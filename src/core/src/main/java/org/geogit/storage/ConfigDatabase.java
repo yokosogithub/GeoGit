@@ -1,5 +1,6 @@
 package org.geogit.storage;
 
+import java.util.List;
 import java.util.Map;
 
 import org.geogit.api.porcelain.ConfigException;
@@ -67,14 +68,14 @@ public interface ConfigDatabase {
      */
     public Optional<Map<String, String>> getAllGlobal();
 
-    /**
-     * Sets a value in the repository config file, e.g. put("section.key", "value") Resulting config
-     * file would look like: [section] key = value
-     * 
-     * @param key String in "section.key" format to set
-     * @param value The value to set
-     * @throws ConfigException if an error is encountered
-     */
+    public Optional<Map<String, String>> getAllSection(String section);
+
+    public Optional<Map<String, String>> getAllSectionGlobal(String section);
+
+    public Optional<List<String>> getAllSubsections(String section);
+
+    public Optional<List<String>> getAllSubsectionsGlobal(String section);
+
     public void put(String key, Object value);
 
     /**

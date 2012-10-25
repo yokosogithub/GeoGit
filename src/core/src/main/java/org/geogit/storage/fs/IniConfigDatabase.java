@@ -4,8 +4,12 @@ import java.io.File;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 
 import org.geogit.api.Platform;
 import org.geogit.api.plumbing.ResolveGeogitDir;
@@ -43,7 +47,7 @@ public class IniConfigDatabase implements ConfigDatabase {
         String option;
 
         public SectionOptionPair(String key) {
-            final int index = key.indexOf('.');
+            final int index = key.lastIndexOf('.');
 
             if (index == -1) {
                 throw new ConfigException(StatusCode.SECTION_OR_KEY_INVALID);
@@ -109,7 +113,7 @@ public class IniConfigDatabase implements ConfigDatabase {
         final SectionOptionPair pair = new SectionOptionPair(key);
         try {
             final Wini ini = new Wini(file);
-            T value = ini.get(pair.section, pair.option, c);
+            T value = ini.get(pair.section.replace(".", "\\"), pair.option, c);
 
             if (value == null)
                 return Optional.absent();
@@ -131,10 +135,9 @@ public class IniConfigDatabase implements ConfigDatabase {
 
             Map<String, String> results = new LinkedHashMap<String, String>();
 
-            for (String sectionName : ini.keySet()) {
-                Section section = ini.get(sectionName);
-                for (String optionKey : section.keySet()) {
-                    results.put(sectionName + "." + optionKey, section.get(optionKey));
+            for (Entry<String, Section> section : ini.entrySet()) {
+                if (section.getValue().getParent() == null) {
+                    getFromSection(section.getValue(), section.getKey(), results);
                 }
             }
 
@@ -149,11 +152,80 @@ public class IniConfigDatabase implements ConfigDatabase {
         }
     }
 
+    private Optional<Map<String, String>> getAllSection(String section, File file) {
+        try {
+            final Wini ini = new Wini(file);
+
+            Map<String, String> results = new LinkedHashMap<String, String>();
+
+            Section iniSection = ini.get(section);
+            getFromSection(iniSection, section, results);
+
+            if (results.isEmpty())
+                return Optional.absent();
+
+            return Optional.of(results);
+        } catch (IllegalArgumentException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new ConfigException(e, StatusCode.INVALID_LOCATION);
+        }
+    }
+
+    private void getFromSection(Section section, String sectionKey, Map<String, String> map) {
+        if (section != null) {
+            for (String optionKey : section.keySet()) {
+                map.put(sectionKey + "." + optionKey, section.get(optionKey));
+            }
+            String[] children = section.childrenNames();
+            for (int i = 0; i < children.length; i++) {
+                Section subSection = section.getChild(children[i]);
+                String sectionName = sectionKey + "." + children[i];
+                getFromSection(subSection, sectionName, map);
+            }
+        }
+    }
+
+    private Optional<List<String>> getAllSubsections(String section, File file) {
+        try {
+            final Wini ini = new Wini(file);
+
+            List<String> results = null;
+
+            Section iniSection = ini.get(section);
+            if (iniSection != null) {
+                results = new ArrayList<String>(Arrays.asList(iniSection.childrenNames()));
+            }
+
+            if (results == null || results.isEmpty())
+                return Optional.absent();
+
+            return Optional.of(results);
+        } catch (IllegalArgumentException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new ConfigException(e, StatusCode.INVALID_LOCATION);
+        }
+    }
+
     private void put(String key, Object value, File file) {
         final SectionOptionPair pair = new SectionOptionPair(key);
         try {
             final Wini ini = new Wini(file);
-            ini.put(pair.section, pair.option, value);
+            String[] sections = pair.section.split("\\.");
+            Section section = ini.get(sections[0]);
+            if (section == null) {
+                section = ini.add(sections[0]);
+            }
+            for (int i = 1; i < sections.length; i++) {
+                Section childSection = section.getChild(sections[i]);
+                if (childSection == null) {
+                    childSection = section.addChild(sections[i]);
+                }
+                section = childSection;
+            }
+            section.put(pair.option, value);
+            // ini.put(pair.section, pair.option, value);
             ini.store();
         } catch (Exception e) {
             throw new ConfigException(e, StatusCode.INVALID_LOCATION);
@@ -164,7 +236,7 @@ public class IniConfigDatabase implements ConfigDatabase {
         final SectionOptionPair pair = new SectionOptionPair(key);
         try {
             final Wini ini = new Wini(file);
-            ini.remove(pair.section, pair.option);
+            ini.remove(pair.section.replace(".", "\\"), pair.option);
             ini.store();
         } catch (Exception e) {
             throw new ConfigException(e, StatusCode.INVALID_LOCATION);
@@ -179,7 +251,7 @@ public class IniConfigDatabase implements ConfigDatabase {
             throw new ConfigException(e, StatusCode.INVALID_LOCATION);
         }
 
-        Section sectionToRemove = ini.get(key);
+        Section sectionToRemove = ini.get(key.replace(".", "\\"));
 
         if (sectionToRemove == null)
             throw new ConfigException(StatusCode.MISSING_SECTION);
@@ -246,9 +318,9 @@ public class IniConfigDatabase implements ConfigDatabase {
     }
 
     /**
-     * Builds and returns a string with all of the values from the global config file.
+     * Builds and returns a map with all of the values from the global config file.
      * 
-     * @return A string which contains all of the contents of the config file.
+     * @return A map which contains all of the contents of the config file.
      * @throws ConfigException if an error is encountered
      */
     @Override
@@ -257,14 +329,59 @@ public class IniConfigDatabase implements ConfigDatabase {
     }
 
     /**
-     * Builds and returns a string with all of the values from the global config file.
+     * Builds and returns a map with all of the values from the global config file.
      * 
-     * @return A string which contains all of the contents of the config file.
+     * @return A map which contains all of the contents of the config file.
      * @throws ConfigException if an error is encountered
      */
     @Override
     public Optional<Map<String, String>> getAllGlobal() {
         return getAll(globalConfig());
+    }
+
+    /**
+     * Builds and returns a map with all of the values of a specific section from the local config
+     * file.
+     * 
+     * @return A map which contains all of the contents of a particular section of the config file.
+     * @throws ConfigException if an error is encountered
+     */
+    @Override
+    public Optional<Map<String, String>> getAllSection(String section) {
+        return getAllSection(section, config());
+    }
+
+    /**
+     * Builds and returns a string with all of the values of a specific section from the global
+     * config file.
+     * 
+     * @return A map which contains all of the contents of a particular section of the config file.
+     * @throws ConfigException if an error is encountered
+     */
+    @Override
+    public Optional<Map<String, String>> getAllSectionGlobal(String section) {
+        return getAllSection(section, globalConfig());
+    }
+
+    /**
+     * Builds and returns a list of all subsections of the given section from the local config file.
+     * 
+     * @return A list which contains all of the subsections of the given section.
+     * @throws ConfigException if an error is encountered
+     */
+    public Optional<List<String>> getAllSubsections(String section) {
+        return getAllSubsections(section, config());
+    }
+
+    /**
+     * Builds and returns a list of all subsections of the given section from the global config
+     * file.
+     * 
+     * @return A list which contains all of the subsections of the given section.
+     * @throws ConfigException if an error is encountered
+     */
+    public Optional<List<String>> getAllSubsectionsGlobal(String section) {
+        return getAllSubsections(section, globalConfig());
     }
 
     /**
