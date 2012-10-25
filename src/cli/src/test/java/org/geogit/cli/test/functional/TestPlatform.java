@@ -11,19 +11,11 @@ import org.geogit.api.Platform;
 
 public class TestPlatform extends DefaultPlatform implements Platform {
 
-    private File workingDirectory;
-
     private File userHomeDirectory;
 
-    public TestPlatform(final File workingDirectory) {
-        this.workingDirectory = workingDirectory;
-        this.userHomeDirectory = new File(workingDirectory, "userhome");
-        this.userHomeDirectory.mkdir();
-    }
-
-    @Override
-    public File pwd() {
-        return workingDirectory;
+    public TestPlatform(final File workingDirectory, final File userHomeDirectory) {
+        this.userHomeDirectory = userHomeDirectory;
+        super.setWorkingDir(workingDirectory);
     }
 
     @Override

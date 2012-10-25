@@ -15,6 +15,8 @@ import org.geogit.cli.GeogitCLI;
  */
 public class GlobalState {
 
+    public static File homeDirectory;
+
     public static File currentDirectory;
 
     public static ByteArrayInputStream stdIn;

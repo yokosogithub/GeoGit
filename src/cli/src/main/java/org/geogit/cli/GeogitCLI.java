@@ -48,7 +48,9 @@ import com.google.inject.util.Modules;
  */
 public class GeogitCLI {
 
-    private Injector injector;
+    private Injector commandsInjector;
+
+    private Injector geogitInjector;
 
     private Platform platform;
 
@@ -66,7 +68,7 @@ public class GeogitCLI {
         this.platform = new DefaultPlatform();
 
         Iterable<CLIModule> plugins = ServiceLoader.load(CLIModule.class);
-        injector = Guice.createInjector(plugins);
+        commandsInjector = Guice.createInjector(plugins);
     }
 
     public Platform getPlatform() {
@@ -118,9 +120,20 @@ public class GeogitCLI {
     }
 
     public GeoGIT newGeoGIT() {
-        Injector inj = Guice.createInjector(Modules.override(new GeogitModule()).with(
-                new JEStorageModule()));
+        Injector inj = getGeogitInjector();
         return new GeoGIT(inj, platform.pwd());
+    }
+
+    public Injector getGeogitInjector() {
+        if (geogitInjector == null) {
+            geogitInjector = Guice.createInjector(Modules.override(new GeogitModule()).with(
+                    new JEStorageModule()));
+        }
+        return geogitInjector;
+    }
+
+    public void setGeogitInjector(@Nullable Injector injector) {
+        geogitInjector = injector;
     }
 
     public ConsoleReader getConsole() {
@@ -176,7 +189,7 @@ public class GeogitCLI {
     }
 
     private Collection<Key<?>> findCommands() {
-        Map<Key<?>, Binding<?>> commands = injector.getBindings();
+        Map<Key<?>, Binding<?>> commands = commandsInjector.getBindings();
         return commands.keySet();
     }
 
@@ -184,7 +197,7 @@ public class GeogitCLI {
         JCommander jc = new JCommander(this);
         jc.setProgramName("geogit");
         for (Key<?> cmd : findCommands()) {
-            Object obj = injector.getInstance(cmd);
+            Object obj = commandsInjector.getInstance(cmd);
             if (obj instanceof CLICommand || obj instanceof CLICommandExtension) {
                 jc.addCommand(obj);
             }
@@ -318,4 +331,5 @@ public class GeogitCLI {
         }
         return this.progressListener;
     }
+
 }

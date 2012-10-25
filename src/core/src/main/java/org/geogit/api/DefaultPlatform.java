@@ -24,6 +24,7 @@ public class DefaultPlatform implements Platform {
         return new File(".").getAbsoluteFile().getParentFile();
     }
 
+    @Override
     public void setWorkingDir(File workingDir) {
         checkArgument(workingDir == null || workingDir.isDirectory(),
                 "file does not exist or is not a directory: " + workingDir);

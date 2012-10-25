@@ -15,15 +15,11 @@ import org.geogit.api.porcelain.InitOp;
 import org.geogit.cli.AbstractCommand;
 import org.geogit.cli.CLICommand;
 import org.geogit.cli.GeogitCLI;
-import org.geogit.di.GeogitModule;
 import org.geogit.repository.Repository;
-import org.geogit.storage.bdbje.JEStorageModule;
 
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.Parameters;
 import com.google.common.base.Throwables;
-import com.google.inject.Guice;
-import com.google.inject.util.Modules;
 
 /**
  * CLI proxy for {@link InitOp}
@@ -56,8 +52,8 @@ public class Init extends AbstractCommand implements CLICommand {
                     repoDir = currDir;
                 }
             }
-            GeoGIT geogit = new GeoGIT(Guice.createInjector(Modules.override(new GeogitModule())
-                    .with(new JEStorageModule())), repoDir);
+
+            GeoGIT geogit = new GeoGIT(cli.getGeogitInjector(), repoDir);
 
             Repository repository = geogit.command(InitOp.class).call();
             final boolean repoExisted = repository == null;

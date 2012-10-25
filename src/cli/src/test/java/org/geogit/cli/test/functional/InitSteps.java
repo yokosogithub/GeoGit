@@ -5,6 +5,7 @@
 package org.geogit.cli.test.functional;
 
 import static org.geogit.cli.test.functional.GlobalState.currentDirectory;
+import static org.geogit.cli.test.functional.GlobalState.homeDirectory;
 import static org.geogit.cli.test.functional.GlobalState.stdOut;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -13,6 +14,7 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import java.io.File;
+import java.io.IOException;
 import java.net.URI;
 import java.util.List;
 
@@ -29,10 +31,7 @@ public class InitSteps extends AbstractGeogitFunctionalTest {
 
     @Given("^I am in an empty directory$")
     public void I_am_in_an_empty_directory() throws Throwable {
-        currentDirectory = new File("target", "testrepo");
-        FileUtils.deleteDirectory(currentDirectory);
-        assertFalse(currentDirectory.exists());
-        assertTrue(currentDirectory.mkdirs());
+        setUpDirectories();
         assertEquals(0, currentDirectory.list().length);
         setupGeogit();
     }
@@ -82,18 +81,34 @@ public class InitSteps extends AbstractGeogitFunctionalTest {
         assertTrue("Repository directory not found: " + repoDir.getAbsolutePath(), repoDir.exists());
     }
 
-    @Given("^I have a repository$")
-    public void I_have_a_repository() throws Throwable {
-        currentDirectory = new File("target", "testrepo");
-        FileUtils.deleteDirectory(currentDirectory);
-        assertFalse(currentDirectory.exists());
-        assertTrue(currentDirectory.mkdirs());
+    @Given("^I have an unconfigured repository$")
+    public void I_have_an_unconfigured_repository() throws Throwable {
+        setUpDirectories();
         setupGeogit();
 
         List<String> output = runAndParseCommand("init");
         assertEquals(output.toString(), 1, output.size());
         assertNotNull(output.get(0));
         assertTrue(output.get(0), output.get(0).startsWith("Initialized"));
+    }
+
+    @Given("^I have a repository$")
+    public void I_have_a_repository() throws Throwable {
+        I_have_an_unconfigured_repository();
+        runCommand("config", "--global", "user.name", "John Doe");
+        runCommand("config", "--global", "user.email", "JohnDoe@example.com");
+    }
+
+    private void setUpDirectories() throws IOException {
+        homeDirectory = new File("target", "fakeHomeDir");
+        FileUtils.deleteDirectory(homeDirectory);
+        assertFalse(homeDirectory.exists());
+        assertTrue(homeDirectory.mkdirs());
+
+        currentDirectory = new File("target", "testrepo");
+        FileUtils.deleteDirectory(currentDirectory);
+        assertFalse(currentDirectory.exists());
+        assertTrue(currentDirectory.mkdirs());
     }
 
     @Given("^I have 6 unstaged features$")

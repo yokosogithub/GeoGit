@@ -7,6 +7,7 @@ package org.geogit.cli.test.functional;
 import static org.geogit.cli.test.functional.GlobalState.currentDirectory;
 import static org.geogit.cli.test.functional.GlobalState.geogit;
 import static org.geogit.cli.test.functional.GlobalState.geogitCLI;
+import static org.geogit.cli.test.functional.GlobalState.homeDirectory;
 import static org.geogit.cli.test.functional.GlobalState.stdIn;
 import static org.geogit.cli.test.functional.GlobalState.stdOut;
 import static org.junit.Assert.assertNotNull;
@@ -23,7 +24,6 @@ import jline.console.ConsoleReader;
 import org.geogit.api.GeoGIT;
 import org.geogit.api.NodeRef;
 import org.geogit.api.ObjectId;
-import org.geogit.api.Platform;
 import org.geogit.api.RevFeature;
 import org.geogit.cli.GeogitCLI;
 import org.geogit.di.GeogitModule;
@@ -102,23 +102,26 @@ public abstract class AbstractGeogitFunctionalTest {
 
     protected void setupGeogit() throws Exception {
         assertNotNull(currentDirectory);
+        assertNotNull(homeDirectory);
 
         stdIn = new ByteArrayInputStream(new byte[0]);
         stdOut = new ByteArrayOutputStream();
 
-        Platform platform = new TestPlatform(currentDirectory);
+        TestPlatform platform = new TestPlatform(currentDirectory, homeDirectory);
 
         ConsoleReader consoleReader = new ConsoleReader(stdIn, stdOut, new UnsupportedTerminal());
 
         Injector injector = Guice.createInjector(Modules.override(new GeogitModule()).with(
                 new JEStorageModule(), new TestModule(platform)));
+
         geogit = new GeoGIT(injector, currentDirectory);
         try {
             geogitCLI = new GeogitCLI(consoleReader);
+            geogitCLI.setPlatform(platform);
+            geogitCLI.setGeogitInjector(injector);
             if (geogit.getRepository() != null) {
                 geogitCLI.setGeogit(geogit);
             }
-            geogitCLI.setPlatform(platform);
         } finally {
             geogit.close();
         }
