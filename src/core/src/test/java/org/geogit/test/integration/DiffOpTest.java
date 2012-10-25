@@ -13,6 +13,7 @@ import static org.junit.Assert.fail;
 
 import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
 
 import org.geogit.api.NodeRef;
 import org.geogit.api.ObjectId;
@@ -26,6 +27,8 @@ import org.junit.Test;
 import org.opengis.feature.Feature;
 import org.opengis.feature.simple.SimpleFeature;
 import org.opengis.feature.simple.SimpleFeatureType;
+
+import com.google.common.collect.Sets;
 
 /**
  * Unit test suite for {@link DiffOp}, must cover {@link DiffTreeWalk} too.
@@ -414,12 +417,14 @@ public class DiffOpTest extends RepositoryTestCase {
         diffOp.setFilter(pointsName);
 
         diffs = toList(diffOp.call());
+
         assertEquals(2, diffs.size());
         assertEquals(ChangeType.REMOVED, diffs.get(0).changeType());
         assertEquals(ChangeType.REMOVED, diffs.get(1).changeType());
 
-        assertEquals(oid11, diffs.get(0).oldObjectId());
-        assertEquals(oid13, diffs.get(1).oldObjectId());
+        Set<ObjectId> ids = Sets.newHashSet(diffs.get(0).oldObjectId(), diffs.get(1).oldObjectId());
+
+        assertEquals(Sets.newHashSet(oid11, oid13), ids);
     }
 
     @Test
