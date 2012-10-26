@@ -11,7 +11,7 @@ import com.google.common.base.Optional;
 import com.google.inject.Inject;
 
 /**
- * Return a map of all of the remotes from the local config database.
+ * Return a list of all of the remotes from the local config database.
  * 
  * @author jgarrett
  * @see ConfigDatabase
