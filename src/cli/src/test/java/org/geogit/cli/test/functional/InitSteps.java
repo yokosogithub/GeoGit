@@ -62,6 +62,12 @@ public class InitSteps extends AbstractGeogitFunctionalTest {
         assertFalse(actual, actual.contains(expected));
     }
 
+    @Then("^the response should contain ([^\"]*) lines$")
+    public void the_response_should_contain_x_lines(int lines) throws Throwable {
+        String[] lineStrings = stdOut.toString().split("\n");
+        assertEquals(lines, lineStrings.length);
+    }
+
     @Then("^the response should start with \"([^\"]*)\"$")
     public void the_response_should_start_with(String expected) throws Throwable {
         String actual = stdOut.toString().replaceAll("\n", "");
@@ -137,9 +143,14 @@ public class InitSteps extends AbstractGeogitFunctionalTest {
 
     }
 
+    @Given("I modify and add a feature")
+    public void I_modify_and_add_a_feature() throws Throwable {
+        insertAndAdd(points1_modified);
+    }
+
     @Given("I modify a feature")
     public void I_modify_a_feature() throws Throwable {
-        insertAndAdd(points1_modified);
+        insert(points1_modified);
     }
 
     @Then("^if I change to the respository subdirectory \"([^\"]*)\"$")

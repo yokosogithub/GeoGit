@@ -14,7 +14,7 @@ Feature: "commit" command
       And I stage 6 features
      When I run the command "commit -m Test"
      Then the response should contain "6 features added"
-     When I modify a feature
+     When I modify and add a feature
       And I run the command "commit -m Test2"
      Then the response should contain "1 changed"
      

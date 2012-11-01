@@ -49,6 +49,11 @@ public class Status implements CLICommand {
             return;
         }
 
+        if (limit < 0) {
+            cli.getConsole().println("Limit must be 0 or greater.");
+            return;
+        }
+
         ConsoleReader console = cli.getConsole();
         GeoGIT geogit = cli.getGeogit();
 
