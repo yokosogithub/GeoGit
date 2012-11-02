@@ -5,6 +5,10 @@
 
 package org.geogit.cli.porcelain;
 
+import static com.google.common.base.Preconditions.checkState;
+import jline.console.ConsoleReader;
+
+import org.geogit.api.GeoGIT;
 import org.geogit.cli.AbstractCommand;
 import org.geogit.cli.CLICommand;
 import org.geogit.cli.GeogitCLI;
@@ -19,7 +23,10 @@ public class Checkout extends AbstractCommand implements CLICommand {
 
     @Override
     public void runInternal(GeogitCLI cli) {
-        // TODO Auto-generated method stub
+        final GeoGIT geogit = cli.getGeogit();
+        checkState(geogit != null, "not in a geogit repository.");
+
+        final ConsoleReader console = cli.getConsole();
 
     }
 

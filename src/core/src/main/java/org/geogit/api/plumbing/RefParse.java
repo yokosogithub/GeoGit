@@ -56,7 +56,7 @@ public class RefParse extends AbstractGeoGitOp<Optional<Ref>> {
 
     /**
      * Parses a geogit reference string (possibly abbreviated) and return the resolved {@link Ref}
-     * or {@code null} if the ref spec didn't resolve to any actual reference.
+     * or {@code absent} if the ref spec didn't resolve to any actual reference.
      * 
      * Combinations of these operators are supported:
      * <ul>

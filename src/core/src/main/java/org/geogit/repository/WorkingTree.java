@@ -87,7 +87,7 @@ public class WorkingTree {
      * 
      * @param newTree the tree to be set as the new WORK_HEAD
      */
-    private void updateWorkHead(ObjectId newTree) {
+    public void updateWorkHead(ObjectId newTree) {
         repository.command(UpdateRef.class).setName(Ref.WORK_HEAD).setNewValue(newTree).call();
     }
 
