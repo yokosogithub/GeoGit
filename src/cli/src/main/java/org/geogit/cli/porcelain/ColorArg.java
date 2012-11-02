@@ -6,14 +6,23 @@ package org.geogit.cli.porcelain;
 
 import com.beust.jcommander.IStringConverter;
 
+/**
+ * This enumeration defines different the various usage options for color in some commands.
+ */
 public enum ColorArg {
     auto, never, always;
 
+    /**
+     * This converter is used to convert a String input into a valid enumeration value.
+     */
     public static class Converter implements IStringConverter<ColorArg> {
 
+        /**
+         * @param value the string to convert
+         * @return the resulting ColorArg enumeration
+         */
         @Override
         public ColorArg convert(String value) {
-            // TODO Auto-generated method stub
             return ColorArg.valueOf(value);
         }
 

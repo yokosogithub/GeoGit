@@ -17,6 +17,7 @@ import org.geogit.api.GeoGIT;
 import org.geogit.api.ObjectId;
 import org.geogit.api.RevCommit;
 import org.geogit.api.plumbing.diff.DiffEntry;
+import org.geogit.api.porcelain.CommitOp;
 import org.geogit.api.porcelain.NothingToCommitException;
 import org.geogit.cli.AbstractCommand;
 import org.geogit.cli.AnsiDecorator;
@@ -27,7 +28,17 @@ import com.beust.jcommander.Parameter;
 import com.beust.jcommander.Parameters;
 
 /**
- *
+ * Stores the current contents of the index in a new commit along with a log message from the user
+ * describing the changes.
+ * <p>
+ * CLI proxy for {@link CommitOp}
+ * <p>
+ * Usage:
+ * <ul>
+ * <li> {@code geogit commit -m <msg>}
+ * </ul>
+ * 
+ * @see CommitOp
  */
 @Parameters(commandNames = "commit", commandDescription = "Record staged changes to the repository")
 public class Commit extends AbstractCommand implements CLICommand {
@@ -35,6 +46,12 @@ public class Commit extends AbstractCommand implements CLICommand {
     @Parameter(names = "-m", description = "Commit message")
     private String message;
 
+    /**
+     * Executes the commit command using the provided options.
+     * 
+     * @param cli
+     * @see org.geogit.cli.AbstractCommand#runInternal(org.geogit.cli.GeogitCLI)
+     */
     @Override
     public void runInternal(GeogitCLI cli) throws Exception {
         checkState(cli.getGeogit() != null, "Not a geogit repository: " + cli.getPlatform().pwd());

@@ -77,6 +77,8 @@ public class Diff extends AbstractCommand implements CLICommand {
     private boolean raw;
 
     /**
+     * Executes the diff command with the specified options.
+     * 
      * @param cli
      * @throws Exception
      * @see org.geogit.cli.AbstractCommand#runInternal(org.geogit.cli.GeogitCLI)

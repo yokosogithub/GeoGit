@@ -12,6 +12,7 @@ import jline.console.ConsoleReader;
 
 import org.geogit.api.GeoGIT;
 import org.geogit.api.plumbing.ResolveGeogitDir;
+import org.geogit.api.porcelain.AddOp;
 import org.geogit.cli.AbstractCommand;
 import org.geogit.cli.GeogitCLI;
 
@@ -19,7 +20,19 @@ import com.beust.jcommander.Parameter;
 import com.beust.jcommander.Parameters;
 
 /**
- *
+ * Many geogit porcelainish commands take mixture of flags (i.e. parameters that begin with a dash
+ * -) and parameters meant for the underlying git rev-list command they use internally and flags and
+ * parameters for the other commands they use downstream of git rev-list. This command is used to
+ * distinguish between them.
+ * <p>
+ * CLI proxy for {@link AddOp}
+ * <p>
+ * Usage:
+ * <ul>
+ * <li> {@code geogit add [-n] [<pattern>...]}
+ * </ul>
+ * 
+ * @see AddOp
  */
 @Parameters(commandNames = "rev-parse", commandDescription = "Resolve parameters according to the arguments")
 public class RevParse extends AbstractCommand {

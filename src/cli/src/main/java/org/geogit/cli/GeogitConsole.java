@@ -27,16 +27,22 @@ import com.beust.jcommander.ParameterException;
 import com.google.common.base.Throwables;
 
 /**
- *
+ * Provides the ability to execute several commands in succession without re-initializing GeoGit or
+ * the command line interface.
  */
 public class GeogitConsole {
 
     /**
-     * @param console
+     * Constructs the GeogitConsole
      */
     public GeogitConsole() {
     }
 
+    /**
+     * Entry point for the Geogit console.
+     * 
+     * @param args unused
+     */
     public static void main(String... args) {
         try {
             new GeogitConsole().run();

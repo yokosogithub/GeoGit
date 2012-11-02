@@ -61,7 +61,9 @@ public class GeogitCLI {
     private DefaultProgressListener progressListener;
 
     /**
-     * @param console
+     * Construct a GeogitCLI with the given console reader.
+     * 
+     * @param consoleReader
      */
     public GeogitCLI(final ConsoleReader consoleReader) {
         this.consoleReader = consoleReader;
@@ -71,10 +73,20 @@ public class GeogitCLI {
         commandsInjector = Guice.createInjector(plugins);
     }
 
+    /**
+     * @return the platform being used by the geogit command line interface.
+     * @see Platform
+     */
     public Platform getPlatform() {
         return platform;
     }
 
+    /**
+     * Sets the platform for the command line interface to use.
+     * 
+     * @param platform the platform to use
+     * @see Platform
+     */
     public void setPlatform(Platform platform) {
         checkNotNull(platform);
         this.platform = platform;
@@ -87,7 +99,7 @@ public class GeogitCLI {
      * Note the repository is lazily loaded and cached afterwards to simplify the execution of
      * commands or command options that do not need a live repository.
      * 
-     * @return
+     * @return the GeoGIT facade
      */
     public synchronized GeoGIT getGeogit() {
         if (geogit == null) {
@@ -97,6 +109,11 @@ public class GeogitCLI {
         return geogit;
     }
 
+    /**
+     * Gives the command line interface a GeoGIT facade to use.
+     * 
+     * @param geogit
+     */
     public void setGeogit(@Nullable GeoGIT geogit) {
         this.geogit = geogit;
     }
@@ -119,11 +136,20 @@ public class GeogitCLI {
         return null;
     }
 
+    /**
+     * Constructs a new geogit facade.
+     * 
+     * @return the constructed GeoGIT.
+     */
     public GeoGIT newGeoGIT() {
         Injector inj = getGeogitInjector();
         return new GeoGIT(inj, platform.pwd());
     }
 
+    /**
+     * @return the Guice injector being used by the command line interface. If one hasn't been made,
+     *         it will be created.
+     */
     public Injector getGeogitInjector() {
         if (geogitInjector == null) {
             geogitInjector = Guice.createInjector(Modules.override(new GeogitModule()).with(
@@ -132,14 +158,25 @@ public class GeogitCLI {
         return geogitInjector;
     }
 
+    /**
+     * Sets the Guice injector for the command line interface to use.
+     * 
+     * @param injector the Guice injector to use
+     */
     public void setGeogitInjector(@Nullable Injector injector) {
         geogitInjector = injector;
     }
 
+    /**
+     * @return the console reader being used by the command line interface.
+     */
     public ConsoleReader getConsole() {
         return consoleReader;
     }
 
+    /**
+     * Closes the GeoGIT facade if it exists.
+     */
     public void close() {
         if (geogit != null) {
             geogit.close();
@@ -148,6 +185,8 @@ public class GeogitCLI {
     }
 
     /**
+     * Entry point for the command line interface.
+     * 
      * @param args
      */
     public static void main(String[] args) {
@@ -188,6 +227,11 @@ public class GeogitCLI {
         System.exit(exitCode);
     }
 
+    /**
+     * Finds all commands that are bound do the command injector.
+     * 
+     * @return a collection of keys, one for each command
+     */
     private Collection<Key<?>> findCommands() {
         Map<Key<?>, Binding<?>> commands = commandsInjector.getBindings();
         return commands.keySet();
@@ -236,7 +280,10 @@ public class GeogitCLI {
     }
 
     /**
+     * Executes a command.
+     * 
      * @param args
+     * @throws exceptions thrown by the executed commands.
      */
     public void execute(String... args) throws Exception {
         JCommander mainCommander = newCommandParser();
@@ -273,6 +320,11 @@ public class GeogitCLI {
         }
     }
 
+    /**
+     * @return the ProgressListener for the command line interface. If it doesn't exist, a new one
+     *         will be constructed.
+     * @see ProgressListener
+     */
     public synchronized ProgressListener getProgressListener() {
         if (this.progressListener == null) {
 

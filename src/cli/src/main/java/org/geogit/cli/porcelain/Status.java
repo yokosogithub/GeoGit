@@ -26,6 +26,20 @@ import org.geogit.repository.WorkingTree;
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.Parameters;
 
+/**
+ * Displays features that have differences between the index and the current HEAD commit and
+ * features that have differences between the working tree and the index file. The first are what
+ * you would commit by running geogit commit; the second are what you could commit by running geogit
+ * add before running geogit commit.
+ * <p>
+ * Usage:
+ * <ul>
+ * <li> {@code geogit status [<options>]}
+ * </ul>
+ * 
+ * @see Commit
+ * @see Add
+ */
 @Parameters(commandNames = "status", commandDescription = "Show the working tree status")
 public class Status implements CLICommand {
 
@@ -39,6 +53,8 @@ public class Status implements CLICommand {
     private boolean all = false;
 
     /**
+     * Executes the status command using the provided options.
+     * 
      * @param cli
      * @see org.geogit.cli.CLICommand#run(org.geogit.cli.GeogitCLI)
      */
@@ -97,6 +113,16 @@ public class Status implements CLICommand {
         }
     }
 
+    /**
+     * Prints the list of changes using the specified options
+     * 
+     * @param console the output console
+     * @param changes an iterator of differences to print
+     * @param color the color to use for the changes if color use is enabled
+     * @param total the total number of changes
+     * @throws IOException
+     * @see DiffEntry
+     */
     private void print(final ConsoleReader console, final Iterator<DiffEntry> changes,
             final Color color, final int total) throws IOException {
 
@@ -139,6 +165,13 @@ public class Status implements CLICommand {
         console.println(ansi.toString());
     }
 
+    /**
+     * Formats a DiffEntry for display
+     * 
+     * @param entry the DiffEntry to format
+     * @return the formatted display string
+     * @see DiffEntry
+     */
     private String formatPath(DiffEntry entry) {
         String path;
         NodeRef oldObject = entry.getOldObject();

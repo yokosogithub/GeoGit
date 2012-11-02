@@ -15,7 +15,12 @@ import com.beust.jcommander.Parameter;
 import com.beust.jcommander.Parameters;
 
 /**
- *
+ * This command displays the usage for GeoGit or a specific command if provided.
+ * <p>
+ * Usage:
+ * <ul>
+ * <li> {@code geogit [--]help [<command>]}
+ * </ul>
  */
 @Parameters(commandNames = { "help", "--help" }, commandDescription = "Print this help message, or provide a command name to get help for")
 public class Help implements CLICommand {
@@ -23,6 +28,12 @@ public class Help implements CLICommand {
     @Parameter
     private List<String> parameters = new ArrayList<String>();
 
+    /**
+     * Executes the help command.
+     * 
+     * @param cli
+     * @see org.geogit.cli.CLICommand#run(org.geogit.cli.GeogitCLI)
+     */
     // @Override
     public void run(GeogitCLI cli) {
 

@@ -29,13 +29,22 @@ import com.google.common.base.Throwables;
 import com.google.common.collect.Iterators;
 
 /**
- *
+ * Shows the commit logs.
+ * <p>
+ * CLI proxy for {@link org.geogit.api.porcelain.LogOp}
+ * <p>
+ * Usage:
+ * <ul>
+ * <li> {@code geogit log [<options>]}
+ * </ul>
+ * 
+ * @see org.geogit.api.porcelain.LogOp
  */
 @Parameters(commandNames = "log", commandDescription = "Show commit logs")
 public class Log extends AbstractCommand implements CLICommand {
 
     @Parameter(names = { "--max-count", "-n" }, description = "Maximum number of commits to log.")
-    public Integer limit;
+    private Integer limit;
 
     @Parameter(names = "--skip", description = "Skip number commits before starting to show the commit output.")
     private Integer skip;
@@ -51,6 +60,12 @@ public class Log extends AbstractCommand implements CLICommand {
     @Parameter(names = "--color", description = "Whether to apply colored output. Possible values are auto|never|always.", converter = ColorArg.Converter.class)
     private ColorArg color = ColorArg.auto;
 
+    /**
+     * Executes the log command using the provided options.
+     * 
+     * @param cli
+     * @see org.geogit.cli.AbstractCommand#runInternal(org.geogit.cli.GeogitCLI)
+     */
     @Override
     public void runInternal(GeogitCLI cli) {
         final Platform platform = cli.getPlatform();
@@ -116,6 +131,13 @@ public class Log extends AbstractCommand implements CLICommand {
         }
     }
 
+    /**
+     * Converts a RevPersion for into a readable string.
+     * 
+     * @param person the person to format.
+     * @return the formatted string
+     * @see RevPerson
+     */
     private String formatPerson(RevPerson person) {
         StringBuilder sb = new StringBuilder();
         if (person.getName() == null) {
@@ -129,6 +151,14 @@ public class Log extends AbstractCommand implements CLICommand {
         return sb.toString();
     }
 
+    /**
+     * Converts a timestamp into a readable string that represents the rough time since that
+     * timestamp.
+     * 
+     * @param platform
+     * @param timestamp
+     * @return
+     */
     private String estimateSince(Platform platform, long timestamp) {
         long now = platform.currentTimeMillis();
         long diff = now - timestamp;

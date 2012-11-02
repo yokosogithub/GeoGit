@@ -25,9 +25,26 @@ import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 
 /**
- * @author mfawcett
+ * You can query/set/unset options with this command. The name is actually the section and the key
+ * separated by a dot, and the value will be escaped. By default, the config file of the current
+ * repository will be assumed. If the --global option is set, the global .geogitconfig file will be
+ * used.
+ * <p>
+ * CLI proxy for {@link ConfigOp}
+ * <p>
+ * Usage:
+ * <ul>
+ * <li> {@code geogit config [--global] name [value]}: retrieves or sets the config variable
+ * specified by name
+ * <li> {@code geogit config [--global] --get name}: retrieves the config variable specified by name
+ * <li> {@code geogit config [--global] --unset name}: removes the config variable specified by name
+ * <li> {@code geogit config [--global] --remove-section name}: removes the config section specified
+ * by name
+ * <li> {@code geogit config [--global] -l}: lists all config variables
+ * </ul>
  * 
- *         CLI proxy for {@link ConfigOp}
+ * @author mfawcett
+ * @see ConfigOp
  */
 @Parameters(commandNames = "config", commandDescription = "Get and set repository or global options")
 public class Config extends AbstractCommand implements CLICommand {
@@ -51,6 +68,12 @@ public class Config extends AbstractCommand implements CLICommand {
     @Parameter(description = "name value (name is section.key format, value is only required when setting)")
     private List<String> nameValuePair;
 
+    /**
+     * Executes the config command using the provided options.
+     * 
+     * @param cli
+     * @see org.geogit.cli.AbstractCommand#runInternal(org.geogit.cli.GeogitCLI)
+     */
     @Override
     public void runInternal(GeogitCLI cli) throws Exception {
 
@@ -140,6 +163,12 @@ public class Config extends AbstractCommand implements CLICommand {
         }
     }
 
+    /**
+     * Determines which action should be set based on the state of several option flags.
+     * 
+     * @return the determined ConfigAction
+     * @see ConfigAction
+     */
     private ConfigAction resolveConfigAction() {
         ConfigAction action = ConfigAction.CONFIG_NO_ACTION;
         if (get) {
@@ -170,6 +199,11 @@ public class Config extends AbstractCommand implements CLICommand {
         return action;
     }
 
+    /**
+     * Builds a single string out of all of the string parameters after the first one.
+     * 
+     * @return the concatenated value string
+     */
     private String buildValueString() {
         if (nameValuePair.isEmpty())
             return null;

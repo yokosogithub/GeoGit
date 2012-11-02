@@ -22,7 +22,18 @@ import com.beust.jcommander.Parameters;
 import com.google.common.base.Throwables;
 
 /**
+ * This command creates an empty geogit repository - basically a .geogit directory with
+ * subdirectories for the object, refs, index, and config databases. An initial HEAD that references
+ * the HEAD of the master branch is also created.
+ * <p>
  * CLI proxy for {@link InitOp}
+ * <p>
+ * Usage:
+ * <ul>
+ * <li> {@code geogit init [<directory>]}
+ * </ul>
+ * 
+ * @see InitOp
  */
 @Parameters(commandNames = "init", commandDescription = "Create an empty geogit repository or reinitialize an existing one")
 public class Init extends AbstractCommand implements CLICommand {
@@ -30,6 +41,12 @@ public class Init extends AbstractCommand implements CLICommand {
     @Parameter(description = "Repository location (directory).", required = false, arity = 1)
     private List<String> location;
 
+    /**
+     * Executes the init command.
+     * 
+     * @param cli
+     * @see org.geogit.cli.AbstractCommand#runInternal(org.geogit.cli.GeogitCLI)
+     */
     @Override
     public void runInternal(GeogitCLI cli) {
 
