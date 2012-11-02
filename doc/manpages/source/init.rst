@@ -8,7 +8,7 @@ geogit-init documentation
 
 SYNOPSIS
 ********
- geogit init [<directory>]
+geogit init [<directory>]
 
 
 DESCRIPTION

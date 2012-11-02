@@ -41,6 +41,11 @@ EXAMPLES
 SEE ALSO
 ********
 
- geogit-init
+:ref:`geogit-init`
+:ref:`geogit-add`
+:ref:`geogit-commit`
+:ref:`geogit-log`
+:ref:`geogit-status`
+:ref:`geogit-config`
 
 

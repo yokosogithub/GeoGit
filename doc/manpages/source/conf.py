@@ -24,7 +24,12 @@ import sys, os, string
 # (source start file, name, description, authors, manual section).
 man_pages = [
 	('geogit', 'geogit', 'Runs a geogit command', ['OpenGeo <http://opengeo.org>'], '1'),
-	('init', 'geogit-init', 'Create and initialize a new geogit repository', ['OpenGeo <http://opengeo.org>'], '1')
+	('init', 'geogit-init', 'Create and initialize a new geogit repository', ['OpenGeo <http://opengeo.org>'], '1'),
+	('add', 'geogit-add', 'Stage changes to the index to prepare for commit', ['OpenGeo <http://opengeo.org>'], '1'),
+    ('commit', 'geogit-commit', 'Commits staged changes to the repository', ['OpenGeo <http://opengeo.org>'], '1'),
+    ('config', 'geogit-config', 'Get and set repository or global options', ['OpenGeo <http://opengeo.org>'], '1'),
+    ('log', 'geogit-log', 'Show commit logs', ['OpenGeo <http://opengeo.org>'], '1'),
+    ('status', 'geogit-status', 'Show the working tree and index status', ['OpenGeo <http://opengeo.org>'], '1')
 ]
 
 # General configuration
