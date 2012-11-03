@@ -31,6 +31,7 @@ import org.opengis.util.ProgressListener;
 
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.ParameterException;
+import com.google.common.base.Optional;
 import com.google.common.base.Throwables;
 import com.google.inject.Binding;
 import com.google.inject.Guice;
@@ -267,7 +268,8 @@ public class GeogitCLI {
                     consoleReader.flush();
                 } else if (e instanceof IllegalArgumentException
                         || e instanceof IllegalStateException) {
-                    consoleReader.println(e.getMessage());
+                    e.printStackTrace();
+                    consoleReader.println(Optional.fromNullable(e.getMessage()).or("Uknown error"));
                     consoleReader.flush();
                 } else {
                     e.printStackTrace();

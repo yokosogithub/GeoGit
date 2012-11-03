@@ -103,15 +103,27 @@ public class UpdateRef extends AbstractGeoGitOp<Optional<Ref>> {
         Preconditions.checkState(name != null, "name has not been set");
         Preconditions.checkState(delete || newValue != null, "value has not been set");
 
-        String storedValue = refDb.getRef(name);
-        Preconditions.checkState(oldValue == null || oldValue.toString().equals(storedValue),
-                "Old value (" + storedValue + ") doesn't match expected value '" + oldValue + "'");
+        if (oldValue != null) {
+            String storedValue;
+            try {
+                storedValue = refDb.getRef(name);
+            } catch (IllegalArgumentException e) {
+                // may be updating what used to be a symred to be a direct ref
+                storedValue = refDb.getSymRef(name);
+            }
+            Preconditions.checkState(oldValue.toString().equals(storedValue), "Old value ("
+                    + storedValue + ") doesn't match expected value '" + oldValue + "'");
+        }
 
         if (delete) {
-            refDb.remove(name);
-        } else {
-            refDb.putRef(name, newValue.toString());
+            Optional<Ref> oldRef = command(RefParse.class).setName(name).call();
+            if (oldRef.isPresent()) {
+                refDb.remove(name);
+            }
+            return oldRef;
         }
+
+        refDb.putRef(name, newValue.toString());
         return command(RefParse.class).setName(name).call();
     }
 

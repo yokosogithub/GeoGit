@@ -68,11 +68,11 @@ public class HeapRefDatabase implements RefDatabase {
      * @return {@code null} if the ref didn't exist already, its old value otherwise
      */
     @Override
-    public String putRef(String name, String value) {
+    public void putRef(String name, String value) {
         checkNotNull(name);
         checkNotNull(value);
         ObjectId.valueOf(value);
-        return refs.put(name, value);
+        refs.put(name, value);
     }
 
     /**
@@ -110,18 +110,11 @@ public class HeapRefDatabase implements RefDatabase {
      * @return {@code null} if the ref didn't exist already, its old value otherwise
      */
     @Override
-    public String putSymRef(String name, String val) {
+    public void putSymRef(String name, String val) {
         checkNotNull(name);
         checkNotNull(val);
-        String old;
-        try {
-            old = getSymRef(name);
-        } catch (IllegalArgumentException e) {
-            old = null;
-        }
         val = "ref: " + val;
         refs.put(name, val);
-        return old;
     }
 
     /**

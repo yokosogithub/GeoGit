@@ -35,7 +35,9 @@ public class RefDatabaseTest extends RepositoryTestCase {
         Arrays.fill(raw, (byte) 1);
         ObjectId oid = new ObjectId(raw);
 
-        assertEquals(ObjectId.NULL.toString(), refDb.putRef(Ref.MASTER, oid.toString()));
+        assertEquals(ObjectId.NULL.toString(), refDb.getRef(Ref.MASTER));
+
+        refDb.putRef(Ref.MASTER, oid.toString());
 
         assertEquals(oid.toString(), refDb.getRef(Ref.MASTER));
     }
@@ -45,7 +47,9 @@ public class RefDatabaseTest extends RepositoryTestCase {
 
         String branch = "refs/heads/branch";
 
-        assertEquals(Ref.MASTER, refDb.putSymRef(Ref.HEAD, branch));
+        assertEquals(Ref.MASTER, refDb.getSymRef(Ref.HEAD));
+
+        refDb.putSymRef(Ref.HEAD, branch);
 
         assertEquals(branch, refDb.getSymRef(Ref.HEAD));
     }

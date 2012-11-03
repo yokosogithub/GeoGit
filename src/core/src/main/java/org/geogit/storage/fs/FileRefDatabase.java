@@ -131,7 +131,7 @@ public class FileRefDatabase implements RefDatabase {
      * @return {@code null} if the ref didn't exist already, its old value otherwise
      */
     @Override
-    public String putRef(String refName, String refValue) {
+    public void putRef(String refName, String refValue) {
         checkNotNull(refName);
         checkNotNull(refValue);
         try {
@@ -139,12 +139,7 @@ public class FileRefDatabase implements RefDatabase {
         } catch (IllegalArgumentException e) {
             throw e;
         }
-
-        String oldRef = getRef(refName);
-
         store(refName, refValue);
-
-        return oldRef;
     }
 
     /**
@@ -153,16 +148,11 @@ public class FileRefDatabase implements RefDatabase {
      * @return {@code null} if the ref didn't exist already, its old value otherwise
      */
     @Override
-    public String putSymRef(String name, String val) {
+    public void putSymRef(String name, String val) {
         checkNotNull(name);
         checkNotNull(val);
-
-        String oldRef = getSymRef(name);
-
         val = "ref: " + val;
         store(name, val);
-
-        return oldRef;
     }
 
     /**

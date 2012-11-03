@@ -270,9 +270,10 @@ public class CommitOp extends AbstractGeoGitOp<RevCommit> {
         Preconditions.checkState(commit.getId().equals(branchHead.get().getObjectId()));
         LOGGER.fine("New head: " + branchHead);
 
-        final Optional<SymRef> newHead = command(UpdateSymRef.class).setName(Ref.HEAD)
+        final Optional<Ref> newHead = command(UpdateSymRef.class).setName(Ref.HEAD)
                 .setNewValue(branch).call();
-        Preconditions.checkState(branch.equals(newHead.get().getTarget()));
+
+        Preconditions.checkState(branch.equals(((SymRef) newHead.get()).getTarget()));
 
         ObjectId treeId = repository.getCommit(branchHead.get().getObjectId()).getTreeId();
         Preconditions.checkState(newTreeId.equals(treeId));

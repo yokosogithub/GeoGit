@@ -56,6 +56,9 @@ public class Branch extends AbstractCommand implements CLICommand {
     @Parameter(names = { "--delete", "-D" })
     private boolean delete = false;
 
+    @Parameter(names = "--force", description = "Force deleting a branch")
+    private boolean force = false;
+
     @Parameter(names = { "--verbose", "-v",
             "Verbose output for list mode. Shows branch commit id and commit message." })
     private boolean verbose = false;
@@ -80,7 +83,7 @@ public class Branch extends AbstractCommand implements CLICommand {
 
         if (delete) {
             for (String br : branchName) {
-                geogit.command(BranchDeleteOp.class).setName(br).call();
+                geogit.command(BranchDeleteOp.class).setName(br).setForce(force).call();
                 try {
                     console.println("deleted branch " + br);
                 } catch (IOException e) {

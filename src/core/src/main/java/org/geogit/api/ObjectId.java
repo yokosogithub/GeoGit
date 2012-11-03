@@ -111,7 +111,7 @@ public class ObjectId implements Comparable<ObjectId> {
     public static ObjectId valueOf(final String hash) {
         Preconditions.checkNotNull(hash);
         Preconditions.checkArgument(hash.length() == NUM_CHARS, hash,
-                String.format("Invalid hash string %s", hash));
+                String.format("ObjectId.valueOf: Invalid hash string %s", hash));
 
         // this is perhaps the worse way of doing this...
 

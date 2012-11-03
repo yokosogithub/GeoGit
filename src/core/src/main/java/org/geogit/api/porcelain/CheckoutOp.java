@@ -20,6 +20,7 @@ import org.geogit.api.plumbing.RefParse;
 import org.geogit.api.plumbing.RevObjectParse;
 import org.geogit.api.plumbing.RevParse;
 import org.geogit.api.plumbing.UpdateRef;
+import org.geogit.api.plumbing.UpdateSymRef;
 import org.geogit.repository.WorkingTree;
 
 import com.google.common.base.Optional;
@@ -109,6 +110,10 @@ public class CheckoutOp extends AbstractGeoGitOp<ObjectId> {
             workTree.updateWorkHead(treeId);
             if (targetRef.isPresent()) {
                 // update HEAD
+                String refName = targetRef.get().getName();
+                command(UpdateSymRef.class).setName(Ref.HEAD).setNewValue(refName).call();
+            } else {
+                // set HEAD to a dettached state
                 ObjectId commitId = commit.get().getId();
                 command(UpdateRef.class).setName(Ref.HEAD).setNewValue(commitId).call();
             }

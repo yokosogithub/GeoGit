@@ -40,14 +40,9 @@ public interface RefDatabase {
      * @param refValue the value of the ref
      * @return {@code null} if the ref didn't exist already, its old value otherwise
      */
-    public abstract String putRef(String refName, String refValue);
+    public abstract void putRef(String refName, String refValue);
 
-    /**
-     * @param name the name of the symbolic ref
-     * @param val the value of the symbolic ref
-     * @return {@code null} if the ref didn't exist already, its old value otherwise
-     */
-    public abstract String putSymRef(String name, String val);
+    public abstract void putSymRef(String name, String val);
 
     /**
      * @param refName the name of the ref to remove (e.g. {@code "HEAD"},
