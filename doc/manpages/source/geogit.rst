@@ -47,5 +47,6 @@ SEE ALSO
 :ref:`geogit-log`
 :ref:`geogit-status`
 :ref:`geogit-config`
-
+:ref:`geogit-pg`
+:ref:`geogit-shp`
 

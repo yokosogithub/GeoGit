@@ -29,7 +29,13 @@ man_pages = [
     ('commit', 'geogit-commit', 'Commits staged changes to the repository', ['OpenGeo <http://opengeo.org>'], '1'),
     ('config', 'geogit-config', 'Get and set repository or global options', ['OpenGeo <http://opengeo.org>'], '1'),
     ('log', 'geogit-log', 'Show commit logs', ['OpenGeo <http://opengeo.org>'], '1'),
-    ('status', 'geogit-status', 'Show the working tree and index status', ['OpenGeo <http://opengeo.org>'], '1')
+    ('status', 'geogit-status', 'Show the working tree and index status', ['OpenGeo <http://opengeo.org>'], '1'),
+    ('pg', 'geogit-pg', 'PostGIS command extension', ['OpenGeo <http://opengeo.org>'], '2'),
+    ('pgimport', 'geogit-pg-import', 'Import features from a PostGIS database', ['OpenGeo <http://opengeo.org>'], '2'),
+    ('pglist', 'geogit-pg-list', 'List tables in a PostGIS database', ['OpenGeo <http://opengeo.org>'], '2'),
+    ('pgdescribe', 'geogit-pg-describe', 'Describe properties of a table in a PostGIS database', ['OpenGeo <http://opengeo.org>'], '2'),
+    ('shp', 'geogit-shp', 'Shapefile command extension', ['OpenGeo <http://opengeo.org>'], '3'),
+    ('shpimport', 'geogit-shp-import', 'Import features from shapefiles', ['OpenGeo <http://opengeo.org>'], '3')
 ]
 
 # General configuration
@@ -52,7 +58,7 @@ master_doc = 'geogit'
 
 # General substitutions.
 project = u'GeoGit'
-manual = u'GeiGit man pages'
+manual = u'GeoGit man pages'
 copyright = u'OpenGeo <http://opengeo.org>'
 
 # The default replacements for |version| and |release|, also used in various
