@@ -15,6 +15,9 @@ package org.geogit.api;
  */
 public interface RevObject {
 
+    /**
+     * {@code RevObject} types enumeration.
+     */
     public static enum TYPE {
         COMMIT {
             @Override
@@ -54,6 +57,9 @@ public interface RevObject {
         }
     }
 
+    /**
+     * @return the object type of this object
+     */
     public TYPE getType();
 
     /**

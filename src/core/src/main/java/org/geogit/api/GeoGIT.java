@@ -38,24 +38,49 @@ public class GeoGIT {
 
     private Repository repository;
 
+    /**
+     * Constructs a new instance of the GeoGit facade.
+     */
     public GeoGIT() {
         injector = Guice.createInjector(new GeogitModule());
     }
 
+    /**
+     * Constructs a new instance of the GeoGit facade with the given working directory.
+     * 
+     * @param workingDir the working directory for this instance of GeoGit
+     */
     public GeoGIT(File workingDir) {
         this();
         injector.getInstance(Platform.class).setWorkingDir(workingDir);
     }
 
+    /**
+     * Constructs a new instance of the GeoGit facade with the given Guice injector
+     * 
+     * @param injector the injector to use
+     * @see Injector
+     */
     public GeoGIT(final Injector injector) {
         this(injector, null);
     }
 
+    /**
+     * Constructs a new instance of the GeoGit facade with the given Guice injector and working
+     * directory.
+     * 
+     * @param injector the injector to use
+     * @param workingDir the working directory for this instance of GeoGit
+     * @see Injector
+     */
     public GeoGIT(final Injector injector, final File workingDir) {
         this.injector = injector;
         injector.getInstance(Platform.class).setWorkingDir(workingDir);
     }
 
+    /**
+     * Closes the current repository.
+     */
     public void close() {
         if (repository != null) {
             repository.close();
@@ -64,7 +89,10 @@ public class GeoGIT {
     }
 
     /**
-     * @param commandClass
+     * Finds and returns an instance of a command of the specified class.
+     * 
+     * @param commandClass the kind of command to locate and instantiate
+     * @return a new instance of the requested command class, with its dependencies resolved
      */
     public <T extends AbstractGeoGitOp<?>> T command(Class<T> commandClass) {
         return injector.getInstance(commandClass);
@@ -114,16 +142,20 @@ public class GeoGIT {
     }
 
     /**
-     * Add a transaction record to the index
+     * Add a transaction record to the index.
+     * 
+     * @return an instance of the AddOp command
+     * @see AddOp
      */
     public AddOp add() {
         return command(AddOp.class);
     }
 
     /**
-     * Record changes to the repository
+     * Record changes to the repository.
      * 
-     * @return commit id
+     * @return an instance of the CommitOp command
+     * @see CommitOp
      */
     public CommitOp commit() {
         CommitOp command = command(CommitOp.class);
@@ -131,28 +163,37 @@ public class GeoGIT {
     }
 
     /**
-     * Check out a branch to the working tree
+     * Check out a branch to the working tree.
+     * 
+     * @return an instance of the CheckoutOp command
+     * @see CheckoutOp
      */
     public CheckoutOp checkout() {
         return command(CheckoutOp.class);
     }
 
     /**
-     * Show changes between commits, commit and working tree, etc
+     * Show changes between commits, commit and working tree, etc.
+     * 
+     * @return an instance of the DiffOp command
+     * @see DiffOp
      */
     public DiffOp diff() {
         return command(DiffOp.class);
     }
 
     /**
-     * Show commit logs
+     * Show commit logs.
+     * 
+     * @return an instance of the LogOp command
+     * @see LogOp
      */
     public LogOp log() {
         return command(LogOp.class);
     }
 
     /**
-     * @return
+     * @return the platform for this GeoGit facade
      */
     public Platform getPlatform() {
         return injector.getInstance(Platform.class);

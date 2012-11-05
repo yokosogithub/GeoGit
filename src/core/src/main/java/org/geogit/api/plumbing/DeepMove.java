@@ -44,6 +44,13 @@ public class DeepMove extends AbstractGeoGitOp<ObjectId> {
 
     private ObjectSerialisingFactory serialFactory;
 
+    /**
+     * Constructs a new instance of the {@code DeepMove} operation with the specified parameters.
+     * 
+     * @param odb the repository object database
+     * @param index the staging database
+     * @param serialFactory the serialization factory
+     */
     @Inject
     public DeepMove(ObjectDatabase odb, StagingDatabase index,
             ObjectSerialisingFactory serialFactory) {
@@ -55,6 +62,7 @@ public class DeepMove extends AbstractGeoGitOp<ObjectId> {
     /**
      * @param toIndex if {@code true} moves the object from the repository's object database to the
      *        index database instead
+     * @return this
      */
     public DeepMove setToIndex(boolean toIndex) {
         this.toIndex = toIndex;
@@ -63,12 +71,18 @@ public class DeepMove extends AbstractGeoGitOp<ObjectId> {
 
     /**
      * @param objectRef the object to move from the origin database to the destination one
+     * @return this
      */
     public DeepMove setObjectRef(Supplier<NodeRef> objectRef) {
         this.objectRef = objectRef;
         return this;
     }
 
+    /**
+     * Executes a deep move using the supplied {@link NodeRef}.
+     * 
+     * @return the {@link ObjectId} of the moved object
+     */
     @Override
     public ObjectId call() {
         ObjectDatabase from = toIndex ? odb : index;

@@ -14,6 +14,7 @@ import javax.annotation.Nullable;
 import com.google.common.collect.Lists;
 
 /**
+ * The basic leaf element of a revision tree.
  */
 public class NodeRef implements Comparable<NodeRef> {
 
@@ -43,6 +44,15 @@ public class NodeRef implements Comparable<NodeRef> {
      */
     private ObjectId metadataId;
 
+    /**
+     * Constructs a new NodeRef.
+     * 
+     * @param name full path from the root tree to the object this ref points to
+     * @param oid id of the object this ref points to
+     * @param metadataId possibly {@link ObjectId#NULL NULL} id for the object describing the object
+     *        this ref points to
+     * @param type type of object this ref points to
+     */
     public NodeRef(final String name, final ObjectId oid, final ObjectId metadataId,
             final RevObject.TYPE type) {
         checkNotNull(name);
@@ -113,6 +123,9 @@ public class NodeRef implements Comparable<NodeRef> {
         return path.compareTo(o.getPath());
     }
 
+    /**
+     * @return the NodeRef represented as a readable string.
+     */
     @Override
     public String toString() {
         return new StringBuilder("NodeRef").append('[').append(path).append(" -> ")
@@ -182,6 +195,10 @@ public class NodeRef implements Comparable<NodeRef> {
     }
 
     /**
+     * Determines if the given node path is a direct child of the parent path.
+     * 
+     * @param parentPath
+     * @param nodePath
      * @return true of {@code nodePath} is a direct child of {@code parentPath}, {@code false} if
      *         unrelated, sibling, same path, or nested child
      */
@@ -196,6 +213,10 @@ public class NodeRef implements Comparable<NodeRef> {
     }
 
     /**
+     * Determines if the given node path is a child of the given parent path.
+     * 
+     * @param parentPath
+     * @param nodePath
      * @return true of {@code nodePath} is a child of {@code parentPath} at any depth level,
      *         {@code false} if unrelated, sibling, or same path
      */
@@ -210,6 +231,7 @@ public class NodeRef implements Comparable<NodeRef> {
     /**
      * Given {@code path == "path/to/node"} returns {@code ["path", "path/to", "path/to/node"]}
      * 
+     * @param path the path to analyze
      * @return a sorted list of all paths that lead to the given path
      */
     public static List<String> allPathsTo(final String path) {
@@ -232,7 +254,12 @@ public class NodeRef implements Comparable<NodeRef> {
     }
 
     /**
-     * Returns a new full path made by appending {@code childName} to {@code parentTreePath}
+     * Constructs a new path by appending a child name to an existing parent path.
+     * 
+     * @param parentTreePath full parent path
+     * @param childName name to append
+     * 
+     * @return a new full path made by appending {@code childName} to {@code parentTreePath}
      */
     public static String appendChild(String parentTreePath, String childName) {
         checkNotNull(parentTreePath);

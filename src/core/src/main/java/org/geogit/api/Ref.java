@@ -40,14 +40,29 @@ public class Ref implements Comparable<Ref> {
      */
     public static final String WORK_HEAD = "WORK_HEAD";
 
+    /**
+     * Directory prefix for refs.
+     */
     public static final String REFS_PREFIX = "refs/";
 
+    /**
+     * Directory prefix for remotes.
+     */
     public static final String REMOTES_PREFIX = "remotes/";
 
+    /**
+     * Directory prefix for tags.
+     */
     public static final String TAGS_PREFIX = REFS_PREFIX + "tags/";
 
+    /**
+     * Directory prefix for heads.
+     */
     public static final String HEADS_PREFIX = REFS_PREFIX + "heads/";
 
+    /**
+     * By convention, the origin of the repository
+     */
     public static final String ORIGIN = "refs/remotes/origin";
 
     private String name;
@@ -56,6 +71,14 @@ public class Ref implements Comparable<Ref> {
 
     private ObjectId objectId;
 
+    /**
+     * Constructs a new Ref with the given parameters.
+     * 
+     * @param name name of this ref
+     * @param oid object id for this ref
+     * @param type object type
+     * @see RevObject.TYPE
+     */
     public Ref(final String name, final ObjectId oid, @Nullable final RevObject.TYPE type) {
         Preconditions.checkNotNull(name);
         Preconditions.checkNotNull(oid);
@@ -66,25 +89,30 @@ public class Ref implements Comparable<Ref> {
     }
 
     /**
-     * @see org.geogit.api.Ref#getName()
+     * @return the name for this ref
      */
     public String getName() {
         return name;
     }
 
     /**
-     * @see org.geogit.api.Ref#getObjectId()
+     * @return the object id being referenced
      */
     public ObjectId getObjectId() {
         return objectId;
     }
 
+    /**
+     * @return the type of the object this ref refers to
+     * @see RevObject.TYPE
+     */
     public RevObject.TYPE getType() {
         return type;
     }
 
     /**
-     * @see org.geogit.api.Ref#equals(java.lang.Object)
+     * @param o object to compare against
+     * @return whether or not this ref is equal to the target object
      */
     @Override
     public boolean equals(Object o) {
@@ -97,7 +125,7 @@ public class Ref implements Comparable<Ref> {
     }
 
     /**
-     * @see org.geogit.api.Ref#hashCode()
+     * @return a hash code for this ref
      */
     @Override
     public int hashCode() {
@@ -105,13 +133,16 @@ public class Ref implements Comparable<Ref> {
     }
 
     /**
-     * @see org.geogit.api.Ref#compareTo(org.geogit.api.Ref)
+     * @see java.lang.Comparable#compareTo(java.lang.Object)
      */
     @Override
     public int compareTo(Ref o) {
         return name.compareTo(o.getName());
     }
 
+    /**
+     * @return the ref represented by a readable string
+     */
     @Override
     public String toString() {
         return new StringBuilder("Ref").append('[').append(name).append(" -> ").append(objectId)

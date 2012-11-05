@@ -29,6 +29,13 @@ public class CreateTree extends AbstractGeoGitOp<MutableTree> {
 
     private ObjectSerialisingFactory serialFactory;
 
+    /**
+     * Constructs a new {@code CreateTree} operation with the specified parameters.
+     * 
+     * @param odb the repository object database
+     * @param indexDb the staging database
+     * @param serialFactory the serialization factory
+     */
     @Inject
     public CreateTree(ObjectDatabase odb, StagingDatabase indexDb,
             ObjectSerialisingFactory serialFactory) {
@@ -38,14 +45,20 @@ public class CreateTree extends AbstractGeoGitOp<MutableTree> {
     }
 
     /**
-     * @param toIndexDb it {@code true}, the returned tree is backed by the {@link StagingDatabase},
+     * @param toIndexDb if {@code true}, the returned tree is backed by the {@link StagingDatabase},
      *        otherwise by the repository's {@link ObjectDatabase}
+     * @return this
      */
     public CreateTree setIndex(boolean toIndexDb) {
         index = toIndexDb;
         return this;
     }
 
+    /**
+     * Executes the create tree operation and returns a new mutable tree.
+     * 
+     * @return the {@link MutableTree} that was created by the operation
+     */
     @Override
     public MutableTree call() {
         ObjectDatabase storage = index ? indexDb : odb;

@@ -8,10 +8,13 @@ package org.geogit.api;
 import java.io.File;
 
 /**
- *
+ * Interface for a GeoGit platform.
  */
 public interface Platform {
 
+    /**
+     * @return the working directory
+     */
     public File pwd();
 
     /**
@@ -19,12 +22,18 @@ public interface Platform {
      */
     public void setWorkingDir(File workingDir);
 
+    /**
+     * @return who I am
+     */
     public String whoami();
 
     /**
-     * @return
+     * @return the current time in milliseconds
      */
     public long currentTimeMillis();
 
+    /**
+     * @return the user's home directory
+     */
     public File getUserHome();
 }

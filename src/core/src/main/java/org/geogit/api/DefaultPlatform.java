@@ -10,12 +10,15 @@ import static com.google.common.base.Preconditions.checkArgument;
 import java.io.File;
 
 /**
- *
+ * Standard platform for GeoGit.
  */
 public class DefaultPlatform implements Platform {
 
     private File workingDir;
 
+    /**
+     * @return the working directory
+     */
     @Override
     public File pwd() {
         if (workingDir != null) {
@@ -24,6 +27,9 @@ public class DefaultPlatform implements Platform {
         return new File(".").getAbsoluteFile().getParentFile();
     }
 
+    /**
+     * @param workingDir the working directory to use
+     */
     @Override
     public void setWorkingDir(File workingDir) {
         checkArgument(workingDir == null || workingDir.isDirectory(),
@@ -31,13 +37,16 @@ public class DefaultPlatform implements Platform {
         this.workingDir = workingDir;
     }
 
+    /**
+     * @see Platform#whoami()
+     */
     @Override
     public String whoami() {
         return System.getProperty("user.name", "nobody");
     }
 
     /**
-     * @return
+     * @return the current time in milliseconds
      * @see org.geogit.api.Platform#currentTimeMillis()
      */
     @Override
@@ -45,6 +54,9 @@ public class DefaultPlatform implements Platform {
         return System.currentTimeMillis();
     }
 
+    /**
+     * @return the user home directory
+     */
     @Override
     public File getUserHome() {
         return new File(System.getProperty("user.home"));

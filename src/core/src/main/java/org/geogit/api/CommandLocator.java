@@ -11,6 +11,7 @@ package org.geogit.api;
 public interface CommandLocator {
 
     /**
+     * Finds and returns an instance of a command of the specified class.
      * 
      * @param commandClass the kind of command to locate and instantiate
      * @return a new instance of the requested command class, with its dependencies resolved

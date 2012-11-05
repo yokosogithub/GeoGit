@@ -29,10 +29,26 @@ public class RevCommit extends AbstractRevObject {
 
     private long timestamp;
 
+    /**
+     * Constructs a new {@code RevCommit} with the given {@link ObjectId}.
+     * 
+     * @param id the object id to use
+     */
     public RevCommit(final ObjectId id) {
         super(id, TYPE.COMMIT);
     }
 
+    /**
+     * Constructs a new {@code RevCommit} with the given parameters.
+     * 
+     * @param id the {@link ObjectId} to use
+     * @param treeId the {@link ObjectId} of the tree this commit points to
+     * @param parentIds a list of parent commits' {@link ObjectId}s
+     * @param author the author of this commit
+     * @param committer the committer of this commit
+     * @param message the message for this commit
+     * @param timestamp the timestamp of this commit
+     */
     public RevCommit(final ObjectId id, ObjectId treeId, List<ObjectId> parentIds,
             RevPerson author, RevPerson committer, String message, long timestamp) {
         this(id);
@@ -90,11 +106,19 @@ public class RevCommit extends AbstractRevObject {
         return timestamp;
     }
 
+    /**
+     * @return the {@code RevCommit} as a readable string
+     */
     @Override
     public String toString() {
         return "Commit[" + getId() + ", '" + message + "']";
     }
 
+    /**
+     * Equality is based on author, committer, message, parent ids, timestamp, and tree id.
+     * 
+     * @see AbstractRevObject#equals(java.lang.Object)
+     */
     @Override
     public boolean equals(Object o) {
         if (!(o instanceof RevCommit) && super.equals(o)) {

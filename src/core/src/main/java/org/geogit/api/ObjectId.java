@@ -20,8 +20,14 @@ import com.google.common.hash.Hashing;
  */
 public class ObjectId implements Comparable<ObjectId> {
 
+    /**
+     * ObjectId instance that represents a NULL id.
+     */
     public static final ObjectId NULL;
 
+    /**
+     * Hash function for hashing strings.
+     */
     public static final HashFunction HASH_FUNCTION;
 
     private static final int NUM_BYTES;
@@ -39,20 +45,36 @@ public class ObjectId implements Comparable<ObjectId> {
 
     private final byte[] hashCode;
 
+    /**
+     * Constructs a new {@code NULL} object id.
+     */
     public ObjectId() {
         this.hashCode = NULL.hashCode;
     }
 
+    /**
+     * Constructs a new object id with the given byte code.
+     * 
+     * @param raw the byte code to use
+     */
     public ObjectId(byte[] raw) {
         Preconditions.checkNotNull(raw);
         Preconditions.checkArgument(raw.length == NUM_BYTES);
         this.hashCode = raw.clone();
     }
 
+    /**
+     * @return whether or not this object id is null
+     */
     public boolean isNull() {
         return NULL.equals(this);
     }
 
+    /**
+     * Determines if this object id is the same as the given object id.
+     * 
+     * @param o the object id to compare against
+     */
     @Override
     public boolean equals(Object o) {
         if (!(o instanceof ObjectId)) {
@@ -61,6 +83,9 @@ public class ObjectId implements Comparable<ObjectId> {
         return Arrays.equals(hashCode, ((ObjectId) o).hashCode);
     }
 
+    /**
+     * @return a hash code based on the contents of the byte array.
+     */
     @Override
     public int hashCode() {
         return Arrays.hashCode(hashCode);
@@ -76,10 +101,11 @@ public class ObjectId implements Comparable<ObjectId> {
     }
 
     /**
-     * Returns the objectid represented by its string form, this method is the inverse of
-     * {@link #toString()}
+     * Converts a {@code String} representation of a hash code into an {@code ObjectId}.
      * 
-     * @return
+     * @param hash the string to convert
+     * @return the object id represented by its string form, this method is the inverse of
+     *         {@link #toString()}
      */
     public static ObjectId valueOf(final String hash) {
         Preconditions.checkNotNull(hash);
@@ -96,6 +122,12 @@ public class ObjectId implements Comparable<ObjectId> {
         return new ObjectId(raw);
     }
 
+    /**
+     * Converts a {@code String} representation of a byte code into a byte array.
+     * 
+     * @param hash the string to convert
+     * @return the byte array represented by its string form
+     */
     public static byte[] toRaw(final String hash) {
         Preconditions.checkNotNull(hash);
         for (int i = 0; i < hash.length(); i++) {
@@ -134,6 +166,9 @@ public class ObjectId implements Comparable<ObjectId> {
         return 0;
     }
 
+    /**
+     * @return a raw byte array of the hash code for this object id.
+     */
     public byte[] getRawValue() {
         return hashCode.clone();
     }
@@ -145,7 +180,7 @@ public class ObjectId implements Comparable<ObjectId> {
      * </p>
      * 
      * @param strToHash
-     * @return
+     * @return the {@code ObjectId} generated from the string
      */
     public static ObjectId forString(final String strToHash) {
         Preconditions.checkNotNull(strToHash);
@@ -156,7 +191,7 @@ public class ObjectId implements Comparable<ObjectId> {
     /**
      * Prints the object ID just like the git command "0000000..0000000"
      * 
-     * @return
+     * @return the formatted string
      */
     public String printSmallId() {
         String out = toString();
@@ -165,7 +200,7 @@ public class ObjectId implements Comparable<ObjectId> {
 
     /**
      * @param index
-     * @return
+     * @return the byte at the given index
      */
     public int byteN(int index) {
         return this.hashCode[index];

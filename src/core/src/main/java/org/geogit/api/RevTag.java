@@ -16,14 +16,27 @@ public class RevTag extends AbstractRevObject {
 
     private ObjectId commit;
 
+    /**
+     * Constructs a new {@code RevTag} with the given {@link ObjectId}, name, and commit id.
+     * 
+     * @param id the {@code ObjectId} to use for this tag
+     * @param name the name of the tag
+     * @param commitId the {@code ObjectId} of the commit that this tag points to
+     */
     public RevTag(final ObjectId id, final String name, final ObjectId commitId) {
         super(id, TYPE.TAG);
     }
 
+    /**
+     * @return the name
+     */
     public String getName() {
         return name;
     }
 
+    /**
+     * @return the {@code ObjectId} of the commit that this tag points to
+     */
     public ObjectId getCommitId() {
         return commit;
     }

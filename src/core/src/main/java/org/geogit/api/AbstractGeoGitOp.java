@@ -14,6 +14,11 @@ import org.opengis.util.ProgressListener;
 
 import com.google.inject.Inject;
 
+/**
+ * Provides a base implementation for internal GeoGit operations.
+ * 
+ * @param <T> the type of the result of the exectution of the command
+ */
 public abstract class AbstractGeoGitOp<T> implements Callable<T> {
 
     private static final ProgressListener NULL_PROGRESS_LISTENER = new NullProgressListener();
@@ -24,33 +29,60 @@ public abstract class AbstractGeoGitOp<T> implements Callable<T> {
 
     private CommandLocator commandLocator;
 
+    /**
+     * Constructs a new abstract operation.
+     */
     public AbstractGeoGitOp() {
         LOGGER = Logging.getLogger(getClass());
     }
 
+    /**
+     * Finds and returns an instance of a command of the specified class.
+     * 
+     * @param commandClass the kind of command to locate and instantiate
+     * @return a new instance of the requested command class, with its dependencies resolved
+     */
     public <C extends AbstractGeoGitOp<?>> C command(Class<C> commandClass) {
         return commandLocator.command(commandClass);
     }
 
+    /**
+     * @param locator the command locator to use when finding commands
+     */
     @Inject
     public void setCommandLocator(CommandLocator locator) {
         this.commandLocator = locator;
     }
 
+    /**
+     * @param listener the progress listener to use
+     * @return this
+     */
     public AbstractGeoGitOp<T> setProgressListener(final ProgressListener listener) {
         this.progressListener = listener == null ? NULL_PROGRESS_LISTENER : listener;
         return this;
     }
 
+    /**
+     * @return the progress listener that is currently set
+     */
     protected ProgressListener getProgressListener() {
         return progressListener;
     }
 
+    /**
+     * Constructs a new progress listener based on a specified sub progress amount.
+     * 
+     * @param amount amount of progress
+     * @return the newly constructed progress listener
+     */
     protected ProgressListener subProgress(float amount) {
         return new SubProgressListener(getProgressListener(), amount);
     }
 
     /**
+     * Subclasses shall implement to do the real work.
+     * 
      * @see java.util.concurrent.Callable#call()
      */
     public abstract T call();
