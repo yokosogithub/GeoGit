@@ -8,17 +8,17 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.math.BigDecimal;
 import java.math.BigInteger;
-import java.util.Collection;
 import java.util.UUID;
 
 import org.geogit.api.RevFeature;
+import org.geogit.storage.EntityType;
 import org.geogit.storage.ObjectWriter;
 import org.geotools.referencing.CRS;
-import org.opengis.feature.Feature;
-import org.opengis.feature.Property;
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
 
 import com.caucho.hessian.io.Hessian2Output;
+import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableList;
 import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.io.OutStream;
 import com.vividsolutions.jts.io.WKBWriter;
@@ -42,9 +42,9 @@ import com.vividsolutions.jts.io.WKBWriter;
  */
 class HessianFeatureWriter implements ObjectWriter<RevFeature> {
 
-    private Feature feat;
+    private RevFeature feat;
 
-    public HessianFeatureWriter(final Feature feature) {
+    public HessianFeatureWriter(final RevFeature feature) {
         this.feat = feature;
     }
 
@@ -53,12 +53,11 @@ class HessianFeatureWriter implements ObjectWriter<RevFeature> {
         try {
             hout.startMessage();
             hout.writeInt(BlobType.FEATURE.getValue());
-            Collection<Property> props = feat.getProperties();
+            ImmutableList<Optional<Object>> values = feat.getValues();
 
-            hout.writeString(feat.getType().getName().getURI());
-            hout.writeInt(props.size());
-            for (Property p : props) {
-                writeProperty(hout, p);
+            hout.writeInt(values.size());
+            for (Optional<Object> value : values) {
+                writeProperty(hout, value.orNull());
             }
             hout.completeMessage();
         } finally {
@@ -79,8 +78,7 @@ class HessianFeatureWriter implements ObjectWriter<RevFeature> {
      * @param prop
      * @throws IOException
      */
-    private void writeProperty(final Hessian2Output out, Property prop) throws IOException {
-        final Object value = prop.getValue();
+    private void writeProperty(final Hessian2Output out, Object value) throws IOException {
         final EntityType type = EntityType.determineType(value);
 
         out.writeInt(type.getValue());

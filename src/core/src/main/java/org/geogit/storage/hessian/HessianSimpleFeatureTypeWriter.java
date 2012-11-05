@@ -9,6 +9,7 @@ import java.io.OutputStream;
 import java.util.List;
 
 import org.geogit.api.RevFeatureType;
+import org.geogit.storage.GtEntityType;
 import org.geogit.storage.ObjectWriter;
 import org.geotools.referencing.CRS;
 import org.geotools.referencing.wkt.Formattable;

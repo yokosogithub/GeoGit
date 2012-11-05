@@ -24,12 +24,10 @@ import jline.console.ConsoleReader;
 import org.geogit.api.GeoGIT;
 import org.geogit.api.NodeRef;
 import org.geogit.api.ObjectId;
-import org.geogit.api.RevFeature;
 import org.geogit.cli.GeogitCLI;
 import org.geogit.di.GeogitModule;
 import org.geogit.repository.WorkingTree;
 import org.geogit.storage.bdbje.JEStorageModule;
-import org.geogit.storage.hessian.GeoToolsRevFeature;
 import org.geotools.data.DataUtilities;
 import org.geotools.feature.NameImpl;
 import org.geotools.feature.simple.SimpleFeatureBuilder;
@@ -221,8 +219,7 @@ public abstract class AbstractGeogitFunctionalTest {
         final WorkingTree workTree = geogit.getRepository().getWorkingTree();
         Name name = f.getType().getName();
         String parentPath = name.getLocalPart();
-        RevFeature rf = new GeoToolsRevFeature(f);
-        NodeRef ref = workTree.insert(parentPath, rf);
+        NodeRef ref = workTree.insert(parentPath, f);
         ObjectId objectId = ref.getObjectId();
         return objectId;
     }

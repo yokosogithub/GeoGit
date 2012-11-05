@@ -9,19 +9,15 @@ import java.util.Iterator;
 import java.util.List;
 
 import org.geogit.api.AbstractGeoGitOp;
-import org.geogit.api.RevFeature;
+import org.geogit.api.RevFeatureType;
 import org.geogit.api.RevTree;
 import org.geogit.geotools.plumbing.GeoToolsOpException.StatusCode;
 import org.geogit.repository.WorkingTree;
-import org.geogit.storage.hessian.GeoToolsRevFeature;
-import org.geogit.storage.hessian.GeoToolsRevFeatureType;
-
 import org.geotools.data.DataStore;
 import org.geotools.data.simple.SimpleFeatureCollection;
 import org.geotools.data.simple.SimpleFeatureIterator;
 import org.geotools.data.simple.SimpleFeatureSource;
-
-import org.opengis.feature.simple.SimpleFeature;
+import org.opengis.feature.Feature;
 import org.opengis.feature.type.Name;
 import org.opengis.util.ProgressListener;
 
@@ -84,20 +80,19 @@ public class ImportOp extends AbstractGeoGitOp<RevTree> {
                 throw new GeoToolsOpException(StatusCode.UNABLE_TO_GET_FEATURES);
             }
 
-            GeoToolsRevFeatureType revType = new GeoToolsRevFeatureType(featureSource.getSchema());
+            RevFeatureType revType = new RevFeatureType(featureSource.getSchema());
 
             String treePath = revType.getName().getLocalPart();
 
             final SimpleFeatureIterator featureIterator = features.features();
 
-            Iterator<RevFeature> iterator = new AbstractIterator<RevFeature>() {
+            Iterator<Feature> iterator = new AbstractIterator<Feature>() {
                 @Override
-                protected RevFeature computeNext() {
+                protected Feature computeNext() {
                     if (!featureIterator.hasNext()) {
                         return super.endOfData();
                     }
-                    SimpleFeature feature = featureIterator.next();
-                    return new GeoToolsRevFeature(feature);
+                    return featureIterator.next();
                 }
             };
             ProgressListener progressListener = getProgressListener();

@@ -47,7 +47,7 @@ public interface ObjectDatabase {
     /**
      * 
      */
-    public <T> ObjectId put(final ObjectWriter<T> writer);
+    // public <T> ObjectId put(final ObjectWriter<T> writer);
 
     /**
      * @param id

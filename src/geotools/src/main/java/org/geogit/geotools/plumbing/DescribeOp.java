@@ -12,11 +12,9 @@ import java.util.Map;
 
 import org.geogit.api.AbstractGeoGitOp;
 import org.geogit.geotools.plumbing.GeoToolsOpException.StatusCode;
-import org.geogit.storage.hessian.GeoToolsRevFeatureType;
-
 import org.geotools.data.DataStore;
 import org.geotools.data.simple.SimpleFeatureSource;
-
+import org.opengis.feature.simple.SimpleFeatureType;
 import org.opengis.feature.type.Name;
 import org.opengis.feature.type.PropertyDescriptor;
 
@@ -64,9 +62,9 @@ public class DescribeOp extends AbstractGeoGitOp<Optional<Map<String, String>>> 
                 throw new GeoToolsOpException(StatusCode.UNABLE_TO_GET_FEATURES);
             }
 
-            GeoToolsRevFeatureType revType = new GeoToolsRevFeatureType(featureSource.getSchema());
+            SimpleFeatureType featureType = featureSource.getSchema();
 
-            Collection<PropertyDescriptor> descriptors = revType.type().getDescriptors();
+            Collection<PropertyDescriptor> descriptors = featureType.getDescriptors();
             for (PropertyDescriptor descriptor : descriptors) {
                 propertyMap.put(descriptor.getName().toString(), descriptor.getType().getBinding()
                         .getSimpleName());

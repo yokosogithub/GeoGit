@@ -26,6 +26,7 @@ import org.geogit.api.RevObject.TYPE;
 import org.geogit.api.RevTree;
 import org.geogit.api.TestPlatform;
 import org.geogit.api.plumbing.CreateTree;
+import org.geogit.api.plumbing.HashObject;
 import org.geogit.api.plumbing.RevObjectParse;
 import org.geogit.api.plumbing.WriteBack;
 import org.geogit.di.GeogitModule;
@@ -76,7 +77,8 @@ public class DepthSearchTest {
         root = addTree(root, "path/to/tree1", "node11", "node12", "node13");
         root = addTree(root, "path/to/tree2", "node21", "node22", "node23");
         root = addTree(root, "tree3", "node31", "node32", "node33");
-        rootTreeId = odb.put(serialFactory.createRevTreeWriter(root));
+        rootTreeId = fakeGeogit.command(HashObject.class).setObject(root).call();
+        odb.put(rootTreeId, serialFactory.createRevTreeWriter(root));
     }
 
     private MutableTree addTree(MutableTree root, final String treePath, String... singleNodeNames) {

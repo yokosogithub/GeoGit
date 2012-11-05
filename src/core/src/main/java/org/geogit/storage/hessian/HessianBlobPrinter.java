@@ -97,7 +97,6 @@ class HessianBlobPrinter extends HessianRevReader implements BlobPrinter {
      */
     private void printFeature(Hessian2Input hin, PrintStream out) throws IOException {
         openTag("feature", out);
-        String typeString = hin.readString();
         int attrCount = hin.readInt();
         for (int i = 0; i < attrCount; i++) {
             Object obj = HessianFeatureReader.readValue(hin);

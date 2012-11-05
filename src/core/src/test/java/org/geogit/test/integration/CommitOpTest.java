@@ -22,10 +22,10 @@ import org.geogit.api.RevTree;
 import org.geogit.api.plumbing.RevParse;
 import org.geogit.api.porcelain.CommitOp;
 import org.geogit.api.porcelain.NothingToCommitException;
-import org.opengis.util.ProgressListener;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
+import org.opengis.util.ProgressListener;
 
 import com.google.common.base.Optional;
 

@@ -13,7 +13,6 @@ import java.util.Map.Entry;
 import org.geogit.cli.CLICommand;
 import org.geogit.cli.GeogitCLI;
 import org.geogit.geotools.plumbing.DescribeOp;
-
 import org.geotools.data.DataStore;
 import org.geotools.jdbc.JDBCDataStore;
 

@@ -10,6 +10,7 @@ import java.util.List;
 
 import org.geogit.api.ObjectId;
 import org.geogit.api.RevFeatureType;
+import org.geogit.storage.GtEntityType;
 import org.geogit.storage.ObjectReader;
 import org.geotools.feature.NameImpl;
 import org.geotools.feature.simple.SimpleFeatureTypeBuilder;
@@ -40,7 +41,7 @@ public class HessianSimpleFeatureTypeReader implements ObjectReader<RevFeatureTy
     }
 
     @Override
-    public GeoToolsRevFeatureType read(ObjectId id, InputStream rawData) {
+    public RevFeatureType read(ObjectId id, InputStream rawData) {
         Hessian2Input hin = new Hessian2Input(rawData);
         try {
             hin.startMessage();
@@ -65,7 +66,7 @@ public class HessianSimpleFeatureTypeReader implements ObjectReader<RevFeatureTy
 
             builder.setName(new NameImpl("".equals(typeNamespace) ? null : typeNamespace, typeName));
             SimpleFeatureType type = builder.buildFeatureType();
-            return new GeoToolsRevFeatureType(type);
+            return new RevFeatureType(type);
         } catch (Exception e) {
             throw Throwables.propagate(e);
         } finally {

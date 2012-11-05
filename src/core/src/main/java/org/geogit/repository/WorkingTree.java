@@ -23,19 +23,20 @@ import org.geogit.api.RevObject.TYPE;
 import org.geogit.api.RevTree;
 import org.geogit.api.SpatialRef;
 import org.geogit.api.TreeVisitor;
-import org.geogit.api.plumbing.CreateTree;
 import org.geogit.api.plumbing.DiffWorkTree;
 import org.geogit.api.plumbing.FindOrCreateSubtree;
 import org.geogit.api.plumbing.FindTreeChild;
+import org.geogit.api.plumbing.HashObject;
 import org.geogit.api.plumbing.ResolveTreeish;
 import org.geogit.api.plumbing.RevObjectParse;
 import org.geogit.api.plumbing.UpdateRef;
 import org.geogit.api.plumbing.WriteBack;
 import org.geogit.api.plumbing.diff.DiffEntry;
-import org.geogit.storage.ObjectDatabase;
 import org.geogit.storage.ObjectSerialisingFactory;
 import org.geogit.storage.ObjectWriter;
 import org.geogit.storage.StagingDatabase;
+import org.opengis.feature.Feature;
+import org.opengis.feature.type.FeatureType;
 import org.opengis.filter.Filter;
 import org.opengis.geometry.BoundingBox;
 import org.opengis.util.ProgressListener;
@@ -161,7 +162,7 @@ public class WorkingTree {
      * @throws Exception
      */
     public void delete(final QName typeName, final Filter filter,
-            final Iterator<RevFeature> affectedFeatures) throws Exception {
+            final Iterator<Feature> affectedFeatures) throws Exception {
 
         MutableTree parentTree = repository.command(FindOrCreateSubtree.class)
                 .setParent(Suppliers.ofInstance(Optional.of(getTree()))).setIndex(true)
@@ -171,7 +172,7 @@ public class WorkingTree {
         String featurePath;
 
         while (affectedFeatures.hasNext()) {
-            fid = affectedFeatures.next().getFeatureId();
+            fid = affectedFeatures.next().getIdentifier().getID();
             featurePath = NodeRef.appendChild(typeName.getLocalPart(), fid);
             Optional<NodeRef> ref = findUnstaged(featurePath);
             if (ref.isPresent()) {
@@ -198,7 +199,9 @@ public class WorkingTree {
         if (isDirectChild) {
             parentTree.remove(typeName.getLocalPart());
             ObjectWriter<RevTree> treeWriter = serialFactory.createRevTreeWriter(parentTree);
-            ObjectId newAncestorId = indexDatabase.put(treeWriter);
+            ObjectId newAncestorId = repository.command(HashObject.class).setObject(parentTree)
+                    .call();
+            indexDatabase.put(newAncestorId, treeWriter);
             updateWorkHead(newAncestorId);
             return;
         }
@@ -230,7 +233,7 @@ public class WorkingTree {
      * @param parentTreePath
      * @param feature
      */
-    public NodeRef insert(final String parentTreePath, final RevFeature feature) {
+    public NodeRef insert(final String parentTreePath, final Feature feature) {
         NodeRef ref = putInDatabase(parentTreePath, feature);
         MutableTree parentTree = repository.command(FindOrCreateSubtree.class).setIndex(true)
                 .setParent(Suppliers.ofInstance(Optional.of(getTree())))
@@ -256,7 +259,7 @@ public class WorkingTree {
      * @param collectionSize
      * @throws Exception
      */
-    public void insert(final String treePath, Iterator<RevFeature> features,
+    public void insert(final String treePath, Iterator<Feature> features,
             boolean forceUseProvidedFID, ProgressListener listener,
             @Nullable List<NodeRef> insertedTarget, @Nullable Integer collectionSize)
             throws Exception {
@@ -287,7 +290,7 @@ public class WorkingTree {
      * @param collectionSize
      * @throws Exception
      */
-    public void update(final String treePath, final Iterator<RevFeature> features,
+    public void update(final String treePath, final Iterator<Feature> features,
             final ProgressListener listener, @Nullable final Integer collectionSize)
             throws Exception {
 
@@ -354,25 +357,33 @@ public class WorkingTree {
      * @param path
      * @return the NodeRef for the inserted feature
      */
-    private NodeRef putInDatabase(final String parentTreePath, final RevFeature feature) {
+    private NodeRef putInDatabase(final String parentTreePath, final Feature feature) {
         NodeRef.checkValidPath(parentTreePath);
         checkNotNull(feature);
 
-        final ObjectWriter<?> featureWriter = serialFactory.createFeatureWriter(feature);
+        RevFeatureBuilder builder = new RevFeatureBuilder();
 
-        final RevFeatureType featureType = feature.getFeatureType();
+        RevFeature newFeature = builder.build(feature);
+
+        final ObjectWriter<?> featureWriter = serialFactory.createFeatureWriter(newFeature);
+
+        final FeatureType featureType = feature.getType();
+        RevFeatureType newFeatureType = new RevFeatureType(featureType);
         final ObjectWriter<RevFeatureType> featureTypeWriter = serialFactory
-                .createFeatureTypeWriter(featureType);
+                .createFeatureTypeWriter(newFeatureType);
 
         final BoundingBox bounds = feature.getBounds();
-        final String nodePath = NodeRef.appendChild(parentTreePath, feature.getFeatureId());
+        final String nodePath = NodeRef
+                .appendChild(parentTreePath, feature.getIdentifier().getID());
 
-        final ObjectId objectId = indexDatabase.put(featureWriter);
+        final ObjectId objectId = repository.command(HashObject.class).setObject(newFeature).call();
+        indexDatabase.put(objectId, featureWriter);
         final ObjectId metadataId;
-        if (featureType.getId().isNull()) {
-            metadataId = indexDatabase.put(featureTypeWriter);
+        if (newFeatureType.getId().isNull()) {
+            metadataId = repository.command(HashObject.class).setObject(newFeatureType).call();
+            indexDatabase.put(metadataId, featureTypeWriter);
         } else {
-            metadataId = featureType.getId();
+            metadataId = newFeatureType.getId();
         }
 
         NodeRef newObject;
@@ -395,7 +406,7 @@ public class WorkingTree {
      * @param target
      * @throws Exception
      */
-    private void putInDatabase(final String parentTreePath, final Iterator<RevFeature> objects,
+    private void putInDatabase(final String parentTreePath, final Iterator<Feature> objects,
             final ProgressListener progress, final @Nullable Integer size,
             @Nullable final List<NodeRef> target, MutableTree parentTree) throws Exception {
 
@@ -403,7 +414,7 @@ public class WorkingTree {
         checkNotNull(progress);
         checkNotNull(parentTree);
 
-        RevFeature revFeature;
+        Feature feature;
         int count = 0;
 
         progress.started();
@@ -416,8 +427,8 @@ public class WorkingTree {
                 progress.progress((float) (count * 100) / size.intValue());
             }
 
-            revFeature = objects.next();
-            NodeRef objectRef = putInDatabase(parentTreePath, revFeature);
+            feature = objects.next();
+            NodeRef objectRef = putInDatabase(parentTreePath, feature);
 
             parentTree.put(objectRef);
 

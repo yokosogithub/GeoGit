@@ -27,6 +27,7 @@ import org.geogit.api.ObjectId;
 import org.geogit.api.RevObject.TYPE;
 import org.geogit.api.RevTree;
 import org.geogit.api.TreeVisitor;
+import org.geogit.api.plumbing.HashObject;
 import org.geogit.storage.ObjectDatabase;
 import org.geogit.storage.ObjectSerialisingFactory;
 import org.geogit.storage.RevSHA1Tree;
@@ -141,7 +142,8 @@ public class RevSHA1TreeTest extends RepositoryTestCase {
             assertFalse(tree.get(key).isPresent());
         }
 
-        final ObjectId newTreeId = odb.put(getRepository().newRevTreeWriter(tree));
+        final ObjectId newTreeId = geogit.command(HashObject.class).setObject(tree).call();
+        odb.put(newTreeId, getRepository().newRevTreeWriter(tree));
         RevTree tree2 = odb.get(newTreeId, getRepository().newRevTreeReader(odb, 0));
 
         for (String key : removedKeys) {
@@ -184,7 +186,8 @@ public class RevSHA1TreeTest extends RepositoryTestCase {
             assertFalse(tree.get(key).isPresent());
         }
 
-        final ObjectId newTreeId = odb.put(getRepository().newRevTreeWriter(tree));
+        final ObjectId newTreeId = geogit.command(HashObject.class).setObject(tree).call();
+        odb.put(newTreeId, getRepository().newRevTreeWriter(tree));
         RevTree tree2 = odb.get(newTreeId, getRepository().newRevTreeReader(odb, 0));
 
         for (String key : removedKeys) {
@@ -323,7 +326,8 @@ public class RevSHA1TreeTest extends RepositoryTestCase {
         final ObjectId treeId;
 
         RevTree tree = createTree(numEntries, insertInAscendingKeyOrder);
-        treeId = odb.put(getRepository().newRevTreeWriter(tree));
+        treeId = geogit.command(HashObject.class).setObject(tree).call();
+        odb.put(treeId, getRepository().newRevTreeWriter(tree));
         return treeId;
     }
 

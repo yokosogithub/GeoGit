@@ -4,50 +4,27 @@
  */
 package org.geogit.api;
 
-import javax.xml.namespace.QName;
-
-import org.opengis.geometry.BoundingBox;
+import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableList;
 
 /**
  * A binary representation of the state of a Feature.
  * 
  */
-public abstract class RevFeature extends AbstractRevObject {
+public class RevFeature extends AbstractRevObject {
 
-    private final Object parsed;
+    private final ImmutableList<Optional<Object>> values;
 
-    public RevFeature(Object feature) {
-        this(ObjectId.NULL, feature);
+    public RevFeature(ImmutableList<Optional<Object>> values) {
+        this(ObjectId.NULL, values);
     }
 
-    public RevFeature(ObjectId id, Object parsed) {
+    public RevFeature(ObjectId id, ImmutableList<Optional<Object>> values) {
         super(id, TYPE.FEATURE);
-        this.parsed = parsed;
+        this.values = values;
     }
 
-    public abstract RevFeatureType getFeatureType();
-
-    public Object feature() {
-        return parsed;
+    public ImmutableList<Optional<Object>> getValues() {
+        return values;
     }
-
-    /**
-     * @return
-     */
-    public abstract BoundingBox getBounds();
-
-    /**
-     * @return
-     */
-    public abstract QName getName();
-
-    /**
-     * @return
-     */
-    public abstract String getFeatureId();
-
-    /**
-     * @return
-     */
-    public abstract boolean isUseProvidedFid();
 }

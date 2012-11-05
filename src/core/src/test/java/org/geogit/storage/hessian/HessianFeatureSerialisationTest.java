@@ -13,11 +13,12 @@ import java.util.UUID;
 import junit.framework.TestCase;
 
 import org.geogit.api.ObjectId;
+import org.geogit.api.RevFeature;
+import org.geogit.repository.RevFeatureBuilder;
 import org.geotools.data.DataUtilities;
 import org.geotools.feature.simple.SimpleFeatureBuilder;
 import org.geotools.geometry.jts.WKTReader2;
 import org.opengis.feature.Feature;
-import org.opengis.feature.simple.SimpleFeature;
 import org.opengis.feature.simple.SimpleFeatureType;
 import org.opengis.feature.type.GeometryDescriptor;
 
@@ -51,7 +52,9 @@ public class HessianFeatureSerialisationTest extends TestCase {
 
     public void testSerialise() throws Exception {
 
-        HessianFeatureWriter writer = new HessianFeatureWriter(feature1_1);
+        RevFeatureBuilder builder = new RevFeatureBuilder();
+        RevFeature newFeature = builder.build(feature1_1);
+        HessianFeatureWriter writer = new HessianFeatureWriter(newFeature);
 
         ByteArrayOutputStream output = new ByteArrayOutputStream();
         writer.write(output);
@@ -59,16 +62,17 @@ public class HessianFeatureSerialisationTest extends TestCase {
         byte[] data = output.toByteArray();
         assertTrue(data.length > 0);
 
-        HessianFeatureReader reader = new HessianFeatureReader(featureType1, feature1_1
-                .getIdentifier().getID(), null);
+        HessianFeatureReader reader = new HessianFeatureReader(null);
         ByteArrayInputStream input = new ByteArrayInputStream(data);
-        Feature feat = reader.read(ObjectId.forString(feature1_1.getIdentifier().getID()), input)
-                .feature();
+        RevFeature feat = reader
+                .read(ObjectId.forString(feature1_1.getIdentifier().getID()), input);
 
         assertNotNull(feat);
-        assertTrue(feat instanceof SimpleFeature);
+        assertEquals(newFeature.getValues().size(), feat.getValues().size());
 
-        assertEquals(feature1_1, feat);
+        for (int i = 0; i < newFeature.getValues().size(); i++) {
+            assertEquals(newFeature.getValues().get(i).orNull(), feat.getValues().get(i).orNull());
+        }
 
     }
 

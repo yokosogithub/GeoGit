@@ -15,6 +15,7 @@ import org.geogit.api.MutableTree;
 import org.geogit.api.NodeRef;
 import org.geogit.api.ObjectId;
 import org.geogit.api.RevTree;
+import org.geogit.api.plumbing.HashObject;
 
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
@@ -207,7 +208,9 @@ class MutableRevSHA1Tree extends RevSHA1Tree implements MutableTree {
                     }
                 }
                 // size = size.add(subtree.size());
-                subtreeId = this.db.put(serialFactory.createRevTreeWriter(subtree));
+                HashObject hash = new HashObject();
+                subtreeId = hash.setObject(subtree).call();
+                this.db.put(subtreeId, serialFactory.createRevTreeWriter(subtree));
                 // subtreeId = this.db.put(new BxmlRevTreeWriter(subtree));
                 ignoreForSizeComputation.add(subtreeId);
                 mySubTrees.put(bucket, subtreeId);

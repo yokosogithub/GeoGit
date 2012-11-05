@@ -14,8 +14,8 @@ import javax.xml.parsers.DocumentBuilderFactory;
 
 import org.custommonkey.xmlunit.XMLAssert;
 import org.geogit.api.RevFeature;
+import org.geogit.repository.RevFeatureBuilder;
 import org.geogit.storage.ObjectWriter;
-import org.geogit.storage.hessian.GeoToolsRevFeature;
 import org.geogit.test.integration.RepositoryTestCase;
 import org.junit.Test;
 import org.w3c.dom.Document;
@@ -25,8 +25,8 @@ public class FeaturePrintTest extends RepositoryTestCase {
     @Test
     public void testPrint() throws Exception {
         ByteArrayOutputStream bout = new ByteArrayOutputStream();
-        ObjectWriter<RevFeature> writ = getRepository().newFeatureWriter(
-                new GeoToolsRevFeature(lines1));
+        RevFeatureBuilder builder = new RevFeatureBuilder();
+        ObjectWriter<RevFeature> writ = getRepository().newFeatureWriter(builder.build(lines1));
         writ.write(bout);
 
         byte[] bytes = bout.toByteArray();

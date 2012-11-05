@@ -191,9 +191,8 @@ public class Repository {
         return getObjectDatabase().newObjectInserter();
     }
 
-    public RevFeature getFeature(final RevFeatureType featureType, final String featureId,
-            final ObjectId contentId) {
-        ObjectReader<RevFeature> reader = newFeatureReader(featureType, featureId);
+    public RevFeature getFeature(final ObjectId contentId) {
+        ObjectReader<RevFeature> reader = newFeatureReader();
 
         RevFeature revFeature = getObjectDatabase().get(contentId, reader);
 
@@ -224,14 +223,13 @@ public class Repository {
         return serialFactory.createCommitReader();
     }
 
-    public ObjectReader<RevFeature> newFeatureReader(RevFeatureType featureType, String featureId) {
-        ObjectReader<RevFeature> reader = serialFactory.createFeatureReader(featureType, featureId);
+    public ObjectReader<RevFeature> newFeatureReader() {
+        ObjectReader<RevFeature> reader = serialFactory.createFeatureReader();
         return reader;
     }
 
-    public ObjectReader<RevFeature> newFeatureReader(final RevFeatureType featureType,
-            final String featureId, final Map<String, Serializable> hints) {
-        return serialFactory.createFeatureReader(featureType, featureId, hints);
+    public ObjectReader<RevFeature> newFeatureReader(final Map<String, Serializable> hints) {
+        return serialFactory.createFeatureReader(hints);
     }
 
     public ObjectWriter<RevFeature> newFeatureWriter(RevFeature feature) {

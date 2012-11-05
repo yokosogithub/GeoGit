@@ -127,13 +127,11 @@ public class DeepMove extends AbstractGeoGitOp<ObjectId> {
         }
 
         final InputStream raw = from.getRaw(objectId);
-        final ObjectId insertedId;
         try {
-            insertedId = to.put(new RawObjectWriter(raw));
+            to.put(objectId, new RawObjectWriter(raw));
             from.delete(objectId);
 
-            checkState(objectId.equals(insertedId));
-            checkState(to.exists(insertedId));
+            checkState(to.exists(objectId));
 
         } finally {
             Closeables.closeQuietly(raw);

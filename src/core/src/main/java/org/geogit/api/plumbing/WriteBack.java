@@ -166,14 +166,16 @@ public class WriteBack extends AbstractGeoGitOp<ObjectId> {
     private ObjectId writeBack(MutableTree ancestor, final String ancestorPath,
             final RevTree childTree, final String childPath, final ObjectDatabase targetDatabase) {
 
-        final ObjectId treeId = targetDatabase.put(serialFactory.createRevTreeWriter(childTree));
+        final ObjectId treeId = command(HashObject.class).setObject(childTree).call();
+        targetDatabase.put(treeId, serialFactory.createRevTreeWriter(childTree));
 
         final boolean isDirectChild = NodeRef.isDirectChild(ancestorPath, childPath);
         if (isDirectChild) {
             ObjectId metadataId = ObjectId.NULL;
             ancestor.put(new NodeRef(childPath, treeId, metadataId, TYPE.TREE));
             ObjectWriter<RevTree> treeWriter = serialFactory.createRevTreeWriter(ancestor);
-            ObjectId newAncestorId = targetDatabase.put(treeWriter);
+            ObjectId newAncestorId = command(HashObject.class).setObject(ancestor).call();
+            targetDatabase.put(newAncestorId, treeWriter);
             return newAncestorId;
         }
 

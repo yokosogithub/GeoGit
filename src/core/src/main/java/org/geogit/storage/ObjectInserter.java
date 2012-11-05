@@ -24,9 +24,8 @@ public class ObjectInserter {
         objectDb = objectDatabase;
     }
 
-    public ObjectId insert(final ObjectWriter<?> writer) {
-        ObjectId objectId = objectDb.put(writer);
-        return objectId;
+    public void insert(final ObjectId objectID, final ObjectWriter<?> writer) {
+        objectDb.put(objectID, writer);
     }
 
 }

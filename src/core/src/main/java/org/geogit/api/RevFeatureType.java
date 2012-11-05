@@ -4,30 +4,68 @@
  */
 package org.geogit.api;
 
+import java.util.ArrayList;
+import java.util.Collections;
+
 import javax.xml.namespace.QName;
+
+import org.opengis.feature.type.FeatureType;
+import org.opengis.feature.type.Name;
+import org.opengis.feature.type.PropertyDescriptor;
+
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Ordering;
 
 /**
  * A binary representation of the state of a Feature Type.
  */
-public abstract class RevFeatureType extends AbstractRevObject {
+public class RevFeatureType extends AbstractRevObject {
 
-    private final Object parsedType;
+    private final FeatureType featureType;
 
-    public RevFeatureType(Object parsed) {
-        this(ObjectId.NULL, parsed);
+    private ImmutableList<PropertyDescriptor> sortedDescriptors;
+
+    public static final Ordering<PropertyDescriptor> PROPERTY_ORDER = new Ordering<PropertyDescriptor>() {
+        @Override
+        public int compare(PropertyDescriptor left, PropertyDescriptor right) {
+            int c = Ordering.natural().nullsFirst()
+                    .compare(left.getName().getNamespaceURI(), right.getName().getNamespaceURI());
+            if (c == 0) {
+                c = Ordering.natural().nullsFirst()
+                        .compare(left.getName().getLocalPart(), right.getName().getLocalPart());
+            }
+            return c;
+        }
+    };
+
+    public RevFeatureType(FeatureType featureType) {
+        this(ObjectId.NULL, featureType);
     }
 
-    public RevFeatureType(ObjectId id, Object parsed) {
+    public RevFeatureType(ObjectId id, FeatureType featureType) {
         super(id, TYPE.FEATURETYPE);
-        this.parsedType = parsed;
+        this.featureType = featureType;
+        ArrayList<PropertyDescriptor> descriptors = Lists.newArrayList(this.featureType
+                .getDescriptors());
+        Collections.sort(descriptors, PROPERTY_ORDER);
+        sortedDescriptors = ImmutableList.copyOf(descriptors);
+
     }
 
-    public Object type() {
-        return parsedType;
+    public FeatureType type() {
+        return featureType;
+    }
+
+    public ImmutableList<PropertyDescriptor> sortedDescriptors() {
+        return sortedDescriptors;
     }
 
     /**
      * @return
      */
-    public abstract QName getName();
+    public QName getName() {
+        Name name = type().getName();
+        return new QName(name.getNamespaceURI(), name.getLocalPart());
+    }
 }

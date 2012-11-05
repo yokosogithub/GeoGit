@@ -17,9 +17,7 @@ import org.geogit.storage.ObjectDatabase;
 import org.geogit.storage.ObjectReader;
 import org.geogit.storage.ObjectSerialisingFactory;
 import org.geogit.storage.ObjectWriter;
-import org.opengis.feature.Feature;
 import org.opengis.feature.simple.SimpleFeatureType;
-import org.opengis.feature.type.FeatureType;
 
 public class HessianFactory implements ObjectSerialisingFactory {
 
@@ -48,22 +46,19 @@ public class HessianFactory implements ObjectSerialisingFactory {
     }
 
     @Override
-    public ObjectReader<RevFeature> createFeatureReader(RevFeatureType featureType, String featureId) {
-        FeatureType simpleType = (FeatureType) featureType.type();
-        ObjectReader<RevFeature> reader = new HessianFeatureReader(simpleType, featureId, null);
+    public ObjectReader<RevFeature> createFeatureReader() {
+        ObjectReader<RevFeature> reader = new HessianFeatureReader(null);
         return reader;
     }
 
     @Override
-    public ObjectReader<RevFeature> createFeatureReader(final RevFeatureType featureType,
-            final String featureId, final Map<String, Serializable> hints) {
-        FeatureType simpleType = (FeatureType) featureType;
-        return new HessianFeatureReader(simpleType, featureId, hints);
+    public ObjectReader<RevFeature> createFeatureReader(final Map<String, Serializable> hints) {
+        return new HessianFeatureReader(hints);
     }
 
     @Override
     public ObjectWriter<RevFeature> createFeatureWriter(RevFeature feature) {
-        return new HessianFeatureWriter((Feature) feature.feature());
+        return new HessianFeatureWriter(feature);
     }
 
     @Override

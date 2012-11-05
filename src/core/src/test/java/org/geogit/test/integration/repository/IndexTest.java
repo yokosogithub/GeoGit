@@ -19,6 +19,7 @@ import org.geogit.api.RevCommit;
 import org.geogit.api.RevTree;
 import org.geogit.api.plumbing.CreateTree;
 import org.geogit.api.plumbing.FindTreeChild;
+import org.geogit.api.plumbing.HashObject;
 import org.geogit.api.plumbing.RevObjectParse;
 import org.geogit.api.plumbing.UpdateRef;
 import org.geogit.api.plumbing.WriteTree;
@@ -101,7 +102,8 @@ public class IndexTest extends RepositoryTestCase {
         // simulate a commit so the repo head points to this new tree
         ObjectInserter objectInserter = repo.newObjectInserter();
         RevCommit commit = new RevCommit(ObjectId.NULL, newRootTreeId, null, null, null, null, 0);
-        ObjectId commitId = objectInserter.insert(getRepository().newCommitWriter(commit));
+        ObjectId commitId = geogit.command(HashObject.class).setObject(commit).call();
+        objectInserter.insert(commitId, getRepository().newCommitWriter(commit));
         Optional<Ref> newHead = geogit.command(UpdateRef.class).setName("refs/heads/master")
                 .setNewValue(commitId).call();
         assertTrue(newHead.isPresent());
@@ -295,7 +297,8 @@ public class IndexTest extends RepositoryTestCase {
             ObjectInserter objectInserter = repo.newObjectInserter();
             RevCommit commit = new RevCommit(ObjectId.NULL, newRepoTreeId1, null, null, null, null,
                     0);
-            ObjectId commitId = objectInserter.insert(getRepository().newCommitWriter(commit));
+            ObjectId commitId = geogit.command(HashObject.class).setObject(commit).call();
+            objectInserter.insert(commitId, getRepository().newCommitWriter(commit));
             Optional<Ref> newHead = geogit.command(UpdateRef.class).setName("refs/heads/master")
                     .setNewValue(commitId).call();
             assertTrue(newHead.isPresent());
@@ -335,7 +338,8 @@ public class IndexTest extends RepositoryTestCase {
             ObjectInserter objectInserter = repo.newObjectInserter();
             RevCommit commit = new RevCommit(ObjectId.NULL, newRepoTreeId2, null, null, null, null,
                     0);
-            ObjectId commitId = objectInserter.insert(getRepository().newCommitWriter(commit));
+            ObjectId commitId = geogit.command(HashObject.class).setObject(commit).call();
+            objectInserter.insert(commitId, getRepository().newCommitWriter(commit));
             Optional<Ref> newHead = geogit.command(UpdateRef.class).setName("refs/heads/master")
                     .setNewValue(commitId).call();
             assertTrue(newHead.isPresent());

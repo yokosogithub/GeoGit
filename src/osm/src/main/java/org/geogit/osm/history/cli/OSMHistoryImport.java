@@ -43,6 +43,7 @@ import org.geogit.osm.history.internal.HistoryDownloader;
 import org.geogit.osm.history.internal.Node;
 import org.geogit.osm.history.internal.Primitive;
 import org.geogit.osm.history.internal.Way;
+import org.geogit.repository.FeatureBuilder;
 import org.geogit.repository.Repository;
 import org.geogit.repository.StagingArea;
 import org.geogit.repository.WorkingTree;
@@ -51,10 +52,10 @@ import org.geogit.storage.ObjectSerialisingFactory;
 import org.geotools.data.DataUtilities;
 import org.geotools.feature.SchemaException;
 import org.geotools.feature.simple.SimpleFeatureBuilder;
+import org.opengis.feature.Feature;
 import org.opengis.feature.simple.SimpleFeature;
 import org.opengis.feature.simple.SimpleFeatureType;
 import org.opengis.feature.type.Name;
-import org.opengis.geometry.BoundingBox;
 import org.opengis.util.ProgressListener;
 
 import com.beust.jcommander.Parameters;
@@ -303,7 +304,7 @@ public class OSMHistoryImport extends AbstractCommand implements CLICommand {
                 executor.submit(new Runnable() {
                     @Override
                     public void run() {
-                        RevFeature feature = new OsmRevFeature(primitive, geom);
+                        SimpleFeature feature = toFeature(primitive, geom);
                         String parentPath = NodeRef.parentPath(featurePath);
                         workTree.insert(parentPath, feature);
                     }
@@ -354,6 +355,7 @@ public class OSMHistoryImport extends AbstractCommand implements CLICommand {
                 .getSerializationFactory();
         StagingArea index = geogit.getRepository().getIndex();
 
+        FeatureBuilder featureBuilder = new FeatureBuilder(NODE_REV_TYPE);
         List<Coordinate> coordinates = Lists.newArrayList(nodes.size());
         for (Long nodeId : nodes) {
             Coordinate coord = thisChangePointCache.get(nodeId);
@@ -367,9 +369,13 @@ public class OSMHistoryImport extends AbstractCommand implements CLICommand {
                 if (ref.isPresent()) {
                     NodeRef nodeRef = ref.get();
                     ObjectReader<RevFeature> reader;
-                    reader = serialFactory.createFeatureReader(NODE_REV_TYPE, fid);
-                    RevFeature feature = index.getDatabase().get(nodeRef.getObjectId(), reader);
-                    Point p = (Point) ((SimpleFeature) feature.feature()).getAttribute("location");
+                    reader = serialFactory.createFeatureReader();
+
+                    RevFeature revFeature = index.getDatabase().get(nodeRef.getObjectId(), reader);
+                    String id = NodeRef.nodeFromPath(nodeRef.getPath());
+                    Feature feature = featureBuilder.build(id, revFeature);
+
+                    Point p = (Point) ((SimpleFeature) feature).getAttribute("location");
                     if (p != null) {
                         coord = p.getCoordinate();
                         thisChangePointCache.put(Long.valueOf(nodeId), coord);
@@ -474,76 +480,26 @@ public class OSMHistoryImport extends AbstractCommand implements CLICommand {
 
     private static final RevFeatureType WAY_REV_TYPE = new OsmRevFeatureTypeWay();
 
-    public static class OsmRevFeature extends RevFeature {
+    private static SimpleFeature toFeature(Primitive feature, Geometry geom) {
 
-        private RevFeatureType featureType;
+        SimpleFeatureType ft = feature instanceof Node ? nodeType() : wayType();
+        SimpleFeatureBuilder builder = new SimpleFeatureBuilder(ft);
 
-        /**
-         * @param feature
-         * @param geom
-         */
-        public OsmRevFeature(Primitive feature, Geometry geom) {
-            super(toFeature(feature, geom));
-            if (feature instanceof Node) {
-                featureType = NODE_REV_TYPE;
-            } else if (feature instanceof Way) {
-                featureType = WAY_REV_TYPE;
-            } else {
-                throw new IllegalArgumentException();
-            }
+        // "visible:Boolean,version:Int,timestamp:long,[location:Point | way:LineString];
+        builder.set("visible", Boolean.valueOf(feature.isVisible()));
+        builder.set("version", Integer.valueOf(feature.getVersion()));
+        builder.set("timestamp", Long.valueOf(feature.getTimestamp()));
+
+        if (feature instanceof Node) {
+            builder.set("location", geom);
+        } else if (feature instanceof Way) {
+            builder.set("way", geom);
+        } else {
+            throw new IllegalArgumentException();
         }
 
-        @Override
-        public SimpleFeature feature() {
-            return (SimpleFeature) super.feature();
-        }
-
-        @Override
-        public RevFeatureType getFeatureType() {
-            return featureType;
-        }
-
-        @Override
-        public BoundingBox getBounds() {
-            return feature().getBounds();
-        }
-
-        @Override
-        public QName getName() {
-            return getFeatureType().getName();
-        }
-
-        @Override
-        public String getFeatureId() {
-            return feature().getID();
-        }
-
-        @Override
-        public boolean isUseProvidedFid() {
-            return true;
-        }
-
-        private static SimpleFeature toFeature(Primitive feature, Geometry geom) {
-
-            SimpleFeatureType ft = feature instanceof Node ? nodeType() : wayType();
-            SimpleFeatureBuilder builder = new SimpleFeatureBuilder(ft);
-
-            // "visible:Boolean,version:Int,timestamp:long,[location:Point | way:LineString];
-            builder.set("visible", Boolean.valueOf(feature.isVisible()));
-            builder.set("version", Integer.valueOf(feature.getVersion()));
-            builder.set("timestamp", Long.valueOf(feature.getTimestamp()));
-
-            if (feature instanceof Node) {
-                builder.set("location", geom);
-            } else if (feature instanceof Way) {
-                builder.set("way", geom);
-            } else {
-                throw new IllegalArgumentException();
-            }
-
-            String fid = String.valueOf(feature.getId());
-            SimpleFeature simpleFeature = builder.buildFeature(fid);
-            return simpleFeature;
-        }
+        String fid = String.valueOf(feature.getId());
+        SimpleFeature simpleFeature = builder.buildFeature(fid);
+        return simpleFeature;
     }
 }

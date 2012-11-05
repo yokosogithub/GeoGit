@@ -19,6 +19,7 @@ import org.geogit.api.RevCommit;
 import org.geogit.api.RevTree;
 import org.geogit.api.SymRef;
 import org.geogit.api.plumbing.CreateTree;
+import org.geogit.api.plumbing.HashObject;
 import org.geogit.api.plumbing.RefParse;
 import org.geogit.api.plumbing.ResolveTreeish;
 import org.geogit.api.plumbing.RevObjectParse;
@@ -246,7 +247,9 @@ public class CommitOp extends AbstractGeoGitOp<RevCommit> {
                 return null;
             }
             ObjectInserter objectInserter = repository.newObjectInserter();
-            commitId = objectInserter.insert(repository.newCommitWriter(cb.build(ObjectId.NULL)));
+            RevCommit commit = cb.build(ObjectId.NULL);
+            commitId = command(HashObject.class).setObject(commit).call();
+            objectInserter.insert(commitId, repository.newCommitWriter(commit));
         }
         final RevCommit commit = repository.getCommit(commitId);
         // set the HEAD pointing to the new commit

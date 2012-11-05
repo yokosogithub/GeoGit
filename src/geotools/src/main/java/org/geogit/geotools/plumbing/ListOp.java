@@ -10,9 +10,7 @@ import java.util.List;
 
 import org.geogit.api.AbstractGeoGitOp;
 import org.geogit.geotools.plumbing.GeoToolsOpException.StatusCode;
-
 import org.geotools.data.DataStore;
-
 import org.opengis.feature.type.Name;
 
 import com.google.common.base.Optional;

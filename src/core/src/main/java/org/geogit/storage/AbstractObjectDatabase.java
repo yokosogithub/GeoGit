@@ -7,8 +7,6 @@ package org.geogit.storage;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.security.DigestOutputStream;
-import java.security.MessageDigest;
 import java.util.List;
 
 import org.geogit.api.ObjectId;
@@ -76,38 +74,38 @@ public abstract class AbstractObjectDatabase implements ObjectDatabase {
     /**
      * @see org.geogit.storage.ObjectDatabase#put(org.geogit.storage.ObjectWriter)
      */
-    @Override
-    public final <T> ObjectId put(final ObjectWriter<T> writer) {
-        MessageDigest sha1;
-        ByteArrayOutputStream rawOut = new ByteArrayOutputStream();
-        DigestOutputStream keyGenOut;
-        try {
-            sha1 = MessageDigest.getInstance("SHA1");
+    // @Override
+    // public final <T> ObjectId put(final ObjectWriter<T> writer) {
+    // MessageDigest sha1;
+    // ByteArrayOutputStream rawOut = new ByteArrayOutputStream();
+    // DigestOutputStream keyGenOut;
+    // try {
+    // sha1 = MessageDigest.getInstance("SHA1");
 
-            keyGenOut = new DigestOutputStream(rawOut, sha1);
-            // GZIPOutputStream cOut = new GZIPOutputStream(keyGenOut);
-            LZFOutputStream cOut = new LZFOutputStream(keyGenOut);
+    // keyGenOut = new DigestOutputStream(rawOut, sha1);
+    // GZIPOutputStream cOut = new GZIPOutputStream(keyGenOut);
+    // LZFOutputStream cOut = new LZFOutputStream(keyGenOut);
 
-            try {
-                writer.write(cOut);
-            } finally {
-                // cOut.finish();
-                cOut.flush();
-                cOut.close();
-                keyGenOut.flush();
-                keyGenOut.close();
-                rawOut.flush();
-                rawOut.close();
-            }
-        } catch (Exception e) {
-            throw Throwables.propagate(e);
-        }
-        final byte[] rawData = rawOut.toByteArray();
-        final byte[] rawKey = keyGenOut.getMessageDigest().digest();
-        final ObjectId id = new ObjectId(rawKey);
-        putInternal(id, rawData);
-        return id;
-    }
+    // try {
+    // writer.write(cOut);
+    // } finally {
+    // cOut.finish();
+    // cOut.flush();
+    // cOut.close();
+    // keyGenOut.flush();
+    // keyGenOut.close();
+    // rawOut.flush();
+    // rawOut.close();
+    // }
+    // } catch (Exception e) {
+    // throw Throwables.propagate(e);
+    // }
+    // final byte[] rawData = rawOut.toByteArray();
+    // final byte[] rawKey = keyGenOut.getMessageDigest().digest();
+    // final ObjectId id = new ObjectId(rawKey);
+    // putInternal(id, rawData);
+    // return id;
+    // }
 
     /**
      * @see org.geogit.storage.ObjectDatabase#put(org.geogit.api.ObjectId,

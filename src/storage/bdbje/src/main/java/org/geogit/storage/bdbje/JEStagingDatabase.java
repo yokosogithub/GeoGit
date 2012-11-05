@@ -159,11 +159,6 @@ public class JEStagingDatabase implements ObjectDatabase, StagingDatabase {
     }
 
     @Override
-    public <T> ObjectId put(ObjectWriter<T> writer) {
-        return stagingDb.put(writer);
-    }
-
-    @Override
     public boolean put(ObjectId id, ObjectWriter<?> writer) {
         return stagingDb.put(id, writer);
     }

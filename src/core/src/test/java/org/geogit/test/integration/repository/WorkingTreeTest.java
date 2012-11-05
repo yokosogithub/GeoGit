@@ -19,15 +19,14 @@ import javax.xml.namespace.QName;
 
 import org.geogit.api.NodeRef;
 import org.geogit.api.ObjectId;
-import org.geogit.api.RevFeature;
 import org.geogit.api.plumbing.diff.DiffEntry;
 import org.geogit.repository.WorkingTree;
-import org.geogit.storage.hessian.GeoToolsRevFeature;
 import org.geogit.test.integration.RepositoryTestCase;
 import org.geotools.util.NullProgressListener;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
+import org.opengis.feature.Feature;
 import org.opengis.feature.type.Name;
 
 /**
@@ -49,8 +48,7 @@ public class WorkingTreeTest extends RepositoryTestCase {
     public void testInsertSingle() throws Exception {
         Name name = points1.getType().getName();
         String parentPath = name.getLocalPart();
-        RevFeature rf = new GeoToolsRevFeature(points1);
-        NodeRef ref = workTree.insert(parentPath, rf);
+        NodeRef ref = workTree.insert(parentPath, points1);
         ObjectId objectId = ref.getObjectId();
 
         assertEquals(objectId, workTree.findUnstaged(appendChild(pointsName, idP1)).get()
@@ -59,10 +57,10 @@ public class WorkingTreeTest extends RepositoryTestCase {
 
     @Test
     public void testInsertCollection() throws Exception {
-        List<RevFeature> featureList = new LinkedList<RevFeature>();
-        featureList.add(new GeoToolsRevFeature(points1));
-        featureList.add(new GeoToolsRevFeature(points2));
-        featureList.add(new GeoToolsRevFeature(points3));
+        List<Feature> featureList = new LinkedList<Feature>();
+        featureList.add(points1);
+        featureList.add(points2);
+        featureList.add(points3);
 
         List<NodeRef> targetList = new LinkedList<NodeRef>();
         workTree.insert(pointsName, featureList.iterator(), false, new NullProgressListener(),
@@ -84,10 +82,10 @@ public class WorkingTreeTest extends RepositoryTestCase {
 
     @Test
     public void testInsertCollectionNullCollectionSize() throws Exception {
-        List<RevFeature> featureList = new LinkedList<RevFeature>();
-        featureList.add(new GeoToolsRevFeature(points1));
-        featureList.add(new GeoToolsRevFeature(points2));
-        featureList.add(new GeoToolsRevFeature(points3));
+        List<Feature> featureList = new LinkedList<Feature>();
+        featureList.add(points1);
+        featureList.add(points2);
+        featureList.add(points3);
 
         List<NodeRef> targetList = new LinkedList<NodeRef>();
         workTree.insert(pointsName, featureList.iterator(), false, new NullProgressListener(),
@@ -109,10 +107,10 @@ public class WorkingTreeTest extends RepositoryTestCase {
 
     @Test
     public void testInsertCollectionZeroCollectionSize() throws Exception {
-        List<RevFeature> featureList = new LinkedList<RevFeature>();
-        featureList.add(new GeoToolsRevFeature(points1));
-        featureList.add(new GeoToolsRevFeature(points2));
-        featureList.add(new GeoToolsRevFeature(points3));
+        List<Feature> featureList = new LinkedList<Feature>();
+        featureList.add(points1);
+        featureList.add(points2);
+        featureList.add(points3);
 
         List<NodeRef> targetList = new LinkedList<NodeRef>();
         workTree.insert(pointsName, featureList.iterator(), false, new NullProgressListener(),
@@ -134,10 +132,10 @@ public class WorkingTreeTest extends RepositoryTestCase {
 
     @Test
     public void testInsertCollectionNegativeCollectionSize() throws Exception {
-        List<RevFeature> featureList = new LinkedList<RevFeature>();
-        featureList.add(new GeoToolsRevFeature(points1));
-        featureList.add(new GeoToolsRevFeature(points2));
-        featureList.add(new GeoToolsRevFeature(points3));
+        List<Feature> featureList = new LinkedList<Feature>();
+        featureList.add(points1);
+        featureList.add(points2);
+        featureList.add(points3);
 
         List<NodeRef> targetList = new LinkedList<NodeRef>();
 
@@ -148,10 +146,10 @@ public class WorkingTreeTest extends RepositoryTestCase {
 
     @Test
     public void testInsertCollectionNoTarget() throws Exception {
-        List<RevFeature> featureList = new LinkedList<RevFeature>();
-        featureList.add(new GeoToolsRevFeature(points1));
-        featureList.add(new GeoToolsRevFeature(points2));
-        featureList.add(new GeoToolsRevFeature(points3));
+        List<Feature> featureList = new LinkedList<Feature>();
+        featureList.add(points1);
+        featureList.add(points2);
+        featureList.add(points3);
 
         workTree.insert(pointsName, featureList.iterator(), false, new NullProgressListener(),
                 null, null);
@@ -163,18 +161,18 @@ public class WorkingTreeTest extends RepositoryTestCase {
 
     @Test
     public void testInsertDuplicateFeatures() throws Exception {
-        List<RevFeature> featureList = new LinkedList<RevFeature>();
-        featureList.add(new GeoToolsRevFeature(points1));
-        featureList.add(new GeoToolsRevFeature(points2));
-        featureList.add(new GeoToolsRevFeature(points3));
+        List<Feature> featureList = new LinkedList<Feature>();
+        featureList.add(points1);
+        featureList.add(points2);
+        featureList.add(points3);
 
         workTree.insert(pointsName, featureList.iterator(), false, new NullProgressListener(),
                 null, 3);
 
         ObjectId oID1 = workTree.findUnstaged(appendChild(pointsName, idP1)).get().getObjectId();
 
-        List<RevFeature> modifiedFeatures = new LinkedList<RevFeature>();
-        modifiedFeatures.add(new GeoToolsRevFeature(points1_modified));
+        List<Feature> modifiedFeatures = new LinkedList<Feature>();
+        modifiedFeatures.add(points1_modified);
 
         workTree.insert(pointsName, modifiedFeatures.iterator(), false, new NullProgressListener(),
                 null, 1);
@@ -185,18 +183,18 @@ public class WorkingTreeTest extends RepositoryTestCase {
 
     @Test
     public void testUpdateFeatures() throws Exception {
-        List<RevFeature> featureList = new LinkedList<RevFeature>();
-        featureList.add(new GeoToolsRevFeature(points1));
-        featureList.add(new GeoToolsRevFeature(points2));
-        featureList.add(new GeoToolsRevFeature(points3));
+        List<Feature> featureList = new LinkedList<Feature>();
+        featureList.add(points1);
+        featureList.add(points2);
+        featureList.add(points3);
 
         workTree.insert(pointsName, featureList.iterator(), false, new NullProgressListener(),
                 null, 3);
 
         ObjectId oID1 = workTree.findUnstaged(appendChild(pointsName, idP1)).get().getObjectId();
 
-        List<RevFeature> modifiedFeatures = new LinkedList<RevFeature>();
-        modifiedFeatures.add(new GeoToolsRevFeature(points1_modified));
+        List<Feature> modifiedFeatures = new LinkedList<Feature>();
+        modifiedFeatures.add(points1_modified);
 
         workTree.update(pointsName, modifiedFeatures.iterator(), new NullProgressListener(), 1);
         assertFalse(workTree.findUnstaged(appendChild(pointsName, idP1)).get().getObjectId()
@@ -206,18 +204,18 @@ public class WorkingTreeTest extends RepositoryTestCase {
 
     @Test
     public void testUpdateFeaturesNullCollectionSize() throws Exception {
-        List<RevFeature> featureList = new LinkedList<RevFeature>();
-        featureList.add(new GeoToolsRevFeature(points1));
-        featureList.add(new GeoToolsRevFeature(points2));
-        featureList.add(new GeoToolsRevFeature(points3));
+        List<Feature> featureList = new LinkedList<Feature>();
+        featureList.add(points1);
+        featureList.add(points2);
+        featureList.add(points3);
 
         workTree.insert(pointsName, featureList.iterator(), false, new NullProgressListener(),
                 null, 3);
 
         ObjectId oID1 = workTree.findUnstaged(appendChild(pointsName, idP1)).get().getObjectId();
 
-        List<RevFeature> modifiedFeatures = new LinkedList<RevFeature>();
-        modifiedFeatures.add(new GeoToolsRevFeature(points1_modified));
+        List<Feature> modifiedFeatures = new LinkedList<Feature>();
+        modifiedFeatures.add(points1_modified);
 
         workTree.update(pointsName, modifiedFeatures.iterator(), new NullProgressListener(), null);
         assertFalse(workTree.findUnstaged(appendChild(pointsName, idP1)).get().getObjectId()
@@ -226,18 +224,18 @@ public class WorkingTreeTest extends RepositoryTestCase {
 
     @Test
     public void testUpdateFeaturesZeroCollectionSize() throws Exception {
-        List<RevFeature> featureList = new LinkedList<RevFeature>();
-        featureList.add(new GeoToolsRevFeature(points1));
-        featureList.add(new GeoToolsRevFeature(points2));
-        featureList.add(new GeoToolsRevFeature(points3));
+        List<Feature> featureList = new LinkedList<Feature>();
+        featureList.add(points1);
+        featureList.add(points2);
+        featureList.add(points3);
 
         workTree.insert(pointsName, featureList.iterator(), false, new NullProgressListener(),
                 null, 3);
 
         ObjectId oID1 = workTree.findUnstaged(appendChild(pointsName, idP1)).get().getObjectId();
 
-        List<RevFeature> modifiedFeatures = new LinkedList<RevFeature>();
-        modifiedFeatures.add(new GeoToolsRevFeature(points1_modified));
+        List<Feature> modifiedFeatures = new LinkedList<Feature>();
+        modifiedFeatures.add(points1_modified);
 
         workTree.update(pointsName, modifiedFeatures.iterator(), new NullProgressListener(), 0);
         assertFalse(workTree.findUnstaged(appendChild(pointsName, idP1)).get().getObjectId()
@@ -246,16 +244,16 @@ public class WorkingTreeTest extends RepositoryTestCase {
 
     @Test
     public void testUpdateFeaturesNegativeCollectionSize() throws Exception {
-        List<RevFeature> featureList = new LinkedList<RevFeature>();
-        featureList.add(new GeoToolsRevFeature(points1));
-        featureList.add(new GeoToolsRevFeature(points2));
-        featureList.add(new GeoToolsRevFeature(points3));
+        List<Feature> featureList = new LinkedList<Feature>();
+        featureList.add(points1);
+        featureList.add(points2);
+        featureList.add(points3);
 
         workTree.insert(pointsName, featureList.iterator(), false, new NullProgressListener(),
                 null, 3);
 
-        List<RevFeature> modifiedFeatures = new LinkedList<RevFeature>();
-        modifiedFeatures.add(new GeoToolsRevFeature(points1_modified));
+        List<Feature> modifiedFeatures = new LinkedList<Feature>();
+        modifiedFeatures.add(points1_modified);
 
         exception.expect(IllegalArgumentException.class);
         workTree.update(pointsName, modifiedFeatures.iterator(), new NullProgressListener(), -5);
@@ -263,10 +261,10 @@ public class WorkingTreeTest extends RepositoryTestCase {
 
     @Test
     public void testDeleteSingle() throws Exception {
-        List<RevFeature> featureList = new LinkedList<RevFeature>();
-        featureList.add(new GeoToolsRevFeature(points1));
-        featureList.add(new GeoToolsRevFeature(points2));
-        featureList.add(new GeoToolsRevFeature(points3));
+        List<Feature> featureList = new LinkedList<Feature>();
+        featureList.add(points1);
+        featureList.add(points2);
+        featureList.add(points3);
 
         workTree.insert(pointsName, featureList.iterator(), false, new NullProgressListener(),
                 null, 3);
@@ -290,9 +288,9 @@ public class WorkingTreeTest extends RepositoryTestCase {
 
     @Test
     public void testDeleteNonexistantFeature() throws Exception {
-        List<RevFeature> featureList = new LinkedList<RevFeature>();
-        featureList.add(new GeoToolsRevFeature(points1));
-        featureList.add(new GeoToolsRevFeature(points2));
+        List<Feature> featureList = new LinkedList<Feature>();
+        featureList.add(points1);
+        featureList.add(points2);
 
         workTree.insert(pointsName, featureList.iterator(), false, new NullProgressListener(),
                 null, 2);
@@ -317,10 +315,10 @@ public class WorkingTreeTest extends RepositoryTestCase {
 
     @Test
     public void testDeleteCollection() throws Exception {
-        List<RevFeature> featureList = new LinkedList<RevFeature>();
-        featureList.add(new GeoToolsRevFeature(points1));
-        featureList.add(new GeoToolsRevFeature(points2));
-        featureList.add(new GeoToolsRevFeature(points3));
+        List<Feature> featureList = new LinkedList<Feature>();
+        featureList.add(points1);
+        featureList.add(points2);
+        featureList.add(points3);
 
         workTree.insert(pointsName, featureList.iterator(), false, new NullProgressListener(),
                 null, 3);
@@ -329,9 +327,9 @@ public class WorkingTreeTest extends RepositoryTestCase {
         assertTrue(workTree.findUnstaged(appendChild(pointsName, idP2)).isPresent());
         assertTrue(workTree.findUnstaged(appendChild(pointsName, idP3)).isPresent());
 
-        List<RevFeature> deleteFeatures = new LinkedList<RevFeature>();
-        deleteFeatures.add(new GeoToolsRevFeature(points1));
-        deleteFeatures.add(new GeoToolsRevFeature(points3));
+        List<Feature> deleteFeatures = new LinkedList<Feature>();
+        deleteFeatures.add(points1);
+        deleteFeatures.add(points3);
 
         Name typeName = points1.getName();
 
@@ -345,9 +343,9 @@ public class WorkingTreeTest extends RepositoryTestCase {
 
     @Test
     public void testDeleteCollectionOfFeaturesNotPresent() throws Exception {
-        List<RevFeature> featureList = new LinkedList<RevFeature>();
-        featureList.add(new GeoToolsRevFeature(points1));
-        featureList.add(new GeoToolsRevFeature(points2));
+        List<Feature> featureList = new LinkedList<Feature>();
+        featureList.add(points1);
+        featureList.add(points2);
 
         workTree.insert(pointsName, featureList.iterator(), false, new NullProgressListener(),
                 null, 3);
@@ -356,8 +354,8 @@ public class WorkingTreeTest extends RepositoryTestCase {
         assertTrue(workTree.findUnstaged(appendChild(pointsName, idP2)).isPresent());
         assertFalse(workTree.findUnstaged(appendChild(pointsName, idP3)).isPresent());
 
-        List<RevFeature> deleteFeatures = new LinkedList<RevFeature>();
-        deleteFeatures.add(new GeoToolsRevFeature(points3));
+        List<Feature> deleteFeatures = new LinkedList<Feature>();
+        deleteFeatures.add(points3);
 
         Name typeName = points1.getName();
 
@@ -371,18 +369,18 @@ public class WorkingTreeTest extends RepositoryTestCase {
 
     @Test
     public void testDeleteFeatureType() throws Exception {
-        List<RevFeature> featureList = new LinkedList<RevFeature>();
-        featureList.add(new GeoToolsRevFeature(points1));
-        featureList.add(new GeoToolsRevFeature(points2));
-        featureList.add(new GeoToolsRevFeature(points3));
+        List<Feature> featureList = new LinkedList<Feature>();
+        featureList.add(points1);
+        featureList.add(points2);
+        featureList.add(points3);
 
         workTree.insert(pointsName, featureList.iterator(), false, new NullProgressListener(),
                 null, 3);
 
-        featureList = new LinkedList<RevFeature>();
-        featureList.add(new GeoToolsRevFeature(lines1));
-        featureList.add(new GeoToolsRevFeature(lines2));
-        featureList.add(new GeoToolsRevFeature(lines3));
+        featureList = new LinkedList<Feature>();
+        featureList.add(lines1);
+        featureList.add(lines2);
+        featureList.add(lines3);
 
         workTree.insert(linesName, featureList.iterator(), false, new NullProgressListener(), null,
                 3);
@@ -414,10 +412,10 @@ public class WorkingTreeTest extends RepositoryTestCase {
 
     @Test
     public void testGetUnstaged() throws Exception {
-        List<RevFeature> featureList = new LinkedList<RevFeature>();
-        featureList.add(new GeoToolsRevFeature(points1));
-        featureList.add(new GeoToolsRevFeature(points2));
-        featureList.add(new GeoToolsRevFeature(points3));
+        List<Feature> featureList = new LinkedList<Feature>();
+        featureList.add(points1);
+        featureList.add(points2);
+        featureList.add(points3);
 
         workTree.insert(pointsName, featureList.iterator(), false, new NullProgressListener(),
                 null, 3);
@@ -431,18 +429,18 @@ public class WorkingTreeTest extends RepositoryTestCase {
 
     @Test
     public void testInsertMultipleFeatureTypes() throws Exception {
-        List<RevFeature> featureList = new LinkedList<RevFeature>();
-        featureList.add(new GeoToolsRevFeature(points1));
-        featureList.add(new GeoToolsRevFeature(points2));
-        featureList.add(new GeoToolsRevFeature(points3));
+        List<Feature> featureList = new LinkedList<Feature>();
+        featureList.add(points1);
+        featureList.add(points2);
+        featureList.add(points3);
 
         workTree.insert(pointsName, featureList.iterator(), false, new NullProgressListener(),
                 null, 3);
 
-        featureList = new LinkedList<RevFeature>();
-        featureList.add(new GeoToolsRevFeature(lines1));
-        featureList.add(new GeoToolsRevFeature(lines2));
-        featureList.add(new GeoToolsRevFeature(lines3));
+        featureList = new LinkedList<Feature>();
+        featureList.add(lines1);
+        featureList.add(lines2);
+        featureList.add(lines3);
 
         workTree.insert(linesName, featureList.iterator(), false, new NullProgressListener(), null,
                 3);
@@ -458,18 +456,18 @@ public class WorkingTreeTest extends RepositoryTestCase {
 
     @Test
     public void testGetFeatureTypeNames() throws Exception {
-        List<RevFeature> featureList = new LinkedList<RevFeature>();
-        featureList.add(new GeoToolsRevFeature(points1));
-        featureList.add(new GeoToolsRevFeature(points2));
-        featureList.add(new GeoToolsRevFeature(points3));
+        List<Feature> featureList = new LinkedList<Feature>();
+        featureList.add(points1);
+        featureList.add(points2);
+        featureList.add(points3);
 
         workTree.insert(pointsName, featureList.iterator(), false, new NullProgressListener(),
                 null, 3);
 
-        featureList = new LinkedList<RevFeature>();
-        featureList.add(new GeoToolsRevFeature(lines1));
-        featureList.add(new GeoToolsRevFeature(lines2));
-        featureList.add(new GeoToolsRevFeature(lines3));
+        featureList = new LinkedList<Feature>();
+        featureList.add(lines1);
+        featureList.add(lines2);
+        featureList.add(lines3);
 
         workTree.insert(linesName, featureList.iterator(), false, new NullProgressListener(), null,
                 3);

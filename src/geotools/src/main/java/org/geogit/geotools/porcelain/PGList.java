@@ -13,7 +13,6 @@ import org.geogit.cli.CLICommand;
 import org.geogit.cli.GeogitCLI;
 import org.geogit.geotools.plumbing.GeoToolsOpException;
 import org.geogit.geotools.plumbing.ListOp;
-
 import org.geotools.data.DataStore;
 import org.geotools.jdbc.JDBCDataStore;
 

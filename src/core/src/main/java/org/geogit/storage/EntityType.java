@@ -1,8 +1,8 @@
 /* Copyright (c) 2011 TOPP - www.openplans.org. All rights reserved.
- * This code is licensed under the LGPL 2.0 license, available at the root
+ * This code is licensed under the LGPL 2.1 license, available at the root
  * application directory.
  */
-package org.geogit.storage.hessian;
+package org.geogit.storage;
 
 import java.io.Serializable;
 import java.math.BigDecimal;
@@ -20,18 +20,12 @@ import com.vividsolutions.jts.geom.Geometry;
  * 
  * @author mleslie
  */
-@SuppressWarnings("rawtypes")
-enum GtEntityType implements Serializable {
-    STRING(0, String.class), BOOLEAN(1, Boolean.class), BYTE(2, Byte.class), DOUBLE(3, Double.class), BIGDECIMAL(
-            4, BigDecimal.class), FLOAT(5, Float.class), INT(6, Integer.class), BIGINT(7,
-            BigInteger.class), LONG(8, Long.class), BOOLEAN_ARRAY(11, boolean[].class), BYTE_ARRAY(
-            12, byte[].class), CHAR_ARRAY(13, char[].class), DOUBLE_ARRAY(14, double[].class), FLOAT_ARRAY(
-            15, float[].class), INT_ARRAY(16, int[].class), LONG_ARRAY(17, long[].class), GEOMETRY(
-            9, Geometry.class), NULL(10, null), UNKNOWN_SERIALISABLE(18, Serializable.class), UNKNOWN(
-            19, null), UUID(20, java.util.UUID.class), DATE_UTIL(21, java.util.Date.class), DATE_SQL(
-            22, java.sql.Date.class);
+public enum EntityType implements Serializable {
+    STRING(0), BOOLEAN(1), BYTE(2), DOUBLE(3), BIGDECIMAL(4), FLOAT(5), INT(6), BIGINT(7), LONG(8), BOOLEAN_ARRAY(
+            11), BYTE_ARRAY(12), CHAR_ARRAY(13), DOUBLE_ARRAY(14), FLOAT_ARRAY(15), INT_ARRAY(16), LONG_ARRAY(
+            17), GEOMETRY(9), NULL(10), UNKNOWN_SERIALISABLE(18), UNKNOWN(19), UUID(20);
 
-    public static GtEntityType determineType(Object value) {
+    public static EntityType determineType(Object value) {
         if (value == null)
             return NULL;
         if (value instanceof String)
@@ -70,10 +64,6 @@ enum GtEntityType implements Serializable {
             return UUID;
         if (value instanceof Geometry)
             return GEOMETRY;
-        if (value instanceof java.util.Date)
-            return DATE_UTIL;
-        if (value instanceof java.sql.Date)
-            return DATE_SQL;
         if (value instanceof Serializable)
             return UNKNOWN_SERIALISABLE;
         return UNKNOWN;
@@ -81,38 +71,12 @@ enum GtEntityType implements Serializable {
 
     private int value;
 
-    private Class binding;
-
-    private GtEntityType(int value, Class binding) {
+    private EntityType(int value) {
         this.value = value;
-        this.binding = binding;
     }
 
     public int getValue() {
         return this.value;
-    }
-
-    public Class getBinding() {
-        return this.binding;
-    }
-
-    @SuppressWarnings("unchecked")
-    public static GtEntityType fromBinding(Class cls) {
-        if (cls == null)
-            return NULL;
-        /*
-         * We're handling equality first, as some entity types are top-level catch-alls, and we
-         * can't rely on processing order to ensure the more specific cases are handled first.
-         */
-        for (GtEntityType type : GtEntityType.values()) {
-            if (type.binding != null && type.binding.equals(cls))
-                return type;
-        }
-        for (GtEntityType type : GtEntityType.values()) {
-            if (type.binding != null && type.binding.isAssignableFrom(cls))
-                return type;
-        }
-        return UNKNOWN;
     }
 
     /**
@@ -121,11 +85,10 @@ enum GtEntityType implements Serializable {
      * @param value The value of the desired EntityType, as read from the blob
      * @return The correct EntityType for the value, or null if none is found.
      */
-    public static GtEntityType fromValue(int value) {
-        for (GtEntityType type : GtEntityType.values()) {
-            if (type.value == value) {
+    public static EntityType fromValue(int value) {
+        for (EntityType type : EntityType.values()) {
+            if (type.value == value)
                 return type;
-            }
         }
         return null;
     }

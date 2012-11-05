@@ -72,25 +72,19 @@ public interface ObjectSerialisingFactory {
     public ObjectWriter<RevFeature> createFeatureWriter(final RevFeature feature);
 
     /**
-     * Creates an instance of a Feature reader that can parse features of the given feature type.
+     * Creates an instance of a Feature reader that can parse features.
      * 
-     * @param featureType FeatureType description of the feature to be read
-     * @param featureId String representation of the feature id
      * @return feature reader
      */
-    public ObjectReader<RevFeature> createFeatureReader(final RevFeatureType featureType,
-            final String featureId);
+    public ObjectReader<RevFeature> createFeatureReader();
 
     /**
-     * Creates an instance of a Feature reader that can parse features of the given feature type.
+     * Creates an instance of a Feature reader that can parse features.
      * 
-     * @param featureType FeatureType description of the feature to be read
-     * @param featureId String representation of the feature id
      * @param hints feature creation hints
      * @return feature reader
      */
-    public ObjectReader<RevFeature> createFeatureReader(final RevFeatureType featureType,
-            final String featureId, final Map<String, Serializable> hints);
+    public ObjectReader<RevFeature> createFeatureReader(final Map<String, Serializable> hints);
 
     /**
      * Creates a BlobPrinter that can parse serialised elements into a human-readable(ish)
