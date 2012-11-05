@@ -10,10 +10,18 @@ import org.geogit.cli.CLIModule;
 import com.google.inject.Binder;
 
 /**
- *
+ * Provides bindings for geotools command extensions to the GeoGit command line interface.
+ * 
+ * @author jgarrett
+ * @see PGCommandProxy
+ * @see ShpCommandProxy
  */
 public class GeoToolsModule implements CLIModule {
 
+    /**
+     * 
+     * @see org.geogit.cli.CLIModule#configure()
+     */
     @Override
     public void configure(Binder binder) {
         binder.bind(PGCommandProxy.class);

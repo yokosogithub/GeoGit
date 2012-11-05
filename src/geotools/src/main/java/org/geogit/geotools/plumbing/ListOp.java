@@ -16,12 +16,20 @@ import org.opengis.feature.type.Name;
 import com.google.common.base.Optional;
 
 /**
- *
+ * Internal operation for listing tables from a GeoTools {@link DataStore}.
+ * 
+ * @author jgarrett
+ * @see DataStore
  */
 public class ListOp extends AbstractGeoGitOp<Optional<List<String>>> {
 
     private DataStore dataStore;
 
+    /**
+     * Executes the list operation on the provided data store.
+     * 
+     * @return a list of all tables, or Optional.absent() if none were found
+     */
     @Override
     public Optional<List<String>> call() {
         if (dataStore == null) {
@@ -51,11 +59,18 @@ public class ListOp extends AbstractGeoGitOp<Optional<List<String>>> {
         return Optional.of(features);
     }
 
+    /**
+     * @param dataStore the data store to use for the import process
+     * @return this
+     */
     public ListOp setDataStore(DataStore dataStore) {
         this.dataStore = dataStore;
         return this;
     }
 
+    /**
+     * @return the data store that has been set
+     */
     public DataStore getDataStore() {
         return dataStore;
     }

@@ -21,14 +21,28 @@ import com.beust.jcommander.Parameters;
 import com.google.common.base.Optional;
 
 /**
- *
+ * Describes a table from a PostGIS database.
+ * 
+ * PostGIS CLI proxy for {@link DescribeOp}
+ * 
+ * @author jgarrett
+ * @see DescribeOp
  */
 @Parameters(commandNames = "describe", commandDescription = "Describe a PostGIS table")
 public class PGDescribe extends AbstractPGCommand implements CLICommand {
 
+    /**
+     * Table to describe.
+     */
     @Parameter(names = { "--table", "-t" }, description = "Table to describe.", required = true)
     public String table = "";
 
+    /**
+     * Executes the describe command using the provided options.
+     * 
+     * @param cli
+     * @see org.geogit.cli.AbstractPGCommand#runInternal(org.geogit.cli.GeogitCLI)
+     */
     @Override
     protected void runInternal(GeogitCLI cli) throws Exception {
         if (cli.getGeogit() == null) {

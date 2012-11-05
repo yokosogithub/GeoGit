@@ -12,8 +12,14 @@ import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameters;
 
 /**
- * {@link CLICommandExtension} that provides a {@link JCommander} for shp specific commands.
+ * {@link CLICommandExtension} that provides a {@link JCommander} for shapefile specific commands.
+ * <p>
+ * Usage:
+ * <ul>
+ * <li> {@code geogit shp <command> <args>...]}
+ * </ul>
  * 
+ * @author jgarrett
  * @see ShpImport
  */
 @Parameters(commandNames = "shp", commandDescription = "GeoGit/Shapefile integration utilities")

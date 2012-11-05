@@ -8,25 +8,45 @@ package org.geogit.geotools.porcelain;
 import com.beust.jcommander.Parameter;
 
 /**
- *
+ * Common arguments for PostGIS porcelain commands.
+ * 
+ * @author jgarrett
  */
 public class PGCommonArgs {
 
+    /**
+     * Machine name or IP address to connect to. Default: localhost
+     */
     @Parameter(names = "--host", description = "Machine name or IP address to connect to. Default: localhost")
     public String host = "localhost";
 
-    @Parameter(names = "--port", description = "Port number to connect to.  Default: 5432.")
+    /**
+     * Port number to connect to. Default: 5432
+     */
+    @Parameter(names = "--port", description = "Port number to connect to.  Default: 5432")
     public Integer port = 5432;
 
+    /**
+     * The database schema to access. Default: public
+     */
     @Parameter(names = "--schema", description = "The database schema to access.  Default: public")
     public String schema = "public";
 
+    /**
+     * The databse to connect to. Default: database
+     */
     @Parameter(names = "--database", description = "The databse to connect to.  Default: database")
     public String database = "database";
 
+    /**
+     * User name. Default: postgres
+     */
     @Parameter(names = "--user", description = "User name.  Default: postgres")
     public String username = "postgres";
 
+    /**
+     * Password. Default: <no password>
+     */
     @Parameter(names = "--password", description = "Password.  Default: <no password>")
     public String password = "";
 

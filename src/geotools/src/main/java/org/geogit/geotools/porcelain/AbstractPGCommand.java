@@ -21,20 +21,37 @@ import com.beust.jcommander.ParametersDelegate;
 import com.beust.jcommander.internal.Maps;
 
 /**
- * A template command; provides out of the box support for the --help argument so far.
+ * A template for PostGIS commands; provides out of the box support for the --help argument so far.
  * 
+ * @author jgarrett
+ * @see CLICommand
  */
 public abstract class AbstractPGCommand implements CLICommand {
 
+    /**
+     * Flag for displaying help for the command.
+     */
     @Parameter(names = "--help", help = true, hidden = true)
     public boolean help;
 
+    /**
+     * Common arguments for PostGIS commands.
+     * 
+     * @see PGCommonArgs
+     */
     @ParametersDelegate
     public PGCommonArgs commonArgs = new PGCommonArgs();
 
+    /**
+     * Factory for constructing the data store.
+     * 
+     * @see PostgisNGDataStoreFactory
+     */
     public AbstractDataStoreFactory dataStoreFactory = new PostgisNGDataStoreFactory();
 
     /**
+     * Executes the command.
+     * 
      * @param cli
      * @throws Exception
      * @see org.geogit.cli.CLICommand#run(org.geogit.cli.GeogitCLI)
@@ -58,6 +75,13 @@ public abstract class AbstractPGCommand implements CLICommand {
      */
     protected abstract void runInternal(GeogitCLI cli) throws Exception;
 
+    /**
+     * Constructs a new PostGIS data store using connection parameters from {@link PGCommonArgs}.
+     * 
+     * @return the constructed data store
+     * @throws Exception
+     * @see DataStore
+     */
     protected DataStore getDataStore() throws Exception {
         Map<String, Serializable> params = Maps.newHashMap();
         params.put(PostgisNGDataStoreFactory.DBTYPE.key, "postgis");

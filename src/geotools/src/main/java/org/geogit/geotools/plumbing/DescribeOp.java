@@ -21,7 +21,10 @@ import org.opengis.feature.type.PropertyDescriptor;
 import com.google.common.base.Optional;
 
 /**
- *
+ * Internal operation for describing a table from a GeoTools {@link DataStore}.
+ * 
+ * @author jgarrett
+ * @see DataStore
  */
 public class DescribeOp extends AbstractGeoGitOp<Optional<Map<String, String>>> {
 
@@ -29,6 +32,11 @@ public class DescribeOp extends AbstractGeoGitOp<Optional<Map<String, String>>> 
 
     private DataStore dataStore;
 
+    /**
+     * Describes a table from the data store that has been assigned.
+     * 
+     * @return a map that contains all properties and their types from the provided table
+     */
     @Override
     public Optional<Map<String, String>> call() {
         if (dataStore == null) {
@@ -77,20 +85,36 @@ public class DescribeOp extends AbstractGeoGitOp<Optional<Map<String, String>>> 
         return Optional.of(propertyMap);
     }
 
+    /**
+     * @param table the table to describe
+     * @return this
+     */
     public DescribeOp setTable(String table) {
         this.table = table;
         return this;
     }
 
+    /**
+     * @return the table that is currently set
+     */
     public String getTable() {
         return table;
     }
 
+    /**
+     * @param dataStore the data store that contains the table to describe
+     * @return this
+     * @see DataStore
+     */
     public DescribeOp setDataStore(DataStore dataStore) {
         this.dataStore = dataStore;
         return this;
     }
 
+    /**
+     * @return the data store that is currently set
+     * @see DataStore
+     */
     public DataStore getDataStore() {
         return dataStore;
     }

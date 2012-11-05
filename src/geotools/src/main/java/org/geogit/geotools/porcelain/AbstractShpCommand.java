@@ -20,17 +20,30 @@ import com.beust.jcommander.Parameters;
 import com.beust.jcommander.internal.Maps;
 
 /**
- * A template command; provides out of the box support for the --help argument so far.
+ * A template for shapefile commands; provides out of the box support for the --help argument so
+ * far.
  * 
+ * @author jgarrett
+ * @see CLICommand
  */
 public abstract class AbstractShpCommand implements CLICommand {
 
+    /**
+     * Flag for displaying help for the command.
+     */
     @Parameter(names = "--help", help = true, hidden = true)
     public boolean help;
 
+    /**
+     * Factory for constructing the data store.
+     * 
+     * @see ShapefileDataStoreFactory
+     */
     public AbstractDataStoreFactory dataStoreFactory = new ShapefileDataStoreFactory();
 
     /**
+     * Executes the command.
+     * 
      * @param cli
      * @throws Exception
      * @see org.geogit.cli.CLICommand#run(org.geogit.cli.GeogitCLI)
@@ -54,6 +67,14 @@ public abstract class AbstractShpCommand implements CLICommand {
      */
     protected abstract void runInternal(GeogitCLI cli) throws Exception;
 
+    /**
+     * Constructs a new shapefile data store using the specified shapefile.
+     * 
+     * @param shapefile the url of the shapefile to use in creating the data store
+     * @return the constructed data store
+     * @throws Exception
+     * @see DataStore
+     */
     protected DataStore getDataStore(String shapefile) throws Exception {
         Map<String, Serializable> params = Maps.newHashMap();
         params.put(ShapefileDataStoreFactory.URLP.key, shapefile);

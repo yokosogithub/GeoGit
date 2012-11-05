@@ -38,6 +38,12 @@ public class RevParse extends AbstractCommand {
     @Parameter(names = "--is-inside-work-tree", description = "Check if the current directory is inside a geogit repository and print out the repository location")
     private boolean is_inside_work_tree;
 
+    /**
+     * Executes the rev-parse command using the provided options.
+     * 
+     * @param cli
+     * @see org.geogit.cli.AbstractCommand#runInternal(org.geogit.cli.GeogitCLI)
+     */
     @Override
     protected void runInternal(GeogitCLI cli) throws Exception {
         GeoGIT geogit = cli.getGeogit();

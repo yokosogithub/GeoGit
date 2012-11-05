@@ -20,11 +20,22 @@ import com.beust.jcommander.Parameters;
 import com.google.common.base.Optional;
 
 /**
- *
+ * Lists tables from a PostGIS database.
+ * 
+ * PostGIS CLI proxy for {@link ListOp}
+ * 
+ * @author jgarrett
+ * @see ListOp
  */
 @Parameters(commandNames = "list", commandDescription = "List available feature types in a database")
 public class PGList extends AbstractPGCommand implements CLICommand {
 
+    /**
+     * Executes the list command using the provided options.
+     * 
+     * @param cli
+     * @see org.geogit.cli.AbstractPGCommand#runInternal(org.geogit.cli.GeogitCLI)
+     */
     @Override
     protected void runInternal(GeogitCLI cli) throws Exception {
         if (cli.getGeogit() == null) {

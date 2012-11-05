@@ -19,17 +19,34 @@ import com.beust.jcommander.Parameter;
 import com.beust.jcommander.Parameters;
 
 /**
- *
+ * Imports one or more tables from a PostGIS database.
+ * 
+ * PostGIS CLI proxy for {@link ImportOp}
+ * 
+ * @author jgarrett
+ * @see ImportOp
  */
 @Parameters(commandNames = "import", commandDescription = "Import PostGIS database")
 public class PGImport extends AbstractPGCommand implements CLICommand {
 
+    /**
+     * If this is set, only this table will be imported.
+     */
     @Parameter(names = { "--table", "-t" }, description = "Table to import.")
     public String table = "";
 
+    /**
+     * If this is set, all tables will be imported.
+     */
     @Parameter(names = "--all", description = "Import all tables.")
     public boolean all = false;
 
+    /**
+     * Executes the import command using the provided options.
+     * 
+     * @param cli
+     * @see org.geogit.cli.AbstractPGCommand#runInternal(org.geogit.cli.GeogitCLI)
+     */
     @Override
     protected void runInternal(GeogitCLI cli) throws Exception {
         if (cli.getGeogit() == null) {

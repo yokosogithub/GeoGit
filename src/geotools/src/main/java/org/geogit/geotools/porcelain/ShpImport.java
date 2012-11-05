@@ -18,14 +18,29 @@ import com.beust.jcommander.Parameter;
 import com.beust.jcommander.Parameters;
 
 /**
- *
+ * Imports features from one or more shapefiles.
+ * 
+ * PostGIS CLI proxy for {@link ImportOp}
+ * 
+ * @author groldan
+ * @author jgarrett
+ * @see ImportOp
  */
 @Parameters(commandNames = "import", commandDescription = "Import Shapefile")
 public class ShpImport extends AbstractShpCommand implements CLICommand {
 
+    /**
+     * Shapefiles to import.
+     */
     @Parameter(description = "<shapefile> [<shapefile>]...")
     List<String> shapeFile;
 
+    /**
+     * Executes the import command using the provided options.
+     * 
+     * @param cli
+     * @see org.geogit.cli.AbstractPGCommand#runInternal(org.geogit.cli.GeogitCLI)
+     */
     @Override
     protected void runInternal(GeogitCLI cli) throws Exception {
         if (cli.getGeogit() == null) {

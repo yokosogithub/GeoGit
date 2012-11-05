@@ -25,7 +25,11 @@ import com.google.common.collect.AbstractIterator;
 import com.google.inject.Inject;
 
 /**
- *
+ * Internal operation for importing tables from a GeoTools {@link DataStore}.
+ * 
+ * @author groldan
+ * @author jgarrett
+ * @see DataStore
  */
 public class ImportOp extends AbstractGeoGitOp<RevTree> {
 
@@ -37,11 +41,23 @@ public class ImportOp extends AbstractGeoGitOp<RevTree> {
 
     private WorkingTree workTree;
 
+    /**
+     * Constructs a new import operation with the given working tree.
+     * 
+     * @param workTree the working tree where features will be imported to
+     */
     @Inject
     public ImportOp(final WorkingTree workTree) {
         this.workTree = workTree;
     }
 
+    /**
+     * Executes the import operation using the parameters that have been specified. Features will be
+     * added to the working tree, and a new working tree will be constructed. Either {@code all} or
+     * {@code table}, but not both, must be set prior to the import process.
+     * 
+     * @return RevTree the new working tree
+     */
     @Override
     public RevTree call() {
         if (dataStore == null) {
@@ -116,29 +132,50 @@ public class ImportOp extends AbstractGeoGitOp<RevTree> {
         return workTree.getTree();
     }
 
+    /**
+     * @param all if this is set, all tables from the data store will be imported
+     * @return
+     */
     public ImportOp setAll(boolean all) {
         this.all = all;
         return this;
     }
 
+    /**
+     * @return whether or not the all flag has been set
+     */
     public boolean getAll() {
         return all;
     }
 
+    /**
+     * @param table if this is set, only the specified table will be imported from the data store
+     * @return this
+     */
     public ImportOp setTable(String table) {
         this.table = table;
         return this;
     }
 
+    /**
+     * @return the table that has been set, or null
+     */
     public String getTable() {
         return table;
     }
 
+    /**
+     * @param dataStore the data store to use for the import process
+     * @return this
+     */
     public ImportOp setDataStore(DataStore dataStore) {
         this.dataStore = dataStore;
         return this;
     }
 
+    /**
+     * @return the data store that has been set
+     */
     public DataStore getDataStore() {
         return dataStore;
     }
