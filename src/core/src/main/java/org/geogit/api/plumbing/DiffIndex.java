@@ -50,7 +50,7 @@ public class DiffIndex extends AbstractGeoGitOp<Iterator<DiffEntry>> {
 
     /**
      * @param pathFilter the path filter to use during the diff operation
-     * @return this
+     * @return {@code this}
      */
     public DiffIndex setFilter(@Nullable String pathFilter) {
         this.pathFilter = pathFilter;
@@ -61,7 +61,7 @@ public class DiffIndex extends AbstractGeoGitOp<Iterator<DiffEntry>> {
      * @param refSpec the name of the root tree object in the repository's object database to
      *        compare the index against. If {@code null} or not specified, defaults to the tree
      *        object of the current HEAD commit.
-     * @return this
+     * @return {@code this}
      */
     public DiffIndex setOldVersion(@Nullable String refSpec) {
         this.refSpec = refSpec;

@@ -14,8 +14,21 @@ import org.geogit.storage.ObjectReader;
 import com.caucho.hessian.io.Hessian2Input;
 import com.google.common.base.Throwables;
 
+/**
+ * Reads an object type from a binary encoded stream.
+ * 
+ * @see RevObject.TYPE
+ */
 class HessianObjectTypeReader extends HessianRevReader implements ObjectReader<RevObject.TYPE> {
 
+    /**
+     * Reads the {@link RevObject.TYPE} from the raw input stream.
+     * 
+     * @param id unused
+     * @param rawData the input stream to read from
+     * @return the type of the object in the input stream
+     * @throws IllegalArgumentException if the object type was unknown
+     */
     @Override
     public RevObject.TYPE read(ObjectId id, InputStream rawData) {
         Hessian2Input hin = new Hessian2Input(rawData);

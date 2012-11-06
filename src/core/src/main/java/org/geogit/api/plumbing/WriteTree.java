@@ -65,7 +65,7 @@ public class WriteTree extends AbstractGeoGitOp<ObjectId> {
 
     /**
      * @param oldRoot a supplier for the old root tree
-     * @return this
+     * @return {@code this}
      */
     public WriteTree setOldRoot(Supplier<RevTree> oldRoot) {
         this.oldRoot = oldRoot;

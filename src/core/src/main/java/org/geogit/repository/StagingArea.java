@@ -66,11 +66,10 @@ public interface StagingArea {
 
     /**
      * Discards any staged change.
-     * 
-     * @REVISIT: should this be implemented through ResetOp (GeoGIT.reset()) instead?
-     * @TODO: When we implement transaction management will be the time to discard any needed object
-     *        inserted to the database too
      */
+    // REVISIT: should this be implemented through ResetOp (GeoGIT.reset()) instead?
+    // TODO: When we implement transaction management will be the time to discard any needed object
+    // inserted to the database too
     public abstract void reset();
 
 }

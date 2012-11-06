@@ -18,13 +18,27 @@ import org.geogit.storage.RevSHA1Tree;
 import com.caucho.hessian.io.Hessian2Output;
 import com.google.common.base.Throwables;
 
+/**
+ * Writes a {@link RevTree tree} to a binary encoded stream.
+ */
+
 class HessianRevTreeWriter extends HessianRevWriter implements ObjectWriter<RevTree> {
     private final RevSHA1Tree tree;
 
+    /**
+     * Constructs a new {@code HessianRevTreeWriter} with the given {@link RevTree}.
+     * 
+     * @param tree the tree to write
+     */
     public HessianRevTreeWriter(RevTree tree) {
         this.tree = (RevSHA1Tree) tree;
     }
 
+    /**
+     * Writes the provided {@link RevTree} to the output stream.
+     * 
+     * @param the stream to write to
+     */
     @Override
     public void write(OutputStream out) throws IOException {
         RevTree revTree = this.tree;

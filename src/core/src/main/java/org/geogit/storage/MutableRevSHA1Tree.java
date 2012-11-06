@@ -21,12 +21,20 @@ import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Sets;
 
+/**
+ * Provides a mutable version of a {@link RevSHA1Tree}.
+ * 
+ * @see RevSHA1Tree
+ */
 class MutableRevSHA1Tree extends RevSHA1Tree implements MutableTree {
 
     // private BigInteger mutableSize;
 
     /**
      * Copy constructor
+     * 
+     * @param copy the tree to copy
+     * @param serialFactory the serialization factory
      */
     public MutableRevSHA1Tree(final RevSHA1Tree copy, final ObjectSerialisingFactory serialFactory) {
         super(copy.getId(), copy.db, copy.depth, serialFactory);
@@ -35,6 +43,13 @@ class MutableRevSHA1Tree extends RevSHA1Tree implements MutableTree {
         super.mySubTrees.putAll(copy.mySubTrees);
     }
 
+    /**
+     * Constructs a new {@code MutableRevSHA1Tree} with the provided parameters.
+     * 
+     * @param db the object database
+     * @param childOrder the child order
+     * @param serialFactory the serialization factory
+     */
     MutableRevSHA1Tree(ObjectDatabase db, int childOrder,
             final ObjectSerialisingFactory serialFactory) {
         super(db, childOrder, serialFactory);
@@ -50,6 +65,8 @@ class MutableRevSHA1Tree extends RevSHA1Tree implements MutableTree {
 
     /**
      * Overrides {@link RevSHA1Tree#isNormalized()} to account for the mutable state of this tree
+     * 
+     * @return {@code true} if the tree is normalized, {@code false} otherwise
      */
     @Override
     public boolean isNormalized() {
@@ -89,8 +106,7 @@ class MutableRevSHA1Tree extends RevSHA1Tree implements MutableTree {
      * 
      * -->
      * 
-     * @param key non null
-     * @param value non null
+     * @param ref node to add to the tree
      */
     @Override
     public void put(final NodeRef ref) {
@@ -117,6 +133,13 @@ class MutableRevSHA1Tree extends RevSHA1Tree implements MutableTree {
         }
     }
 
+    /**
+     * Removes the {@link NodeRef} that matches the given key.
+     * 
+     * @param key the NodeRef to remove
+     * @return an {@link Optional} of the NodeRef if it was removed, or {@link Optional#absent()} if
+     *         it wasn't found
+     */
     @Override
     public Optional<NodeRef> remove(final String key) {
         Preconditions.checkNotNull(key, "key can't be null");

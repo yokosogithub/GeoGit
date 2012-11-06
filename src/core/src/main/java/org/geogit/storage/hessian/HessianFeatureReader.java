@@ -37,6 +37,11 @@ class HessianFeatureReader implements ObjectReader<RevFeature> {
 
     private static GeometryFactory geometryFactory = new GeometryFactory();
 
+    /**
+     * Constructs a new {@code HessianFeatureReader} with the provided hints.
+     * 
+     * @param hints
+     */
     public HessianFeatureReader(final Map<String, Serializable> hints) {
         if (hints != null) {
             GeometryFactory gf = (GeometryFactory) hints.get(ObjectReader.JTS_GEOMETRY_FACTORY);
@@ -46,6 +51,16 @@ class HessianFeatureReader implements ObjectReader<RevFeature> {
         }
     }
 
+    /**
+     * Reads a {@link RevFeature} from the given input stream and assigns it the provided
+     * {@link ObjectId id}.
+     * 
+     * @param id the id to use for the feature
+     * @param rawData the input stream of the feature
+     * @return the final feature
+     * @throws IllegalArgumentException if the provided stream does not represent a
+     *         {@code RevFeature}
+     */
     public RevFeature read(ObjectId id, InputStream rawData) throws IllegalArgumentException {
         try {
             Hessian2Input in = new Hessian2Input(rawData);
@@ -69,6 +84,13 @@ class HessianFeatureReader implements ObjectReader<RevFeature> {
         }
     }
 
+    /**
+     * Reads an object from the input stream.
+     * 
+     * @param in the input stream
+     * @return the object that was read
+     * @throws IOException
+     */
     static Object readValue(final Hessian2Input in) throws IOException {
         EntityType type = EntityType.fromValue(in.readInt());
         if (type == null)

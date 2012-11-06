@@ -152,7 +152,7 @@ public class ConfigOp extends AbstractGeoGitOp<Optional<Map<String, String>>> {
     /**
      * @param global if true, config actions will be executed on the global configuration file. If
      *        false, then all actions will be done on the config file in the local repository.
-     * @return this
+     * @return {@code this}
      */
     public ConfigOp setGlobal(boolean global) {
         this.global = global;
@@ -168,7 +168,7 @@ public class ConfigOp extends AbstractGeoGitOp<Optional<Map<String, String>>> {
 
     /**
      * @param action the action to execute when the command is called.
-     * @return this
+     * @return {@code this}
      */
     public ConfigOp setAction(ConfigAction action) {
         this.action = action;
@@ -177,7 +177,7 @@ public class ConfigOp extends AbstractGeoGitOp<Optional<Map<String, String>>> {
 
     /**
      * @param name the variable name to act on
-     * @return this
+     * @return {@code this}
      */
     public ConfigOp setName(String name) {
         this.name = name;
@@ -193,7 +193,7 @@ public class ConfigOp extends AbstractGeoGitOp<Optional<Map<String, String>>> {
 
     /**
      * @param value the value to set
-     * @return this
+     * @return {@code this}
      */
     public ConfigOp setValue(String value) {
         this.value = value;

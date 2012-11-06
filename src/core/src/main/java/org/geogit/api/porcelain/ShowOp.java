@@ -44,7 +44,7 @@ public class ShowOp extends AbstractGeoGitOp<Void> {
 
     /**
      * @param out the stream to print the object to
-     * @return this
+     * @return {@code this}
      */
     public ShowOp setPrintStream(final PrintStream out) {
         this.out = out;
@@ -53,7 +53,7 @@ public class ShowOp extends AbstractGeoGitOp<Void> {
 
     /**
      * @param oid the id for the object to print
-     * @return this
+     * @return {@code this}
      */
     public ShowOp setObjectId(final ObjectId oid) {
         this.oid = oid;

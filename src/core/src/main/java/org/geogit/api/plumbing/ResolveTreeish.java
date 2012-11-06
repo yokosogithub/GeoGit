@@ -27,7 +27,7 @@ public class ResolveTreeish extends AbstractGeoGitOp<Optional<ObjectId>> {
 
     /**
      * @param treeishRefSpec a ref spec that ultimately resolves to a tree id
-     * @return this
+     * @return {@code this}
      */
     public ResolveTreeish setTreeish(String treeishRefSpec) {
         checkNotNull(treeishRefSpec);
@@ -39,7 +39,7 @@ public class ResolveTreeish extends AbstractGeoGitOp<Optional<ObjectId>> {
     /**
      * @param treeish an object id that ultimately resolves to a tree id (i.e. a commit id, a tree
      *        id)
-     * @return this
+     * @return {@code this}
      */
     public ResolveTreeish setTreeish(ObjectId treeish) {
         checkNotNull(treeish);
@@ -52,7 +52,7 @@ public class ResolveTreeish extends AbstractGeoGitOp<Optional<ObjectId>> {
      * Executes the command.
      * 
      * @return an {@link Optional} of the {@link ObjectId} that was resolved, or
-     *         {@code Optional.absent()} if it did not resolve.
+     *         {@link Optional#absent()} if it did not resolve.
      */
     @Override
     public Optional<ObjectId> call() {
@@ -71,7 +71,7 @@ public class ResolveTreeish extends AbstractGeoGitOp<Optional<ObjectId>> {
     /**
      * @param resolved an {@link Optional} with an ObjectId to resolve
      * @return an {@link Optional} of the {@link ObjectId} that was resolved, or
-     *         {@code Optional.absent()} if it did not resolve.
+     *         {@link Optional#absent()} if it did not resolve.
      */
     private Optional<ObjectId> call(Optional<ObjectId> resolved) {
         if (!resolved.isPresent()) {

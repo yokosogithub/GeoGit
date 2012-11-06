@@ -19,10 +19,20 @@ public class RawObjectWriter implements ObjectWriter<Object> {
 
     private final InputStream from;
 
+    /**
+     * Constructs a new {@code RawObjectWriter} with the given {@link InputStream}.
+     * 
+     * @param from the object input stream
+     */
     public RawObjectWriter(final InputStream from) {
         this.from = from;
     }
 
+    /**
+     * Writes the contents of the input stream to the given {@link OutputStream}.
+     * 
+     * @param out the output stream to write to
+     */
     @Override
     public void write(OutputStream out) throws IOException {
         int c;

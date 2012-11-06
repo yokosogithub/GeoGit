@@ -87,7 +87,7 @@ public class DescribeOp extends AbstractGeoGitOp<Optional<Map<String, String>>> 
 
     /**
      * @param table the table to describe
-     * @return this
+     * @return {@code this}
      */
     public DescribeOp setTable(String table) {
         this.table = table;
@@ -103,7 +103,7 @@ public class DescribeOp extends AbstractGeoGitOp<Optional<Map<String, String>>> 
 
     /**
      * @param dataStore the data store that contains the table to describe
-     * @return this
+     * @return {@code this}
      * @see DataStore
      */
     public DescribeOp setDataStore(DataStore dataStore) {

@@ -56,7 +56,7 @@ public class DiffWorkTree extends AbstractGeoGitOp<Iterator<DiffEntry>> {
     /**
      * @param refSpec the name of the root tree object in the to compare the working tree against.
      *        If {@code null} or not specified, defaults to the current state of the index.
-     * @return this
+     * @return {@code this}
      */
     public DiffWorkTree setOldVersion(@Nullable String refSpec) {
         this.refSpec = refSpec;
@@ -65,7 +65,7 @@ public class DiffWorkTree extends AbstractGeoGitOp<Iterator<DiffEntry>> {
 
     /**
      * @param path the path filter to use during the diff operation
-     * @return this
+     * @return {@code this}
      */
     public DiffWorkTree setFilter(@Nullable String path) {
         pathFilter = path;

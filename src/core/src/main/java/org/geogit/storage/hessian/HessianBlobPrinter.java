@@ -29,6 +29,11 @@ import com.caucho.hessian.io.Hessian2Input;
 import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.io.WKTWriter;
 
+/**
+ * Provides a blob printer for printing objects stored in hessian.
+ * 
+ * @see BlobPrinter
+ */
 class HessianBlobPrinter extends HessianRevReader implements BlobPrinter {
 
     /**
@@ -45,16 +50,33 @@ class HessianBlobPrinter extends HessianRevReader implements BlobPrinter {
      */
     boolean startNew;
 
+    /**
+     * Constructs a new {@code HessianBlobPrinter}.
+     */
     public HessianBlobPrinter() {
         entityStack = new Stack<EntityState>();
         startNew = false;
     }
 
+    /**
+     * Prints the contents of the provided byte array to the PrintStream in an xml-based format.
+     * 
+     * @param rawBlob the blob to print
+     * @param out the output stream
+     * @throws IOException
+     */
     @Override
     public void print(byte[] rawBlob, PrintStream out) throws IOException {
         print(new ByteArrayInputStream(rawBlob), out);
     }
 
+    /**
+     * Prints the contents of the provided InputStream to the PrintStream in an xml-based format.
+     * 
+     * @param rawBlob an input stream of a blob
+     * @param out the output stream
+     * @throws IOException
+     */
     @Override
     public void print(InputStream rawBlob, PrintStream out) throws IOException {
         Hessian2Input hin = new Hessian2Input(rawBlob);
@@ -70,6 +92,8 @@ class HessianBlobPrinter extends HessianRevReader implements BlobPrinter {
             break;
         case COMMIT:
             printCommit(hin, out);
+            break;
+        default:
             break;
         }
 

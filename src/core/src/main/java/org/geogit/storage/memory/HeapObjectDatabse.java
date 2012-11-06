@@ -15,13 +15,17 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
 /**
- *
+ * Provides an implementation of a GeoGit object database that utilizes the heap for the storage of
+ * objects.
+ * 
+ * @see AbstractObjectDatabase
  */
 public class HeapObjectDatabse extends AbstractObjectDatabase implements ObjectDatabase {
 
     private Map<ObjectId, byte[]> objects;
 
     /**
+     * Closes the database.
      * 
      * @see org.geogit.storage.ObjectDatabase#close()
      */
@@ -33,14 +37,16 @@ public class HeapObjectDatabse extends AbstractObjectDatabase implements ObjectD
         }
     }
 
+    /**
+     * @return true if the database is open, false otherwise
+     */
     @Override
     public boolean isOpen() {
         return objects != null;
     }
 
     /**
-     * 
-     * @see org.geogit.storage.ObjectDatabase#open()
+     * Opens the database for use by GeoGit.
      */
     @Override
     public void open() {
@@ -52,9 +58,10 @@ public class HeapObjectDatabse extends AbstractObjectDatabase implements ObjectD
     }
 
     /**
-     * @param id
-     * @return
-     * @see org.geogit.storage.ObjectDatabase#exists(org.geogit.api.ObjectId)
+     * Determines if the given {@link ObjectId} exists in the object database.
+     * 
+     * @param id the id to search for
+     * @return true if the object exists, false otherwise
      */
     @Override
     public boolean exists(ObjectId id) {
@@ -62,9 +69,10 @@ public class HeapObjectDatabse extends AbstractObjectDatabase implements ObjectD
     }
 
     /**
-     * @param objectId
-     * @return
-     * @see org.geogit.storage.ObjectDatabase#delete(org.geogit.api.ObjectId)
+     * Deletes the object with the provided {@link ObjectId id} from the database.
+     * 
+     * @param objectId the id of the object to delete
+     * @return true if the object was deleted, false if it was not found
      */
     @Override
     public boolean delete(ObjectId objectId) {
@@ -81,6 +89,12 @@ public class HeapObjectDatabse extends AbstractObjectDatabase implements ObjectD
         throw new UnsupportedOperationException("we override lookup directly");
     }
 
+    /**
+     * Searches the database for {@link ObjectId}s that match the given partial id.
+     * 
+     * @param partialId the partial id to search for
+     * @return a list of matching results
+     */
     @Override
     public List<ObjectId> lookUp(final String partialId) {
         Preconditions.checkNotNull(partialId);

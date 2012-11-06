@@ -38,7 +38,7 @@ public class UpdateSymRef extends AbstractGeoGitOp<Optional<SymRef>> {
      * Constructs a new {@code UpdateSymRef} operation with the given {@link RefDatabase reference
      * database}.
      * 
-     * @param refDb
+     * @param refDb the reference database to use
      */
     @Inject
     public UpdateSymRef(RefDatabase refDb) {
@@ -47,7 +47,7 @@ public class UpdateSymRef extends AbstractGeoGitOp<Optional<SymRef>> {
 
     /**
      * @param name the name of the ref to update
-     * @return this
+     * @return {@code this}
      */
     public UpdateSymRef setName(String name) {
         this.name = name;
@@ -58,7 +58,7 @@ public class UpdateSymRef extends AbstractGeoGitOp<Optional<SymRef>> {
      * @param newValue the value to set the reference to. It can be an object id
      *        {@link ObjectId#toString() hash code} or a symbolic name such as
      *        {@code "refs/origin/master"}
-     * @return this
+     * @return {@code this}
      */
     public UpdateSymRef setNewValue(String newValue) {
         this.newValue = newValue;
@@ -68,7 +68,7 @@ public class UpdateSymRef extends AbstractGeoGitOp<Optional<SymRef>> {
     /**
      * @param oldValue if provided, the operation will fail if the current ref value doesn't match
      *        {@code oldValue}
-     * @return this
+     * @return {@code this}
      */
     public UpdateSymRef setOldValue(String oldValue) {
         this.oldValue = oldValue;
@@ -77,7 +77,7 @@ public class UpdateSymRef extends AbstractGeoGitOp<Optional<SymRef>> {
 
     /**
      * @param delete if {@code true}, the ref will be deleted
-     * @return this
+     * @return {@code this}
      */
     public UpdateSymRef setDelete(boolean delete) {
         this.delete = delete;
@@ -86,9 +86,9 @@ public class UpdateSymRef extends AbstractGeoGitOp<Optional<SymRef>> {
 
     /**
      * @param reason if provided, the ref log will be updated with this reason message
-     * @return this
-     * @TODO: reflog not yet implemented
+     * @return {@code this}
      */
+    // TODO: reflog not yet implemented
     public UpdateSymRef setReason(String reason) {
         this.reason = reason;
         return this;

@@ -51,7 +51,7 @@ public class DiffTree extends AbstractGeoGitOp<Iterator<DiffEntry>> {
 
     /**
      * @param oldRefSpec the ref that points to the "old" version
-     * @return this
+     * @return {@code this}
      */
     public DiffTree setOldVersion(String oldRefSpec) {
         this.oldRefSpec = oldRefSpec;
@@ -60,7 +60,7 @@ public class DiffTree extends AbstractGeoGitOp<Iterator<DiffEntry>> {
 
     /**
      * @param newRefSpec the ref that points to the "new" version
-     * @return this
+     * @return {@code this}
      */
     public DiffTree setNewVersion(String newRefSpec) {
         this.newRefSpec = newRefSpec;
@@ -69,7 +69,7 @@ public class DiffTree extends AbstractGeoGitOp<Iterator<DiffEntry>> {
 
     /**
      * @param oldTreeId the {@link ObjectId} of the "old" tree
-     * @return this
+     * @return {@code this}
      */
     public DiffTree setOldTree(ObjectId oldTreeId) {
         this.oldRefSpec = oldTreeId.toString();
@@ -78,7 +78,7 @@ public class DiffTree extends AbstractGeoGitOp<Iterator<DiffEntry>> {
 
     /**
      * @param newTreeId the {@link ObjectId} of the "new" tree
-     * @return this
+     * @return {@code this}
      */
     public DiffTree setNewTree(ObjectId newTreeId) {
         this.newRefSpec = newTreeId.toString();
@@ -87,7 +87,7 @@ public class DiffTree extends AbstractGeoGitOp<Iterator<DiffEntry>> {
 
     /**
      * @param path the path filter to use during the diff operation
-     * @return this
+     * @return {@code this}
      */
     public DiffTree setFilterPath(String path) {
         this.path = path;

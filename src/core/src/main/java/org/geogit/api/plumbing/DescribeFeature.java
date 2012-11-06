@@ -28,7 +28,7 @@ public class DescribeFeature extends AbstractGeoGitOp<ImmutableSortedSet<Propert
 
     /**
      * @param feature the feature to describe
-     * @return this
+     * @return {@code this}
      */
     public DescribeFeature setFeature(RevFeature feature) {
         this.feature = feature;
@@ -37,7 +37,7 @@ public class DescribeFeature extends AbstractGeoGitOp<ImmutableSortedSet<Propert
 
     /**
      * @param featureType the {@link FeatureType} associated with this feature
-     * @return this
+     * @return {@code this}
      */
     public DescribeFeature setFeatureType(FeatureType featureType) {
         this.featureType = featureType;

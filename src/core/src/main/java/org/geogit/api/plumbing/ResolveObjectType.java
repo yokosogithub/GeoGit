@@ -39,7 +39,7 @@ public class ResolveObjectType extends AbstractGeoGitOp<RevObject.TYPE> {
 
     /**
      * @param oid the {@link ObjectId object id} of the object to check
-     * @return this
+     * @return {@code this}
      */
     public ResolveObjectType setObjectId(ObjectId oid) {
         this.oid = oid;
@@ -49,7 +49,7 @@ public class ResolveObjectType extends AbstractGeoGitOp<RevObject.TYPE> {
     /**
      * Executes the command.
      * 
-     * @return the {@link RevObject.TYPE type} of the object specified by the object id.
+     * @return the type of the object specified by the object id.
      * @throws IllegalArgumentException if the object doesn't exist
      */
     @Override

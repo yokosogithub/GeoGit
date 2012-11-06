@@ -62,7 +62,7 @@ public class FindTreeChild extends AbstractGeoGitOp<Optional<NodeRef>> {
     /**
      * @param indexDb whether to look up in the {@link StagingDatabase index db} ({@code true}) or
      *        on the repository's {@link ObjectDatabase object database} (default)
-     * @return this
+     * @return {@code this}
      */
     public FindTreeChild setIndex(final boolean indexDb) {
         this.indexDb = indexDb;
@@ -72,7 +72,7 @@ public class FindTreeChild extends AbstractGeoGitOp<Optional<NodeRef>> {
     /**
      * @param tree a supplier that resolves to the tree where to start the search for the nested
      *        child. If not supplied the current HEAD tree is assumed.
-     * @return this
+     * @return {@code this}
      */
     public FindTreeChild setParent(Supplier<RevTree> tree) {
         this.parent = tree;
@@ -81,7 +81,7 @@ public class FindTreeChild extends AbstractGeoGitOp<Optional<NodeRef>> {
 
     /**
      * @param tree the tree to search for the nested child
-     * @return this
+     * @return {@code this}
      */
     public FindTreeChild setParent(RevTree tree) {
         this.parent = Suppliers.ofInstance(tree);
@@ -90,7 +90,7 @@ public class FindTreeChild extends AbstractGeoGitOp<Optional<NodeRef>> {
 
     /**
      * @param parentPath the parent's path. If not given parent is assumed to be a root tree.
-     * @return this
+     * @return {@code this}
      */
     public FindTreeChild setParentPath(String parentPath) {
         this.parentPath = parentPath;
@@ -99,7 +99,7 @@ public class FindTreeChild extends AbstractGeoGitOp<Optional<NodeRef>> {
 
     /**
      * @param childPath the full path of the subtree to look for
-     * @return this
+     * @return {@code this}
      */
     public FindTreeChild setChildPath(String childPath) {
         this.childPath = childPath;
@@ -110,7 +110,7 @@ public class FindTreeChild extends AbstractGeoGitOp<Optional<NodeRef>> {
      * Executes the command.
      * 
      * @return an {@code Optional} that contains the NodeRef if it was found, or
-     *         {@code Optional.absent()} if it wasn't
+     *         {@link Optional#absent()} if it wasn't
      */
     @Override
     public Optional<NodeRef> call() {

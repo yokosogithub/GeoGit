@@ -35,7 +35,7 @@ import com.google.inject.Inject;
  * <li> {@link #setTimeRange(Range) timeRange}: return commits that fall in to the given time range.
  * <li> {@link #setSince(ObjectId) since}...{@link #setUntil(ObjectId) until}: Show only commits
  * between the named two commits.
- * <li> {@link #addPath(List) addPath}: Show only commits that affect any of the specified paths.
+ * <li> {@link #addPath(String) addPath}: Show only commits that affect the specified path.
  * </ul>
  * </p>
  * 
@@ -72,7 +72,7 @@ public class LogOp extends AbstractGeoGitOp<Iterator<RevCommit>> {
 
     /**
      * @param limit sets the limit for the amount of commits to show
-     * @return this
+     * @return {@code this}
      */
     public LogOp setLimit(int limit) {
         Preconditions.checkArgument(limit > 0, "limit shall be > 0: " + limit);
@@ -84,7 +84,7 @@ public class LogOp extends AbstractGeoGitOp<Iterator<RevCommit>> {
      * Indicates to return only commits newer than the given one ({@code since} is exclusive)
      * 
      * @param since the initial (oldest and exclusive) commit id, ({@code null} sets the default)
-     * @return this
+     * @return {@code this}
      * @see #setUntil(ObjectId)
      */
     public LogOp setSince(final ObjectId since) {
@@ -96,7 +96,7 @@ public class LogOp extends AbstractGeoGitOp<Iterator<RevCommit>> {
      * Indicates to return commits up to the provided one, inclusive.
      * 
      * @param until the final (newest and inclusive) commit id, ({@code null} sets the default)
-     * @return this
+     * @return {@code this}
      * @see #setSince(ObjectId)
      */
     public LogOp setUntil(ObjectId until) {
@@ -108,7 +108,7 @@ public class LogOp extends AbstractGeoGitOp<Iterator<RevCommit>> {
      * Show only commits that affect any of the specified paths.
      * 
      * @param path
-     * @return this
+     * @return {@code this}
      */
     public LogOp addPath(final String path) {
         Preconditions.checkNotNull(path);
@@ -124,7 +124,7 @@ public class LogOp extends AbstractGeoGitOp<Iterator<RevCommit>> {
      * Show only commits that lie within the specified time range.
      * 
      * @param commitRange time range to show commits from
-     * @return this
+     * @return {@code this}
      */
     public LogOp setTimeRange(final Range<Date> commitRange) {
         if (commitRange == null) {

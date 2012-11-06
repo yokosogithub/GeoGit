@@ -47,7 +47,7 @@ public class RefParse extends AbstractGeoGitOp<Optional<Ref>> {
 
     /**
      * @param name the name of the ref to parse
-     * @return this
+     * @return {@code this}
      */
     public RefParse setName(String name) {
         this.refSpec = name;
@@ -67,7 +67,7 @@ public class RefParse extends AbstractGeoGitOp<Optional<Ref>> {
      * </ul>
      * 
      * @return an {@code Optional} that contains a {@link Ref reference} or
-     *         {@code Optional.absent()} if revstr can't be resolved to any {@link ObjectId}
+     *         {@link Optional#absent()} if revstr can't be resolved to any {@link ObjectId}
      * @throws IllegalArgumentException if {@code refSpec} resolves to more than one ref on the same
      *         namespace
      */

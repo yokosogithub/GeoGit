@@ -21,6 +21,10 @@ import com.caucho.hessian.io.HessianProtocolException;
 import com.google.common.base.Throwables;
 import com.google.common.collect.Maps;
 
+/**
+ * Reads {@link RevTree trees} from a binary encoded stream.
+ * 
+ */
 class HessianRevTreeReader extends HessianRevReader implements ObjectReader<RevTree> {
 
     private ObjectDatabase objectDb;
@@ -29,16 +33,38 @@ class HessianRevTreeReader extends HessianRevReader implements ObjectReader<RevT
 
     private HessianFactory hessianFactory;
 
+    /**
+     * Constructs a new {@code HessianRevTreeReader} with the provided parameters.
+     * 
+     * @param objectDb the object database
+     * @param hessianFactory the serialization factory
+     */
     public HessianRevTreeReader(ObjectDatabase objectDb, HessianFactory hessianFactory) {
         this(objectDb, 0, hessianFactory);
     }
 
+    /**
+     * Constructs a new {@code HessianRevTreeReader} with the provided parameters
+     * 
+     * @param objectDb the object database
+     * @param order the depth
+     * @param hessianFactory the serialization factory
+     */
     public HessianRevTreeReader(ObjectDatabase objectDb, int order, HessianFactory hessianFactory) {
         this.objectDb = objectDb;
         this.order = order;
         this.hessianFactory = hessianFactory;
     }
 
+    /**
+     * Reads a {@link RevTree} from the given input stream and assigns it the provided
+     * {@link ObjectId id}.
+     * 
+     * @param id the id to use for the tree
+     * @param rawData the input stream of the tree
+     * @return the final tree
+     * @throws IllegalArgumentException if the provided stream does not represent a {@code RevTree}
+     */
     @Override
     public RevTree read(ObjectId id, InputStream rawData) throws IllegalArgumentException {
         Hessian2Input hin = new Hessian2Input(rawData);

@@ -18,10 +18,20 @@ import org.ini4j.Wini;
 import com.google.common.base.Optional;
 import com.google.inject.Inject;
 
+/**
+ * Provides a means of managing GeoGit configuration options through the use of an INI file.
+ * 
+ * @see ConfigDatabase
+ */
 public class IniConfigDatabase implements ConfigDatabase {
 
     final private Platform platform;
 
+    /**
+     * Constructs a new {@code IniConfigDatabase} with the given platform.
+     * 
+     * @param platform the platform to use
+     */
     @Inject
     public IniConfigDatabase(Platform platform) {
         this.platform = platform;

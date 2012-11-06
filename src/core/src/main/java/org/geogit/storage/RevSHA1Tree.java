@@ -27,13 +27,17 @@ import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
 import com.google.common.collect.Iterators;
 
+/**
+ * Provides an implementation of {@link RevTree}.
+ * 
+ * @see RevTree
+ */
 public class RevSHA1Tree extends AbstractRevObject implements RevTree {
 
     /**
-     * How many children to hold before splitting myself into subtrees
-     * 
-     * @todo make this configurable
+     * How many children to hold before splitting myself into subtrees.
      */
+    // TODO: make this configurable
     public static final int SPLIT_FACTOR = 64 * 1024;
 
     /**
@@ -63,21 +67,53 @@ public class RevSHA1Tree extends AbstractRevObject implements RevTree {
 
     protected final ObjectSerialisingFactory serialFactory;
 
+    /**
+     * Constructs a new {@code RevSHA1Tree} with the provided parameters.
+     * 
+     * @param db the object database
+     * @param serialFactory the serialization factory
+     */
     public RevSHA1Tree(final ObjectDatabase db, final ObjectSerialisingFactory serialFactory) {
         this(null, db, 0, serialFactory);
     }
 
+    /**
+     * Constructs a new {@code RevSHA1Tree} with the provided parameters.
+     * 
+     * @param db the object database
+     * @param order the depth
+     * @param serialFactory the serialization factory
+     */
     RevSHA1Tree(final ObjectDatabase db, final int order,
             final ObjectSerialisingFactory serialFactory) {
         this(null, db, order, serialFactory);
     }
 
+    /**
+     * Constructs a new {@code RevSHA1Tree} with the provided parameters.
+     * 
+     * @param id the object id to use
+     * @param db the object database
+     * @param order the depth
+     * @param serialFactory the serialization factory
+     */
     public RevSHA1Tree(final ObjectId id, final ObjectDatabase db, final int order,
             final ObjectSerialisingFactory serialFactory) {
         this(id, db, order, new TreeMap<String, NodeRef>(), new TreeMap<Integer, ObjectId>(),
                 BigInteger.ZERO, serialFactory);
     }
 
+    /**
+     * Constructs a new {@code RevSHA1Tree} with the provided parameters.
+     * 
+     * @param id the object id to use
+     * @param db the object database
+     * @param order the depth
+     * @param references {@link NodeRef nodes} and their paths
+     * @param subTrees subtree ids and their indices
+     * @param size unused
+     * @param serialFactory the serialization factory
+     */
     public RevSHA1Tree(final ObjectId id, final ObjectDatabase db, final int order,
             TreeMap<String, NodeRef> references, TreeMap<Integer, ObjectId> subTrees,
             final BigInteger size, final ObjectSerialisingFactory serialFactory) {
@@ -91,6 +127,9 @@ public class RevSHA1Tree extends AbstractRevObject implements RevTree {
         this.serialFactory = serialFactory;
     }
 
+    /**
+     * @return a mutable version of this tree.
+     */
     @Override
     public MutableTree mutable() {
         return new MutableRevSHA1Tree(this, serialFactory);
@@ -104,6 +143,12 @@ public class RevSHA1Tree extends AbstractRevObject implements RevTree {
     // return size;
     // }
 
+    /**
+     * Accepts the provided tree visitor, providing a way to perform various actions on leaves and
+     * subtrees of this tree.
+     * 
+     * @param visitor the visitor to use
+     */
     @Override
     @SuppressWarnings("unchecked")
     public void accept(TreeVisitor visitor) {
@@ -156,10 +201,12 @@ public class RevSHA1Tree extends AbstractRevObject implements RevTree {
     }
 
     /**
-     * Gets an entry by key, this is potentially slow.
+     * Retrieves the {@link NodeRef} that matches the given key from the tree, this is potentially
+     * slow.
      * 
-     * @param key
-     * @return
+     * @param key the path of the node to get
+     * @return an {@link Optional} of the node if it exists, or {@link Optional#absent()} if it
+     *         wasn't found.
      */
     @Override
     public Optional<NodeRef> get(final String key) {
@@ -202,14 +249,17 @@ public class RevSHA1Tree extends AbstractRevObject implements RevTree {
     }
 
     /**
-     * Returns {@code true}, since this is an immutable tree. {@link MutableRevSHA1Tree} overrides
-     * this method to check against its mutable state.
+     * @return {@code true}, since this is an immutable tree. {@link MutableRevSHA1Tree} overrides
+     *         this method to check against its mutable state.
      */
     @Override
     public boolean isNormalized() {
         return true;
     }
 
+    /**
+     * @return a {@code String} representation of this class
+     */
     @Override
     public String toString() {
         return new StringBuilder(getClass().getSimpleName()).append("[size: ")
@@ -218,9 +268,11 @@ public class RevSHA1Tree extends AbstractRevObject implements RevTree {
     }
 
     /**
-     * Returns an iterator over this tree children
+     * Provides an iterator to iterate through the {@link NodeRef}s of the tree, skipping nodes that
+     * match the provided filter.
      * 
-     * @see org.geogit.api.RevTree#iterator(com.google.common.base.Predicate)
+     * @param filter the filter to use
+     * @return an iterator that iterates through nodes that do not get filtered
      */
     @SuppressWarnings("unchecked")
     @Override

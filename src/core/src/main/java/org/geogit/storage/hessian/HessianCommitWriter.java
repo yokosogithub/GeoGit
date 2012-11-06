@@ -15,14 +15,27 @@ import org.geogit.storage.ObjectWriter;
 
 import com.caucho.hessian.io.Hessian2Output;
 
+/**
+ * Writes {@link RevCommit commits} to a binary encoded stream.
+ */
 class HessianCommitWriter extends HessianRevWriter implements ObjectWriter<RevCommit> {
 
     private RevCommit commit;
 
+    /**
+     * Constructs a new {@code HessianCommitWriter} with the given {@link RevCommit}.
+     * 
+     * @param commit the commit to write
+     */
     public HessianCommitWriter(final RevCommit commit) {
         this.commit = commit;
     }
 
+    /**
+     * Writes the commit to the provided output stream.
+     * 
+     * @param out the stream to write to
+     */
     @Override
     public void write(OutputStream out) throws IOException {
         Hessian2Output hout = new Hessian2Output(out);

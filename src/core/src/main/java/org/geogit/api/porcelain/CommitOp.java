@@ -96,7 +96,7 @@ public class CommitOp extends AbstractGeoGitOp<RevCommit> {
      * 
      * @param authorName the author's name
      * @param authorEmail the author's email
-     * @return this
+     * @return {@code this}
      */
     public CommitOp setAuthor(final @Nullable String authorName, @Nullable final String authorEmail) {
         this.authorName = Optional.fromNullable(authorName);
@@ -177,8 +177,8 @@ public class CommitOp extends AbstractGeoGitOp<RevCommit> {
      * If {@code true}, tells {@link #call()} to stage all the unstaged changes that are not new
      * object before performing the commit.
      * 
-     * @param all {@code true} to {@link AddOp#setUpdateOnly(boolean) stage changes) before commit,
-     *        {@code false} to not do that. Defaults to {@code false}.
+     * @param all {@code true} to stage changes before commit, {@code false} to not do that.
+     *        Defaults to {@code false}.
      * @return {@code this}, to ease command chaining
      */
     public CommitOp setAll(boolean all) {
@@ -359,7 +359,7 @@ public class CommitOp extends AbstractGeoGitOp<RevCommit> {
 
     /**
      * @param allowEmptyCommit whether to allow a commit that represents no changes over its parent
-     * @return this
+     * @return {@code this}
      */
     public CommitOp setAllowEmpty(boolean allowEmptyCommit) {
         this.allowEmpty = allowEmptyCommit;

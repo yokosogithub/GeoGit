@@ -17,11 +17,11 @@ public class SpatialRef extends NodeRef {
     /**
      * Constructs a new {@code SpatialRef} with the given parameters.
      * 
-     * @param path
-     * @param oid
-     * @param metadataId
-     * @param type
-     * @param bounds
+     * @param path the path of the node
+     * @param oid the id of the object at the node
+     * @param metadataId id of the object that contains metadata for this node
+     * @param type the type of object being stored
+     * @param bounds the bounds of the node
      */
     public SpatialRef(String path, ObjectId oid, ObjectId metadataId, TYPE type, BoundingBox bounds) {
         super(path, oid, metadataId, type);

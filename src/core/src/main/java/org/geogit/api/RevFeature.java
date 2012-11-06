@@ -18,7 +18,7 @@ public class RevFeature extends AbstractRevObject {
     /**
      * Constructs a new {@code RevFeature} with the provided set of values.
      * 
-     * @param values a list of values, with {@code Optional.absent()} representing a null value
+     * @param values a list of values, with {@link Optional#absent()} representing a null value
      */
     public RevFeature(ImmutableList<Optional<Object>> values) {
         this(ObjectId.NULL, values);
@@ -28,7 +28,7 @@ public class RevFeature extends AbstractRevObject {
      * Constructs a new {@code RevFeature} with the provided {@link ObjectId} and set of values
      * 
      * @param id the {@link ObjectId} to use for this feature
-     * @param values a list of values, with {@code Optional.absent()} representing a null value
+     * @param values a list of values, with {@link Optional#absent()} representing a null value
      */
     public RevFeature(ObjectId id, ImmutableList<Optional<Object>> values) {
         super(id, TYPE.FEATURE);
@@ -36,7 +36,7 @@ public class RevFeature extends AbstractRevObject {
     }
 
     /**
-     * @return a list of values, with {@code Optional.absent()} representing a null value
+     * @return a list of values, with {@link Optional#absent()} representing a null value
      */
     public ImmutableList<Optional<Object>> getValues() {
         return values;

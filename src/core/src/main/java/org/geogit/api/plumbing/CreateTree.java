@@ -47,7 +47,7 @@ public class CreateTree extends AbstractGeoGitOp<MutableTree> {
     /**
      * @param toIndexDb if {@code true}, the returned tree is backed by the {@link StagingDatabase},
      *        otherwise by the repository's {@link ObjectDatabase}
-     * @return this
+     * @return {@code this}
      */
     public CreateTree setIndex(boolean toIndexDb) {
         index = toIndexDb;

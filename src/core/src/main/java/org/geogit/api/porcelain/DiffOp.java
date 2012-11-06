@@ -63,7 +63,7 @@ public class DiffOp extends AbstractGeoGitOp<Iterator<DiffEntry>> {
 
     /**
      * @param revObjectSpec the old version to compare against
-     * @return this
+     * @return {@code this}
      */
     public DiffOp setOldVersion(@Nullable String revObjectSpec) {
         this.oldRefSpec = revObjectSpec;
@@ -72,7 +72,7 @@ public class DiffOp extends AbstractGeoGitOp<Iterator<DiffEntry>> {
 
     /**
      * @param treeishOid the old {@link ObjectId} to compare against
-     * @return this
+     * @return {@code this}
      */
     public DiffOp setOldVersion(ObjectId treeishOid) {
         return setOldVersion(treeishOid.toString());
@@ -80,7 +80,7 @@ public class DiffOp extends AbstractGeoGitOp<Iterator<DiffEntry>> {
 
     /**
      * @param revObjectSpec the new version to compare against
-     * @return this
+     * @return {@code this}
      */
     public DiffOp setNewVersion(String revObjectSpec) {
         this.newRefSpec = revObjectSpec;
@@ -89,7 +89,7 @@ public class DiffOp extends AbstractGeoGitOp<Iterator<DiffEntry>> {
 
     /**
      * @param treeishOid the new {@link ObjectId} to compare against
-     * @return this
+     * @return {@code this}
      */
     public DiffOp setNewVersion(ObjectId treeishOid) {
         return setNewVersion(treeishOid.toString());
@@ -97,7 +97,7 @@ public class DiffOp extends AbstractGeoGitOp<Iterator<DiffEntry>> {
 
     /**
      * @param pathFilter
-     * @return this
+     * @return {@code this}
      */
     public DiffOp setFilter(String pathFilter) {
         this.pathFilter = pathFilter;

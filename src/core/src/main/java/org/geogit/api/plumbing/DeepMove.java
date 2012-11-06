@@ -62,7 +62,7 @@ public class DeepMove extends AbstractGeoGitOp<ObjectId> {
     /**
      * @param toIndex if {@code true} moves the object from the repository's object database to the
      *        index database instead
-     * @return this
+     * @return {@code this}
      */
     public DeepMove setToIndex(boolean toIndex) {
         this.toIndex = toIndex;
@@ -71,7 +71,7 @@ public class DeepMove extends AbstractGeoGitOp<ObjectId> {
 
     /**
      * @param objectRef the object to move from the origin database to the destination one
-     * @return this
+     * @return {@code this}
      */
     public DeepMove setObjectRef(Supplier<NodeRef> objectRef) {
         this.objectRef = objectRef;

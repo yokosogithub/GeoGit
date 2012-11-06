@@ -61,7 +61,7 @@ public class ListOp extends AbstractGeoGitOp<Optional<List<String>>> {
 
     /**
      * @param dataStore the data store to use for the import process
-     * @return this
+     * @return {@code this}
      */
     public ListOp setDataStore(DataStore dataStore) {
         this.dataStore = dataStore;

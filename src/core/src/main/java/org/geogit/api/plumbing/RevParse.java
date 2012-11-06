@@ -43,7 +43,7 @@ public class RevParse extends AbstractGeoGitOp<Optional<ObjectId>> {
 
     /**
      * @param refSpec the ref spec to resolve
-     * @return this
+     * @return {@code this}
      */
     public RevParse setRefSpec(final String refSpec) {
         this.refSpec = refSpec;
@@ -82,7 +82,6 @@ public class RevParse extends AbstractGeoGitOp<Optional<ObjectId>> {
      * <li><b>ref@{time}</b>: value of ref at the designated time</li>
      * </ul>
      * 
-     * @param revstr A geogit object references expression
      * @throws IllegalArgumentException if the ref spec doesn't resolve to any object in the
      *         respository
      * @return the resolved object id, may be {@link Optional#absent() absent}

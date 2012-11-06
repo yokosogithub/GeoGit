@@ -21,12 +21,20 @@ import com.caucho.hessian.io.Hessian2Output;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
 
+/**
+ * Abstract parent class to writers of Rev's. This class provides some common functions used by
+ * various Rev writers.
+ * 
+ */
 class HessianRevWriter {
 
     @SuppressWarnings("unchecked")
     private static Map<CoordinateReferenceSystem, String> crsIdCache = Collections
             .synchronizedMap(new LRUMap(3));
 
+    /**
+     * Constructs a new {@code HessianRevWriter}.
+     */
     public HessianRevWriter() {
         super();
     }

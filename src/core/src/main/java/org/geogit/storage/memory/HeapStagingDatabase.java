@@ -18,6 +18,7 @@ import javax.annotation.Nullable;
 import org.geogit.api.CommandLocator;
 import org.geogit.api.NodeRef;
 import org.geogit.api.ObjectId;
+import org.geogit.storage.AbstractObjectDatabase;
 import org.geogit.storage.ObjectDatabase;
 import org.geogit.storage.ObjectInserter;
 import org.geogit.storage.ObjectReader;
@@ -28,6 +29,12 @@ import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.ning.compress.lzf.LZFInputStream;
 
+/**
+ * Provides an implementation of a GeoGit staging database that utilizes the heap for the storage of
+ * objects.
+ * 
+ * @see AbstractObjectDatabase
+ */
 public class HeapStagingDatabase extends HeapObjectDatabse implements StagingDatabase {
 
     private ObjectDatabase repositoryDb;
@@ -35,9 +42,8 @@ public class HeapStagingDatabase extends HeapObjectDatabse implements StagingDat
     private CommandLocator commandLocator;
 
     /**
-     * @param referenceDatabase the repository reference database, used to get the head re
-     * @param repoDb
-     * @param stagingDb
+     * @param repositoryDb the object database
+     * @param commandLocator the Guice command locator
      */
     @Inject
     public HeapStagingDatabase(final ObjectDatabase repositoryDb,
@@ -48,8 +54,7 @@ public class HeapStagingDatabase extends HeapObjectDatabse implements StagingDat
 
     // /////////////////////////////////////////
     /**
-     * 
-     * @see org.geogit.storage.StagingDatabase#open()
+     * Opens the staging database.
      */
     @Override
     public void open() {
@@ -79,7 +84,7 @@ public class HeapStagingDatabase extends HeapObjectDatabse implements StagingDat
     }
 
     /**
-     * @see org.geogit.storage.StagingDatabase#close()
+     * Closes the staging database.
      */
     @Override
     public void close() {
@@ -123,6 +128,12 @@ public class HeapStagingDatabase extends HeapObjectDatabse implements StagingDat
 
     // /////////////////////////////////////////////////////////////////////
 
+    /**
+     * Determines if the given {@link ObjectId} exists in the object database.
+     * 
+     * @param id the id to search for
+     * @return true if the object exists, false otherwise
+     */
     @Override
     public boolean exists(ObjectId id) {
         boolean exists = super.exists(id);
@@ -132,6 +143,12 @@ public class HeapStagingDatabase extends HeapObjectDatabse implements StagingDat
         return exists;
     }
 
+    /**
+     * Gets the raw input stream of the object with the given {@link ObjectId id}.
+     * 
+     * @param id the id of the object to get
+     * @return the input stream of the object
+     */
     @Override
     public final InputStream getRaw(final ObjectId id) throws IllegalArgumentException {
         InputStream in = getRawInternal(id);
@@ -153,6 +170,12 @@ public class HeapStagingDatabase extends HeapObjectDatabse implements StagingDat
         return null;
     }
 
+    /**
+     * Searches the database for {@link ObjectId}s that match the given partial id.
+     * 
+     * @param partialId the partial id to search for
+     * @return a list of matching results
+     */
     @Override
     public List<ObjectId> lookUp(String partialId) {
         Set<ObjectId> lookUp = new HashSet<ObjectId>(super.lookUp(partialId));
@@ -160,6 +183,13 @@ public class HeapStagingDatabase extends HeapObjectDatabse implements StagingDat
         return new ArrayList<ObjectId>(lookUp);
     }
 
+    /**
+     * Reads an object with the given {@link ObjectId id} out of the database.
+     * 
+     * @param id the id of the object to read
+     * @param reader the reader of the object
+     * @return the object, as read in from the {@link ObjectReader}
+     */
     @Override
     public <T> T get(ObjectId id, ObjectReader<T> reader) {
         if (super.exists(id)) {
@@ -168,11 +198,20 @@ public class HeapStagingDatabase extends HeapObjectDatabse implements StagingDat
         return repositoryDb.get(id, reader);
     }
 
+    /**
+     * @return a newly constructed {@link ObjectInserter} for this database
+     */
     @Override
     public ObjectInserter newObjectInserter() {
         return super.newObjectInserter();
     }
 
+    /**
+     * Deletes the object with the provided {@link ObjectId id} from the database.
+     * 
+     * @param objectId the id of the object to delete
+     * @return true if the object was deleted, false if it was not found
+     */
     @Override
     public boolean delete(ObjectId objectId) {
         return super.delete(objectId);

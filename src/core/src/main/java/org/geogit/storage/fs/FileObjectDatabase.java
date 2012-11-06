@@ -28,6 +28,12 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableList.Builder;
 import com.google.inject.Inject;
 
+/**
+ * Provides an implementation of a GeoGit object database that utilizes the file system for the
+ * storage of objects.
+ * 
+ * @see AbstractObjectDatabase
+ */
 public class FileObjectDatabase extends AbstractObjectDatabase implements ObjectDatabase {
 
     private final Platform platform;
@@ -38,6 +44,11 @@ public class FileObjectDatabase extends AbstractObjectDatabase implements Object
 
     private String dataRootPath;
 
+    /**
+     * Constructs a new {@code FileObjectDatabase} using the given platform.
+     * 
+     * @param platform the platform to use.
+     */
     @Inject
     public FileObjectDatabase(final Platform platform) {
         this(platform, "objects");
@@ -58,11 +69,17 @@ public class FileObjectDatabase extends AbstractObjectDatabase implements Object
         return dataRootPath;
     }
 
+    /**
+     * @return true if the database is open, false otherwise
+     */
     @Override
     public boolean isOpen() {
         return dataRoot != null;
     }
 
+    /**
+     * Opens the database for use by GeoGit.
+     */
     @Override
     public void open() {
         if (isOpen()) {
@@ -94,12 +111,21 @@ public class FileObjectDatabase extends AbstractObjectDatabase implements Object
         dataRootPath = dataRoot.getAbsolutePath();
     }
 
+    /**
+     * Closes the database.
+     */
     @Override
     public void close() {
         dataRoot = null;
         dataRootPath = null;
     }
 
+    /**
+     * Determines if the given {@link ObjectId} exists in the object database.
+     * 
+     * @param id the id to search for
+     * @return true if the object exists, false otherwise
+     */
     @Override
     public boolean exists(final ObjectId id) {
         File f = filePath(id);
@@ -150,6 +176,12 @@ public class FileObjectDatabase extends AbstractObjectDatabase implements Object
         return true;
     }
 
+    /**
+     * Deletes the object with the provided {@link ObjectId id} from the database.
+     * 
+     * @param objectId the id of the object to delete
+     * @return true if the object was deleted, false if it was not found
+     */
     @Override
     public boolean delete(ObjectId objectId) {
         File filePath = filePath(objectId);
@@ -178,6 +210,12 @@ public class FileObjectDatabase extends AbstractObjectDatabase implements Object
         return new File(filePath);
     }
 
+    /**
+     * Searches the database for {@link ObjectId}s that match the given partial id.
+     * 
+     * @param partialId the partial id to search for
+     * @return a list of matching results
+     */
     @Override
     public List<ObjectId> lookUp(final String partialId) {
         File parent = filePath(partialId).getParentFile();

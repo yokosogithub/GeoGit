@@ -155,7 +155,7 @@ public class Repository {
 
     /**
      * @param revStr the string to parse
-     * @return the parsed {@link Ref}, or {@code Optional.absent()} if it did not parse.
+     * @return the parsed {@link Ref}, or {@link Optional#absent()} if it did not parse.
      */
     public Optional<Ref> getRef(final String revStr) {
         Optional<Ref> ref = command(RefParse.class).setName(revStr).call();
@@ -163,7 +163,7 @@ public class Repository {
     }
 
     /**
-     * @return the {@link Ref} pointed to by HEAD, or {@code Optional.absent()} if it could not be
+     * @return the {@link Ref} pointed to by HEAD, or {@link Optional#absent()} if it could not be
      *         resolved.
      */
     public Optional<Ref> getHead() {
@@ -364,7 +364,7 @@ public class Repository {
     /**
      * @param path the path to search for
      * @return an {@link Optional} of the {@link NodeRef} for the child, or
-     *         {@code Optional.absent()} if it wasn't found
+     *         {@link Optional#absent()} if it wasn't found
      */
     public Optional<NodeRef> getRootTreeChild(String path) {
         return command(FindTreeChild.class).setChildPath(path).call();
@@ -376,7 +376,7 @@ public class Repository {
      * @param tree the tree to search
      * @param childPath the path to search for
      * @return an {@link Optional} of the {@link NodeRef} for the child path, or
-     *         {@code Optional.absent()} if it wasn't found
+     *         {@link Optional#absent()} if it wasn't found
      */
     public Optional<NodeRef> getTreeChild(RevTree tree, String childPath) {
         return command(FindTreeChild.class).setParent(tree).setChildPath(childPath).call();

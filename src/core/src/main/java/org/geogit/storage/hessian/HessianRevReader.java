@@ -29,19 +29,36 @@ import com.google.common.base.Throwables;
  * @author mleslie
  */
 abstract class HessianRevReader {
+    /**
+     * Different types of tree nodes.
+     */
     public enum Node {
         REF(0), TREE(1), END(2);
 
         private int value;
 
+        /**
+         * Constructs a new node enumeration with the given value.
+         * 
+         * @param value the value for the node
+         */
         Node(int value) {
             this.value = value;
         }
 
+        /**
+         * @return the {@code int} value of this enumeration
+         */
         public int getValue() {
             return this.value;
         }
 
+        /**
+         * Determines the {@code Node} given its integer value.
+         * 
+         * @param value The value of the desired {@code Node}
+         * @return The correct {@code Node} for the value, or null if none is found.
+         */
         public static Node fromValue(int value) {
             for (Node n : Node.values()) {
                 if (value == n.getValue())
@@ -55,6 +72,9 @@ abstract class HessianRevReader {
     private static Map<String, CoordinateReferenceSystem> crsCache = Collections
             .synchronizedMap(new LRUMap(3));
 
+    /**
+     * Constructs a new {@code HessianRevReader}.
+     */
     public HessianRevReader() {
         super();
     }
@@ -63,8 +83,8 @@ abstract class HessianRevReader {
      * Reads the ObjectId content from the given input stream and creates a new ObjectId object from
      * it.
      * 
-     * @param hin
-     * @return
+     * @param hin the input stream
+     * @return the new {@link ObjectId} or {@code ObjectId.NULL} if no bytes were read
      * @throws IOException
      */
     protected ObjectId readObjectId(Hessian2Input hin) throws IOException {

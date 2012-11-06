@@ -15,7 +15,7 @@ import org.geogit.api.RevTree;
 
 /**
  * The ObjectSerialisingFactory is used to create instances of the various writers and readers used
- * to work with the serialised forms of various repository elements.
+ * to work with the serialized forms of various repository elements.
  * 
  * @author mleslie
  * 
@@ -35,7 +35,6 @@ public interface ObjectSerialisingFactory {
      * 
      * @return commit reader
      */
-
     public ObjectReader<RevCommit> createCommitReader();
 
     /**
@@ -64,7 +63,7 @@ public interface ObjectSerialisingFactory {
     public ObjectReader<RevTree> createRevTreeReader(ObjectDatabase objectDb, int depth);
 
     /**
-     * Creates an instance of a Feature writer to serialise the provided feature.
+     * Creates an instance of a Feature writer to serialize the provided feature.
      * 
      * @param feature Feature to be written
      * @return feature writer
@@ -95,15 +94,24 @@ public interface ObjectSerialisingFactory {
     public BlobPrinter createBlobPrinter();
 
     /**
-     * @param type
-     * @return
+     * Creates an instance of a feature type writer to serialize the provided feature type.
+     * 
+     * @param type the feature type to write
+     * @return feature type writer
      */
     public ObjectWriter<RevFeatureType> createFeatureTypeWriter(RevFeatureType type);
 
     /**
-     * @return
+     * Creates an instance of a feature type reader that can parse feature types.
+     * 
+     * @return feature type reader
      */
     public ObjectReader<RevFeatureType> createFeatureTypeReader();
 
+    /**
+     * Creates an instance of an object type reader that can determine the type of objects.
+     * 
+     * @return object type reader
+     */
     public ObjectReader<RevObject.TYPE> createObjectTypeReader();
 }

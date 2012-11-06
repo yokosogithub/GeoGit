@@ -44,10 +44,20 @@ class HessianFeatureWriter implements ObjectWriter<RevFeature> {
 
     private RevFeature feat;
 
+    /**
+     * Constructs a new {@code HessianFeatureWriter} to write the provided feature.
+     * 
+     * @param feature the feature to write
+     */
     public HessianFeatureWriter(final RevFeature feature) {
         this.feat = feature;
     }
 
+    /**
+     * Writes the provided feature to the given output stream.
+     * 
+     * @param out the output stream to write to
+     */
     public void write(final OutputStream out) throws IOException {
         Hessian2Output hout = new Hessian2Output(out);
         try {

@@ -16,15 +16,15 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
 
 /**
- *
+ * Provides an implementation of a GeoGit ref database that utilizes the heap for the storage of
+ * refs.
  */
 public class HeapRefDatabase implements RefDatabase {
 
     private Map<String, String> refs;
 
     /**
-     * 
-     * @see org.geogit.storage.RefDatabase#create()
+     * Creates the reference database.
      */
     @Override
     public void create() {
@@ -34,8 +34,7 @@ public class HeapRefDatabase implements RefDatabase {
     }
 
     /**
-     * 
-     * @see org.geogit.storage.RefDatabase#close()
+     * Closes the reference database.
      */
     @Override
     public void close() {
@@ -46,9 +45,8 @@ public class HeapRefDatabase implements RefDatabase {
     }
 
     /**
-     * @param name
-     * @return
-     * @see org.geogit.storage.RefDatabase#getRef(java.lang.String)
+     * @param name the name of the ref (e.g. {@code "refs/remotes/origin"}, etc).
+     * @return the ref, or {@code null} if it doesn't exist
      */
     @Override
     public String getRef(String name) {
@@ -65,9 +63,9 @@ public class HeapRefDatabase implements RefDatabase {
     }
 
     /**
-     * @param ref
-     * @return
-     * @see org.geogit.storage.RefDatabase#put(org.geogit.api.Ref)
+     * @param name the name of the ref
+     * @param value the value of the ref
+     * @return {@code null} if the ref didn't exist already, its old value otherwise
      */
     @Override
     public String putRef(String name, String value) {
@@ -77,6 +75,11 @@ public class HeapRefDatabase implements RefDatabase {
         return refs.put(name, value);
     }
 
+    /**
+     * @param refName the name of the ref to remove (e.g. {@code "HEAD"},
+     *        {@code "refs/remotes/origin"}, etc).
+     * @return the value of the ref before removing it, or {@code null} if it didn't exist
+     */
     @Override
     public String remove(String refName) {
         checkNotNull(refName);
@@ -84,6 +87,10 @@ public class HeapRefDatabase implements RefDatabase {
         return oldValue;
     }
 
+    /**
+     * @param name the name of the symbolic ref (e.g. {@code "HEAD"}, etc).
+     * @return the ref, or {@code null} if it doesn't exist
+     */
     @Override
     public String getSymRef(String name) {
         checkNotNull(name);
@@ -97,6 +104,11 @@ public class HeapRefDatabase implements RefDatabase {
         return value.substring("ref: ".length());
     }
 
+    /**
+     * @param name the name of the symbolic ref
+     * @param val the value of the symbolic ref
+     * @return {@code null} if the ref didn't exist already, its old value otherwise
+     */
     @Override
     public String putSymRef(String name, String val) {
         checkNotNull(name);
@@ -112,6 +124,10 @@ public class HeapRefDatabase implements RefDatabase {
         return old;
     }
 
+    /**
+     * @return all known references under the "refs" namespace (i.e. not top level ones like HEAD,
+     *         etc), key'ed by ref name
+     */
     @Override
     public Map<String, String> getAll() {
 

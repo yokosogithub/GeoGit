@@ -52,7 +52,7 @@ public class DepthSearch {
      * @param rootTreeId the tree to search
      * @param path the path to the {@code NodeRef} to search for
      * @return an {@link Optional} of the {@code NodeRef} if it was found, or
-     *         {@code Optional.absent()} if it wasn't found.
+     *         {@link Optional#absent()} if it wasn't found.
      */
     public Optional<NodeRef> find(final ObjectId rootTreeId, final String path) {
         RevTree tree = objectDb.get(rootTreeId, serialFactory.createRevTreeReader(objectDb));
@@ -68,7 +68,7 @@ public class DepthSearch {
      * @param rootTree the tree to search
      * @param childPath the path to the {@code NodeRef} to search for
      * @return an {@link Optional} of the {@code NodeRef} if it was found, or
-     *         {@code Optional.absent()} if it wasn't found.
+     *         {@link Optional#absent()} if it wasn't found.
      */
     public Optional<NodeRef> find(final RevTree rootTree, final String childPath) {
         return find(rootTree, "", childPath);
@@ -81,7 +81,7 @@ public class DepthSearch {
      * @param parentPath the path of the parent tree
      * @param childPath the path to search for
      * @return an {@link Optional} of the {@code NodeRef} if the child path was found, or
-     *         {@code Optional.absent()} if it wasn't found.
+     *         {@link Optional#absent()} if it wasn't found.
      */
     public Optional<NodeRef> find(final RevTree parent, final String parentPath,
             final String childPath) {

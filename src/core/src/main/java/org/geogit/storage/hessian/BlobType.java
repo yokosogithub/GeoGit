@@ -33,10 +33,19 @@ enum BlobType {
         this.value = value;
     }
 
+    /**
+     * @return the {@code int} value of the enumeration
+     */
     public int getValue() {
         return this.value;
     }
 
+    /**
+     * Determines the {@code BlobType} given its integer value.
+     * 
+     * @param value The value of the desired {@code BlobType}
+     * @return The correct {@code BlobType} for the value, or null if none is found.
+     */
     public static BlobType fromValue(int value) {
         for (BlobType type : BlobType.values()) {
             if (type.value == value)

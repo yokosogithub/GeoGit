@@ -7,13 +7,20 @@ package org.geogit.storage;
 import java.util.Map;
 
 /**
- * @author groldan
+ * Provides an interface for GeoGit reference databases.
  * 
+ * @author groldan
  */
 public interface RefDatabase {
 
+    /**
+     * Creates the reference database.
+     */
     public abstract void create();
 
+    /**
+     * Closes the reference database.
+     */
     public abstract void close();
 
     /**
@@ -29,11 +36,17 @@ public interface RefDatabase {
     public abstract String getSymRef(String name);
 
     /**
-     * @param ref
+     * @param refName the name of the ref
+     * @param refValue the value of the ref
      * @return {@code null} if the ref didn't exist already, its old value otherwise
      */
     public abstract String putRef(String refName, String refValue);
 
+    /**
+     * @param name the name of the symbolic ref
+     * @param val the value of the symbolic ref
+     * @return {@code null} if the ref didn't exist already, its old value otherwise
+     */
     public abstract String putSymRef(String name, String val);
 
     /**

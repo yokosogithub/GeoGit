@@ -85,7 +85,7 @@ public final class CommitBuilder {
     }
 
     /**
-     * @param author the author's email to set
+     * @param email the author's email to set
      */
     public void setAuthorEmail(String email) {
         this.authorEmail = email;
@@ -113,7 +113,7 @@ public final class CommitBuilder {
     }
 
     /**
-     * @param committer the committer's email to set
+     * @param email the committer's email to set
      */
     public void setCommitterEmail(String email) {
         this.committerEmail = email;
@@ -142,7 +142,7 @@ public final class CommitBuilder {
 
     /**
      * @param timestamp timestamp, in UTC, of the commit. Let it blank for the builder to auto-set
-     *        it at {@link #build()} time
+     *        it at {@link #build(ObjectId)} time
      */
     public void setTimestamp(long timestamp) {
         this.timestamp = timestamp;

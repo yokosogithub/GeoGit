@@ -134,7 +134,7 @@ public class ImportOp extends AbstractGeoGitOp<RevTree> {
 
     /**
      * @param all if this is set, all tables from the data store will be imported
-     * @return this
+     * @return {@code this}
      */
     public ImportOp setAll(boolean all) {
         this.all = all;
@@ -150,7 +150,7 @@ public class ImportOp extends AbstractGeoGitOp<RevTree> {
 
     /**
      * @param table if this is set, only the specified table will be imported from the data store
-     * @return this
+     * @return {@code this}
      */
     public ImportOp setTable(String table) {
         this.table = table;
@@ -166,7 +166,7 @@ public class ImportOp extends AbstractGeoGitOp<RevTree> {
 
     /**
      * @param dataStore the data store to use for the import process
-     * @return this
+     * @return {@code this}
      */
     public ImportOp setDataStore(DataStore dataStore) {
         this.dataStore = dataStore;

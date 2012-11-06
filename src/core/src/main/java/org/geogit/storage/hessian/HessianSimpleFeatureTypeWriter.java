@@ -23,15 +23,29 @@ import org.opengis.referencing.crs.CoordinateReferenceSystem;
 import com.caucho.hessian.io.Hessian2Output;
 import com.google.common.base.Preconditions;
 
+/**
+ * Writes a {@link SimpleFeatureType feature type} to a binary encoded stream.
+ */
 public class HessianSimpleFeatureTypeWriter implements ObjectWriter<RevFeatureType> {
 
     private SimpleFeatureType type;
 
+    /**
+     * Constructs a new {@code HessianSimpleFeatureTypeWriter} to write the provided
+     * {@link SimpleFeatureType}.
+     * 
+     * @param type the feature type to write
+     */
     public HessianSimpleFeatureTypeWriter(final SimpleFeatureType type) {
         Preconditions.checkNotNull(type);
         this.type = type;
     }
 
+    /**
+     * Writes the provided feature type to the output stream.
+     * 
+     * @param out the output stream to write to
+     */
     @Override
     public void write(OutputStream out) throws IOException {
         Hessian2Output hout = new Hessian2Output(out);

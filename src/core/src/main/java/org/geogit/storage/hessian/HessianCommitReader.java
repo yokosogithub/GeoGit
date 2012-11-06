@@ -16,8 +16,21 @@ import org.geogit.storage.ObjectReader;
 import com.caucho.hessian.io.Hessian2Input;
 import com.google.common.base.Throwables;
 
+/**
+ * Reads {@link RevCommit commits} from a binary encoded stream.
+ */
 class HessianCommitReader extends HessianRevReader implements ObjectReader<RevCommit> {
 
+    /**
+     * Reads a {@link RevCommit} from the given input stream and assigns it the provided
+     * {@link ObjectId id}.
+     * 
+     * @param id the id to use for the commit
+     * @param rawData the input stream of the commit
+     * @return the final commit
+     * @throws IllegalArgumentException if the provided stream does not represent a
+     *         {@code RevCommit}
+     */
     @Override
     public RevCommit read(ObjectId id, InputStream rawData) throws IllegalArgumentException {
         Hessian2Input hin = new Hessian2Input(rawData);

@@ -17,13 +17,18 @@ import com.google.common.io.Closeables;
 import com.ning.compress.lzf.LZFInputStream;
 import com.ning.compress.lzf.LZFOutputStream;
 
+/**
+ * Provides a base implementation for different representations of the {@link ObjectDatabase}.
+ * 
+ * @see ObjectDatabase
+ */
 public abstract class AbstractObjectDatabase implements ObjectDatabase {
 
-    public AbstractObjectDatabase() {
-        // TODO: use an external cache
-    }
-
     /**
+     * Searches the database for {@link ObjectId}s that match the given partial id.
+     * 
+     * @param partialId the partial id to search for
+     * @return a list of matching results
      * @see org.geogit.storage.ObjectDatabase#lookUp(java.lang.String)
      */
     @Override
@@ -35,9 +40,20 @@ public abstract class AbstractObjectDatabase implements ObjectDatabase {
         return lookUpInternal(raw);
     }
 
+    /**
+     * Searches the database for {@link ObjectId}s that match the given raw byte code.
+     * 
+     * @param raw raw byte code to search for
+     * @return a list of matching results
+     */
     protected abstract List<ObjectId> lookUpInternal(byte[] raw);
 
     /**
+     * Reads an object with the given {@link ObjectId id} out of the database.
+     * 
+     * @param id the id of the object to read
+     * @param reader the reader of the object
+     * @return the object, as read in from the {@link ObjectReader}
      * @see org.geogit.storage.ObjectDatabase#get(org.geogit.api.ObjectId,
      *      org.geogit.storage.ObjectReader)
      */
@@ -57,6 +73,10 @@ public abstract class AbstractObjectDatabase implements ObjectDatabase {
     }
 
     /**
+     * Gets the raw input stream of the object with the given {@link ObjectId id}.
+     * 
+     * @param id the id of the object to get
+     * @return the input stream of the object
      * @see org.geogit.storage.ObjectDatabase#getRaw(org.geogit.api.ObjectId)
      */
     @Override
@@ -108,6 +128,12 @@ public abstract class AbstractObjectDatabase implements ObjectDatabase {
     // }
 
     /**
+     * Adds an object to the database with the given {@link ObjectId id}. If an object with the same
+     * id already exists, it will not be inserted.
+     * 
+     * @param id the id of the object to insert
+     * @param writer the writer for the object
+     * @return true if the object was inserted, false otherwise
      * @see org.geogit.storage.ObjectDatabase#put(org.geogit.api.ObjectId,
      *      org.geogit.storage.ObjectWriter)
      */
@@ -143,6 +169,7 @@ public abstract class AbstractObjectDatabase implements ObjectDatabase {
     protected abstract boolean putInternal(ObjectId id, byte[] rawData);
 
     /**
+     * @return a newly constructed {@link ObjectInserter} for this database
      * @see org.geogit.storage.ObjectDatabase#newObjectInserter()
      */
     @Override

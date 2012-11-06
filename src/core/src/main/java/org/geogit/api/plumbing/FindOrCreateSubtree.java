@@ -58,7 +58,7 @@ public class FindOrCreateSubtree extends AbstractGeoGitOp<RevTree> {
     /**
      * @param parent a supplier that resolves to the parent tree where to start the search for the
      *        subtree from
-     * @return this
+     * @return {@code this}
      */
     public FindOrCreateSubtree setParent(Supplier<Optional<RevTree>> parent) {
         this.parentSupplier = parent;
@@ -67,7 +67,7 @@ public class FindOrCreateSubtree extends AbstractGeoGitOp<RevTree> {
 
     /**
      * @param parentPath the parent's path. If not given parent is assumed to be a root tree.
-     * @return this
+     * @return {@code this}
      */
     public FindOrCreateSubtree setParentPath(String parentPath) {
         this.parentPath = parentPath;
@@ -76,7 +76,7 @@ public class FindOrCreateSubtree extends AbstractGeoGitOp<RevTree> {
 
     /**
      * @param subtreePath the full path of the subtree to look for
-     * @return this
+     * @return {@code this}
      */
     public FindOrCreateSubtree setChildPath(String subtreePath) {
         this.childPath = subtreePath;
@@ -86,7 +86,7 @@ public class FindOrCreateSubtree extends AbstractGeoGitOp<RevTree> {
     /**
      * @param indexDb whether to look up in the {@link StagingDatabase index db} ({@code true}) or
      *        on the repository's {@link ObjectDatabase object database} (default)
-     * @return this
+     * @return {@code this}
      */
     public FindOrCreateSubtree setIndex(boolean indexDb) {
         this.indexDb = indexDb;

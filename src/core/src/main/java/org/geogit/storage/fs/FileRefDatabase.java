@@ -26,7 +26,8 @@ import com.google.common.io.Files;
 import com.google.inject.Inject;
 
 /**
- *
+ * Provides an implementation of a GeoGit ref database that utilizes the file system for the storage
+ * of refs.
  */
 public class FileRefDatabase implements RefDatabase {
 
@@ -34,11 +35,19 @@ public class FileRefDatabase implements RefDatabase {
 
     private Platform platform;
 
+    /**
+     * Constructs a new {@code FileRefDatabase} with the given platform.
+     * 
+     * @param platform the platform to use
+     */
     @Inject
     public FileRefDatabase(Platform platform) {
         this.platform = platform;
     }
 
+    /**
+     * Creates the reference database.
+     */
     @Override
     public void create() {
         URL envHome = new ResolveGeogitDir(platform).call();
@@ -63,11 +72,18 @@ public class FileRefDatabase implements RefDatabase {
         }
     }
 
+    /**
+     * Closes the reference database.
+     */
     @Override
     public void close() {
         // nothing to close
     }
 
+    /**
+     * @param name the name of the ref (e.g. {@code "refs/remotes/origin"}, etc).
+     * @return the ref, or {@code null} if it doesn't exist
+     */
     @Override
     public String getRef(String name) {
         checkNotNull(name);
@@ -84,6 +100,10 @@ public class FileRefDatabase implements RefDatabase {
         return value;
     }
 
+    /**
+     * @param name the name of the symbolic ref (e.g. {@code "HEAD"}, etc).
+     * @return the ref, or {@code null} if it doesn't exist
+     */
     @Override
     public String getSymRef(String name) {
         checkNotNull(name);
@@ -98,6 +118,11 @@ public class FileRefDatabase implements RefDatabase {
         return value.substring("ref: ".length());
     }
 
+    /**
+     * @param refName the name of the ref
+     * @param refValue the value of the ref
+     * @return {@code null} if the ref didn't exist already, its old value otherwise
+     */
     @Override
     public String putRef(String refName, String refValue) {
         checkNotNull(refName);
@@ -115,6 +140,11 @@ public class FileRefDatabase implements RefDatabase {
         return oldRef;
     }
 
+    /**
+     * @param name the name of the symbolic ref
+     * @param val the value of the symbolic ref
+     * @return {@code null} if the ref didn't exist already, its old value otherwise
+     */
     @Override
     public String putSymRef(String name, String val) {
         checkNotNull(name);
@@ -128,6 +158,11 @@ public class FileRefDatabase implements RefDatabase {
         return oldRef;
     }
 
+    /**
+     * @param refName the name of the ref to remove (e.g. {@code "HEAD"},
+     *        {@code "refs/remotes/origin"}, etc).
+     * @return the value of the ref before removing it, or {@code null} if it didn't exist
+     */
     @Override
     public String remove(String refName) {
         checkNotNull(refName);
@@ -184,6 +219,10 @@ public class FileRefDatabase implements RefDatabase {
         }
     }
 
+    /**
+     * @return all known references under the "refs" namespace (i.e. not top level ones like HEAD,
+     *         etc), key'ed by ref name
+     */
     @Override
     public Map<String, String> getAll() {
         File refsRoot;

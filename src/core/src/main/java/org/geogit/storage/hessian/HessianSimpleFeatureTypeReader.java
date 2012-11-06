@@ -29,17 +29,33 @@ import org.opengis.util.InternationalString;
 import com.caucho.hessian.io.Hessian2Input;
 import com.google.common.base.Throwables;
 
+/**
+ * Reads {@link RevFeatureType feature types} from a binary encoded stream.
+ */
 public class HessianSimpleFeatureTypeReader implements ObjectReader<RevFeatureType> {
 
     private SimpleFeatureTypeBuilder builder;
 
     private FeatureTypeFactory typeFactory;
 
+    /**
+     * Constructs a new {@code HessianSimpleFeatureTypeReader}.
+     */
     public HessianSimpleFeatureTypeReader() {
         this.builder = new SimpleFeatureTypeBuilder();
         this.typeFactory = builder.getFeatureTypeFactory();
     }
 
+    /**
+     * Reads a {@link RevFeatureType} from the given input stream and assigns it the provided
+     * {@link ObjectId id}.
+     * 
+     * @param id the id to use for the feature type
+     * @param rawData the input stream of the feature type
+     * @return the final feature type
+     * @throws IllegalArgumentException if the provided stream does not represent a
+     *         {@code RevFeatureType}
+     */
     @Override
     public RevFeatureType read(ObjectId id, InputStream rawData) {
         Hessian2Input hin = new Hessian2Input(rawData);

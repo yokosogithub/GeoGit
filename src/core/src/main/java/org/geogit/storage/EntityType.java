@@ -25,6 +25,12 @@ public enum EntityType implements Serializable {
             11), BYTE_ARRAY(12), CHAR_ARRAY(13), DOUBLE_ARRAY(14), FLOAT_ARRAY(15), INT_ARRAY(16), LONG_ARRAY(
             17), GEOMETRY(9), NULL(10), UNKNOWN_SERIALISABLE(18), UNKNOWN(19), UUID(20);
 
+    /**
+     * Determines the type of a given object.
+     * 
+     * @param value the object to analyze
+     * @return the type of the object
+     */
     public static EntityType determineType(Object value) {
         if (value == null)
             return NULL;
@@ -75,6 +81,9 @@ public enum EntityType implements Serializable {
         this.value = value;
     }
 
+    /**
+     * @return the {@code int} value of the enumeration
+     */
     public int getValue() {
         return this.value;
     }

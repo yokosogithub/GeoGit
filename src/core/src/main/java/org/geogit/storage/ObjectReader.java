@@ -10,6 +10,11 @@ import org.geogit.api.ObjectId;
 
 import com.vividsolutions.jts.geom.GeometryFactory;
 
+/**
+ * Provides a base interface for reading GeoGit objects from an {@link InputStream}.
+ * 
+ * @param <T> the type of the object to read
+ */
 public interface ObjectReader<T> {
 
     /**
@@ -23,9 +28,11 @@ public interface ObjectReader<T> {
     public static final String USE_PROVIDED_FID = "USE_PROVIDED_FID";
 
     /**
-     * @param id
-     * @param rawData
-     * @return
+     * Reads an object from the given input stream and assigns it the provided {@link ObjectId id}.
+     * 
+     * @param id the id to use for the object
+     * @param rawData the input stream of the object
+     * @return the final object
      * @throws IllegalArgumentException if the provided stream does not represents an object of the
      *         required type
      */

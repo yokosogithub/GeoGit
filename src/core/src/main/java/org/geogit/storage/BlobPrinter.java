@@ -8,13 +8,16 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintStream;
 
+/**
+ * Provides an interface for printing various GeoGit blobs.
+ */
 public interface BlobPrinter {
 
     /**
      * Prints the contents of the provided byte array to the PrintStream in an xml-based format.
      * 
-     * @param rawBlob
-     * @param out
+     * @param rawBlob the blob to print
+     * @param out the output stream
      * @throws IOException
      */
     public void print(final byte[] rawBlob, final PrintStream out) throws IOException;
@@ -22,8 +25,8 @@ public interface BlobPrinter {
     /**
      * Prints the contents of the provided InputStream to the PrintStream in an xml-based format.
      * 
-     * @param rawBlob
-     * @param out
+     * @param rawBlob an input stream of a blob
+     * @param out the output stream
      * @throws IOException
      */
     public void print(final InputStream rawBlob, final PrintStream out) throws IOException;

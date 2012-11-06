@@ -88,7 +88,7 @@ public class HashObject extends AbstractGeoGitOp<ObjectId> {
 
     /**
      * @param object {@link RevObject} to hash.
-     * @return this
+     * @return {@code this}
      */
     public HashObject setObject(RevObject object) {
         this.object = object;

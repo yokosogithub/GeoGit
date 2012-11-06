@@ -81,8 +81,8 @@ public class AddOp extends AbstractGeoGitOp<WorkingTree> {
      * reported by the diff walk (neat).
      * </p>
      * 
-     * @param pathFilter
-     * @param progressListener
+     * @param progress the progress listener for this process
+     * @param pathFilter the filter to use
      */
     public void stage(final ProgressListener progress, final @Nullable String pathFilter) {
 

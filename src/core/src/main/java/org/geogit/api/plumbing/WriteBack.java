@@ -76,7 +76,7 @@ public class WriteBack extends AbstractGeoGitOp<ObjectId> {
      * @param indexDb if {@code true} the trees will be stored to the {@link StagingDatabase},
      *        otherwise to the repository's {@link ObjectDatabase permanent store}. Defaults to
      *        {@code false}
-     * @return this
+     * @return {@code this}
      */
     public WriteBack setIndex(boolean indexDb) {
         this.indexDb = indexDb;
@@ -86,7 +86,7 @@ public class WriteBack extends AbstractGeoGitOp<ObjectId> {
     /**
      * @param oldRoot the root tree to which add the {@link #setTree(RevTree) child tree} and any
      *        intermediate tree. If not set defaults to the current HEAD tree
-     * @return this
+     * @return {@code this}
      */
     public WriteBack setAncestor(MutableTree oldRoot) {
         return setAncestor(Suppliers.ofInstance(oldRoot));
@@ -95,7 +95,7 @@ public class WriteBack extends AbstractGeoGitOp<ObjectId> {
     /**
      * @param ancestor the root tree to which add the {@link #setTree(RevTree) child tree} and any
      *        intermediate tree. If not set defaults to the current HEAD tree
-     * @return this
+     * @return {@code this}
      */
     public WriteBack setAncestor(Supplier<MutableTree> ancestor) {
         this.ancestor = ancestor;
@@ -105,7 +105,7 @@ public class WriteBack extends AbstractGeoGitOp<ObjectId> {
     /**
      * @param ancestorPath the path of the {@link #setAncestor(Supplier) ancestor tree}. If set not
      *        the ancestor tree is assumed to be a root tree.
-     * @return this
+     * @return {@code this}
      */
     public WriteBack setAncestorPath(String ancestorPath) {
         this.ancestorPath = ancestorPath;
@@ -114,7 +114,7 @@ public class WriteBack extends AbstractGeoGitOp<ObjectId> {
 
     /**
      * @param childPath mandatory, the path to the child tree
-     * @return this
+     * @return {@code this}
      */
     public WriteBack setChildPath(String childPath) {
         this.childPath = childPath;
@@ -124,7 +124,7 @@ public class WriteBack extends AbstractGeoGitOp<ObjectId> {
     /**
      * @param tree the tree to store on the object database and to create any intermediate tree for
      *        the given {@link #setAncestor(Supplier) ancestor tree}
-     * @return this
+     * @return {@code this}
      */
     public WriteBack setTree(RevTree tree) {
         return setTree(Suppliers.ofInstance(tree));
@@ -133,7 +133,7 @@ public class WriteBack extends AbstractGeoGitOp<ObjectId> {
     /**
      * @param tree the tree to store on the object database and to create any intermediate tree for
      *        the given {@link #setAncestor(Supplier) ancestor tree}
-     * @return this
+     * @return {@code this}
      */
     public WriteBack setTree(Supplier<RevTree> tree) {
         this.tree = tree;

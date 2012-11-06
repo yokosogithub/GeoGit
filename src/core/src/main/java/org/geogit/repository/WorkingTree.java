@@ -252,7 +252,7 @@ public class WorkingTree {
      * @param treePath the path of the tree to insert the features into
      * @param features the features to insert
      * @param forceUseProvidedFID - currently unused
-     * @param listener a {@link ProgressListner} for the current process
+     * @param listener a {@link ProgressListener} for the current process
      * @param insertedTarget if provided, inserted features will be added to this list
      * @param collectionSize number of features to add
      * @throws Exception
@@ -284,7 +284,7 @@ public class WorkingTree {
      * 
      * @param treePath the path of the tree to insert the features into
      * @param features the features to insert
-     * @param listener a {@link ProgressListner} for the current process
+     * @param listener a {@link ProgressListener} for the current process
      * @param collectionSize number of features to add
      * @throws Exception
      */

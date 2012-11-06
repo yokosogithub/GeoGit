@@ -23,7 +23,7 @@ public interface MutableTree extends RevTree {
      * Removes the NodeRef that matches the given key.
      * 
      * @param key the NodeRef to remove
-     * @return an optional of the NodeRef if it was removed, or {@code Optional.absent()} if it
+     * @return an optional of the NodeRef if it was removed, or {@link Optional#absent()} if it
      *         wasn't found
      */
     public abstract Optional<NodeRef> remove(final String key);

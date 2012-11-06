@@ -31,6 +31,12 @@ public enum GtEntityType implements Serializable {
             19, null), UUID(20, java.util.UUID.class), DATE_UTIL(21, java.util.Date.class), DATE_SQL(
             22, java.sql.Date.class);
 
+    /**
+     * Determines the type of a given object.
+     * 
+     * @param value the object to analyze
+     * @return the type of the object
+     */
     public static GtEntityType determineType(Object value) {
         if (value == null)
             return NULL;
@@ -88,14 +94,26 @@ public enum GtEntityType implements Serializable {
         this.binding = binding;
     }
 
+    /**
+     * @return the {@code int} value of the enumeration
+     */
     public int getValue() {
         return this.value;
     }
 
+    /**
+     * @return the actual class of the enumerated type
+     */
     public Class getBinding() {
         return this.binding;
     }
 
+    /**
+     * Determines the EntityType given a particular class.
+     * 
+     * @param cls the class to look up
+     * @return the EntityType for the given class, UNKNOWN if a match couldn't be found.
+     */
     @SuppressWarnings("unchecked")
     public static GtEntityType fromBinding(Class cls) {
         if (cls == null)

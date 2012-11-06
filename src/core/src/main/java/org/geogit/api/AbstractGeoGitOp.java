@@ -56,7 +56,7 @@ public abstract class AbstractGeoGitOp<T> implements Callable<T> {
 
     /**
      * @param listener the progress listener to use
-     * @return this
+     * @return {@code this}
      */
     public AbstractGeoGitOp<T> setProgressListener(final ProgressListener listener) {
         this.progressListener = listener == null ? NULL_PROGRESS_LISTENER : listener;
