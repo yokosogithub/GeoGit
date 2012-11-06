@@ -198,7 +198,7 @@ public class RevTreeBuilderTest extends RepositoryTestCase {
 
     @Test
     public void testRemoveSplittedTree() throws Exception {
-        final int numEntries = 2 * RevTreeBuilder.DEFAULT_SPLIT_FACTOR + 105;
+        final int numEntries = (int) (1.5 * RevTreeBuilder.DEFAULT_SPLIT_FACTOR);
         final ObjectId treeId = createAndSaveTree(numEntries, true);
         final RevTree tree = odb.get(treeId, serialFactory.createRevTreeReader());
 

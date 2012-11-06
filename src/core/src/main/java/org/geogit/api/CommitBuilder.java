@@ -6,6 +6,7 @@ package org.geogit.api;
 
 import java.util.List;
 
+import org.geogit.api.plumbing.HashObject;
 import com.google.common.base.Preconditions;
 
 /**
@@ -30,6 +31,9 @@ public final class CommitBuilder {
     private String message;
 
     private long timestamp;
+
+    public CommitBuilder() {
+    }
 
     /**
      * @return the treeId of the commit
@@ -138,25 +142,29 @@ public final class CommitBuilder {
 
     /**
      * @param timestamp timestamp, in UTC, of the commit. Let it blank for the builder to auto-set
-     *        it at {@link #build(ObjectId)} time
+     *        it at {@link #build()} time
      */
     public void setTimestamp(long timestamp) {
         this.timestamp = timestamp;
     }
 
-    /**
-     * Builds the {@link RevCommit}.
-     * 
-     * @param id the id of the tree to build the commit off of
-     * @return the constructed {@code RevCommit}
-     */
-    public RevCommit build(final ObjectId id) {
-        Preconditions.checkNotNull(id, "Id can't be null");
-
+    public RevCommit build() {
         if (treeId == null) {
             throw new IllegalStateException("No tree id set");
         }
-        return new RevCommit(id, treeId, parentIds, new RevPerson(author, authorEmail),
-                new RevPerson(committer, committerEmail), message, getTimestamp());
+
+        final ObjectId treeId = this.treeId;
+        final List<ObjectId> parentIds = this.parentIds;
+        final RevPerson author = new RevPerson(this.author, authorEmail);
+        final RevPerson committer = new RevPerson(this.committer, committerEmail);
+        final long timestamp = getTimestamp();
+        final String commitMessage = this.message;
+
+        RevCommit unnnamedCommit = new RevCommit(ObjectId.NULL, treeId, parentIds, author,
+                committer, commitMessage, timestamp);
+        ObjectId commitId = new HashObject().setObject(unnnamedCommit).call();
+
+        return new RevCommit(commitId, treeId, parentIds, author, committer, commitMessage,
+                timestamp);
     }
 }

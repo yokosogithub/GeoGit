@@ -49,7 +49,7 @@ public class CommitReaderWriterTest extends RepositoryTestCase {
         List<ObjectId> parentIds = Arrays.asList(parentId1, parentId2);
         b.setParentIds(parentIds);
 
-        commit = b.build(ObjectId.NULL);
+        commit = b.build();
     }
 
     @Test
@@ -58,7 +58,7 @@ public class CommitReaderWriterTest extends RepositoryTestCase {
         getRepository().newCommitWriter(commit).write(out);
         byte[] built = out.toByteArray();
 
-        RevCommit read = getRepository().newCommitReader().read(ObjectId.NULL,
+        RevCommit read = getRepository().newCommitReader().read(commit.getId(),
                 new ByteArrayInputStream(built));
         assertNotNull(read);
 
@@ -92,7 +92,7 @@ public class CommitReaderWriterTest extends RepositoryTestCase {
         // it's at ~700/s
         for (int i = 0; i < k; i++) {
             built.reset();
-            getRepository().newCommitReader().read(ObjectId.NULL, built);
+            getRepository().newCommitReader().read(commit.getId(), built);
         }
         sw.stop();
         System.err.printf("\nParsed %d commits in %s, (%d/s)\n", k, sw.getTimeString(), k * 1000

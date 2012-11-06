@@ -4,6 +4,8 @@
  */
 package org.geogit.storage.hessian;
 
+import static com.google.common.base.Preconditions.checkState;
+
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
@@ -59,7 +61,9 @@ class HessianCommitReader extends HessianRevReader implements ObjectReader<RevCo
 
             hin.completeMessage();
 
-            return builder.build(id);
+            RevCommit commit = builder.build();
+            checkState(id.equals(commit.getId()));
+            return commit;
         } catch (Exception e) {
             throw Throwables.propagate(e);
         }

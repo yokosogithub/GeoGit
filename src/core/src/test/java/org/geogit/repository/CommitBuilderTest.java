@@ -24,14 +24,7 @@ public class CommitBuilderTest extends TestCase {
     public void testBuildEmpty() throws Exception {
         CommitBuilder b = new CommitBuilder();
         try {
-            b.build(null);
-            fail("expected NPE on null id");
-        } catch (NullPointerException e) {
-            assertTrue(e.getMessage().contains("Id"));
-        }
-
-        try {
-            b.build(ObjectId.NULL);
+            b.build();
             fail("expected IllegalStateException on null tree id");
         } catch (IllegalStateException e) {
             assertTrue(e.getMessage().contains("tree"));
@@ -47,7 +40,6 @@ public class CommitBuilderTest extends TestCase {
         b.setMessage("cool this works");
         b.setTimestamp(1000);
 
-        final ObjectId commitId = ObjectId.forString("fake commit content");
         ObjectId treeId = ObjectId.forString("fake tree content");
 
         b.setTreeId(treeId);
@@ -57,9 +49,9 @@ public class CommitBuilderTest extends TestCase {
         List<ObjectId> parentIds = ImmutableList.of(parentId1, parentId2);
         b.setParentIds(parentIds);
 
-        RevCommit build = b.build(commitId);
-
-        assertEquals(commitId, build.getId());
+        RevCommit build = b.build();
+        assertNotNull(build.getId());
+        assertFalse(build.getId().isNull());
         assertEquals(treeId, build.getTreeId());
         assertEquals(parentIds, build.getParentIds());
         assertEquals("groldan", build.getAuthor().getName());

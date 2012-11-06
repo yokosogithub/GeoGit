@@ -87,7 +87,6 @@ public class HashObjectTest extends RepositoryTestCase {
         b.setMessage("cool this works");
         b.setTimestamp(1000);
 
-        final ObjectId commitId = ObjectId.forString("fake commit content");
         ObjectId treeId = ObjectId.forString("fake tree content");
 
         b.setTreeId(treeId);
@@ -97,8 +96,8 @@ public class HashObjectTest extends RepositoryTestCase {
         List<ObjectId> parentIds = ImmutableList.of(parentId1, parentId2);
         b.setParentIds(parentIds);
 
-        commit1 = b.build(commitId);
-        commit1Duplicate = b.build(commitId);
+        commit1 = b.build();
+        commit1Duplicate = b.build();
 
         b.setMessage(null);
         b.setAuthor(null);
@@ -106,7 +105,7 @@ public class HashObjectTest extends RepositoryTestCase {
         b.setTimestamp(-1000);
         b.setParentIds(ImmutableList.of(parentId1, ObjectId.NULL));
 
-        commit2 = b.build(commitId);
+        commit2 = b.build();
 
         Object boolArray = new boolean[] { true, false, true, true, false };
         Object byteArray = new byte[] { 100, 127, -110, 26, 42 };

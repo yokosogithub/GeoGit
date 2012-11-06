@@ -19,7 +19,6 @@ import org.geogit.api.Ref;
 import org.geogit.api.RevCommit;
 import org.geogit.api.RevTree;
 import org.geogit.api.SymRef;
-import org.geogit.api.plumbing.HashObject;
 import org.geogit.api.plumbing.RefParse;
 import org.geogit.api.plumbing.ResolveTreeish;
 import org.geogit.api.plumbing.RevObjectParse;
@@ -244,7 +243,7 @@ public class CommitOp extends AbstractGeoGitOp<RevCommit> {
             }
         }
 
-        final ObjectId commitId;
+        final RevCommit commit;
         {
             CommitBuilder cb = new CommitBuilder();
             cb.setAuthor(author);
@@ -261,16 +260,14 @@ public class CommitOp extends AbstractGeoGitOp<RevCommit> {
                 return null;
             }
             ObjectInserter objectInserter = repository.newObjectInserter();
-            RevCommit commit = cb.build(ObjectId.NULL);
-            commitId = command(HashObject.class).setObject(commit).call();
-            objectInserter.insert(commitId, repository.newCommitWriter(commit));
+            commit = cb.build();
+            objectInserter.insert(commit.getId(), repository.newCommitWriter(commit));
         }
-        final RevCommit commit = repository.getCommit(commitId);
         // set the HEAD pointing to the new commit
         final String branch = "refs/heads/master";
         final Optional<Ref> branchHead = command(UpdateRef.class).setName(branch)
-                .setNewValue(commitId).call();
-        Preconditions.checkState(commitId.equals(branchHead.get().getObjectId()));
+                .setNewValue(commit.getId()).call();
+        Preconditions.checkState(commit.getId().equals(branchHead.get().getObjectId()));
         LOGGER.fine("New head: " + branchHead);
 
         final Optional<SymRef> newHead = command(UpdateSymRef.class).setName(Ref.HEAD)

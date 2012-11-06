@@ -29,7 +29,6 @@ public class HessianCommitSerialisationTest extends TestCase {
         builder.setCommitterEmail(committerEmail);
         builder.setTimestamp(currentTime);
 
-        ObjectId commitId = ObjectId.forString("Fake commit");
         ObjectId treeId = ObjectId.forString("Fake tree");
         builder.setTreeId(treeId);
 
@@ -38,7 +37,7 @@ public class HessianCommitSerialisationTest extends TestCase {
         List<ObjectId> parents = Arrays.asList(parent1, parent2);
         builder.setParentIds(parents);
 
-        RevCommit cmtIn = builder.build(commitId);
+        RevCommit cmtIn = builder.build();
         assertNotNull(cmtIn);
 
         ByteArrayOutputStream bout = new ByteArrayOutputStream();
@@ -51,7 +50,7 @@ public class HessianCommitSerialisationTest extends TestCase {
         ByteArrayInputStream bin = new ByteArrayInputStream(bytes);
         HessianCommitReader read = new HessianCommitReader();
 
-        RevCommit cmtOut = read.read(commitId, bin);
+        RevCommit cmtOut = read.read(cmtIn.getId(), bin);
 
         assertEquals(treeId, cmtOut.getTreeId());
         assertEquals(parents, cmtOut.getParentIds());

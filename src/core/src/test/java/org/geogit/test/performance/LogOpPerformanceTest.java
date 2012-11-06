@@ -12,7 +12,6 @@ import org.geogit.api.RevCommit;
 import org.geogit.api.porcelain.CommitOp;
 import org.geogit.api.porcelain.LogOp;
 import org.geogit.test.integration.RepositoryTestCase;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import com.google.common.base.Stopwatch;
@@ -23,7 +22,7 @@ public class LogOpPerformanceTest extends RepositoryTestCase {
     protected void setUpInternal() throws Exception {
     }
 
-    @Ignore
+    // @Ignore
     @Test
     public void testCommits() throws Exception {
         System.err.println("############### Warming up....");
@@ -32,8 +31,8 @@ public class LogOpPerformanceTest extends RepositoryTestCase {
 
         createAndLogMultipleCommits(1000);
         createAndLogMultipleCommits(1000 * 10);
-        createAndLogMultipleCommits(1000 * 100);
-        createAndLogMultipleCommits(1000 * 1000);
+        // createAndLogMultipleCommits(1000 * 100);
+        // createAndLogMultipleCommits(1000 * 1000);
     }
 
     private void createAndLogMultipleCommits(int numCommits) throws Exception {
