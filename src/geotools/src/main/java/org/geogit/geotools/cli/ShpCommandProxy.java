@@ -25,6 +25,10 @@ import com.beust.jcommander.Parameters;
 @Parameters(commandNames = "shp", commandDescription = "GeoGit/Shapefile integration utilities")
 public class ShpCommandProxy implements CLICommandExtension {
 
+    /**
+     * @return the JCommander parser for this extension
+     * @see JCommander
+     */
     @Override
     public JCommander getCommandParser() {
         JCommander commander = new JCommander();
