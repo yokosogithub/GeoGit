@@ -16,7 +16,7 @@ import com.beust.jcommander.Parameters;
  * <p>
  * Usage:
  * <ul>
- * <li> {@code geogit shp <command> <args>...]}
+ * <li> {@code geogit shp <command> <args>...}
  * </ul>
  * 
  * @author jgarrett
