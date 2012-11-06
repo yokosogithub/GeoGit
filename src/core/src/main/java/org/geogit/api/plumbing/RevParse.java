@@ -30,11 +30,21 @@ public class RevParse extends AbstractGeoGitOp<Optional<ObjectId>> {
 
     private StagingDatabase indexDb;
 
+    /**
+     * Constructs a new {@code RevParse} operation with the specified {@link StagingDatabase staging
+     * database}.
+     * 
+     * @param indexDb the staging database to use
+     */
     @Inject
     public RevParse(StagingDatabase indexDb) {
         this.indexDb = indexDb;
     }
 
+    /**
+     * @param refSpec the ref spec to resolve
+     * @return this
+     */
     public RevParse setRefSpec(final String refSpec) {
         this.refSpec = refSpec;
         return this;

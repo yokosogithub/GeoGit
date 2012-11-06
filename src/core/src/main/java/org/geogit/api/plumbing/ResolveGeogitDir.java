@@ -26,6 +26,11 @@ public class ResolveGeogitDir extends AbstractGeoGitOp<URL> {
 
     private Platform platform;
 
+    /**
+     * Constructs a new instance of {@code ResolveGeogitDir} with the specified platform.
+     * 
+     * @param platform the platform to use
+     */
     @Inject
     public ResolveGeogitDir(Platform platform) {
         this.platform = platform;
@@ -49,7 +54,7 @@ public class ResolveGeogitDir extends AbstractGeoGitOp<URL> {
     }
 
     /**
-     * @param pwd the current working directory
+     * @param file the directory to search
      * @return the location of the {@code .geogit} repository environment directory or {@code null}
      *         if not inside a working directory
      */

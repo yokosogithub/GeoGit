@@ -76,9 +76,6 @@ public class Index implements StagingArea {
     @Inject
     private ObjectSerialisingFactory serialFactory;
 
-    public Index() {
-    }
-
     /**
      * @return the staging database.
      */
@@ -90,7 +87,7 @@ public class Index implements StagingArea {
     /**
      * Updates the STAGE_HEAD ref to the specified tree.
      * 
-     * @param newTree
+     * @param newTree the tree to set as the new STAGE_HEAD
      */
     private void updateStageHead(ObjectId newTree) {
         repository.command(UpdateRef.class).setName(Ref.STAGE_HEAD).setNewValue(newTree).call();
@@ -132,9 +129,9 @@ public class Index implements StagingArea {
     }
 
     /**
-     * @param path
-     * @return the NodeRef for the feature at the specified path if it exists in the index,
-     *         otherwise Optional.absent()
+     * @param path the path of the {@link NodeRef} to find
+     * @return the {@code NodeRef} for the feature at the specified path if it exists in the index,
+     *         otherwise {@code Optional.absent()}
      */
     @Override
     public Optional<NodeRef> findStaged(final String path) {
@@ -146,9 +143,9 @@ public class Index implements StagingArea {
     /**
      * Stages the changes indicated by the {@link DiffEntry} iterator.
      * 
-     * @param progress
-     * @param unstaged
-     * @param numChanges
+     * @param progress the progress listener for the process
+     * @param unstaged an iterator for the unstaged changes
+     * @param numChanges number of unstaged changes
      */
     @Override
     public void stage(final ProgressListener progress, final Iterator<DiffEntry> unstaged,
@@ -213,7 +210,7 @@ public class Index implements StagingArea {
     }
 
     /**
-     * @param pathFilter
+     * @param pathFilter if specified, only changes that match the filter will be returned
      * @return an iterator for all of the differences between STAGE_HEAD and HEAD based on the path
      *         filter.
      */
@@ -225,7 +222,7 @@ public class Index implements StagingArea {
     }
 
     /**
-     * @param pathFilter
+     * @param pathFilter if specified, only changes that match the filter will be returned
      * @return the number differences between STAGE_HEAD and HEAD based on the path filter.
      */
     @Override

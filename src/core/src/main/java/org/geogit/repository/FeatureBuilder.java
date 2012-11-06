@@ -18,7 +18,12 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 
 /**
- *
+ * Provides a method of building features from {@link RevFeature} objects that have the type
+ * specified by the given {@link RevFeatureType}.
+ * 
+ * @see RevFeatureType
+ * @see RevFeature
+ * @see Feature
  */
 public class FeatureBuilder {
 
@@ -26,15 +31,33 @@ public class FeatureBuilder {
 
     private SimpleFeatureBuilder featureBuilder;
 
+    /**
+     * Constructs a new {@code FeatureBuilder} with the given {@link RevFeatureType feature type}.
+     * 
+     * @param type the feature type of the features that will be built
+     */
     public FeatureBuilder(RevFeatureType type) {
         this.type = type;
         featureBuilder = new SimpleFeatureBuilder((SimpleFeatureType) type.type());
     }
 
+    /**
+     * Constructs a new {@code FeatureBuilder} with the given {@link SimpleFeatureType feature type}
+     * .
+     * 
+     * @param type the feature type of the features that will be built
+     */
     public FeatureBuilder(SimpleFeatureType type) {
         this(new RevFeatureType(type));
     }
 
+    /**
+     * Builds a {@link Feature} from the provided {@link RevFeature}.
+     * 
+     * @param id the id of the new feature
+     * @param revFeature the {@code RevFeature} with the property values for the feature
+     * @return the constructed {@code Feature}
+     */
     public Feature build(String id, RevFeature revFeature) {
         featureBuilder.reset();
         ImmutableList<PropertyDescriptor> descriptors = type.sortedDescriptors();

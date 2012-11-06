@@ -67,8 +67,6 @@ import com.google.inject.Inject;
  * to reflect the state of that branch
  * </ul>
  * 
- * @param the actual type representing a Feature
- * @param the actual type representing a FeatureType
  * @author Gabriel Roldan
  * @see Repository
  */
@@ -86,7 +84,7 @@ public class WorkingTree {
     /**
      * Updates the WORK_HEAD ref to the specified tree.
      * 
-     * @param newTree
+     * @param newTree the tree to be set as the new WORK_HEAD
      */
     private void updateWorkHead(ObjectId newTree) {
         repository.command(UpdateRef.class).setName(Ref.WORK_HEAD).setNewValue(newTree).call();
@@ -129,8 +127,8 @@ public class WorkingTree {
     /**
      * Deletes a single feature from the working tree and updates the WORK_HEAD ref.
      * 
-     * @param path
-     * @param featureId
+     * @param path the path of the feature
+     * @param featureId the id of the feature
      * @return true if the object was found and deleted, false otherwise
      */
     public boolean delete(final String path, final String featureId) {
@@ -156,9 +154,9 @@ public class WorkingTree {
      * Deletes a collection of features of the same type from the working tree and updates the
      * WORK_HEAD ref.
      * 
-     * @param typeName
+     * @param typeName feature type
      * @param filter - currently unused
-     * @param affectedFeatures
+     * @param affectedFeatures features to remove
      * @throws Exception
      */
     public void delete(final QName typeName, final Filter filter,
@@ -189,7 +187,7 @@ public class WorkingTree {
     /**
      * Deletes a feature type from the working tree and updates the WORK_HEAD ref.
      * 
-     * @param typeName
+     * @param typeName feature type to remove
      * @throws Exception
      */
     public void delete(final QName typeName) throws Exception {
@@ -230,8 +228,8 @@ public class WorkingTree {
     /**
      * Insert a single feature into the working tree and updates the WORK_HEAD ref.
      * 
-     * @param parentTreePath
-     * @param feature
+     * @param parentTreePath path of the parent tree to insert the feature into
+     * @param feature the feature to insert
      */
     public NodeRef insert(final String parentTreePath, final Feature feature) {
         NodeRef ref = putInDatabase(parentTreePath, feature);
@@ -251,12 +249,12 @@ public class WorkingTree {
     /**
      * Inserts a collection of features into the working tree and updates the WORK_HEAD ref.
      * 
-     * @param treePath
-     * @param features
+     * @param treePath the path of the tree to insert the features into
+     * @param features the features to insert
      * @param forceUseProvidedFID - currently unused
-     * @param listener
-     * @param insertedTarget
-     * @param collectionSize
+     * @param listener a {@link ProgressListner} for the current process
+     * @param insertedTarget if provided, inserted features will be added to this list
+     * @param collectionSize number of features to add
      * @throws Exception
      */
     public void insert(final String treePath, Iterator<Feature> features,
@@ -284,10 +282,10 @@ public class WorkingTree {
     /**
      * Updates a collection of features in the working tree and updates the WORK_HEAD ref.
      * 
-     * @param treePath
-     * @param features
-     * @param listener
-     * @param collectionSize
+     * @param treePath the path of the tree to insert the features into
+     * @param features the features to insert
+     * @param listener a {@link ProgressListner} for the current process
+     * @param collectionSize number of features to add
      * @throws Exception
      */
     public void update(final String treePath, final Iterator<Feature> features,
@@ -305,7 +303,7 @@ public class WorkingTree {
     /**
      * Determines if a specific feature type is versioned (existing in the main repository).
      * 
-     * @param typeName
+     * @param typeName feature type to check
      * @return true if the feature type is versioned, false otherwise.
      */
     public boolean hasRoot(final QName typeName) {
@@ -316,7 +314,7 @@ public class WorkingTree {
     }
 
     /**
-     * @param pathFilter
+     * @param pathFilter if specified, only changes that match the filter will be returned
      * @return an iterator for all of the differences between the work tree and the index based on
      *         the path filter.
      */
@@ -327,7 +325,7 @@ public class WorkingTree {
     }
 
     /**
-     * @param pathFilter
+     * @param pathFilter if specified, only changes that match the filter will be counted
      * @return the number differences between the work tree and the index based on the path filter.
      */
     public int countUnstaged(final @Nullable String pathFilter) {
@@ -341,7 +339,7 @@ public class WorkingTree {
     }
 
     /**
-     * @param path
+     * @param path finds a {@link NodeRef} for the feature at the given path in the index
      * @return the NodeRef for the feature at the specified path if it exists in the work tree,
      *         otherwise Optional.absent()
      */
@@ -354,7 +352,8 @@ public class WorkingTree {
     /**
      * Adds a single feature to the staging database.
      * 
-     * @param path
+     * @param parentTreePath the path of the feature
+     * @param feature the feature to add
      * @return the NodeRef for the inserted feature
      */
     private NodeRef putInDatabase(final String parentTreePath, final Feature feature) {
@@ -399,11 +398,11 @@ public class WorkingTree {
     /**
      * Adds a collection of features to the staging database.
      * 
-     * @param parentTreepath
-     * @param objects
-     * @param progress
-     * @param size
-     * @param target
+     * @param parentTreepath path of features
+     * @param objects the features to insert
+     * @param progress the {@link ProgressListener} for this process
+     * @param size number of features to add
+     * @param target if specified, created {@link NodeRef}s will be added to the list
      * @throws Exception
      */
     private void putInDatabase(final String parentTreePath, final Iterator<Feature> objects,
@@ -440,7 +439,7 @@ public class WorkingTree {
     }
 
     /**
-     * @return
+     * @return a list of all the feature type names in the working tree
      */
     public List<QName> getFeatureTypeNames() {
         // List<QName> names = new ArrayList<QName>();

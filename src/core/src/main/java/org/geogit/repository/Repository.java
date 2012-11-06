@@ -71,31 +71,46 @@ public class Repository {
     @Inject
     private ObjectDatabase objectDatabase;
 
-    public Repository() {
-    }
-
+    /**
+     * Creates the repository.
+     */
     public void create() {
         refDatabase.create();
         objectDatabase.open();
         index.getDatabase().open();
     }
 
+    /**
+     * @return the {@link ConfigDatabase} for this repository
+     */
     public ConfigDatabase getConfigDatabase() {
         return configDatabase;
     }
 
+    /**
+     * @return the {@link RefDatabase} for this repository
+     */
     public RefDatabase getRefDatabase() {
         return refDatabase;
     }
 
+    /**
+     * @return the {@link ObjectDatabase} for this repository
+     */
     public ObjectDatabase getObjectDatabase() {
         return objectDatabase;
     }
 
+    /**
+     * @return the {@link StagingArea} for this repository
+     */
     public StagingArea getIndex() {
         return index;
     }
 
+    /**
+     * Closes the repository.
+     */
     public void close() {
         refDatabase.close();
         objectDatabase.close();
@@ -103,16 +118,27 @@ public class Repository {
     }
 
     /**
-     * @param commandClass
+     * Finds and returns an instance of a command of the specified class.
+     * 
+     * @param commandClass the kind of command to locate and instantiate
+     * @return a new instance of the requested command class, with its dependencies resolved
      */
     public <T extends AbstractGeoGitOp<?>> T command(Class<T> commandClass) {
         return injector.getInstance(commandClass);
     }
 
+    /**
+     * @return the {@link WorkingTree} for this repository
+     */
     public WorkingTree getWorkingTree() {
         return workingTree;
     }
 
+    /**
+     * @param oid the {@link ObjectId} of the object to get
+     * @return the raw {@link InputStream} for the object data
+     * @throws IOException
+     */
     public InputStream getRawObject(final ObjectId oid) throws IOException {
         return getObjectDatabase().getRaw(oid);
     }
@@ -128,6 +154,8 @@ public class Repository {
     }
 
     /**
+     * @param revStr the string to parse
+     * @return the parsed {@link Ref}, or {@code Optional.absent()} if it did not parse.
      */
     public Optional<Ref> getRef(final String revStr) {
         Optional<Ref> ref = command(RefParse.class).setName(revStr).call();
@@ -135,11 +163,19 @@ public class Repository {
     }
 
     /**
+     * @return the {@link Ref} pointed to by HEAD, or {@code Optional.absent()} if it could not be
+     *         resolved.
      */
     public Optional<Ref> getHead() {
         return getRef(Ref.HEAD);
     }
 
+    /**
+     * Determines if a commit with the given {@link ObjectId} exists in the object database.
+     * 
+     * @param id the id to look for
+     * @return true if the object was found, false otherwise
+     */
     public boolean commitExists(final ObjectId id) {
         try {
             getObjectDatabase().get(id, newCommitReader());
@@ -150,6 +186,12 @@ public class Repository {
         return true;
     }
 
+    /**
+     * Gets the {@link RevCommit} with the given {@link ObjectId} from the object database.
+     * 
+     * @param commitId the {@code ObjectId} for the commit
+     * @return the {@code RevCommit}
+     */
     public RevCommit getCommit(final ObjectId commitId) {
         RevCommit commit = getObjectDatabase().get(commitId, newCommitReader());
 
@@ -172,6 +214,9 @@ public class Repository {
         return true;
     }
 
+    /**
+     * @return the {@link ObjectId} of the root tree
+     */
     public ObjectId getRootTreeId() {
         // find the root tree
         ObjectId commitId = command(RevParse.class).setRefSpec(Ref.HEAD).call().get();
@@ -191,6 +236,10 @@ public class Repository {
         return getObjectDatabase().newObjectInserter();
     }
 
+    /**
+     * @param contentId the {@link ObjectId} of the feature to get
+     * @return the {@link RevFeature} that was found in the object database
+     */
     public RevFeature getFeature(final ObjectId contentId) {
         ObjectReader<RevFeature> reader = newFeatureReader();
 
@@ -199,57 +248,102 @@ public class Repository {
         return revFeature;
     }
 
+    /**
+     * @param commit commit to write
+     * @return a new ObjectWriter for the given commit
+     */
     public ObjectWriter<RevCommit> newCommitWriter(RevCommit commit) {
         return serialFactory.createCommitWriter(commit);
     }
 
+    /**
+     * @return a newly constructed {@link BlobPrinter}
+     */
     public BlobPrinter newBlobPrinter() {
         return serialFactory.createBlobPrinter();
     }
 
+    /**
+     * @param objectDatabase the object database that contains {@link RevTree}s
+     * @return a newly constructed {@link ObjectReader} for {@code RevTrees}
+     */
     public ObjectReader<RevTree> newRevTreeReader(ObjectDatabase objectDatabase) {
         return serialFactory.createRevTreeReader(objectDatabase);
     }
 
+    /**
+     * @param odb the object database that contains {@link RevTree}s
+     * @param depth read depth
+     * @return a newly constructed {@link ObjectReader} for {@code RevTrees}
+     */
     public ObjectReader<RevTree> newRevTreeReader(ObjectDatabase odb, int depth) {
         return serialFactory.createRevTreeReader(odb, depth);
     }
 
+    /**
+     * @param tree the {@link RevTree} to write
+     * @return a newly constructed {@link ObjectWriter} for the {@code RevTree}
+     */
     public ObjectWriter<RevTree> newRevTreeWriter(RevTree tree) {
         return serialFactory.createRevTreeWriter(tree);
     }
 
+    /**
+     * @return a newly constructed {@link ObjectReader} for {@link RevCommit}s
+     */
     public ObjectReader<RevCommit> newCommitReader() {
         return serialFactory.createCommitReader();
     }
 
+    /**
+     * @return a newly constructed {@link ObjectReader} for {@link RevFeature}s
+     */
     public ObjectReader<RevFeature> newFeatureReader() {
         ObjectReader<RevFeature> reader = serialFactory.createFeatureReader();
         return reader;
     }
 
+    /**
+     * @param hints hints for feature reading
+     * @return a newly constructed {@link ObjectReader} for {@link RevFeature}s
+     */
     public ObjectReader<RevFeature> newFeatureReader(final Map<String, Serializable> hints) {
         return serialFactory.createFeatureReader(hints);
     }
 
+    /**
+     * @param feature the {@link RevFeature} to write
+     * @return a newly constructed {@link ObjectWriter} for the given {@code RevFeature}
+     */
     public ObjectWriter<RevFeature> newFeatureWriter(RevFeature feature) {
         return serialFactory.createFeatureWriter(feature);
     }
 
+    /**
+     * @param type the {@link RevFeatureType} to write
+     * @return a newly constructed {@link ObjectWriter} for the given {@code RevFeatureType}
+     */
     public ObjectWriter<RevFeatureType> newFeatureTypeWriter(RevFeatureType type) {
         return serialFactory.createFeatureTypeWriter(type);
     }
 
+    /**
+     * @return a newly constructed {@link ObjectReader} for {@link RevFeatureType}s
+     */
     public ObjectReader<RevFeatureType> newFeatureTypeReader() {
         return serialFactory.createFeatureTypeReader();
     }
 
+    /**
+     * @return the {@link ObjectSerialisingFactory} for this repository
+     */
     public ObjectSerialisingFactory getSerializationFactory() {
         return serialFactory;
     }
 
     /**
-     * @return
+     * @return the existing {@link RevTree} pointed to by HEAD, or a new {@code RevTree} if it did
+     *         not exist
      */
     public RevTree getOrCreateHeadTree() {
         Optional<ObjectId> headTreeId = command(ResolveTreeish.class).setTreeish(Ref.HEAD).call();
@@ -260,17 +354,30 @@ public class Repository {
     }
 
     /**
-     * @param treeId
-     * @return
+     * @param treeId the tree to retrieve
+     * @return the {@link RevTree} referred to by the given {@link ObjectId}
      */
     public RevTree getTree(ObjectId treeId) {
         return command(RevObjectParse.class).setObjectId(treeId).call(RevTree.class).get();
     }
 
+    /**
+     * @param path the path to search for
+     * @return an {@link Optional} of the {@link NodeRef} for the child, or
+     *         {@code Optional.absent()} if it wasn't found
+     */
     public Optional<NodeRef> getRootTreeChild(String path) {
         return command(FindTreeChild.class).setChildPath(path).call();
     }
 
+    /**
+     * Search the given tree for the child path.
+     * 
+     * @param tree the tree to search
+     * @param childPath the path to search for
+     * @return an {@link Optional} of the {@link NodeRef} for the child path, or
+     *         {@code Optional.absent()} if it wasn't found
+     */
     public Optional<NodeRef> getTreeChild(RevTree tree, String childPath) {
         return command(FindTreeChild.class).setParent(tree).setChildPath(childPath).call();
     }

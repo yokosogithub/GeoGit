@@ -52,7 +52,11 @@ import com.vividsolutions.jts.geom.CoordinateFilter;
 import com.vividsolutions.jts.geom.Geometry;
 
 /**
- * Hashes a RevObject and returns the ObjectId
+ * Hashes a RevObject and returns the ObjectId.
+ * 
+ * @author jgarrett
+ * @see RevObject
+ * @see ObjectId
  */
 public class HashObject extends AbstractGeoGitOp<ObjectId> {
 
@@ -83,7 +87,8 @@ public class HashObject extends AbstractGeoGitOp<ObjectId> {
             (byte) 0xb7, (byte) 0x84, 0x07, 0x77 };
 
     /**
-     * @param RevObject to hash.
+     * @param object {@link RevObject} to hash.
+     * @return this
      */
     public HashObject setObject(RevObject object) {
         this.object = object;
@@ -195,7 +200,7 @@ public class HashObject extends AbstractGeoGitOp<ObjectId> {
 
     }
 
-    protected void hashObjectId(final Hasher hasher, ObjectId id) throws IOException {
+    private void hashObjectId(final Hasher hasher, ObjectId id) throws IOException {
         Preconditions.checkNotNull(id);
         if (id.isNull()) {
             hasher.putBytes(NULL_BYTE_CODE);

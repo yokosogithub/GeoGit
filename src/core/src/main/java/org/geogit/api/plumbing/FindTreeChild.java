@@ -23,6 +23,8 @@ import com.google.common.base.Suppliers;
 import com.google.inject.Inject;
 
 /**
+ * Finds a {@link NodeRef} by searching the given {@link RevTree} for the given path.
+ * 
  * @see ResolveTreeish
  * @see RevObjectParse
  */
@@ -42,6 +44,13 @@ public class FindTreeChild extends AbstractGeoGitOp<Optional<NodeRef>> {
 
     private ObjectDatabase odb;
 
+    /**
+     * Constructs a new {@code FindTreeChild} instance with the specified parameters.
+     * 
+     * @param serialFactory the serialization factory
+     * @param odb the repository object database
+     * @param index the staging database
+     */
     @Inject
     public FindTreeChild(ObjectSerialisingFactory serialFactory, ObjectDatabase odb,
             StagingDatabase index) {
@@ -53,6 +62,7 @@ public class FindTreeChild extends AbstractGeoGitOp<Optional<NodeRef>> {
     /**
      * @param indexDb whether to look up in the {@link StagingDatabase index db} ({@code true}) or
      *        on the repository's {@link ObjectDatabase object database} (default)
+     * @return this
      */
     public FindTreeChild setIndex(final boolean indexDb) {
         this.indexDb = indexDb;
@@ -62,12 +72,17 @@ public class FindTreeChild extends AbstractGeoGitOp<Optional<NodeRef>> {
     /**
      * @param tree a supplier that resolves to the tree where to start the search for the nested
      *        child. If not supplied the current HEAD tree is assumed.
+     * @return this
      */
     public FindTreeChild setParent(Supplier<RevTree> tree) {
         this.parent = tree;
         return this;
     }
 
+    /**
+     * @param tree the tree to search for the nested child
+     * @return this
+     */
     public FindTreeChild setParent(RevTree tree) {
         this.parent = Suppliers.ofInstance(tree);
         return this;
@@ -75,6 +90,7 @@ public class FindTreeChild extends AbstractGeoGitOp<Optional<NodeRef>> {
 
     /**
      * @param parentPath the parent's path. If not given parent is assumed to be a root tree.
+     * @return this
      */
     public FindTreeChild setParentPath(String parentPath) {
         this.parentPath = parentPath;
@@ -83,12 +99,19 @@ public class FindTreeChild extends AbstractGeoGitOp<Optional<NodeRef>> {
 
     /**
      * @param childPath the full path of the subtree to look for
+     * @return this
      */
     public FindTreeChild setChildPath(String childPath) {
         this.childPath = childPath;
         return this;
     }
 
+    /**
+     * Executes the command.
+     * 
+     * @return an {@code Optional} that contains the NodeRef if it was found, or
+     *         {@code Optional.absent()} if it wasn't
+     */
     @Override
     public Optional<NodeRef> call() {
         checkNotNull(childPath, "childPath");

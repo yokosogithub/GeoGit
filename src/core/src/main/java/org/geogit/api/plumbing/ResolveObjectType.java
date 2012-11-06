@@ -15,7 +15,7 @@ import org.geogit.storage.StagingDatabase;
 import com.google.inject.Inject;
 
 /**
- *
+ * Gets the object type of the object that matches the given {@link ObjectId}.
  */
 public class ResolveObjectType extends AbstractGeoGitOp<RevObject.TYPE> {
 
@@ -25,18 +25,31 @@ public class ResolveObjectType extends AbstractGeoGitOp<RevObject.TYPE> {
 
     private ObjectId oid;
 
+    /**
+     * Constructs a new instance of {@code ResolveObjectType} using the specified parameters.
+     * 
+     * @param indexDb the staging database
+     * @param serialFactory the serialization factory
+     */
     @Inject
     public ResolveObjectType(StagingDatabase indexDb, ObjectSerialisingFactory serialFactory) {
         this.indexDb = indexDb;
         this.serialFactory = serialFactory;
     }
 
+    /**
+     * @param oid the {@link ObjectId object id} of the object to check
+     * @return this
+     */
     public ResolveObjectType setObjectId(ObjectId oid) {
         this.oid = oid;
         return this;
     }
 
     /**
+     * Executes the command.
+     * 
+     * @return the {@link RevObject.TYPE type} of the object specified by the object id.
      * @throws IllegalArgumentException if the object doesn't exist
      */
     @Override

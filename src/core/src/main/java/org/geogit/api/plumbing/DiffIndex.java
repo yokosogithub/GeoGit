@@ -35,6 +35,13 @@ public class DiffIndex extends AbstractGeoGitOp<Iterator<DiffEntry>> {
 
     private String pathFilter;
 
+    /**
+     * Constructs a new {@code DiffIndex} with the given {@link StagingArea} and
+     * {@link ObjectSerialisingFactory}.
+     * 
+     * @param index the staging area
+     * @param serialFactory the serialization factory
+     */
     @Inject
     public DiffIndex(StagingArea index, ObjectSerialisingFactory serialFactory) {
         this.index = index;
@@ -42,7 +49,8 @@ public class DiffIndex extends AbstractGeoGitOp<Iterator<DiffEntry>> {
     }
 
     /**
-     * @param pathFilter
+     * @param pathFilter the path filter to use during the diff operation
+     * @return this
      */
     public DiffIndex setFilter(@Nullable String pathFilter) {
         this.pathFilter = pathFilter;
@@ -50,15 +58,22 @@ public class DiffIndex extends AbstractGeoGitOp<Iterator<DiffEntry>> {
     }
 
     /**
-     * @param the name of the root tree object in the repository's object database to compare the
-     *        index against. If {@code null} or not specified, defaults to the tree object of the
-     *        current HEAD commit.
+     * @param refSpec the name of the root tree object in the repository's object database to
+     *        compare the index against. If {@code null} or not specified, defaults to the tree
+     *        object of the current HEAD commit.
+     * @return this
      */
     public DiffIndex setOldVersion(@Nullable String refSpec) {
         this.refSpec = refSpec;
         return this;
     }
 
+    /**
+     * Finds differences between the tree pointed to by the given ref and the index.
+     * 
+     * @return an iterator to a set of differences between the two trees
+     * @see DiffEntry
+     */
     @Override
     public Iterator<DiffEntry> call() {
         final String oldVersion = Optional.fromNullable(refSpec).or(Ref.HEAD);

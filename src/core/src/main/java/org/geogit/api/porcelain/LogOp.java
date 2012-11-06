@@ -59,12 +59,21 @@ public class LogOp extends AbstractGeoGitOp<Iterator<RevCommit>> {
 
     private Repository repository;
 
+    /**
+     * Constructs a new {@code LogOp} with the given {@link Repository}.
+     * 
+     * @param repository the repository to log commits from
+     */
     @Inject
     public LogOp(final Repository repository) {
         this.repository = repository;
         timeRange = ALWAYS;
     }
 
+    /**
+     * @param limit sets the limit for the amount of commits to show
+     * @return this
+     */
     public LogOp setLimit(int limit) {
         Preconditions.checkArgument(limit > 0, "limit shall be > 0: " + limit);
         this.limit = Integer.valueOf(limit);
@@ -74,8 +83,8 @@ public class LogOp extends AbstractGeoGitOp<Iterator<RevCommit>> {
     /**
      * Indicates to return only commits newer than the given one ({@code since} is exclusive)
      * 
-     * @param the initial (oldest and exclusive) commit id, ({@code null} sets the default)
-     * @return
+     * @param since the initial (oldest and exclusive) commit id, ({@code null} sets the default)
+     * @return this
      * @see #setUntil(ObjectId)
      */
     public LogOp setSince(final ObjectId since) {
@@ -86,8 +95,8 @@ public class LogOp extends AbstractGeoGitOp<Iterator<RevCommit>> {
     /**
      * Indicates to return commits up to the provided one, inclusive.
      * 
-     * @param the final (newest and inclusive) commit id, ({@code null} sets the default)
-     * @return
+     * @param until the final (newest and inclusive) commit id, ({@code null} sets the default)
+     * @return this
      * @see #setSince(ObjectId)
      */
     public LogOp setUntil(ObjectId until) {
@@ -99,7 +108,7 @@ public class LogOp extends AbstractGeoGitOp<Iterator<RevCommit>> {
      * Show only commits that affect any of the specified paths.
      * 
      * @param path
-     * @return
+     * @return this
      */
     public LogOp addPath(final String path) {
         Preconditions.checkNotNull(path);
@@ -111,6 +120,12 @@ public class LogOp extends AbstractGeoGitOp<Iterator<RevCommit>> {
         return this;
     }
 
+    /**
+     * Show only commits that lie within the specified time range.
+     * 
+     * @param commitRange time range to show commits from
+     * @return this
+     */
     public LogOp setTimeRange(final Range<Date> commitRange) {
         if (commitRange == null) {
             this.timeRange = ALWAYS;
@@ -123,6 +138,8 @@ public class LogOp extends AbstractGeoGitOp<Iterator<RevCommit>> {
     }
 
     /**
+     * Executes the log operation.
+     * 
      * @return the list of commits that satisfy the query criteria, most recent first.
      * @see org.geogit.api.AbstractGeoGitOp#call()
      */
@@ -173,11 +190,22 @@ public class LogOp extends AbstractGeoGitOp<Iterator<RevCommit>> {
 
         private final Repository repo;
 
+        /**
+         * Constructs a new {@code LinearHistoryIterator} with the given parameters.
+         * 
+         * @param tip the first commit in the history
+         * @param repo the repository where the commits are stored.
+         */
         public LinearHistoryIterator(final ObjectId tip, final Repository repo) {
             this.nextCommitId = tip;
             this.repo = repo;
         }
 
+        /**
+         * Calculates the next commit in the history.
+         * 
+         * @return the next {@link RevCommit commit} in the history
+         */
         @Override
         protected RevCommit computeNext() {
             if (nextCommitId.isNull()) {
@@ -213,6 +241,8 @@ public class LogOp extends AbstractGeoGitOp<Iterator<RevCommit>> {
         private final Repository repo;
 
         /**
+         * Constructs a new {@code LogFilter} with the given parameters.
+         * 
          * @param repo the repository where to get the commits from
          * @param oldestCommitId the oldest commit, exclusive. Indicates when to stop evaluating.
          * @param timeRange extra time range filter besides oldest commit

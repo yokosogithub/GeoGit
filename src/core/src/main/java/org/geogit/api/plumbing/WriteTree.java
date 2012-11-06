@@ -51,17 +51,32 @@ public class WriteTree extends AbstractGeoGitOp<ObjectId> {
 
     private Supplier<RevTree> oldRoot;
 
+    /**
+     * Creates a new {@code WriteTree} operation using the specified parameters.
+     * 
+     * @param repositoryDatabase the object database to use
+     * @param index the staging area
+     */
     @Inject
     public WriteTree(ObjectDatabase repositoryDatabase, StagingArea index) {
         this.repositoryDatabase = repositoryDatabase;
         this.index = index;
     }
 
+    /**
+     * @param oldRoot a supplier for the old root tree
+     * @return this
+     */
     public WriteTree setOldRoot(Supplier<RevTree> oldRoot) {
         this.oldRoot = oldRoot;
         return this;
     }
 
+    /**
+     * Executes the write tree operation.
+     * 
+     * @return the new root tree id
+     */
     @Override
     public ObjectId call() {
         final ProgressListener progress = getProgressListener();
@@ -155,7 +170,7 @@ public class WriteTree extends AbstractGeoGitOp<ObjectId> {
     }
 
     /**
-     * @return
+     * @return the resolved root tree id
      */
     private ObjectId resolveRootTreeId() {
         if (oldRoot != null) {
@@ -167,8 +182,8 @@ public class WriteTree extends AbstractGeoGitOp<ObjectId> {
     }
 
     /**
-     * @param targetTreeId
-     * @return
+     * @param targetTreeId the tree to resolve
+     * @return the resolved root tree
      */
     private MutableTree resolveRootTree(ObjectId targetTreeId) {
         if (oldRoot != null) {

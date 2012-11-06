@@ -33,18 +33,32 @@ public class RevObjectParse extends AbstractGeoGitOp<Optional<RevObject>> {
 
     private String refSpec;
 
+    /**
+     * Constructs a new {@class RevObjectParse} operation with the given parameters.
+     * 
+     * @param indexDb the staging database
+     * @param serialFactory the serialization factory
+     */
     @Inject
     public RevObjectParse(StagingDatabase indexDb, ObjectSerialisingFactory serialFactory) {
         this.indexDb = indexDb;
         this.serialFactory = serialFactory;
     }
 
+    /**
+     * @param refSpec the ref spec to resolve
+     * @return this
+     */
     public RevObjectParse setRefSpec(final String refSpec) {
         this.objectId = null;
         this.refSpec = refSpec;
         return this;
     }
 
+    /**
+     * @param objectId the {@link ObjectId object id} to resolve
+     * @return this
+     */
     public RevObjectParse setObjectId(final ObjectId objectId) {
         this.refSpec = null;
         this.objectId = objectId;
@@ -54,12 +68,18 @@ public class RevObjectParse extends AbstractGeoGitOp<Optional<RevObject>> {
     /**
      * @return the resolved object id
      * @throws IllegalArgumentException if the provided refspec doesn't resolve to any known object
+     * @see RevObject
      */
     @Override
     public Optional<RevObject> call() throws IllegalArgumentException {
         return call(RevObject.class);
     }
 
+    /**
+     * @param clazz the base type of the parsed objects
+     * @return the resolved object id
+     * @see RevObject
+     */
     public <T extends RevObject> Optional<T> call(Class<T> clazz) {
         final ObjectId resolvedObjectId;
         if (objectId == null) {

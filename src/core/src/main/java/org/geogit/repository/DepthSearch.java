@@ -22,17 +22,38 @@ import org.geogit.storage.ObjectSerialisingFactory;
 
 import com.google.common.base.Optional;
 
+/**
+ * Searches for a {@link NodeRef} within a particular tree.
+ * 
+ * @see NodeRef
+ * @see RevTree
+ * @see ObjectDatabase
+ */
 public class DepthSearch {
 
     private final ObjectDatabase objectDb;
 
     private ObjectSerialisingFactory serialFactory;
 
+    /**
+     * Constructs a new {@code DepthSearch} with the given parameters.
+     * 
+     * @param db the object database where {@link NodeRef}s and {@link RevTree}s are stored
+     * @param serialFactory the serialization factor
+     */
     public DepthSearch(final ObjectDatabase db, ObjectSerialisingFactory serialFactory) {
         this.objectDb = db;
         this.serialFactory = serialFactory;
     }
 
+    /**
+     * Searches for a {@link NodeRef} in the given tree.
+     * 
+     * @param rootTreeId the tree to search
+     * @param path the path to the {@code NodeRef} to search for
+     * @return an {@link Optional} of the {@code NodeRef} if it was found, or
+     *         {@code Optional.absent()} if it wasn't found.
+     */
     public Optional<NodeRef> find(final ObjectId rootTreeId, final String path) {
         RevTree tree = objectDb.get(rootTreeId, serialFactory.createRevTreeReader(objectDb));
         if (tree == null) {
@@ -41,10 +62,27 @@ public class DepthSearch {
         return find(tree, path);
     }
 
+    /**
+     * Searches for a {@link NodeRef} in the given tree.
+     * 
+     * @param rootTree the tree to search
+     * @param childPath the path to the {@code NodeRef} to search for
+     * @return an {@link Optional} of the {@code NodeRef} if it was found, or
+     *         {@code Optional.absent()} if it wasn't found.
+     */
     public Optional<NodeRef> find(final RevTree rootTree, final String childPath) {
         return find(rootTree, "", childPath);
     }
 
+    /**
+     * Searches for the direct child path in the parent tree.
+     * 
+     * @param parent the tree to search
+     * @param parentPath the path of the parent tree
+     * @param childPath the path to search for
+     * @return an {@link Optional} of the {@code NodeRef} if the child path was found, or
+     *         {@code Optional.absent()} if it wasn't found.
+     */
     public Optional<NodeRef> find(final RevTree parent, final String parentPath,
             final String childPath) {
         checkNotNull(parent, "parent");
@@ -75,8 +113,10 @@ public class DepthSearch {
     }
 
     /**
-     * @param tree
-     * @param childId
+     * Searches for the given {@link ObjectId} in the given tree.
+     * 
+     * @param tree the tree to search
+     * @param childId the object to search for
      * @return the object reference if found, or {@code null} if not.
      */
     public @Nullable

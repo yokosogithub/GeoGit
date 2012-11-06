@@ -12,6 +12,11 @@ import org.geogit.api.RevPerson;
 
 import com.google.common.base.Preconditions;
 
+/**
+ * Provides a method for constructing a {@link RevCommit} with the given parameters.
+ * 
+ * @see RevCommit
+ */
 public final class CommitBuilder {
 
     private ObjectId treeId;
@@ -30,11 +35,8 @@ public final class CommitBuilder {
 
     private long timestamp;
 
-    public CommitBuilder() {
-    }
-
     /**
-     * @return the treeId
+     * @return the treeId of the commit
      */
     public ObjectId getTreeId() {
         return treeId;
@@ -48,7 +50,7 @@ public final class CommitBuilder {
     }
 
     /**
-     * @return the parentIds
+     * @return the parent commit {@link ObjectId ids}
      */
     public List<ObjectId> getParentIds() {
         return parentIds;
@@ -146,6 +148,12 @@ public final class CommitBuilder {
         this.timestamp = timestamp;
     }
 
+    /**
+     * Builds the {@link RevCommit}.
+     * 
+     * @param id the id of the tree to build the commit off of
+     * @return the constructed {@code RevCommit}
+     */
     public RevCommit build(final ObjectId id) {
         Preconditions.checkNotNull(id, "Id can't be null");
 

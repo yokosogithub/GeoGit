@@ -17,8 +17,14 @@ import org.opengis.geometry.BoundingBox;
 
 import com.google.common.base.Preconditions;
 
+/**
+ * Provides a way of describing the between two different {@link NodeRef}s.
+ */
 public class DiffEntry {
 
+    /**
+     * The possible types of change between the two {@link NodeRef}s
+     */
     public static enum ChangeType {
         /**
          * Add a new Feature
@@ -62,6 +68,12 @@ public class DiffEntry {
 
     private final NodeRef newObject;
 
+    /**
+     * Constructs a new {@code DiffEntry} from two different {@link NodeRef}s
+     * 
+     * @param oldObject the old node ref
+     * @param newObject the new node ref
+     */
     public DiffEntry(@Nonnull(when = When.MAYBE) NodeRef oldObject,
             @Nonnull(when = When.MAYBE) NodeRef newObject) {
 
@@ -138,17 +150,26 @@ public class DiffEntry {
         return bounds;
     }
 
+    /**
+     * @return the {@code DiffEntry} in the form of a readable {@code String}
+     */
     @Override
     public String toString() {
         return new StringBuilder(changeType().toString()).append(" [").append(oldObject)
                 .append("] -> [").append(newObject).append("]").toString();
     }
 
+    /**
+     * @return the path of the old object
+     */
     public @Nullable
     String oldPath() {
         return oldObject == null ? null : oldObject.getPath();
     }
 
+    /**
+     * @return the path of the new object
+     */
     public @Nullable
     String newPath() {
         return newObject == null ? null : newObject.getPath();

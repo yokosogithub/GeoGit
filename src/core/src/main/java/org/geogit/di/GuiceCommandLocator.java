@@ -12,17 +12,31 @@ import com.google.inject.Inject;
 import com.google.inject.Injector;
 
 /**
- *
+ * Provides a method for finding and creating instances of GeoGit operations.
+ * 
+ * @see Injector
+ * @see AbstractGeoGitOp
  */
 public class GuiceCommandLocator implements CommandLocator {
 
     private Injector injector;
 
+    /**
+     * Constructs a new {@code GuiceCommandLocator} with the given {@link Injector}.
+     * 
+     * @param injector the injector which has commands bound to it
+     */
     @Inject
     public GuiceCommandLocator(Injector injector) {
         this.injector = injector;
     }
 
+    /**
+     * Finds and returns an instance of a command of the specified class.
+     * 
+     * @param commandClass the kind of command to locate and instantiate
+     * @return a new instance of the requested command class, with its dependencies resolved
+     */
     @Override
     public <T extends AbstractGeoGitOp<?>> T command(Class<T> commandClass) {
         T instance = injector.getInstance(commandClass);

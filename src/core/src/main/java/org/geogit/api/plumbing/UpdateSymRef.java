@@ -34,6 +34,12 @@ public class UpdateSymRef extends AbstractGeoGitOp<Optional<SymRef>> {
 
     private RefDatabase refDb;
 
+    /**
+     * Constructs a new {@code UpdateSymRef} operation with the given {@link RefDatabase reference
+     * database}.
+     * 
+     * @param refDb
+     */
     @Inject
     public UpdateSymRef(RefDatabase refDb) {
         this.refDb = refDb;
@@ -41,6 +47,7 @@ public class UpdateSymRef extends AbstractGeoGitOp<Optional<SymRef>> {
 
     /**
      * @param name the name of the ref to update
+     * @return this
      */
     public UpdateSymRef setName(String name) {
         this.name = name;
@@ -51,6 +58,7 @@ public class UpdateSymRef extends AbstractGeoGitOp<Optional<SymRef>> {
      * @param newValue the value to set the reference to. It can be an object id
      *        {@link ObjectId#toString() hash code} or a symbolic name such as
      *        {@code "refs/origin/master"}
+     * @return this
      */
     public UpdateSymRef setNewValue(String newValue) {
         this.newValue = newValue;
@@ -60,6 +68,7 @@ public class UpdateSymRef extends AbstractGeoGitOp<Optional<SymRef>> {
     /**
      * @param oldValue if provided, the operation will fail if the current ref value doesn't match
      *        {@code oldValue}
+     * @return this
      */
     public UpdateSymRef setOldValue(String oldValue) {
         this.oldValue = oldValue;
@@ -68,6 +77,7 @@ public class UpdateSymRef extends AbstractGeoGitOp<Optional<SymRef>> {
 
     /**
      * @param delete if {@code true}, the ref will be deleted
+     * @return this
      */
     public UpdateSymRef setDelete(boolean delete) {
         this.delete = delete;
@@ -76,6 +86,7 @@ public class UpdateSymRef extends AbstractGeoGitOp<Optional<SymRef>> {
 
     /**
      * @param reason if provided, the ref log will be updated with this reason message
+     * @return this
      * @TODO: reflog not yet implemented
      */
     public UpdateSymRef setReason(String reason) {
@@ -84,7 +95,9 @@ public class UpdateSymRef extends AbstractGeoGitOp<Optional<SymRef>> {
     }
 
     /**
-     * The new ref
+     * Executes the operation.
+     * 
+     * @return the new ref
      */
     @Override
     public Optional<SymRef> call() {

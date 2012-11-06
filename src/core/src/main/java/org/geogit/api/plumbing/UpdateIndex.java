@@ -8,8 +8,6 @@ package org.geogit.api.plumbing;
 import org.geogit.api.AbstractGeoGitOp;
 import org.geogit.api.porcelain.AddOp;
 
-import com.google.inject.Inject;
-
 /**
  * Register file contents in the working tree to the index.
  * <p>
@@ -35,11 +33,6 @@ import com.google.inject.Inject;
  * </ul>
  */
 public class UpdateIndex extends AbstractGeoGitOp<Void> {
-
-    @Inject
-    public UpdateIndex() {
-
-    }
 
     @Override
     public Void call() {

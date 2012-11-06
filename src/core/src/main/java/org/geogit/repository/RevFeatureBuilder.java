@@ -18,6 +18,13 @@ import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Ordering;
 
+/**
+ * Provides a method of building a {@link RevFeature} from a {@link Feature}.
+ * 
+ * @author jgarrett
+ * @see RevFeature
+ * @see Feature
+ */
 public final class RevFeatureBuilder {
 
     private static final Ordering<Property> PROPERTY_ORDER = new Ordering<Property>() {
@@ -28,6 +35,12 @@ public final class RevFeatureBuilder {
         }
     };
 
+    /**
+     * Constructs a new {@link RevFeature} from the provided {@link Feature}.
+     * 
+     * @param feature the feature to build from
+     * @return the newly constructed RevFeature
+     */
     public RevFeature build(Feature feature) {
         if (feature == null) {
             throw new IllegalStateException("No feature set");

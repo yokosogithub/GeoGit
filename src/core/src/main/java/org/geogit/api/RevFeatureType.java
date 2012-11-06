@@ -26,6 +26,9 @@ public class RevFeatureType extends AbstractRevObject {
 
     private ImmutableList<PropertyDescriptor> sortedDescriptors;
 
+    /**
+     * Provides a method of sorting {@link PropertyDescriptor}s by their names.
+     */
     public static final Ordering<PropertyDescriptor> PROPERTY_ORDER = new Ordering<PropertyDescriptor>() {
         @Override
         public int compare(PropertyDescriptor left, PropertyDescriptor right) {
@@ -39,10 +42,22 @@ public class RevFeatureType extends AbstractRevObject {
         }
     };
 
+    /**
+     * Constructs a new {@code RevFeatureType} from the given {@link FeatureType}.
+     * 
+     * @param featureType the feature type to use
+     */
     public RevFeatureType(FeatureType featureType) {
         this(ObjectId.NULL, featureType);
     }
 
+    /**
+     * Constructs a new {@code RevFeatureType} from the given {@link ObjectId} and
+     * {@link FeatureType}.
+     * 
+     * @param id the object id to use for this feature type
+     * @param featureType the feature type to use
+     */
     public RevFeatureType(ObjectId id, FeatureType featureType) {
         super(id, TYPE.FEATURETYPE);
         this.featureType = featureType;
@@ -53,16 +68,22 @@ public class RevFeatureType extends AbstractRevObject {
 
     }
 
+    /**
+     * @return the FeatureType that this object represents
+     */
     public FeatureType type() {
         return featureType;
     }
 
+    /**
+     * @return the sorted {@link PropertyDescriptor}s of the feature type
+     */
     public ImmutableList<PropertyDescriptor> sortedDescriptors() {
         return sortedDescriptors;
     }
 
     /**
-     * @return
+     * @return the name of the feature type
      */
     public QName getName() {
         Name name = type().getName();

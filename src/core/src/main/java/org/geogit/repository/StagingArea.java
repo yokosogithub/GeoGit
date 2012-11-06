@@ -16,6 +16,11 @@ import org.opengis.util.ProgressListener;
 
 import com.google.common.base.Optional;
 
+/**
+ * Serves as an interface for the index of the GeoGit repository.
+ * 
+ * @see StagingDatabase
+ */
 public interface StagingArea {
 
     /**

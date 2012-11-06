@@ -37,6 +37,12 @@ public class DiffTree extends AbstractGeoGitOp<Iterator<DiffEntry>> {
 
     private String newRefSpec;
 
+    /**
+     * Constructs a new instance of the {@code DiffTree} operation with the given parameters.
+     * 
+     * @param objectDb the repository object database
+     * @param serialFactory the serialization factory
+     */
     @Inject
     public DiffTree(ObjectDatabase objectDb, ObjectSerialisingFactory serialFactory) {
         this.objectDb = objectDb;
@@ -44,8 +50,8 @@ public class DiffTree extends AbstractGeoGitOp<Iterator<DiffEntry>> {
     }
 
     /**
-     * @param oldRefSpec
-     * @return
+     * @param oldRefSpec the ref that points to the "old" version
+     * @return this
      */
     public DiffTree setOldVersion(String oldRefSpec) {
         this.oldRefSpec = oldRefSpec;
@@ -53,8 +59,8 @@ public class DiffTree extends AbstractGeoGitOp<Iterator<DiffEntry>> {
     }
 
     /**
-     * @param newRefSpec
-     * @return
+     * @param newRefSpec the ref that points to the "new" version
+     * @return this
      */
     public DiffTree setNewVersion(String newRefSpec) {
         this.newRefSpec = newRefSpec;
@@ -62,8 +68,8 @@ public class DiffTree extends AbstractGeoGitOp<Iterator<DiffEntry>> {
     }
 
     /**
-     * @param oldTreeId
-     * @return
+     * @param oldTreeId the {@link ObjectId} of the "old" tree
+     * @return this
      */
     public DiffTree setOldTree(ObjectId oldTreeId) {
         this.oldRefSpec = oldTreeId.toString();
@@ -71,19 +77,29 @@ public class DiffTree extends AbstractGeoGitOp<Iterator<DiffEntry>> {
     }
 
     /**
-     * @param newTreeId
-     * @return
+     * @param newTreeId the {@link ObjectId} of the "new" tree
+     * @return this
      */
     public DiffTree setNewTree(ObjectId newTreeId) {
         this.newRefSpec = newTreeId.toString();
         return this;
     }
 
+    /**
+     * @param path the path filter to use during the diff operation
+     * @return this
+     */
     public DiffTree setFilterPath(String path) {
         this.path = path;
         return this;
     }
 
+    /**
+     * Finds differences between the two specified trees.
+     * 
+     * @return an iterator to a set of differences between the two trees
+     * @see DiffEntry
+     */
     @Override
     public Iterator<DiffEntry> call() throws IllegalArgumentException {
         checkNotNull(oldRefSpec, "old version not specified");

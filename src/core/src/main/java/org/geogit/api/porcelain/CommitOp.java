@@ -79,6 +79,12 @@ public class CommitOp extends AbstractGeoGitOp<RevCommit> {
 
     private String committerEmail;
 
+    /**
+     * Constructs a new {@code CommitOp} with the given parameters.
+     * 
+     * @param repository the respository to commit to
+     * @param platform the current platform
+     */
     @Inject
     public CommitOp(final Repository repository, final Platform platform) {
         this.repository = repository;
@@ -87,6 +93,10 @@ public class CommitOp extends AbstractGeoGitOp<RevCommit> {
 
     /**
      * If set, overrides the author's name from the configuration
+     * 
+     * @param authorName the author's name
+     * @param authorEmail the author's email
+     * @return this
      */
     public CommitOp setAuthor(final @Nullable String authorName, @Nullable final String authorEmail) {
         this.authorName = Optional.fromNullable(authorName);
@@ -116,6 +126,9 @@ public class CommitOp extends AbstractGeoGitOp<RevCommit> {
 
     /**
      * If set, overrides the committer's name from the configuration
+     * 
+     * @param committerName the committer's name
+     * @param committerEmail the committer's email
      */
     public void setCommitter(String committerName, @Nullable String committerEmail) {
         Preconditions.checkNotNull(committerName);
@@ -181,7 +194,9 @@ public class CommitOp extends AbstractGeoGitOp<RevCommit> {
     }
 
     /**
-     * @return the commit just applied, or {@code null} iif
+     * Executes the commit operation.
+     * 
+     * @return the commit just applied, or {@code null} if
      *         {@code getProgressListener().isCanceled()}
      * @see org.geogit.api.AbstractGeoGitOp#call()
      * @throws NothingToCommitException if there are no staged changes by comparing the index
@@ -287,10 +302,16 @@ public class CommitOp extends AbstractGeoGitOp<RevCommit> {
         return Suppliers.memoize(supplier);
     }
 
+    /**
+     * @return the timestamp to be used for the commit
+     */
     public long getTimeStamp() {
         return timeStamp == null ? platform.currentTimeMillis() : timeStamp.longValue();
     }
 
+    /**
+     * @return the message for the commit
+     */
     public String getMessage() {
         return message;
     }
@@ -338,12 +359,16 @@ public class CommitOp extends AbstractGeoGitOp<RevCommit> {
 
     /**
      * @param allowEmptyCommit whether to allow a commit that represents no changes over its parent
+     * @return this
      */
     public CommitOp setAllowEmpty(boolean allowEmptyCommit) {
         this.allowEmpty = allowEmptyCommit;
         return this;
     }
 
+    /**
+     * @return true if a commit that represents no changes is allowed, false otherwise
+     */
     public boolean isAllowEmpty() {
         return allowEmpty;
     }

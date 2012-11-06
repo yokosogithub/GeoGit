@@ -15,6 +15,11 @@ public class NothingToCommitException extends RuntimeException {
 
     private static final long serialVersionUID = 1L;
 
+    /**
+     * Constructs a new {@code NothingToCommitException} with the given message.
+     * 
+     * @param msg the message for the exception
+     */
     public NothingToCommitException(String msg) {
         super(msg);
     }

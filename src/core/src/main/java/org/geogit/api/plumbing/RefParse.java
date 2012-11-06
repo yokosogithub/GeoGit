@@ -35,6 +35,11 @@ public class RefParse extends AbstractGeoGitOp<Optional<Ref>> {
 
     private RefDatabase refDb;
 
+    /**
+     * Constructs a new {@code RefParse} operation with the given reference database.
+     * 
+     * @param refDb the reference database to use
+     */
     @Inject
     public RefParse(RefDatabase refDb) {
         this.refDb = refDb;
@@ -42,6 +47,7 @@ public class RefParse extends AbstractGeoGitOp<Optional<Ref>> {
 
     /**
      * @param name the name of the ref to parse
+     * @return this
      */
     public RefParse setName(String name) {
         this.refSpec = name;
@@ -60,7 +66,8 @@ public class RefParse extends AbstractGeoGitOp<Optional<Ref>> {
      * {@code refs/remotes} namespace, in that order of precedence</li>
      * </ul>
      * 
-     * @return an {@link Ref reference} or {@code null} if revstr can't be resolved to any ObjectId
+     * @return an {@code Optional} that contains a {@link Ref reference} or
+     *         {@code Optional.absent()} if revstr can't be resolved to any {@link ObjectId}
      * @throws IllegalArgumentException if {@code refSpec} resolves to more than one ref on the same
      *         namespace
      */

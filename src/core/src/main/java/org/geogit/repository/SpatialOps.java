@@ -33,7 +33,7 @@ public class SpatialOps {
      * @param target bounds to be expanded (or created if null) to include {@code include} and then
      *        be returned
      * @param include bounds to ensure are included by {@code target}
-     * @return
+     * @return the new bounding box
      */
     public static BoundingBox expandToInclude(BoundingBox target, BoundingBox include) {
         if (include == null) {
@@ -68,6 +68,11 @@ public class SpatialOps {
         return target;
     }
 
+    /**
+     * @param oldObject
+     * @param newObject
+     * @return the aggregated bounding box
+     */
     public static BoundingBox aggregatedBounds(NodeRef oldObject, NodeRef newObject) {
         if (!(oldObject instanceof SpatialRef)) {
             return boundsOf(newObject);
@@ -81,6 +86,11 @@ public class SpatialOps {
         return expandToInclude(bounds1, bounds2);
     }
 
+    /**
+     * @param the {@link NodeRef ref} to get the bounds of
+     * @return the bounding box of the {@code NodeRef}, or null if the {@code NodeRef} has no
+     *         bounds.
+     */
     private static BoundingBox boundsOf(NodeRef ref) {
         if (!(ref instanceof SpatialRef)) {
             return null;
@@ -93,6 +103,9 @@ public class SpatialOps {
      * bounds.getSpan(1) == 0D, a polygon otherwise), setting the bounds
      * {@link BoundingBox#getCoordinateReferenceSystem() CRS} as the geometry's
      * {@link Geometry#getUserData() user data}.
+     * 
+     * @param bounds the bounding box to build from
+     * @return the newly constructed geometry
      */
     public static Geometry toGeometry(final BoundingBox bounds) {
         if (bounds == null) {

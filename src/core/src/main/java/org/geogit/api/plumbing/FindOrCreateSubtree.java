@@ -28,6 +28,8 @@ import com.google.inject.Inject;
  * If a child tree of {@code parent} addressed by the given {@code childPath} exists, returns it's
  * mutable copy, otherwise just returns a new mutable tree without any modification to root or any
  * intermediate tree between root and the requested tree path.
+ * 
+ * @see RevTree
  */
 public class FindOrCreateSubtree extends AbstractGeoGitOp<RevTree> {
 
@@ -56,6 +58,7 @@ public class FindOrCreateSubtree extends AbstractGeoGitOp<RevTree> {
     /**
      * @param parent a supplier that resolves to the parent tree where to start the search for the
      *        subtree from
+     * @return this
      */
     public FindOrCreateSubtree setParent(Supplier<Optional<RevTree>> parent) {
         this.parentSupplier = parent;
@@ -64,6 +67,7 @@ public class FindOrCreateSubtree extends AbstractGeoGitOp<RevTree> {
 
     /**
      * @param parentPath the parent's path. If not given parent is assumed to be a root tree.
+     * @return this
      */
     public FindOrCreateSubtree setParentPath(String parentPath) {
         this.parentPath = parentPath;
@@ -72,6 +76,7 @@ public class FindOrCreateSubtree extends AbstractGeoGitOp<RevTree> {
 
     /**
      * @param subtreePath the full path of the subtree to look for
+     * @return this
      */
     public FindOrCreateSubtree setChildPath(String subtreePath) {
         this.childPath = subtreePath;
@@ -81,12 +86,18 @@ public class FindOrCreateSubtree extends AbstractGeoGitOp<RevTree> {
     /**
      * @param indexDb whether to look up in the {@link StagingDatabase index db} ({@code true}) or
      *        on the repository's {@link ObjectDatabase object database} (default)
+     * @return this
      */
     public FindOrCreateSubtree setIndex(boolean indexDb) {
         this.indexDb = indexDb;
         return this;
     }
 
+    /**
+     * Executes the command.
+     * 
+     * @return the subtree if it was found, or a new one if it wasn't
+     */
     @Override
     public RevTree call() {
         checkNotNull(parentSupplier, "parent");

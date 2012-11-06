@@ -38,6 +38,13 @@ public class DiffWorkTree extends AbstractGeoGitOp<Iterator<DiffEntry>> {
 
     private String refSpec;
 
+    /**
+     * Constructs a new instance of the {@code DiffWorkTree} operation with the given parameters.
+     * 
+     * @param index the staging area
+     * @param workTree the working tree
+     * @param serialFactory the serialization factory
+     */
     @Inject
     public DiffWorkTree(StagingArea index, WorkingTree workTree,
             ObjectSerialisingFactory serialFactory) {
@@ -47,13 +54,19 @@ public class DiffWorkTree extends AbstractGeoGitOp<Iterator<DiffEntry>> {
     }
 
     /**
-     * @param oldRefSpec
+     * @param refSpec the name of the root tree object in the to compare the working tree against.
+     *        If {@code null} or not specified, defaults to the current state of the index.
+     * @return this
      */
     public DiffWorkTree setOldVersion(@Nullable String refSpec) {
         this.refSpec = refSpec;
         return this;
     }
 
+    /**
+     * @param path the path filter to use during the diff operation
+     * @return this
+     */
     public DiffWorkTree setFilter(@Nullable String path) {
         pathFilter = path;
         return this;
@@ -63,6 +76,9 @@ public class DiffWorkTree extends AbstractGeoGitOp<Iterator<DiffEntry>> {
      * If no {@link #setOldVersion(String) old version} was set, returns the differences between the
      * working tree and the index, otherwise the differences between the working tree and the
      * specified revision.
+     * 
+     * @return an iterator to a set of differences between the two trees
+     * @see DiffEntry
      */
     @Override
     public Iterator<DiffEntry> call() {
@@ -79,7 +95,7 @@ public class DiffWorkTree extends AbstractGeoGitOp<Iterator<DiffEntry>> {
     }
 
     /**
-     * @return
+     * @return the tree referenced by the old ref, or the head of the index.
      */
     private RevTree getOldTree() {
 

@@ -33,6 +33,12 @@ public class UpdateRef extends AbstractGeoGitOp<Optional<Ref>> {
 
     private RefDatabase refDb;
 
+    /**
+     * Constructs a new {@code UpdateRef} operation with the given {@link RefDatabase reference
+     * database}.
+     * 
+     * @param refDb the reference database to use.
+     */
     @Inject
     public UpdateRef(RefDatabase refDb) {
         this.refDb = refDb;
@@ -40,6 +46,7 @@ public class UpdateRef extends AbstractGeoGitOp<Optional<Ref>> {
 
     /**
      * @param name the name of the ref to update
+     * @return this
      */
     public UpdateRef setName(String name) {
         this.name = name;
@@ -50,6 +57,7 @@ public class UpdateRef extends AbstractGeoGitOp<Optional<Ref>> {
      * @param newValue the value to set the reference to. It can be an object id
      *        {@link ObjectId#toString() hash code} or a symbolic name such as
      *        {@code "refs/origin/master"}
+     * @return this
      */
     public UpdateRef setNewValue(ObjectId newValue) {
         this.newValue = newValue;
@@ -59,6 +67,7 @@ public class UpdateRef extends AbstractGeoGitOp<Optional<Ref>> {
     /**
      * @param oldValue if provided, the operation will fail if the current ref value doesn't match
      *        {@code oldValue}
+     * @return this
      */
     public UpdateRef setOldValue(ObjectId oldValue) {
         this.oldValue = oldValue;
@@ -67,6 +76,7 @@ public class UpdateRef extends AbstractGeoGitOp<Optional<Ref>> {
 
     /**
      * @param delete if {@code true}, the ref will be deleted
+     * @return this
      */
     public UpdateRef setDelete(boolean delete) {
         this.delete = delete;
@@ -75,6 +85,7 @@ public class UpdateRef extends AbstractGeoGitOp<Optional<Ref>> {
 
     /**
      * @param reason if provided, the ref log will be updated with this reason message
+     * @return this
      * @TODO: reflog not yet implemented
      */
     public UpdateRef setReason(String reason) {
@@ -83,6 +94,8 @@ public class UpdateRef extends AbstractGeoGitOp<Optional<Ref>> {
     }
 
     /**
+     * Executes the operation.
+     * 
      * @return the new value of the ref
      */
     @Override

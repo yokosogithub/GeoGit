@@ -15,7 +15,10 @@ import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Ordering;
 
 /**
- * Describes all of the properties in the given RevFeature
+ * Describes all of the properties in the given {@link RevFeature}.
+ * 
+ * @author jgarrett
+ * @see RevFeature
  */
 public class DescribeFeature extends AbstractGeoGitOp<ImmutableSortedSet<Property>> {
 
@@ -23,34 +26,9 @@ public class DescribeFeature extends AbstractGeoGitOp<ImmutableSortedSet<Propert
 
     private FeatureType featureType;
 
-    private static final Ordering<PropertyDescriptor> PROPERTY_DESCRIPTOR_ORDER = new Ordering<PropertyDescriptor>() {
-        @Override
-        public int compare(PropertyDescriptor left, PropertyDescriptor right) {
-            int c = Ordering.natural().nullsFirst()
-                    .compare(left.getName().getNamespaceURI(), right.getName().getNamespaceURI());
-            if (c == 0) {
-                c = Ordering.natural().nullsFirst()
-                        .compare(left.getName().getLocalPart(), right.getName().getLocalPart());
-            }
-            return c;
-        }
-    };
-
-    private static final Ordering<Property> PROPERTY_ORDER = new Ordering<Property>() {
-        @Override
-        public int compare(Property left, Property right) {
-            int c = Ordering.natural().nullsFirst()
-                    .compare(left.getName().getNamespaceURI(), right.getName().getNamespaceURI());
-            if (c == 0) {
-                c = Ordering.natural().nullsFirst()
-                        .compare(left.getName().getLocalPart(), right.getName().getLocalPart());
-            }
-            return c;
-        }
-    };
-
     /**
-     * @param feature to describe
+     * @param feature the feature to describe
+     * @return this
      */
     public DescribeFeature setFeature(RevFeature feature) {
         this.feature = feature;
@@ -58,7 +36,8 @@ public class DescribeFeature extends AbstractGeoGitOp<ImmutableSortedSet<Propert
     }
 
     /**
-     * @param feature type of this feature
+     * @param featureType the {@link FeatureType} associated with this feature
+     * @return this
      */
     public DescribeFeature setFeatureType(FeatureType featureType) {
         this.featureType = featureType;

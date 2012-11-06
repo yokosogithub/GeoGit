@@ -24,6 +24,9 @@ import com.google.inject.Inject;
  */
 public class ConfigOp extends AbstractGeoGitOp<Optional<Map<String, String>>> {
 
+    /**
+     * Enumeration of the possible actions of this command.
+     */
     public enum ConfigAction {
         CONFIG_NO_ACTION, CONFIG_GET, CONFIG_SET, CONFIG_UNSET, CONFIG_REMOVE_SECTION, CONFIG_LIST
     };
@@ -39,6 +42,8 @@ public class ConfigOp extends AbstractGeoGitOp<Optional<Map<String, String>>> {
     final private ConfigDatabase config;
 
     /**
+     * Constructs a new {@code ConfigOp} with the given {@link ConfigDatabase}.
+     * 
      * @param config where to store the options
      */
     @Inject
@@ -47,6 +52,8 @@ public class ConfigOp extends AbstractGeoGitOp<Optional<Map<String, String>>> {
     }
 
     /**
+     * Executes the config command with the specified options.
+     * 
      * @return Optional<String> if querying for a value, empty Optional if no matching name was
      *         found or if setting a value.
      * @throws ConfigException if an error is encountered. More specific information can be found in
@@ -135,38 +142,67 @@ public class ConfigOp extends AbstractGeoGitOp<Optional<Map<String, String>>> {
         return Optional.absent();
     }
 
+    /**
+     * @return true if the global option is set, false otherwise
+     */
     public boolean getGlobal() {
         return global;
     }
 
+    /**
+     * @param global if true, config actions will be executed on the global configuration file. If
+     *        false, then all actions will be done on the config file in the local repository.
+     * @return this
+     */
     public ConfigOp setGlobal(boolean global) {
         this.global = global;
         return this;
     }
 
+    /**
+     * @return the currently set {@link ConfigAction action}.
+     */
     public ConfigAction getAction() {
         return action;
     }
 
+    /**
+     * @param action the action to execute when the command is called.
+     * @return this
+     */
     public ConfigOp setAction(ConfigAction action) {
         this.action = action;
         return this;
     }
 
+    /**
+     * @param name the variable name to act on
+     * @return this
+     */
     public ConfigOp setName(String name) {
         this.name = name;
         return this;
     }
 
+    /**
+     * @return the name of the variable that is being acted on
+     */
     public String getName() {
         return name;
     }
 
+    /**
+     * @param value the value to set
+     * @return this
+     */
     public ConfigOp setValue(String value) {
         this.value = value;
         return this;
     }
 
+    /**
+     * @return the currently set value
+     */
     public String getValue() {
         return value;
     }

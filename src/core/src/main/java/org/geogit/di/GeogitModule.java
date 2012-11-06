@@ -24,8 +24,19 @@ import com.google.inject.AbstractModule;
 import com.google.inject.Scopes;
 
 /**
- *
+ * Provides bindings for GeoGit singletons.
+ * 
+ * @see CommandLocator
+ * @see Platform
+ * @see Repository
+ * @see ConfigDatabase
+ * @see StagingArea
+ * @see WorkingTree
+ * @see ObjectDatabase
+ * @see RefDatabase
+ * @see ObjectSerialisingFactory
  */
+
 public class GeogitModule extends AbstractModule {
 
     /**

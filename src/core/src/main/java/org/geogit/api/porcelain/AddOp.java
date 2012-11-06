@@ -29,7 +29,8 @@ import com.google.inject.Inject;
  * criteria as staged.
  * 
  * @author groldan
- * 
+ * @see WorkingTree
+ * @see StagingArea
  */
 public class AddOp extends AbstractGeoGitOp<WorkingTree> {
 
@@ -41,6 +42,12 @@ public class AddOp extends AbstractGeoGitOp<WorkingTree> {
 
     private StagingArea index;
 
+    /**
+     * Constructs a new {@code AddOp} with the given parameters.
+     * 
+     * @param workTree the working tree to add stages from
+     * @param index the staging area to stage changes to
+     */
     @Inject
     public AddOp(final WorkingTree workTree, final StagingArea index) {
         this.index = index;
@@ -49,7 +56,9 @@ public class AddOp extends AbstractGeoGitOp<WorkingTree> {
     }
 
     /**
-     * @see java.util.concurrent.Callable#call()
+     * Executes the add command, staging unstaged changes that match the provided patterns.
+     * 
+     * @return the modified {@link WorkingTree working tree}.
      */
     public WorkingTree call() {
         // this is add all, TODO: implement partial adds

@@ -49,6 +49,8 @@ public class InitOp extends AbstractGeoGitOp<Repository> {
     private Injector injector;
 
     /**
+     * Constructs a new {@code InitOp} with the specified parameters.
+     * 
      * @param platform where to get the current directory from
      * @param injector where to get the repository from (with auto-wired dependencies) once ensured
      *        the {@code .geogit} repository directory is found or created.
@@ -62,6 +64,8 @@ public class InitOp extends AbstractGeoGitOp<Repository> {
     }
 
     /**
+     * Executes the Init operation.
+     * 
      * @return the repository _if_ it was newly created, {@code null} if an existing repository was
      *         reinitialized (NOTE so far reinitialized is a loose term, we're not reinitializing
      *         anything, like copying template config files to the repo directory or so)

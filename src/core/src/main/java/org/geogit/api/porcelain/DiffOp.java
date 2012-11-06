@@ -17,8 +17,6 @@ import org.geogit.api.plumbing.DiffTree;
 import org.geogit.api.plumbing.DiffWorkTree;
 import org.geogit.api.plumbing.diff.DiffEntry;
 
-import com.google.inject.Inject;
-
 /**
  * Perform a diff between trees pointed out by two commits
  * <p>
@@ -56,45 +54,62 @@ public class DiffOp extends AbstractGeoGitOp<Iterator<DiffEntry>> {
 
     private boolean cached;
 
-    @Inject
-    public DiffOp() {
-    }
-
+    /**
+     * @param compareIndex if true, the index will be used in the comparison
+     */
     public void setCompareIndex(boolean compareIndex) {
         this.cached = compareIndex;
     }
 
     /**
-     * @param commitId the oldVersion to set
-     * @return
+     * @param revObjectSpec the old version to compare against
+     * @return this
      */
     public DiffOp setOldVersion(@Nullable String revObjectSpec) {
         this.oldRefSpec = revObjectSpec;
         return this;
     }
 
+    /**
+     * @param treeishOid the old {@link ObjectId} to compare against
+     * @return this
+     */
     public DiffOp setOldVersion(ObjectId treeishOid) {
         return setOldVersion(treeishOid.toString());
     }
 
     /**
-     * @param commitId the newVersion to set
-     * @return
+     * @param revObjectSpec the new version to compare against
+     * @return this
      */
     public DiffOp setNewVersion(String revObjectSpec) {
         this.newRefSpec = revObjectSpec;
         return this;
     }
 
+    /**
+     * @param treeishOid the new {@link ObjectId} to compare against
+     * @return this
+     */
     public DiffOp setNewVersion(ObjectId treeishOid) {
         return setNewVersion(treeishOid.toString());
     }
 
+    /**
+     * @param pathFilter
+     * @return this
+     */
     public DiffOp setFilter(String pathFilter) {
         this.pathFilter = pathFilter;
         return this;
     }
 
+    /**
+     * Executes the diff operation.
+     * 
+     * @return an iterator to a set of differences between the two trees
+     * @see DiffEntry
+     */
     @Override
     public Iterator<DiffEntry> call() {
         checkArgument(cached && oldRefSpec == null || !cached, String.format(
