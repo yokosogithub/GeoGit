@@ -17,13 +17,11 @@ import org.geogit.api.RevCommit;
 import org.geogit.api.RevFeature;
 import org.geogit.api.RevFeatureType;
 import org.geogit.api.RevTree;
-import org.geogit.api.plumbing.CreateTree;
 import org.geogit.api.plumbing.FindTreeChild;
 import org.geogit.api.plumbing.RefParse;
 import org.geogit.api.plumbing.ResolveTreeish;
 import org.geogit.api.plumbing.RevObjectParse;
 import org.geogit.api.plumbing.RevParse;
-import org.geogit.storage.BlobPrinter;
 import org.geogit.storage.ConfigDatabase;
 import org.geogit.storage.ObjectDatabase;
 import org.geogit.storage.ObjectInserter;
@@ -74,6 +72,9 @@ public class Repository {
     /**
      * Creates the repository.
      */
+    public Repository() {
+    }
+
     public void create() {
         refDatabase.create();
         objectDatabase.open();
@@ -206,7 +207,7 @@ public class Repository {
      */
     public boolean treeExists(final ObjectId id) {
         try {
-            getObjectDatabase().get(id, newRevTreeReader(getObjectDatabase()));
+            getObjectDatabase().get(id, newRevTreeReader());
         } catch (IllegalArgumentException e) {
             return false;
         }
@@ -256,28 +257,8 @@ public class Repository {
         return serialFactory.createCommitWriter(commit);
     }
 
-    /**
-     * @return a newly constructed {@link BlobPrinter}
-     */
-    public BlobPrinter newBlobPrinter() {
-        return serialFactory.createBlobPrinter();
-    }
-
-    /**
-     * @param objectDatabase the object database that contains {@link RevTree}s
-     * @return a newly constructed {@link ObjectReader} for {@code RevTrees}
-     */
-    public ObjectReader<RevTree> newRevTreeReader(ObjectDatabase objectDatabase) {
-        return serialFactory.createRevTreeReader(objectDatabase);
-    }
-
-    /**
-     * @param odb the object database that contains {@link RevTree}s
-     * @param depth read depth
-     * @return a newly constructed {@link ObjectReader} for {@code RevTrees}
-     */
-    public ObjectReader<RevTree> newRevTreeReader(ObjectDatabase odb, int depth) {
-        return serialFactory.createRevTreeReader(odb, depth);
+    public ObjectReader<RevTree> newRevTreeReader() {
+        return serialFactory.createRevTreeReader();
     }
 
     /**
@@ -348,7 +329,7 @@ public class Repository {
     public RevTree getOrCreateHeadTree() {
         Optional<ObjectId> headTreeId = command(ResolveTreeish.class).setTreeish(Ref.HEAD).call();
         if (!headTreeId.isPresent() || headTreeId.get().isNull()) {
-            return command(CreateTree.class).call();
+            return RevTree.EMPTY;
         }
         return getTree(headTreeId.get());
     }

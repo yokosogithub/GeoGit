@@ -18,21 +18,19 @@ import java.io.IOException;
 import org.apache.commons.io.FileUtils;
 import org.geogit.api.GeoGIT;
 import org.geogit.api.MemoryModule;
-import org.geogit.api.MutableTree;
 import org.geogit.api.NodeRef;
 import org.geogit.api.ObjectId;
 import org.geogit.api.Platform;
 import org.geogit.api.RevObject.TYPE;
 import org.geogit.api.RevTree;
+import org.geogit.api.RevTreeBuilder;
 import org.geogit.api.TestPlatform;
 import org.geogit.api.plumbing.CreateTree;
-import org.geogit.api.plumbing.HashObject;
 import org.geogit.api.plumbing.RevObjectParse;
 import org.geogit.api.plumbing.WriteBack;
 import org.geogit.di.GeogitModule;
 import org.geogit.storage.ObjectDatabase;
 import org.geogit.storage.ObjectSerialisingFactory;
-import org.geogit.storage.RevSHA1Tree;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -73,30 +71,37 @@ public class DepthSearchTest {
         serialFactory = fakeRepo.getSerializationFactory();
         search = new DepthSearch(odb, serialFactory);
 
-        MutableTree root = new RevSHA1Tree(odb, serialFactory).mutable();
+        RevTreeBuilder root = new RevTreeBuilder(odb, serialFactory);
         root = addTree(root, "path/to/tree1", "node11", "node12", "node13");
         root = addTree(root, "path/to/tree2", "node21", "node22", "node23");
         root = addTree(root, "tree3", "node31", "node32", "node33");
-        rootTreeId = fakeGeogit.command(HashObject.class).setObject(root).call();
-        odb.put(rootTreeId, serialFactory.createRevTreeWriter(root));
+        RevTree rootTree = root.build();
+        odb.put(rootTree.getId(), serialFactory.createRevTreeWriter(rootTree));
+        rootTreeId = rootTree.getId();
     }
 
-    private MutableTree addTree(MutableTree root, final String treePath, String... singleNodeNames) {
+    private RevTreeBuilder addTree(RevTreeBuilder root, final String treePath,
+            String... singleNodeNames) {
 
-        MutableTree subTree = new CreateTree(odb, null, serialFactory).setIndex(false).call();
+        RevTreeBuilder subTreeBuilder = new CreateTree(odb, null, serialFactory).setIndex(false)
+                .call();
         if (singleNodeNames != null) {
             for (String singleNodeName : singleNodeNames) {
                 String nodePath = NodeRef.appendChild(treePath, singleNodeName);
                 ObjectId fakeFeatureOId = ObjectId.forString(nodePath);
                 ObjectId fakeTypeOId = ObjectId.forString(treePath);
-                subTree.put(new NodeRef(nodePath, fakeFeatureOId, fakeTypeOId, TYPE.FEATURE));
+                subTreeBuilder
+                        .put(new NodeRef(nodePath, fakeFeatureOId, fakeTypeOId, TYPE.FEATURE));
             }
         }
 
-        ObjectId newRootId = fakeGeogit.command(WriteBack.class).setAncestor(root)
-                .setChildPath(treePath).setTree(subTree).call();
+        RevTree subtree = subTreeBuilder.build();
+        WriteBack writeBack = fakeGeogit.command(WriteBack.class).setAncestor(root)
+                .setChildPath(treePath).setTree(subtree);
+        ObjectId newRootId = writeBack.call();
+
         return fakeGeogit.command(RevObjectParse.class).setObjectId(newRootId).call(RevTree.class)
-                .get().mutable();
+                .get().builder(odb);
     }
 
     @Test

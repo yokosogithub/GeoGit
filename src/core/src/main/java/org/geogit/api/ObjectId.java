@@ -4,6 +4,7 @@
  */
 package org.geogit.api;
 
+import java.nio.charset.Charset;
 import java.util.Arrays;
 
 import com.google.common.base.Preconditions;
@@ -13,10 +14,7 @@ import com.google.common.hash.HashFunction;
 import com.google.common.hash.Hashing;
 
 /**
- * A semi-mutable SHA-1 abstraction.
- * <p>
- * An ObjectId is mutable as long as it has not been assigned a raw value already
- * </p>
+ * A {@link RevObject} identifier backed by a hash function (SHA1 for instance)
  */
 public class ObjectId implements Comparable<ObjectId> {
 
@@ -77,6 +75,9 @@ public class ObjectId implements Comparable<ObjectId> {
      */
     @Override
     public boolean equals(Object o) {
+        if (o == this) {
+            return true;
+        }
         if (!(o instanceof ObjectId)) {
             return false;
         }
@@ -184,7 +185,7 @@ public class ObjectId implements Comparable<ObjectId> {
      */
     public static ObjectId forString(final String strToHash) {
         Preconditions.checkNotNull(strToHash);
-        HashCode hashCode = HASH_FUNCTION.hashString(strToHash);
+        HashCode hashCode = HASH_FUNCTION.hashString(strToHash, Charset.forName("UTF-8"));
         return new ObjectId(hashCode.asBytes());
     }
 

@@ -10,17 +10,16 @@ import static org.geogit.api.NodeRef.PATH_SEPARATOR;
 
 import java.util.List;
 
-import javax.annotation.Nullable;
-
 import org.geogit.api.NodeRef;
 import org.geogit.api.ObjectId;
-import org.geogit.api.RevObject.TYPE;
 import org.geogit.api.RevTree;
-import org.geogit.api.TreeVisitor;
+import org.geogit.storage.NodeRefPathStorageOrder;
 import org.geogit.storage.ObjectDatabase;
 import org.geogit.storage.ObjectSerialisingFactory;
 
 import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSortedMap;
 
 /**
  * Searches for a {@link NodeRef} within a particular tree.
@@ -34,6 +33,8 @@ public class DepthSearch {
     private final ObjectDatabase objectDb;
 
     private ObjectSerialisingFactory serialFactory;
+
+    private NodeRefPathStorageOrder refOrder = new NodeRefPathStorageOrder();
 
     /**
      * Constructs a new {@code DepthSearch} with the given parameters.
@@ -55,7 +56,7 @@ public class DepthSearch {
      *         {@link Optional#absent()} if it wasn't found.
      */
     public Optional<NodeRef> find(final ObjectId rootTreeId, final String path) {
-        RevTree tree = objectDb.get(rootTreeId, serialFactory.createRevTreeReader(objectDb));
+        RevTree tree = objectDb.get(rootTreeId, serialFactory.createRevTreeReader());
         if (tree == null) {
             return null;
         }
@@ -85,6 +86,7 @@ public class DepthSearch {
      */
     public Optional<NodeRef> find(final RevTree parent, final String parentPath,
             final String childPath) {
+
         checkNotNull(parent, "parent");
         checkNotNull(parentPath, "parentPath");
         checkNotNull(childPath, "childPath");
@@ -93,13 +95,16 @@ public class DepthSearch {
         checkArgument(!childPath.isEmpty(), "empty child path");
         checkArgument(childPath.charAt(childPath.length() - 1) != PATH_SEPARATOR);
 
-        checkArgument(parentPath.isEmpty() || childPath.startsWith(parentPath + PATH_SEPARATOR),
-                String.format("expected: [%s/...] got: [%s]", parentPath, childPath));
+        checkArgument(parentPath.isEmpty() || childPath.startsWith(parentPath + PATH_SEPARATOR));
 
         final List<String> allPaths = NodeRef.allPathsTo(childPath);
         final int nexChildIndex = allPaths.indexOf(parentPath) + 1;
         final String directChildPath = allPaths.get(nexChildIndex);
-        final Optional<NodeRef> childTreeRef = parent.get(directChildPath);
+
+        final Optional<NodeRef> childTreeRef = getDirectChild(parent, directChildPath, 0);
+
+        // final Optional<NodeRef> childTreeRef = parent.get(directChildPath);
+
         if (!childTreeRef.isPresent()) {
             return childTreeRef;
         }
@@ -108,51 +113,38 @@ public class DepthSearch {
             return childTreeRef;
         }
         final RevTree childTree = objectDb.get(childTreeRef.get().getObjectId(),
-                serialFactory.createRevTreeReader(objectDb));
+                serialFactory.createRevTreeReader());
         return find(childTree, directChildPath, childPath);
     }
 
     /**
-     * Searches for the given {@link ObjectId} in the given tree.
-     * 
-     * @param tree the tree to search
-     * @param childId the object to search for
-     * @return the object reference if found, or {@code null} if not.
+     * @param parent
+     * @param directChildPath
+     * @return
      */
-    public @Nullable
-    NodeRef find(final RevTree tree, final ObjectId childId) {
-
-        final NodeRef[] refHolder = new NodeRef[1];
-
-        class IdFindedVisitor implements TreeVisitor {
-
-            @Override
-            public boolean visitEntry(NodeRef ref) {
-                if (childId.equals(ref.getObjectId())) {
-                    refHolder[0] = ref;
-                    return false;// end walk
+    public Optional<NodeRef> getDirectChild(RevTree parent, String directChildPath,
+            final int subtreesDepth) {
+        if (parent.isEmpty()) {
+            return Optional.absent();
+        }
+        if (parent.children().isPresent()) {
+            ImmutableList<NodeRef> refs = parent.children().get();
+            for (int i = 0; i < refs.size(); i++) {
+                if (directChildPath.equals(refs.get(i).getPath())) {
+                    return Optional.of(refs.get(i));
                 }
-                if (TYPE.TREE.equals(ref.getType())) {
-                    objectDb.get(ref.getObjectId(), serialFactory.createRevTreeReader(objectDb))
-                            .accept(this);
-                    if (refHolder[0] != null) {
-                        // found, stop walk
-                        return false;
-                    }
-                }
-                return true;// continue
             }
-
-            @Override
-            public boolean visitSubTree(int bucket, ObjectId treeId) {
-                return true;
-            }
+            return Optional.absent();
         }
 
-        tree.accept(new IdFindedVisitor());
-        if (refHolder[0] == null) {
-            return null;
+        ObjectId pathHash = refOrder.pathHash(directChildPath);
+        Integer bucket = Integer.valueOf(pathHash.byteN(subtreesDepth) & 0xFF);
+        ImmutableSortedMap<Integer, ObjectId> buckets = parent.buckets().get();
+        ObjectId subtreeId = buckets.get(bucket);
+        if (subtreeId == null) {
+            return Optional.absent();
         }
-        return refHolder[0];
+        RevTree subtree = objectDb.get(subtreeId, serialFactory.createRevTreeReader());
+        return getDirectChild(subtree, directChildPath, subtreesDepth + 1);
     }
 }

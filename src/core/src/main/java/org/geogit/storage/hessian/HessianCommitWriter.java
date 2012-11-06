@@ -75,4 +75,9 @@ class HessianCommitWriter extends HessianRevWriter implements ObjectWriter<RevCo
         }
     }
 
+    @Override
+    public RevCommit object() {
+        return commit;
+    }
+
 }

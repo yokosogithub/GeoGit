@@ -35,6 +35,7 @@ public interface ObjectSerialisingFactory {
      * 
      * @return commit reader
      */
+
     public ObjectReader<RevCommit> createCommitReader();
 
     /**
@@ -47,23 +48,11 @@ public interface ObjectSerialisingFactory {
 
     /**
      * Creates an instance of a RevTree reader.
-     * 
-     * @param objectDb the ObjectDatabase the RevTree is stored in
-     * @return revtree reader
      */
-    public ObjectReader<RevTree> createRevTreeReader(ObjectDatabase objectDb);
+    public ObjectReader<RevTree> createRevTreeReader();
 
     /**
-     * Creates an instance of a RevTree reader that will start reading a the given tree depth.
-     * 
-     * @param objectDb the ObjectDatabase the RevTree is stored in
-     * @param depth depth of the revtree's root
-     * @return revtree reader
-     */
-    public ObjectReader<RevTree> createRevTreeReader(ObjectDatabase objectDb, int depth);
-
-    /**
-     * Creates an instance of a Feature writer to serialize the provided feature.
+     * Creates an instance of a Feature writer to serialise the provided feature.
      * 
      * @param feature Feature to be written
      * @return feature writer
@@ -86,18 +75,8 @@ public interface ObjectSerialisingFactory {
     public ObjectReader<RevFeature> createFeatureReader(final Map<String, Serializable> hints);
 
     /**
-     * Creates a BlobPrinter that can parse serialised elements into a human-readable(ish)
-     * representation, typically xml.
-     * 
-     * @return instance of a BlobPrinter for the current serialisation
-     */
-    public BlobPrinter createBlobPrinter();
-
-    /**
-     * Creates an instance of a feature type writer to serialize the provided feature type.
-     * 
-     * @param type the feature type to write
-     * @return feature type writer
+     * @param type
+     * @return
      */
     public ObjectWriter<RevFeatureType> createFeatureTypeWriter(RevFeatureType type);
 
@@ -114,4 +93,5 @@ public interface ObjectSerialisingFactory {
      * @return object type reader
      */
     public ObjectReader<RevObject.TYPE> createObjectTypeReader();
+
 }

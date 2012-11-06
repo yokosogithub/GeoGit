@@ -23,4 +23,5 @@ public interface ObjectWriter<T> {
      */
     public void write(OutputStream out) throws IOException;
 
+    public T object();
 }

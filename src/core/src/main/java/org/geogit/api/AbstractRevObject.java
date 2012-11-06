@@ -16,25 +16,8 @@ package org.geogit.api;
 public abstract class AbstractRevObject implements RevObject {
     private final ObjectId id;
 
-    private final TYPE type;
-
-    /**
-     * Constructs a new AbstractRevObject with the given id and type
-     * 
-     * @param id ObjectId of this RevObject
-     * @param type the type of this RevObject
-     */
-    public AbstractRevObject(final ObjectId id, final TYPE type) {
+    public AbstractRevObject(final ObjectId id) {
         this.id = id;
-        this.type = type;
-    }
-
-    /**
-     * @return the type for this object
-     * @see RevObject.TYPE
-     */
-    public final TYPE getType() {
-        return type;
     }
 
     /**

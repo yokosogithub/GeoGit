@@ -12,11 +12,11 @@ import java.util.Map;
 
 import javax.annotation.Nullable;
 
-import org.geogit.api.MutableTree;
 import org.geogit.api.NodeRef;
 import org.geogit.api.ObjectId;
 import org.geogit.api.Ref;
 import org.geogit.api.RevTree;
+import org.geogit.api.RevTreeBuilder;
 import org.geogit.api.plumbing.DiffIndex;
 import org.geogit.api.plumbing.FindOrCreateSubtree;
 import org.geogit.api.plumbing.FindTreeChild;
@@ -30,6 +30,7 @@ import org.geogit.storage.StagingDatabase;
 import org.opengis.util.ProgressListener;
 
 import com.google.common.base.Optional;
+import com.google.common.base.Stopwatch;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
 import com.google.inject.Inject;
@@ -99,7 +100,7 @@ public class Index implements StagingArea {
 
         } else {
             stageTree = repository.command(RevObjectParse.class).setObjectId(stageTreeId.get())
-                    .call(RevTree.class).or(RevTree.NULL);
+                    .call(RevTree.class).or(RevTree.EMPTY);
         }
         return stageTree;
     }
@@ -107,11 +108,11 @@ public class Index implements StagingArea {
     /**
      * @return a supplier for the index.
      */
-    private Supplier<MutableTree> getTreeSupplier() {
-        Supplier<MutableTree> supplier = new Supplier<MutableTree>() {
+    private Supplier<RevTreeBuilder> getTreeSupplier() {
+        Supplier<RevTreeBuilder> supplier = new Supplier<RevTreeBuilder>() {
             @Override
-            public MutableTree get() {
-                return getTree().mutable();
+            public RevTreeBuilder get() {
+                return getTree().builder(getDatabase());
             }
         };
         return Suppliers.memoize(supplier);
@@ -168,9 +169,9 @@ public class Index implements StagingArea {
         while (changes.hasNext()) {
             Map.Entry<String, List<DiffEntry>> pairs = changes.next();
 
-            MutableTree parentTree = repository.command(FindOrCreateSubtree.class)
+            RevTreeBuilder parentTree = repository.command(FindOrCreateSubtree.class)
                     .setParent(Suppliers.ofInstance(Optional.of(getTree()))).setIndex(true)
-                    .setChildPath(pairs.getKey()).call().mutable();
+                    .setChildPath(pairs.getKey()).call().builder(getDatabase());
 
             for (DiffEntry diff : pairs.getValue()) {
                 i++;
@@ -191,7 +192,8 @@ public class Index implements StagingArea {
             }
 
             ObjectId newTree = repository.command(WriteBack.class).setAncestor(getTreeSupplier())
-                    .setChildPath(pairs.getKey()).setIndex(true).setTree(parentTree).call();
+                    .setChildPath(pairs.getKey()).setToIndex(true).setTree(parentTree.build())
+                    .call();
 
             updateStageHead(newTree);
         }
@@ -216,12 +218,15 @@ public class Index implements StagingArea {
      */
     @Override
     public int countStaged(final @Nullable String pathFilter) {
+        Stopwatch sw = new Stopwatch().start();
         Iterator<DiffEntry> unstaged = getStaged(pathFilter);
         int count = 0;
         while (unstaged.hasNext()) {
             count++;
             unstaged.next();
         }
+        sw.stop();
+        // System.err.println("countStaged: " + sw);
         return count;
     }
 

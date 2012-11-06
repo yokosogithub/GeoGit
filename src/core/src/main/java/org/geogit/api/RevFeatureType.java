@@ -59,7 +59,7 @@ public class RevFeatureType extends AbstractRevObject {
      * @param featureType the feature type to use
      */
     public RevFeatureType(ObjectId id, FeatureType featureType) {
-        super(id, TYPE.FEATURETYPE);
+        super(id);
         this.featureType = featureType;
         ArrayList<PropertyDescriptor> descriptors = Lists.newArrayList(this.featureType
                 .getDescriptors());
@@ -68,9 +68,11 @@ public class RevFeatureType extends AbstractRevObject {
 
     }
 
-    /**
-     * @return the FeatureType that this object represents
-     */
+    @Override
+    public TYPE getType() {
+        return TYPE.FEATURETYPE;
+    }
+
     public FeatureType type() {
         return featureType;
     }

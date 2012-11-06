@@ -104,7 +104,7 @@ public class DiffWorkTree extends AbstractGeoGitOp<Iterator<DiffEntry>> {
         ObjectId headTreeId = command(ResolveTreeish.class).setTreeish(oldVersion).call().get();
         final RevTree headTree;
         if (headTreeId.isNull()) {
-            headTree = RevTree.NULL;
+            headTree = RevTree.EMPTY;
         } else {
             headTree = command(RevObjectParse.class).setObjectId(headTreeId).call(RevTree.class)
                     .get();

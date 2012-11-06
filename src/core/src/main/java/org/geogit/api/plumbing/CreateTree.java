@@ -6,20 +6,18 @@
 package org.geogit.api.plumbing;
 
 import org.geogit.api.AbstractGeoGitOp;
-import org.geogit.api.MutableTree;
-import org.geogit.api.ObjectId;
+import org.geogit.api.RevTreeBuilder;
 import org.geogit.storage.ObjectDatabase;
 import org.geogit.storage.ObjectSerialisingFactory;
-import org.geogit.storage.RevSHA1Tree;
 import org.geogit.storage.StagingDatabase;
 
 import com.google.inject.Inject;
 
 /**
- * Creates a new {@link MutableTree} backed by the specified object database (the repository's by
+ * Creates a new {@link RevTreeBuilder} backed by the specified object database (the repository's by
  * default, or the staging area object database if so indicated)
  */
-public class CreateTree extends AbstractGeoGitOp<MutableTree> {
+public class CreateTree extends AbstractGeoGitOp<RevTreeBuilder> {
 
     private boolean index;
 
@@ -60,10 +58,9 @@ public class CreateTree extends AbstractGeoGitOp<MutableTree> {
      * @return the {@link MutableTree} that was created by the operation
      */
     @Override
-    public MutableTree call() {
+    public RevTreeBuilder call() {
         ObjectDatabase storage = index ? indexDb : odb;
-
-        return new RevSHA1Tree(ObjectId.NULL, storage, 0, serialFactory).mutable();
+        return new RevTreeBuilder(storage, serialFactory);
     }
 
 }

@@ -8,9 +8,9 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.geogit.api.CommitBuilder;
 import org.geogit.api.ObjectId;
 import org.geogit.api.RevCommit;
-import org.geogit.repository.CommitBuilder;
 import org.geogit.storage.ObjectReader;
 
 import com.caucho.hessian.io.Hessian2Input;

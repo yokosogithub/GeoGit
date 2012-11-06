@@ -18,13 +18,13 @@ import java.util.List;
 import java.util.UUID;
 
 import org.geogit.api.CommandLocator;
+import org.geogit.api.CommitBuilder;
 import org.geogit.api.ObjectId;
 import org.geogit.api.RevCommit;
 import org.geogit.api.RevFeature;
+import org.geogit.api.RevFeatureBuilder;
 import org.geogit.api.RevFeatureType;
 import org.geogit.api.RevTag;
-import org.geogit.repository.CommitBuilder;
-import org.geogit.repository.RevFeatureBuilder;
 import org.geogit.test.integration.RepositoryTestCase;
 import org.geotools.data.DataUtilities;
 import org.geotools.feature.simple.SimpleFeatureBuilder;

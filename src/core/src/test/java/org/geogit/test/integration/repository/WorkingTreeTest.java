@@ -23,6 +23,7 @@ import org.geogit.api.plumbing.diff.DiffEntry;
 import org.geogit.repository.WorkingTree;
 import org.geogit.test.integration.RepositoryTestCase;
 import org.geotools.util.NullProgressListener;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -367,6 +368,7 @@ public class WorkingTreeTest extends RepositoryTestCase {
         assertFalse(workTree.findUnstaged(appendChild(pointsName, idP3)).isPresent());
     }
 
+    @Ignore
     @Test
     public void testDeleteFeatureType() throws Exception {
         List<Feature> featureList = new LinkedList<Feature>();

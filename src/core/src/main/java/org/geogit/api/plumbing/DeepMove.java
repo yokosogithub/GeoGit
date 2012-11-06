@@ -14,7 +14,6 @@ import org.geogit.api.NodeRef;
 import org.geogit.api.ObjectId;
 import org.geogit.api.RevObject.TYPE;
 import org.geogit.api.RevTree;
-import org.geogit.api.TreeVisitor;
 import org.geogit.repository.StagingArea;
 import org.geogit.storage.ObjectDatabase;
 import org.geogit.storage.ObjectSerialisingFactory;
@@ -22,7 +21,6 @@ import org.geogit.storage.RawObjectWriter;
 import org.geogit.storage.StagingDatabase;
 
 import com.google.common.base.Supplier;
-import com.google.common.base.Throwables;
 import com.google.common.io.Closeables;
 import com.google.inject.Inject;
 
@@ -104,32 +102,35 @@ public class DeepMove extends AbstractGeoGitOp<ObjectId> {
             final ObjectDatabase to) {
 
         final ObjectId objectId = objectRef.getObjectId();
+        if (TYPE.TREE.equals(objectRef.getType())) {
+            RevTree tree = from.get(objectId, serialFactory.createRevTreeReader());
+            moveTree(tree, from, to);
+        } else {
+            moveFeature(objectRef, from, to);
+        }
+    }
+
+    private void moveFeature(NodeRef objectRef, ObjectDatabase from, ObjectDatabase to) {
+        moveObject(objectRef.getObjectId(), from, to, true);
+
         final ObjectId metadataId = objectRef.getMetadataId();
-        moveObject(objectId, from, to, true);
         if (!metadataId.isNull()) {
             moveObject(metadataId, from, to, false);
         }
+    }
 
-        if (TYPE.TREE.equals(objectRef.getType())) {
-            RevTree tree = from.get(objectId, serialFactory.createRevTreeReader(from));
-            tree.accept(new TreeVisitor() {
-
-                @Override
-                public boolean visitEntry(final NodeRef ref) {
-                    try {
-                        deepMove(ref, from, to);
-                    } catch (Exception e) {
-                        Throwables.propagate(e);
-                    }
-                    return true;
-                }
-
-                @Override
-                public boolean visitSubTree(int bucket, ObjectId treeId) {
-                    return true;
-                }
-            });
+    private void moveTree(RevTree tree, ObjectDatabase from, ObjectDatabase to) {
+        if (tree.children().isPresent()) {
+            for (NodeRef ref : tree.children().get()) {
+                deepMove(ref, from, to);
+            }
+        } else if (tree.buckets().isPresent()) {
+            for (ObjectId bucketId : tree.buckets().get().values()) {
+                RevTree bucketTree = from.get(bucketId, serialFactory.createRevTreeReader());
+                moveTree(bucketTree, from, to);
+            }
         }
+        moveObject(tree.getId(), from, to, true);
     }
 
     private void moveObject(final ObjectId objectId, final ObjectDatabase from,

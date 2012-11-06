@@ -83,7 +83,7 @@ public class DiffIndex extends AbstractGeoGitOp<Iterator<DiffEntry>> {
 
         final RevTree rootTree;
         if (rootTreeId.get().isNull()) {
-            rootTree = RevTree.NULL;
+            rootTree = RevTree.EMPTY;
         } else {
             rootTree = command(RevObjectParse.class).setObjectId(rootTreeId.get())
                     .call(RevTree.class).get();

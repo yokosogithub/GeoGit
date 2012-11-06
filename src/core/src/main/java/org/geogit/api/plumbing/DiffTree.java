@@ -115,9 +115,9 @@ public class DiffTree extends AbstractGeoGitOp<Iterator<DiffEntry>> {
         final RevTree oldTree;
         final RevTree newTree;
         oldTree = command(RevObjectParse.class).setObjectId(oldTreeId.get()).call(RevTree.class)
-                .or(RevTree.NULL);
+                .or(RevTree.EMPTY);
         newTree = command(RevObjectParse.class).setObjectId(newTreeId.get()).call(RevTree.class)
-                .or(RevTree.NULL);
+                .or(RevTree.EMPTY);
 
         DiffTreeWalk treeWalk = new DiffTreeWalk(objectDb, oldTree, newTree, serialFactory);
         treeWalk.setFilter(this.path);

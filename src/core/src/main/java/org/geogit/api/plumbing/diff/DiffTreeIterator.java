@@ -16,6 +16,10 @@ import org.geogit.storage.ObjectSerialisingFactory;
 import com.google.common.base.Optional;
 import com.google.common.collect.AbstractIterator;
 
+/**
+ * 
+ * @see DepthSearch
+ */
 public class DiffTreeIterator extends AbstractIterator<DiffEntry> {
 
     private ObjectDatabase lookupDb;

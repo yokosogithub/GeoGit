@@ -3,10 +3,8 @@
  * application directory.
  */
 
-package org.geogit.repository;
+package org.geogit.api;
 
-import org.geogit.api.RevFeature;
-import org.geogit.api.RevFeatureType;
 import org.geotools.feature.simple.SimpleFeatureBuilder;
 import org.opengis.feature.Feature;
 import org.opengis.feature.simple.SimpleFeature;

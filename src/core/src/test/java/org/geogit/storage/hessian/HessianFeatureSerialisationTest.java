@@ -14,7 +14,7 @@ import junit.framework.TestCase;
 
 import org.geogit.api.ObjectId;
 import org.geogit.api.RevFeature;
-import org.geogit.repository.RevFeatureBuilder;
+import org.geogit.api.RevFeatureBuilder;
 import org.geotools.data.DataUtilities;
 import org.geotools.feature.simple.SimpleFeatureBuilder;
 import org.geotools.geometry.jts.WKTReader2;

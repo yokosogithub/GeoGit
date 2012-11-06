@@ -12,13 +12,13 @@ import java.util.Map;
 import javax.annotation.Nullable;
 
 import org.geogit.api.AbstractGeoGitOp;
+import org.geogit.api.CommitBuilder;
 import org.geogit.api.ObjectId;
 import org.geogit.api.Platform;
 import org.geogit.api.Ref;
 import org.geogit.api.RevCommit;
 import org.geogit.api.RevTree;
 import org.geogit.api.SymRef;
-import org.geogit.api.plumbing.CreateTree;
 import org.geogit.api.plumbing.HashObject;
 import org.geogit.api.plumbing.RefParse;
 import org.geogit.api.plumbing.ResolveTreeish;
@@ -27,7 +27,6 @@ import org.geogit.api.plumbing.UpdateRef;
 import org.geogit.api.plumbing.UpdateSymRef;
 import org.geogit.api.plumbing.WriteTree;
 import org.geogit.api.porcelain.ConfigOp.ConfigAction;
-import org.geogit.repository.CommitBuilder;
 import org.geogit.repository.Repository;
 import org.geogit.storage.ObjectInserter;
 
@@ -294,7 +293,7 @@ public class CommitOp extends AbstractGeoGitOp<RevCommit> {
                 Optional<ObjectId> head = command(ResolveTreeish.class).setTreeish(Ref.HEAD).call();
                 ObjectId id = head.get();
                 if (id.isNull()) {
-                    return command(CreateTree.class).setIndex(false).call();
+                    return RevTree.EMPTY;
                 }
                 return command(RevObjectParse.class).setObjectId(id).call(RevTree.class).get();
             }

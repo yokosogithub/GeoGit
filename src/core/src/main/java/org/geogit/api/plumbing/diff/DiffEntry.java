@@ -15,6 +15,7 @@ import org.geogit.api.ObjectId;
 import org.geogit.repository.SpatialOps;
 import org.opengis.geometry.BoundingBox;
 
+import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
 
 /**
@@ -173,5 +174,19 @@ public class DiffEntry {
     public @Nullable
     String newPath() {
         return newObject == null ? null : newObject.getPath();
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (!(o instanceof DiffEntry)) {
+            return false;
+        }
+        DiffEntry de = (DiffEntry) o;
+        return Objects.equal(oldObject, de.oldObject) && Objects.equal(newObject, de.newObject);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hashCode(oldObject, newObject);
     }
 }

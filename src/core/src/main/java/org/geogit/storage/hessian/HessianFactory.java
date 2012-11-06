@@ -12,8 +12,6 @@ import org.geogit.api.RevFeature;
 import org.geogit.api.RevFeatureType;
 import org.geogit.api.RevObject;
 import org.geogit.api.RevTree;
-import org.geogit.storage.BlobPrinter;
-import org.geogit.storage.ObjectDatabase;
 import org.geogit.storage.ObjectReader;
 import org.geogit.storage.ObjectSerialisingFactory;
 import org.geogit.storage.ObjectWriter;
@@ -37,16 +35,8 @@ public class HessianFactory implements ObjectSerialisingFactory {
     /** HESSIAN_COMMIT_READER */
     private static final HessianCommitReader COMMIT_READER = new HessianCommitReader();
 
-    /**
-     * Creates a BlobPrinter that can parse serialised elements into a human-readable(ish)
-     * representation, typically xml.
-     * 
-     * @return instance of a BlobPrinter for the current serialisation
-     */
-    @Override
-    public BlobPrinter createBlobPrinter() {
-        return new HessianBlobPrinter();
-    }
+    /** HESSIAN_TREE_READER */
+    private static final HessianRevTreeReader TREE_READER = new HessianRevTreeReader();
 
     /**
      * Creates an instance of a commit reader.
@@ -102,27 +92,9 @@ public class HessianFactory implements ObjectSerialisingFactory {
         return new HessianFeatureWriter(feature);
     }
 
-    /**
-     * Creates an instance of a RevTree reader.
-     * 
-     * @param objectDb the ObjectDatabase the RevTree is stored in
-     * @return revtree reader
-     */
     @Override
-    public ObjectReader<RevTree> createRevTreeReader(ObjectDatabase objectDb) {
-        return new HessianRevTreeReader(objectDb, this);
-    }
-
-    /**
-     * Creates an instance of a RevTree reader that will start reading at the given tree depth.
-     * 
-     * @param objectDb the ObjectDatabase the RevTree is stored in
-     * @param order depth of the revtree's root
-     * @return revtree reader
-     */
-    @Override
-    public ObjectReader<RevTree> createRevTreeReader(ObjectDatabase objectDb, int order) {
-        return new HessianRevTreeReader(objectDb, order, this);
+    public ObjectReader<RevTree> createRevTreeReader() {
+        return TREE_READER;
     }
 
     /**

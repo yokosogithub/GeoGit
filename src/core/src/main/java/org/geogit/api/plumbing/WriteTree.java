@@ -9,11 +9,11 @@ import java.util.Iterator;
 import java.util.Map;
 
 import org.geogit.api.AbstractGeoGitOp;
-import org.geogit.api.MutableTree;
 import org.geogit.api.NodeRef;
 import org.geogit.api.ObjectId;
 import org.geogit.api.Ref;
 import org.geogit.api.RevTree;
+import org.geogit.api.RevTreeBuilder;
 import org.geogit.api.plumbing.diff.DiffEntry;
 import org.geogit.repository.StagingArea;
 import org.geogit.storage.ObjectDatabase;
@@ -95,7 +95,7 @@ public class WriteTree extends AbstractGeoGitOp<ObjectId> {
 
         Iterator<DiffEntry> staged = index.getStaged(pathFilter);
 
-        Map<String, MutableTree> changedTrees = Maps.newHashMap();
+        Map<String, RevTreeBuilder> changedTrees = Maps.newHashMap();
 
         NodeRef ref;
         int i = 0;
@@ -115,7 +115,7 @@ public class WriteTree extends AbstractGeoGitOp<ObjectId> {
 
             final String parentPath = NodeRef.parentPath(ref.getPath());
 
-            MutableTree parentTree = parentPath == null ? null : changedTrees.get(parentPath);
+            RevTreeBuilder parentTree = parentPath == null ? null : changedTrees.get(parentPath);
 
             if (parentPath != null && parentTree == null) {
 
@@ -123,7 +123,8 @@ public class WriteTree extends AbstractGeoGitOp<ObjectId> {
                         .of(oldRootTree));
 
                 parentTree = command(FindOrCreateSubtree.class).setParent(rootSupp)
-                        .setChildPath(parentPath).call().mutable();
+                        .setChildPath(parentPath).call().builder(repositoryDatabase);// repositoryDatabase
+                                                                                     // for sure?
                 changedTrees.put(parentPath, parentTree);
             }
 
@@ -142,11 +143,12 @@ public class WriteTree extends AbstractGeoGitOp<ObjectId> {
 
         // now write back all changed trees
         ObjectId newTargetRootId = oldRootTreeId;
-        for (Map.Entry<String, MutableTree> e : changedTrees.entrySet()) {
+        for (Map.Entry<String, RevTreeBuilder> e : changedTrees.entrySet()) {
             String treePath = e.getKey();
-            MutableTree tree = e.getValue();
+            RevTreeBuilder treeBuilder = e.getValue();
             RevTree newRoot = getTree(newTargetRootId);
-            newTargetRootId = writeBack(newRoot.mutable(), tree, treePath);
+            RevTree tree = treeBuilder.build();
+            newTargetRootId = writeBack(newRoot.builder(repositoryDatabase), tree, treePath);
         }
 
         progress.complete();
@@ -156,7 +158,7 @@ public class WriteTree extends AbstractGeoGitOp<ObjectId> {
 
     private RevTree getTree(ObjectId treeId) {
         if (treeId.isNull()) {
-            return command(CreateTree.class).call();
+            return RevTree.EMPTY;
         }
         return command(RevObjectParse.class).setObjectId(treeId).call(RevTree.class).get();
     }
@@ -185,21 +187,20 @@ public class WriteTree extends AbstractGeoGitOp<ObjectId> {
      * @param targetTreeId the tree to resolve
      * @return the resolved root tree
      */
-    private MutableTree resolveRootTree(ObjectId targetTreeId) {
+    private RevTree resolveRootTree(ObjectId targetTreeId) {
         if (oldRoot != null) {
-            return oldRoot.get().mutable();
+            return oldRoot.get();
         }
         if (targetTreeId.isNull()) {
-            return command(CreateTree.class).call();
+            return RevTree.EMPTY;
         }
-        return command(RevObjectParse.class).setObjectId(targetTreeId).call(RevTree.class).get()
-                .mutable();
+        return command(RevObjectParse.class).setObjectId(targetTreeId).call(RevTree.class).get();
     }
 
-    private ObjectId writeBack(MutableTree root, final RevTree tree, final String pathToTree) {
+    private ObjectId writeBack(RevTreeBuilder root, final RevTree tree, final String pathToTree) {
 
         return command(WriteBack.class).setAncestor(root).setAncestorPath("").setTree(tree)
-                .setChildPath(pathToTree).setIndex(false).call();
+                .setChildPath(pathToTree).setToIndex(false).call();
     }
 
 }

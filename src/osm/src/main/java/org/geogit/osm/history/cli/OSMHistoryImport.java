@@ -27,6 +27,7 @@ import javax.xml.namespace.QName;
 
 import jline.console.ConsoleReader;
 
+import org.geogit.api.FeatureBuilder;
 import org.geogit.api.GeoGIT;
 import org.geogit.api.NodeRef;
 import org.geogit.api.RevFeature;
@@ -43,7 +44,6 @@ import org.geogit.osm.history.internal.HistoryDownloader;
 import org.geogit.osm.history.internal.Node;
 import org.geogit.osm.history.internal.Primitive;
 import org.geogit.osm.history.internal.Way;
-import org.geogit.repository.FeatureBuilder;
 import org.geogit.repository.Repository;
 import org.geogit.repository.StagingArea;
 import org.geogit.repository.WorkingTree;

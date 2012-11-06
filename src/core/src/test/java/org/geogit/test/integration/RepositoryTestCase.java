@@ -8,6 +8,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
@@ -28,6 +29,7 @@ import org.geogit.repository.Repository;
 import org.geogit.repository.WorkingTree;
 import org.geotools.data.DataUtilities;
 import org.geotools.feature.NameImpl;
+import org.geotools.feature.SchemaException;
 import org.geotools.feature.simple.SimpleFeatureBuilder;
 import org.geotools.geometry.jts.ReferencedEnvelope;
 import org.geotools.geometry.jts.WKTReader2;
@@ -116,6 +118,10 @@ public abstract class RepositoryTestCase {
 
         setup = true;
         Logging.ALL.forceMonolineConsoleOutput();
+        doSetUp();
+    }
+
+    protected final void doSetUp() throws IOException, SchemaException, ParseException, Exception {
         envHome = new File(new File("target"), "testrepository");
 
         FileUtils.deleteDirectory(envHome);

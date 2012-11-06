@@ -126,10 +126,10 @@ public class FindOrCreateSubtree extends AbstractGeoGitOp<RevTree> {
             subtreeId = ObjectId.NULL;
         }
         if (subtreeId.isNull()) {
-            return command(CreateTree.class).setIndex(indexDb).call();
+            return RevTree.EMPTY;
         }
         ObjectDatabase target = indexDb ? index : odb;
-        RevTree tree = target.get(subtreeId, serialFactory.createRevTreeReader(target));
+        RevTree tree = target.get(subtreeId, serialFactory.createRevTreeReader());
         return tree;
     }
 }

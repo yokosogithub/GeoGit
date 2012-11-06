@@ -10,14 +10,13 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 
 import org.geogit.api.AbstractGeoGitOp;
-import org.geogit.api.MutableTree;
 import org.geogit.api.NodeRef;
 import org.geogit.api.ObjectId;
 import org.geogit.api.RevObject.TYPE;
 import org.geogit.api.RevTree;
+import org.geogit.api.RevTreeBuilder;
 import org.geogit.storage.ObjectDatabase;
 import org.geogit.storage.ObjectSerialisingFactory;
-import org.geogit.storage.ObjectWriter;
 import org.geogit.storage.StagingDatabase;
 
 import com.google.common.base.Optional;
@@ -29,8 +28,8 @@ import com.google.inject.Inject;
  * Writes the contents of a given tree as a child of a given ancestor tree, creating any
  * intermediate tree needed, and returns the {@link ObjectId id} of the resulting new ancestor tree.
  * <p>
- * If no {@link #setAncestor(MutableTree) ancestor} is provided,it is assumed to be the current HEAD
- * tree.
+ * If no {@link #setAncestor(RevTreeBuilder) ancestor} is provided,it is assumed to be the current
+ * HEAD tree.
  * <p>
  * If no {@link #setAncestorPath(String) ancestor path} is provided, the ancestor is assumed to be a
  * root tree
@@ -47,9 +46,14 @@ public class WriteBack extends AbstractGeoGitOp<ObjectId> {
 
     private final StagingDatabase index;
 
+    /**
+     * Either {@link #odb} or {@link #index}, depending on the value of {@link #indexDb}
+     */
+    private ObjectDatabase targetdb;
+
     private boolean indexDb;
 
-    private Supplier<MutableTree> ancestor;
+    private Supplier<RevTreeBuilder> ancestor;
 
     private String childPath;
 
@@ -69,6 +73,7 @@ public class WriteBack extends AbstractGeoGitOp<ObjectId> {
             ObjectSerialisingFactory serialFactory) {
         this.odb = odb;
         this.index = index;
+        this.targetdb = odb;
         this.serialFactory = serialFactory;
     }
 
@@ -78,8 +83,9 @@ public class WriteBack extends AbstractGeoGitOp<ObjectId> {
      *        {@code false}
      * @return {@code this}
      */
-    public WriteBack setIndex(boolean indexDb) {
+    public WriteBack setToIndex(boolean indexDb) {
         this.indexDb = indexDb;
+        this.targetdb = indexDb ? index : odb;
         return this;
     }
 
@@ -88,7 +94,7 @@ public class WriteBack extends AbstractGeoGitOp<ObjectId> {
      *        intermediate tree. If not set defaults to the current HEAD tree
      * @return {@code this}
      */
-    public WriteBack setAncestor(MutableTree oldRoot) {
+    public WriteBack setAncestor(RevTreeBuilder oldRoot) {
         return setAncestor(Suppliers.ofInstance(oldRoot));
     }
 
@@ -97,7 +103,7 @@ public class WriteBack extends AbstractGeoGitOp<ObjectId> {
      *        intermediate tree. If not set defaults to the current HEAD tree
      * @return {@code this}
      */
-    public WriteBack setAncestor(Supplier<MutableTree> ancestor) {
+    public WriteBack setAncestor(Supplier<RevTreeBuilder> ancestor) {
         this.ancestor = ancestor;
         return this;
     }
@@ -158,7 +164,7 @@ public class WriteBack extends AbstractGeoGitOp<ObjectId> {
         checkState(null != tree, "child tree supplier returned null");
 
         ObjectDatabase targetDb = indexDb ? index : odb;
-        MutableTree root = resolveAncestor();
+        RevTreeBuilder root = resolveAncestor();
 
         return writeBack(root, ancestorPath, tree, childPath, targetDb);
     }
@@ -173,62 +179,54 @@ public class WriteBack extends AbstractGeoGitOp<ObjectId> {
     /**
      * @return the resolved ancestor
      */
-    private MutableTree resolveAncestor() {
-        if (this.ancestor == null) {
-
-        }
-        MutableTree ancestor = this.ancestor.get();
+    private RevTreeBuilder resolveAncestor() {
+        RevTreeBuilder ancestor = this.ancestor.get();
         checkState(ancestor != null, "provided ancestor tree supplier returned null");
         return ancestor;
     }
 
-    private ObjectId writeBack(MutableTree ancestor, final String ancestorPath,
+    private ObjectId writeBack(RevTreeBuilder ancestor, final String ancestorPath,
             final RevTree childTree, final String childPath, final ObjectDatabase targetDatabase) {
 
-        final ObjectId treeId = command(HashObject.class).setObject(childTree).call();
+        final ObjectId treeId = childTree.getId();
         targetDatabase.put(treeId, serialFactory.createRevTreeWriter(childTree));
 
         final boolean isDirectChild = NodeRef.isDirectChild(ancestorPath, childPath);
         if (isDirectChild) {
             ObjectId metadataId = ObjectId.NULL;
             ancestor.put(new NodeRef(childPath, treeId, metadataId, TYPE.TREE));
-            ObjectWriter<RevTree> treeWriter = serialFactory.createRevTreeWriter(ancestor);
-            ObjectId newAncestorId = command(HashObject.class).setObject(ancestor).call();
-            targetDatabase.put(newAncestorId, treeWriter);
-            return newAncestorId;
+            RevTree newAncestor = ancestor.build();
+            targetDatabase.put(newAncestor.getId(), serialFactory.createRevTreeWriter(newAncestor));
+            return newAncestor.getId();
         }
 
         final String parentPath = NodeRef.parentPath(childPath);
         Optional<NodeRef> parentRef = getTreeChild(ancestor, parentPath);
-        MutableTree parent;
+        RevTreeBuilder parentBuilder;
         if (parentRef.isPresent()) {
             ObjectId parentId = parentRef.get().getObjectId();
-            parent = getTree(parentId).mutable();
+            parentBuilder = getTree(parentId).builder(targetdb);
         } else {
-            parent = newTree();
+            parentBuilder = RevTree.EMPTY.builder(targetDatabase);
         }
 
-        parent.put(new NodeRef(childPath, treeId, ObjectId.NULL, TYPE.TREE));
+        parentBuilder.put(new NodeRef(childPath, treeId, ObjectId.NULL, TYPE.TREE));
+        RevTree parent = parentBuilder.build();
 
         return writeBack(ancestor, ancestorPath, parent, parentPath, targetDatabase);
     }
 
-    private MutableTree newTree() {
-        return command(CreateTree.class).setIndex(indexDb).call();
-    }
-
     private RevTree getTree(ObjectId treeId) {
         if (treeId.isNull()) {
-            return newTree();
+            return RevTree.EMPTY;
         }
-        ObjectDatabase targetDb = indexDb ? index : odb;
-        RevTree revTree = targetDb.get(treeId, serialFactory.createRevTreeReader(targetDb));
+        RevTree revTree = targetdb.get(treeId, serialFactory.createRevTreeReader());
         return revTree;
     }
 
-    private Optional<NodeRef> getTreeChild(RevTree parent, String childPath) {
-
-        FindTreeChild cmd = command(FindTreeChild.class).setIndex(true).setParent(parent)
+    private Optional<NodeRef> getTreeChild(RevTreeBuilder parent, String childPath) {
+        RevTree realParent = parent.build();
+        FindTreeChild cmd = command(FindTreeChild.class).setIndex(true).setParent(realParent)
                 .setChildPath(childPath);
 
         return cmd.call();

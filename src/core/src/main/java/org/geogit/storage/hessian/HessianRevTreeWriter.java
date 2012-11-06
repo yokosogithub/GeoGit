@@ -6,24 +6,23 @@ package org.geogit.storage.hessian;
 
 import java.io.IOException;
 import java.io.OutputStream;
+import java.util.Map.Entry;
 
-import org.geogit.api.MutableTree;
 import org.geogit.api.NodeRef;
 import org.geogit.api.ObjectId;
 import org.geogit.api.RevTree;
-import org.geogit.api.TreeVisitor;
 import org.geogit.storage.ObjectWriter;
-import org.geogit.storage.RevSHA1Tree;
 
 import com.caucho.hessian.io.Hessian2Output;
-import com.google.common.base.Throwables;
+import com.google.common.collect.ImmutableCollection;
+import com.google.common.collect.ImmutableSortedMap;
 
 /**
  * Writes a {@link RevTree tree} to a binary encoded stream.
  */
 
 class HessianRevTreeWriter extends HessianRevWriter implements ObjectWriter<RevTree> {
-    private final RevSHA1Tree tree;
+    private final RevTree tree;
 
     /**
      * Constructs a new {@code HessianRevTreeWriter} with the given {@link RevTree}.
@@ -31,7 +30,7 @@ class HessianRevTreeWriter extends HessianRevWriter implements ObjectWriter<RevT
      * @param tree the tree to write
      */
     public HessianRevTreeWriter(RevTree tree) {
-        this.tree = (RevSHA1Tree) tree;
+        this.tree = tree;
     }
 
     /**
@@ -42,10 +41,6 @@ class HessianRevTreeWriter extends HessianRevWriter implements ObjectWriter<RevT
     @Override
     public void write(OutputStream out) throws IOException {
         RevTree revTree = this.tree;
-        if (!revTree.isNormalized()) {
-            revTree = revTree.mutable();
-            ((MutableTree) revTree).normalize();
-        }
         Hessian2Output hout = new Hessian2Output(out);
         try {
             hout.startMessage();
@@ -54,8 +49,12 @@ class HessianRevTreeWriter extends HessianRevWriter implements ObjectWriter<RevT
             // byte[] size = revTree.size().toByteArray();
             // hout.writeBytes(size);
 
-            TreeVisitor v = new WritingTreeVisitor(hout);
-            revTree.accept(v);
+            if (revTree.children().isPresent()) {
+                writeChildren(hout, revTree.children().get());
+            } else if (revTree.buckets().isPresent()) {
+                writeBuckets(hout, revTree.buckets().get());
+            }
+
             hout.writeInt(HessianRevTreeReader.Node.END.getValue());
 
             hout.completeMessage();
@@ -64,33 +63,25 @@ class HessianRevTreeWriter extends HessianRevWriter implements ObjectWriter<RevT
         }
     }
 
-    private final class WritingTreeVisitor implements TreeVisitor {
-        private Hessian2Output hout;
-
-        public WritingTreeVisitor(Hessian2Output out) {
-            this.hout = out;
+    private void writeChildren(Hessian2Output hout, ImmutableCollection<NodeRef> children)
+            throws IOException {
+        for (NodeRef ref : children) {
+            HessianRevTreeWriter.this.writeNodeRef(hout, ref);
         }
+    }
 
-        @Override
-        public boolean visitEntry(NodeRef ref) {
-            try {
-                HessianRevTreeWriter.this.writeNodeRef(hout, ref);
-            } catch (IOException ex) {
-                Throwables.propagate(ex);
-            }
-            return true;
-        }
+    private void writeBuckets(Hessian2Output hout, ImmutableSortedMap<Integer, ObjectId> buckets)
+            throws IOException {
 
-        @Override
-        public boolean visitSubTree(int bucket, ObjectId treeId) {
-            try {
-                hout.writeInt(HessianRevReader.Node.TREE.getValue());
-                hout.writeInt(bucket);
-                HessianRevTreeWriter.this.writeObjectId(hout, treeId);
-            } catch (IOException ex) {
-                ex.printStackTrace();
-            }
-            return false;
+        for (Entry<Integer, ObjectId> entry : buckets.entrySet()) {
+            hout.writeInt(HessianRevReader.Node.TREE.getValue());
+            hout.writeInt(entry.getKey().intValue());
+            HessianRevTreeWriter.this.writeObjectId(hout, entry.getValue());
         }
+    }
+
+    @Override
+    public RevTree object() {
+        return tree;
     }
 }

@@ -10,14 +10,11 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
-import java.io.PrintWriter;
-
 import org.geogit.api.NodeRef;
 import org.geogit.api.ObjectId;
 import org.geogit.api.Ref;
 import org.geogit.api.RevCommit;
 import org.geogit.api.RevTree;
-import org.geogit.api.plumbing.CreateTree;
 import org.geogit.api.plumbing.FindTreeChild;
 import org.geogit.api.plumbing.HashObject;
 import org.geogit.api.plumbing.RevObjectParse;
@@ -26,7 +23,6 @@ import org.geogit.api.plumbing.WriteTree;
 import org.geogit.repository.StagingArea;
 import org.geogit.repository.WorkingTree;
 import org.geogit.storage.ObjectInserter;
-import org.geogit.test.integration.PrintVisitor;
 import org.geogit.test.integration.RepositoryTestCase;
 import org.junit.Test;
 import org.opengis.feature.Feature;
@@ -196,7 +192,7 @@ public class IndexTest extends RepositoryTestCase {
             @Override
             public RevTree get() {
                 if (treeId.isNull()) {
-                    return geogit.command(CreateTree.class).setIndex(true).call();
+                    return RevTree.EMPTY;
                 }
                 return geogit.command(RevObjectParse.class).setObjectId(treeId).call(RevTree.class)
                         .get();
@@ -281,7 +277,6 @@ public class IndexTest extends RepositoryTestCase {
             RevTree newRepoTree = repo.getTree(newRepoTreeId1);
 
             System.err.println("++++++++++ new repo tree 1: " + newRepoTreeId1 + " ++++++++++++");
-            newRepoTree.accept(new PrintVisitor(repo, new PrintWriter(System.err)));
             // check feature1_1 is there
             assertEquals(oId1_1, repo.getTreeChild(newRepoTree, appendChild(pointsName, idP1))
                     .get().getObjectId());
@@ -315,8 +310,6 @@ public class IndexTest extends RepositoryTestCase {
 
             System.err.println("++++++++ new root 2:" + newRepoTreeId2 + " ++++++++++");
             RevTree newRepoTree = repo.getTree(newRepoTreeId2);
-
-            newRepoTree.accept(new PrintVisitor(repo, new PrintWriter(System.err)));
 
             // check feature1_2, feature1_2 and feature2_1
             Optional<NodeRef> treeChild;
@@ -363,8 +356,6 @@ public class IndexTest extends RepositoryTestCase {
 
             System.err.println("++++++++ new root 3:" + newRepoTreeId3 + " ++++++++++");
             RevTree newRepoTree = repo.getTree(newRepoTreeId3);
-
-            newRepoTree.accept(new PrintVisitor(repo, new PrintWriter(System.err)));
 
             // and check only feature1_2 and feature2_2 remain
             assertFalse(repo.getTreeChild(newRepoTree, appendChild(pointsName, idP1)).isPresent());

@@ -31,7 +31,7 @@ public class RevFeature extends AbstractRevObject {
      * @param values a list of values, with {@link Optional#absent()} representing a null value
      */
     public RevFeature(ObjectId id, ImmutableList<Optional<Object>> values) {
-        super(id, TYPE.FEATURE);
+        super(id);
         this.values = values;
     }
 
@@ -40,5 +40,10 @@ public class RevFeature extends AbstractRevObject {
      */
     public ImmutableList<Optional<Object>> getValues() {
         return values;
+    }
+
+    @Override
+    public TYPE getType() {
+        return TYPE.FEATURE;
     }
 }

@@ -109,7 +109,7 @@ public class RevObjectParse extends AbstractGeoGitOp<Optional<RevObject>> {
             throw new UnsupportedOperationException("not yet implemented");
             // break;
         case TREE:
-            reader = serialFactory.createRevTreeReader(indexDb);
+            reader = serialFactory.createRevTreeReader();
             break;
         case FEATURETYPE:
             reader = serialFactory.createFeatureTypeReader();

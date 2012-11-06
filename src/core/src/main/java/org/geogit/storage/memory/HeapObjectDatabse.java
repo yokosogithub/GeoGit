@@ -1,5 +1,7 @@
 package org.geogit.storage.memory;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.util.Collections;
@@ -65,6 +67,7 @@ public class HeapObjectDatabse extends AbstractObjectDatabase implements ObjectD
      */
     @Override
     public boolean exists(ObjectId id) {
+        checkNotNull(id);
         return objects.containsKey(id);
     }
 
@@ -76,14 +79,10 @@ public class HeapObjectDatabse extends AbstractObjectDatabase implements ObjectD
      */
     @Override
     public boolean delete(ObjectId objectId) {
+        checkNotNull(objectId);
         return objects.remove(objectId) != null;
     }
 
-    /**
-     * @param raw
-     * @return
-     * @see org.geogit.storage.AbstractObjectDatabase#lookUpInternal(byte[])
-     */
     @Override
     protected List<ObjectId> lookUpInternal(byte[] raw) {
         throw new UnsupportedOperationException("we override lookup directly");

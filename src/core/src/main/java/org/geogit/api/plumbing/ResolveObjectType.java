@@ -54,7 +54,10 @@ public class ResolveObjectType extends AbstractGeoGitOp<RevObject.TYPE> {
      */
     @Override
     public TYPE call() throws IllegalArgumentException {
-        TYPE type = indexDb.get(oid, serialFactory.createObjectTypeReader());
-        return type;
+        Object o = indexDb.get(oid, serialFactory.createObjectTypeReader());
+        if (o instanceof RevObject) {
+            return ((RevObject) o).getType();
+        }
+        return (RevObject.TYPE) o;
     }
 }

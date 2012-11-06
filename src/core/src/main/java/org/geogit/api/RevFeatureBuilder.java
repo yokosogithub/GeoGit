@@ -2,15 +2,13 @@
  * This code is licensed under the LGPL 2.1 license, available at the root
  * application directory.
  */
-package org.geogit.repository;
+package org.geogit.api;
 
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
-import org.geogit.api.RevFeature;
-import org.geogit.api.RevFeatureType;
 import org.opengis.feature.Feature;
 import org.opengis.feature.Property;
 

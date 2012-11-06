@@ -40,7 +40,7 @@ public class FindTreeChild extends AbstractGeoGitOp<Optional<NodeRef>> {
 
     private boolean indexDb;
 
-    private StagingDatabase index;
+    private ObjectDatabase index;
 
     private ObjectDatabase odb;
 
@@ -57,6 +57,12 @@ public class FindTreeChild extends AbstractGeoGitOp<Optional<NodeRef>> {
         this.serialFactory = serialFactory;
         this.odb = odb;
         this.index = index;
+    }
+
+    public FindTreeChild(ObjectSerialisingFactory serialFactory, ObjectDatabase odb) {
+        this.serialFactory = serialFactory;
+        this.odb = odb;
+        this.index = odb;
     }
 
     /**

@@ -19,7 +19,6 @@ import java.util.UUID;
 
 import org.apache.commons.collections.map.LRUMap;
 import org.geogit.api.AbstractGeoGitOp;
-import org.geogit.api.MutableTree;
 import org.geogit.api.NodeRef;
 import org.geogit.api.ObjectId;
 import org.geogit.api.RevCommit;
@@ -30,7 +29,6 @@ import org.geogit.api.RevPerson;
 import org.geogit.api.RevTag;
 import org.geogit.api.RevTree;
 import org.geogit.api.SpatialRef;
-import org.geogit.api.TreeVisitor;
 import org.geogit.storage.GtEntityType;
 import org.geotools.referencing.CRS;
 import org.geotools.referencing.wkt.Formattable;
@@ -172,13 +170,15 @@ public class HashObject extends AbstractGeoGitOp<ObjectId> {
     }
 
     private void hashTree(final Hasher hasher, RevTree revTree) throws IOException {
-        if (!revTree.isNormalized()) {
-            revTree = revTree.mutable();
-            ((MutableTree) revTree).normalize();
+        if (revTree.children().isPresent()) {
+            for (NodeRef ref : revTree.children().get()) {
+                hashNodeRef(hasher, ref);
+            }
+        } else if (revTree.buckets().isPresent()) {
+            for (ObjectId bucketId : revTree.buckets().get().values()) {
+                hashObjectId(hasher, bucketId);
+            }
         }
-
-        TreeVisitor v = new WritingTreeVisitor(hasher);
-        revTree.accept(v);
         hasher.putInt(TreeNode.END.getValue());
     }
 
@@ -426,35 +426,5 @@ public class HashObject extends AbstractGeoGitOp<ObjectId> {
             crsIdCache.put(crs, epsgCode);
         }
         return epsgCode;
-    }
-
-    private final class WritingTreeVisitor implements TreeVisitor {
-        private Hasher hasher;
-
-        public WritingTreeVisitor(Hasher hasher) {
-            this.hasher = hasher;
-        }
-
-        @Override
-        public boolean visitEntry(NodeRef ref) {
-            try {
-                hashNodeRef(hasher, ref);
-            } catch (IOException ex) {
-                Throwables.propagate(ex);
-            }
-            return true;
-        }
-
-        @Override
-        public boolean visitSubTree(int bucket, ObjectId treeId) {
-            try {
-                hasher.putInt(TreeNode.TREE.getValue());
-                hasher.putInt(bucket);
-                hashObjectId(hasher, treeId);
-            } catch (IOException ex) {
-                ex.printStackTrace();
-            }
-            return false;
-        }
     }
 }

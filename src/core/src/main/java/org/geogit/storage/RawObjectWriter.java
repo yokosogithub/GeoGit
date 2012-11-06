@@ -41,4 +41,9 @@ public class RawObjectWriter implements ObjectWriter<Object> {
         }
     }
 
+    @Override
+    public Object object() {
+        return null;
+    }
+
 }

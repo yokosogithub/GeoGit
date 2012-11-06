@@ -9,6 +9,7 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import org.geogit.api.RevFeature;
+import org.geogit.api.RevFeatureBuilder;
 import org.geogit.test.integration.RepositoryTestCase;
 import org.junit.Test;
 import org.opengis.feature.Property;

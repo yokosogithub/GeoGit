@@ -24,6 +24,10 @@ import com.ning.compress.lzf.LZFOutputStream;
  */
 public abstract class AbstractObjectDatabase implements ObjectDatabase {
 
+    public AbstractObjectDatabase() {
+        // TODO: use an external cache
+    }
+
     /**
      * Searches the database for {@link ObjectId}s that match the given partial id.
      * 
@@ -62,8 +66,8 @@ public abstract class AbstractObjectDatabase implements ObjectDatabase {
         Preconditions.checkNotNull(id, "id");
         Preconditions.checkNotNull(reader, "reader");
 
-        T object;
         InputStream raw = getRaw(id);
+        T object;
         try {
             object = reader.read(id, raw);
         } finally {
@@ -92,63 +96,18 @@ public abstract class AbstractObjectDatabase implements ObjectDatabase {
     protected abstract InputStream getRawInternal(ObjectId id) throws IllegalArgumentException;
 
     /**
-     * @see org.geogit.storage.ObjectDatabase#put(org.geogit.storage.ObjectWriter)
-     */
-    // @Override
-    // public final <T> ObjectId put(final ObjectWriter<T> writer) {
-    // MessageDigest sha1;
-    // ByteArrayOutputStream rawOut = new ByteArrayOutputStream();
-    // DigestOutputStream keyGenOut;
-    // try {
-    // sha1 = MessageDigest.getInstance("SHA1");
-
-    // keyGenOut = new DigestOutputStream(rawOut, sha1);
-    // GZIPOutputStream cOut = new GZIPOutputStream(keyGenOut);
-    // LZFOutputStream cOut = new LZFOutputStream(keyGenOut);
-
-    // try {
-    // writer.write(cOut);
-    // } finally {
-    // cOut.finish();
-    // cOut.flush();
-    // cOut.close();
-    // keyGenOut.flush();
-    // keyGenOut.close();
-    // rawOut.flush();
-    // rawOut.close();
-    // }
-    // } catch (Exception e) {
-    // throw Throwables.propagate(e);
-    // }
-    // final byte[] rawData = rawOut.toByteArray();
-    // final byte[] rawKey = keyGenOut.getMessageDigest().digest();
-    // final ObjectId id = new ObjectId(rawKey);
-    // putInternal(id, rawData);
-    // return id;
-    // }
-
-    /**
-     * Adds an object to the database with the given {@link ObjectId id}. If an object with the same
-     * id already exists, it will not be inserted.
-     * 
-     * @param id the id of the object to insert
-     * @param writer the writer for the object
-     * @return true if the object was inserted, false otherwise
      * @see org.geogit.storage.ObjectDatabase#put(org.geogit.api.ObjectId,
      *      org.geogit.storage.ObjectWriter)
      */
     @Override
     public final boolean put(final ObjectId id, final ObjectWriter<?> writer) {
         ByteArrayOutputStream rawOut = new ByteArrayOutputStream();
-        // GZIPOutputStream cOut = new GZIPOutputStream(rawOut);
         LZFOutputStream cOut = new LZFOutputStream(rawOut);
         try {
-            // writer.write(cOut);
             writer.write(cOut);
         } catch (IOException e) {
             throw Throwables.propagate(e);
         } finally {
-            // cOut.finish();
             try {
                 cOut.flush();
                 cOut.close();
@@ -159,7 +118,8 @@ public abstract class AbstractObjectDatabase implements ObjectDatabase {
             }
         }
         final byte[] rawData = rawOut.toByteArray();
-        return putInternal(id, rawData);
+        final boolean inserted = putInternal(id, rawData);
+        return inserted;
     }
 
     /**

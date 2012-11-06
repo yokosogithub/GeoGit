@@ -24,7 +24,12 @@ public class RevTag extends AbstractRevObject {
      * @param commitId the {@code ObjectId} of the commit that this tag points to
      */
     public RevTag(final ObjectId id, final String name, final ObjectId commitId) {
-        super(id, TYPE.TAG);
+        super(id);
+    }
+
+    @Override
+    public TYPE getType() {
+        return TYPE.TAG;
     }
 
     /**

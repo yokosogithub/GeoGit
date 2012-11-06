@@ -35,7 +35,12 @@ public class RevCommit extends AbstractRevObject {
      * @param id the object id to use
      */
     public RevCommit(final ObjectId id) {
-        super(id, TYPE.COMMIT);
+        super(id);
+    }
+
+    @Override
+    public TYPE getType() {
+        return TYPE.COMMIT;
     }
 
     /**

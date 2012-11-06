@@ -200,4 +200,9 @@ class HessianFeatureWriter implements ObjectWriter<RevFeature> {
             break;
         }
     }
+
+    @Override
+    public RevFeature object() {
+        return null;
+    }
 }
