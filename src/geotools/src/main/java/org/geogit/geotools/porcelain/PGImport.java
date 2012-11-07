@@ -14,6 +14,7 @@ import org.geogit.geotools.plumbing.GeoToolsOpException;
 import org.geogit.geotools.plumbing.ImportOp;
 import org.geotools.data.DataStore;
 import org.geotools.jdbc.JDBCDataStore;
+import org.opengis.util.ProgressListener;
 
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.Parameters;
@@ -77,8 +78,9 @@ public class PGImport extends AbstractPGCommand implements CLICommand {
 
             cli.getConsole().println("Importing from database " + commonArgs.database);
 
+            ProgressListener progressListener = cli.getProgressListener();
             cli.getGeogit().command(ImportOp.class).setAll(all).setTable(table)
-                    .setDataStore(dataStore).call();
+                    .setDataStore(dataStore).setProgressListener(progressListener).call();
 
             cli.getConsole().println("Import successful.");
 

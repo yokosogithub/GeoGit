@@ -13,6 +13,7 @@ import org.geogit.cli.GeogitCLI;
 import org.geogit.geotools.plumbing.GeoToolsOpException;
 import org.geogit.geotools.plumbing.ImportOp;
 import org.geotools.data.DataStore;
+import org.opengis.util.ProgressListener;
 
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.Parameters;
@@ -67,8 +68,9 @@ public class ShpImport extends AbstractShpCommand implements CLICommand {
 
                 cli.getConsole().println("Importing from shapefile " + shp);
 
+                ProgressListener progressListener = cli.getProgressListener();
                 cli.getGeogit().command(ImportOp.class).setAll(true).setTable(null)
-                        .setDataStore(dataStore).call();
+                        .setDataStore(dataStore).setProgressListener(progressListener).call();
 
                 cli.getConsole().println(shp + " imported successfully.");
 
