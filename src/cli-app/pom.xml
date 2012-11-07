@@ -13,7 +13,7 @@
   <artifactId>geogit-cli-app</artifactId>
   <packaging>pom</packaging>
   <name>GeoGit CLI App</name>
-
+    
   <dependencies>
     <dependency>
       <groupId>org.geogit</groupId>
@@ -70,30 +70,47 @@
           </execution>
         </executions>
       </plugin>
-      <plugin>
-        <artifactId>maven-assembly-plugin</artifactId>
-        <configuration>
-          <appendAssemblyId>false</appendAssemblyId>
-          <finalName>geogit</finalName>
-          <archive>
-            <manifest>
-              <mainClass>org.geogit.cli.GeogitCLI</mainClass>
-            </manifest>
-          </archive>
-          <descriptors>
-            <descriptor>cli-assembly-dir.xml</descriptor>
-          </descriptors>
-        </configuration>
-          <executions>
-              <execution>
-                  <id>assemble</id>
-                  <phase>package</phase>
-                  <goals>
-                      <goal>single</goal>
-                  </goals>
-              </execution>
-          </executions>
-      </plugin>
+        <plugin>
+            <artifactId>maven-assembly-plugin</artifactId>
+            <configuration>
+                <archive>
+                    <manifest>
+                        <mainClass>org.geogit.cli.GeogitCLI</mainClass>
+                    </manifest>
+                </archive>
+                <descriptors>
+                    <descriptor>cli-assembly-zip.xml</descriptor>
+                </descriptors>
+            </configuration>
+            <executions>
+                <execution>
+                    <id>assemble-dir</id>
+                    <configuration>
+                        <appendAssemblyId>false</appendAssemblyId>
+                        <finalName>geogit</finalName>
+                        <archive>
+                            <manifest>
+                                <mainClass>org.geogit.cli.GeogitCLI</mainClass>
+                            </manifest>
+                        </archive>
+                        <descriptors>
+                            <descriptor>cli-assembly-dir.xml</descriptor>
+                        </descriptors>
+                    </configuration>
+                    <phase>package</phase>
+                    <goals>
+                        <goal>single</goal>
+                    </goals>
+                </execution>
+                <execution>
+                    <id>assemble-zip</id>
+                    <goals>
+                        <goal>single</goal>
+                    </goals>
+                </execution>
+            </executions>
+        </plugin>
+
     </plugins>
   </build>
 </project>
