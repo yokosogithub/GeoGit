@@ -6,6 +6,7 @@
 package org.geogit.storage.fs;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.common.base.Preconditions.checkState;
 
 import java.io.File;
 import java.io.IOException;
@@ -92,6 +93,9 @@ public class FileRefDatabase implements RefDatabase {
             return null;
         }
         String value = readRef(refFile);
+        if (value == null) {
+            return null;
+        }
         try {
             ObjectId.valueOf(value);
         } catch (IllegalArgumentException e) {
@@ -112,6 +116,9 @@ public class FileRefDatabase implements RefDatabase {
             return null;
         }
         String value = readRef(refFile);
+        if (value == null) {
+            return null;
+        }
         if (!value.startsWith("ref: ")) {
             throw new IllegalArgumentException(name + " is not a symbolic ref: '" + value + "'");
         }
@@ -202,18 +209,26 @@ public class FileRefDatabase implements RefDatabase {
 
     private String readRef(File refFile) {
         try {
-            return Files.readFirstLine(refFile, CHARSET);
+            synchronized (refFile.getCanonicalPath().intern()) {
+                return Files.readFirstLine(refFile, CHARSET);
+            }
         } catch (IOException e) {
             throw Throwables.propagate(e);
         }
     }
 
     private void store(String refName, String refValue) {
-        File refFile = toFile(refName);
+        final File refFile = toFile(refName);
+        final File tmpFile = new File(refFile.getParentFile(), "." + refFile.getName() + ".tmp");
 
         try {
-            Files.createParentDirs(refFile);
-            Files.write(refValue + "\n", refFile, CHARSET);
+            Files.createParentDirs(tmpFile);
+            Files.write(refValue + "\n", tmpFile, CHARSET);
+            boolean renamed;
+            synchronized (refFile.getCanonicalPath().intern()) {
+                renamed = tmpFile.renameTo(refFile);
+            }
+            checkState(renamed, "unable to save ref " + refName);
         } catch (IOException e) {
             throw Throwables.propagate(e);
         }
@@ -243,7 +258,7 @@ public class FileRefDatabase implements RefDatabase {
         for (File f : children) {
             if (f.isDirectory()) {
                 findRefs(f, prefix + f.getName() + "/", target);
-            } else {
+            } else if (!f.getName().startsWith(".")) {
                 String refName = prefix + f.getName();
                 String refValue = readRef(f);
                 target.put(refName, refValue);
