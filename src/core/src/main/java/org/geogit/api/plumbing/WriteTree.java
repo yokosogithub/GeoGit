@@ -85,7 +85,7 @@ public class WriteTree extends AbstractGeoGitOp<ObjectId> {
         final RevTree oldRootTree = resolveRootTree(oldRootTreeId);
 
         String pathFilter = null;
-        final int numChanges = index.countStaged(pathFilter);
+        final long numChanges = index.countStaged(pathFilter);
         if (numChanges == 0) {
             return oldRootTreeId;
         }

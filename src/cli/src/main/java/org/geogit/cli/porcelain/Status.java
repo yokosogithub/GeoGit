@@ -78,8 +78,8 @@ public class Status implements CLICommand {
         final WorkingTree workTree = geogit.getRepository().getWorkingTree();
 
         String pathFilter = null;
-        final int countStaged = index.countStaged(pathFilter);
-        final int countUnstaged = workTree.countUnstaged(pathFilter);
+        final long countStaged = index.countStaged(pathFilter);
+        final long countUnstaged = workTree.countUnstaged(pathFilter);
 
         console.println("# On branch <can't know yet>");
 
@@ -124,7 +124,7 @@ public class Status implements CLICommand {
      * @see DiffEntry
      */
     private void print(final ConsoleReader console, final Iterator<DiffEntry> changes,
-            final Color color, final int total) throws IOException {
+            final Color color, final long total) throws IOException {
 
         final int limit = all || this.limit == null ? Integer.MAX_VALUE : this.limit.intValue();
 

@@ -55,6 +55,8 @@ public class RevTreeBuilder {
 
     protected MessageDigest md;
 
+    private long size;
+
     /**
      * Empty tree constructor, used to create trees from scratch
      * 
@@ -96,6 +98,7 @@ public class RevTreeBuilder {
         this.innerTrees = Maps.newTreeMap();
 
         if (copy != null) {
+            this.size = copy.size();
             if (copy.children().isPresent()) {
                 checkArgument(!copy.buckets().isPresent());
                 for (NodeRef ref : copy.children().get()) {
@@ -118,7 +121,7 @@ public class RevTreeBuilder {
         RevTreeImpl unnamedTree;
 
         if (!innerTrees.isEmpty()) {
-            unnamedTree = RevTreeImpl.createNodeTree(ObjectId.NULL, innerTrees);
+            unnamedTree = RevTreeImpl.createNodeTree(ObjectId.NULL, size, innerTrees);
         } else {
             Collection<NodeRef> entries = Collections2.filter(entriesByBucket.values(),
                     new Predicate<NodeRef>() {
@@ -129,11 +132,11 @@ public class RevTreeBuilder {
                             return applies;
                         }
                     });
-            unnamedTree = RevTreeImpl.createLeafTree(ObjectId.NULL, entries);
+            unnamedTree = RevTreeImpl.createLeafTree(ObjectId.NULL, size, entries);
         }
 
         ObjectId treeId = new HashObject().setObject(unnamedTree).call();
-        RevTreeImpl namedTree = RevTreeImpl.create(treeId, unnamedTree);
+        RevTreeImpl namedTree = RevTreeImpl.create(treeId, size, unnamedTree);
         return namedTree;
     }
 
@@ -207,11 +210,29 @@ public class RevTreeBuilder {
             this.entriesByBucket.remove(bucket, existing.get());
         }
         entriesByBucket.put(bucket, ref);
+        if (ref.getType().equals(RevObject.TYPE.FEATURE)) {
+            if (!existing.isPresent()) {
+                size += 1;
+            }
+        } else if (ref.getType().equals(RevObject.TYPE.TREE)) {
+            long oldChildSize = existing.isPresent() ? sizeOfTree(existing.get().getObjectId())
+                    : 0L;
+            long newChildSize = sizeOfTree(ref.getObjectId());
+            this.size += (newChildSize - oldChildSize);
+        }
         if (entriesByBucket.size() >= DEFAULT_SPLIT_FACTOR) {
             // hit the split factor modification tolerance, lets normalize
             normalize();
         }
         return this;
+    }
+
+    private long sizeOfTree(ObjectId treeId) {
+        if (treeId.isNull()) {
+            return 0L;
+        }
+        RevTree tree = db.get(treeId, serialFactory.createRevTreeReader());
+        return tree.size();
     }
 
     public RevTreeBuilder remove(final String childPath) {
@@ -224,10 +245,17 @@ public class RevTreeBuilder {
 
         Optional<NodeRef> ref = this.getInternal(childPath, bucket, true);
         if (ref.isPresent()) {
-            entriesByBucket.remove(bucket, ref.get());
+            NodeRef child = ref.get();
+            entriesByBucket.remove(bucket, child);
 
             entriesByBucket.put(bucket, new NodeRef(childPath, ObjectId.NULL, ObjectId.NULL,
                     TYPE.FEATURE));
+            if (TYPE.FEATURE.equals(child.getType())) {
+                this.size--;
+            } else {
+                checkState(TYPE.TREE.equals(child.getType()));
+                this.size -= sizeOfTree(child.getObjectId());
+            }
             if (entriesByBucket.size() >= DEFAULT_SPLIT_FACTOR) {
                 normalize();
             }

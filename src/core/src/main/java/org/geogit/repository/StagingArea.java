@@ -49,7 +49,7 @@ public interface StagingArea {
      * @param numChanges
      */
     public abstract void stage(final ProgressListener progress, final Iterator<DiffEntry> unstaged,
-            final int numChanges);
+            final long numChanges);
 
     /**
      * @param pathFilter
@@ -62,7 +62,7 @@ public interface StagingArea {
      * @param pathFilter
      * @return the number differences between STAGE_HEAD and HEAD based on the path filter.
      */
-    public abstract int countStaged(final @Nullable String pathFilter);
+    public abstract long countStaged(final @Nullable String pathFilter);
 
     /**
      * Discards any staged change.

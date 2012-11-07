@@ -74,7 +74,7 @@ public class Add extends AbstractCommand implements CLICommand {
         }
 
         console.print("Counting unstaged features...");
-        int unstaged = cli.getGeogit().getRepository().getWorkingTree().countUnstaged(pathFilter);
+        long unstaged = cli.getGeogit().getRepository().getWorkingTree().countUnstaged(pathFilter);
         if (0 == unstaged) {
             console.println();
             console.println("No unstaged features, exiting.");
@@ -92,7 +92,7 @@ public class Add extends AbstractCommand implements CLICommand {
         }
         WorkingTree workTree = op.setProgressListener(cli.getProgressListener()).call();
 
-        int staged = cli.getGeogit().getRepository().getIndex().countStaged(null);
+        long staged = cli.getGeogit().getRepository().getIndex().countStaged(null);
         unstaged = workTree.countUnstaged(null);
 
         console.println(staged + " features staged for commit");

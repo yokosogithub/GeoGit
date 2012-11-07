@@ -40,8 +40,7 @@ class HessianRevTreeReader extends HessianRevReader implements ObjectReader<RevT
                 throw new IllegalArgumentException("Could not parse blob of type " + blobType
                         + " as rev tree.");
 
-            // BigInteger size = new BigInteger(hin.readBytes());
-            // BigInteger size = BigInteger.ZERO;
+            final long size = hin.readLong();
 
             Builder<NodeRef> children = ImmutableList.builder();
             TreeMap<Integer, ObjectId> subtrees = Maps.newTreeMap();
@@ -67,9 +66,9 @@ class HessianRevTreeReader extends HessianRevReader implements ObjectReader<RevT
 
             RevTree tree;
             if (subtrees.isEmpty()) {
-                tree = RevTreeImpl.createLeafTree(id, children.build());
+                tree = RevTreeImpl.createLeafTree(id, size, children.build());
             } else {
-                tree = RevTreeImpl.createNodeTree(id, subtrees);
+                tree = RevTreeImpl.createNodeTree(id, size, subtrees);
             }
             return tree;
         } catch (Exception e) {

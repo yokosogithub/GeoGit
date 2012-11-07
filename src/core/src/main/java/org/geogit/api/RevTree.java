@@ -71,7 +71,18 @@ public interface RevTree extends RevObject {
         public Optional<ImmutableSortedMap<Integer, ObjectId>> buckets() {
             return Optional.absent();
         }
+
+        @Override
+        public long size() {
+            return 0L;
+        }
+
     };
+
+    /**
+     * @return total number of features, including size nested trees
+     */
+    public long size();
 
     public boolean isEmpty();
 

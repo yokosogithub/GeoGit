@@ -32,8 +32,8 @@ import org.junit.Test;
 import com.google.common.base.Joiner;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 
 /**
@@ -211,7 +211,7 @@ public class TreeDiffEntryIteratorTest extends Assert {
     @Test
     public void testBucketEmptyChildrenEmpty() {
 
-        RevTree leftTree = bucketTree(null);
+        RevTree leftTree = bucketTree();
         RevTree rightTree = childenTree();
 
         ImmutableSet<DiffEntry> diffset = diffSet(leftTree, rightTree);
@@ -224,7 +224,7 @@ public class TreeDiffEntryIteratorTest extends Assert {
     public void testChildrenEmptyBucketEmpty() {
 
         RevTree leftTree = childenTree();
-        RevTree rightTree = bucketTree(null);
+        RevTree rightTree = bucketTree();
 
         ImmutableSet<DiffEntry> diffset = diffSet(leftTree, rightTree);
         ImmutableSet<DiffEntry> expected = ImmutableSet.of();
@@ -236,7 +236,7 @@ public class TreeDiffEntryIteratorTest extends Assert {
     public void testChildrenBucket() {
 
         RevTree leftTree = childenTree();
-        RevTree rightTree = bucketTree(null);
+        RevTree rightTree = bucketTree();
 
         ImmutableSet<DiffEntry> diffset = diffSet(leftTree, rightTree);
         ImmutableSet<DiffEntry> expected = ImmutableSet.of();
@@ -245,15 +245,11 @@ public class TreeDiffEntryIteratorTest extends Assert {
     }
 
     @SuppressWarnings("unchecked")
-    private RevTree bucketTree(@Nullable Map<Integer, ObjectId> bucketTrees) {
+    private RevTree bucketTree() {
 
-        ObjectId id = bucketTrees == null ? ObjectId.forString("null") : ObjectId
-                .forString(bucketTrees.keySet().toString());
-
-        if (bucketTrees == null) {
-            bucketTrees = Maps.newHashMap();
-        }
-        RevTreeImpl tree = RevTreeImpl.createNodeTree(id, bucketTrees);
+        ObjectId id = ObjectId.forString("null");
+        Map<Integer, ObjectId> bucketTrees = ImmutableMap.of();
+        RevTreeImpl tree = RevTreeImpl.createNodeTree(id, 0, bucketTrees);
 
         when(mockDb.get(eq(id), (ObjectReader<RevTree>) any())).thenReturn(tree);
 
@@ -278,7 +274,8 @@ public class TreeDiffEntryIteratorTest extends Assert {
                 .on(" ").join(pathIdKvps));
 
         ImmutableList<NodeRef> sortedRefs = ImmutableList.copyOf(refs);
-        RevTreeImpl tree = RevTreeImpl.createLeafTree(id, sortedRefs);
+        long size = sortedRefs.size();
+        RevTreeImpl tree = RevTreeImpl.createLeafTree(id, size, sortedRefs);
 
         when(mockDb.get(eq(id), (ObjectReader<RevTree>) any())).thenReturn(tree);
 

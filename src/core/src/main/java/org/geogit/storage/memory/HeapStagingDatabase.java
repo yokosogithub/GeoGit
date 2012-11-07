@@ -12,6 +12,7 @@ import java.util.List;
 import java.util.Set;
 
 import org.geogit.api.ObjectId;
+import org.geogit.storage.AbstractObjectDatabase;
 import org.geogit.storage.ObjectDatabase;
 import org.geogit.storage.ObjectInserter;
 import org.geogit.storage.ObjectReader;

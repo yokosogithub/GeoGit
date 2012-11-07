@@ -139,7 +139,7 @@ public class Index implements StagingArea {
      */
     @Override
     public void stage(final ProgressListener progress, final Iterator<DiffEntry> unstaged,
-            final int numChanges) {
+            final long numChanges) {
         int i = 0;
         progress.started();
         // System.err.println("staging with path: " + path2 + ". Matches: " + numChanges);
@@ -217,10 +217,10 @@ public class Index implements StagingArea {
      * @return the number differences between STAGE_HEAD and HEAD based on the path filter.
      */
     @Override
-    public int countStaged(final @Nullable String pathFilter) {
+    public long countStaged(final @Nullable String pathFilter) {
         Stopwatch sw = new Stopwatch().start();
         Iterator<DiffEntry> unstaged = getStaged(pathFilter);
-        int count = 0;
+        long count = 0;
         while (unstaged.hasNext()) {
             count++;
             unstaged.next();

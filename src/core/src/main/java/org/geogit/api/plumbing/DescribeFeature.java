@@ -9,10 +9,8 @@ import org.geogit.api.AbstractGeoGitOp;
 import org.geogit.api.RevFeature;
 import org.opengis.feature.Property;
 import org.opengis.feature.type.FeatureType;
-import org.opengis.feature.type.PropertyDescriptor;
 
 import com.google.common.collect.ImmutableSortedSet;
-import com.google.common.collect.Ordering;
 
 /**
  * Describes all of the properties in the given {@link RevFeature}.

@@ -28,8 +28,8 @@ public class RevTreeImpl extends AbstractRevObject implements RevTree {
 
         private final Optional<ImmutableList<NodeRef>> children;
 
-        public LeafTree(ObjectId id, ImmutableList<NodeRef> childrenMap) {
-            super(id);
+        public LeafTree(final ObjectId id, final long size, final ImmutableList<NodeRef> childrenMap) {
+            super(id, size);
             this.children = Optional.of(childrenMap);
         }
 
@@ -43,8 +43,9 @@ public class RevTreeImpl extends AbstractRevObject implements RevTree {
 
         private final Optional<ImmutableSortedMap<Integer, ObjectId>> buckets;
 
-        public NodeTree(final ObjectId id, final ImmutableSortedMap<Integer, ObjectId> innerTrees) {
-            super(id);
+        public NodeTree(final ObjectId id, final long size,
+                final ImmutableSortedMap<Integer, ObjectId> innerTrees) {
+            super(id, size);
             this.buckets = Optional.of(innerTrees);
         }
 
@@ -54,12 +55,20 @@ public class RevTreeImpl extends AbstractRevObject implements RevTree {
         }
     }
 
-    private RevTreeImpl(ObjectId id) {
+    private final long size;
+
+    private RevTreeImpl(ObjectId id, long size) {
         super(id);
+        this.size = size;
     }
 
     @Override
-    public boolean isEmpty() {
+    public final long size() {
+        return size;
+    }
+
+    @Override
+    public final boolean isEmpty() {
         return children().isPresent() ? children().get().isEmpty()
                 : (buckets().isPresent() ? buckets().get().isEmpty() : true);
     }
@@ -74,38 +83,39 @@ public class RevTreeImpl extends AbstractRevObject implements RevTree {
         return Optional.absent();
     }
 
-    public static RevTreeImpl createLeafTree(ObjectId id, ImmutableList<NodeRef> children) {
+    public static RevTreeImpl createLeafTree(ObjectId id, long size, ImmutableList<NodeRef> children) {
         Preconditions.checkNotNull(id);
         Preconditions.checkNotNull(children);
-        return new LeafTree(id, children);
+        return new LeafTree(id, size, children);
     }
 
-    public static RevTreeImpl createLeafTree(ObjectId id, Collection<NodeRef> children) {
+    public static RevTreeImpl createLeafTree(ObjectId id, long size, Collection<NodeRef> children) {
         Preconditions.checkNotNull(id);
         Preconditions.checkNotNull(children);
 
         TreeSet<NodeRef> set = Sets.newTreeSet(new NodeRefStorageOrder());
         set.addAll(children);
-        return createLeafTree(id, ImmutableList.copyOf(set));
+        return createLeafTree(id, size, ImmutableList.copyOf(set));
     }
 
-    public static RevTreeImpl createNodeTree(ObjectId id, Map<Integer, ObjectId> bucketTrees) {
+    public static RevTreeImpl createNodeTree(ObjectId id, long size,
+            Map<Integer, ObjectId> bucketTrees) {
         Preconditions.checkNotNull(id);
         Preconditions.checkNotNull(bucketTrees);
         ImmutableSortedMap<Integer, ObjectId> innerTrees = ImmutableSortedMap.copyOf(bucketTrees);
 
-        return new NodeTree(id, innerTrees);
+        return new NodeTree(id, size, innerTrees);
     }
 
-    static RevTreeImpl create(ObjectId id, RevTree unidentified) {
+    static RevTreeImpl create(ObjectId id, long size, RevTree unidentified) {
         if (unidentified.buckets().isPresent()) {
-            return new NodeTree(id, unidentified.buckets().get());
+            return new NodeTree(id, size, unidentified.buckets().get());
         }
         ImmutableList<NodeRef> children = ImmutableList.of();
         if (unidentified.children().isPresent()) {
             children = unidentified.children().get();
         }
-        return new LeafTree(id, children);
+        return new LeafTree(id, size, children);
     }
 
     @Override
