@@ -23,6 +23,8 @@ public class RemoteRemoveOp extends AbstractGeoGitOp<Remote> {
     final private ConfigDatabase config;
 
     /**
+     * Constructs a new {@code RemoteRemoveOp} with the given config database.
+     * 
      * @param config where the remote is stored
      */
     @Inject
@@ -31,7 +33,10 @@ public class RemoteRemoveOp extends AbstractGeoGitOp<Remote> {
     }
 
     /**
-     * @return the remote that was removed, or Optional.absent if the remote didn't exist.
+     * Executes the remote-remove operation.
+     * 
+     * @return the {@link Remote} that was removed, or {@link Optional#absent()} if the remote
+     *         didn't exist.
      */
     @Override
     public Remote call() {
@@ -60,11 +65,18 @@ public class RemoteRemoveOp extends AbstractGeoGitOp<Remote> {
         return remote;
     }
 
+    /**
+     * @param name the name of the remote to remove
+     * @return {@code this}
+     */
     public RemoteRemoveOp setName(String name) {
         this.name = name;
         return this;
     }
 
+    /**
+     * @return the name of the remote to remove
+     */
     public String getName() {
         return name;
     }

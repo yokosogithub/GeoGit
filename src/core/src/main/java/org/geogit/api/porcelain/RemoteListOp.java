@@ -21,6 +21,8 @@ public class RemoteListOp extends AbstractGeoGitOp<Optional<List<Remote>>> {
     final private ConfigDatabase config;
 
     /**
+     * Constructs a new {@code RemoteListOp} with the given config database.
+     * 
      * @param config where to find the remotes
      */
     @Inject
@@ -29,6 +31,8 @@ public class RemoteListOp extends AbstractGeoGitOp<Optional<List<Remote>>> {
     }
 
     /**
+     * Executes the remote-list operation.
+     * 
      * @return Optional<List<Remote>> of all remotes found in the config database.
      */
     @Override

@@ -20,7 +20,20 @@ import com.beust.jcommander.Parameter;
 import com.beust.jcommander.Parameters;
 
 /**
- *
+ * Adds a remote for the repository with the given name and URL.
+ * <p>
+ * With {@code -t <branch>} option, instead of the default global refspec for the remote to track
+ * all branches under the refs/remotes/<name>/ namespace, a refspec to track only <branch> is
+ * created.
+ * <p>
+ * CLI proxy for {@link RemoteAddOp}
+ * <p>
+ * Usage:
+ * <ul>
+ * <li> {@code geogit remote add [-t <branch>] <name> <url>}
+ * </ul>
+ * 
+ * @see RemoteAddOp
  */
 @Parameters(commandNames = "remote add", commandDescription = "Add a remote for the repository")
 public class RemoteAdd extends AbstractCommand implements CLICommand {
@@ -31,6 +44,12 @@ public class RemoteAdd extends AbstractCommand implements CLICommand {
     @Parameter(description = "<name> <url>")
     private List<String> params = new ArrayList<String>();
 
+    /**
+     * Executes the remote add command using the provided options.
+     * 
+     * @param cli
+     * @see org.geogit.cli.AbstractCommand#runInternal(org.geogit.cli.GeogitCLI)
+     */
     @Override
     public void runInternal(GeogitCLI cli) throws Exception {
         checkState(cli.getGeogit() != null, "Not a geogit repository: " + cli.getPlatform().pwd());

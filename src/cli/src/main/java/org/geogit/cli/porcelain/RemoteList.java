@@ -21,7 +21,18 @@ import com.beust.jcommander.Parameters;
 import com.google.common.base.Optional;
 
 /**
- *
+ * Shows a list of existing remotes.
+ * <p>
+ * With the {@code -v} option, be a little more descriptive and show the remote URL after the name.
+ * <p>
+ * CLI proxy for {@link RemoteListOp}
+ * <p>
+ * Usage:
+ * <ul>
+ * <li> {@code geogit remote list [-v]}
+ * </ul>
+ * 
+ * @see RemoteListOp
  */
 @Parameters(commandNames = "list", commandDescription = "List all remotes for the current repository")
 public class RemoteList extends AbstractCommand implements CLICommand {
@@ -29,6 +40,12 @@ public class RemoteList extends AbstractCommand implements CLICommand {
     @Parameter(names = { "-v", "--verbose" }, description = "Be a little more verbose and show remote url after name.")
     boolean verbose = false;
 
+    /**
+     * Executes the remote list command.
+     * 
+     * @param cli
+     * @see org.geogit.cli.AbstractCommand#runInternal(org.geogit.cli.GeogitCLI)
+     */
     @Override
     public void runInternal(GeogitCLI cli) throws Exception {
         checkState(cli.getGeogit() != null, "Not a geogit repository: " + cli.getPlatform().pwd());

@@ -12,7 +12,13 @@ import com.beust.jcommander.Parameters;
 
 /**
  * {@link CLICommandExtension} that provides a {@link JCommander} for remote specific commands.
+ * <p>
+ * Usage:
+ * <ul>
+ * <li> {@code geogit remote <command> <args>...}
+ * </ul>
  * 
+ * @author jgarrett
  * @see RemoteAdd
  * @see RemoteRemove
  * @see RemoteList
@@ -20,6 +26,10 @@ import com.beust.jcommander.Parameters;
 @Parameters(commandNames = "remote", commandDescription = "remote utilities")
 public class RemoteExtension implements CLICommandExtension {
 
+    /**
+     * @return the JCommander parser for this extension
+     * @see JCommander
+     */
     @Override
     public JCommander getCommandParser() {
         JCommander commander = new JCommander(this);
