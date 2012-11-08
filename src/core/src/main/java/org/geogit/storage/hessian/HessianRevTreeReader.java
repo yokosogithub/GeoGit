@@ -46,12 +46,8 @@ class HessianRevTreeReader extends HessianRevReader implements ObjectReader<RevT
             TreeMap<Integer, ObjectId> subtrees = Maps.newTreeMap();
 
             while (true) {
-                Node type = null;
-                try {
-                    type = Node.fromValue(hin.readInt());
-                } catch (HessianProtocolException ex) {
-                    ex.printStackTrace();
-                }
+                Node type = Node.fromValue(hin.readInt());
+
                 if (type.equals(Node.REF)) {
                     NodeRef entryRef = readNodeRef(hin);
                     children.add(entryRef);

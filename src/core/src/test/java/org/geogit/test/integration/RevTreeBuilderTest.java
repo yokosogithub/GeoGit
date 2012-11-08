@@ -114,9 +114,10 @@ public class RevTreeBuilderTest extends RepositoryTestCase {
 
         {
             Map<Integer, NodeRef> randomEdits = Maps.newHashMap();
+            Random randGen = new Random();
             for (int i = 0; i < 1000 * 10; i++) {
                 int random;
-                while (randomEdits.containsKey(random = new Random().nextInt(numEntries))) {
+                while (randomEdits.containsKey(random = randGen.nextInt(numEntries))) {
                     ;
                 }
                 String path = "Feature." + random;

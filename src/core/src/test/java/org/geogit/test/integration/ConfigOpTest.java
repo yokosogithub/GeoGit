@@ -1,6 +1,6 @@
 package org.geogit.test.integration;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.*;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
@@ -68,13 +68,13 @@ public class ConfigOpTest {
         config.setAction(ConfigAction.CONFIG_UNSET).setName("section.string").setValue(null).call();
         result = config.setAction(ConfigAction.CONFIG_GET).setName("section.string").setValue(null)
                 .call().or(new HashMap<String, String>());
-        assertEquals(result.get("section.string"), null);
+        assertNull(result.get("section.string"));
 
         // Test unsetting a value that doesn't exist
         config.setAction(ConfigAction.CONFIG_UNSET).setName("section.string").setValue(null).call();
         result = config.setAction(ConfigAction.CONFIG_GET).setName("section.string").setValue(null)
                 .call().or(new HashMap<String, String>());
-        assertEquals(result.get("section.string"), null);
+        assertNull(result.get("section.string"));
 
         // Test removing a section that exists
         config.setAction(ConfigAction.CONFIG_SET).setName("section.string").setValue("1").call();
@@ -84,10 +84,10 @@ public class ConfigOpTest {
 
         result = config.setAction(ConfigAction.CONFIG_GET).setName("section.string").setValue(null)
                 .call().or(new HashMap<String, String>());
-        assertEquals(result.get("section.string"), null);
+        assertNull(result.get("section.string"));
         result = config.setAction(ConfigAction.CONFIG_GET).setName("section.string2")
                 .setValue(null).call().or(new HashMap<String, String>());
-        assertEquals(result.get("section.string2"), null);
+        assertNull(result.get("section.string2"));
 
         // Try listing the config file
         config.setAction(ConfigAction.CONFIG_SET).setName("section.string").setValue("1").call();

@@ -8,6 +8,7 @@ import static com.google.common.base.Objects.equal;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 
 /**
  * A reference to a commit in the DAG.
@@ -133,5 +134,11 @@ public class RevCommit extends AbstractRevObject {
         return equal(getAuthor(), c.getAuthor()) && equal(getCommitter(), c.getCommitter())
                 && equal(getMessage(), c.getMessage()) && equal(getParentIds(), c.getParentIds())
                 && equal(getTimestamp(), c.getTimestamp()) && equal(getTreeId(), c.getTreeId());
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(getId(), getTreeId(), getParentIds(), getAuthor(), getCommitter(),
+                getMessage(), getTimestamp());
     }
 }

@@ -57,8 +57,7 @@ class ChangesetDownloader {
      *        {@code file:/path/to/downloaded/changesets}
      * @param downloadFolder where to download the changeset xml contents to
      */
-    public ChangesetDownloader(String osmAPIUrl, @Nullable File downloadFolder,
-            ExecutorService executor) {
+    public ChangesetDownloader(String osmAPIUrl, File downloadFolder, ExecutorService executor) {
 
         checkNotNull(osmAPIUrl);
         checkNotNull(downloadFolder);
