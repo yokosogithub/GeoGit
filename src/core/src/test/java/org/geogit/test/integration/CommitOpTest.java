@@ -20,6 +20,7 @@ import org.geogit.api.Ref;
 import org.geogit.api.RevCommit;
 import org.geogit.api.RevTree;
 import org.geogit.api.plumbing.RevParse;
+import org.geogit.api.porcelain.AddOp;
 import org.geogit.api.porcelain.CommitOp;
 import org.geogit.api.porcelain.NothingToCommitException;
 import org.junit.Rule;
@@ -45,8 +46,8 @@ public class CommitOpTest extends RepositoryTestCase {
     @Test
     public void testInitialCommit() throws Exception {
         try {
-            geogit.add().addPattern(".").call();
-            geogit.commit().call();
+            geogit.command(AddOp.class).addPattern(".").call();
+            geogit.command(CommitOp.class).call();
             fail("expected NothingToCommitException");
         } catch (NothingToCommitException e) {
             assertTrue(true);
@@ -58,8 +59,8 @@ public class CommitOpTest extends RepositoryTestCase {
         ObjectId oid2 = insertAndAdd(points2);
         // BLOBS.print(repo.getRawObject(insertedId2), System.err);
 
-        geogit.add().addPattern(".").call();
-        RevCommit commit = geogit.commit().call();
+        geogit.command(AddOp.class).addPattern(".").call();
+        RevCommit commit = geogit.command(CommitOp.class).call();
         assertNotNull(commit);
         assertNotNull(commit.getParentIds());
         assertEquals(1, commit.getParentIds().size());
@@ -103,8 +104,8 @@ public class CommitOpTest extends RepositoryTestCase {
         // insert and commit points1
         final ObjectId oId1_1 = insertAndAdd(points1);
 
-        geogit.add().call();
-        final RevCommit commit1 = geogit.commit().call();
+        geogit.command(AddOp.class).call();
+        final RevCommit commit1 = geogit.command(CommitOp.class).call();
         {
             assertCommit(commit1, ObjectId.NULL, null, null);
             // check points1 is there
@@ -118,8 +119,8 @@ public class CommitOpTest extends RepositoryTestCase {
         final ObjectId oId1_3 = insertAndAdd(points3);
         final ObjectId oId2_1 = insertAndAdd(lines1);
 
-        geogit.add().call();
-        final RevCommit commit2 = geogit.commit().setMessage("msg").call();
+        geogit.command(AddOp.class).call();
+        final RevCommit commit2 = geogit.command(CommitOp.class).setMessage("msg").call();
         {
             assertCommit(commit2, commit1.getId(), "groldan", "msg");
 
@@ -149,8 +150,8 @@ public class CommitOpTest extends RepositoryTestCase {
         // and insert feature2_2
         final ObjectId oId2_2 = insertAndAdd(lines2);
 
-        geogit.add().call();
-        final RevCommit commit3 = geogit.commit().call();
+        geogit.command(AddOp.class).call();
+        final RevCommit commit3 = geogit.command(CommitOp.class).call();
         {
             assertCommit(commit3, commit2.getId(), "groldan", null);
 
@@ -175,8 +176,8 @@ public class CommitOpTest extends RepositoryTestCase {
     @Test
     public void testCommitWithCustomAuthorAndCommitter() throws Exception {
         try {
-            geogit.add().addPattern(".").call();
-            geogit.commit().call();
+            geogit.command(AddOp.class).addPattern(".").call();
+            geogit.command(CommitOp.class).call();
             fail("expected NothingToCommitException");
         } catch (NothingToCommitException e) {
             assertTrue(true);
@@ -188,8 +189,8 @@ public class CommitOpTest extends RepositoryTestCase {
         ObjectId oid2 = insertAndAdd(points2);
         // BLOBS.print(repo.getRawObject(insertedId2), System.err);
 
-        geogit.add().addPattern(".").call();
-        CommitOp commitCommand = geogit.commit();
+        geogit.command(AddOp.class).addPattern(".").call();
+        CommitOp commitCommand = geogit.command(CommitOp.class);
         commitCommand.setAuthor("John Doe", "John@Doe.com");
         commitCommand.setCommitter("Jane Doe", "Jane@Doe.com");
         RevCommit commit = commitCommand.call();
@@ -234,8 +235,8 @@ public class CommitOpTest extends RepositoryTestCase {
     @Test
     public void testCommitWithAllOption() throws Exception {
         try {
-            geogit.add().addPattern(".").call();
-            geogit.commit().call();
+            geogit.command(AddOp.class).addPattern(".").call();
+            geogit.command(CommitOp.class).call();
             fail("expected NothingToCommitException");
         } catch (NothingToCommitException e) {
             assertTrue(true);
@@ -243,14 +244,14 @@ public class CommitOpTest extends RepositoryTestCase {
 
         insertAndAdd(points1);
 
-        geogit.add().addPattern(".").call();
-        RevCommit commit = geogit.commit().call();
+        geogit.command(AddOp.class).addPattern(".").call();
+        RevCommit commit = geogit.command(CommitOp.class).call();
         // BLOBS.print(repo.getRawObject(insertedId1), System.err);
 
         ObjectId oid = insertAndAdd(points1_modified);
         // BLOBS.print(repo.getRawObject(insertedId2), System.err);
 
-        CommitOp commitCommand = geogit.commit();
+        CommitOp commitCommand = geogit.command(CommitOp.class);
         commit = commitCommand.setAll(true).call();
         assertNotNull(commit);
         assertNotNull(commit.getParentIds());
@@ -283,14 +284,14 @@ public class CommitOpTest extends RepositoryTestCase {
     @Test
     public void testEmptyCommit() throws Exception {
         try {
-            geogit.add().addPattern(".").call();
-            geogit.commit().call();
+            geogit.command(AddOp.class).addPattern(".").call();
+            geogit.command(CommitOp.class).call();
             fail("expected NothingToCommitException");
         } catch (NothingToCommitException e) {
             assertTrue(true);
         }
 
-        CommitOp commitCommand = geogit.commit();
+        CommitOp commitCommand = geogit.command(CommitOp.class);
         RevCommit commit = commitCommand.setAllowEmpty(true).call();
         assertNotNull(commit);
         assertNotNull(commit.getParentIds());
@@ -305,8 +306,8 @@ public class CommitOpTest extends RepositoryTestCase {
     @Test
     public void testNoCommitterName() throws Exception {
         try {
-            geogit.add().addPattern(".").call();
-            geogit.commit().call();
+            geogit.command(AddOp.class).addPattern(".").call();
+            geogit.command(CommitOp.class).call();
             fail("expected NothingToCommitException");
         } catch (NothingToCommitException e) {
             assertTrue(true);
@@ -314,7 +315,7 @@ public class CommitOpTest extends RepositoryTestCase {
 
         repo.getConfigDatabase().remove("user.name");
 
-        CommitOp commitCommand = geogit.commit();
+        CommitOp commitCommand = geogit.command(CommitOp.class);
         exception.expect(IllegalStateException.class);
         commitCommand.setAllowEmpty(true).call();
     }
@@ -322,8 +323,8 @@ public class CommitOpTest extends RepositoryTestCase {
     @Test
     public void testNoCommitterEmail() throws Exception {
         try {
-            geogit.add().addPattern(".").call();
-            geogit.commit().call();
+            geogit.command(AddOp.class).addPattern(".").call();
+            geogit.command(CommitOp.class).call();
             fail("expected NothingToCommitException");
         } catch (NothingToCommitException e) {
             assertTrue(true);
@@ -331,7 +332,7 @@ public class CommitOpTest extends RepositoryTestCase {
 
         repo.getConfigDatabase().remove("user.email");
 
-        CommitOp commitCommand = geogit.commit();
+        CommitOp commitCommand = geogit.command(CommitOp.class);
         exception.expect(IllegalStateException.class);
         commitCommand.setAllowEmpty(true).call();
     }
@@ -348,22 +349,22 @@ public class CommitOpTest extends RepositoryTestCase {
         when(listener3.isCanceled()).thenReturn(false, false, true);
 
         try {
-            geogit.add().addPattern(".").call();
-            geogit.commit().call();
+            geogit.command(AddOp.class).addPattern(".").call();
+            geogit.command(CommitOp.class).call();
             fail("expected NothingToCommitException");
         } catch (NothingToCommitException e) {
             assertTrue(true);
         }
 
-        CommitOp commitCommand1 = geogit.commit();
+        CommitOp commitCommand1 = geogit.command(CommitOp.class);
         commitCommand1.setProgressListener(listener1);
         assertNull(commitCommand1.setAllowEmpty(true).call());
 
-        CommitOp commitCommand2 = geogit.commit();
+        CommitOp commitCommand2 = geogit.command(CommitOp.class);
         commitCommand2.setProgressListener(listener2);
         assertNull(commitCommand2.setAllowEmpty(true).call());
 
-        CommitOp commitCommand3 = geogit.commit();
+        CommitOp commitCommand3 = geogit.command(CommitOp.class);
         commitCommand3.setProgressListener(listener3);
         assertNull(commitCommand3.setAllowEmpty(true).call());
     }
@@ -371,7 +372,7 @@ public class CommitOpTest extends RepositoryTestCase {
     @Test
     public void testAccessorsAndMutators() throws Exception {
 
-        CommitOp commit = geogit.commit();
+        CommitOp commit = geogit.command(CommitOp.class);
 
         commit.setAll(true);
         assertTrue(commit.getAll());

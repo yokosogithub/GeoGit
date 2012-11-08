@@ -24,6 +24,7 @@ import jline.console.ConsoleReader;
 import org.geogit.api.GeoGIT;
 import org.geogit.api.NodeRef;
 import org.geogit.api.ObjectId;
+import org.geogit.api.porcelain.AddOp;
 import org.geogit.cli.GeogitCLI;
 import org.geogit.di.GeogitModule;
 import org.geogit.repository.WorkingTree;
@@ -208,7 +209,7 @@ public abstract class AbstractGeogitFunctionalTest {
     protected ObjectId insertAndAdd(Feature f) throws Exception {
         ObjectId objectId = insert(f);
 
-        geogit.add().call();
+        geogit.command(AddOp.class).call();
         return objectId;
     }
 
@@ -226,7 +227,7 @@ public abstract class AbstractGeogitFunctionalTest {
 
     protected void insertAndAdd(Feature... features) throws Exception {
         insert(features);
-        geogit.add().call();
+        geogit.command(AddOp.class).call();
     }
 
     protected void insert(Feature... features) throws Exception {
@@ -245,7 +246,7 @@ public abstract class AbstractGeogitFunctionalTest {
     protected boolean deleteAndAdd(Feature f) throws Exception {
         boolean existed = delete(f);
         if (existed) {
-            geogit.add().call();
+            geogit.command(AddOp.class).call();
         }
 
         return existed;

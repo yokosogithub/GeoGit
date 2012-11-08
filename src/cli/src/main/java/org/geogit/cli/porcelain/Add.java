@@ -84,7 +84,7 @@ public class Add extends AbstractCommand implements CLICommand {
         }
 
         console.println("Staging changes...");
-        AddOp op = cli.getGeogit().add();
+        AddOp op = cli.getGeogit().command(AddOp.class);
         if (patterns.size() == 1) {
             op.addPattern(patterns.get(0));
         } else if (patterns.size() > 1) {

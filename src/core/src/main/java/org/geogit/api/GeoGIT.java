@@ -10,12 +10,7 @@ import java.io.File;
 import java.net.URL;
 
 import org.geogit.api.plumbing.ResolveGeogitDir;
-import org.geogit.api.porcelain.AddOp;
-import org.geogit.api.porcelain.CheckoutOp;
-import org.geogit.api.porcelain.CommitOp;
-import org.geogit.api.porcelain.DiffOp;
 import org.geogit.api.porcelain.InitOp;
-import org.geogit.api.porcelain.LogOp;
 import org.geogit.di.GeogitModule;
 import org.geogit.repository.Repository;
 
@@ -139,57 +134,6 @@ public class GeoGIT {
             }
         }
         return repository;
-    }
-
-    /**
-     * Add a transaction record to the index.
-     * 
-     * @return an instance of the AddOp command
-     * @see AddOp
-     */
-    public AddOp add() {
-        return command(AddOp.class);
-    }
-
-    /**
-     * Record changes to the repository.
-     * 
-     * @return an instance of the CommitOp command
-     * @see CommitOp
-     */
-    public CommitOp commit() {
-        CommitOp command = command(CommitOp.class);
-        return command;
-    }
-
-    /**
-     * Check out a branch to the working tree.
-     * 
-     * @return an instance of the CheckoutOp command
-     * @see CheckoutOp
-     */
-    public CheckoutOp checkout() {
-        return command(CheckoutOp.class);
-    }
-
-    /**
-     * Show changes between commits, commit and working tree, etc.
-     * 
-     * @return an instance of the DiffOp command
-     * @see DiffOp
-     */
-    public DiffOp diff() {
-        return command(DiffOp.class);
-    }
-
-    /**
-     * Show commit logs.
-     * 
-     * @return an instance of the LogOp command
-     * @see LogOp
-     */
-    public LogOp log() {
-        return command(LogOp.class);
     }
 
     /**

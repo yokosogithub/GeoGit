@@ -18,6 +18,7 @@ import org.geogit.api.ObjectId;
 import org.geogit.api.RevCommit;
 import org.geogit.api.plumbing.diff.DiffEntry;
 import org.geogit.api.porcelain.CommitOp;
+import org.geogit.api.porcelain.DiffOp;
 import org.geogit.api.porcelain.NothingToCommitException;
 import org.geogit.cli.AbstractCommand;
 import org.geogit.cli.AnsiDecorator;
@@ -65,7 +66,7 @@ public class Commit extends AbstractCommand implements CLICommand {
 
         RevCommit commit;
         try {
-            commit = geogit.commit().setMessage(message)
+            commit = geogit.command(CommitOp.class).setMessage(message)
                     .setProgressListener(cli.getProgressListener()).call();
         } catch (NothingToCommitException noChanges) {
             console.println(ansi.fg(Color.RED).a(noChanges.getMessage()).reset().toString());
@@ -76,7 +77,7 @@ public class Commit extends AbstractCommand implements CLICommand {
         console.println("[" + commit.getId() + "] " + commit.getMessage());
 
         console.print("Committed, counting objects...");
-        Iterator<DiffEntry> diff = geogit.diff().setOldVersion(parentId)
+        Iterator<DiffEntry> diff = geogit.command(DiffOp.class).setOldVersion(parentId)
                 .setNewVersion(commit.getId()).call();
 
         int adds = 0, deletes = 0, changes = 0;

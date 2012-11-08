@@ -20,6 +20,7 @@ import org.geogit.api.plumbing.HashObject;
 import org.geogit.api.plumbing.RevObjectParse;
 import org.geogit.api.plumbing.UpdateRef;
 import org.geogit.api.plumbing.WriteTree;
+import org.geogit.api.porcelain.AddOp;
 import org.geogit.repository.StagingArea;
 import org.geogit.repository.WorkingTree;
 import org.geogit.storage.ObjectInserter;
@@ -106,7 +107,7 @@ public class IndexTest extends RepositoryTestCase {
 
         WorkingTree workTree = repo.getWorkingTree();
         workTree.delete(linesName, lines1.getIdentifier().getID());
-        geogit.add().call();
+        geogit.command(AddOp.class).call();
 
         newRootTreeId = geogit.command(WriteTree.class).setOldRoot(tree(newRootTreeId)).call(); // newRootTreeId
                                                                                                 // =
@@ -179,7 +180,7 @@ public class IndexTest extends RepositoryTestCase {
         assertEquals(oId2, repo.getWorkingTree().findUnstaged(appendChild(pointsName, idP2)).get()
                 .getObjectId());
 
-        geogit.add().call();
+        geogit.command(AddOp.class).call();
 
         assertEquals(oId1, index.findStaged(appendChild(pointsName, idP1)).get().getObjectId());
         assertEquals(oId2, index.findStaged(appendChild(pointsName, idP2)).get().getObjectId());

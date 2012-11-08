@@ -22,6 +22,8 @@ import org.geogit.api.ObjectId;
 import org.geogit.api.Platform;
 import org.geogit.api.RevCommit;
 import org.geogit.api.TestPlatform;
+import org.geogit.api.porcelain.AddOp;
+import org.geogit.api.porcelain.CommitOp;
 import org.geogit.api.porcelain.ConfigOp;
 import org.geogit.api.porcelain.ConfigOp.ConfigAction;
 import org.geogit.di.GeogitModule;
@@ -221,13 +223,13 @@ public abstract class RepositoryTestCase {
         for (Feature f : features) {
             insertAndAdd(f);
             if (oneCommitPerFeature) {
-                RevCommit commit = geogit.commit().call();
+                RevCommit commit = geogit.command(CommitOp.class).call();
                 commits.add(commit);
             }
         }
 
         if (!oneCommitPerFeature) {
-            RevCommit commit = geogit.commit().call();
+            RevCommit commit = geogit.command(CommitOp.class).call();
             commits.add(commit);
         }
 
@@ -240,7 +242,7 @@ public abstract class RepositoryTestCase {
     protected ObjectId insertAndAdd(Feature f) throws Exception {
         ObjectId objectId = insert(f);
 
-        geogit.add().call();
+        geogit.command(AddOp.class).call();
         return objectId;
     }
 
@@ -258,7 +260,7 @@ public abstract class RepositoryTestCase {
 
     protected void insertAndAdd(Feature... features) throws Exception {
         insert(features);
-        geogit.add().call();
+        geogit.command(AddOp.class).call();
     }
 
     protected void insert(Feature... features) throws Exception {
@@ -277,7 +279,7 @@ public abstract class RepositoryTestCase {
     protected boolean deleteAndAdd(Feature f) throws Exception {
         boolean existed = delete(f);
         if (existed) {
-            geogit.add().call();
+            geogit.command(AddOp.class).call();
         }
 
         return existed;

@@ -22,6 +22,7 @@ import org.geogit.api.RevCommit;
 import org.geogit.api.plumbing.diff.DiffEntry;
 import org.geogit.api.plumbing.diff.DiffEntry.ChangeType;
 import org.geogit.api.plumbing.diff.DiffTreeWalk;
+import org.geogit.api.porcelain.CommitOp;
 import org.geogit.api.porcelain.DiffOp;
 import org.junit.Test;
 import org.opengis.feature.Feature;
@@ -42,17 +43,17 @@ public class DiffOpTest extends RepositoryTestCase {
 
     @Override
     protected void setUpInternal() throws Exception {
-        this.diffOp = geogit.diff();
+        this.diffOp = geogit.command(DiffOp.class);
     }
 
     @Test
     public void testDiffPreconditions() throws Exception {
-        Iterator<DiffEntry> difflist = geogit.diff().call();
+        Iterator<DiffEntry> difflist = geogit.command(DiffOp.class).call();
         assertNotNull(difflist);
         assertFalse(difflist.hasNext());
 
         final ObjectId oid1 = insertAndAdd(points1);
-        final RevCommit commit1_1 = geogit.commit().call();
+        final RevCommit commit1_1 = geogit.command(CommitOp.class).call();
         try {
             diffOp.setOldVersion(oid1.toString()).setNewVersion(Ref.HEAD).call();
             fail("Expected IAE as oldVersion is not a commit");
@@ -83,7 +84,7 @@ public class DiffOpTest extends RepositoryTestCase {
     public void testNoChangeSameCommit() throws Exception {
 
         insertAndAdd(points1);
-        final RevCommit commit = geogit.commit().setAll(true).call();
+        final RevCommit commit = geogit.command(CommitOp.class).setAll(true).call();
 
         assertFalse(diffOp.setOldVersion(commit.getId().toString())
                 .setNewVersion(commit.getId().toString()).call().hasNext());
@@ -93,7 +94,7 @@ public class DiffOpTest extends RepositoryTestCase {
     public void testSingleAddition() throws Exception {
 
         final ObjectId newOid = insertAndAdd(points1);
-        geogit.commit().setAll(true).call();
+        geogit.command(CommitOp.class).setAll(true).call();
 
         List<DiffEntry> difflist = toList(diffOp.setOldVersion(ObjectId.NULL)
                 .setNewVersion(Ref.HEAD).call());
@@ -119,7 +120,7 @@ public class DiffOpTest extends RepositoryTestCase {
     public void testSingleAdditionReverseOrder() throws Exception {
 
         final ObjectId newOid = insertAndAdd(points1);
-        final RevCommit commit = geogit.commit().setAll(true).call();
+        final RevCommit commit = geogit.command(CommitOp.class).setAll(true).call();
 
         List<DiffEntry> difflist = toList(diffOp.setOldVersion(commit.getId())
                 .setNewVersion(ObjectId.NULL).call());
@@ -141,10 +142,10 @@ public class DiffOpTest extends RepositoryTestCase {
     @Test
     public void testSingleDeletion() throws Exception {
         final ObjectId featureContentId = insertAndAdd(points1);
-        final RevCommit addCommit = geogit.commit().setAll(true).call();
+        final RevCommit addCommit = geogit.command(CommitOp.class).setAll(true).call();
 
         assertTrue(deleteAndAdd(points1));
-        final RevCommit deleteCommit = geogit.commit().setAll(true).call();
+        final RevCommit deleteCommit = geogit.command(CommitOp.class).setAll(true).call();
 
         List<DiffEntry> difflist = toList(diffOp.setOldVersion(addCommit.getId())
                 .setNewVersion(deleteCommit.getId()).call());
@@ -167,10 +168,10 @@ public class DiffOpTest extends RepositoryTestCase {
     public void testSingleDeletionReverseOrder() throws Exception {
 
         final ObjectId featureContentId = insertAndAdd(points1);
-        final RevCommit addCommit = geogit.commit().setAll(true).call();
+        final RevCommit addCommit = geogit.command(CommitOp.class).setAll(true).call();
 
         assertTrue(deleteAndAdd(points1));
-        final RevCommit deleteCommit = geogit.commit().setAll(true).call();
+        final RevCommit deleteCommit = geogit.command(CommitOp.class).setAll(true).call();
 
         // set old/new version in reverse order
         List<DiffEntry> difflist = toList(diffOp.setOldVersion(deleteCommit.getId())
@@ -196,7 +197,7 @@ public class DiffOpTest extends RepositoryTestCase {
     public void testSingleModification() throws Exception {
 
         final ObjectId oldOid = insertAndAdd(points1);
-        final RevCommit insertCommit = geogit.commit().setAll(true).call();
+        final RevCommit insertCommit = geogit.command(CommitOp.class).setAll(true).call();
 
         final String featureId = points1.getIdentifier().getID();
         final Feature modifiedFeature = feature((SimpleFeatureType) points1.getType(), featureId,
@@ -204,7 +205,7 @@ public class DiffOpTest extends RepositoryTestCase {
 
         final ObjectId newOid = insertAndAdd(modifiedFeature);
 
-        final RevCommit changeCommit = geogit.commit().setAll(true).call();
+        final RevCommit changeCommit = geogit.command(CommitOp.class).setAll(true).call();
 
         List<DiffEntry> difflist = toList(diffOp.setOldVersion(insertCommit.getId())
                 .setNewVersion(changeCommit.getId()).call());
@@ -226,10 +227,10 @@ public class DiffOpTest extends RepositoryTestCase {
 
         // two commits on different trees
         insertAndAdd(points1);
-        final RevCommit commit1 = geogit.commit().setAll(true).call();
+        final RevCommit commit1 = geogit.command(CommitOp.class).setAll(true).call();
 
         insertAndAdd(lines1);
-        final RevCommit commit2 = geogit.commit().setAll(true).call();
+        final RevCommit commit2 = geogit.command(CommitOp.class).setAll(true).call();
 
         diffOp.setOldVersion(commit1.getId()).setNewVersion(commit2.getId());
         diffOp.setFilter(pointsName);
@@ -243,10 +244,10 @@ public class DiffOpTest extends RepositoryTestCase {
 
         // two commits on different trees
         insertAndAdd(points1);
-        final RevCommit commit1 = geogit.commit().setAll(true).call();
+        final RevCommit commit1 = geogit.command(CommitOp.class).setAll(true).call();
 
         insertAndAdd(lines1);
-        final RevCommit commit2 = geogit.commit().setAll(true).call();
+        final RevCommit commit2 = geogit.command(CommitOp.class).setAll(true).call();
 
         diffOp.setOldVersion(commit1.getId()).setNewVersion(commit2.getId());
         diffOp.setFilter(pointsName);
@@ -260,10 +261,10 @@ public class DiffOpTest extends RepositoryTestCase {
 
         // two commits on different trees
         insertAndAdd(points1);
-        final RevCommit commit1 = geogit.commit().setAll(true).call();
+        final RevCommit commit1 = geogit.command(CommitOp.class).setAll(true).call();
 
         insertAndAdd(lines1);
-        final RevCommit commit2 = geogit.commit().setAll(true).call();
+        final RevCommit commit2 = geogit.command(CommitOp.class).setAll(true).call();
 
         // set a filter that doesn't produce any match
 
@@ -280,10 +281,10 @@ public class DiffOpTest extends RepositoryTestCase {
 
         // two commits on different trees
         insertAndAdd(points1);
-        final RevCommit commit1 = geogit.commit().setAll(true).call();
+        final RevCommit commit1 = geogit.command(CommitOp.class).setAll(true).call();
 
         insertAndAdd(lines1);
-        final RevCommit commit2 = geogit.commit().setAll(true).call();
+        final RevCommit commit2 = geogit.command(CommitOp.class).setAll(true).call();
 
         // filter on feature1_1, it didn't change between commit2 and commit1
 
@@ -297,14 +298,14 @@ public class DiffOpTest extends RepositoryTestCase {
     @Test
     public void testFilterMatchesSingleBlobChange() throws Exception {
         final ObjectId initialOid = insertAndAdd(points1);
-        final RevCommit commit1 = geogit.commit().setAll(true).call();
+        final RevCommit commit1 = geogit.command(CommitOp.class).setAll(true).call();
 
         insertAndAdd(lines1);
-        final RevCommit commit2 = geogit.commit().setAll(true).call();
+        final RevCommit commit2 = geogit.command(CommitOp.class).setAll(true).call();
 
         ((SimpleFeature) points1).setAttribute("sp", "modified");
         final ObjectId modifiedOid = insertAndAdd(points1);
-        final RevCommit commit3 = geogit.commit().setAll(true).call();
+        final RevCommit commit3 = geogit.command(CommitOp.class).setAll(true).call();
 
         diffOp.setOldVersion(commit1.getId()).setNewVersion(commit3.getId());
         diffOp.setFilter(NodeRef.appendChild(pointsName, points1.getIdentifier().getID()));
@@ -320,7 +321,7 @@ public class DiffOpTest extends RepositoryTestCase {
         assertEquals(modifiedOid, diff.newObjectId());
 
         assertTrue(deleteAndAdd(points1));
-        final RevCommit commit4 = geogit.commit().setAll(true).call();
+        final RevCommit commit4 = geogit.command(CommitOp.class).setAll(true).call();
         diffOp.setOldVersion(commit2.getId()).setNewVersion(commit4.getId());
         diffOp.setFilter(NodeRef.appendChild(pointsName, points1.getIdentifier().getID()));
         diffs = toList(diffOp.call());
@@ -357,11 +358,11 @@ public class DiffOpTest extends RepositoryTestCase {
     // // two commits on different trees
     // final ObjectId oid11 = insertAndAdd(points1);
     // final ObjectId oid12 = insertAndAdd(points2);
-    // final RevCommit commit1 = geogit.commit().setAll(true).call();
+    // final RevCommit commit1 = geogit.command(CommitOp.class).setAll(true).call();
     //
     // final ObjectId oid21 = insertAndAdd(lines1);
     // final ObjectId oid22 = insertAndAdd(lines2);
-    // final RevCommit commit2 = geogit.commit().setAll(true).call();
+    // final RevCommit commit2 = geogit.command(CommitOp.class).setAll(true).call();
     //
     // List<DiffEntry> diffs;
     //
@@ -401,14 +402,14 @@ public class DiffOpTest extends RepositoryTestCase {
         final ObjectId oid11 = insertAndAdd(points1);
         final ObjectId oid12 = insertAndAdd(points2);
         final ObjectId oid13 = insertAndAdd(points3);
-        final RevCommit commit1 = geogit.commit().setAll(true).call();
+        final RevCommit commit1 = geogit.command(CommitOp.class).setAll(true).call();
 
         final ObjectId oid21 = insertAndAdd(lines1);
-        final RevCommit commit2 = geogit.commit().setAll(true).call();
+        final RevCommit commit2 = geogit.command(CommitOp.class).setAll(true).call();
 
         deleteAndAdd(points1);
         deleteAndAdd(points3);
-        final RevCommit commit3 = geogit.commit().setAll(true).call();
+        final RevCommit commit3 = geogit.command(CommitOp.class).setAll(true).call();
 
         List<DiffEntry> diffs;
 
@@ -434,16 +435,16 @@ public class DiffOpTest extends RepositoryTestCase {
         final ObjectId oid11 = insertAndAdd(points1);
         final ObjectId oid12 = insertAndAdd(points2);
         final ObjectId oid13 = insertAndAdd(points3);
-        final RevCommit commit1 = geogit.commit().setAll(true).call();
+        final RevCommit commit1 = geogit.command(CommitOp.class).setAll(true).call();
 
         final ObjectId oid21 = insertAndAdd(lines1);
         final ObjectId oid22 = insertAndAdd(lines2);
-        final RevCommit commit2 = geogit.commit().setAll(true).call();
+        final RevCommit commit2 = geogit.command(CommitOp.class).setAll(true).call();
 
         deleteAndAdd(points1);
         deleteAndAdd(points2);
         deleteAndAdd(points3);
-        final RevCommit commit3 = geogit.commit().setAll(true).call();
+        final RevCommit commit3 = geogit.command(CommitOp.class).setAll(true).call();
 
         List<DiffEntry> diffs;
 

@@ -17,6 +17,7 @@ import org.geogit.api.GeoGIT;
 import org.geogit.api.Platform;
 import org.geogit.api.RevCommit;
 import org.geogit.api.RevPerson;
+import org.geogit.api.porcelain.LogOp;
 import org.geogit.cli.AbstractCommand;
 import org.geogit.cli.AnsiDecorator;
 import org.geogit.cli.CLICommand;
@@ -75,7 +76,7 @@ public class Log extends AbstractCommand implements CLICommand {
         final GeoGIT geogit = cli.getGeogit();
         Iterator<RevCommit> log;
         try {
-            log = geogit.log().call();
+            log = geogit.command(LogOp.class).call();
         } catch (Exception e) {
             throw Throwables.propagate(e);
         }
