@@ -2,7 +2,7 @@ package org.geogit.api;
 
 import static com.google.common.base.Objects.equal;
 
-import java.util.Objects;
+import com.google.common.base.Objects;
 
 /**
  * The GeoGit identity of a single individual, composed of a name and email address.
@@ -54,6 +54,6 @@ public class RevPerson {
 
     @Override
     public int hashCode() {
-        return Objects.hash(getName(), getEmail());
+        return Objects.hashCode(getName(), getEmail());
     }
 }

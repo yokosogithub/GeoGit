@@ -16,7 +16,7 @@ import com.google.common.hash.Hashing;
 /**
  * A {@link RevObject} identifier backed by a hash function (SHA1 for instance)
  */
-public class ObjectId implements Comparable<ObjectId> {
+public final class ObjectId implements Comparable<ObjectId> {
 
     /**
      * ObjectId instance that represents a NULL id.
