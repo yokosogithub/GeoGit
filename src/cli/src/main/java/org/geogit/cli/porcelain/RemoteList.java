@@ -7,8 +7,6 @@ package org.geogit.cli.porcelain;
 
 import static com.google.common.base.Preconditions.checkState;
 
-import java.util.List;
-
 import org.geogit.api.Remote;
 import org.geogit.api.porcelain.ConfigException;
 import org.geogit.api.porcelain.RemoteListOp;
@@ -18,7 +16,7 @@ import org.geogit.cli.GeogitCLI;
 
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.Parameters;
-import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableList;
 
 /**
  * Shows a list of existing remotes.
@@ -50,25 +48,24 @@ public class RemoteList extends AbstractCommand implements CLICommand {
     public void runInternal(GeogitCLI cli) throws Exception {
         checkState(cli.getGeogit() != null, "Not a geogit repository: " + cli.getPlatform().pwd());
 
+        final ImmutableList<Remote> remoteList;
         try {
-            final Optional<List<Remote>> remoteList = cli.getGeogit().command(RemoteListOp.class)
-                    .call();
-
-            if (remoteList.isPresent()) {
-                for (Remote remote : remoteList.get()) {
-                    if (verbose) {
-                        cli.getConsole().println(
-                                remote.getName() + " " + remote.getFetchURL() + " (fetch)");
-                        cli.getConsole().println(
-                                remote.getName() + " " + remote.getPushURL() + " (push)");
-                    } else {
-                        cli.getConsole().println(remote.getName());
-                    }
-                }
-            }
+            remoteList = cli.getGeogit().command(RemoteListOp.class).call();
         } catch (ConfigException e) {
             cli.getConsole().println("Could not access the config database.");
+            return;
         }
+
+        for (Remote remote : remoteList) {
+            if (verbose) {
+                cli.getConsole()
+                        .println(remote.getName() + " " + remote.getFetchURL() + " (fetch)");
+                cli.getConsole().println(remote.getName() + " " + remote.getPushURL() + " (push)");
+            } else {
+                cli.getConsole().println(remote.getName());
+            }
+        }
+
     }
 
 }

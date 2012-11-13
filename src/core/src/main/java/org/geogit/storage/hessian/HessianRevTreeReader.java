@@ -15,7 +15,6 @@ import org.geogit.api.RevTreeImpl;
 import org.geogit.storage.ObjectReader;
 
 import com.caucho.hessian.io.Hessian2Input;
-import com.caucho.hessian.io.HessianProtocolException;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableList.Builder;

@@ -1,11 +1,9 @@
 package org.geogit.test.integration;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import java.io.File;
-import java.util.List;
 
 import org.geogit.api.Remote;
 import org.geogit.api.TestPlatform;
@@ -20,7 +18,7 @@ import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.junit.rules.TemporaryFolder;
 
-import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableList;
 
 public class RemoteListOpTest {
     @Rule
@@ -44,9 +42,9 @@ public class RemoteListOpTest {
     public void testListNoRemotes() {
         final RemoteListOp remoteList = new RemoteListOp(new IniConfigDatabase(testPlatform));
 
-        Optional<List<Remote>> allRemotes = remoteList.call();
+        ImmutableList<Remote> allRemotes = remoteList.call();
 
-        assertFalse(allRemotes.isPresent());
+        assertTrue(allRemotes.isEmpty());
     }
 
     @Test
@@ -77,13 +75,12 @@ public class RemoteListOpTest {
 
         final RemoteListOp remoteList = new RemoteListOp(new IniConfigDatabase(testPlatform));
 
-        Optional<List<Remote>> allRemotes = remoteList.call();
+        ImmutableList<Remote> allRemotes = remoteList.call();
 
-        assertTrue(allRemotes.isPresent());
-        assertEquals(2, allRemotes.get().size());
+        assertEquals(2, allRemotes.size());
 
-        Remote firstRemote = allRemotes.get().get(0);
-        Remote secondRemote = allRemotes.get().get(1);
+        Remote firstRemote = allRemotes.get(0);
+        Remote secondRemote = allRemotes.get(1);
 
         if (!firstRemote.getName().equals(remoteName1)) {
             // swap first and second
@@ -123,9 +120,9 @@ public class RemoteListOpTest {
 
         final RemoteListOp remoteList = new RemoteListOp(new IniConfigDatabase(testPlatform));
 
-        Optional<List<Remote>> allRemotes = remoteList.call();
+        ImmutableList<Remote> allRemotes = remoteList.call();
 
-        assertFalse(allRemotes.isPresent());
+        assertTrue(allRemotes.isEmpty());
     }
 
     @Test
@@ -148,8 +145,8 @@ public class RemoteListOpTest {
 
         final RemoteListOp remoteList = new RemoteListOp(new IniConfigDatabase(testPlatform));
 
-        Optional<List<Remote>> allRemotes = remoteList.call();
+        ImmutableList<Remote> allRemotes = remoteList.call();
 
-        assertFalse(allRemotes.isPresent());
+        assertTrue(allRemotes.isEmpty());
     }
 }

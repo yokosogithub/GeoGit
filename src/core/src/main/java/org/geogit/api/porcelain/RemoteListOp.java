@@ -8,6 +8,7 @@ import org.geogit.api.Remote;
 import org.geogit.storage.ConfigDatabase;
 
 import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
 
 /**
@@ -16,7 +17,7 @@ import com.google.inject.Inject;
  * @author jgarrett
  * @see ConfigDatabase
  */
-public class RemoteListOp extends AbstractGeoGitOp<Optional<List<Remote>>> {
+public class RemoteListOp extends AbstractGeoGitOp<ImmutableList<Remote>> {
 
     final private ConfigDatabase config;
 
@@ -33,13 +34,13 @@ public class RemoteListOp extends AbstractGeoGitOp<Optional<List<Remote>>> {
     /**
      * Executes the remote-list operation.
      * 
-     * @return Optional<List<Remote>> of all remotes found in the config database.
+     * @return {@code List<Remote>} of all remotes found in the config database, may be empty.
      */
     @Override
-    public Optional<List<Remote>> call() {
+    public ImmutableList<Remote> call() {
         Optional<List<String>> remotes = config.getAllSubsections("remote");
+        List<Remote> allRemotes = new ArrayList<Remote>();
         if (remotes.isPresent()) {
-            List<Remote> allRemotes = new ArrayList<Remote>();
             for (String remoteName : remotes.get()) {
                 String remoteSection = "remote." + remoteName;
                 Optional<String> remoteFetchURL = config.get(remoteSection + ".url");
@@ -51,11 +52,7 @@ public class RemoteListOp extends AbstractGeoGitOp<Optional<List<Remote>>> {
                 }
 
             }
-            if (!allRemotes.isEmpty()) {
-                return Optional.of(allRemotes);
-            }
-
         }
-        return Optional.absent();
+        return ImmutableList.copyOf(allRemotes);
     }
 }
