@@ -79,9 +79,4 @@ class HessianRevTreeWriter extends HessianRevWriter implements ObjectWriter<RevT
             HessianRevTreeWriter.this.writeObjectId(hout, entry.getValue());
         }
     }
-
-    @Override
-    public RevTree object() {
-        return tree;
-    }
 }

@@ -40,10 +40,4 @@ public class RawObjectWriter implements ObjectWriter<Object> {
             out.write(c);
         }
     }
-
-    @Override
-    public Object object() {
-        return null;
-    }
-
 }

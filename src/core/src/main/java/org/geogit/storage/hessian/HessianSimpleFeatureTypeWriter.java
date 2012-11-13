@@ -129,9 +129,4 @@ public class HessianSimpleFeatureTypeWriter implements ObjectWriter<RevFeatureTy
             }
         }
     }
-
-    @Override
-    public RevFeatureType object() {
-        return null;
-    }
 }
