@@ -20,4 +20,11 @@ public final class NodeRefStorageOrder extends Ordering<NodeRef> {
     public int compare(NodeRef nr1, NodeRef nr2) {
         return pathOrder.compare(nr1.getPath(), nr2.getPath());
     }
+
+    /**
+     * @see NodeRefPathStorageOrder#bucket(String, int)
+     */
+    public Integer bucket(final NodeRef ref, final int depth) {
+        return pathOrder.bucket(ref.getPath(), depth);
+    }
 }

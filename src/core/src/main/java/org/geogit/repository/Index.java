@@ -30,7 +30,6 @@ import org.geogit.storage.StagingDatabase;
 import org.opengis.util.ProgressListener;
 
 import com.google.common.base.Optional;
-import com.google.common.base.Stopwatch;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
 import com.google.inject.Inject;
@@ -218,15 +217,12 @@ public class Index implements StagingArea {
      */
     @Override
     public long countStaged(final @Nullable String pathFilter) {
-        Stopwatch sw = new Stopwatch().start();
         Iterator<DiffEntry> unstaged = getStaged(pathFilter);
         long count = 0;
         while (unstaged.hasNext()) {
             count++;
             unstaged.next();
         }
-        sw.stop();
-        // System.err.println("countStaged: " + sw);
         return count;
     }
 

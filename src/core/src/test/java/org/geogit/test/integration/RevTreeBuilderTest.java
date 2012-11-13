@@ -97,7 +97,7 @@ public class RevTreeBuilderTest extends RepositoryTestCase {
 
     @Test
     public void testPutRandomGet() throws Exception {
-        final int numEntries = 2 * RevTreeBuilder.DEFAULT_SPLIT_FACTOR + 1500;
+        final int numEntries = 2 * RevTree.NORMALIZED_SIZE_LIMIT + 1500;
         final ObjectId treeId;
 
         Stopwatch sw;
@@ -115,7 +115,7 @@ public class RevTreeBuilderTest extends RepositoryTestCase {
         {
             Map<Integer, NodeRef> randomEdits = Maps.newHashMap();
             Random randGen = new Random();
-            for (int i = 0; i < 1000 * 10; i++) {
+            for (int i = 0; i < tree.size() / 2; i++) {
                 int random;
                 while (randomEdits.containsKey(random = randGen.nextInt(numEntries))) {
                     ;
@@ -199,7 +199,7 @@ public class RevTreeBuilderTest extends RepositoryTestCase {
 
     @Test
     public void testRemoveSplittedTree() throws Exception {
-        final int numEntries = (int) (1.5 * RevTreeBuilder.DEFAULT_SPLIT_FACTOR);
+        final int numEntries = (int) (1.5 * RevTree.NORMALIZED_SIZE_LIMIT);
         final ObjectId treeId = createAndSaveTree(numEntries, true);
         final RevTree tree = odb.get(treeId, serialFactory.createRevTreeReader());
 
@@ -244,7 +244,7 @@ public class RevTreeBuilderTest extends RepositoryTestCase {
     @Test
     public void testEquality() throws Exception {
         testEquality(100);
-        testEquality(100 + RevTreeBuilder.DEFAULT_SPLIT_FACTOR);
+        testEquality(100 + RevTree.NORMALIZED_SIZE_LIMIT);
     }
 
     private void testEquality(final int numEntries) throws Exception {

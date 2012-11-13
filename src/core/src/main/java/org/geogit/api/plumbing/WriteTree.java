@@ -84,8 +84,8 @@ public class WriteTree extends AbstractGeoGitOp<ObjectId> {
         final ObjectId oldRootTreeId = resolveRootTreeId();
         final RevTree oldRootTree = resolveRootTree(oldRootTreeId);
 
-        String pathFilter = null;
-        final long numChanges = index.countStaged(pathFilter);
+        final String noPathFilter = null;
+        final long numChanges = index.countStaged(noPathFilter);
         if (numChanges == 0) {
             return oldRootTreeId;
         }
@@ -93,7 +93,7 @@ public class WriteTree extends AbstractGeoGitOp<ObjectId> {
             return null;
         }
 
-        Iterator<DiffEntry> staged = index.getStaged(pathFilter);
+        Iterator<DiffEntry> staged = index.getStaged(noPathFilter);
 
         Map<String, RevTreeBuilder> changedTrees = Maps.newHashMap();
 

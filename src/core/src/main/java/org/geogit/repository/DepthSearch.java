@@ -137,8 +137,7 @@ public class DepthSearch {
             return Optional.absent();
         }
 
-        ObjectId pathHash = refOrder.pathHash(directChildPath);
-        Integer bucket = Integer.valueOf(pathHash.byteN(subtreesDepth) & 0xFF);
+        Integer bucket = refOrder.bucket(directChildPath, subtreesDepth);
         ImmutableSortedMap<Integer, ObjectId> buckets = parent.buckets().get();
         ObjectId subtreeId = buckets.get(bucket);
         if (subtreeId == null) {

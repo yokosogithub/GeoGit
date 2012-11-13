@@ -31,4 +31,15 @@ public class ObjectIdTest extends TestCase {
         ObjectId valueOf = ObjectId.valueOf(stringRep);
         assertEquals(id1, valueOf);
     }
+
+    @Test
+    public void testByeN() {
+        ObjectId oid = new ObjectId(new byte[] { 00, 01, 02, 03, (byte) 0xff, 0, 0, 0, 0, 0, 0, 0,
+                0, 0, 0, 0, 0, 0, 0, 0 });
+        assertEquals(0, oid.byteN(0));
+        assertEquals(1, oid.byteN(1));
+        assertEquals(2, oid.byteN(2));
+        assertEquals(3, oid.byteN(3));
+        assertEquals(255, oid.byteN(4));
+    }
 }

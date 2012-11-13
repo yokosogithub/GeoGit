@@ -9,9 +9,6 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 import static org.geogit.api.RevTree.NORMALIZED_SIZE_LIMIT;
 
-import java.io.UnsupportedEncodingException;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.SortedSet;
@@ -22,6 +19,7 @@ import javax.annotation.Nullable;
 import org.geogit.api.RevObject.TYPE;
 import org.geogit.api.plumbing.HashObject;
 import org.geogit.repository.DepthSearch;
+import org.geogit.storage.NodeRefPathStorageOrder;
 import org.geogit.storage.ObjectDatabase;
 import org.geogit.storage.ObjectReader;
 import org.geogit.storage.ObjectSerialisingFactory;
@@ -30,6 +28,7 @@ import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.collect.Collections2;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Ordering;
 import com.google.common.collect.TreeMultimap;
@@ -37,11 +36,12 @@ import com.google.common.collect.TreeMultimap;
 public class RevTreeBuilder {
 
     /**
-     * How many children to hold before splitting myself into subtrees
+     * How many children refs to hold before forcing normalization of the internal data structures
+     * into tree buckets on the database
      * 
      * @todo make this configurable
      */
-    public static int DEFAULT_SPLIT_FACTOR = 1000 * 100;
+    public static final int DEFAULT_NORMALIZATION_THRESHOLD = 1000 * 10;
 
     private final ObjectDatabase db;
 
@@ -49,11 +49,11 @@ public class RevTreeBuilder {
 
     private final TreeMultimap<Integer, NodeRef> entriesByBucket;
 
-    protected final TreeMap<Integer, ObjectId> innerTrees;
+    protected final TreeMap<Integer, ObjectId> bucketTreesByBucket;
 
     private int depth;
 
-    protected MessageDigest md;
+    protected NodeRefPathStorageOrder storageOrder = new NodeRefPathStorageOrder();
 
     private long size;
 
@@ -65,6 +65,10 @@ public class RevTreeBuilder {
      */
     public RevTreeBuilder(ObjectDatabase db, final ObjectSerialisingFactory serialFactory) {
         this(db, serialFactory, null);
+    }
+
+    public long size() {
+        return size;
     }
 
     /**
@@ -95,7 +99,7 @@ public class RevTreeBuilder {
             }
         };
         this.entriesByBucket = TreeMultimap.create(keyComparator, valueComparator);
-        this.innerTrees = Maps.newTreeMap();
+        this.bucketTreesByBucket = Maps.newTreeMap();
 
         if (copy != null) {
             this.size = copy.size();
@@ -109,19 +113,23 @@ public class RevTreeBuilder {
             }
             if (copy.buckets().isPresent()) {
                 checkArgument(!copy.children().isPresent());
-                innerTrees.putAll(copy.buckets().get());
+                bucketTreesByBucket.putAll(copy.buckets().get());
             }
         }
     }
 
+    /**
+     * @return the new tree, not saved to the object database. Any bucket tree thouh is saved when
+     *         this method returns.
+     */
     public RevTree build() {
         normalize();
-        checkState(this.innerTrees.isEmpty() || this.entriesByBucket.isEmpty());
+        checkState(this.bucketTreesByBucket.isEmpty() || this.entriesByBucket.isEmpty());
 
         RevTreeImpl unnamedTree;
 
-        if (!innerTrees.isEmpty()) {
-            unnamedTree = RevTreeImpl.createNodeTree(ObjectId.NULL, size, innerTrees);
+        if (!bucketTreesByBucket.isEmpty()) {
+            unnamedTree = RevTreeImpl.createNodeTree(ObjectId.NULL, size, bucketTreesByBucket);
         } else {
             Collection<NodeRef> entries = Collections2.filter(entriesByBucket.values(),
                     new Predicate<NodeRef>() {
@@ -176,7 +184,7 @@ public class RevTreeBuilder {
         if (!deep) {
             return Optional.absent();
         }
-        final ObjectId subtreeId = innerTrees.get(bucket);
+        final ObjectId subtreeId = bucketTreesByBucket.get(bucket);
         if (subtreeId == null) {
             return Optional.absent();
         }
@@ -193,7 +201,8 @@ public class RevTreeBuilder {
      * Adds or replaces an element in the tree with the given key.
      * <p>
      * <!-- Implementation detail: If the number of cached entries (entries held directly by this
-     * tree) reaches {@link #DEFAULT_SPLIT_FACTOR}, this tree will {@link #normalize()} itself.
+     * tree) reaches {@link #DEFAULT_NORMALIZATION_THRESHOLD}, this tree will {@link #normalize()}
+     * itself.
      * 
      * -->
      * 
@@ -220,7 +229,7 @@ public class RevTreeBuilder {
             long newChildSize = sizeOfTree(ref.getObjectId());
             this.size += (newChildSize - oldChildSize);
         }
-        if (entriesByBucket.size() >= DEFAULT_SPLIT_FACTOR) {
+        if (entriesByBucket.size() >= DEFAULT_NORMALIZATION_THRESHOLD) {
             // hit the split factor modification tolerance, lets normalize
             normalize();
         }
@@ -256,7 +265,7 @@ public class RevTreeBuilder {
                 checkState(TYPE.TREE.equals(child.getType()));
                 this.size -= sizeOfTree(child.getObjectId());
             }
-            if (entriesByBucket.size() >= DEFAULT_SPLIT_FACTOR) {
+            if (entriesByBucket.size() >= DEFAULT_NORMALIZATION_THRESHOLD) {
                 normalize();
             }
         }
@@ -265,9 +274,15 @@ public class RevTreeBuilder {
     }
 
     public boolean isNormalized() {
-        boolean normalized = (entriesByBucket.isEmpty() && innerTrees.isEmpty())
-                || (entriesByBucket.size() <= NORMALIZED_SIZE_LIMIT && innerTrees.isEmpty())
-                || (entriesByBucket.isEmpty() && !innerTrees.isEmpty());
+
+        final boolean empty = entriesByBucket.isEmpty() && bucketTreesByBucket.isEmpty();
+
+        final boolean childrenBetweenLimitsAndNoBuckets = entriesByBucket.size() <= NORMALIZED_SIZE_LIMIT
+                && bucketTreesByBucket.isEmpty();
+
+        boolean onlyBuckets = entriesByBucket.isEmpty() && !bucketTreesByBucket.isEmpty();
+
+        boolean normalized = empty || childrenBetweenLimitsAndNoBuckets || onlyBuckets;
         return normalized;
     }
 
@@ -280,13 +295,14 @@ public class RevTreeBuilder {
             return;
         }
 
+        // update all inner trees
         final int childDepth = this.depth + 1;
         try {
             for (Integer bucket : entriesByBucket.keySet()) {
                 final RevTreeBuilder subtreeBuilder;
                 {
                     final SortedSet<NodeRef> bucketEntries = entriesByBucket.get(bucket);
-                    final ObjectId subtreeId = innerTrees.get(bucket);
+                    final ObjectId subtreeId = bucketTreesByBucket.get(bucket);
                     if (subtreeId == null) {
                         subtreeBuilder = new RevTreeBuilder(db, serialFactory, null, childDepth);
                     } else {
@@ -303,9 +319,13 @@ public class RevTreeBuilder {
                     }
                 }
                 final RevTree subtree = subtreeBuilder.build();
-                final ObjectId newSubtreeId = subtree.getId();
-                db.put(newSubtreeId, serialFactory.createRevTreeWriter(subtree));
-                innerTrees.put(bucket, newSubtreeId);
+                if (subtree.isEmpty()) {
+                    bucketTreesByBucket.remove(bucket);
+                } else {
+                    final ObjectId newSubtreeId = subtree.getId();
+                    db.put(newSubtreeId, serialFactory.createRevTreeWriter(subtree));
+                    bucketTreesByBucket.put(bucket, newSubtreeId);
+                }
             }
             entriesByBucket.clear();
         } catch (RuntimeException e) {
@@ -313,33 +333,30 @@ public class RevTreeBuilder {
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
-    }
 
-    protected final Integer computeBucket(final String key) {
-        byte[] hashedKey = hashKey(key);
-        // int ch1 = hashedKey[2 * this.order] & 0xFF;
-        // int ch2 = hashedKey[2 * this.order + 1] & 0xFF;
-        // int b = (ch1 << 8) + (ch2 << 0);
-        // final Integer bucket = Integer.valueOf(b);
-        final Integer bucket = Integer.valueOf(hashedKey[this.depth] & 0xFF);
+        // did we reach back the upper limit for a children tree? then compress to a children tree
+        if (size <= NORMALIZED_SIZE_LIMIT) {
 
-        return bucket;
-    }
+            final long oldSize = this.size;
+            this.size = 0L;
 
-    private synchronized byte[] hashKey(final String key) {
-        if (md == null) {
-            try {
-                md = MessageDigest.getInstance("SHA1");
-            } catch (NoSuchAlgorithmException e) {
-                throw new RuntimeException(e);
+            ImmutableList<ObjectId> bucketIds = ImmutableList.copyOf(bucketTreesByBucket.values());
+            bucketTreesByBucket.clear();
+
+            for (ObjectId bucketId : bucketIds) {
+                ObjectReader<RevTree> reader = serialFactory.createRevTreeReader();
+                RevTree bucket = db.get(bucketId, reader);
+                checkState(bucket.children().isPresent());
+                for (NodeRef ref : bucket.children().get()) {
+                    put(ref);
+                }
             }
+            checkState(size == oldSize);
         }
-        try {
-            md.reset();
-            return md.digest(key.getBytes("UTF-8"));
-        } catch (UnsupportedEncodingException e) {
-            throw new RuntimeException(e);
-        }
+    }
+
+    protected final Integer computeBucket(final String path) {
+        return this.storageOrder.bucket(path, this.depth);
     }
 
 }

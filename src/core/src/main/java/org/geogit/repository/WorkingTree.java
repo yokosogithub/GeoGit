@@ -9,6 +9,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 
 import javax.annotation.Nullable;
 import javax.xml.namespace.QName;
@@ -37,6 +38,7 @@ import org.geogit.storage.ObjectWriter;
 import org.geogit.storage.StagingDatabase;
 import org.opengis.feature.Feature;
 import org.opengis.feature.type.FeatureType;
+import org.opengis.feature.type.Name;
 import org.opengis.filter.Filter;
 import org.opengis.geometry.BoundingBox;
 import org.opengis.util.ProgressListener;
@@ -46,6 +48,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.google.inject.Inject;
 
 /**
@@ -215,7 +218,18 @@ public class WorkingTree {
      * @param feature the feature to insert
      */
     public NodeRef insert(final String parentTreePath, final Feature feature) {
-        NodeRef ref = putInDatabase(parentTreePath, feature);
+
+        final FeatureType featureType = feature.getType();
+        RevFeatureType newFeatureType = new RevFeatureType(featureType);
+        ObjectId revFeatureTypeId = repository.command(HashObject.class).setObject(newFeatureType)
+                .call();
+
+        final ObjectWriter<RevFeatureType> featureTypeWriter = serialFactory
+                .createFeatureTypeWriter(newFeatureType);
+
+        indexDatabase.put(revFeatureTypeId, featureTypeWriter);
+
+        NodeRef ref = putInDatabase(parentTreePath, feature, revFeatureTypeId);
         RevTreeBuilder parentTree = repository.command(FindOrCreateSubtree.class).setIndex(true)
                 .setParent(Suppliers.ofInstance(Optional.of(getTree())))
                 .setChildPath(parentTreePath).call().builder(indexDatabase);
@@ -311,9 +325,9 @@ public class WorkingTree {
      * @param pathFilter if specified, only changes that match the filter will be counted
      * @return the number differences between the work tree and the index based on the path filter.
      */
-    public int countUnstaged(final @Nullable String pathFilter) {
+    public long countUnstaged(final @Nullable String pathFilter) {
         Iterator<DiffEntry> unstaged = getUnstaged(pathFilter);
-        int count = 0;
+        long count = 0;
         while (unstaged.hasNext()) {
             count++;
             unstaged.next();
@@ -337,36 +351,25 @@ public class WorkingTree {
      * 
      * @param parentTreePath the path of the feature
      * @param feature the feature to add
+     * @param metadataId
      * @return the NodeRef for the inserted feature
      */
-    private NodeRef putInDatabase(final String parentTreePath, final Feature feature) {
+    private NodeRef putInDatabase(final String parentTreePath, final Feature feature,
+            final ObjectId metadataId) {
+
         NodeRef.checkValidPath(parentTreePath);
         checkNotNull(feature);
+        checkNotNull(metadataId);
 
-        RevFeatureBuilder builder = new RevFeatureBuilder();
-
-        RevFeature newFeature = builder.build(feature);
-
-        final ObjectWriter<?> featureWriter = serialFactory.createFeatureWriter(newFeature);
-
-        final FeatureType featureType = feature.getType();
-        RevFeatureType newFeatureType = new RevFeatureType(featureType);
-        final ObjectWriter<RevFeatureType> featureTypeWriter = serialFactory
-                .createFeatureTypeWriter(newFeatureType);
-
+        final RevFeature newFeature = new RevFeatureBuilder().build(feature);
+        final ObjectId objectId = repository.command(HashObject.class).setObject(newFeature).call();
         final BoundingBox bounds = feature.getBounds();
         final String nodePath = NodeRef
                 .appendChild(parentTreePath, feature.getIdentifier().getID());
 
-        final ObjectId objectId = repository.command(HashObject.class).setObject(newFeature).call();
+        final ObjectWriter<?> featureWriter = serialFactory.createFeatureWriter(newFeature);
+
         indexDatabase.put(objectId, featureWriter);
-        final ObjectId metadataId;
-        if (newFeatureType.getId().isNull()) {
-            metadataId = repository.command(HashObject.class).setObject(newFeatureType).call();
-            indexDatabase.put(metadataId, featureTypeWriter);
-        } else {
-            metadataId = newFeatureType.getId();
-        }
 
         NodeRef newObject;
         if (bounds == null) {
@@ -390,7 +393,7 @@ public class WorkingTree {
      */
     private void putInDatabase(final String parentTreePath, final Iterator<Feature> objects,
             final ProgressListener progress, final @Nullable Integer size,
-            @Nullable final List<NodeRef> target, RevTreeBuilder parentTree) throws Exception {
+            @Nullable final List<NodeRef> target, final RevTreeBuilder parentTree) throws Exception {
 
         checkNotNull(objects);
         checkNotNull(progress);
@@ -400,6 +403,9 @@ public class WorkingTree {
         int count = 0;
 
         progress.started();
+
+        Map<Name, ObjectId> revFeatureTypes = Maps.newHashMap();
+
         while (objects.hasNext()) {
             count++;
             if (progress.isCanceled()) {
@@ -410,14 +416,30 @@ public class WorkingTree {
             }
 
             feature = objects.next();
-            NodeRef objectRef = putInDatabase(parentTreePath, feature);
 
+            final FeatureType featureType = feature.getType();
+            ObjectId revFeatureTypeId = revFeatureTypes.get(featureType.getName());
+
+            if (null == revFeatureTypeId) {
+                RevFeatureType newFeatureType = new RevFeatureType(featureType);
+
+                revFeatureTypeId = repository.command(HashObject.class).setObject(newFeatureType)
+                        .call();
+
+                final ObjectWriter<RevFeatureType> featureTypeWriter = serialFactory
+                        .createFeatureTypeWriter(newFeatureType);
+
+                indexDatabase.put(revFeatureTypeId, featureTypeWriter);
+                revFeatureTypes.put(featureType.getName(), revFeatureTypeId);
+            }
+
+            final NodeRef objectRef = putInDatabase(parentTreePath, feature, revFeatureTypeId);
             parentTree.put(objectRef);
-
             if (target != null) {
                 target.add(objectRef);
             }
         }
+
         progress.complete();
     }
 

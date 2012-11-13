@@ -13,7 +13,9 @@ import java.util.WeakHashMap;
 
 import org.geogit.api.NodeRef;
 import org.geogit.api.ObjectId;
+import org.geogit.api.RevTree;
 
+import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
 import com.google.common.collect.Ordering;
 
@@ -42,7 +44,7 @@ public final class NodeRefPathStorageOrder extends Ordering<String> {
     // private Cache<String, ObjectId> cache = CacheBuilder.newBuilder().maximumSize(1000).build();
     private Map<String, ObjectId> cache = new WeakHashMap<String, ObjectId>();
 
-    public ObjectId pathHash(final String path) {
+    private ObjectId pathHash(final String path) {
         ObjectId pathHash = cache.get(path);// .getIfPresent(path);
         if (pathHash == null) {
             hasher.reset();
@@ -51,5 +53,16 @@ public final class NodeRefPathStorageOrder extends Ordering<String> {
             cache.put(path, pathHash);
         }
         return pathHash;
+    }
+
+    public Integer bucket(final String path, final int depth) {
+
+        final int byteN = pathHash(path).byteN(depth);// 0-255
+        final int maxBuckets = RevTree.BUCKET_SIZE;
+
+        Preconditions.checkState(maxBuckets <= 256);
+
+        int bucket = (byteN * maxBuckets) / 255;
+        return Integer.valueOf(bucket);
     }
 }

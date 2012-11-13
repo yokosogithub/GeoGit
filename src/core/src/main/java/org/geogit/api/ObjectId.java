@@ -62,7 +62,7 @@ public final class ObjectId implements Comparable<ObjectId> {
     }
 
     /**
-     * @return whether or not this object id is null
+     * @return whether or not this object id represents the {@link #NULL} object id
      */
     public boolean isNull() {
         return NULL.equals(this);
@@ -168,16 +168,18 @@ public final class ObjectId implements Comparable<ObjectId> {
     }
 
     /**
-     * @return a raw byte array of the hash code for this object id.
+     * @return a raw byte array of the hash code for this object id. Changes to the returned array
+     *         do not affect this object.
      */
     public byte[] getRawValue() {
         return hashCode.clone();
     }
 
     /**
-     * Creates a new SHA-1 ObjectId for the byte[] contents of the given string.
+     * Utility method to quickly hash a String and create an ObjectId out of the string SHA-1 hash.
      * <p>
-     * Note this method is to hash a string, not to convert the string representation of an ObjectId
+     * Note this method is to hash a string, not to convert the string representation of an
+     * ObjectId. Use {@link #valueOf(String)} for that purpose.
      * </p>
      * 
      * @param strToHash
@@ -190,20 +192,14 @@ public final class ObjectId implements Comparable<ObjectId> {
     }
 
     /**
-     * Prints the object ID just like the git command "0000000..0000000"
+     * Returns the value of this ObjectId's internal hash at the given index without having to go
+     * through {@link #getRawValue()} and hence create excessive defensive copies of the byte array.
      * 
-     * @return the formatted string
-     */
-    public String printSmallId() {
-        String out = toString();
-        return out.substring(0, 7) + ".." + out.substring(out.length() - 7, out.length());
-    }
-
-    /**
-     * @param index
-     * @return the byte at the given index
+     * @param index the index of the byte inside this objectid's internal hash to return
+     * @return the byte at the given index as an integer
      */
     public int byteN(int index) {
-        return this.hashCode[index];
+        int b = this.hashCode[index] & 0xFF;
+        return b;
     }
 }
