@@ -264,8 +264,8 @@ public class NodeRef implements Comparable<NodeRef> {
     public static String appendChild(String parentTreePath, String childName) {
         checkNotNull(parentTreePath);
         checkNotNull(childName);
-        return new StringBuilder(parentTreePath).append(PATH_SEPARATOR).append(childName)
-                .toString();
+        return "".equals(parentTreePath) ? childName : new StringBuilder(parentTreePath)
+                .append(PATH_SEPARATOR).append(childName).toString();
     }
 
 }
