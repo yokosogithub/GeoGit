@@ -40,7 +40,7 @@ public class Help implements CLICommand {
         JCommander jc = cli.newCommandParser();
 
         if (parameters.isEmpty()) {
-            jc.usage();
+            cli.printShortCommandList(jc);
         } else {
             String command = parameters.get(0);
             jc.usage(command);

@@ -23,7 +23,7 @@ import com.google.common.collect.Lists;
 /**
  *
  */
-@Parameters(commandNames = { "checkout", "co" }, commandDescription = "Checkout a branch or paths to the working tree")
+@Parameters(commandNames = "checkout", commandDescription = "Checkout a branch or paths to the working tree")
 public class Checkout extends AbstractCommand implements CLICommand {
 
     @Parameter(arity = 1, description = "<branch|commit>")

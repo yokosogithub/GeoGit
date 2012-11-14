@@ -41,7 +41,7 @@ import com.google.common.collect.Lists;
 /**
  *
  */
-@Parameters(commandNames = { "branch", "br" }, commandDescription = "List, create, or delete branches")
+@Parameters(commandNames = "branch", commandDescription = "List, create, or delete branches")
 public class Branch extends AbstractCommand implements CLICommand {
 
     @Parameter(description = "<branch name> [<start point>]")

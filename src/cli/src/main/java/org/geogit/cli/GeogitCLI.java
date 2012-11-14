@@ -13,6 +13,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.ServiceLoader;
+import java.util.TreeSet;
 
 import javax.annotation.Nullable;
 
@@ -32,7 +33,9 @@ import org.opengis.util.ProgressListener;
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.ParameterException;
 import com.google.common.base.Optional;
+import com.google.common.base.Strings;
 import com.google.common.base.Throwables;
+import com.google.common.collect.Sets;
 import com.google.inject.Binding;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
@@ -290,7 +293,7 @@ public class GeogitCLI {
     public void execute(String... args) throws Exception {
         JCommander mainCommander = newCommandParser();
         if (null == args || args.length == 0) {
-            mainCommander.usage();
+            printShortCommandList(mainCommander);
             return;
         }
         {
@@ -325,6 +328,34 @@ public class GeogitCLI {
             CLICommand cliCommand = (CLICommand) objects.get(0);
             cliCommand.run(this);
             getConsole().flush();
+        }
+    }
+
+    /**
+     * @param mainCommander
+     * @throws IOException
+     */
+    public void printShortCommandList(JCommander mainCommander) {
+        TreeSet<String> commandNames = Sets.newTreeSet();
+        int longesCommandLenght = 0;
+        // do this to ignore aliases
+        for (String name : mainCommander.getCommands().keySet()) {
+            commandNames.add(name);
+            longesCommandLenght = Math.max(longesCommandLenght, name.length());
+        }
+        ConsoleReader console = getConsole();
+        try {
+            console.println("usage: geogit <command> [<args>]");
+            console.println();
+            console.println("The most commonly used geogit commands are:");
+            for (String cmd : commandNames) {
+                console.print(Strings.padEnd(cmd, longesCommandLenght, ' '));
+                console.print("\t");
+                console.println(mainCommander.getCommandDescription(cmd));
+            }
+            console.flush();
+        } catch (IOException e) {
+            throw Throwables.propagate(e);
         }
     }
 
