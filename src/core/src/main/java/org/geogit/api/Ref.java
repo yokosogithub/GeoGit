@@ -48,7 +48,7 @@ public class Ref implements Comparable<Ref> {
     /**
      * Directory prefix for remotes.
      */
-    public static final String REMOTES_PREFIX = "remotes/";
+    public static final String REMOTES_PREFIX = REFS_PREFIX + "remotes/";
 
     /**
      * Directory prefix for tags.

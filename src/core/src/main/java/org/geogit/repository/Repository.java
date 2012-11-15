@@ -75,7 +75,7 @@ public class Repository {
     public Repository() {
     }
 
-    public void create() {
+    public void open() {
         refDatabase.create();
         objectDatabase.open();
         index.getDatabase().open();

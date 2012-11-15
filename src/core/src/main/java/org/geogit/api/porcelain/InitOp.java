@@ -108,7 +108,7 @@ public class InitOp extends AbstractGeoGitOp<Repository> {
         Repository repository;
         try {
             repository = injector.getInstance(Repository.class);
-            repository.create();
+            repository.open();
             createDefaultRefs();
         } catch (RuntimeException e) {
             throw new IllegalStateException("Can't access repository at '"
