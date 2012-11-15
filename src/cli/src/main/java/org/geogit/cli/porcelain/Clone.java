@@ -56,7 +56,6 @@ public class Clone extends AbstractCommand implements CLICommand {
      */
     @Override
     public void runInternal(GeogitCLI cli) throws Exception {
-        checkState(cli.getGeogit() != null, "Not a geogit repository: " + cli.getPlatform().pwd());
         checkState(args != null && args.size() > 0, "No repository provided.");
 
     }
