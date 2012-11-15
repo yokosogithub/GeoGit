@@ -179,8 +179,8 @@ public class Diff extends AbstractCommand implements CLICommand {
             Repository repository = geogit.getRepository();
             StagingDatabase index = repository.getIndex().getDatabase();
 
-            final String oldPath = entry.oldPath();
-            final String newPath = entry.newPath();
+            // final String oldPath = entry.oldPath();
+            // final String newPath = entry.newPath();
 
             ObjectId id = null;
             ObjectReader<Object> reader = null;

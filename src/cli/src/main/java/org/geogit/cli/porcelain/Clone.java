@@ -56,7 +56,16 @@ public class Clone extends AbstractCommand implements CLICommand {
      */
     @Override
     public void runInternal(GeogitCLI cli) throws Exception {
-        checkState(args != null && args.size() > 0, "No repository provided.");
+        checkState(args != null && args.size() > 0, "You must specify a repository to clone.");
+        checkState(args.size() < 3, "Too many arguments provided.");
 
+        CloneOp clone = cli.getGeogit().command(CloneOp.class);
+        clone.setBranch(branch).setRepositoryURL(args.get(0));
+
+        if (args.size() > 1) {
+            clone.setDirectory(args.get(1));
+        }
+
+        clone.call();
     }
 }
