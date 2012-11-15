@@ -9,6 +9,7 @@ import static com.google.common.base.Preconditions.checkState;
 
 import java.util.List;
 
+import org.geogit.api.porcelain.PushOp;
 import org.geogit.cli.AbstractCommand;
 import org.geogit.cli.CLICommand;
 import org.geogit.cli.GeogitCLI;
@@ -47,5 +48,19 @@ public class Push extends AbstractCommand implements CLICommand {
     public void runInternal(GeogitCLI cli) throws Exception {
         checkState(cli.getGeogit() != null, "Not a geogit repository: " + cli.getPlatform().pwd());
 
+        PushOp push = cli.getGeogit().command(PushOp.class);
+        push.setProgressListener(cli.getProgressListener());
+        push.setAll(all);
+
+        if (args != null) {
+            if (args.size() > 0) {
+                push.setRepository(args.get(0));
+            }
+            for (int i = 1; i < args.size(); i++) {
+                push.addRefSpec(args.get(i));
+            }
+        }
+
+        push.call();
     }
 }

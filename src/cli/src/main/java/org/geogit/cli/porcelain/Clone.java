@@ -60,6 +60,7 @@ public class Clone extends AbstractCommand implements CLICommand {
         checkState(args.size() < 3, "Too many arguments provided.");
 
         CloneOp clone = cli.getGeogit().command(CloneOp.class);
+        clone.setProgressListener(cli.getProgressListener());
         clone.setBranch(branch).setRepositoryURL(args.get(0));
 
         if (args.size() > 1) {

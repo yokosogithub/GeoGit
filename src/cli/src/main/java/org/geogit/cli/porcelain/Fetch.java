@@ -9,6 +9,7 @@ import static com.google.common.base.Preconditions.checkState;
 
 import java.util.List;
 
+import org.geogit.api.porcelain.FetchOp;
 import org.geogit.cli.AbstractCommand;
 import org.geogit.cli.CLICommand;
 import org.geogit.cli.GeogitCLI;
@@ -35,13 +36,13 @@ import com.beust.jcommander.Parameters;
 @Parameters(commandNames = "fetch", commandDescription = "Download objects and refs from another repository")
 public class Fetch extends AbstractCommand implements CLICommand {
 
-    @Parameter(names = "--all", description = "Fetch all remotes.")
+    @Parameter(names = "--all", description = "Fetch from all remotes.")
     private boolean all = false;
 
     @Parameter(names = { "-p", "--prune" }, description = "After fetching, remove any remote-tracking branches which no longer exist on the remote.")
     private boolean prune = false;
 
-    @Parameter(description = "<repository> [<directory>]")
+    @Parameter(description = "[<repository>...]")
     private List<String> args;
 
     /**
@@ -54,6 +55,16 @@ public class Fetch extends AbstractCommand implements CLICommand {
     public void runInternal(GeogitCLI cli) throws Exception {
         checkState(cli.getGeogit() != null, "Not a geogit repository: " + cli.getPlatform().pwd());
         checkState(args != null && args.size() > 0, "No repository provided.");
+
+        FetchOp fetch = cli.getGeogit().command(FetchOp.class);
+        fetch.setProgressListener(cli.getProgressListener());
+        fetch.setAll(all).setPrune(prune);
+
+        for (String repo : args) {
+            fetch.addRepository(repo);
+        }
+
+        fetch.call();
 
     }
 }

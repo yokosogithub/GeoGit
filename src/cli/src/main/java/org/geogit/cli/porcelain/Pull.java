@@ -9,6 +9,7 @@ import static com.google.common.base.Preconditions.checkState;
 
 import java.util.List;
 
+import org.geogit.api.porcelain.PullOp;
 import org.geogit.cli.AbstractCommand;
 import org.geogit.cli.CLICommand;
 import org.geogit.cli.GeogitCLI;
@@ -55,8 +56,23 @@ public class Pull extends AbstractCommand implements CLICommand {
         checkState(cli.getGeogit() != null, "Not a geogit repository: " + cli.getPlatform().pwd());
         if (!rebase) {
             throw new UnsupportedOperationException(
-                    "Merge pull not yet implemented, use --rebase instead.");
+                    "Merge pull not yet implemented, use --rebase for a rebase pull.");
         }
+
+        PullOp pull = cli.getGeogit().command(PullOp.class);
+        pull.setProgressListener(cli.getProgressListener());
+        pull.setAll(all).setRebase(rebase);
+
+        if (args != null) {
+            if (args.size() > 0) {
+                pull.setRepository(args.get(0));
+            }
+            for (int i = 1; i < args.size(); i++) {
+                pull.addRefSpec(args.get(i));
+            }
+        }
+
+        pull.call();
 
     }
 }
