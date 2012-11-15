@@ -49,6 +49,10 @@ SEE ALSO
 :ref:`geogit-config`
 :ref:`geogit-rebase`
 :ref:`geogit-reset`
+:ref:`geogit-clone`
+:ref:`geogit-fetch`
+:ref:`geogit-pull`
+:ref:`geogit-push`
 :ref:`geogit-pg`
 :ref:`geogit-shp`
 

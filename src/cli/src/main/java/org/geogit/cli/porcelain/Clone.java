@@ -34,7 +34,7 @@ import com.beust.jcommander.Parameters;
  * <p>
  * Usage:
  * <ul>
- * <li> {@code gogit clone [--branch <name>] <repository> [<directory>]}
+ * <li> {@code geogit clone [--branch <name>] <repository> [<directory>]}
  * </ul>
  * 
  * @see CloneOp
