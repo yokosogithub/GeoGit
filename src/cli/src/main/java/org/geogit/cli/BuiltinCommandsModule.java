@@ -10,13 +10,17 @@ import org.geogit.cli.porcelain.Branch;
 import org.geogit.cli.porcelain.Checkout;
 import org.geogit.cli.porcelain.CherryPick;
 import org.geogit.cli.porcelain.Clean;
+import org.geogit.cli.porcelain.Clone;
 import org.geogit.cli.porcelain.Commit;
 import org.geogit.cli.porcelain.Config;
 import org.geogit.cli.porcelain.Diff;
+import org.geogit.cli.porcelain.Fetch;
 import org.geogit.cli.porcelain.Help;
 import org.geogit.cli.porcelain.Init;
 import org.geogit.cli.porcelain.Log;
 import org.geogit.cli.porcelain.Rebase;
+import org.geogit.cli.porcelain.Pull;
+import org.geogit.cli.porcelain.Push;
 import org.geogit.cli.porcelain.RemoteExtension;
 import org.geogit.cli.porcelain.Reset;
 import org.geogit.cli.porcelain.Status;
@@ -41,6 +45,10 @@ import com.google.inject.AbstractModule;
  * @see Status
  * @see Rebase
  * @see Reset
+ * @see Clone
+ * @see Push
+ * @see Pull
+ * @see Fetch
  */
 public class BuiltinCommandsModule extends AbstractModule implements CLIModule {
 
@@ -62,6 +70,10 @@ public class BuiltinCommandsModule extends AbstractModule implements CLIModule {
         bind(Status.class);
         bind(Rebase.class);
         bind(Reset.class);
+        bind(Clone.class);
+        bind(Push.class);
+        bind(Pull.class);
+        bind(Fetch.class);
     }
 
 }
