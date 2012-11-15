@@ -7,7 +7,6 @@ import org.geogit.api.Remote;
 import org.geogit.api.porcelain.RemoteException.StatusCode;
 import org.geogit.storage.ConfigDatabase;
 
-import com.google.common.base.Optional;
 import com.google.inject.Inject;
 
 /**
@@ -54,11 +53,9 @@ public class RemoteAddOp extends AbstractGeoGitOp<Remote> {
             branch = "*";
         }
 
-        Optional<List<String>> allRemotes = config.getAllSubsections("remote");
-        if (allRemotes.isPresent()) {
-            if (allRemotes.get().contains(name)) {
-                throw new RemoteException(StatusCode.REMOTE_ALREADY_EXISTS);
-            }
+        List<String> allRemotes = config.getAllSubsections("remote");
+        if (allRemotes.contains(name)) {
+            throw new RemoteException(StatusCode.REMOTE_ALREADY_EXISTS);
         }
 
         String configSection = "remote." + name;

@@ -53,29 +53,59 @@ public interface ConfigDatabase {
     public <T> Optional<T> getGlobal(String key, Class<T> c);
 
     /**
-     * Builds and returns a string with all of the values from the global config file.
+     * Builds and returns a map with all of the values from the global config file.
      * 
-     * @return A string which contains all of the contents of the config file.
+     * @return A map which contains all of the contents of the config file.
      * @throws ConfigException if an error is encountered
      */
-    public Optional<Map<String, String>> getAll();
+    public Map<String, String> getAll();
 
     /**
-     * Builds and returns a string with all of the values from the global config file.
+     * Builds and returns a map with all of the values from the global config file.
      * 
-     * @return A string which contains all of the contents of the config file.
+     * @return A map which contains all of the contents of the config file.
      * @throws ConfigException if an error is encountered
      */
-    public Optional<Map<String, String>> getAllGlobal();
+    public Map<String, String> getAllGlobal();
 
-    public Optional<Map<String, String>> getAllSection(String section);
+    /**
+     * Builds and returns a map with all of the values from the section in the repository config
+     * file.
+     * 
+     * @return A map which contains all of the contents of the given section.
+     * @throws ConfigException if an error is encountered
+     */
+    public Map<String, String> getAllSection(String section);
 
-    public Optional<Map<String, String>> getAllSectionGlobal(String section);
+    /**
+     * Builds and returns a map with all of the values from the section in the global config file.
+     * 
+     * @return A map which contains all of the contents of the given section.
+     * @throws ConfigException if an error is encountered
+     */
+    public Map<String, String> getAllSectionGlobal(String section);
 
-    public Optional<List<String>> getAllSubsections(String section);
+    /**
+     * @return A list which contains all of the subsections for a given section in the repository
+     *         config file.
+     * @throws ConfigException if an error is encountered
+     */
+    public List<String> getAllSubsections(String section);
 
-    public Optional<List<String>> getAllSubsectionsGlobal(String section);
+    /**
+     * @return A list which contains all of the subsections for a given section in the global config
+     *         file.
+     * @throws ConfigException if an error is encountered
+     */
+    public List<String> getAllSubsectionsGlobal(String section);
 
+    /**
+     * Sets a value in the repository config file
+     * 
+     * @param key String in "section.key" format to set
+     * @param value The value to set
+     * @throws ConfigException if an error is encountered
+     */
     public void put(String key, Object value);
 
     /**

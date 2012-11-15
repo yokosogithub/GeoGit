@@ -126,14 +126,14 @@ public class ConfigOp extends AbstractGeoGitOp<Optional<Map<String, String>>> {
             break;
         }
         case CONFIG_LIST: {
-            Optional<Map<String, String>> results;
+            Map<String, String> results;
             if (global) {
                 results = config.getAllGlobal();
             } else {
                 results = config.getAll();
             }
 
-            return results;
+            return Optional.of(results);
         }
         default:
             throw new ConfigException(StatusCode.OPTION_DOES_N0T_EXIST);

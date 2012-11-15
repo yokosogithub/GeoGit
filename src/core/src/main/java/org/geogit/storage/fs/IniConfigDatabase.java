@@ -129,7 +129,7 @@ public class IniConfigDatabase implements ConfigDatabase {
         }
     }
 
-    private Optional<Map<String, String>> getAll(File file) {
+    private Map<String, String> getAll(File file) {
         try {
             final Wini ini = new Wini(file);
 
@@ -141,10 +141,7 @@ public class IniConfigDatabase implements ConfigDatabase {
                 }
             }
 
-            if (results.isEmpty())
-                return Optional.absent();
-
-            return Optional.of(results);
+            return results;
         } catch (IllegalArgumentException e) {
             throw e;
         } catch (Exception e) {
@@ -152,7 +149,7 @@ public class IniConfigDatabase implements ConfigDatabase {
         }
     }
 
-    private Optional<Map<String, String>> getAllSection(String section, File file) {
+    private Map<String, String> getAllSection(String section, File file) {
         try {
             final Wini ini = new Wini(file);
 
@@ -161,10 +158,7 @@ public class IniConfigDatabase implements ConfigDatabase {
             Section iniSection = ini.get(section);
             getFromSection(iniSection, section, results);
 
-            if (results.isEmpty())
-                return Optional.absent();
-
-            return Optional.of(results);
+            return results;
         } catch (IllegalArgumentException e) {
             throw e;
         } catch (Exception e) {
@@ -186,7 +180,7 @@ public class IniConfigDatabase implements ConfigDatabase {
         }
     }
 
-    private Optional<List<String>> getAllSubsections(String section, File file) {
+    private List<String> getAllSubsections(String section, File file) {
         try {
             final Wini ini = new Wini(file);
 
@@ -198,9 +192,9 @@ public class IniConfigDatabase implements ConfigDatabase {
             }
 
             if (results == null || results.isEmpty())
-                return Optional.absent();
+                return new ArrayList<String>();
 
-            return Optional.of(results);
+            return results;
         } catch (IllegalArgumentException e) {
             throw e;
         } catch (Exception e) {
@@ -318,13 +312,13 @@ public class IniConfigDatabase implements ConfigDatabase {
     }
 
     /**
-     * Builds and returns a map with all of the values from the global config file.
+     * Builds and returns a map with all of the values from the repository config file.
      * 
      * @return A map which contains all of the contents of the config file.
      * @throws ConfigException if an error is encountered
      */
     @Override
-    public Optional<Map<String, String>> getAll() {
+    public Map<String, String> getAll() {
         return getAll(config());
     }
 
@@ -335,7 +329,7 @@ public class IniConfigDatabase implements ConfigDatabase {
      * @throws ConfigException if an error is encountered
      */
     @Override
-    public Optional<Map<String, String>> getAllGlobal() {
+    public Map<String, String> getAllGlobal() {
         return getAll(globalConfig());
     }
 
@@ -347,19 +341,19 @@ public class IniConfigDatabase implements ConfigDatabase {
      * @throws ConfigException if an error is encountered
      */
     @Override
-    public Optional<Map<String, String>> getAllSection(String section) {
+    public Map<String, String> getAllSection(String section) {
         return getAllSection(section, config());
     }
 
     /**
-     * Builds and returns a string with all of the values of a specific section from the global
-     * config file.
+     * Builds and returns a map with all of the values of a specific section from the global config
+     * file.
      * 
      * @return A map which contains all of the contents of a particular section of the config file.
      * @throws ConfigException if an error is encountered
      */
     @Override
-    public Optional<Map<String, String>> getAllSectionGlobal(String section) {
+    public Map<String, String> getAllSectionGlobal(String section) {
         return getAllSection(section, globalConfig());
     }
 
@@ -369,7 +363,7 @@ public class IniConfigDatabase implements ConfigDatabase {
      * @return A list which contains all of the subsections of the given section.
      * @throws ConfigException if an error is encountered
      */
-    public Optional<List<String>> getAllSubsections(String section) {
+    public List<String> getAllSubsections(String section) {
         return getAllSubsections(section, config());
     }
 
@@ -380,7 +374,7 @@ public class IniConfigDatabase implements ConfigDatabase {
      * @return A list which contains all of the subsections of the given section.
      * @throws ConfigException if an error is encountered
      */
-    public Optional<List<String>> getAllSubsectionsGlobal(String section) {
+    public List<String> getAllSubsectionsGlobal(String section) {
         return getAllSubsections(section, globalConfig());
     }
 

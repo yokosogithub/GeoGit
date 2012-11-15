@@ -38,20 +38,18 @@ public class RemoteListOp extends AbstractGeoGitOp<ImmutableList<Remote>> {
      */
     @Override
     public ImmutableList<Remote> call() {
-        Optional<List<String>> remotes = config.getAllSubsections("remote");
+        List<String> remotes = config.getAllSubsections("remote");
         List<Remote> allRemotes = new ArrayList<Remote>();
-        if (remotes.isPresent()) {
-            for (String remoteName : remotes.get()) {
-                String remoteSection = "remote." + remoteName;
-                Optional<String> remoteFetchURL = config.get(remoteSection + ".url");
-                Optional<String> remoteFetch = config.get(remoteSection + ".fetch");
-                if (remoteFetchURL.isPresent() && remoteFetch.isPresent()) {
-                    Optional<String> remotePushURL = config.get(remoteSection + ".pushurl");
-                    allRemotes.add(new Remote(remoteName, remoteFetchURL.get(), remotePushURL
-                            .or(remoteFetchURL.get()), remoteFetch.get()));
-                }
-
+        for (String remoteName : remotes) {
+            String remoteSection = "remote." + remoteName;
+            Optional<String> remoteFetchURL = config.get(remoteSection + ".url");
+            Optional<String> remoteFetch = config.get(remoteSection + ".fetch");
+            if (remoteFetchURL.isPresent() && remoteFetch.isPresent()) {
+                Optional<String> remotePushURL = config.get(remoteSection + ".pushurl");
+                allRemotes.add(new Remote(remoteName, remoteFetchURL.get(), remotePushURL
+                        .or(remoteFetchURL.get()), remoteFetch.get()));
             }
+
         }
         return ImmutableList.copyOf(allRemotes);
     }

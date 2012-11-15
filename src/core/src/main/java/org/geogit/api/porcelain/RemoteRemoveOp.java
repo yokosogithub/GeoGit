@@ -43,8 +43,8 @@ public class RemoteRemoveOp extends AbstractGeoGitOp<Remote> {
         if (name == null || name.isEmpty()) {
             throw new RemoteException(StatusCode.MISSING_NAME);
         }
-        Optional<List<String>> allRemotes = config.getAllSubsections("remote");
-        if (!allRemotes.isPresent() || !allRemotes.get().contains(name)) {
+        List<String> allRemotes = config.getAllSubsections("remote");
+        if (!allRemotes.contains(name)) {
             throw new RemoteException(StatusCode.REMOTE_NOT_FOUND);
         }
 
