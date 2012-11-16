@@ -77,7 +77,7 @@ public class LocalRemoteRepo implements IRemoteRepo {
     private void walkCommit(ObjectId commitId, Repository localRepository,
             ObjectInserter objectInserter) {
         // See if we already have it
-        if (localRepository.getObjectDatabase().lookUp(commitId.toString()).size() > 0) {
+        if (localRepository.getObjectDatabase().exists(commitId)) {
             return;
         }
 
@@ -96,7 +96,7 @@ public class LocalRemoteRepo implements IRemoteRepo {
 
     private void walkTree(ObjectId treeId, Repository localRepository, ObjectInserter objectInserter) {
         // See if we already have it
-        if (localRepository.getObjectDatabase().lookUp(treeId.toString()).size() > 0) {
+        if (localRepository.getObjectDatabase().exists(treeId)) {
             return;
         }
 
@@ -126,29 +126,32 @@ public class LocalRemoteRepo implements IRemoteRepo {
 
     private void moveObject(ObjectId objectId, Repository localRepository,
             ObjectInserter objectInserter) {
-        if (localRepository.getObjectDatabase().lookUp(objectId.toString()).size() == 0) {
-            Optional<RevObject> childObject = remoteGeoGit.command(RevObjectParse.class)
-                    .setObjectId(objectId).call();
-            if (childObject.isPresent()) {
-                ObjectWriter<? extends RevObject> objectWriter = null;
-                switch (childObject.get().getType()) {
-                case TREE:
-                    walkTree(objectId, localRepository, objectInserter);
-                    objectWriter = localRepository.newRevTreeWriter((RevTree) childObject.get());
-                    break;
-                case FEATURE:
-                    objectWriter = localRepository.newFeatureWriter((RevFeature) childObject.get());
-                    break;
-                case FEATURETYPE:
-                    objectWriter = localRepository
-                            .newFeatureTypeWriter((RevFeatureType) childObject.get());
-                    break;
-                default:
-                    break;
-                }
-                if (objectWriter != null) {
-                    objectInserter.insert(childObject.get().getId(), objectWriter);
-                }
+        // See if we already have it
+        if (localRepository.getObjectDatabase().exists(objectId)) {
+            return;
+        }
+
+        Optional<RevObject> childObject = remoteGeoGit.command(RevObjectParse.class)
+                .setObjectId(objectId).call();
+        if (childObject.isPresent()) {
+            ObjectWriter<? extends RevObject> objectWriter = null;
+            switch (childObject.get().getType()) {
+            case TREE:
+                walkTree(objectId, localRepository, objectInserter);
+                objectWriter = localRepository.newRevTreeWriter((RevTree) childObject.get());
+                break;
+            case FEATURE:
+                objectWriter = localRepository.newFeatureWriter((RevFeature) childObject.get());
+                break;
+            case FEATURETYPE:
+                objectWriter = localRepository.newFeatureTypeWriter((RevFeatureType) childObject
+                        .get());
+                break;
+            default:
+                break;
+            }
+            if (objectWriter != null) {
+                objectInserter.insert(childObject.get().getId(), objectWriter);
             }
         }
     }
