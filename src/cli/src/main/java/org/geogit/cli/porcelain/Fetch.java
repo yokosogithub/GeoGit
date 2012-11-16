@@ -61,7 +61,7 @@ public class Fetch extends AbstractCommand implements CLICommand {
         fetch.setAll(all).setPrune(prune);
 
         for (String repo : args) {
-            fetch.addRepository(repo);
+            fetch.addRemote(repo);
         }
 
         fetch.call();

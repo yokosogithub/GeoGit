@@ -56,4 +56,22 @@ public class Remote {
     public String getFetch() {
         return fetch;
     }
+
+    /**
+     * Determines if this Remote is the same as the given Remote.
+     * 
+     * @param o the remote to compare against
+     */
+    @Override
+    public boolean equals(Object o) {
+        if (o == this) {
+            return true;
+        }
+        if (!(o instanceof Remote)) {
+            return false;
+        }
+        Remote r = (Remote) o;
+        return fetch.equals(r.fetch) && fetchurl.equals(r.fetchurl) && pushurl.equals(r.pushurl)
+                && name.equals(r.name);
+    }
 }

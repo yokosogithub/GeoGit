@@ -3,6 +3,7 @@ package org.geogit.api.porcelain;
 import java.util.List;
 
 import org.geogit.api.AbstractGeoGitOp;
+import org.geogit.api.Ref;
 import org.geogit.api.Remote;
 import org.geogit.api.porcelain.RemoteException.StatusCode;
 import org.geogit.storage.ConfigDatabase;
@@ -59,7 +60,8 @@ public class RemoteAddOp extends AbstractGeoGitOp<Remote> {
         }
 
         String configSection = "remote." + name;
-        String fetch = "+refs/heads/" + branch + ":refs/remotes/" + name + "/" + branch;
+        String fetch = "+" + Ref.HEADS_PREFIX + branch + ":" + Ref.REMOTES_PREFIX + name + "/"
+                + branch;
 
         config.put(configSection + ".url", url);
         config.put(configSection + ".fetch", fetch);

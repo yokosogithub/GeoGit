@@ -134,6 +134,7 @@ public class GeogitCLI {
 
         if (null != geogit.command(ResolveGeogitDir.class).call()) {
             geogit.getRepository();
+            geogit.getRepository().setInjectorBuilder(new CLIInjectorBuilder());
             return geogit;
         }
 

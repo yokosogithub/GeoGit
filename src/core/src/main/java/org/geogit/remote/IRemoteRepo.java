@@ -8,6 +8,7 @@ package org.geogit.remote;
 import java.io.IOException;
 
 import org.geogit.api.Ref;
+import org.geogit.repository.Repository;
 
 import com.google.common.collect.ImmutableSet;
 
@@ -30,4 +31,5 @@ public interface IRemoteRepo {
      */
     public ImmutableSet<Ref> listRefs(boolean getHeads, boolean getTags);
 
+    public void fetchNewData(Repository localRepository, Ref ref);
 }

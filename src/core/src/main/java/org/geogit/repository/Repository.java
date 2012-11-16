@@ -10,6 +10,7 @@ import java.io.Serializable;
 import java.util.Map;
 
 import org.geogit.api.AbstractGeoGitOp;
+import org.geogit.api.InjectorBuilder;
 import org.geogit.api.NodeRef;
 import org.geogit.api.ObjectId;
 import org.geogit.api.Ref;
@@ -69,6 +70,8 @@ public class Repository {
     @Inject
     private ObjectDatabase objectDatabase;
 
+    private InjectorBuilder injectorBuilder = new InjectorBuilder();
+
     /**
      * Creates the repository.
      */
@@ -107,6 +110,20 @@ public class Repository {
      */
     public StagingArea getIndex() {
         return index;
+    }
+
+    /**
+     * @return the {@link InjectorBuilder} for this repository
+     */
+    public InjectorBuilder getInjectorBuilder() {
+        return injectorBuilder;
+    }
+
+    /**
+     * @param injectorBuilder the {@link InjectorBuilder} for this repository
+     */
+    public void setInjectorBuilder(InjectorBuilder injectorBuilder) {
+        this.injectorBuilder = injectorBuilder;
     }
 
     /**

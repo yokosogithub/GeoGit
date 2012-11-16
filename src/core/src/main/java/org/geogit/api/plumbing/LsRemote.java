@@ -12,6 +12,7 @@ import org.geogit.api.Ref;
 import org.geogit.api.Remote;
 import org.geogit.remote.IRemoteRepo;
 import org.geogit.remote.RemoteUtils;
+import org.geogit.repository.Repository;
 
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
@@ -20,6 +21,7 @@ import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableSet;
+import com.google.inject.Inject;
 
 /**
  * Connects to the specified remote, retrieves its {@link Ref refs}, closes the remote connection
@@ -35,7 +37,11 @@ public class LsRemote extends AbstractGeoGitOp<ImmutableSet<Ref>> {
 
     private boolean local;
 
-    public LsRemote() {
+    private Repository localRepository;
+
+    @Inject
+    public LsRemote(Repository localRepository) {
+        this.localRepository = localRepository;
         Optional<Remote> abstent = Optional.absent();
         this.remote = Suppliers.ofInstance(abstent);
         this.getHeads = true;
@@ -83,10 +89,12 @@ public class LsRemote extends AbstractGeoGitOp<ImmutableSet<Ref>> {
             return locallyKnownRefs(remoteConfig);
         }
         getProgressListener().setDescription("Obtaining remote " + remoteConfig.getName());
-        IRemoteRepo remoteRepo = RemoteUtils.newRemote(remoteConfig);
+        Optional<IRemoteRepo> remoteRepo = RemoteUtils.newRemote(localRepository
+                .getInjectorBuilder().get(), remoteConfig);
+        Preconditions.checkState(remoteRepo.isPresent(), "Remote could not be opened.");
         getProgressListener().setDescription("Connecting to remote " + remoteConfig.getName());
         try {
-            remoteRepo.open();
+            remoteRepo.get().open();
         } catch (IOException e) {
             throw Throwables.propagate(e);
         }
@@ -94,10 +102,10 @@ public class LsRemote extends AbstractGeoGitOp<ImmutableSet<Ref>> {
                 "Connected to remote " + remoteConfig.getName() + ". Retrieving references");
         ImmutableSet<Ref> remoteRefs;
         try {
-            remoteRefs = remoteRepo.listRefs(getHeads, getTags);
+            remoteRefs = remoteRepo.get().listRefs(getHeads, getTags);
         } finally {
             try {
-                remoteRepo.close();
+                remoteRepo.get().close();
             } catch (IOException e) {
                 throw Throwables.propagate(e);
             }
