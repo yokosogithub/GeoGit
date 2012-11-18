@@ -24,7 +24,7 @@ public final class ObjectId implements Comparable<ObjectId> {
     public static final ObjectId NULL;
 
     /**
-     * Hash function for hashing strings.
+     * Hash function to create object ids out of its contents (SHA-1)
      */
     public static final HashFunction HASH_FUNCTION;
 

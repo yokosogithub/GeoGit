@@ -9,6 +9,13 @@ import java.math.BigDecimal;
 import java.math.BigInteger;
 
 import com.vividsolutions.jts.geom.Geometry;
+import com.vividsolutions.jts.geom.GeometryCollection;
+import com.vividsolutions.jts.geom.LineString;
+import com.vividsolutions.jts.geom.MultiLineString;
+import com.vividsolutions.jts.geom.MultiPoint;
+import com.vividsolutions.jts.geom.MultiPolygon;
+import com.vividsolutions.jts.geom.Point;
+import com.vividsolutions.jts.geom.Polygon;
 
 /**
  * This enum describes the data type of each encoded feature attribute.
@@ -22,68 +29,39 @@ import com.vividsolutions.jts.geom.Geometry;
  */
 @SuppressWarnings("rawtypes")
 public enum GtEntityType implements Serializable {
-    STRING(0, String.class), BOOLEAN(1, Boolean.class), BYTE(2, Byte.class), DOUBLE(3, Double.class), BIGDECIMAL(
-            4, BigDecimal.class), FLOAT(5, Float.class), INT(6, Integer.class), BIGINT(7,
-            BigInteger.class), LONG(8, Long.class), BOOLEAN_ARRAY(11, boolean[].class), BYTE_ARRAY(
-            12, byte[].class), CHAR_ARRAY(13, char[].class), DOUBLE_ARRAY(14, double[].class), FLOAT_ARRAY(
-            15, float[].class), INT_ARRAY(16, int[].class), LONG_ARRAY(17, long[].class), GEOMETRY(
-            9, Geometry.class), NULL(10, null), UNKNOWN_SERIALISABLE(18, Serializable.class), UNKNOWN(
-            19, null), UUID(20, java.util.UUID.class), DATE_UTIL(21, java.util.Date.class), DATE_SQL(
-            22, java.sql.Date.class);
-
-    /**
-     * Determines the type of a given object.
-     * 
-     * @param value the object to analyze
-     * @return the type of the object
-     */
-    public static GtEntityType determineType(Object value) {
-        if (value == null)
-            return NULL;
-        if (value instanceof String)
-            return STRING;
-        if (value instanceof Boolean)
-            return BOOLEAN;
-        if (value instanceof Byte)
-            return BYTE;
-        if (value instanceof Double)
-            return DOUBLE;
-        if (value instanceof BigDecimal)
-            return BIGDECIMAL;
-        if (value instanceof Float)
-            return FLOAT;
-        if (value instanceof Integer)
-            return INT;
-        if (value instanceof BigInteger)
-            return BIGINT;
-        if (value instanceof Long)
-            return LONG;
-        if (value instanceof boolean[])
-            return BOOLEAN_ARRAY;
-        if (value instanceof byte[])
-            return BYTE_ARRAY;
-        if (value instanceof char[])
-            return CHAR_ARRAY;
-        if (value instanceof double[])
-            return DOUBLE_ARRAY;
-        if (value instanceof float[])
-            return FLOAT_ARRAY;
-        if (value instanceof int[])
-            return INT_ARRAY;
-        if (value instanceof long[])
-            return LONG_ARRAY;
-        if (value instanceof java.util.UUID)
-            return UUID;
-        if (value instanceof Geometry)
-            return GEOMETRY;
-        if (value instanceof java.util.Date)
-            return DATE_UTIL;
-        if (value instanceof java.sql.Date)
-            return DATE_SQL;
-        if (value instanceof Serializable)
-            return UNKNOWN_SERIALISABLE;
-        return UNKNOWN;
-    }
+    NULL(-1, null), //
+    STRING(0, String.class), //
+    BOOLEAN(1, Boolean.class), //
+    BYTE(2, Byte.class), //
+    DOUBLE(3, Double.class), //
+    BIGDECIMAL(4, BigDecimal.class), //
+    FLOAT(5, Float.class), //
+    INT(6, Integer.class), //
+    BIGINT(7, BigInteger.class), //
+    LONG(8, Long.class), //
+    BOOLEAN_ARRAY(9, boolean[].class), //
+    BYTE_ARRAY(10, byte[].class), //
+    CHAR_ARRAY(11, char[].class), //
+    DOUBLE_ARRAY(12, double[].class), //
+    FLOAT_ARRAY(13, float[].class), //
+    INT_ARRAY(14, int[].class), //
+    LONG_ARRAY(15, long[].class), //
+    POINT(16, Point.class), //
+    MULTIPOINT(17, MultiPoint.class), //
+    LINESTRING(18, LineString.class), //
+    MULTILINESTRING(19, MultiLineString.class), //
+    POLYGON(20, Polygon.class), //
+    MULTIPOLYGON(21, MultiPolygon.class), //
+    GEOMETRYCOLLECTION(22, GeometryCollection.class), //
+    GEOMETRY(23, Geometry.class), //
+    UNKNOWN_SERIALISABLE(24, Serializable.class), //
+    UNKNOWN(25, null), //
+    UUID(26, java.util.UUID.class), //
+    DATE_UTIL(27, java.util.Date.class), //
+    DATE_SQL(28, java.sql.Date.class), //
+    TIME_SQL(29, java.sql.Time.class), //
+    TIMESTAMP_SQL(30, java.sql.Timestamp.class)//
+    ;
 
     private int value;
 
