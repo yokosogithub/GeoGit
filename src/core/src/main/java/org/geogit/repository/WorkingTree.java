@@ -24,6 +24,7 @@ import org.geogit.api.RevObject.TYPE;
 import org.geogit.api.RevTree;
 import org.geogit.api.RevTreeBuilder;
 import org.geogit.api.SpatialRef;
+import org.geogit.api.plumbing.DiffCount;
 import org.geogit.api.plumbing.DiffWorkTree;
 import org.geogit.api.plumbing.FindOrCreateSubtree;
 import org.geogit.api.plumbing.FindTreeChild;
@@ -326,13 +327,9 @@ public class WorkingTree {
      * @return the number differences between the work tree and the index based on the path filter.
      */
     public long countUnstaged(final @Nullable String pathFilter) {
-        Iterator<DiffEntry> unstaged = getUnstaged(pathFilter);
-        long count = 0;
-        while (unstaged.hasNext()) {
-            count++;
-            unstaged.next();
-        }
-        return count;
+        Long count = repository.command(DiffCount.class).setOldVersion(Ref.STAGE_HEAD)
+                .setNewVersion(Ref.WORK_HEAD).setFilter(pathFilter).call();
+        return count.longValue();
     }
 
     /**

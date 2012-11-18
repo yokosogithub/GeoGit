@@ -17,6 +17,7 @@ import org.geogit.api.ObjectId;
 import org.geogit.api.Ref;
 import org.geogit.api.RevTree;
 import org.geogit.api.RevTreeBuilder;
+import org.geogit.api.plumbing.DiffCount;
 import org.geogit.api.plumbing.DiffIndex;
 import org.geogit.api.plumbing.FindOrCreateSubtree;
 import org.geogit.api.plumbing.FindTreeChild;
@@ -217,13 +218,9 @@ public class Index implements StagingArea {
      */
     @Override
     public long countStaged(final @Nullable String pathFilter) {
-        Iterator<DiffEntry> unstaged = getStaged(pathFilter);
-        long count = 0;
-        while (unstaged.hasNext()) {
-            count++;
-            unstaged.next();
-        }
-        return count;
+        Long count = repository.command(DiffCount.class).setOldVersion(Ref.HEAD)
+                .setNewVersion(Ref.STAGE_HEAD).setFilter(pathFilter).call();
+        return count.longValue();
     }
 
     /**
