@@ -10,14 +10,16 @@ import static com.google.common.base.Preconditions.checkState;
 import static org.geogit.api.RevTree.NORMALIZED_SIZE_LIMIT;
 
 import java.util.Collection;
-import java.util.Comparator;
-import java.util.SortedSet;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.Set;
 import java.util.TreeMap;
 
 import javax.annotation.Nullable;
 
 import org.geogit.api.RevObject.TYPE;
 import org.geogit.api.plumbing.HashObject;
+import org.geogit.api.plumbing.diff.DepthTreeIterator;
 import org.geogit.repository.DepthSearch;
 import org.geogit.storage.NodeRefPathStorageOrder;
 import org.geogit.storage.ObjectDatabase;
@@ -26,12 +28,11 @@ import org.geogit.storage.ObjectSerialisingFactory;
 
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Predicate;
-import com.google.common.collect.Collections2;
-import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Maps;
-import com.google.common.collect.Ordering;
-import com.google.common.collect.TreeMultimap;
+import com.google.common.collect.Multimap;
+import com.google.common.collect.Sets;
 
 public class RevTreeBuilder {
 
@@ -41,21 +42,19 @@ public class RevTreeBuilder {
      * 
      * @todo make this configurable
      */
-    public static final int DEFAULT_NORMALIZATION_THRESHOLD = 1000 * 10;
+    public static final int DEFAULT_NORMALIZATION_THRESHOLD = 1000 * 100;
 
     private final ObjectDatabase db;
 
     protected final ObjectSerialisingFactory serialFactory;
 
-    private final TreeMultimap<Integer, NodeRef> entriesByBucket;
+    private final Map<String, NodeRef> pendingChanges;
 
     protected final TreeMap<Integer, ObjectId> bucketTreesByBucket;
 
     private int depth;
 
     protected NodeRefPathStorageOrder storageOrder = new NodeRefPathStorageOrder();
-
-    private long size;
 
     /**
      * Empty tree constructor, used to create trees from scratch
@@ -65,10 +64,6 @@ public class RevTreeBuilder {
      */
     public RevTreeBuilder(ObjectDatabase db, final ObjectSerialisingFactory serialFactory) {
         this(db, serialFactory, null);
-    }
-
-    public long size() {
-        return size;
     }
 
     /**
@@ -91,24 +86,14 @@ public class RevTreeBuilder {
         this.depth = depth;
         this.serialFactory = serialFactory;
 
-        Comparator<Integer> keyComparator = Ordering.natural();
-        Comparator<NodeRef> valueComparator = new Comparator<NodeRef>() {
-            @Override
-            public int compare(NodeRef o1, NodeRef o2) {
-                return o1.getPath().compareTo(o2.getPath());
-            }
-        };
-        this.entriesByBucket = TreeMultimap.create(keyComparator, valueComparator);
+        this.pendingChanges = Maps.newHashMap();
         this.bucketTreesByBucket = Maps.newTreeMap();
 
         if (copy != null) {
-            this.size = copy.size();
             if (copy.children().isPresent()) {
                 checkArgument(!copy.buckets().isPresent());
                 for (NodeRef ref : copy.children().get()) {
-                    String path = ref.getPath();
-                    Integer bucket = computeBucket(path);
-                    entriesByBucket.put(bucket, ref);
+                    putInternal(ref);
                 }
             }
             if (copy.buckets().isPresent()) {
@@ -119,33 +104,13 @@ public class RevTreeBuilder {
     }
 
     /**
-     * @return the new tree, not saved to the object database. Any bucket tree thouh is saved when
-     *         this method returns.
+     * @param bucket
+     * @param ref
+     * @return
      */
-    public RevTree build() {
-        normalize();
-        checkState(this.bucketTreesByBucket.isEmpty() || this.entriesByBucket.isEmpty());
-
-        RevTreeImpl unnamedTree;
-
-        if (!bucketTreesByBucket.isEmpty()) {
-            unnamedTree = RevTreeImpl.createNodeTree(ObjectId.NULL, size, bucketTreesByBucket);
-        } else {
-            Collection<NodeRef> entries = Collections2.filter(entriesByBucket.values(),
-                    new Predicate<NodeRef>() {
-                        @Override
-                        public boolean apply(NodeRef input) {
-                            ObjectId objectId = input.getObjectId();
-                            boolean applies = !ObjectId.NULL.equals(objectId);
-                            return applies;
-                        }
-                    });
-            unnamedTree = RevTreeImpl.createLeafTree(ObjectId.NULL, size, entries);
-        }
-
-        ObjectId treeId = new HashObject().setObject(unnamedTree).call();
-        RevTreeImpl namedTree = RevTreeImpl.create(treeId, size, unnamedTree);
-        return namedTree;
+    private @Nullable
+    NodeRef putInternal(NodeRef ref) {
+        return pendingChanges.put(ref.getPath(), ref);
     }
 
     /**
@@ -155,35 +120,25 @@ public class RevTreeBuilder {
      * @return
      */
     public Optional<NodeRef> get(final String key) {
-
-        final Integer bucket = computeBucket(key);
-
-        return getInternal(key, bucket, true);
+        return getInternal(key, true);
     }
 
-    private Optional<NodeRef> getInternal(final String key, final Integer bucket, final boolean deep) {
-        if (entriesByBucket.containsKey(bucket)) {
-            NodeRef found = null;
-            SortedSet<NodeRef> bucketEntries = entriesByBucket.get(bucket);
-            for (NodeRef ref : bucketEntries) {
-                if (ref.getPath().equals(key)) {
-                    if (found != null) {
-                        throw new IllegalStateException("Already found: " + found);
-                    }
-                    found = ref;
-                }
-            }
-            if (found != null) {
-                if (ObjectId.NULL.equals(found.getObjectId())) {
-                    return Optional.absent();
-                } else {
-                    return Optional.of(found);
-                }
+    private Optional<NodeRef> getInternal(final String key, final boolean deep) {
+        NodeRef found = pendingChanges.get(key);
+
+        if (found != null) {
+            if (ObjectId.NULL.equals(found.getObjectId())) {
+                return Optional.absent();
+            } else {
+                return Optional.of(found);
             }
         }
+
         if (!deep) {
             return Optional.absent();
         }
+
+        final Integer bucket = computeBucket(key);
         final ObjectId subtreeId = bucketTreesByBucket.get(bucket);
         if (subtreeId == null) {
             return Optional.absent();
@@ -212,24 +167,8 @@ public class RevTreeBuilder {
     public RevTreeBuilder put(final NodeRef ref) {
         Preconditions.checkNotNull(ref, "ref can't be null");
 
-        final Integer bucket = computeBucket(ref.getPath());
-
-        final Optional<NodeRef> existing = this.getInternal(ref.getPath(), bucket, false);
-        if (existing.isPresent()) {
-            this.entriesByBucket.remove(bucket, existing.get());
-        }
-        entriesByBucket.put(bucket, ref);
-        if (ref.getType().equals(RevObject.TYPE.FEATURE)) {
-            if (!existing.isPresent()) {
-                size += 1;
-            }
-        } else if (ref.getType().equals(RevObject.TYPE.TREE)) {
-            long oldChildSize = existing.isPresent() ? sizeOfTree(existing.get().getObjectId())
-                    : 0L;
-            long newChildSize = sizeOfTree(ref.getObjectId());
-            this.size += (newChildSize - oldChildSize);
-        }
-        if (entriesByBucket.size() >= DEFAULT_NORMALIZATION_THRESHOLD) {
+        putInternal(ref);
+        if (pendingChanges.size() >= DEFAULT_NORMALIZATION_THRESHOLD) {
             // hit the split factor modification tolerance, lets normalize
             normalize();
         }
@@ -249,59 +188,108 @@ public class RevTreeBuilder {
         // uses a NodeRef with ObjectId.NULL id signaling the removal
         // of the entry. normalize() is gonna take care of removing it from the subtree
         // subsequently
-
-        final Integer bucket = computeBucket(childPath);
-
-        Optional<NodeRef> ref = this.getInternal(childPath, bucket, true);
-        if (ref.isPresent()) {
-            NodeRef child = ref.get();
-            entriesByBucket.remove(bucket, child);
-
-            entriesByBucket.put(bucket, new NodeRef(childPath, ObjectId.NULL, ObjectId.NULL,
-                    TYPE.FEATURE));
-            if (TYPE.FEATURE.equals(child.getType())) {
-                this.size--;
-            } else {
-                checkState(TYPE.TREE.equals(child.getType()));
-                this.size -= sizeOfTree(child.getObjectId());
-            }
-            if (entriesByBucket.size() >= DEFAULT_NORMALIZATION_THRESHOLD) {
-                normalize();
-            }
-        }
-
-        return this;
+        return put(new NodeRef(childPath, ObjectId.NULL, ObjectId.NULL, TYPE.FEATURE));
     }
 
-    public boolean isNormalized() {
+    /**
+     * @return the new tree, not saved to the object database. Any bucket tree thouh is saved when
+     *         this method returns.
+     */
+    public RevTree build() {
+        RevTree unnamedTree = normalize();
+        checkState(this.bucketTreesByBucket.isEmpty() || this.pendingChanges.isEmpty());
 
-        final boolean empty = entriesByBucket.isEmpty() && bucketTreesByBucket.isEmpty();
-
-        final boolean childrenBetweenLimitsAndNoBuckets = entriesByBucket.size() <= NORMALIZED_SIZE_LIMIT
-                && bucketTreesByBucket.isEmpty();
-
-        boolean onlyBuckets = entriesByBucket.isEmpty() && !bucketTreesByBucket.isEmpty();
-
-        boolean normalized = empty || childrenBetweenLimitsAndNoBuckets || onlyBuckets;
-        return normalized;
+        ObjectId treeId = new HashObject().setObject(unnamedTree).call();
+        RevTreeImpl namedTree = RevTreeImpl.create(treeId, unnamedTree.size(), unnamedTree);
+        return namedTree;
     }
 
     /**
      * Splits the cached entries into subtrees and saves them, making sure the tree contains either
      * only entries or subtrees
      */
-    public void normalize() {
-        if (isNormalized()) {
-            return;
-        }
+    private RevTree normalize() {
+        RevTree unnamedTree;
 
+        if (bucketTreesByBucket.isEmpty() && pendingChanges.size() <= NORMALIZED_SIZE_LIMIT) {
+            unnamedTree = normalizeToChildren();
+        } else {
+            unnamedTree = normalizeToBuckets();
+            if (unnamedTree.isEmpty()) {
+                return RevTree.EMPTY;
+            }
+            if (unnamedTree.size() <= NORMALIZED_SIZE_LIMIT) {
+                unnamedTree = moveBucketsToChildren(unnamedTree);
+            }
+        }
+        return unnamedTree;
+    }
+
+    /**
+     * @param unnamedTree
+     * @return
+     */
+    private RevTree moveBucketsToChildren(RevTree unnamedTree) {
+        checkState(pendingChanges.isEmpty());
+        DepthTreeIterator iterator = new DepthTreeIterator(unnamedTree, db, serialFactory);
+        iterator.setTraverseSubtrees(false);
+        this.bucketTreesByBucket.clear();
+        while (iterator.hasNext()) {
+            put(iterator.next());
+        }
+        return normalizeToChildren();
+    }
+
+    /**
+     * 
+     */
+    private RevTree normalizeToChildren() {
+        Preconditions.checkState(this.bucketTreesByBucket.isEmpty());
+        // remove deletes
+        long size = 0;
+        for (Iterator<NodeRef> it = pendingChanges.values().iterator(); it.hasNext();) {
+            NodeRef next = it.next();
+            if (next.getObjectId().equals(ObjectId.NULL)) {
+                it.remove();
+            } else {
+                size += sizeOf(next);
+            }
+        }
+        Collection<NodeRef> children = pendingChanges.values();
+        RevTreeImpl unnamedTree = RevTreeImpl.createLeafTree(ObjectId.NULL, size, children);
+        return unnamedTree;
+    }
+
+    private long sizeOf(NodeRef ref) {
+        return ref.getType().equals(TYPE.TREE) ? sizeOfTree(ref.getObjectId()) : 1L;
+    }
+
+    /**
+     * @return
+     * 
+     */
+    private RevTree normalizeToBuckets() {
         // update all inner trees
         final int childDepth = this.depth + 1;
+        long accSize = 0;
+
         try {
-            for (Integer bucket : entriesByBucket.keySet()) {
+            Multimap<Integer, NodeRef> changesByBucket = ArrayListMultimap.create();
+            for (Iterator<NodeRef> it = pendingChanges.values().iterator(); it.hasNext();) {
+                NodeRef change = it.next();
+                it.remove();
+                Integer bucket = computeBucket(change.getPath());
+                changesByBucket.put(bucket, change);
+            }
+            Preconditions.checkState(pendingChanges.isEmpty());
+
+            final Set<Integer> buckets = ImmutableSet.copyOf(Sets.union(changesByBucket.keySet(),
+                    bucketTreesByBucket.keySet()));
+
+            for (Integer bucket : buckets) {
                 final RevTreeBuilder subtreeBuilder;
                 {
-                    final SortedSet<NodeRef> bucketEntries = entriesByBucket.get(bucket);
+                    final Collection<NodeRef> bucketEntries = changesByBucket.get(bucket);
                     final ObjectId subtreeId = bucketTreesByBucket.get(bucket);
                     if (subtreeId == null) {
                         subtreeBuilder = new RevTreeBuilder(db, serialFactory, null, childDepth);
@@ -319,6 +307,7 @@ public class RevTreeBuilder {
                     }
                 }
                 final RevTree subtree = subtreeBuilder.build();
+                accSize += subtree.size();
                 if (subtree.isEmpty()) {
                     bucketTreesByBucket.remove(bucket);
                 } else {
@@ -327,32 +316,12 @@ public class RevTreeBuilder {
                     bucketTreesByBucket.put(bucket, newSubtreeId);
                 }
             }
-            entriesByBucket.clear();
         } catch (RuntimeException e) {
             throw e;
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
-
-        // did we reach back the upper limit for a children tree? then compress to a children tree
-        if (size <= NORMALIZED_SIZE_LIMIT) {
-
-            final long oldSize = this.size;
-            this.size = 0L;
-
-            ImmutableList<ObjectId> bucketIds = ImmutableList.copyOf(bucketTreesByBucket.values());
-            bucketTreesByBucket.clear();
-
-            for (ObjectId bucketId : bucketIds) {
-                ObjectReader<RevTree> reader = serialFactory.createRevTreeReader();
-                RevTree bucket = db.get(bucketId, reader);
-                checkState(bucket.children().isPresent());
-                for (NodeRef ref : bucket.children().get()) {
-                    put(ref);
-                }
-            }
-            checkState(size == oldSize);
-        }
+        return RevTreeImpl.createNodeTree(ObjectId.NULL, accSize, this.bucketTreesByBucket);
     }
 
     protected final Integer computeBucket(final String path) {
