@@ -90,7 +90,7 @@ public class Status implements CLICommand {
         Preconditions.checkState(currHead.isPresent(), "Repository has no HEAD.");
         if (currHead.get() instanceof SymRef) {
             final SymRef headRef = (SymRef) currHead.get();
-            console.println("# On branch " + headRef.getTarget());
+            console.println("# On branch " + Ref.localName(headRef.getTarget()));
         } else {
             console.println("# Not currently on any branch.");
         }

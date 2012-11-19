@@ -147,8 +147,11 @@ public class Branch extends AbstractCommand implements CLICommand {
                 ansi.a("  ");
             }
             // print unqualified names for local branches
-            final String branchName = branchRefName.startsWith(Ref.HEADS_PREFIX) ? branchRefName
+            String branchName = branchRefName.startsWith(Ref.HEADS_PREFIX) ? branchRefName
                     .substring(Ref.HEADS_PREFIX.length()) : branchRefName;
+            if (branchRef instanceof SymRef) {
+                branchName += " -> " + Ref.localName(((SymRef) branchRef).getTarget());
+            }
             ansi.a(branchName);
             ansi.reset();
 

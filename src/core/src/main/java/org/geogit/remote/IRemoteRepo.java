@@ -31,5 +31,7 @@ public interface IRemoteRepo {
      */
     public ImmutableSet<Ref> listRefs(boolean getHeads, boolean getTags);
 
+    public Ref headRef();
+
     public void fetchNewData(Repository localRepository, Ref ref);
 }

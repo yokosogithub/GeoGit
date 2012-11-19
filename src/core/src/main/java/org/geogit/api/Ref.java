@@ -96,6 +96,58 @@ public class Ref implements Comparable<Ref> {
     }
 
     /**
+     * @return the name for this ref with the prefix removed
+     */
+    public String localName() {
+        return localName(name);
+    }
+
+    /**
+     * @param ref the ref string
+     * @return the local name of the given ref string
+     */
+    public static String localName(final String ref) {
+
+        if (ref.startsWith(HEADS_PREFIX)) {
+            return ref.substring(HEADS_PREFIX.length());
+        } else if (ref.startsWith(TAGS_PREFIX)) {
+            return ref.substring(TAGS_PREFIX.length());
+        } else if (ref.startsWith(REMOTES_PREFIX)) {
+            String remoteWithBranch = ref.substring(REMOTES_PREFIX.length());
+            return remoteWithBranch.substring(remoteWithBranch.indexOf('/') + 1);
+        } else if (ref.startsWith(REFS_PREFIX)) {
+            return ref.substring(REFS_PREFIX.length());
+        }
+        return ref;
+    }
+
+    /**
+     * @return the namespace for this ref
+     */
+    public String namespace() {
+        return namespace(name);
+    }
+
+    /**
+     * @param ref the ref string
+     * @return the namespace of the given ref string
+     */
+    public static String namespace(final String ref) {
+        if (ref.startsWith(HEADS_PREFIX)) {
+            return HEADS_PREFIX;
+        } else if (ref.startsWith(TAGS_PREFIX)) {
+            return TAGS_PREFIX;
+        } else if (ref.startsWith(REMOTES_PREFIX)) {
+            String remote = ref.substring(REMOTES_PREFIX.length());
+            remote = remote.substring(0, remote.indexOf('/'));
+            return REMOTES_PREFIX + "/" + remote;
+        } else if (ref.startsWith(REFS_PREFIX)) {
+            return REFS_PREFIX;
+        }
+        return ref;
+    }
+
+    /**
      * @return the object id being referenced
      */
     public ObjectId getObjectId() {

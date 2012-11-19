@@ -11,8 +11,10 @@ import java.util.List;
 import org.geogit.api.AbstractGeoGitOp;
 import org.geogit.api.Ref;
 import org.geogit.api.Remote;
+import org.geogit.api.SymRef;
 import org.geogit.api.plumbing.LsRemote;
 import org.geogit.api.plumbing.UpdateRef;
+import org.geogit.api.plumbing.UpdateSymRef;
 import org.geogit.remote.IRemoteRepo;
 import org.geogit.remote.RemoteUtils;
 import org.geogit.repository.Repository;
@@ -154,18 +156,14 @@ public class FetchOp extends AbstractGeoGitOp<Void> {
                     remoteRepo.get().fetchNewData(localRepository, ref);
 
                     // Update the ref
-                    Optional<Ref> localRef = findLocal(remote, ref, localRemoteRefs);
-                    if (localRef.isPresent()) {
-                        command(UpdateRef.class).setName(localRef.get().getName())
-                                .setNewValue(ref.getObjectId()).call();
-                    } else {
-                        String splitRef[] = ref.getName().split("/");
-                        final String refName = Ref.REMOTES_PREFIX + remote.getName() + "/"
-                                + splitRef[splitRef.length - 1];
-                        command(UpdateRef.class).setName(refName).setNewValue(ref.getObjectId())
-                                .call();
-                    }
+                    updateLocalRef(ref, remote, localRemoteRefs);
                 }
+
+                // Update HEAD ref
+                Ref remoteHead = remoteRepo.get().headRef();
+
+                updateLocalRef(remoteHead, remote, localRemoteRefs);
+
                 try {
                     remoteRepo.get().close();
                 } catch (IOException e) {
@@ -176,6 +174,17 @@ public class FetchOp extends AbstractGeoGitOp<Void> {
         }
 
         return null;
+    }
+
+    private void updateLocalRef(Ref remoteRef, Remote remote, ImmutableSet<Ref> localRemoteRefs) {
+        final String refName = Ref.REMOTES_PREFIX + remote.getName() + "/" + remoteRef.localName();
+        if (remoteRef instanceof SymRef) {
+            String targetBranch = Ref.localName(((SymRef) remoteRef).getTarget());
+            String newTarget = Ref.REMOTES_PREFIX + remote.getName() + "/" + targetBranch;
+            command(UpdateSymRef.class).setName(refName).setNewValue(newTarget).call();
+        } else {
+            command(UpdateRef.class).setName(refName).setNewValue(remoteRef.getObjectId()).call();
+        }
     }
 
     /**
@@ -215,13 +224,11 @@ public class FetchOp extends AbstractGeoGitOp<Void> {
         final String prefix = Ref.REMOTES_PREFIX + remoteName + "/";
         for (Ref localRef : localRemoteRefs) {
             if (localRef.getName().startsWith(prefix)) {
-                String splitRef[] = remoteRef.getName().split("/");
-                if (localRef.getName().endsWith(splitRef[splitRef.length - 1])) {
+                if (localRef.localName().equals(remoteRef.localName())) {
                     return Optional.of(localRef);
                 }
             }
         }
         return Optional.absent();
     }
-
 }

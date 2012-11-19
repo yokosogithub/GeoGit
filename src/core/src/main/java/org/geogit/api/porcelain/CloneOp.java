@@ -9,6 +9,7 @@ import javax.annotation.Nullable;
 import org.geogit.api.AbstractGeoGitOp;
 import org.geogit.api.Ref;
 import org.geogit.api.Remote;
+import org.geogit.api.SymRef;
 import org.geogit.api.plumbing.LsRemote;
 import org.geogit.api.plumbing.RefParse;
 import org.geogit.api.plumbing.UpdateRef;
@@ -90,8 +91,7 @@ public class CloneOp extends AbstractGeoGitOp<Void> {
                 Suppliers.ofInstance(Optional.of(remote))).call();
 
         for (Ref remoteRef : remoteRefs) {
-            String refTokens[] = remoteRef.getName().split("/");
-            String branchName = refTokens[refTokens.length - 1];
+            String branchName = remoteRef.localName();
             if (!command(RefParse.class).setName(remoteRef.getName()).call().isPresent()) {
                 command(BranchCreateOp.class).setName(branchName)
                         .setSource(remoteRef.getObjectId().toString()).call();
@@ -112,6 +112,18 @@ public class CloneOp extends AbstractGeoGitOp<Void> {
         // checkout branch
         if (branch.isPresent()) {
             command(CheckoutOp.class).setForce(true).setSource(branch.get()).call();
+        } else {
+            // checkout the head
+            final Optional<Ref> currRemoteHead = command(RefParse.class).setName(
+                    Ref.REMOTES_PREFIX + remote.getName() + "/" + Ref.HEAD).call();
+            Preconditions.checkState(currRemoteHead.isPresent(), "No remote HEAD.");
+            Preconditions.checkState(currRemoteHead.get() instanceof SymRef,
+                    "Remote HEAD is detached." + currRemoteHead.get().toString());
+            final SymRef remoteHeadRef = (SymRef) currRemoteHead.get();
+            final String currentBranch = Ref.localName(remoteHeadRef.getTarget());
+
+            command(CheckoutOp.class).setForce(true).setSource(currentBranch).call();
+
         }
 
         return null;

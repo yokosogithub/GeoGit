@@ -14,12 +14,14 @@ import org.geogit.api.RevObject;
 import org.geogit.api.RevObject.TYPE;
 import org.geogit.api.RevTree;
 import org.geogit.api.plumbing.ForEachRef;
+import org.geogit.api.plumbing.RefParse;
 import org.geogit.api.plumbing.RevObjectParse;
 import org.geogit.repository.Repository;
 import org.geogit.storage.ObjectInserter;
 import org.geogit.storage.ObjectWriter;
 
 import com.google.common.base.Optional;
+import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableSet;
 import com.google.inject.Injector;
@@ -48,6 +50,14 @@ public class LocalRemoteRepo implements IRemoteRepo {
     public void close() throws IOException {
         remoteGeoGit.close();
 
+    }
+
+    @Override
+    public Ref headRef() {
+        final Optional<Ref> currHead = remoteGeoGit.command(RefParse.class).setName(Ref.HEAD)
+                .call();
+        Preconditions.checkState(currHead.isPresent(), "Remote repository has no HEAD.");
+        return currHead.get();
     }
 
     @Override
