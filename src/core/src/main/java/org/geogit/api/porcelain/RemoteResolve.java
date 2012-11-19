@@ -55,8 +55,8 @@ public class RemoteResolve extends AbstractGeoGitOp<Optional<Remote>> implements
 
         Optional<Remote> result = Optional.absent();
 
-        Optional<List<String>> allRemotes = config.getAllSubsections("remote");
-        if (allRemotes.isPresent() && allRemotes.get().contains(name)) {
+        List<String> allRemotes = config.getAllSubsections("remote");
+        if (allRemotes.contains(name)) {
 
             String remoteSection = "remote." + name;
             Optional<String> remoteFetchURL = config.get(remoteSection + ".url");

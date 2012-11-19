@@ -41,6 +41,8 @@ public class CheckoutOp extends AbstractGeoGitOp<ObjectId> {
 
     private Set<String> paths;
 
+    private boolean force = false;
+
     private WorkingTree workTree;
 
     private StagingArea index;
@@ -55,6 +57,12 @@ public class CheckoutOp extends AbstractGeoGitOp<ObjectId> {
     public CheckoutOp setSource(final String branchOrCommit) {
         checkNotNull(branchOrCommit);
         this.branchOrCommit = branchOrCommit;
+        return this;
+    }
+
+    public CheckoutOp setForce(final boolean force) {
+        checkNotNull(force);
+        this.force = force;
         return this;
     }
 
@@ -108,12 +116,15 @@ public class CheckoutOp extends AbstractGeoGitOp<ObjectId> {
         }
 
         if (commit.isPresent()) {
-            // count staged and unstaged changes
-            long staged = index.countStaged(null);
-            long unstaged = workTree.countUnstaged(null);
-            if (staged != 0 || unstaged != 0) {
-                throw new UnsupportedOperationException(
-                        "Doing a checkout without a clean working tree and index is currently unsupported.");
+
+            if (!force) {
+                // count staged and unstaged changes
+                long staged = index.countStaged(null);
+                long unstaged = workTree.countUnstaged(null);
+                if (staged != 0 || unstaged != 0) {
+                    throw new UnsupportedOperationException(
+                            "Doing a checkout without a clean working tree and index is currently unsupported.");
+                }
             }
             // update work tree
             RevCommit revCommit = commit.get();

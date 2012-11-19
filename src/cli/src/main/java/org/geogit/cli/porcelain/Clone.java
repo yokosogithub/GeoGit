@@ -8,11 +8,10 @@ package org.geogit.cli.porcelain;
 import static com.google.common.base.Preconditions.checkState;
 
 import java.io.File;
-import java.net.URL;
+import java.net.URI;
 import java.util.List;
 
 import org.geogit.api.GeoGIT;
-import org.geogit.api.plumbing.ResolveGeogitDir;
 import org.geogit.api.porcelain.CloneOp;
 import org.geogit.api.porcelain.InitOp;
 import org.geogit.cli.AbstractCommand;
@@ -67,6 +66,8 @@ public class Clone extends AbstractCommand implements CLICommand {
         checkState(args != null && args.size() > 0, "You must specify a repository to clone.");
         checkState(args.size() < 3, "Too many arguments provided.");
 
+        String repoURL = args.get(0);
+
         try {
             final File repoDir;
             {
@@ -82,6 +83,18 @@ public class Clone extends AbstractCommand implements CLICommand {
                         throw new IllegalStateException("Can't create directory "
                                 + repoDir.getAbsolutePath());
                     }
+
+                    // Construct a non-relative repository URL
+                    URI repoURI = URI.create(repoURL);
+                    String protocol = repoURI.getScheme();
+                    if (protocol == null || protocol.equals("file")) {
+                        File repo = new File(repoURL);
+                        if (!repo.isAbsolute()) {
+                            repo = new File(currDir, repoURL).getCanonicalFile();
+                        }
+                        repoURL = repo.getPath();
+                    }
+
                 } else {
                     repoDir = currDir;
                 }
@@ -93,6 +106,7 @@ public class Clone extends AbstractCommand implements CLICommand {
             checkState(repository != null,
                     "Destination path already exists and is not an empty directory.");
             cli.setGeogit(geogit);
+            cli.getPlatform().setWorkingDir(repoDir);
             repository.setInjectorBuilder(new CLIInjectorBuilder());
 
         } catch (Exception e) {
@@ -101,7 +115,7 @@ public class Clone extends AbstractCommand implements CLICommand {
 
         CloneOp clone = cli.getGeogit().command(CloneOp.class);
         clone.setProgressListener(cli.getProgressListener());
-        clone.setBranch(branch).setRepositoryURL(args.get(0));
+        clone.setBranch(branch).setRepositoryURL(repoURL);
 
         clone.call();
     }

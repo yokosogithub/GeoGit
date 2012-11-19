@@ -111,7 +111,7 @@ public class CloneOp extends AbstractGeoGitOp<Void> {
 
         // checkout branch
         if (branch.isPresent()) {
-            command(CheckoutOp.class).setSource(branch.get()).call();
+            command(CheckoutOp.class).setForce(true).setSource(branch.get()).call();
         }
 
         return null;

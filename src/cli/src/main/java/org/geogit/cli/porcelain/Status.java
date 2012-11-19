@@ -13,8 +13,11 @@ import org.fusesource.jansi.Ansi;
 import org.fusesource.jansi.Ansi.Color;
 import org.geogit.api.GeoGIT;
 import org.geogit.api.NodeRef;
+import org.geogit.api.Ref;
+import org.geogit.api.SymRef;
 import org.geogit.api.plumbing.DiffIndex;
 import org.geogit.api.plumbing.DiffWorkTree;
+import org.geogit.api.plumbing.RefParse;
 import org.geogit.api.plumbing.diff.DiffEntry;
 import org.geogit.api.plumbing.diff.DiffEntry.ChangeType;
 import org.geogit.cli.AnsiDecorator;
@@ -25,6 +28,8 @@ import org.geogit.repository.WorkingTree;
 
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.Parameters;
+import com.google.common.base.Optional;
+import com.google.common.base.Preconditions;
 
 /**
  * Displays features that have differences between the index and the current HEAD commit and
@@ -81,7 +86,14 @@ public class Status implements CLICommand {
         final long countStaged = index.countStaged(pathFilter);
         final long countUnstaged = workTree.countUnstaged(pathFilter);
 
-        console.println("# On branch <can't know yet>");
+        final Optional<Ref> currHead = geogit.command(RefParse.class).setName(Ref.HEAD).call();
+        Preconditions.checkState(currHead.isPresent(), "Repository has no HEAD.");
+        if (currHead.get() instanceof SymRef) {
+            final SymRef headRef = (SymRef) currHead.get();
+            console.println("# On branch " + headRef.getTarget());
+        } else {
+            console.println("# Not currently on any branch.");
+        }
 
         if (countStaged == 0 && countUnstaged == 0) {
             console.println("nothing to commit (working directory clean)");

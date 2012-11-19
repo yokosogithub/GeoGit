@@ -31,7 +31,7 @@ public class Checkout extends AbstractCommand implements CLICommand {
 
     @Parameter(names = { "--force", "-f" }, description = "When switching branches, proceed even if the index or the "
             + "working tree differs from HEAD. This is used to throw away local changes.")
-    private boolean force;
+    private boolean force = false;
 
     @Override
     public void runInternal(GeogitCLI cli) {
@@ -43,7 +43,7 @@ public class Checkout extends AbstractCommand implements CLICommand {
         // final ConsoleReader console = cli.getConsole();
         String branchOrCommit = branchOrStartPoint.get(0);
 
-        geogit.command(CheckoutOp.class).setSource(branchOrCommit).call();
+        geogit.command(CheckoutOp.class).setForce(force).setSource(branchOrCommit).call();
     }
 
 }
