@@ -7,9 +7,17 @@ package org.geogit.api.porcelain;
 import javax.annotation.Nullable;
 
 import org.geogit.api.AbstractGeoGitOp;
-import org.geogit.api.Platform;
+import org.geogit.api.Ref;
+import org.geogit.api.Remote;
+import org.geogit.api.plumbing.LsRemote;
+import org.geogit.api.plumbing.RefParse;
+import org.geogit.api.plumbing.UpdateRef;
+import org.geogit.api.porcelain.ConfigOp.ConfigAction;
 
 import com.google.common.base.Optional;
+import com.google.common.base.Preconditions;
+import com.google.common.base.Suppliers;
+import com.google.common.collect.ImmutableSet;
 import com.google.inject.Inject;
 
 /**
@@ -22,18 +30,11 @@ public class CloneOp extends AbstractGeoGitOp<Void> {
 
     private String repositoryURL;
 
-    private String directory;
-
-    private final Platform platform;
-
     /**
-     * Constructs a new {@code CloneOp} with the given parameters.
-     * 
-     * @param platform the current platform
+     * Constructs a new {@code CloneOp}.
      */
     @Inject
-    public CloneOp(final Platform platform) {
-        this.platform = platform;
+    public CloneOp() {
     }
 
     /**
@@ -50,22 +51,6 @@ public class CloneOp extends AbstractGeoGitOp<Void> {
      */
     public String getRepositoryURL() {
         return repositoryURL;
-    }
-
-    /**
-     * @param directory the directory to clone the remote repository to
-     * @return {@code this}
-     */
-    public CloneOp setDirectory(final String directory) {
-        this.directory = directory;
-        return this;
-    }
-
-    /**
-     * @return the directory to clone the remote repository to.
-     */
-    public String getDirectory() {
-        return directory;
     }
 
     /**
@@ -91,6 +76,43 @@ public class CloneOp extends AbstractGeoGitOp<Void> {
      * @see org.geogit.api.AbstractGeoGitOp#call()
      */
     public Void call() {
+        Preconditions.checkArgument(repositoryURL != null && !repositoryURL.isEmpty(),
+                "No repository specified to clone from.");
+
+        // Set up origin
+        Remote remote = command(RemoteAddOp.class).setName("origin").setURL(repositoryURL).call();
+
+        // Fetch remote data
+        command(FetchOp.class).call();
+
+        // Set up remote tracking branches
+        final ImmutableSet<Ref> remoteRefs = command(LsRemote.class).setRemote(
+                Suppliers.ofInstance(Optional.of(remote))).call();
+
+        for (Ref remoteRef : remoteRefs) {
+            String refTokens[] = remoteRef.getName().split("/");
+            String branchName = refTokens[refTokens.length - 1];
+            if (!command(RefParse.class).setName(remoteRef.getName()).call().isPresent()) {
+                command(BranchCreateOp.class).setName(branchName)
+                        .setSource(remoteRef.getObjectId().toString()).call();
+            } else {
+                command(UpdateRef.class).setName(remoteRef.getName())
+                        .setNewValue(remoteRef.getObjectId()).call();
+            }
+
+            command(ConfigOp.class).setAction(ConfigAction.CONFIG_SET).setGlobal(false)
+                    .setName("branches." + branchName + ".remote").setValue(remote.getName())
+                    .call();
+
+            command(ConfigOp.class).setAction(ConfigAction.CONFIG_SET).setGlobal(false)
+                    .setName("branches." + branchName + ".merge").setValue(remoteRef.getName())
+                    .call();
+        }
+
+        // checkout branch
+        if (branch.isPresent()) {
+            command(CheckoutOp.class).setSource(branch.get()).call();
+        }
 
         return null;
     }
