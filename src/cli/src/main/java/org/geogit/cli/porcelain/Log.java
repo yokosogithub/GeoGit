@@ -202,7 +202,7 @@ public class Log extends AbstractCommand implements CLICommand {
                 ansi.a("Date:    (").fg(Color.RED)
                         .a(estimateSince(platform, commit.getTimestamp())).reset().a(") ")
                         .a(new Date(commit.getTimestamp())).newline();
-                ansi.a("Subject: ").a(commit.getMessage());
+                ansi.a("Subject: ").a(commit.getMessage()).newline();
                 return ansi.toString();
             }
         };
