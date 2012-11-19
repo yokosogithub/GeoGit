@@ -91,6 +91,20 @@ public class RevCommit extends AbstractRevObject {
     }
 
     /**
+     * Short cut for {@code getParentIds().get(parentIndex)}.
+     * <p>
+     * Beware {@code parentIndex} is <b>zero-based</b>, whilst the command line interface syntax for
+     * parents is one-based (e.g. {@code <commit id>^1} for the first parent instead of
+     * {@code <commit id>^0}).
+     * 
+     * @param parentIndex
+     * @return the parent id at the given index
+     */
+    public ObjectId parentN(int parentIndex) {
+        return parentIds.get(parentIndex);
+    }
+
+    /**
      * @return the author
      */
     public RevPerson getAuthor() {

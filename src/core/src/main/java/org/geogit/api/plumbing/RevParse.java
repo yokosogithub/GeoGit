@@ -5,6 +5,8 @@
 
 package org.geogit.api.plumbing;
 
+import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 
 import java.util.List;
@@ -13,6 +15,9 @@ import java.util.regex.Pattern;
 import org.geogit.api.AbstractGeoGitOp;
 import org.geogit.api.ObjectId;
 import org.geogit.api.Ref;
+import org.geogit.api.RevCommit;
+import org.geogit.api.RevObject;
+import org.geogit.api.RevTag;
 import org.geogit.storage.StagingDatabase;
 
 import com.google.common.base.Optional;
@@ -23,6 +28,10 @@ import com.google.inject.Inject;
  * dereferencing symbolic refs as necessary.
  */
 public class RevParse extends AbstractGeoGitOp<Optional<ObjectId>> {
+
+    private static final char PARENT_DELIMITER = '^';
+
+    private static final char ANCESTOR_DELIMITER = '~';
 
     private String refSpec;
 
@@ -82,15 +91,155 @@ public class RevParse extends AbstractGeoGitOp<Optional<ObjectId>> {
      * <li><b>ref@{time}</b>: value of ref at the designated time</li>
      * </ul>
      * 
-     * @throws IllegalArgumentException if the ref spec doesn't resolve to any object in the
-     *         respository
+     * @throws IllegalArgumentException if the format of {@link #setRefSpec(String) refSpec} can't
+     *         be understood, it resolves to multiple objects (e.g. a partial object id that matches
+     *         multiple objects), or a precondition refSpec form was given (e.g.
+     *         <code> id^{commit}</code>) and the object {@code id} resolves to is not of the
+     *         expected type.
      * @return the resolved object id, may be {@link Optional#absent() absent}
      */
     @Override
     public Optional<ObjectId> call() {
-        checkState(refSpec != null);
+        checkState(this.refSpec != null, "refSpec was not given");
+
+        return revParse(this.refSpec);
+    }
+
+    private Optional<ObjectId> revParse(final String refSpec) {
+
+        final String prefix;
+        int parentN = -1;// -1 = not given, 0 = ensure id is a commit, >0 nth. parent (1 = first
+                         // parent, 2 = second parent, > 2 would resolve to absent as merge commits
+                         // have two parents)
+
+        int ancestorN = -1;// -1 = not given, 0 = same commit, > 0 = nth. historical ancestor, by
+                           // first parent
+
+        final StringBuilder remaining = new StringBuilder();
+        if (refSpec.indexOf(PARENT_DELIMITER) > 0) {
+            prefix = parsePrefix(refSpec, PARENT_DELIMITER);
+            String suffix = parseSuffix(refSpec, PARENT_DELIMITER);
+            parentN = parseNumber(suffix, 1, remaining);
+        } else if (refSpec.indexOf(ANCESTOR_DELIMITER) > 0) {
+            prefix = parsePrefix(refSpec, ANCESTOR_DELIMITER);
+            String suffix = parseSuffix(refSpec, ANCESTOR_DELIMITER);
+            ancestorN = parseNumber(suffix, 1, remaining);
+        } else {
+            prefix = refSpec;
+        }
+
+        Optional<ObjectId> resolved = resolveObject(prefix);
+        if (!resolved.isPresent()) {
+            return resolved;
+        }
+
+        if (parentN > -1) {
+            resolved = resolveParent(resolved.get(), parentN);
+        } else if (ancestorN > -1) {
+            resolved = resolveAncestor(resolved.get(), ancestorN);
+        }
+        if (resolved.isPresent() && remaining.length() > 0) {
+            String newRefSpec = resolved.get().toString() + remaining.toString();
+            resolved = revParse(newRefSpec);
+        }
+        return resolved;
+    }
+
+    private Optional<ObjectId> resolveParent(final ObjectId objectId, final int parentN) {
+        checkNotNull(objectId);
+        checkArgument(parentN > -1);
+        if (objectId.isNull()) {
+            return Optional.absent();
+        }
+        if (parentN == 0) {
+            // 0 == check id is a commit
+            Optional<RevObject> object = command(RevObjectParse.class).setObjectId(objectId).call();
+            checkArgument(object.isPresent() && object.get() instanceof RevCommit,
+                    "%s is not a commit: %s", objectId, (object.isPresent() ? object.get()
+                            .getType() : "null"));
+            return Optional.of(objectId);
+        }
+
+        RevCommit commit = resolveCommit(objectId);
+        if (parentN > commit.getParentIds().size()) {
+            return Optional.absent();
+        }
+
+        return Optional.of(commit.parentN(parentN - 1));
+    }
+
+    /**
+     * @param objectId
+     * @return
+     */
+    private RevCommit resolveCommit(ObjectId objectId) {
+
+        final Optional<RevObject> object = command(RevObjectParse.class).setObjectId(objectId)
+                .call();
+        checkArgument(object.isPresent(), "No object named %s could be found", objectId);
+        final RevObject revObject = object.get();
+        RevCommit commit;
+        switch (revObject.getType()) {
+        case COMMIT:
+            commit = (RevCommit) revObject;
+            break;
+        case TAG:
+            ObjectId commitId = ((RevTag) revObject).getCommitId();
+            commit = command(RevObjectParse.class).setObjectId(commitId).call(RevCommit.class)
+                    .get();
+            break;
+        default:
+            throw new IllegalArgumentException(String.format(
+                    "%s did not resolve to a commit or tag: %s", objectId, revObject.getType()));
+        }
+        return commit;
+    }
+
+    private Optional<ObjectId> resolveAncestor(ObjectId objectId, int ancestorN) {
+        RevCommit commit = resolveCommit(objectId);
+        if (ancestorN == 0) {
+            return Optional.of(commit.getId());
+        }
+        ObjectId firstParent = commit.parentN(0);
+        if (firstParent.isNull()) {
+            return Optional.absent();
+        }
+        return resolveAncestor(firstParent, ancestorN - 1);
+    }
+
+    private int parseNumber(final String suffix, final int defaultValue,
+            StringBuilder remainingTarget) {
+        if (suffix.isEmpty() || !Character.isDigit(suffix.charAt(0))) {
+            remainingTarget.append(suffix);
+            return defaultValue;
+        }
+
+        int i = 0;
+        StringBuilder sb = new StringBuilder();
+        while (i < suffix.length() && Character.isDigit(suffix.charAt(i))) {
+            sb.append(suffix.charAt(i));
+            i++;
+        }
+        remainingTarget.append(suffix.substring(i));
+        return Integer.parseInt(sb.toString());
+    }
+
+    private String parseSuffix(final String spec, final char delim) {
+        checkArgument(spec.indexOf(delim) > -1);
+        String suffix = spec.substring(spec.indexOf(delim) + 1);
+        return suffix;
+    }
+
+    private String parsePrefix(String spec, char delim) {
+        checkArgument(spec.indexOf(delim) > -1);
+        return spec.substring(0, spec.indexOf(delim));
+    }
+
+    /**
+     * @param objectName a ref name or object id
+     */
+    private Optional<ObjectId> resolveObject(final String refSpec) {
         ObjectId resolvedTo = null;
-        // TODO: handle other kinds of ref specs
 
         // is it a ref?
         Optional<Ref> ref = command(RefParse.class).setName(refSpec).call();

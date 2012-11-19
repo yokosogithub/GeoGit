@@ -10,9 +10,7 @@ import javax.annotation.Nullable;
 
 import org.geogit.api.NodeRef;
 import org.geogit.api.ObjectId;
-import org.geogit.api.Ref;
 import org.geogit.api.RevTree;
-import org.geogit.api.plumbing.UpdateRef;
 import org.geogit.api.plumbing.diff.DiffEntry;
 import org.geogit.storage.StagingDatabase;
 import org.opengis.util.ProgressListener;

@@ -29,4 +29,10 @@ public class SymRef extends Ref {
         return target.getName();
     }
 
+    @Override
+    public String toString() {
+        return new StringBuilder("SymRef").append('[').append(getName()).append(" -> ")
+                .append(target.toString()).append(']').toString();
+    }
+
 }

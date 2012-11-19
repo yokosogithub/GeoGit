@@ -289,11 +289,11 @@ public class CommitOp extends AbstractGeoGitOp<RevCommit> {
             @Override
             public RevTree get() {
                 Optional<ObjectId> head = command(ResolveTreeish.class).setTreeish(Ref.HEAD).call();
-                ObjectId id = head.get();
-                if (id.isNull()) {
+                if (!head.isPresent() || head.get().isNull()) {
                     return RevTree.EMPTY;
                 }
-                return command(RevObjectParse.class).setObjectId(id).call(RevTree.class).get();
+                return command(RevObjectParse.class).setObjectId(head.get()).call(RevTree.class)
+                        .get();
             }
         };
         return Suppliers.memoize(supplier);

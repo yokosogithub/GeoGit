@@ -15,8 +15,8 @@ import org.geogit.cli.porcelain.Diff;
 import org.geogit.cli.porcelain.Help;
 import org.geogit.cli.porcelain.Init;
 import org.geogit.cli.porcelain.Log;
-import org.geogit.cli.porcelain.RemoteExtension;
 import org.geogit.cli.porcelain.Rebase;
+import org.geogit.cli.porcelain.RemoteExtension;
 import org.geogit.cli.porcelain.Reset;
 import org.geogit.cli.porcelain.Status;
 
