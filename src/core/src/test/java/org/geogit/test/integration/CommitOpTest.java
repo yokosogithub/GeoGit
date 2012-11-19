@@ -4,6 +4,7 @@
  */
 package org.geogit.test.integration;
 
+
 import static org.geogit.api.NodeRef.appendChild;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -13,6 +14,8 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
+
+import javax.annotation.Nullable;
 
 import org.geogit.api.NodeRef;
 import org.geogit.api.ObjectId;
@@ -63,8 +66,8 @@ public class CommitOpTest extends RepositoryTestCase {
         RevCommit commit = geogit.command(CommitOp.class).call();
         assertNotNull(commit);
         assertNotNull(commit.getParentIds());
-        assertEquals(1, commit.getParentIds().size());
-        assertTrue(commit.getParentIds().get(0).isNull());
+        assertEquals(0, commit.getParentIds().size());
+        assertFalse(commit.parentN(0).isPresent());
         assertNotNull(commit.getId());
         assertEquals("groldan", commit.getAuthor().getName());
         assertEquals("groldan@opengeo.org", commit.getAuthor().getEmail());
@@ -107,7 +110,7 @@ public class CommitOpTest extends RepositoryTestCase {
         geogit.command(AddOp.class).call();
         final RevCommit commit1 = geogit.command(CommitOp.class).call();
         {
-            assertCommit(commit1, ObjectId.NULL, null, null);
+            assertCommit(commit1, null, null, null);
             // check points1 is there
             assertEquals(oId1_1, repo.getRootTreeChild(appendChild(pointsName, idP1)).get()
                     .getObjectId());
@@ -196,8 +199,8 @@ public class CommitOpTest extends RepositoryTestCase {
         RevCommit commit = commitCommand.call();
         assertNotNull(commit);
         assertNotNull(commit.getParentIds());
-        assertEquals(1, commit.getParentIds().size());
-        assertTrue(commit.getParentIds().get(0).isNull());
+        assertEquals(0, commit.getParentIds().size());
+        assertFalse(commit.parentN(0).isPresent());
         assertNotNull(commit.getId());
         assertEquals("John Doe", commit.getAuthor().getName());
         assertEquals("John@Doe.com", commit.getAuthor().getEmail());
@@ -295,8 +298,8 @@ public class CommitOpTest extends RepositoryTestCase {
         RevCommit commit = commitCommand.setAllowEmpty(true).call();
         assertNotNull(commit);
         assertNotNull(commit.getParentIds());
-        assertEquals(1, commit.getParentIds().size());
-        assertTrue(commit.getParentIds().get(0).isNull());
+        assertEquals(0, commit.getParentIds().size());
+        assertFalse(commit.parentN(0).isPresent());
         assertNotNull(commit.getId());
 
         ObjectId commitId = geogit.command(RevParse.class).setRefSpec(Ref.HEAD).call().get();
@@ -399,10 +402,12 @@ public class CommitOpTest extends RepositoryTestCase {
         assertFalse(commit.isAllowEmpty());
     }
 
-    private void assertCommit(RevCommit commit, ObjectId parentId, String author, String message) {
+    private void assertCommit(RevCommit commit, @Nullable ObjectId parentId, String author,
+            String message) {
+
         assertNotNull(commit);
-        assertEquals(1, commit.getParentIds().size());
-        assertEquals(parentId, commit.getParentIds().get(0));
+        assertEquals(parentId == null ? 0 : 1, commit.getParentIds().size());
+        assertEquals(parentId, commit.parentN(0).orNull());
         assertNotNull(commit.getTreeId());
         assertNotNull(commit.getId());
         if (author != null) {

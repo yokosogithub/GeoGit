@@ -122,9 +122,7 @@ public class FindCommonAncestor extends AbstractGeoGitOp<Optional<RevCommit>> {
             }
 
             for (ObjectId parent : commit.getParentIds()) {
-                if (!ObjectId.NULL.equals(parent)) {
-                    commitQueue.add(repository.getCommit(parent));
-                }
+                commitQueue.add(repository.getCommit(parent));
             }
         }
 

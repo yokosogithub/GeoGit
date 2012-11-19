@@ -165,7 +165,7 @@ public class RevParse extends AbstractGeoGitOp<Optional<ObjectId>> {
             return Optional.absent();
         }
 
-        return Optional.of(commit.parentN(parentN - 1));
+        return commit.parentN(parentN - 1);
     }
 
     /**
@@ -200,11 +200,11 @@ public class RevParse extends AbstractGeoGitOp<Optional<ObjectId>> {
         if (ancestorN == 0) {
             return Optional.of(commit.getId());
         }
-        ObjectId firstParent = commit.parentN(0);
-        if (firstParent.isNull()) {
+        Optional<ObjectId> firstParent = commit.parentN(0);
+        if (!firstParent.isPresent()) {
             return Optional.absent();
         }
-        return resolveAncestor(firstParent, ancestorN - 1);
+        return resolveAncestor(firstParent.get(), ancestorN - 1);
     }
 
     private int parseNumber(final String suffix, final int defaultValue,

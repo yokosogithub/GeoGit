@@ -154,18 +154,18 @@ public class RevParseIntegrationTest extends RepositoryTestCase {
 
         ObjectId expected;
 
-        expected = masterCommit4.parentN(0);
+        expected = masterCommit4.parentN(0).get();
         assertParsed(expected, revParse("HEAD^"));
         assertParsed(expected, revParse("HEAD^1"));
         assertAbsent(revParse("HEAD^2"));
         assertParsed(masterCommit4, revParse("HEAD^0"));
 
-        expected = mergeCommit.parentN(0);
+        expected = mergeCommit.parentN(0).get();
         assertParsed(expected, revParse("HEAD^^"));
         assertParsed(expected, revParse("HEAD^1^"));
         assertParsed(expected, revParse("HEAD^1^1"));
 
-        expected = mergeCommit.parentN(1);
+        expected = mergeCommit.parentN(1).get();
         assertParsed(expected, revParse("HEAD^^2"));
         assertParsed(expected, revParse("HEAD^1^2"));
 
@@ -207,8 +207,8 @@ public class RevParseIntegrationTest extends RepositoryTestCase {
         assertParsed(masterCommit1, revParse(masterCommit2.getId() + "^"));
         assertParsed(masterCommit1, revParse(masterCommit2.getId() + "^1"));
 
-        assertParsed(ObjectId.NULL, revParse(masterCommit1.getId() + "^"));
-        assertParsed(ObjectId.NULL, revParse(masterCommit1.getId() + "^1"));
+        assertAbsent(revParse(masterCommit1.getId() + "^"));
+        assertAbsent(revParse(masterCommit1.getId() + "^1"));
         assertAbsent(revParse(masterCommit1.getId() + "^2"));
     }
 

@@ -72,7 +72,7 @@ public class Commit extends AbstractCommand implements CLICommand {
             console.println(ansi.fg(Color.RED).a(noChanges.getMessage()).reset().toString());
             return;
         }
-        ObjectId parentId = commit.getParentIds().get(0);
+        final ObjectId parentId = commit.parentN(0).or(ObjectId.NULL);
 
         console.println("[" + commit.getId() + "] " + commit.getMessage());
 

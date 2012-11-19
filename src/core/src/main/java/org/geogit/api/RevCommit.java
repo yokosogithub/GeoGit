@@ -13,6 +13,7 @@ import java.util.List;
 import javax.annotation.Nullable;
 
 import com.google.common.base.Objects;
+import com.google.common.base.Optional;
 
 /**
  * A reference to a commit in the DAG.
@@ -98,10 +99,14 @@ public class RevCommit extends AbstractRevObject {
      * {@code <commit id>^0}).
      * 
      * @param parentIndex
-     * @return the parent id at the given index
+     * @return the parent id at the given index, or absent
      */
-    public ObjectId parentN(int parentIndex) {
-        return parentIds.get(parentIndex);
+    public Optional<ObjectId> parentN(int parentIndex) {
+        Optional<ObjectId> parent = Optional.absent();
+        if (parentIds.size() > parentIndex) {
+            parent = Optional.of(parentIds.get(parentIndex));
+        }
+        return parent;
     }
 
     /**

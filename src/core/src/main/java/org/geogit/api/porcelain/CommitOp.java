@@ -226,7 +226,9 @@ public class CommitOp extends AbstractGeoGitOp<RevCommit> {
 
         final String currentBranch = ((SymRef) headRef).getTarget();
         final ObjectId currHeadCommitId = headRef.getObjectId();
-        parents.add(currHeadCommitId);
+        if (!currHeadCommitId.isNull()) {
+            parents.add(currHeadCommitId);
+        }
 
         // final ObjectId newTreeId = index.writeTree(currHead.get(), subProgress(49f));
         final ObjectId newTreeId = command(WriteTree.class).setOldRoot(resolveOldRoot())

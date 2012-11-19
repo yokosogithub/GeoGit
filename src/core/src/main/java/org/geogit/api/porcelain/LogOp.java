@@ -7,7 +7,6 @@ package org.geogit.api.porcelain;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Set;
 
 import org.geogit.api.AbstractGeoGitOp;
@@ -19,6 +18,7 @@ import org.geogit.api.plumbing.diff.DiffEntry;
 import org.geogit.repository.Repository;
 import org.geotools.util.Range;
 
+import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.base.Throwables;
@@ -201,7 +201,7 @@ public class LogOp extends AbstractGeoGitOp<Iterator<RevCommit>> {
      */
     private static class LinearHistoryIterator extends AbstractIterator<RevCommit> {
 
-        private ObjectId nextCommitId;
+        private Optional<ObjectId> nextCommitId;
 
         private final Repository repo;
 
@@ -211,8 +211,10 @@ public class LogOp extends AbstractGeoGitOp<Iterator<RevCommit>> {
          * @param tip the first commit in the history
          * @param repo the repository where the commits are stored.
          */
+        @SuppressWarnings("unchecked")
         public LinearHistoryIterator(final ObjectId tip, final Repository repo) {
-            this.nextCommitId = tip;
+            this.nextCommitId = (Optional<ObjectId>) (tip.isNull() ? Optional.absent() : Optional
+                    .of(tip));
             this.repo = repo;
         }
 
@@ -223,17 +225,12 @@ public class LogOp extends AbstractGeoGitOp<Iterator<RevCommit>> {
          */
         @Override
         protected RevCommit computeNext() {
-            if (nextCommitId.isNull()) {
-                return endOfData();
+            if (nextCommitId.isPresent()) {
+                final RevCommit commit = repo.getCommit(nextCommitId.get());
+                nextCommitId = commit.parentN(0);
+                return commit;
             }
-            final RevCommit commit = repo.getCommit(nextCommitId);
-            List<ObjectId> parentIds = commit.getParentIds();
-            Preconditions.checkNotNull(parentIds);
-            Preconditions.checkState(parentIds.size() > 0);
-
-            nextCommitId = commit.getParentIds().get(0);
-
-            return commit;
+            return endOfData();
         }
 
     }
@@ -297,7 +294,7 @@ public class LogOp extends AbstractGeoGitOp<Iterator<RevCommit>> {
                 // did this commit touch any of the paths?
                 for (String path : paths) {
                     DiffOp diff = command(DiffOp.class);
-                    ObjectId parentId = commit.getParentIds().get(0);
+                    ObjectId parentId = commit.parentN(0).or(ObjectId.NULL);
                     Iterator<DiffEntry> diffResult;
                     try {
                         diff.setOldVersion(parentId).setNewVersion(commit.getId()).setFilter(path);
