@@ -10,28 +10,15 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
-
-import org.geogit.api.NodeRef;
 import org.geogit.api.ObjectId;
-import org.geogit.api.RevObject.TYPE;
 import org.geogit.api.RevTree;
-import org.geogit.api.SpatialRef;
 import org.geogit.storage.ObjectDatabase;
 import org.geogit.storage.ObjectInserter;
 import org.geogit.storage.ObjectReader;
 import org.geogit.storage.ObjectWriter;
 import org.geogit.storage.StagingDatabase;
-import org.geotools.geometry.jts.ReferencedEnvelope;
-import org.geotools.referencing.CRS;
-import org.opengis.geometry.BoundingBox;
-import org.opengis.referencing.crs.CoordinateReferenceSystem;
 
 import com.google.inject.Inject;
-import com.sleepycat.bind.tuple.TupleBinding;
-import com.sleepycat.bind.tuple.TupleInput;
-import com.sleepycat.bind.tuple.TupleOutput;
 import com.sleepycat.je.DatabaseConfig;
 import com.sleepycat.je.Environment;
 
@@ -61,11 +48,6 @@ import com.sleepycat.je.Environment;
  * 
  */
 public class JEStagingDatabase implements ObjectDatabase, StagingDatabase {
-
-    private final TupleBinding<String> keyPathBinding = TupleBinding
-            .getPrimitiveBinding(String.class);
-
-    private final TupleBinding<NodeRef> refBinding = new NodeRefBinding();
 
     private final EnvironmentBuilder envProvider;
 
@@ -171,110 +153,6 @@ public class JEStagingDatabase implements ObjectDatabase, StagingDatabase {
     @Override
     public boolean delete(ObjectId objectId) {
         return stagingDb.delete(objectId);
-    }
-
-    private static class ObjectIdBinding extends TupleBinding<ObjectId> {
-
-        private byte[] rawObjectId;
-
-        @Override
-        public ObjectId entryToObject(TupleInput input) {
-            if (rawObjectId == null) {
-                rawObjectId = new byte[20];
-            }
-            input.readFast(rawObjectId);
-            ObjectId objectId = new ObjectId(rawObjectId);
-            return objectId;
-        }
-
-        @Override
-        public void objectToEntry(ObjectId objectId, TupleOutput output) {
-            output.write(objectId.getRawValue());
-        }
-
-    }
-
-    private static class NodeRefBinding extends TupleBinding<NodeRef> {
-
-        private static final int NULL_NODEREF = -1;
-
-        private static final int REF = 0;
-
-        private static final int SPATIAL_REF = 1;
-
-        private TupleBinding<ObjectId> oidBinding = new ObjectIdBinding();
-
-        @Override
-        public NodeRef entryToObject(@Nonnull TupleInput input) {
-            final int refTypeMark = input.readByte();
-            if (NULL_NODEREF == refTypeMark) {
-                return null;
-            }
-
-            String path = input.readString();
-            int typeVal = input.readInt();
-            TYPE type = TYPE.valueOf(typeVal);
-
-            ObjectId objectId = oidBinding.entryToObject(input);
-            ObjectId metadataId = oidBinding.entryToObject(input);
-
-            NodeRef ref;
-            if (SPATIAL_REF == refTypeMark) {
-                String srs = input.readString();
-                CoordinateReferenceSystem crs;
-                try {
-                    crs = CRS.decode(srs);
-                } catch (Exception e) {
-                    // e.printStackTrace();
-                    crs = null;
-                }
-
-                double x1 = input.readDouble();
-                double x2 = input.readDouble();
-                double y1 = input.readDouble();
-                double y2 = input.readDouble();
-                BoundingBox bounds = new ReferencedEnvelope(x1, x2, y1, y2, crs);
-
-                ref = new SpatialRef(path, objectId, metadataId, type, bounds);
-            } else {
-                ref = new NodeRef(path, objectId, metadataId, type);
-            }
-            return ref;
-        }
-
-        @Override
-        public void objectToEntry(@Nullable NodeRef ref, TupleOutput output) {
-            if (null == ref) {
-                output.writeByte(NULL_NODEREF);
-                return;
-            }
-            final int refTypeMark = ref instanceof SpatialRef ? SPATIAL_REF : REF;
-            output.writeByte(refTypeMark);
-
-            final String path = ref.getPath();
-            final ObjectId objectId = ref.getObjectId();
-            final ObjectId metadataId = ref.getMetadataId();
-            final TYPE type = ref.getType();
-
-            output.writeString(path);
-            output.writeInt(type.value());
-            oidBinding.objectToEntry(objectId, output);
-            oidBinding.objectToEntry(metadataId, output);
-
-            if (refTypeMark == SPATIAL_REF) {
-                SpatialRef sr = (SpatialRef) ref;
-                BoundingBox bounds = sr.getBounds();
-                CoordinateReferenceSystem crs = bounds.getCoordinateReferenceSystem();
-                String srs = CRS.toSRS(crs);
-
-                output.writeString(srs);
-                final int dimension = 2;// bounds.getDimension();
-                for (int d = 0; d < dimension; d++) {
-                    output.writeDouble(bounds.getMinimum(d));
-                    output.writeDouble(bounds.getMaximum(d));
-                }
-            }
-        }
     }
 
 }

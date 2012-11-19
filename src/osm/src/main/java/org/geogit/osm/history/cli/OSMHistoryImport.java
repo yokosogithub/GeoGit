@@ -412,7 +412,7 @@ public class OSMHistoryImport extends AbstractCommand implements CLICommand {
 
     private static SimpleFeatureType WayType;
 
-    private static SimpleFeatureType RelationType;
+    // private static SimpleFeatureType RelationType;
 
     private synchronized static SimpleFeatureType nodeType() {
         if (NodeType == null) {

@@ -8,8 +8,6 @@ package org.geogit.api.plumbing;
 import org.geogit.api.AbstractGeoGitOp;
 import org.geogit.api.Ref;
 import org.geogit.storage.RefDatabase;
-import org.geogit.util.Closure;
-import org.geogit.util.Closures;
 
 import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
@@ -27,8 +25,6 @@ public class ForEachRef extends AbstractGeoGitOp<ImmutableSet<Ref>> {
     private RefDatabase refDb;
 
     private Predicate<Ref> filter;
-
-    private Closure<Ref> action;
 
     @Inject
     public ForEachRef(RefDatabase refDb) {
@@ -50,11 +46,6 @@ public class ForEachRef extends AbstractGeoGitOp<ImmutableSet<Ref>> {
         return this;
     }
 
-    public ForEachRef setAction(Closure<Ref> action) {
-        this.action = action;
-        return this;
-    }
-
     /**
      * @return the new value of the ref
      */
@@ -64,14 +55,12 @@ public class ForEachRef extends AbstractGeoGitOp<ImmutableSet<Ref>> {
         @SuppressWarnings("unchecked")
         final Predicate<Ref> filter = (Predicate<Ref>) (this.filter == null ? Predicates
                 .alwaysTrue() : this.filter);
-        final Closure<Ref> action = Closures.doNothing();
 
         ImmutableSet.Builder<Ref> refs = new ImmutableSet.Builder<Ref>();
         for (String refName : refDb.getAll().keySet()) {
             Optional<Ref> ref = command(RefParse.class).setName(refName).call();
             if (ref.isPresent() && filter.apply(ref.get())) {
                 Ref accepted = ref.get();
-                action.execute(accepted);
                 refs.add(accepted);
             }
         }

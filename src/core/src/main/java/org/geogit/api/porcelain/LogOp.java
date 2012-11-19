@@ -182,7 +182,7 @@ public class LogOp extends AbstractGeoGitOp<Iterator<RevCommit>> {
         }
 
         Iterator<RevCommit> linearHistory = new LinearHistoryIterator(newestCommitId, repository);
-        LogFilter filter = new LogFilter(repository, oldestCommitId, timeRange, paths);
+        LogFilter filter = new LogFilter(oldestCommitId, timeRange, paths);
         Iterator<RevCommit> filteredCommits = Iterators.filter(linearHistory, filter);
         if (skip != null) {
             Iterators.advance(filteredCommits, skip.intValue());
@@ -250,24 +250,18 @@ public class LogOp extends AbstractGeoGitOp<Iterator<RevCommit>> {
 
         private final Set<String> paths;
 
-        private final Repository repo;
-
         /**
          * Constructs a new {@code LogFilter} with the given parameters.
          * 
-         * @param repo the repository where to get the commits from
          * @param oldestCommitId the oldest commit, exclusive. Indicates when to stop evaluating.
          * @param timeRange extra time range filter besides oldest commit
          * @param paths extra filter on content, indicates to return only commits that affected any
          *        of the provided paths
          */
-        public LogFilter(final Repository repo, final ObjectId oldestCommitId,
-                final Range<Long> timeRange, final Set<String> paths) {
-            Preconditions.checkNotNull(repo);
+        public LogFilter(final ObjectId oldestCommitId, final Range<Long> timeRange,
+                final Set<String> paths) {
             Preconditions.checkNotNull(oldestCommitId);
             Preconditions.checkNotNull(timeRange);
-
-            this.repo = repo;
             this.oldestCommitId = oldestCommitId;
             this.timeRange = timeRange;
             this.paths = paths;
