@@ -65,7 +65,7 @@ public class Pull extends AbstractCommand implements CLICommand {
 
         if (args != null) {
             if (args.size() > 0) {
-                pull.setRepository(args.get(0));
+                pull.setRemote(args.get(0));
             }
             for (int i = 1; i < args.size(); i++) {
                 pull.addRefSpec(args.get(i));

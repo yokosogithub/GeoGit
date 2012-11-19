@@ -8,8 +8,15 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.geogit.api.AbstractGeoGitOp;
-import org.geogit.api.Platform;
+import org.geogit.api.Ref;
+import org.geogit.api.Remote;
+import org.geogit.api.SymRef;
+import org.geogit.api.plumbing.RefParse;
 
+import com.google.common.base.Optional;
+import com.google.common.base.Preconditions;
+import com.google.common.base.Supplier;
+import com.google.common.base.Suppliers;
 import com.google.inject.Inject;
 
 /**
@@ -21,20 +28,15 @@ public class PullOp extends AbstractGeoGitOp<Void> {
 
     private boolean rebase;
 
-    private String repository;
+    private Supplier<Optional<Remote>> remote;
 
     private List<String> refSpecs = new ArrayList<String>();
 
-    private final Platform platform;
-
     /**
-     * Constructs a new {@code PullOp} with the given parameters.
-     * 
-     * @param platform the current platform
+     * Constructs a new {@code PullOp}.
      */
     @Inject
-    public PullOp(final Platform platform) {
-        this.platform = platform;
+    public PullOp() {
     }
 
     /**
@@ -47,26 +49,12 @@ public class PullOp extends AbstractGeoGitOp<Void> {
     }
 
     /**
-     * @return whether or not the op is configured to pull from all remotes
-     */
-    public boolean getAll() {
-        return all;
-    }
-
-    /**
      * @param rebase if {@code true}, perform a rebase on the remote branch instead of a merge
      * @return {@code this}
      */
     public PullOp setRebase(final boolean rebase) {
         this.rebase = rebase;
         return this;
-    }
-
-    /**
-     * @return whether or not to rebase instead of merge the remote branch
-     */
-    public boolean getRebase() {
-        return rebase;
     }
 
     /**
@@ -79,26 +67,23 @@ public class PullOp extends AbstractGeoGitOp<Void> {
     }
 
     /**
-     * @return the list of refspecs to pull
-     */
-    public List<String> getRefSpecs() {
-        return refSpecs;
-    }
-
-    /**
-     * @param repository the repository to pull from
+     * @param remoteName the name or URL of a remote repository to fetch from
      * @return {@code this}
      */
-    public PullOp setRepository(final String repository) {
-        this.repository = repository;
-        return this;
+    public PullOp setRemote(final String remoteName) {
+        Preconditions.checkNotNull(remoteName);
+        return setRemote(command(RemoteResolve.class).setName(remoteName));
     }
 
     /**
-     * @return the repository to pull from.
+     * @param remoteSupplier the remote repository to fetch from
+     * @return {@code this}
      */
-    public String getRepository() {
-        return repository;
+    public PullOp setRemote(Supplier<Optional<Remote>> remoteSupplier) {
+        Preconditions.checkNotNull(remoteSupplier);
+        remote = remoteSupplier;
+
+        return this;
     }
 
     /**
@@ -108,6 +93,43 @@ public class PullOp extends AbstractGeoGitOp<Void> {
      * @see org.geogit.api.AbstractGeoGitOp#call()
      */
     public Void call() {
+
+        if (remote == null) {
+            setRemote("origin");
+        }
+
+        Optional<Remote> remoteRepo = remote.get();
+
+        Preconditions.checkArgument(remoteRepo.isPresent(), "Remote could not be resolved.");
+
+        command(FetchOp.class).addRemote(remote).setAll(all).call();
+
+        if (refSpecs.size() > 0) {
+
+        } else {
+
+            // pull current branch
+            final Optional<Ref> currHead = command(RefParse.class).setName(Ref.HEAD).call();
+            Preconditions.checkState(currHead.isPresent(), "Repository has no HEAD, can't rebase.");
+            Preconditions.checkState(currHead.get() instanceof SymRef,
+                    "Can't pull from detached HEAD");
+            final SymRef headRef = (SymRef) currHead.get();
+            final String currentBranch = Ref.localName(headRef.getTarget());
+
+            String remoteBranch = Ref.REMOTES_PREFIX + remoteRepo.get().getName() + "/"
+                    + currentBranch;
+
+            Optional<Ref> upstream = command(RefParse.class).setName(remoteBranch).call();
+
+            Preconditions.checkState(upstream.isPresent(),
+                    "Cannot pull into current branch, no common ancestor was found.");
+
+            if (rebase) {
+                command(RebaseOp.class).setUpstream(
+                        Suppliers.ofInstance(upstream.get().getObjectId())).call();
+            }
+
+        }
 
         return null;
     }

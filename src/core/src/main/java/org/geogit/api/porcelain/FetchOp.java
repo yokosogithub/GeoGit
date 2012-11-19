@@ -108,10 +108,7 @@ public class FetchOp extends AbstractGeoGitOp<Void> {
             }
         } else if (remotes.size() == 0) {
             // If no remotes are specified, default to the origin remote
-            Optional<Remote> origin = command(RemoteResolve.class).setName("origin").call();
-            if (origin.isPresent()) {
-                remotes.add(origin.get());
-            }
+            addRemote("origin");
         }
         Preconditions.checkState(remotes.size() > 0,
                 "No remote repository specified.  Please specify a remote name to fetch from.");
