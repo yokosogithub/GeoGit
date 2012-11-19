@@ -3,11 +3,16 @@ package org.geogit.api.porcelain;
 import java.util.List;
 
 import org.geogit.api.AbstractGeoGitOp;
+import org.geogit.api.Ref;
 import org.geogit.api.Remote;
+import org.geogit.api.plumbing.LsRemote;
+import org.geogit.api.plumbing.UpdateRef;
 import org.geogit.api.porcelain.RemoteException.StatusCode;
 import org.geogit.storage.ConfigDatabase;
 
 import com.google.common.base.Optional;
+import com.google.common.base.Suppliers;
+import com.google.common.collect.ImmutableSet;
 import com.google.inject.Inject;
 
 /**
@@ -61,6 +66,14 @@ public class RemoteRemoveOp extends AbstractGeoGitOp<Remote> {
                 remoteFetch.or(""));
 
         config.removeSection(remoteSection);
+
+        // Remove refs
+        final ImmutableSet<Ref> localRemoteRefs = command(LsRemote.class).retrieveLocalRefs(true)
+                .setRemote(Suppliers.ofInstance(Optional.of(remote))).call();
+
+        for (Ref localRef : localRemoteRefs) {
+            command(UpdateRef.class).setDelete(true).setName(localRef.getName()).call();
+        }
 
         return remote;
     }

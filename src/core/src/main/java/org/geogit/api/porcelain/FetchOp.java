@@ -104,8 +104,15 @@ public class FetchOp extends AbstractGeoGitOp<Void> {
                     remotes.add(remote);
                 }
             }
+        } else if (remotes.size() == 0) {
+            // If no remotes are specified, default to the origin remote
+            Optional<Remote> origin = command(RemoteResolve.class).setName("origin").call();
+            if (origin.isPresent()) {
+                remotes.add(origin.get());
+            }
         }
-        Preconditions.checkState(remotes.size() > 0, "No remotes to fetch from");
+        Preconditions.checkState(remotes.size() > 0,
+                "No remote repository specified.  Please specify a remote name to fetch from.");
 
         for (Remote remote : remotes) {
             final ImmutableSet<Ref> remoteRemoteRefs = command(LsRemote.class).setRemote(
@@ -118,7 +125,6 @@ public class FetchOp extends AbstractGeoGitOp<Void> {
 
             if (prune) {
                 // Delete local refs that aren't in the remote
-                // Store local refs that are in the remote
                 List<Ref> locals = new ArrayList<Ref>();
                 for (Ref remoteRef : remoteRemoteRefs) {
                     Optional<Ref> localRef = findLocal(remote, remoteRef, localRemoteRefs);
