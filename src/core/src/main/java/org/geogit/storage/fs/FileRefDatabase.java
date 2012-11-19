@@ -216,6 +216,7 @@ public class FileRefDatabase implements RefDatabase {
             Files.write(refValue + "\n", tmpFile, CHARSET);
             boolean renamed;
             synchronized (refFile.getCanonicalPath().intern()) {
+                refFile.delete();
                 renamed = tmpFile.renameTo(refFile);
             }
             checkState(renamed, "unable to save ref " + refName);
