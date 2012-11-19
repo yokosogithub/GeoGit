@@ -21,6 +21,7 @@ import org.geogit.api.plumbing.RevObjectParse;
 import org.geogit.api.plumbing.RevParse;
 import org.geogit.api.plumbing.UpdateRef;
 import org.geogit.api.plumbing.UpdateSymRef;
+import org.geogit.repository.StagingArea;
 import org.geogit.repository.WorkingTree;
 
 import com.google.common.base.Optional;
@@ -42,9 +43,12 @@ public class CheckoutOp extends AbstractGeoGitOp<ObjectId> {
 
     private WorkingTree workTree;
 
+    private StagingArea index;
+
     @Inject
-    public CheckoutOp(final WorkingTree workTree) {
+    public CheckoutOp(final WorkingTree workTree, final StagingArea index) {
         this.workTree = workTree;
+        this.index = index;
         paths = Sets.newTreeSet();
     }
 
@@ -104,10 +108,18 @@ public class CheckoutOp extends AbstractGeoGitOp<ObjectId> {
         }
 
         if (commit.isPresent()) {
+            // count staged and unstaged changes
+            long staged = index.countStaged(null);
+            long unstaged = workTree.countUnstaged(null);
+            if (staged != 0 || unstaged != 0) {
+                throw new UnsupportedOperationException(
+                        "Doing a checkout without a clean working tree and index is currently unsupported.");
+            }
             // update work tree
             RevCommit revCommit = commit.get();
             ObjectId treeId = revCommit.getTreeId();
             workTree.updateWorkHead(treeId);
+            index.updateStageHead(treeId);
             if (targetRef.isPresent()) {
                 // update HEAD
                 String refName = targetRef.get().getName();

@@ -224,6 +224,7 @@ public class CommitOp extends AbstractGeoGitOp<RevCommit> {
                 .checkState(headRef instanceof SymRef,//
                         "HEAD is in a dettached state, cannot commit. Create a branch from it before committing");
 
+        final String currentBranch = ((SymRef) headRef).getTarget();
         final ObjectId currHeadCommitId = headRef.getObjectId();
         parents.add(currHeadCommitId);
 
@@ -264,16 +265,15 @@ public class CommitOp extends AbstractGeoGitOp<RevCommit> {
             objectInserter.insert(commit.getId(), repository.newCommitWriter(commit));
         }
         // set the HEAD pointing to the new commit
-        final String branch = "refs/heads/master";
-        final Optional<Ref> branchHead = command(UpdateRef.class).setName(branch)
+        final Optional<Ref> branchHead = command(UpdateRef.class).setName(currentBranch)
                 .setNewValue(commit.getId()).call();
         Preconditions.checkState(commit.getId().equals(branchHead.get().getObjectId()));
         LOGGER.fine("New head: " + branchHead);
 
         final Optional<Ref> newHead = command(UpdateSymRef.class).setName(Ref.HEAD)
-                .setNewValue(branch).call();
+                .setNewValue(currentBranch).call();
 
-        Preconditions.checkState(branch.equals(((SymRef) newHead.get()).getTarget()));
+        Preconditions.checkState(currentBranch.equals(((SymRef) newHead.get()).getTarget()));
 
         ObjectId treeId = repository.getCommit(branchHead.get().getObjectId()).getTreeId();
         Preconditions.checkState(newTreeId.equals(treeId));

@@ -16,6 +16,8 @@ import org.geogit.cli.porcelain.Help;
 import org.geogit.cli.porcelain.Init;
 import org.geogit.cli.porcelain.Log;
 import org.geogit.cli.porcelain.RemoteExtension;
+import org.geogit.cli.porcelain.Rebase;
+import org.geogit.cli.porcelain.Reset;
 import org.geogit.cli.porcelain.Status;
 
 import com.google.inject.AbstractModule;
@@ -35,6 +37,8 @@ import com.google.inject.AbstractModule;
  * @see Log
  * @see RemoteExtension
  * @see Status
+ * @see Rebase
+ * @see Reset
  */
 public class BuiltinCommandsModule extends AbstractModule implements CLIModule {
 
@@ -53,6 +57,8 @@ public class BuiltinCommandsModule extends AbstractModule implements CLIModule {
         bind(Log.class);
         bind(RemoteExtension.class);
         bind(Status.class);
+        bind(Rebase.class);
+        bind(Reset.class);
     }
 
 }

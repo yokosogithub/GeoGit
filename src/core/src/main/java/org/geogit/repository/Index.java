@@ -79,7 +79,8 @@ public class Index implements StagingArea {
      * 
      * @param newTree the tree to set as the new STAGE_HEAD
      */
-    private void updateStageHead(ObjectId newTree) {
+    @Override
+    public void updateStageHead(ObjectId newTree) {
         repository.command(UpdateRef.class).setName(Ref.STAGE_HEAD).setNewValue(newTree).call();
     }
 

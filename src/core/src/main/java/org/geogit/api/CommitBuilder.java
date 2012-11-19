@@ -32,6 +32,20 @@ public final class CommitBuilder {
     }
 
     /**
+     * @param copy the commit to initialize this builder properties with
+     */
+    public CommitBuilder(RevCommit copy) {
+        setAuthor(copy.getAuthor().getName());
+        setAuthorEmail(copy.getAuthor().getEmail());
+        setCommitter(copy.getCommitter().getName());
+        setCommitterEmail(copy.getCommitter().getEmail());
+        setMessage(copy.getMessage());
+        setParentIds(copy.getParentIds());
+        setTreeId(copy.getTreeId());
+        setTimestamp(copy.getTimestamp());
+    }
+
+    /**
      * @return the treeId of the commit
      */
     public ObjectId getTreeId() {

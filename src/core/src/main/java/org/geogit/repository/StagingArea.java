@@ -9,7 +9,10 @@ import java.util.Iterator;
 import javax.annotation.Nullable;
 
 import org.geogit.api.NodeRef;
+import org.geogit.api.ObjectId;
+import org.geogit.api.Ref;
 import org.geogit.api.RevTree;
+import org.geogit.api.plumbing.UpdateRef;
 import org.geogit.api.plumbing.diff.DiffEntry;
 import org.geogit.storage.StagingDatabase;
 import org.opengis.util.ProgressListener;
@@ -27,6 +30,13 @@ public interface StagingArea {
      * @return the staging database.
      */
     public StagingDatabase getDatabase();
+
+    /**
+     * Updates the STAGE_HEAD ref to the specified tree.
+     * 
+     * @param newTree the tree to set as the new STAGE_HEAD
+     */
+    public void updateStageHead(ObjectId newTree);
 
     /**
      * @return the tree represented by STAGE_HEAD. If there is no tree set at STAGE_HEAD, it will

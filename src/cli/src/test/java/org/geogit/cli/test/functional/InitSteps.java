@@ -151,6 +151,23 @@ public class InitSteps extends AbstractGeogitFunctionalTest {
 
     }
 
+    @Given("^I have several branches")
+    public void I_have_several_branches() throws Throwable {
+        insertAndAdd(points1);
+        runCommand(("commit -m Commit1").split(" "));
+        runCommand(("branch -c branch1").split(" "));
+        insertAndAdd(points2);
+        runCommand(("commit -m Commit2").split(" "));
+        insertAndAdd(points3);
+        runCommand(("commit -m Commit3").split(" "));
+        runCommand(("branch -c branch2").split(" "));
+        insertAndAdd(lines1);
+        runCommand(("commit -m Commit4").split(" "));
+        runCommand(("checkout master").split(" "));
+        insertAndAdd(lines2);
+        runCommand(("commit -m Commit5").split(" "));
+    }
+
     @Given("I modify and add a feature")
     public void I_modify_and_add_a_feature() throws Throwable {
         insertAndAdd(points1_modified);

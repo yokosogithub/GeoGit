@@ -30,6 +30,8 @@ man_pages = [
     ('config', 'geogit-config', 'Get and set repository or global options', ['OpenGeo <http://opengeo.org>'], '1'),
     ('log', 'geogit-log', 'Show commit logs', ['OpenGeo <http://opengeo.org>'], '1'),
     ('status', 'geogit-status', 'Show the working tree and index status', ['OpenGeo <http://opengeo.org>'], '1'),
+    ('rebase', 'geogit-rebase', 'Forward-port local commits to the updated upstream head', ['OpenGeo <http://opengeo.org>'], '1'),
+    ('reset', 'geogit-reset', 'Reset current HEAD to the specified state', ['OpenGeo <http://opengeo.org>'], '1'),
     ('pg', 'geogit-pg', 'PostGIS command extension', ['OpenGeo <http://opengeo.org>'], '2'),
     ('pgimport', 'geogit-pg-import', 'Import features from a PostGIS database', ['OpenGeo <http://opengeo.org>'], '2'),
     ('pglist', 'geogit-pg-list', 'List tables in a PostGIS database', ['OpenGeo <http://opengeo.org>'], '2'),
