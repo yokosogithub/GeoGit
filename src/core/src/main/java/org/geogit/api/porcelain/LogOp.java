@@ -49,6 +49,8 @@ public class LogOp extends AbstractGeoGitOp<Iterator<RevCommit>> {
 
     private Range<Long> timeRange;
 
+    private Integer skip;
+
     private Integer limit;
 
     private ObjectId since;
@@ -68,6 +70,16 @@ public class LogOp extends AbstractGeoGitOp<Iterator<RevCommit>> {
     public LogOp(final Repository repository) {
         this.repository = repository;
         timeRange = ALWAYS;
+    }
+
+    /**
+     * @param skip sets the number of commits to skip from the commit list
+     * @return {@code this}
+     */
+    public LogOp setSkip(int skip) {
+        Preconditions.checkArgument(skip > 0, "skip shall be > 0: " + skip);
+        this.skip = Integer.valueOf(skip);
+        return this;
     }
 
     /**
@@ -172,6 +184,9 @@ public class LogOp extends AbstractGeoGitOp<Iterator<RevCommit>> {
         Iterator<RevCommit> linearHistory = new LinearHistoryIterator(newestCommitId, repository);
         LogFilter filter = new LogFilter(repository, oldestCommitId, timeRange, paths);
         Iterator<RevCommit> filteredCommits = Iterators.filter(linearHistory, filter);
+        if (skip != null) {
+            Iterators.advance(filteredCommits, skip.intValue());
+        }
         if (limit != null) {
             filteredCommits = Iterators.limit(filteredCommits, limit.intValue());
         }

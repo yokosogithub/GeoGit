@@ -5,8 +5,10 @@
 
 package org.geogit.cli.porcelain;
 
+import java.io.IOException;
 import java.util.Date;
 import java.util.Iterator;
+import java.util.List;
 
 import jline.Terminal;
 import jline.console.ConsoleReader;
@@ -14,9 +16,11 @@ import jline.console.ConsoleReader;
 import org.fusesource.jansi.Ansi;
 import org.fusesource.jansi.Ansi.Color;
 import org.geogit.api.GeoGIT;
+import org.geogit.api.ObjectId;
 import org.geogit.api.Platform;
 import org.geogit.api.RevCommit;
 import org.geogit.api.RevPerson;
+import org.geogit.api.plumbing.RevParse;
 import org.geogit.api.porcelain.LogOp;
 import org.geogit.cli.AbstractCommand;
 import org.geogit.cli.AnsiDecorator;
@@ -25,9 +29,14 @@ import org.geogit.cli.GeogitCLI;
 
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.Parameters;
+import com.google.common.base.Function;
+import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Throwables;
+import com.google.common.base.Splitter;
+import com.google.common.base.Strings;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterators;
+import com.google.common.collect.Lists;
 
 /**
  * Shows the commit logs.
@@ -56,7 +65,11 @@ public class Log extends AbstractCommand implements CLICommand {
     @Parameter(names = "--until", description = "Maximum number of commits to log")
     private String until;
 
-    // private String paths;
+    @Parameter(names = "--oneline", description = "Print only commit id and message on a sinlge line per commit")
+    private boolean oneline;
+
+    @Parameter(description = "[[<until>]|[<since>..<until>]] [<path>]...]")
+    private List<String> sinceUntilPaths = Lists.newArrayList();
 
     @Parameter(names = "--color", description = "Whether to apply colored output. Possible values are auto|never|always.", converter = ColorArg.Converter.class)
     private ColorArg color = ColorArg.auto;
@@ -65,71 +78,134 @@ public class Log extends AbstractCommand implements CLICommand {
      * Executes the log command using the provided options.
      * 
      * @param cli
+     * @throws IOException
      * @see org.geogit.cli.AbstractCommand#runInternal(org.geogit.cli.GeogitCLI)
      */
     @Override
-    public void runInternal(GeogitCLI cli) {
+    public void runInternal(GeogitCLI cli) throws Exception {
         final Platform platform = cli.getPlatform();
         Preconditions.checkState(cli.getGeogit() != null, "Not a geogit repository: "
                 + platform.pwd().getAbsolutePath());
 
         final GeoGIT geogit = cli.getGeogit();
-        Iterator<RevCommit> log;
-        try {
-            log = geogit.command(LogOp.class).call();
-        } catch (Exception e) {
-            throw Throwables.propagate(e);
-        }
+
+        LogOp op = geogit.command(LogOp.class);
+
         if (skip != null) {
-            Iterators.advance(log, skip.intValue());
+            op.setSkip(skip.intValue());
         }
         if (limit != null) {
-            log = Iterators.limit(log, limit.intValue());
+            op.setLimit(limit.intValue());
         }
+        if (!sinceUntilPaths.isEmpty()) {
+            List<String> sinceUntil = ImmutableList.copyOf((Splitter.on("..").split(sinceUntilPaths
+                    .get(0))));
+            Preconditions.checkArgument(sinceUntil.size() == 1 || sinceUntil.size() == 2,
+                    "Invalid refSpec format, expected [<until>]|[<since>..<until>]: %s",
+                    sinceUntilPaths.get(0));
 
-        cli.getPlatform();
+            String sinceRefSpec;
+            String untilRefSpec;
+            if (sinceUntil.size() == 1) {
+                // just until was given
+                sinceRefSpec = null;
+                untilRefSpec = sinceUntil.get(0);
+            } else {
+                sinceRefSpec = sinceUntil.get(0);
+                untilRefSpec = sinceUntil.get(1);
+            }
+            if (sinceRefSpec != null) {
+                Optional<ObjectId> since;
+                since = geogit.command(RevParse.class).setRefSpec(sinceRefSpec).call();
+                Preconditions.checkArgument(since.isPresent(), "Object not found '%s'",
+                        sinceRefSpec);
+                op.setSince(since.get());
+            }
+            if (untilRefSpec != null) {
+                Optional<ObjectId> until;
+                until = geogit.command(RevParse.class).setRefSpec(untilRefSpec).call();
+                Preconditions.checkArgument(until.isPresent(), "Object not found '%s'",
+                        sinceRefSpec);
+                op.setUntil(until.get());
+            }
+        }
+        Iterator<RevCommit> log = op.call();
         ConsoleReader console = cli.getConsole();
         Terminal terminal = console.getTerminal();
-        try {
-            if (log.hasNext()) {
-                while (log.hasNext()) {
-                    RevCommit commit = log.next();
-
-                    boolean useColor;
-                    switch (color) {
-                    case never:
-                        useColor = false;
-                        break;
-                    case always:
-                        useColor = true;
-                        break;
-                    default:
-                        useColor = terminal.isAnsiSupported();
-                    }
-                    Ansi ansi = AnsiDecorator.newAnsi(useColor);
-
-                    ansi.a("Commit:  ").fg(Color.YELLOW).a(commit.getId().toString()).reset()
-                            .newline();
-                    ansi.a("Author:  ").fg(Color.GREEN).a(formatPerson(commit.getAuthor())).reset()
-                            .newline();
-                    ansi.a("Date:    (").fg(Color.RED)
-                            .a(estimateSince(platform, commit.getTimestamp())).reset().a(") ")
-                            .a(new Date(commit.getTimestamp())).newline();
-                    ansi.a("Subject: ").a(commit.getMessage()).newline();
-
-                    console.print(ansi.toString());
-
-                    if (log.hasNext()) {
-                        console.println("");
-                    }
-                }
-            } else {
-                console.println("No commits to show");
-            }
-            console.flush();
-        } catch (Exception e) {
-            throw Throwables.propagate(e);
+        final boolean useColor;
+        switch (color) {
+        case never:
+            useColor = false;
+            break;
+        case always:
+            useColor = true;
+            break;
+        default:
+            useColor = terminal.isAnsiSupported();
         }
+
+        if (!log.hasNext()) {
+            console.println("No commits to show");
+            console.flush();
+            return;
+        }
+
+        Function<RevCommit, CharSequence> printFunction;
+        if (oneline) {
+            printFunction = oneLineConverter(useColor);
+        } else {
+            printFunction = standardConverter(useColor, geogit.getPlatform());
+        }
+
+        Iterator<CharSequence> formattedLog = Iterators.transform(log, printFunction);
+        while (formattedLog.hasNext()) {
+            CharSequence formattedCommit = formattedLog.next();
+            console.println(formattedCommit);
+            console.flush();
+        }
+    }
+
+    /**
+     * @param useColor
+     * @return
+     */
+    private Function<RevCommit, CharSequence> oneLineConverter(final boolean useColor) {
+        return new Function<RevCommit, CharSequence>() {
+
+            @Override
+            public CharSequence apply(RevCommit commit) {
+                Ansi ansi = AnsiDecorator.newAnsi(useColor);
+                ansi.fg(Color.YELLOW).a(commit.getId().toString()).reset();
+                String message = Strings.nullToEmpty(commit.getMessage());
+                String title = Splitter.on('\n').split(message).iterator().next();
+                ansi.a(" ").a(title);
+                return ansi.toString();
+            }
+        };
+    }
+
+    /**
+     * @param useColor
+     * @return
+     */
+    private Function<RevCommit, CharSequence> standardConverter(final boolean useColor,
+            final Platform platform) {
+        return new Function<RevCommit, CharSequence>() {
+
+            @Override
+            public CharSequence apply(RevCommit commit) {
+                Ansi ansi = AnsiDecorator.newAnsi(useColor);
+
+                ansi.a("Commit:  ").fg(Color.YELLOW).a(commit.getId().toString()).reset().newline();
+                ansi.a("Author:  ").fg(Color.GREEN).a(formatPerson(commit.getAuthor())).reset()
+                        .newline();
+                ansi.a("Date:    (").fg(Color.RED)
+                        .a(estimateSince(platform, commit.getTimestamp())).reset().a(") ")
+                        .a(new Date(commit.getTimestamp())).newline();
+                ansi.a("Subject: ").a(commit.getMessage());
+                return ansi.toString();
+            }
+        };
     }
 
     /**
