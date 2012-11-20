@@ -54,7 +54,7 @@ public class Push extends AbstractCommand implements CLICommand {
 
         if (args != null) {
             if (args.size() > 0) {
-                push.setRepository(args.get(0));
+                push.setRemote(args.get(0));
             }
             for (int i = 1; i < args.size(); i++) {
                 push.addRefSpec(args.get(i));

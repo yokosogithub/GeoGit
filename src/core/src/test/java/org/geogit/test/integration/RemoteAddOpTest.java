@@ -2,41 +2,26 @@ package org.geogit.test.integration;
 
 import static org.junit.Assert.assertEquals;
 
-import java.io.File;
-
 import org.geogit.api.Remote;
-import org.geogit.api.TestPlatform;
 import org.geogit.api.porcelain.RemoteAddOp;
 import org.geogit.api.porcelain.RemoteException;
-import org.geogit.storage.fs.IniConfigDatabase;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
-import org.junit.rules.TemporaryFolder;
 
-public class RemoteAddOpTest {
+public class RemoteAddOpTest extends RepositoryTestCase {
 
     @Rule
     public ExpectedException exception = ExpectedException.none();
 
-    @Rule
-    public TemporaryFolder tempFolder = new TemporaryFolder();
-
-    TestPlatform testPlatform;
-
     @Before
-    public final void setUp() {
-        final File userhome = tempFolder.newFolder("testUserHomeDir");
-        final File workingDir = tempFolder.newFolder("testWorkingDir");
-        tempFolder.newFolder("testWorkingDir/.geogit");
-        testPlatform = new TestPlatform(workingDir);
-        testPlatform.setUserHome(userhome);
+    public final void setUpInternal() {
     }
 
     @Test
     public void testNullName() {
-        final RemoteAddOp remoteAdd = new RemoteAddOp(new IniConfigDatabase(testPlatform));
+        final RemoteAddOp remoteAdd = geogit.command(RemoteAddOp.class);
 
         exception.expect(RemoteException.class);
         remoteAdd.setName(null).setURL("http://test.com").call();
@@ -44,7 +29,7 @@ public class RemoteAddOpTest {
 
     @Test
     public void testEmptyName() {
-        final RemoteAddOp remoteAdd = new RemoteAddOp(new IniConfigDatabase(testPlatform));
+        final RemoteAddOp remoteAdd = geogit.command(RemoteAddOp.class);
 
         exception.expect(RemoteException.class);
         remoteAdd.setName("").setURL("http://test.com").call();
@@ -52,7 +37,7 @@ public class RemoteAddOpTest {
 
     @Test
     public void testNullURL() {
-        final RemoteAddOp remoteAdd = new RemoteAddOp(new IniConfigDatabase(testPlatform));
+        final RemoteAddOp remoteAdd = geogit.command(RemoteAddOp.class);
 
         exception.expect(RemoteException.class);
         remoteAdd.setName("myremote").setURL(null).call();
@@ -60,7 +45,7 @@ public class RemoteAddOpTest {
 
     @Test
     public void testEmptyURL() {
-        final RemoteAddOp remoteAdd = new RemoteAddOp(new IniConfigDatabase(testPlatform));
+        final RemoteAddOp remoteAdd = geogit.command(RemoteAddOp.class);
 
         exception.expect(RemoteException.class);
         remoteAdd.setName("myremote").setURL("").call();
@@ -68,7 +53,7 @@ public class RemoteAddOpTest {
 
     @Test
     public void testAddRemoteNullBranch() {
-        final RemoteAddOp remoteAdd = new RemoteAddOp(new IniConfigDatabase(testPlatform));
+        final RemoteAddOp remoteAdd = geogit.command(RemoteAddOp.class);
 
         String remoteName = "myremote";
         String remoteURL = "http://test.com";
@@ -83,7 +68,7 @@ public class RemoteAddOpTest {
 
     @Test
     public void testAddRemoteEmptyBranch() {
-        final RemoteAddOp remoteAdd = new RemoteAddOp(new IniConfigDatabase(testPlatform));
+        final RemoteAddOp remoteAdd = geogit.command(RemoteAddOp.class);
 
         String remoteName = "myremote";
         String remoteURL = "http://test.com";
@@ -98,7 +83,7 @@ public class RemoteAddOpTest {
 
     @Test
     public void testAddRemoteWithBranch() {
-        final RemoteAddOp remoteAdd = new RemoteAddOp(new IniConfigDatabase(testPlatform));
+        final RemoteAddOp remoteAdd = geogit.command(RemoteAddOp.class);
 
         String remoteName = "myremote";
         String remoteURL = "http://test.com";
@@ -115,7 +100,7 @@ public class RemoteAddOpTest {
 
     @Test
     public void testAddRemoteThatExists() {
-        final RemoteAddOp remoteAdd = new RemoteAddOp(new IniConfigDatabase(testPlatform));
+        final RemoteAddOp remoteAdd = geogit.command(RemoteAddOp.class);
 
         String remoteName = "myremote";
         String remoteURL = "http://test.com";
@@ -133,7 +118,7 @@ public class RemoteAddOpTest {
 
     @Test
     public void testAddMultipleRemotes() {
-        final RemoteAddOp remoteAdd = new RemoteAddOp(new IniConfigDatabase(testPlatform));
+        final RemoteAddOp remoteAdd = geogit.command(RemoteAddOp.class);
 
         String remoteName1 = "myremote";
         String remoteURL1 = "http://test.com";
@@ -158,7 +143,7 @@ public class RemoteAddOpTest {
 
     @Test
     public void testAccessorsAndMutators() {
-        final RemoteAddOp remoteAdd = new RemoteAddOp(new IniConfigDatabase(testPlatform));
+        final RemoteAddOp remoteAdd = geogit.command(RemoteAddOp.class);
 
         String remoteName = "myremote";
         String remoteURL = "http://test.com";

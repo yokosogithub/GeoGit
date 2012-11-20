@@ -4,12 +4,25 @@
  */
 package org.geogit.api.porcelain;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
 import org.geogit.api.AbstractGeoGitOp;
-import org.geogit.api.Platform;
+import org.geogit.api.Ref;
+import org.geogit.api.Remote;
+import org.geogit.api.SymRef;
+import org.geogit.api.plumbing.ForEachRef;
+import org.geogit.api.plumbing.RefParse;
+import org.geogit.remote.IRemoteRepo;
+import org.geogit.remote.RemoteUtils;
+import org.geogit.repository.Repository;
 
+import com.google.common.base.Optional;
+import com.google.common.base.Preconditions;
+import com.google.common.base.Predicate;
+import com.google.common.base.Supplier;
+import com.google.common.base.Throwables;
 import com.google.inject.Inject;
 
 /**
@@ -19,22 +32,20 @@ public class PushOp extends AbstractGeoGitOp<Void> {
 
     private boolean all;
 
-    private boolean rebase;
-
-    private String repository;
-
     private List<String> refSpecs = new ArrayList<String>();
 
-    private final Platform platform;
+    private Supplier<Optional<Remote>> remote;
+
+    private Repository localRepository;
 
     /**
-     * Constructs a new {@code PushOp} with the given parameters.
+     * Constructs a new {@code PushOp} with the provided parameters.
      * 
-     * @param platform the current platform
+     * @param localRepository the local geogit repository
      */
     @Inject
-    public PushOp(final Platform platform) {
-        this.platform = platform;
+    public PushOp(final Repository localRepository) {
+        this.localRepository = localRepository;
     }
 
     /**
@@ -70,19 +81,23 @@ public class PushOp extends AbstractGeoGitOp<Void> {
     }
 
     /**
-     * @param repository the repository to push to
+     * @param remoteName the name or URL of a remote repository to push to
      * @return {@code this}
      */
-    public PushOp setRepository(final String repository) {
-        this.repository = repository;
-        return this;
+    public PushOp setRemote(final String remoteName) {
+        Preconditions.checkNotNull(remoteName);
+        return setRemote(command(RemoteResolve.class).setName(remoteName));
     }
 
     /**
-     * @return the repository to push to
+     * @param remoteSupplier a supplier for the remote repository to push to
+     * @return {@code this}
      */
-    public String getRepository() {
-        return repository;
+    public PushOp setRemote(Supplier<Optional<Remote>> remoteSupplier) {
+        Preconditions.checkNotNull(remoteSupplier);
+        remote = remoteSupplier;
+
+        return this;
     }
 
     /**
@@ -92,6 +107,64 @@ public class PushOp extends AbstractGeoGitOp<Void> {
      * @see org.geogit.api.AbstractGeoGitOp#call()
      */
     public Void call() {
+        if (remote == null) {
+            setRemote("origin");
+        }
+
+        Optional<Remote> pushRemote = remote.get();
+
+        Preconditions.checkArgument(pushRemote.isPresent(), "Remote could not be resolved.");
+
+        if (refSpecs.size() > 0) {
+            throw new UnsupportedOperationException("Pull does not currently handle ref specs.");
+        } else {
+            List<Ref> refsToPush = new ArrayList<Ref>();
+            if (all) {
+                Predicate<Ref> filter = new Predicate<Ref>() {
+                    final String prefix = Ref.HEADS_PREFIX;
+
+                    @Override
+                    public boolean apply(Ref input) {
+                        return input.getName().startsWith(prefix);
+                    }
+                };
+                refsToPush.addAll(command(ForEachRef.class).setFilter(filter).call());
+            } else {
+                // push current branch
+                final Optional<Ref> currHead = command(RefParse.class).setName(Ref.HEAD).call();
+                Preconditions.checkState(currHead.isPresent(),
+                        "Repository has no HEAD, can't push.");
+                Preconditions.checkState(currHead.get() instanceof SymRef,
+                        "Can't push from detached HEAD");
+                final SymRef headRef = (SymRef) currHead.get();
+                final Optional<Ref> targetRef = command(RefParse.class)
+                        .setName(headRef.getTarget()).call();
+                Preconditions.checkState(targetRef.isPresent());
+                refsToPush.add(targetRef.get());
+            }
+
+            Optional<IRemoteRepo> remoteRepo = RemoteUtils.newRemote(localRepository
+                    .getInjectorBuilder().get(), pushRemote.get());
+
+            if (remoteRepo.isPresent()) {
+                try {
+                    remoteRepo.get().open();
+                } catch (IOException e) {
+                    Throwables.propagate(e);
+                }
+
+                for (Ref ref : refsToPush) {
+                    remoteRepo.get().pushNewData(localRepository, ref);
+                }
+
+                try {
+                    remoteRepo.get().close();
+                } catch (IOException e) {
+                    Throwables.propagate(e);
+                }
+            }
+
+        }
 
         return null;
     }

@@ -105,12 +105,12 @@ public class PullOp extends AbstractGeoGitOp<Void> {
         command(FetchOp.class).addRemote(remote).setAll(all).call();
 
         if (refSpecs.size() > 0) {
-
+            throw new UnsupportedOperationException("Pull does not currently handle ref specs.");
         } else {
 
             // pull current branch
             final Optional<Ref> currHead = command(RefParse.class).setName(Ref.HEAD).call();
-            Preconditions.checkState(currHead.isPresent(), "Repository has no HEAD, can't rebase.");
+            Preconditions.checkState(currHead.isPresent(), "Repository has no HEAD, can't pull.");
             Preconditions.checkState(currHead.get() instanceof SymRef,
                     "Can't pull from detached HEAD");
             final SymRef headRef = (SymRef) currHead.get();

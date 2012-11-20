@@ -5,51 +5,36 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
-import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.geogit.api.Platform;
-import org.geogit.api.TestPlatform;
 import org.geogit.api.porcelain.ConfigException;
 import org.geogit.api.porcelain.ConfigOp;
 import org.geogit.api.porcelain.ConfigOp.ConfigAction;
-import org.geogit.storage.fs.IniConfigDatabase;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
-import org.junit.rules.TemporaryFolder;
 
 import com.google.common.base.Optional;
 
 // TODO: Not sure if this belongs in porcelain or integration
 
-public class ConfigOpTest {
+public class ConfigOpTest extends RepositoryTestCase {
     @Rule
     public ExpectedException exception = ExpectedException.none();
 
-    @Rule
-    public TemporaryFolder tempFolder = new TemporaryFolder();
-
-    TestPlatform testPlatform;
-
     @Before
-    public final void setUp() {
-        final File userhome = tempFolder.newFolder("testUserHomeDir");
-        final File workingDir = tempFolder.newFolder("testWorkingDir");
-        tempFolder.newFolder("testWorkingDir/.geogit");
-        testPlatform = new TestPlatform(workingDir);
-        testPlatform.setUserHome(userhome);
+    public final void setUpInternal() {
     }
 
     @After
-    public final void tearDown() {
+    public final void tearDownInternal() {
     }
 
-    private void test(Platform platform, boolean global) {
-        final ConfigOp config = new ConfigOp(new IniConfigDatabase(platform));
+    private void test(boolean global) {
+        final ConfigOp config = geogit.command(ConfigOp.class);
         config.setGlobal(global);
 
         config.setAction(ConfigAction.CONFIG_SET).setName("section.string").setValue("1").call();
@@ -102,17 +87,17 @@ public class ConfigOpTest {
 
     @Test
     public void testLocal() {
-        test(testPlatform, false);
+        test(false);
     }
 
     @Test
     public void testGlobal() {
-        test(testPlatform, true);
+        test(true);
     }
 
     @Test
     public void testNullNameValuePairForGet() {
-        final ConfigOp config = new ConfigOp(new IniConfigDatabase(testPlatform));
+        final ConfigOp config = geogit.command(ConfigOp.class);
 
         exception.expect(ConfigException.class);
         config.setGlobal(true).setAction(ConfigAction.CONFIG_GET).setName(null).setValue(null)
@@ -121,7 +106,7 @@ public class ConfigOpTest {
 
     @Test
     public void testEmptyNameAndValueForGet() {
-        final ConfigOp config = new ConfigOp(new IniConfigDatabase(testPlatform));
+        final ConfigOp config = geogit.command(ConfigOp.class);
 
         exception.expect(ConfigException.class);
         config.setGlobal(true).setAction(ConfigAction.CONFIG_GET).setName("").setValue("").call();
@@ -129,7 +114,7 @@ public class ConfigOpTest {
 
     @Test
     public void testEmptyNameAndValueForSet() {
-        final ConfigOp config = new ConfigOp(new IniConfigDatabase(testPlatform));
+        final ConfigOp config = geogit.command(ConfigOp.class);
 
         exception.expect(ConfigException.class);
         config.setGlobal(true).setAction(ConfigAction.CONFIG_SET).setName("").setValue("").call();
@@ -137,7 +122,7 @@ public class ConfigOpTest {
 
     @Test
     public void testEmptyNameForUnset() {
-        final ConfigOp config = new ConfigOp(new IniConfigDatabase(testPlatform));
+        final ConfigOp config = geogit.command(ConfigOp.class);
 
         exception.expect(ConfigException.class);
         config.setGlobal(true).setAction(ConfigAction.CONFIG_UNSET).setName("").setValue(null)
@@ -146,7 +131,7 @@ public class ConfigOpTest {
 
     @Test
     public void testEmptyNameForRemoveSection() {
-        final ConfigOp config = new ConfigOp(new IniConfigDatabase(testPlatform));
+        final ConfigOp config = geogit.command(ConfigOp.class);
 
         exception.expect(ConfigException.class);
         config.setGlobal(true).setAction(ConfigAction.CONFIG_REMOVE_SECTION).setName("").call();
@@ -154,7 +139,7 @@ public class ConfigOpTest {
 
     @Test
     public void testNoNameForSet() {
-        final ConfigOp config = new ConfigOp(new IniConfigDatabase(testPlatform));
+        final ConfigOp config = geogit.command(ConfigOp.class);
 
         exception.expect(ConfigException.class);
         config.setGlobal(true).setAction(ConfigAction.CONFIG_SET).setName(null).setValue(null)
@@ -163,7 +148,7 @@ public class ConfigOpTest {
 
     @Test
     public void testNoNameForUnset() {
-        final ConfigOp config = new ConfigOp(new IniConfigDatabase(testPlatform));
+        final ConfigOp config = geogit.command(ConfigOp.class);
 
         exception.expect(ConfigException.class);
         config.setGlobal(true).setAction(ConfigAction.CONFIG_UNSET).setName(null).setValue(null)
@@ -172,7 +157,7 @@ public class ConfigOpTest {
 
     @Test
     public void testNoNameForRemoveSection() {
-        final ConfigOp config = new ConfigOp(new IniConfigDatabase(testPlatform));
+        final ConfigOp config = geogit.command(ConfigOp.class);
 
         exception.expect(ConfigException.class);
         config.setGlobal(true).setAction(ConfigAction.CONFIG_REMOVE_SECTION).setName(null)
@@ -181,7 +166,7 @@ public class ConfigOpTest {
 
     @Test
     public void testRemovingMissingSection() {
-        final ConfigOp config = new ConfigOp(new IniConfigDatabase(testPlatform));
+        final ConfigOp config = geogit.command(ConfigOp.class);
 
         exception.expect(ConfigException.class);
         config.setGlobal(true).setAction(ConfigAction.CONFIG_REMOVE_SECTION)
@@ -190,7 +175,7 @@ public class ConfigOpTest {
 
     @Test
     public void testInvalidSectionKey() {
-        final ConfigOp config = new ConfigOp(new IniConfigDatabase(testPlatform));
+        final ConfigOp config = geogit.command(ConfigOp.class);
         Optional<Map<String, String>> result = config.setGlobal(true)
                 .setAction(ConfigAction.CONFIG_GET).setName("doesnt.exist").setValue(null).call();
         assertFalse(result.isPresent());
@@ -198,7 +183,7 @@ public class ConfigOpTest {
 
     @Test
     public void testTooManyArguments() {
-        final ConfigOp config = new ConfigOp(new IniConfigDatabase(testPlatform));
+        final ConfigOp config = geogit.command(ConfigOp.class);
 
         exception.expect(ConfigException.class);
         config.setGlobal(true).setAction(ConfigAction.CONFIG_GET).setName("too.many")
@@ -207,7 +192,7 @@ public class ConfigOpTest {
 
     @Test
     public void testAccessors() {
-        final ConfigOp config = new ConfigOp(new IniConfigDatabase(testPlatform));
+        final ConfigOp config = geogit.command(ConfigOp.class);
         config.setGlobal(true);
         assertTrue(config.getGlobal());
 
@@ -226,7 +211,7 @@ public class ConfigOpTest {
 
     @Test
     public void testNoAction() {
-        final ConfigOp config = new ConfigOp(new IniConfigDatabase(testPlatform));
+        final ConfigOp config = geogit.command(ConfigOp.class);
 
         exception.expect(ConfigException.class);
         config.setAction(ConfigAction.CONFIG_NO_ACTION).setName("section.key").setValue(null)
@@ -235,7 +220,7 @@ public class ConfigOpTest {
 
     @Test
     public void testFallback() {
-        final ConfigOp config = new ConfigOp(new IniConfigDatabase(testPlatform));
+        final ConfigOp config = geogit.command(ConfigOp.class);
 
         // Set a value in global config, then try to get value from local even though
         // we're not in a valid repository

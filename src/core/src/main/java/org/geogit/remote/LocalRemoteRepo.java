@@ -16,6 +16,7 @@ import org.geogit.api.RevTree;
 import org.geogit.api.plumbing.ForEachRef;
 import org.geogit.api.plumbing.RefParse;
 import org.geogit.api.plumbing.RevObjectParse;
+import org.geogit.api.plumbing.UpdateRef;
 import org.geogit.repository.Repository;
 import org.geogit.storage.ObjectInserter;
 import org.geogit.storage.ObjectWriter;
@@ -81,81 +82,88 @@ public class LocalRemoteRepo implements IRemoteRepo {
     @Override
     public void fetchNewData(Repository localRepository, Ref ref) {
         ObjectInserter objectInserter = localRepository.newObjectInserter();
-        walkCommit(ref.getObjectId(), localRepository, objectInserter);
+        walkCommit(ref.getObjectId(), remoteGeoGit.getRepository(), localRepository, objectInserter);
     }
 
-    private void walkCommit(ObjectId commitId, Repository localRepository,
+    @Override
+    public void pushNewData(Repository localRepository, Ref ref) {
+        ObjectInserter objectInserter = remoteGeoGit.getRepository().newObjectInserter();
+        walkCommit(ref.getObjectId(), localRepository, remoteGeoGit.getRepository(), objectInserter);
+        remoteGeoGit.command(UpdateRef.class).setName(ref.getName()).setNewValue(ref.getObjectId())
+                .call();
+    }
+
+    private void walkCommit(ObjectId commitId, Repository from, Repository to,
             ObjectInserter objectInserter) {
         // See if we already have it
-        if (localRepository.getObjectDatabase().exists(commitId)) {
+        if (to.getObjectDatabase().exists(commitId)) {
             return;
         }
 
-        Optional<RevObject> object = remoteGeoGit.command(RevObjectParse.class)
-                .setObjectId(commitId).call();
+        Optional<RevObject> object = from.command(RevObjectParse.class).setObjectId(commitId)
+                .call();
         if (object.isPresent() && object.get().getType().equals(TYPE.COMMIT)) {
             RevCommit commit = (RevCommit) object.get();
-            walkTree(commit.getTreeId(), localRepository, objectInserter);
+            walkTree(commit.getTreeId(), from, to, objectInserter);
 
-            objectInserter.insert(commit.getId(), localRepository.newCommitWriter(commit));
+            objectInserter.insert(commit.getId(), to.newCommitWriter(commit));
             for (ObjectId parentCommit : commit.getParentIds()) {
-                walkCommit(parentCommit, localRepository, objectInserter);
+                walkCommit(parentCommit, from, to, objectInserter);
             }
         }
     }
 
-    private void walkTree(ObjectId treeId, Repository localRepository, ObjectInserter objectInserter) {
+    private void walkTree(ObjectId treeId, Repository from, Repository to,
+            ObjectInserter objectInserter) {
         // See if we already have it
-        if (localRepository.getObjectDatabase().exists(treeId)) {
+        if (to.getObjectDatabase().exists(treeId)) {
             return;
         }
 
-        Optional<RevObject> object = remoteGeoGit.command(RevObjectParse.class).setObjectId(treeId)
-                .call();
+        Optional<RevObject> object = from.command(RevObjectParse.class).setObjectId(treeId).call();
         if (object.isPresent() && object.get().getType().equals(TYPE.TREE)) {
             RevTree tree = (RevTree) object.get();
 
-            objectInserter.insert(tree.getId(), localRepository.newRevTreeWriter(tree));
+            objectInserter.insert(tree.getId(), to.newRevTreeWriter(tree));
             // walk subtrees
             if (tree.buckets().isPresent()) {
                 for (ObjectId bucketId : tree.buckets().get().values()) {
-                    walkTree(bucketId, localRepository, objectInserter);
+                    walkTree(bucketId, from, to, objectInserter);
                 }
             }
             // get new objects
             if (tree.children().isPresent()) {
                 for (NodeRef ref : tree.children().get()) {
-                    moveObject(ref.getObjectId(), localRepository, objectInserter);
+                    moveObject(ref.getObjectId(), from, to, objectInserter);
                     if (!ref.getMetadataId().isNull()) {
-                        moveObject(ref.getMetadataId(), localRepository, objectInserter);
+                        moveObject(ref.getMetadataId(), from, to, objectInserter);
                     }
                 }
             }
         }
     }
 
-    private void moveObject(ObjectId objectId, Repository localRepository,
+    private void moveObject(ObjectId objectId, Repository from, Repository to,
             ObjectInserter objectInserter) {
         // See if we already have it
-        if (localRepository.getObjectDatabase().exists(objectId)) {
+        if (to.getObjectDatabase().exists(objectId)) {
             return;
         }
 
-        Optional<RevObject> childObject = remoteGeoGit.command(RevObjectParse.class)
-                .setObjectId(objectId).call();
+        Optional<RevObject> childObject = from.command(RevObjectParse.class).setObjectId(objectId)
+                .call();
         if (childObject.isPresent()) {
             ObjectWriter<? extends RevObject> objectWriter = null;
             switch (childObject.get().getType()) {
             case TREE:
-                walkTree(objectId, localRepository, objectInserter);
-                objectWriter = localRepository.newRevTreeWriter((RevTree) childObject.get());
+                walkTree(objectId, from, to, objectInserter);
+                objectWriter = to.newRevTreeWriter((RevTree) childObject.get());
                 break;
             case FEATURE:
-                objectWriter = localRepository.newFeatureWriter((RevFeature) childObject.get());
+                objectWriter = to.newFeatureWriter((RevFeature) childObject.get());
                 break;
             case FEATURETYPE:
-                objectWriter = localRepository.newFeatureTypeWriter((RevFeatureType) childObject
-                        .get());
+                objectWriter = to.newFeatureTypeWriter((RevFeatureType) childObject.get());
                 break;
             default:
                 break;

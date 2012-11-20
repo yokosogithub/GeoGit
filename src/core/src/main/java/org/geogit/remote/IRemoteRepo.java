@@ -34,4 +34,6 @@ public interface IRemoteRepo {
     public Ref headRef();
 
     public void fetchNewData(Repository localRepository, Ref ref);
+
+    public void pushNewData(Repository localRepository, Ref ref);
 }

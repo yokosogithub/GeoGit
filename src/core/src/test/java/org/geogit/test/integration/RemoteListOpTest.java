@@ -3,44 +3,29 @@ package org.geogit.test.integration;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
-import java.io.File;
-
 import org.geogit.api.Remote;
-import org.geogit.api.TestPlatform;
 import org.geogit.api.porcelain.ConfigOp;
 import org.geogit.api.porcelain.ConfigOp.ConfigAction;
 import org.geogit.api.porcelain.RemoteAddOp;
 import org.geogit.api.porcelain.RemoteListOp;
-import org.geogit.storage.fs.IniConfigDatabase;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
-import org.junit.rules.TemporaryFolder;
 
 import com.google.common.collect.ImmutableList;
 
-public class RemoteListOpTest {
+public class RemoteListOpTest extends RepositoryTestCase {
     @Rule
     public ExpectedException exception = ExpectedException.none();
 
-    @Rule
-    public TemporaryFolder tempFolder = new TemporaryFolder();
-
-    TestPlatform testPlatform;
-
     @Before
-    public final void setUp() {
-        final File userhome = tempFolder.newFolder("testUserHomeDir");
-        final File workingDir = tempFolder.newFolder("testWorkingDir");
-        tempFolder.newFolder("testWorkingDir/.geogit");
-        testPlatform = new TestPlatform(workingDir);
-        testPlatform.setUserHome(userhome);
+    public final void setUpInternal() {
     }
 
     @Test
     public void testListNoRemotes() {
-        final RemoteListOp remoteList = new RemoteListOp(new IniConfigDatabase(testPlatform));
+        final RemoteListOp remoteList = geogit.command(RemoteListOp.class);
 
         ImmutableList<Remote> allRemotes = remoteList.call();
 
@@ -49,7 +34,7 @@ public class RemoteListOpTest {
 
     @Test
     public void testListMultipleRemotes() {
-        final RemoteAddOp remoteAdd = new RemoteAddOp(new IniConfigDatabase(testPlatform));
+        final RemoteAddOp remoteAdd = geogit.command(RemoteAddOp.class);
 
         String remoteName1 = "myremote";
         String remoteURL1 = "http://test.com";
@@ -73,7 +58,7 @@ public class RemoteListOpTest {
         assertEquals(remote.getFetch(), "+refs/heads/" + branch + ":refs/remotes/" + remoteName2
                 + "/" + branch);
 
-        final RemoteListOp remoteList = new RemoteListOp(new IniConfigDatabase(testPlatform));
+        final RemoteListOp remoteList = geogit.command(RemoteListOp.class);
 
         ImmutableList<Remote> allRemotes = remoteList.call();
 
@@ -103,7 +88,7 @@ public class RemoteListOpTest {
 
     @Test
     public void testListRemoteWithNoURL() {
-        final RemoteAddOp remoteAdd = new RemoteAddOp(new IniConfigDatabase(testPlatform));
+        final RemoteAddOp remoteAdd = geogit.command(RemoteAddOp.class);
 
         String remoteName = "myremote";
         String remoteURL = "http://test.com";
@@ -115,10 +100,10 @@ public class RemoteListOpTest {
         assertEquals(remote.getPushURL(), remoteURL);
         assertEquals(remote.getFetch(), "+refs/heads/*:refs/remotes/" + remoteName + "/*");
 
-        final ConfigOp config = new ConfigOp(new IniConfigDatabase(testPlatform));
+        final ConfigOp config = geogit.command(ConfigOp.class);
         config.setAction(ConfigAction.CONFIG_UNSET).setName("remote." + remoteName + ".url").call();
 
-        final RemoteListOp remoteList = new RemoteListOp(new IniConfigDatabase(testPlatform));
+        final RemoteListOp remoteList = geogit.command(RemoteListOp.class);
 
         ImmutableList<Remote> allRemotes = remoteList.call();
 
@@ -127,7 +112,7 @@ public class RemoteListOpTest {
 
     @Test
     public void testListRemoteWithNoFetch() {
-        final RemoteAddOp remoteAdd = new RemoteAddOp(new IniConfigDatabase(testPlatform));
+        final RemoteAddOp remoteAdd = geogit.command(RemoteAddOp.class);
 
         String remoteName = "myremote";
         String remoteURL = "http://test.com";
@@ -139,11 +124,11 @@ public class RemoteListOpTest {
         assertEquals(remote.getPushURL(), remoteURL);
         assertEquals(remote.getFetch(), "+refs/heads/*:refs/remotes/" + remoteName + "/*");
 
-        final ConfigOp config = new ConfigOp(new IniConfigDatabase(testPlatform));
+        final ConfigOp config = geogit.command(ConfigOp.class);
         config.setAction(ConfigAction.CONFIG_UNSET).setName("remote." + remoteName + ".fetch")
                 .call();
 
-        final RemoteListOp remoteList = new RemoteListOp(new IniConfigDatabase(testPlatform));
+        final RemoteListOp remoteList = geogit.command(RemoteListOp.class);
 
         ImmutableList<Remote> allRemotes = remoteList.call();
 
