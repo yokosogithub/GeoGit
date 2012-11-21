@@ -104,7 +104,7 @@ public class HessianSimpleFeatureTypeWriter implements ObjectWriter<RevFeatureTy
         Name typeName = attrType.getName();
         hout.writeString(typeName.getNamespaceURI() == null ? "" : typeName.getNamespaceURI());
         hout.writeString(typeName.getLocalPart());
-        if (type.equals(GtEntityType.GEOMETRY) && attrType instanceof GeometryType) {
+        if (type.isGeometry() && attrType instanceof GeometryType) {
             GeometryType gt = (GeometryType) attrType;
             hout.writeObject(gt.getBinding());
             CoordinateReferenceSystem crs = gt.getCoordinateReferenceSystem();

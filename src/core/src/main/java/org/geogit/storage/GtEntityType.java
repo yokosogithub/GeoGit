@@ -79,6 +79,10 @@ public enum GtEntityType implements Serializable {
         return this.value;
     }
 
+    public boolean isGeometry() {
+        return binding != null && Geometry.class.isAssignableFrom(binding);
+    }
+
     /**
      * @return the actual class of the enumerated type
      */

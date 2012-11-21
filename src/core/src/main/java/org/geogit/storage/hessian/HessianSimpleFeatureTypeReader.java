@@ -126,7 +126,7 @@ public class HessianSimpleFeatureTypeReader implements ObjectReader<RevFeatureTy
         String tName = hin.readString();
         String crsText = null;
         boolean crsCode = false;
-        if (GtEntityType.GEOMETRY.equals(type)) {
+        if (type.isGeometry()) {
             Object bObj = hin.readObject();
             if (bObj instanceof Class) {
                 binding = (Class) bObj;
@@ -150,7 +150,7 @@ public class HessianSimpleFeatureTypeReader implements ObjectReader<RevFeatureTy
 
         AttributeType attributeType;
         AttributeDescriptor attributeDescriptor;
-        if (GtEntityType.GEOMETRY.equals(type)) {
+        if (type.isGeometry()) {
             CoordinateReferenceSystem crs;
             if (crsCode) {
                 if ("urn:ogc:def:crs:EPSG::0".equals(crsText)) {
