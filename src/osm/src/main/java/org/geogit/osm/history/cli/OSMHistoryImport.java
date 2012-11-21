@@ -50,12 +50,13 @@ import org.geogit.repository.WorkingTree;
 import org.geogit.storage.ObjectReader;
 import org.geogit.storage.ObjectSerialisingFactory;
 import org.geotools.data.DataUtilities;
-import org.geotools.feature.SchemaException;
 import org.geotools.feature.simple.SimpleFeatureBuilder;
+import org.geotools.referencing.CRS;
 import org.opengis.feature.Feature;
 import org.opengis.feature.simple.SimpleFeature;
 import org.opengis.feature.simple.SimpleFeatureType;
 import org.opengis.feature.type.Name;
+import org.opengis.referencing.crs.CoordinateReferenceSystem;
 import org.opengis.util.ProgressListener;
 
 import com.beust.jcommander.Parameters;
@@ -416,10 +417,14 @@ public class OSMHistoryImport extends AbstractCommand implements CLICommand {
 
     private synchronized static SimpleFeatureType nodeType() {
         if (NodeType == null) {
-            String typeSpec = "visible:Boolean,version:Integer,timestamp:java.lang.Long,location:Point:4326";
+            String typeSpec = "visible:Boolean,version:Integer,timestamp:java.lang.Long,location:Point:srid=4326";
             try {
-                NodeType = DataUtilities.createType(NAMESPACE, NODE_TYPE_NAME, typeSpec);
-            } catch (SchemaException e) {
+                SimpleFeatureType type = DataUtilities.createType(NAMESPACE, NODE_TYPE_NAME,
+                        typeSpec);
+                boolean longitudeFirst = true;
+                CoordinateReferenceSystem forceLonLat = CRS.decode("EPSG:4326", longitudeFirst);
+                NodeType = DataUtilities.createSubType(type, null, forceLonLat);
+            } catch (Exception e) {
                 throw Throwables.propagate(e);
             }
         }
@@ -428,10 +433,14 @@ public class OSMHistoryImport extends AbstractCommand implements CLICommand {
 
     private synchronized static SimpleFeatureType wayType() {
         if (WayType == null) {
-            String typeSpec = "visible:Boolean,version:Integer,timestamp:java.lang.Long,way:LineString:4326";
+            String typeSpec = "visible:Boolean,version:Integer,timestamp:java.lang.Long,way:LineString:srid=4326";
             try {
-                WayType = DataUtilities.createType(NAMESPACE, NODE_TYPE_NAME, typeSpec);
-            } catch (SchemaException e) {
+                SimpleFeatureType type = DataUtilities.createType(NAMESPACE, NODE_TYPE_NAME,
+                        typeSpec);
+                boolean longitudeFirst = true;
+                CoordinateReferenceSystem forceLonLat = CRS.decode("EPSG:4326", longitudeFirst);
+                WayType = DataUtilities.createSubType(type, null, forceLonLat);
+            } catch (Exception e) {
                 throw Throwables.propagate(e);
             }
         }

@@ -21,6 +21,9 @@ public class Node extends Primitive {
         return Optional.fromNullable(location);
     }
 
+    /**
+     * @param location point location, in lon/lat ordinate order
+     */
     void setLocation(Point location) {
         this.location = location;
     }
