@@ -139,8 +139,7 @@ public class FetchOp extends AbstractGeoGitOp<Void> {
                 }
             }
 
-            Optional<IRemoteRepo> remoteRepo = RemoteUtils.newRemote(localRepository
-                    .getInjectorBuilder().get(), remote);
+            Optional<IRemoteRepo> remoteRepo = getRemoteRepo(remote);
 
             if (remoteRepo.isPresent()) {
                 try {
@@ -171,6 +170,10 @@ public class FetchOp extends AbstractGeoGitOp<Void> {
         }
 
         return null;
+    }
+
+    public Optional<IRemoteRepo> getRemoteRepo(Remote remote) {
+        return RemoteUtils.newRemote(localRepository.getInjectorBuilder().get(), remote);
     }
 
     private void updateLocalRef(Ref remoteRef, Remote remote, ImmutableSet<Ref> localRemoteRefs) {

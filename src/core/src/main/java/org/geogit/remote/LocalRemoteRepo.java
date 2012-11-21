@@ -40,10 +40,16 @@ public class LocalRemoteRepo implements IRemoteRepo {
         this.workingDirectory = workingDirectory;
     }
 
+    public void setGeoGit(GeoGIT geogit) {
+        this.remoteGeoGit = geogit;
+    }
+
     @Override
     public void open() throws IOException {
-        remoteGeoGit = new GeoGIT(injector, workingDirectory);
-        remoteGeoGit.getRepository();
+        if (remoteGeoGit == null) {
+            remoteGeoGit = new GeoGIT(injector, workingDirectory);
+            remoteGeoGit.getRepository();
+        }
 
     }
 

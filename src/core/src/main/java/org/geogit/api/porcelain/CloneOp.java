@@ -27,7 +27,7 @@ import com.google.inject.Inject;
  */
 public class CloneOp extends AbstractGeoGitOp<Void> {
 
-    private Optional<String> branch;
+    private Optional<String> branch = Optional.absent();
 
     private String repositoryURL;
 

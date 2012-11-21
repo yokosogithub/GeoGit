@@ -89,8 +89,7 @@ public class LsRemote extends AbstractGeoGitOp<ImmutableSet<Ref>> {
             return locallyKnownRefs(remoteConfig);
         }
         getProgressListener().setDescription("Obtaining remote " + remoteConfig.getName());
-        Optional<IRemoteRepo> remoteRepo = RemoteUtils.newRemote(localRepository
-                .getInjectorBuilder().get(), remoteConfig);
+        Optional<IRemoteRepo> remoteRepo = getRemoteRepo(remoteConfig);
         Preconditions.checkState(remoteRepo.isPresent(), "Remote could not be opened.");
         getProgressListener().setDescription("Connecting to remote " + remoteConfig.getName());
         try {
@@ -111,6 +110,10 @@ public class LsRemote extends AbstractGeoGitOp<ImmutableSet<Ref>> {
             }
         }
         return remoteRefs;
+    }
+
+    public Optional<IRemoteRepo> getRemoteRepo(Remote remote) {
+        return RemoteUtils.newRemote(localRepository.getInjectorBuilder().get(), remote);
     }
 
     /**
