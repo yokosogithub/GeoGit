@@ -12,6 +12,7 @@ import org.geogit.api.RevFeatureType;
 import org.geogit.storage.GtEntityType;
 import org.geogit.storage.ObjectWriter;
 import org.geotools.referencing.CRS;
+import org.geotools.referencing.CRS.AxisOrder;
 import org.geotools.referencing.wkt.Formattable;
 import org.opengis.feature.simple.SimpleFeatureType;
 import org.opengis.feature.type.AttributeDescriptor;
@@ -112,7 +113,17 @@ public class HessianSimpleFeatureTypeWriter implements ObjectWriter<RevFeatureTy
             if (crs == null) {
                 srsName = "urn:ogc:def:crs:EPSG::0";
             } else {
-                srsName = CRS.toSRS(crs);
+                // use a flag to control whether the code is returned in EPSG: form instead of
+                // urn:ogc:.. form irrespective of the org.geotools.referencing.forceXY System
+                // property.
+                final boolean longitudeFisrt = CRS.getAxisOrder(crs, false) == AxisOrder.EAST_NORTH;
+                boolean codeOnly = true;
+                String crsCode = CRS.toSRS(crs, codeOnly);
+                if (crsCode != null) {
+                    srsName = (longitudeFisrt ? "EPSG:" : "urn:ogc:def:crs:EPSG::") + crsCode;
+                } else {
+                    srsName = null;
+                }
             }
             if (srsName != null) {
                 hout.writeBoolean(true);

@@ -156,7 +156,8 @@ public class HessianSimpleFeatureTypeReader implements ObjectReader<RevFeatureTy
                 if ("urn:ogc:def:crs:EPSG::0".equals(crsText)) {
                     crs = null;
                 } else {
-                    crs = CRS.decode(crsText);
+                    boolean forceLongitudeFirst = crsText.startsWith("EPSG:");
+                    crs = CRS.decode(crsText, forceLongitudeFirst);
                 }
             } else {
                 crs = CRS.parseWKT(crsText);
