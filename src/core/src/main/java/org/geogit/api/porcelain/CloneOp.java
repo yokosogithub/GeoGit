@@ -48,26 +48,12 @@ public class CloneOp extends AbstractGeoGitOp<Void> {
     }
 
     /**
-     * @return the URL of the repository to clone.
-     */
-    public String getRepositoryURL() {
-        return repositoryURL;
-    }
-
-    /**
      * @param branch the branch to checkout when the clone is complete
      * @return {@code this}
      */
     public CloneOp setBranch(@Nullable String branch) {
         this.branch = Optional.fromNullable(branch);
         return this;
-    }
-
-    /**
-     * @return the branch to checkout when the clone is complete.
-     */
-    public Optional<String> getBranch() {
-        return branch;
     }
 
     /**
@@ -90,7 +76,12 @@ public class CloneOp extends AbstractGeoGitOp<Void> {
         final ImmutableSet<Ref> remoteRefs = command(LsRemote.class).setRemote(
                 Suppliers.ofInstance(Optional.of(remote))).call();
 
+        boolean emptyRepo = true;
+
         for (Ref remoteRef : remoteRefs) {
+            if (emptyRepo && !remoteRef.getObjectId().isNull()) {
+                emptyRepo = false;
+            }
             String branchName = remoteRef.localName();
             if (!command(RefParse.class).setName(remoteRef.getName()).call().isPresent()) {
                 command(BranchCreateOp.class).setName(branchName)
@@ -109,21 +100,23 @@ public class CloneOp extends AbstractGeoGitOp<Void> {
                     .call();
         }
 
-        // checkout branch
-        if (branch.isPresent()) {
-            command(CheckoutOp.class).setForce(true).setSource(branch.get()).call();
-        } else {
-            // checkout the head
-            final Optional<Ref> currRemoteHead = command(RefParse.class).setName(
-                    Ref.REMOTES_PREFIX + remote.getName() + "/" + Ref.HEAD).call();
-            Preconditions.checkState(currRemoteHead.isPresent(), "No remote HEAD.");
-            Preconditions.checkState(currRemoteHead.get() instanceof SymRef,
-                    "Remote HEAD is detached." + currRemoteHead.get().toString());
-            final SymRef remoteHeadRef = (SymRef) currRemoteHead.get();
-            final String currentBranch = Ref.localName(remoteHeadRef.getTarget());
+        if (!emptyRepo) {
+            // checkout branch
+            if (branch.isPresent()) {
+                command(CheckoutOp.class).setForce(true).setSource(branch.get()).call();
+            } else {
+                // checkout the head
+                final Optional<Ref> currRemoteHead = command(RefParse.class).setName(
+                        Ref.REMOTES_PREFIX + remote.getName() + "/" + Ref.HEAD).call();
+                Preconditions.checkState(currRemoteHead.isPresent(), "No remote HEAD.");
+                Preconditions.checkState(currRemoteHead.get() instanceof SymRef,
+                        "Remote HEAD is detached." + currRemoteHead.get().toString());
+                final SymRef remoteHeadRef = (SymRef) currRemoteHead.get();
+                final String currentBranch = Ref.localName(remoteHeadRef.getTarget());
 
-            command(CheckoutOp.class).setForce(true).setSource(currentBranch).call();
+                command(CheckoutOp.class).setForce(true).setSource(currentBranch).call();
 
+            }
         }
 
         return null;

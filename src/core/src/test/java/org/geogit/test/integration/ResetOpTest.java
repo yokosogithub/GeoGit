@@ -305,4 +305,10 @@ public class ResetOpTest extends RepositoryTestCase {
 
     }
 
+    @Test
+    public void testEnum() throws Exception {
+        ResetMode.values();
+        assertEquals(ResetMode.valueOf("HARD"), ResetMode.HARD);
+    }
+
 }

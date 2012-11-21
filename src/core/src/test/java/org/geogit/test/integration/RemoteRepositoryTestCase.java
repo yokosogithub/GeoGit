@@ -7,8 +7,8 @@ package org.geogit.test.integration;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
-import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
 
@@ -35,9 +35,10 @@ import org.geogit.api.porcelain.CommitOp;
 import org.geogit.api.porcelain.ConfigOp;
 import org.geogit.api.porcelain.ConfigOp.ConfigAction;
 import org.geogit.api.porcelain.FetchOp;
+import org.geogit.api.porcelain.PullOp;
+import org.geogit.api.porcelain.PushOp;
 import org.geogit.remote.IRemoteRepo;
 import org.geogit.remote.LocalRemoteRepo;
-import org.geogit.remote.RemoteUtils;
 import org.geogit.repository.Repository;
 import org.geogit.repository.WorkingTree;
 import org.geotools.data.DataUtilities;
@@ -235,6 +236,30 @@ public abstract class RemoteRepositoryTestCase {
         when(clone.command(LsRemote.class)).thenReturn(lsRemote);
 
         return clone;
+    }
+
+    protected PullOp pull() {
+        PullOp pull = spy(localGeogit.geogit.command(PullOp.class));
+        FetchOp fetch = fetch();
+        when(pull.command(FetchOp.class)).thenReturn(fetch);
+
+        LsRemote lsRemote = lsremote();
+        when(pull.command(LsRemote.class)).thenReturn(lsRemote);
+
+        return pull;
+    }
+
+    protected PushOp push() {
+        PushOp push = spy(localGeogit.geogit.command(PushOp.class));
+        doReturn(Optional.of(remoteRepo)).when(push).getRemoteRepo(any(Remote.class));
+
+        FetchOp fetch = fetch();
+        when(push.command(FetchOp.class)).thenReturn(fetch);
+
+        LsRemote lsRemote = lsremote();
+        when(push.command(LsRemote.class)).thenReturn(lsRemote);
+
+        return push;
     }
 
     @After

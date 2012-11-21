@@ -85,8 +85,9 @@ public class FetchOp extends AbstractGeoGitOp<Void> {
     public FetchOp addRemote(Supplier<Optional<Remote>> remoteSupplier) {
         Preconditions.checkNotNull(remoteSupplier);
         Optional<Remote> remote = remoteSupplier.get();
-        Preconditions.checkState(remote.isPresent(), "Remote could not be resolved.");
-        remotes.add(remote.get());
+        if (remote.isPresent()) {
+            remotes.add(remote.get());
+        }
 
         return this;
     }
@@ -126,7 +127,7 @@ public class FetchOp extends AbstractGeoGitOp<Void> {
                 // Delete local refs that aren't in the remote
                 List<Ref> locals = new ArrayList<Ref>();
                 for (Ref remoteRef : remoteRemoteRefs) {
-                    Optional<Ref> localRef = findLocal(remote, remoteRef, localRemoteRefs);
+                    Optional<Ref> localRef = findLocal(remoteRef, localRemoteRefs);
                     if (localRef.isPresent()) {
                         locals.add(localRef.get());
                     }
@@ -141,32 +142,30 @@ public class FetchOp extends AbstractGeoGitOp<Void> {
 
             Optional<IRemoteRepo> remoteRepo = getRemoteRepo(remote);
 
-            if (remoteRepo.isPresent()) {
-                try {
-                    remoteRepo.get().open();
-                } catch (IOException e) {
-                    Throwables.propagate(e);
-                }
-                for (Ref ref : needUpdate) {
-                    // Fetch updated data from this ref
-                    remoteRepo.get().fetchNewData(localRepository, ref);
+            Preconditions.checkState(remoteRepo.isPresent(), "Failed to connect to the remote.");
+            try {
+                remoteRepo.get().open();
+            } catch (IOException e) {
+                Throwables.propagate(e);
+            }
+            for (Ref ref : needUpdate) {
+                // Fetch updated data from this ref
+                remoteRepo.get().fetchNewData(localRepository, ref);
 
-                    // Update the ref
-                    updateLocalRef(ref, remote, localRemoteRefs);
-                }
-
-                // Update HEAD ref
-                Ref remoteHead = remoteRepo.get().headRef();
-
-                updateLocalRef(remoteHead, remote, localRemoteRefs);
-
-                try {
-                    remoteRepo.get().close();
-                } catch (IOException e) {
-                    Throwables.propagate(e);
-                }
+                // Update the ref
+                updateLocalRef(ref, remote, localRemoteRefs);
             }
 
+            // Update HEAD ref
+            Ref remoteHead = remoteRepo.get().headRef();
+
+            updateLocalRef(remoteHead, remote, localRemoteRefs);
+
+            try {
+                remoteRepo.get().close();
+            } catch (IOException e) {
+                Throwables.propagate(e);
+            }
         }
 
         return null;
@@ -198,7 +197,7 @@ public class FetchOp extends AbstractGeoGitOp<Void> {
 
         for (Ref remoteRef : remoteRefs) {// refs/heads/xxx or refs/tags/yyy, though we don't handle
                                           // tags yet
-            Optional<Ref> local = findLocal(remote, remoteRef, localRemoteRefs);
+            Optional<Ref> local = findLocal(remoteRef, localRemoteRefs);
             if (local.isPresent()) {
                 if (!local.get().getObjectId().equals(remoteRef.getObjectId())) {
                     outdatedOrMissing.add(remoteRef);
@@ -213,20 +212,15 @@ public class FetchOp extends AbstractGeoGitOp<Void> {
     /**
      * Finds the corresponding local reference in {@code localRemoteRefs} for the given remote ref
      * 
-     * @param remote the remote
      * @param remoteRef a ref in the {@code refs/heads} or {@code refs/tags} namespace as given by
      *        {@link LsRemote} when querying a remote repository
-     * @param the list of locally known references of the given remote in the
+     * @param localRemoteRefs the list of locally known references of the given remote in the
      *        {@code refs/remotes/<remote name>/} namespace
      */
-    private Optional<Ref> findLocal(Remote remote, Ref remoteRef, ImmutableSet<Ref> localRemoteRefs) {
-        final String remoteName = remote.getName();
-        final String prefix = Ref.REMOTES_PREFIX + remoteName + "/";
+    private Optional<Ref> findLocal(Ref remoteRef, ImmutableSet<Ref> localRemoteRefs) {
         for (Ref localRef : localRemoteRefs) {
-            if (localRef.getName().startsWith(prefix)) {
-                if (localRef.localName().equals(remoteRef.localName())) {
-                    return Optional.of(localRef);
-                }
+            if (localRef.localName().equals(remoteRef.localName())) {
+                return Optional.of(localRef);
             }
         }
         return Optional.absent();

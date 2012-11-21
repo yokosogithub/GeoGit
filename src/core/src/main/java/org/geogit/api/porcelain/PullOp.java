@@ -127,6 +127,8 @@ public class PullOp extends AbstractGeoGitOp<Void> {
             if (rebase) {
                 command(RebaseOp.class).setUpstream(
                         Suppliers.ofInstance(upstream.get().getObjectId())).call();
+            } else {
+                throw new UnsupportedOperationException("Merge pull is current unsupported.");
             }
 
         }

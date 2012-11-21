@@ -58,26 +58,12 @@ public class PushOp extends AbstractGeoGitOp<Void> {
     }
 
     /**
-     * @return whether or not the op is configured to push all refs
-     */
-    public boolean getAll() {
-        return all;
-    }
-
-    /**
      * @param refSpec the refspec of a remote branch
      * @return {@code this}
      */
     public PushOp addRefSpec(final String refSpec) {
         refSpecs.add(refSpec);
         return this;
-    }
-
-    /**
-     * @return the list of refspecs to push
-     */
-    public List<String> getRefSpecs() {
-        return refSpecs;
     }
 
     /**
@@ -143,29 +129,32 @@ public class PushOp extends AbstractGeoGitOp<Void> {
                 refsToPush.add(targetRef.get());
             }
 
-            Optional<IRemoteRepo> remoteRepo = RemoteUtils.newRemote(localRepository
-                    .getInjectorBuilder().get(), pushRemote.get());
+            Optional<IRemoteRepo> remoteRepo = getRemoteRepo(pushRemote.get());
 
-            if (remoteRepo.isPresent()) {
-                try {
-                    remoteRepo.get().open();
-                } catch (IOException e) {
-                    Throwables.propagate(e);
-                }
+            Preconditions.checkState(remoteRepo.isPresent(), "Failed to connect to the remote.");
 
-                for (Ref ref : refsToPush) {
-                    remoteRepo.get().pushNewData(localRepository, ref);
-                }
+            try {
+                remoteRepo.get().open();
+            } catch (IOException e) {
+                Throwables.propagate(e);
+            }
 
-                try {
-                    remoteRepo.get().close();
-                } catch (IOException e) {
-                    Throwables.propagate(e);
-                }
+            for (Ref ref : refsToPush) {
+                remoteRepo.get().pushNewData(localRepository, ref);
+            }
+
+            try {
+                remoteRepo.get().close();
+            } catch (IOException e) {
+                Throwables.propagate(e);
             }
 
         }
 
         return null;
+    }
+
+    public Optional<IRemoteRepo> getRemoteRepo(Remote remote) {
+        return RemoteUtils.newRemote(localRepository.getInjectorBuilder().get(), remote);
     }
 }

@@ -210,6 +210,12 @@ public class ConfigOpTest extends RepositoryTestCase {
     }
 
     @Test
+    public void testEnum() {
+        ConfigAction.values();
+        assertEquals(ConfigAction.CONFIG_GET, ConfigAction.valueOf("CONFIG_GET"));
+    }
+
+    @Test
     public void testNoAction() {
         final ConfigOp config = geogit.command(ConfigOp.class);
 
