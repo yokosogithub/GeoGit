@@ -100,8 +100,8 @@ public class RevObjectParse extends AbstractGeoGitOp<Optional<RevObject>> {
         ObjectReader<? extends RevObject> reader;
         switch (type) {
         case FEATURE:
-            throw new UnsupportedOperationException("not yet implemented");
-            // break;
+            reader = serialFactory.createFeatureReader();
+            break;
         case COMMIT:
             reader = serialFactory.createCommitReader();
             break;
