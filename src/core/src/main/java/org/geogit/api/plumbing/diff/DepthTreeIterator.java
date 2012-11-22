@@ -25,7 +25,7 @@ import com.google.common.collect.Iterators;
 
 /**
  * An iterator over a {@link RevTree} that fully traverses it, including any sub tree if
- * {@link #setTraverseSubtrees(boolean) traverseSubtrees == true}
+ * {@link #setTraverseSubtrees(boolean) traverseSubtrees == true}.
  */
 public class DepthTreeIterator extends AbstractIterator<NodeRef> {
 

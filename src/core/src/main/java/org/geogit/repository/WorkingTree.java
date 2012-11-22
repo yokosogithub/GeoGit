@@ -213,6 +213,42 @@ public class WorkingTree {
     }
 
     /**
+     * 
+     * @param features the features to delete
+     */
+    public void delete(Iterator<String> features) {
+        Map<String, RevTreeBuilder> parents = Maps.newHashMap();
+        while (features.hasNext()) {
+            String featurePath = features.next();
+            // System.err.println("removing " + feature);
+            String parentPath = NodeRef.parentPath(featurePath);
+            RevTreeBuilder parentTree;
+            if (parents.containsKey(parentPath)) {
+                parentTree = parents.get(parentPath);
+            } else {
+                parentTree = repository.command(FindOrCreateSubtree.class).setIndex(true)
+                        .setParent(Suppliers.ofInstance(Optional.of(getTree())))
+                        .setChildPath(parentPath).call().builder(indexDatabase);
+                parents.put(parentPath, parentTree);
+            }
+
+            parentTree.remove(featurePath);
+        }
+        ObjectId newTree = null;
+        for (Map.Entry<String, RevTreeBuilder> entry : parents.entrySet()) {
+            String path = entry.getKey();
+            RevTreeBuilder parentTree = entry.getValue();
+            newTree = repository.command(WriteBack.class).setAncestor(getTreeSupplier())
+                    .setChildPath(path).setToIndex(true).setTree(parentTree.build()).call();
+            updateWorkHead(newTree);
+        }
+        /*
+         * if (newTree != null) { updateWorkHead(newTree); }
+         */
+
+    }
+
+    /**
      * Insert a single feature into the working tree and updates the WORK_HEAD ref.
      * 
      * @param parentTreePath path of the parent tree to insert the feature into
@@ -456,4 +492,5 @@ public class WorkingTree {
         }
         return typeNames;
     }
+
 }
