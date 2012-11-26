@@ -91,6 +91,7 @@ public class Rebase extends AbstractCommand implements CLICommand {
                 .setName(arguments.get(0)).call();
 
         RebaseOp rebase = cli.getGeogit().command(RebaseOp.class);
+        rebase.setProgressListener(cli.getProgressListener());
 
         if (onto != null) {
             Optional<ObjectId> ontoId = cli.getGeogit().command(RevParse.class).setRefSpec(onto)

@@ -119,10 +119,8 @@ public class FetchOp extends AbstractGeoGitOp<Void> {
 
         getProgressListener().started();
 
-        int remoteCount = 0;
         for (Remote remote : remotes) {
-            remoteCount++;
-            ProgressListener subProgress = this.subProgress((remoteCount * 100.f) / remotes.size());
+            ProgressListener subProgress = this.subProgress(100.f / remotes.size());
             subProgress.started();
             final ImmutableSet<Ref> remoteRemoteRefs = command(LsRemote.class).setRemote(
                     Suppliers.ofInstance(Optional.of(remote))).call();

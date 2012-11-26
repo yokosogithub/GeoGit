@@ -26,6 +26,7 @@ import org.geogit.api.plumbing.diff.DiffEntry;
 import org.geogit.repository.Repository;
 import org.geogit.repository.StagingArea;
 import org.geogit.storage.ObjectInserter;
+import org.opengis.util.ProgressListener;
 
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
@@ -109,10 +110,13 @@ public class RebaseOp extends AbstractGeoGitOp<Boolean> {
         Preconditions.checkState(!ObjectId.NULL.equals(upstream.get()),
                 "Upstream did not resolve to a commit.");
 
+        getProgressListener().started();
+
         if (ObjectId.NULL.equals(headRef.getObjectId())) {
             // Fast-forward
             command(UpdateRef.class).setName(currentBranch).setNewValue(upstream.get()).call();
             command(UpdateSymRef.class).setName(Ref.HEAD).setNewValue(currentBranch).call();
+            getProgressListener().complete();
             return true;
         }
 
@@ -120,7 +124,7 @@ public class RebaseOp extends AbstractGeoGitOp<Boolean> {
         final RevCommit targetCommit = repository.getCommit(upstream.get());
 
         Optional<RevCommit> ancestorCommit = command(FindCommonAncestor.class).setLeft(headCommit)
-                .setRight(targetCommit).call();
+                .setRight(targetCommit).setProgressListener(subProgress(10.f)).call();
 
         Preconditions.checkState(ancestorCommit.isPresent(), "No ancestor commit could be found.");
 
@@ -142,6 +146,10 @@ public class RebaseOp extends AbstractGeoGitOp<Boolean> {
         command(CheckoutOp.class).setSource(onto.get().toString()).call();
 
         ObjectId rebaseHead = onto.get();
+
+        ProgressListener subProgress = subProgress(90.f);
+
+        int numCommits = commitsToRebase.size() - 1;
 
         for (int i = commitsToRebase.size() - 2; i >= 0; i--) {
             // get changes
@@ -171,7 +179,12 @@ public class RebaseOp extends AbstractGeoGitOp<Boolean> {
             repository.getWorkingTree().updateWorkHead(newTreeId);
             repository.getIndex().updateStageHead(newTreeId);
 
+            subProgress.progress((numCommits - i) * 100.f / numCommits);
+
         }
+        subProgress.complete();
+
+        getProgressListener().complete();
 
         return true;
     }

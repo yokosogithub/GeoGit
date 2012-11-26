@@ -8,3 +8,13 @@ Feature: "push" command
      When I run the command "push origin"
      Then the response should start with "Not a geogit repository"
      
+  Scenario: Try to push to origin
+    Given I am in an empty directory
+      And there is a remote repository
+     When I run the command "clone remoterepo localrepo"
+     Then the response should contain "Cloning into 'localrepo'..."
+      And the response should contain "Done."
+     When I modify a feature
+      And I run the command "commit -m Commit5"
+      And I run the command "push"
+     Then it should answer ""

@@ -101,8 +101,10 @@ public class PullOp extends AbstractGeoGitOp<Void> {
         Optional<Remote> remoteRepo = remote.get();
 
         Preconditions.checkArgument(remoteRepo.isPresent(), "Remote could not be resolved.");
+        getProgressListener().started();
 
-        command(FetchOp.class).addRemote(remote).setAll(all).call();
+        command(FetchOp.class).addRemote(remote).setAll(all).setProgressListener(subProgress(80.f))
+                .call();
 
         if (refSpecs.size() > 0) {
             throw new UnsupportedOperationException("Pull does not currently handle ref specs.");
@@ -125,13 +127,15 @@ public class PullOp extends AbstractGeoGitOp<Void> {
                     "Cannot pull into current branch, no common ancestor was found.");
 
             if (rebase) {
-                command(RebaseOp.class).setUpstream(
-                        Suppliers.ofInstance(upstream.get().getObjectId())).call();
+                command(RebaseOp.class)
+                        .setUpstream(Suppliers.ofInstance(upstream.get().getObjectId()))
+                        .setProgressListener(subProgress(20.f)).call();
             } else {
                 throw new UnsupportedOperationException("Merge pull is current unsupported.");
             }
 
         }
+        getProgressListener().complete();
 
         return null;
     }

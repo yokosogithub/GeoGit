@@ -79,6 +79,8 @@ public class FindCommonAncestor extends AbstractGeoGitOp<Optional<RevCommit>> {
             return Optional.of(left);
         }
 
+        getProgressListener().started();
+
         final int partitionSize;
         {
             final String key = "plumbing.partitionSize";
@@ -91,15 +93,20 @@ public class FindCommonAncestor extends AbstractGeoGitOp<Optional<RevCommit>> {
 
         Iterator<List<RevCommit>> partitions = Iterators.partition(log, partitionSize);
 
+        getProgressListener().progress(50.f);
+
         while (partitions.hasNext()) {
 
             Set<ObjectId> ancestrySet = new HashSet<ObjectId>();
             populateSet(partitions.next(), ancestrySet);
             Optional<RevCommit> ancestor = findAncestor(left, ancestrySet);
             if (ancestor.isPresent()) {
+                getProgressListener().complete();
                 return ancestor;
             }
         }
+
+        getProgressListener().complete();
 
         return Optional.absent();
     }

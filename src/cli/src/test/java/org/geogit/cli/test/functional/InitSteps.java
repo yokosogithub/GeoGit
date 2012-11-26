@@ -145,7 +145,7 @@ public class InitSteps extends AbstractGeogitFunctionalTest {
         insertAndAdd(points3);
         runCommand(("commit -m Commit3").split(" "));
         runCommand(("checkout master").split(" "));
-        insertAndAdd(points1_modified);
+        insertAndAdd(lines1);
         runCommand(("commit -m Commit4").split(" "));
         geogit.close();
         geogit = oldGeogit;
