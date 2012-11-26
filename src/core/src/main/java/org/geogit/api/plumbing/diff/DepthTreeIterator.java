@@ -39,6 +39,10 @@ public class DepthTreeIterator extends AbstractIterator<NodeRef> {
 
     private boolean traverseSubtrees;
 
+    private boolean onlyTrees;
+
+    private boolean includeTrees;
+
     public DepthTreeIterator(RevTree tree, ObjectDatabase source,
             ObjectSerialisingFactory serialFactory) {
 
@@ -54,7 +58,7 @@ public class DepthTreeIterator extends AbstractIterator<NodeRef> {
     /**
      * @param traverseSubtrees if {@code true}, any tree {@link NodeRef} will be resolved to its
      *        corresponding {@link RevTree} and its children feature {@link NodeRef}s will be
-     *        returned, and no tree refs will be returned. Defaults to {@code false}
+     *        returned. Defaults to {@code false}
      */
     public void setTraverseSubtrees(boolean traverseSubtrees) {
         this.traverseSubtrees = traverseSubtrees;
@@ -71,16 +75,30 @@ public class DepthTreeIterator extends AbstractIterator<NodeRef> {
         }
         if (iterator.hasNext()) {
             NodeRef ref = iterator.next();
-            if (traverseSubtrees && ref.getType().equals(TYPE.TREE)) {
-                ObjectId subtreeId = ref.getObjectId();
-                RevTree subTree = source.get(subtreeId, serialFactory.createRevTreeReader());
-                DepthTreeIterator subtreeIterator = new DepthTreeIterator(subTree, source,
-                        serialFactory);
-                subtreeIterator.setTraverseSubtrees(true);
-                this.iterator = Iterators.concat(subtreeIterator, this.iterator);
-                return computeNext();
+            if (ref.getType().equals(TYPE.TREE)) {
+                if (traverseSubtrees) {
+                    ObjectId subtreeId = ref.getObjectId();
+                    RevTree subTree = source.get(subtreeId, serialFactory.createRevTreeReader());
+                    DepthTreeIterator subtreeIterator = new DepthTreeIterator(subTree, source,
+                            serialFactory);
+                    subtreeIterator.setTraverseSubtrees(true);
+                    subtreeIterator.setIncludeTrees(includeTrees);
+                    subtreeIterator.setOnlyTrees(onlyTrees);
+                    this.iterator = Iterators.concat(subtreeIterator, this.iterator);
+                }
+                if (!includeTrees && !onlyTrees) {
+                    return computeNext();
+                } else {
+                    return ref;
+                }
+            } else {
+                if (onlyTrees) {
+                    return computeNext();
+                } else {
+                    return ref;
+                }
             }
-            return ref;
+
         }
         return endOfData();
     }
@@ -151,6 +169,23 @@ public class DepthTreeIterator extends AbstractIterator<NodeRef> {
             return Iterators.concat(bucketIterators.iterator());
         }
 
+    }
+
+    /**
+     * 
+     * @param includeTrees if {@code true}, only {@link NodeRef} resolving to a tree are returned
+     */
+    public void setOnlyTrees(boolean onlyTrees) {
+        this.onlyTrees = onlyTrees;
+    }
+
+    /**
+     * 
+     * @param includeTrees if {@code true}, any {@link NodeRef} resolving to a tree will be returned
+     *        along with its children. If not, only children are returned.
+     */
+    public void setIncludeTrees(boolean includeTrees) {
+        this.includeTrees = includeTrees;
     }
 
 }

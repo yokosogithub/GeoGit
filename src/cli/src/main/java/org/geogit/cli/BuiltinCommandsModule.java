@@ -4,6 +4,7 @@
  */
 package org.geogit.cli;
 
+import org.geogit.cli.plumbing.LsTree;
 import org.geogit.cli.plumbing.RevParse;
 import org.geogit.cli.porcelain.Add;
 import org.geogit.cli.porcelain.Branch;
@@ -70,10 +71,7 @@ public class BuiltinCommandsModule extends AbstractModule implements CLIModule {
         bind(Status.class);
         bind(Rebase.class);
         bind(Reset.class);
-        bind(Clone.class);
-        bind(Push.class);
-        bind(Pull.class);
-        bind(Fetch.class);
+        bind(LsTree.class);
     }
 
 }

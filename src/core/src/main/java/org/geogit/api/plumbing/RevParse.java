@@ -13,14 +13,17 @@ import java.util.List;
 import java.util.regex.Pattern;
 
 import org.geogit.api.AbstractGeoGitOp;
+import org.geogit.api.NodeRef;
 import org.geogit.api.ObjectId;
 import org.geogit.api.Ref;
 import org.geogit.api.RevCommit;
 import org.geogit.api.RevObject;
 import org.geogit.api.RevTag;
+import org.geogit.api.RevTree;
 import org.geogit.storage.StagingDatabase;
 
 import com.google.common.base.Optional;
+import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 
 /**
@@ -32,6 +35,8 @@ public class RevParse extends AbstractGeoGitOp<Optional<ObjectId>> {
     private static final char PARENT_DELIMITER = '^';
 
     private static final char ANCESTOR_DELIMITER = '~';
+
+    private static final String PATH_SEPARATOR = ":";
 
     private String refSpec;
 
@@ -105,7 +110,14 @@ public class RevParse extends AbstractGeoGitOp<Optional<ObjectId>> {
         return revParse(this.refSpec);
     }
 
-    private Optional<ObjectId> revParse(final String refSpec) {
+    private Optional<ObjectId> revParse(String refSpec) {
+
+        String path = null;
+        if (refSpec.contains(PATH_SEPARATOR)) {
+            String[] tokens = refSpec.split(PATH_SEPARATOR);
+            refSpec = tokens[0];
+            path = tokens[1];
+        }
 
         final String prefix;
         int parentN = -1;// -1 = not given, 0 = ensure id is a commit, >0 nth. parent (1 = first
@@ -141,6 +153,24 @@ public class RevParse extends AbstractGeoGitOp<Optional<ObjectId>> {
         if (resolved.isPresent() && remaining.length() > 0) {
             String newRefSpec = resolved.get().toString() + remaining.toString();
             resolved = revParse(newRefSpec);
+        }
+
+        if (!resolved.isPresent()) {
+            return resolved;
+        }
+
+        if (path != null) {
+            NodeRef.checkValidPath(path);
+            Optional<ObjectId> treeId = command(ResolveTreeish.class).setTreeish(resolved.get())
+                    .call();
+            Optional<RevTree> revTree = command(RevObjectParse.class).setObjectId(treeId.get())
+                    .call(RevTree.class);
+            Optional<NodeRef> ref = command(FindTreeChild.class).setParent(revTree.get())
+                    .setChildPath(path)
+                    .call();
+            Preconditions.checkArgument(ref.isPresent(),
+                    "pathspec '%s' did not match any valid path", path);
+            resolved = Optional.of(ref.get().getObjectId());
         }
         return resolved;
     }
