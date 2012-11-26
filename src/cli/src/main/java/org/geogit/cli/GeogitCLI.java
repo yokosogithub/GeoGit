@@ -25,8 +25,6 @@ import org.geogit.api.GeoGIT;
 import org.geogit.api.GlobalInjectorBuilder;
 import org.geogit.api.Platform;
 import org.geogit.api.plumbing.ResolveGeogitDir;
-import org.geogit.di.GeogitModule;
-import org.geogit.storage.bdbje.JEStorageModule;
 import org.geotools.util.DefaultProgressListener;
 import org.geotools.util.logging.Logging;
 import org.opengis.util.ProgressListener;
@@ -42,7 +40,6 @@ import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Key;
 import com.google.inject.Module;
-import com.google.inject.util.Modules;
 
 /**
  * Command Line Interface for geogit.
@@ -73,6 +70,7 @@ public class GeogitCLI {
     public GeogitCLI(final ConsoleReader consoleReader) {
         this.consoleReader = consoleReader;
         this.platform = new DefaultPlatform();
+        GlobalInjectorBuilder.builder = new CLIInjectorBuilder();
 
         Iterable<CLIModule> plugins = ServiceLoader.load(CLIModule.class);
         commandsInjector = Guice.createInjector(plugins);
@@ -135,7 +133,6 @@ public class GeogitCLI {
 
         if (null != geogit.command(ResolveGeogitDir.class).call()) {
             geogit.getRepository();
-            GlobalInjectorBuilder.builder = new CLIInjectorBuilder();
             return geogit;
         }
 
@@ -158,8 +155,7 @@ public class GeogitCLI {
      */
     public Injector getGeogitInjector() {
         if (geogitInjector == null) {
-            geogitInjector = Guice.createInjector(Modules.override(new GeogitModule()).with(
-                    new JEStorageModule()));
+            geogitInjector = GlobalInjectorBuilder.builder.get();
         }
         return geogitInjector;
     }
@@ -379,7 +375,8 @@ public class GeogitCLI {
 
                 private final long delayMillis = 300;
 
-                private volatile long lastRun = platform.currentTimeMillis();
+                // Don't skip the first update
+                private volatile long lastRun = -(delayMillis + 1);
 
                 @Override
                 public void complete() {

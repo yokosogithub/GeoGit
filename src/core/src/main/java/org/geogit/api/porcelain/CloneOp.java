@@ -66,11 +66,14 @@ public class CloneOp extends AbstractGeoGitOp<Void> {
         Preconditions.checkArgument(repositoryURL != null && !repositoryURL.isEmpty(),
                 "No repository specified to clone from.");
 
+        getProgressListener().started();
+        getProgressListener().progress(0.f);
+
         // Set up origin
         Remote remote = command(RemoteAddOp.class).setName("origin").setURL(repositoryURL).call();
 
         // Fetch remote data
-        command(FetchOp.class).call();
+        command(FetchOp.class).setProgressListener(subProgress(90.f)).call();
 
         // Set up remote tracking branches
         final ImmutableSet<Ref> remoteRefs = command(LsRemote.class).setRemote(
@@ -99,6 +102,7 @@ public class CloneOp extends AbstractGeoGitOp<Void> {
                     .setName("branches." + branchName + ".merge").setValue(remoteRef.getName())
                     .call();
         }
+        getProgressListener().progress(95.f);
 
         if (!emptyRepo) {
             // checkout branch
@@ -118,6 +122,8 @@ public class CloneOp extends AbstractGeoGitOp<Void> {
 
             }
         }
+
+        getProgressListener().complete();
 
         return null;
     }

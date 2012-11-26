@@ -8,3 +8,15 @@ Feature: "pull" command
      When I run the command "pull origin"
      Then the response should start with "Not a geogit repository"
      
+  Scenario: Try to pull from origin
+    Given I have a repository with a remote
+     When I run the command "pull origin --rebase"
+      And I run the command "branch --all"
+     Then the response should contain "origin/master"
+      And the response should contain "origin/branch1"
+      And the response should contain "origin/HEAD"
+     When I run the command "log"
+     Then the response should contain "Commit4"
+      And the response should not contain "Commit3"
+      And the response should not contain "Commit2"
+      And the response should contain "Commit1"

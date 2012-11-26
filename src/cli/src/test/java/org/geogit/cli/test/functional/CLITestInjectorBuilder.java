@@ -1,7 +1,8 @@
 package org.geogit.cli.test.functional;
 
+import java.io.File;
+
 import org.geogit.api.InjectorBuilder;
-import org.geogit.api.Platform;
 import org.geogit.di.GeogitModule;
 import org.geogit.storage.bdbje.JEStorageModule;
 
@@ -11,16 +12,20 @@ import com.google.inject.util.Modules;
 
 public class CLITestInjectorBuilder extends InjectorBuilder {
 
-    Platform platform;
+    File workingDirectory;
 
-    public CLITestInjectorBuilder(Platform platform) {
-        this.platform = platform;
+    File homeDirectory;
+
+    public CLITestInjectorBuilder(File workingDirectory, File homeDirectory) {
+        this.workingDirectory = workingDirectory;
+        this.homeDirectory = homeDirectory;
     }
 
     @Override
     public Injector get() {
         return Guice.createInjector(Modules.override(new GeogitModule()).with(
-                new JEStorageModule(), new TestModule(platform)));
+                new JEStorageModule(),
+                new TestModule(new TestPlatform(workingDirectory, homeDirectory))));
     }
 
 }

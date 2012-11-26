@@ -25,6 +25,7 @@ import org.geogit.api.GeoGIT;
 import org.geogit.api.GlobalInjectorBuilder;
 import org.geogit.api.NodeRef;
 import org.geogit.api.ObjectId;
+import org.geogit.api.Platform;
 import org.geogit.api.porcelain.AddOp;
 import org.geogit.cli.GeogitCLI;
 import org.geogit.repository.WorkingTree;
@@ -103,17 +104,19 @@ public abstract class AbstractGeogitFunctionalTest {
         stdIn = new ByteArrayInputStream(new byte[0]);
         stdOut = new ByteArrayOutputStream();
 
-        TestPlatform platform = new TestPlatform(currentDirectory, homeDirectory);
-
         ConsoleReader consoleReader = new ConsoleReader(stdIn, stdOut, new UnsupportedTerminal());
 
-        GlobalInjectorBuilder.builder = new CLITestInjectorBuilder(platform);
+        GlobalInjectorBuilder.builder = new CLITestInjectorBuilder(currentDirectory, homeDirectory);
         Injector injector = GlobalInjectorBuilder.builder.get();
+
+        if (geogit != null) {
+            geogit.close();
+        }
 
         geogit = new GeoGIT(injector, currentDirectory);
         try {
             geogitCLI = new GeogitCLI(consoleReader);
-            geogitCLI.setPlatform(platform);
+            geogitCLI.setPlatform(injector.getInstance(Platform.class));
             geogitCLI.setGeogitInjector(injector);
             if (geogit.getRepository() != null) {
                 geogitCLI.setGeogit(geogit);

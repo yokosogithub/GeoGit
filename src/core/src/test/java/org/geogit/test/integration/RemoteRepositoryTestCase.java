@@ -135,7 +135,7 @@ public abstract class RemoteRepositoryTestCase {
 
             geogit = new GeoGIT(injector, envHome);
             repo = geogit.getOrCreateRepository();
-            GlobalInjectorBuilder.builder = injectorBuilder;
+
             repo.command(ConfigOp.class).setAction(ConfigAction.CONFIG_SET).setName("user.name")
                     .setValue("Gabriel Roldan").call();
             repo.command(ConfigOp.class).setAction(ConfigAction.CONFIG_SET).setName("user.email")

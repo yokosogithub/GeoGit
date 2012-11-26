@@ -12,3 +12,27 @@ Feature: "clone" command
     Given I am in an empty directory
      When I run the command "clone repository directory extra"
      Then it should answer "Too many arguments provided."
+     
+  Scenario: Try to clone a remote repository
+    Given I am in an empty directory
+      And there is a remote repository
+     When I run the command "clone remoterepo localrepo"
+     Then the response should contain "Cloning into 'localrepo'..."
+      And the response should contain "Done."
+     When I run the command "log"
+     Then the response should contain "Commit4"
+      And the response should not contain "Commit3"
+      And the response should not contain "Commit2"
+      And the response should contain "Commit1"
+      
+  Scenario: Try to clone a remote repository with a branch specified
+    Given I am in an empty directory
+      And there is a remote repository
+     When I run the command "clone -b branch1 remoterepo localrepo"
+     Then the response should contain "Cloning into 'localrepo'..."
+      And the response should contain "Done."
+     When I run the command "log"
+     Then the response should not contain "Commit4"
+      And the response should contain "Commit3"
+      And the response should contain "Commit2"
+      And the response should contain "Commit1"

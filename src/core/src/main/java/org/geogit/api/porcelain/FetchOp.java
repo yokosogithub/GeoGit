@@ -19,6 +19,7 @@ import org.geogit.api.plumbing.UpdateSymRef;
 import org.geogit.remote.IRemoteRepo;
 import org.geogit.remote.RemoteUtils;
 import org.geogit.repository.Repository;
+import org.opengis.util.ProgressListener;
 
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
@@ -86,6 +87,7 @@ public class FetchOp extends AbstractGeoGitOp<Void> {
     public FetchOp addRemote(Supplier<Optional<Remote>> remoteSupplier) {
         Preconditions.checkNotNull(remoteSupplier);
         Optional<Remote> remote = remoteSupplier.get();
+        Preconditions.checkState(remote.isPresent(), "Remote could not be resolved.");
         if (remote.isPresent()) {
             remotes.add(remote.get());
         }
@@ -115,7 +117,13 @@ public class FetchOp extends AbstractGeoGitOp<Void> {
         Preconditions.checkState(remotes.size() > 0,
                 "No remote repository specified.  Please specify a remote name to fetch from.");
 
+        getProgressListener().started();
+
+        int remoteCount = 0;
         for (Remote remote : remotes) {
+            remoteCount++;
+            ProgressListener subProgress = this.subProgress((remoteCount * 100.f) / remotes.size());
+            subProgress.started();
             final ImmutableSet<Ref> remoteRemoteRefs = command(LsRemote.class).setRemote(
                     Suppliers.ofInstance(Optional.of(remote))).call();
             final ImmutableSet<Ref> localRemoteRefs = command(LsRemote.class)
@@ -149,7 +157,10 @@ public class FetchOp extends AbstractGeoGitOp<Void> {
             } catch (IOException e) {
                 Throwables.propagate(e);
             }
+            int refCount = 0;
             for (Ref ref : needUpdate) {
+                refCount++;
+                subProgress.progress((refCount * 100.f) / needUpdate.size());
                 // Fetch updated data from this ref
                 remoteRepo.get().fetchNewData(localRepository, ref);
 
@@ -167,7 +178,9 @@ public class FetchOp extends AbstractGeoGitOp<Void> {
             } catch (IOException e) {
                 Throwables.propagate(e);
             }
+            subProgress.complete();
         }
+        getProgressListener().complete();
 
         return null;
     }

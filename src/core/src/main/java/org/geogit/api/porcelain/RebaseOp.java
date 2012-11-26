@@ -106,10 +106,15 @@ public class RebaseOp extends AbstractGeoGitOp<Boolean> {
 
         Preconditions.checkState(upstream != null, "No upstream target has been specified.");
 
-        Preconditions.checkState(!ObjectId.NULL.equals(headRef.getObjectId()),
-                "HEAD did not resolve to a commit.");
         Preconditions.checkState(!ObjectId.NULL.equals(upstream.get()),
                 "Upstream did not resolve to a commit.");
+
+        if (ObjectId.NULL.equals(headRef.getObjectId())) {
+            // Fast-forward
+            command(UpdateRef.class).setName(currentBranch).setNewValue(upstream.get()).call();
+            command(UpdateSymRef.class).setName(Ref.HEAD).setNewValue(currentBranch).call();
+            return true;
+        }
 
         final RevCommit headCommit = repository.getCommit(headRef.getObjectId());
         final RevCommit targetCommit = repository.getCommit(upstream.get());
