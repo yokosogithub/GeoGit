@@ -22,6 +22,7 @@ import jline.console.CursorBuffer;
 
 import org.geogit.api.DefaultPlatform;
 import org.geogit.api.GeoGIT;
+import org.geogit.api.GlobalInjectorBuilder;
 import org.geogit.api.Platform;
 import org.geogit.api.plumbing.ResolveGeogitDir;
 import org.geogit.di.GeogitModule;
@@ -134,7 +135,7 @@ public class GeogitCLI {
 
         if (null != geogit.command(ResolveGeogitDir.class).call()) {
             geogit.getRepository();
-            geogit.getRepository().setInjectorBuilder(new CLIInjectorBuilder());
+            GlobalInjectorBuilder.builder = new CLIInjectorBuilder();
             return geogit;
         }
 

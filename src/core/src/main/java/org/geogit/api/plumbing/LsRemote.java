@@ -8,6 +8,7 @@ package org.geogit.api.plumbing;
 import java.io.IOException;
 
 import org.geogit.api.AbstractGeoGitOp;
+import org.geogit.api.GlobalInjectorBuilder;
 import org.geogit.api.Ref;
 import org.geogit.api.Remote;
 import org.geogit.remote.IRemoteRepo;
@@ -113,7 +114,7 @@ public class LsRemote extends AbstractGeoGitOp<ImmutableSet<Ref>> {
     }
 
     public Optional<IRemoteRepo> getRemoteRepo(Remote remote) {
-        return RemoteUtils.newRemote(localRepository.getInjectorBuilder().get(), remote);
+        return RemoteUtils.newRemote(GlobalInjectorBuilder.builder.get(), remote);
     }
 
     /**

@@ -9,6 +9,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.geogit.api.AbstractGeoGitOp;
+import org.geogit.api.GlobalInjectorBuilder;
 import org.geogit.api.Ref;
 import org.geogit.api.Remote;
 import org.geogit.api.SymRef;
@@ -172,7 +173,7 @@ public class FetchOp extends AbstractGeoGitOp<Void> {
     }
 
     public Optional<IRemoteRepo> getRemoteRepo(Remote remote) {
-        return RemoteUtils.newRemote(localRepository.getInjectorBuilder().get(), remote);
+        return RemoteUtils.newRemote(GlobalInjectorBuilder.builder.get(), remote);
     }
 
     private void updateLocalRef(Ref remoteRef, Remote remote, ImmutableSet<Ref> localRemoteRefs) {

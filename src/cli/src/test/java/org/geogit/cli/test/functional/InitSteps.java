@@ -5,6 +5,7 @@
 package org.geogit.cli.test.functional;
 
 import static org.geogit.cli.test.functional.GlobalState.currentDirectory;
+import static org.geogit.cli.test.functional.GlobalState.geogit;
 import static org.geogit.cli.test.functional.GlobalState.homeDirectory;
 import static org.geogit.cli.test.functional.GlobalState.stdOut;
 import static org.junit.Assert.assertEquals;
@@ -104,6 +105,25 @@ public class InitSteps extends AbstractGeogitFunctionalTest {
         assertEquals(output.toString(), 1, output.size());
         assertNotNull(output.get(0));
         assertTrue(output.get(0), output.get(0).startsWith("Initialized"));
+    }
+
+    @Given("^there is a remote repository$")
+    public void there_is_a_remote_repository() throws Throwable {
+        List<String> output = runAndParseCommand("init", "remoterepo");
+        assertEquals(output.toString(), 1, output.size());
+        assertNotNull(output.get(0));
+        assertTrue(output.get(0), output.get(0).startsWith("Initialized"));
+        insertAndAdd(points1);
+        runCommand(("commit -m Commit1").split(" "));
+        runCommand(("branch -c branch1").split(" "));
+        insertAndAdd(points2);
+        runCommand(("commit -m Commit2").split(" "));
+        insertAndAdd(points3);
+        runCommand(("commit -m Commit3").split(" "));
+        runCommand(("checkout master").split(" "));
+        insertAndAdd(points1_modified);
+        runCommand(("commit -m Commit4").split(" "));
+        geogit.getPlatform().setWorkingDir(currentDirectory);
     }
 
     @Given("^I have a repository$")

@@ -113,20 +113,6 @@ public class Repository {
     }
 
     /**
-     * @return the {@link InjectorBuilder} for this repository
-     */
-    public InjectorBuilder getInjectorBuilder() {
-        return injectorBuilder;
-    }
-
-    /**
-     * @param injectorBuilder the {@link InjectorBuilder} for this repository
-     */
-    public void setInjectorBuilder(InjectorBuilder injectorBuilder) {
-        this.injectorBuilder = injectorBuilder;
-    }
-
-    /**
      * Closes the repository.
      */
     public void close() {

@@ -21,6 +21,7 @@ import java.util.List;
 
 import org.apache.commons.io.FileUtils;
 import org.geogit.api.GeoGIT;
+import org.geogit.api.GlobalInjectorBuilder;
 import org.geogit.api.InjectorBuilder;
 import org.geogit.api.NodeRef;
 import org.geogit.api.ObjectId;
@@ -134,7 +135,7 @@ public abstract class RemoteRepositoryTestCase {
 
             geogit = new GeoGIT(injector, envHome);
             repo = geogit.getOrCreateRepository();
-            repo.setInjectorBuilder(injectorBuilder);
+            GlobalInjectorBuilder.builder = injectorBuilder;
             repo.command(ConfigOp.class).setAction(ConfigAction.CONFIG_SET).setName("user.name")
                     .setValue("Gabriel Roldan").call();
             repo.command(ConfigOp.class).setAction(ConfigAction.CONFIG_SET).setName("user.email")

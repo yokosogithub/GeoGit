@@ -16,7 +16,6 @@ import org.geogit.api.porcelain.CloneOp;
 import org.geogit.api.porcelain.InitOp;
 import org.geogit.cli.AbstractCommand;
 import org.geogit.cli.CLICommand;
-import org.geogit.cli.CLIInjectorBuilder;
 import org.geogit.cli.GeogitCLI;
 import org.geogit.repository.Repository;
 
@@ -107,16 +106,19 @@ public class Clone extends AbstractCommand implements CLICommand {
                     "Destination path already exists and is not an empty directory.");
             cli.setGeogit(geogit);
             cli.getPlatform().setWorkingDir(repoDir);
-            repository.setInjectorBuilder(new CLIInjectorBuilder());
 
         } catch (Exception e) {
             throw Throwables.propagate(e);
         }
+
+        cli.getConsole().println("Cloning into '" + cli.getPlatform().pwd().getName() + "'...");
 
         CloneOp clone = cli.getGeogit().command(CloneOp.class);
         clone.setProgressListener(cli.getProgressListener());
         clone.setBranch(branch).setRepositoryURL(repoURL);
 
         clone.call();
+
+        cli.getConsole().println("Done.");
     }
 }
