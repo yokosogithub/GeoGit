@@ -15,6 +15,7 @@ import jline.console.ConsoleReader;
 import org.geogit.api.NodeRef;
 import org.geogit.api.ObjectId;
 import org.geogit.api.plumbing.LsTreeOp;
+import org.geogit.api.plumbing.LsTreeOp.Strategy;
 import org.geogit.cli.AbstractCommand;
 import org.geogit.cli.CLICommand;
 import org.geogit.cli.GeogitCLI;
@@ -59,9 +60,22 @@ public class LsTree extends AbstractCommand implements CLICommand {
         } else {
             ref = refList.get(0);
         }
+        Strategy lsStrategy = Strategy.CHILDREN;
+        if (recursive) {
+            if (includeTrees) {
+                lsStrategy = Strategy.DEPTHFIRST;
+            } else if (onlyTrees) {
+                lsStrategy = Strategy.DEPTHFIRST_ONLY_TREES;
+            } else {
+                lsStrategy = Strategy.DEPTHFIRST_ONLY_FEATURES;
+            }
+        } else {
+            if (onlyTrees) {
+                lsStrategy = Strategy.TREES_ONLY;
+            }
+        }
         Iterator<NodeRef> iter = cli.getGeogit().command(LsTreeOp.class).setReference(ref)
-                .setOnlyTrees(onlyTrees).setIncludeTrees(includeTrees).setRecursive(recursive)
-                .call();
+                .setStrategy(lsStrategy).call();
 
         Function<NodeRef, CharSequence> printFunctor = new Function<NodeRef, CharSequence>() {
 

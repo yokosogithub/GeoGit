@@ -4,16 +4,16 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
-import java.util.ArrayList;
 import java.util.Iterator;
 
 import org.geogit.api.NodeRef;
 import org.geogit.api.plumbing.LsTreeOp;
+import org.geogit.api.plumbing.LsTreeOp.Strategy;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
-import com.google.common.collect.Lists;
+import com.google.common.collect.Iterators;
 
 public class LsFeaturesOpTest extends RepositoryTestCase {
 
@@ -22,50 +22,50 @@ public class LsFeaturesOpTest extends RepositoryTestCase {
 
     @Override
     protected void setUpInternal() throws Exception {
-        populate(false, points1, points2, points3, lines1, lines2, lines3);
+        boolean onecComitPerFeature = false;
+        populate(onecComitPerFeature, points1, points2, points3, lines1, lines2, lines3);
     }
 
     @Test
     public void testNonRecursiveRootListing() {
         Iterator<NodeRef> iter = geogit.command(LsTreeOp.class).call();
-        ArrayList<NodeRef> list = Lists.newArrayList(iter);
-        assertEquals(list.size(), 0);
+        assertEquals(2, Iterators.size(iter));
     }
 
     @Test
     public void testNonRecursiveTreeListing() {
-        Iterator<NodeRef> iter = geogit.command(LsTreeOp.class).setIncludeTrees(true).call();
-        ArrayList<NodeRef> list = Lists.newArrayList(iter);
-        assertEquals(list.size(), 2);
+        Iterator<NodeRef> iter = geogit.command(LsTreeOp.class).setStrategy(Strategy.TREES_ONLY)
+                .call();
+        assertEquals(2, Iterators.size(iter));
     }
 
     @Test
     public void testRecursiveRootListing() {
-        Iterator<NodeRef> iter = geogit.command(LsTreeOp.class).setRecursive(true).call();
-        ArrayList<NodeRef> list = Lists.newArrayList(iter);
-        assertEquals(list.size(), 6);
+        Iterator<NodeRef> iter = geogit.command(LsTreeOp.class)
+                .setStrategy(Strategy.DEPTHFIRST_ONLY_FEATURES).call();
+
+        assertEquals(6, Iterators.size(iter));
     }
 
     @Test
     public void testPathListing() {
         Iterator<NodeRef> iter = geogit.command(LsTreeOp.class).setReference("Points").call();
-        ArrayList<NodeRef> list = Lists.newArrayList(iter);
-        assertEquals(list.size(), 3);
+
+        assertEquals(3, Iterators.size(iter));
     }
 
     @Test
     public void testHEADNonRecursiveRootListing() {
         Iterator<NodeRef> iter = geogit.command(LsTreeOp.class).setReference("HEAD").call();
-        ArrayList<NodeRef> list = Lists.newArrayList(iter);
-        assertEquals(list.size(), 0);
+        assertEquals(2, Iterators.size(iter));
     }
 
     @Test
     public void testHEADNonRecursiveTreeListing() {
         Iterator<NodeRef> iter = geogit.command(LsTreeOp.class).setReference("HEAD")
-                .setIncludeTrees(true).call();
-        ArrayList<NodeRef> list = Lists.newArrayList(iter);
-        assertEquals(list.size(), 2);
+                .setStrategy(Strategy.TREES_ONLY).call();
+
+        assertEquals(2, Iterators.size(iter));
     }
 
     @Test
