@@ -65,7 +65,7 @@ import com.google.common.base.Suppliers;
  * @author jgarrett
  * @see ResetOp
  */
-@Parameters(commandNames = { "reset" }, commandDescription = "Forward-port local commits to the updated upstream head")
+@Parameters(commandNames = { "reset" }, commandDescription = "Reset current HEAD to the specified state, optionally modifying index and working tree to match")
 public class Reset extends AbstractCommand implements CLICommand {
 
     @Parameter(names = { "--hard" }, description = "Resets the index and the working tree.")
