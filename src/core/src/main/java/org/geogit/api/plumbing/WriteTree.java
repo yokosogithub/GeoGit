@@ -5,6 +5,7 @@
 
 package org.geogit.api.plumbing;
 
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.Map;
 
@@ -23,6 +24,7 @@ import org.opengis.util.ProgressListener;
 import com.google.common.base.Optional;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.inject.Inject;
 
@@ -95,6 +97,7 @@ public class WriteTree extends AbstractGeoGitOp<ObjectId> {
 
         Iterator<DiffEntry> staged = index.getStaged(noPathFilter);
 
+        ArrayList<DiffEntry> newArrayList = Lists.newArrayList(index.getStaged(noPathFilter));
         Map<String, RevTreeBuilder> changedTrees = Maps.newHashMap();
 
         NodeRef ref;

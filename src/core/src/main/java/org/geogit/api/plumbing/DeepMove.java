@@ -8,6 +8,7 @@ package org.geogit.api.plumbing;
 import static com.google.common.base.Preconditions.checkState;
 
 import java.io.InputStream;
+import java.util.Iterator;
 
 import org.geogit.api.AbstractGeoGitOp;
 import org.geogit.api.NodeRef;
@@ -120,11 +121,12 @@ public class DeepMove extends AbstractGeoGitOp<ObjectId> {
     }
 
     private void moveTree(RevTree tree, ObjectDatabase from, ObjectDatabase to) {
-        if (tree.children().isPresent()) {
-            for (NodeRef ref : tree.children().get()) {
-                deepMove(ref, from, to);
-            }
-        } else if (tree.buckets().isPresent()) {
+        Iterator<NodeRef> children = tree.children();
+        while (children.hasNext()) {
+            NodeRef ref = children.next();
+            deepMove(ref, from, to);
+        }
+        if (tree.buckets().isPresent()) {
             for (ObjectId bucketId : tree.buckets().get().values()) {
                 RevTree bucketTree = from.get(bucketId, serialFactory.createRevTreeReader());
                 moveTree(bucketTree, from, to);

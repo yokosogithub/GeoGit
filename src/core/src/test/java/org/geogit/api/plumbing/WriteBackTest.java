@@ -112,17 +112,17 @@ public class WriteBackTest extends Assert {
     @Test
     public void testSiblingsSingleLevel() {
 
-        RevTreeBuilder oldRoot = new RevTreeBuilder(odb, serialFactory);
+        RevTreeBuilder ancestor = new RevTreeBuilder(odb, serialFactory);
 
         RevTree tree1 = new RevTreeBuilder(odb, serialFactory).put(blob("subtree1/blob")).build();
         RevTree tree2 = new RevTreeBuilder(odb, serialFactory).put(blob("subtree2/blob")).build();
 
-        ObjectId newRootId1 = writeBack.setAncestor(oldRoot).setChildPath("subtree1")
+        ObjectId newRootId1 = writeBack.setAncestor(ancestor).setChildPath("subtree1")
                 .setTree(tree1).call();
 
-        ObjectReader<RevTree> reader = serialFactory.createRevTreeReader();
-        ObjectId newRootId2 = writeBack.setAncestor(odb.get(newRootId1, reader).builder(odb))
-                .setChildPath("subtree2").setTree(tree2).call();
+        ancestor = odb.get(newRootId1, serialFactory.createRevTreeReader()).builder(odb);
+        ObjectId newRootId2 = writeBack.setAncestor(ancestor).setChildPath("subtree2")
+                .setTree(tree2).call();
 
         // created the intermediate tree node?
         DepthSearch depthSearch = new DepthSearch(odb, serialFactory);

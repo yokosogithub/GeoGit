@@ -103,8 +103,6 @@ public class DepthSearch {
 
         final Optional<NodeRef> childTreeRef = getDirectChild(parent, directChildPath, 0);
 
-        // final Optional<NodeRef> childTreeRef = parent.get(directChildPath);
-
         if (!childTreeRef.isPresent()) {
             return childTreeRef;
         }
@@ -127,11 +125,22 @@ public class DepthSearch {
         if (parent.isEmpty()) {
             return Optional.absent();
         }
-        if (parent.children().isPresent()) {
-            ImmutableList<NodeRef> refs = parent.children().get();
-            for (int i = 0; i < refs.size(); i++) {
-                if (directChildPath.equals(refs.get(i).getPath())) {
-                    return Optional.of(refs.get(i));
+
+        if (parent.trees().isPresent() || parent.features().isPresent()) {
+            if (parent.trees().isPresent()) {
+                ImmutableList<NodeRef> refs = parent.trees().get();
+                for (int i = 0; i < refs.size(); i++) {
+                    if (directChildPath.equals(refs.get(i).getPath())) {
+                        return Optional.of(refs.get(i));
+                    }
+                }
+            }
+            if (parent.features().isPresent()) {
+                ImmutableList<NodeRef> refs = parent.features().get();
+                for (int i = 0; i < refs.size(); i++) {
+                    if (directChildPath.equals(refs.get(i).getPath())) {
+                        return Optional.of(refs.get(i));
+                    }
                 }
             }
             return Optional.absent();

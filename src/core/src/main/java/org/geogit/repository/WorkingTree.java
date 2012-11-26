@@ -29,6 +29,7 @@ import org.geogit.api.plumbing.DiffWorkTree;
 import org.geogit.api.plumbing.FindOrCreateSubtree;
 import org.geogit.api.plumbing.FindTreeChild;
 import org.geogit.api.plumbing.HashObject;
+import org.geogit.api.plumbing.LsTreeOp;
 import org.geogit.api.plumbing.ResolveTreeish;
 import org.geogit.api.plumbing.RevObjectParse;
 import org.geogit.api.plumbing.UpdateRef;
@@ -44,11 +45,13 @@ import org.opengis.filter.Filter;
 import org.opengis.geometry.BoundingBox;
 import org.opengis.util.ProgressListener;
 
+import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
-import com.google.common.collect.Lists;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Iterators;
 import com.google.common.collect.Maps;
 import com.google.inject.Inject;
 
@@ -481,16 +484,30 @@ public class WorkingTree {
      */
     public List<QName> getFeatureTypeNames() {
         // List<QName> names = new ArrayList<QName>();
-        RevTree root = getTree();
+        // RevTree root = getTree();
 
-        final List<QName> typeNames = Lists.newLinkedList();
-        if (root.children().isPresent()) {
-            for (NodeRef typeTreeRef : root.children().get()) {
-                String localName = NodeRef.nodeFromPath(typeTreeRef.getPath());
-                typeNames.add(new QName(localName));
-            }
-        }
-        return typeNames;
+        Iterator<NodeRef> allTrees = repository.command(LsTreeOp.class).setReference(Ref.WORK_HEAD)
+                .setStrategy(LsTreeOp.Strategy.DEPTHFIRST_ONLY_TREES).call();
+
+        ImmutableList<QName> treeNames = ImmutableList.copyOf(Iterators.transform(allTrees,
+                new Function<NodeRef, QName>() {
+
+                    @Override
+                    public QName apply(NodeRef treeRef) {
+                        Preconditions.checkArgument(TYPE.TREE.equals(treeRef.getType()));
+                        String localName = NodeRef.nodeFromPath(treeRef.getPath());
+                        return new QName(localName);
+                    }
+                }));
+        return treeNames;
+
+        // final List<QName> typeNames = Lists.newLinkedList();
+        // if (root.features().isPresent()) {
+        // for (NodeRef typeTreeRef : root.features().get()) {
+        // String localName = NodeRef.nodeFromPath(typeTreeRef.getPath());
+        // typeNames.add(new QName(localName));
+        // }
+        // }
+        // return typeNames;
     }
-
 }

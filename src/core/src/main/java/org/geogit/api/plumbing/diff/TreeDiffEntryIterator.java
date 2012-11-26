@@ -29,7 +29,6 @@ import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.AbstractIterator;
 import com.google.common.collect.ArrayListMultimap;
-import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.Iterators;
 import com.google.common.collect.ListMultimap;
@@ -64,31 +63,37 @@ class TreeDiffEntryIterator extends AbstractIterator<DiffEntry> {
             delegate = addRemoveAll(newTree, ADDED);
         } else if (newTree == null || newTree.isEmpty()) {
             delegate = addRemoveAll(oldTree, REMOVED);
-        } else if (oldTree.children().isPresent() && newTree.children().isPresent()) {
-            ImmutableCollection<NodeRef> left = oldTree.children().get();
-            ImmutableCollection<NodeRef> right = newTree.children().get();
+        } else if (!oldTree.buckets().isPresent() && !newTree.buckets().isPresent()) {
+
+            Iterator<NodeRef> left = oldTree.children();
+            Iterator<NodeRef> right = newTree.children();
+
             delegate = new ChildrenChildrenDiff(left, right);
+
         } else if (oldTree.buckets().isPresent() && newTree.buckets().isPresent()) {
             delegate = new BucketBucketDiff(oldTree.buckets().get(), newTree.buckets().get());
 
-        } else if (oldTree.children().isPresent()) {
-            checkState(newTree.buckets().isPresent());
-            ImmutableCollection<NodeRef> left = oldTree.children().get();
+        } else if (newTree.buckets().isPresent()) {
+            checkState(!oldTree.buckets().isPresent());
+
+            DepthTreeIterator left = new DepthTreeIterator(oldTree, objectDb,
+                    DepthTreeIterator.Strategy.RECURSIVE_FEATURES_ONLY);
 
             DepthTreeIterator rightIterator;
-            rightIterator = new DepthTreeIterator(newTree, objectDb, serialFactory);
-            rightIterator.setTraverseSubtrees(true);
-            delegate = new ChildrenChildrenDiff(left.iterator(), rightIterator);
+            rightIterator = new DepthTreeIterator(newTree, objectDb,
+                    DepthTreeIterator.Strategy.RECURSIVE_FEATURES_ONLY);
+            delegate = new ChildrenChildrenDiff(left, rightIterator);
 
         } else {
             checkState(oldTree.buckets().isPresent());
-            checkState(newTree.children().isPresent());
-            ImmutableCollection<NodeRef> right = newTree.children().get();
+
+            DepthTreeIterator right = new DepthTreeIterator(newTree, objectDb,
+                    DepthTreeIterator.Strategy.RECURSIVE_FEATURES_ONLY);
 
             DepthTreeIterator leftIterator;
-            leftIterator = new DepthTreeIterator(oldTree, objectDb, serialFactory);
-            leftIterator.setTraverseSubtrees(true);
-            delegate = new ChildrenChildrenDiff(leftIterator, right.iterator());
+            leftIterator = new DepthTreeIterator(oldTree, objectDb,
+                    DepthTreeIterator.Strategy.RECURSIVE_FEATURES_ONLY);
+            delegate = new ChildrenChildrenDiff(leftIterator, right);
             // delegate = new BucketsChildrenDiff(left, right);
         }
     }
@@ -104,8 +109,8 @@ class TreeDiffEntryIterator extends AbstractIterator<DiffEntry> {
     private Iterator<DiffEntry> addRemoveAll(final RevTree tree, final ChangeType changeType) {
         DepthTreeIterator treeIterator;
 
-        treeIterator = new DepthTreeIterator(tree, objectDb, serialFactory);
-        treeIterator.setTraverseSubtrees(true);
+        treeIterator = new DepthTreeIterator(tree, objectDb,
+                DepthTreeIterator.Strategy.RECURSIVE_FEATURES_ONLY);
 
         return Iterators.transform(treeIterator, new RefToDiffEntry(changeType));
     }
@@ -125,15 +130,6 @@ class TreeDiffEntryIterator extends AbstractIterator<DiffEntry> {
 
         private @Nullable
         Iterator<DiffEntry> subtreeIterator;
-
-        /**
-         * @param left
-         * @param right
-         */
-        public ChildrenChildrenDiff(ImmutableCollection<NodeRef> left,
-                ImmutableCollection<NodeRef> right) {
-            this(left.iterator(), right.iterator());
-        }
 
         public ChildrenChildrenDiff(Iterator<NodeRef> left, Iterator<NodeRef> right) {
 

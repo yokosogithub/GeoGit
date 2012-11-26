@@ -33,7 +33,7 @@ abstract class HessianRevReader {
      * Different types of tree nodes.
      */
     public enum Node {
-        REF(0), TREE(1), END(2);
+        REF(0), BUCKET(1), END(2);
 
         private int value;
 

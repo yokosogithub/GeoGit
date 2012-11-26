@@ -10,6 +10,7 @@ import java.util.TreeMap;
 
 import org.geogit.api.NodeRef;
 import org.geogit.api.ObjectId;
+import org.geogit.api.RevObject.TYPE;
 import org.geogit.api.RevTree;
 import org.geogit.api.RevTreeImpl;
 import org.geogit.storage.ObjectReader;
@@ -41,7 +42,8 @@ class HessianRevTreeReader extends HessianRevReader implements ObjectReader<RevT
 
             final long size = hin.readLong();
 
-            Builder<NodeRef> children = ImmutableList.builder();
+            Builder<NodeRef> features = ImmutableList.builder();
+            Builder<NodeRef> trees = ImmutableList.builder();
             TreeMap<Integer, ObjectId> subtrees = Maps.newTreeMap();
 
             while (true) {
@@ -49,8 +51,12 @@ class HessianRevTreeReader extends HessianRevReader implements ObjectReader<RevT
 
                 if (type.equals(Node.REF)) {
                     NodeRef entryRef = readNodeRef(hin);
-                    children.add(entryRef);
-                } else if (type.equals(Node.TREE)) {
+                    if (entryRef.getType().equals(TYPE.TREE)) {
+                        trees.add(entryRef);
+                    } else {
+                        features.add(entryRef);
+                    }
+                } else if (type.equals(Node.BUCKET)) {
                     parseAndSetSubTree(hin, subtrees);
                 } else if (type.equals(Node.END)) {
                     break;
@@ -61,7 +67,7 @@ class HessianRevTreeReader extends HessianRevReader implements ObjectReader<RevT
 
             RevTree tree;
             if (subtrees.isEmpty()) {
-                tree = RevTreeImpl.createLeafTree(id, size, children.build());
+                tree = RevTreeImpl.createLeafTree(id, size, features.build(), trees.build());
             } else {
                 tree = RevTreeImpl.createNodeTree(id, size, subtrees);
             }

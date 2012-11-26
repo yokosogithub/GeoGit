@@ -5,6 +5,7 @@
 
 package org.geogit.api.plumbing;
 
+import java.util.Iterator;
 import java.util.Map.Entry;
 
 import org.geogit.api.AbstractGeoGitOp;
@@ -16,7 +17,6 @@ import org.geogit.api.RevTree;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.google.common.base.Supplier;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedMap;
 
 /**
@@ -59,9 +59,7 @@ public class CatObject extends AbstractGeoGitOp<CharSequence> {
 
         private void printTree(RevTree tree, final int indent) {
             println(tree.getId().toString());
-            if (tree.children().isPresent()) {
-                printChildren(tree.children().get(), indent);
-            }
+            printChildren(tree.children(), indent);
             if (tree.buckets().isPresent()) {
                 printBuckets(tree.buckets().get(), indent);
             }
@@ -82,8 +80,9 @@ public class CatObject extends AbstractGeoGitOp<CharSequence> {
             }
         }
 
-        private void printChildren(ImmutableList<NodeRef> children, int indent) {
-            for (NodeRef ref : children) {
+        private void printChildren(Iterator<NodeRef> children, int indent) {
+            while (children.hasNext()) {
+                NodeRef ref = children.next();
                 indent(indent + 1);
                 print(ref.getObjectId().toString());
                 print(" --> ");

@@ -19,9 +19,9 @@ import org.geogit.cli.porcelain.Fetch;
 import org.geogit.cli.porcelain.Help;
 import org.geogit.cli.porcelain.Init;
 import org.geogit.cli.porcelain.Log;
-import org.geogit.cli.porcelain.Rebase;
 import org.geogit.cli.porcelain.Pull;
 import org.geogit.cli.porcelain.Push;
+import org.geogit.cli.porcelain.Rebase;
 import org.geogit.cli.porcelain.RemoteExtension;
 import org.geogit.cli.porcelain.Reset;
 import org.geogit.cli.porcelain.Status;
@@ -71,6 +71,10 @@ public class BuiltinCommandsModule extends AbstractModule implements CLIModule {
         bind(Status.class);
         bind(Rebase.class);
         bind(Reset.class);
+        bind(Clone.class);
+        bind(Fetch.class);
+        bind(Push.class);
+        bind(Pull.class);
         bind(LsTree.class);
     }
 

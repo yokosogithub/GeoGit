@@ -173,8 +173,16 @@ class HashObjectFunnels {
         @Override
         public void funnel(RevTree from, PrimitiveSink into) {
             RevObjectTypeFunnel.funnel(TYPE.TREE, into);
-            if (from.children().isPresent()) {
-                ImmutableList<NodeRef> children = from.children().get();
+            if (from.trees().isPresent()) {
+                ImmutableList<NodeRef> trees = from.trees().get();
+                NodeRef ref;
+                for (int i = 0; i < trees.size(); i++) {
+                    ref = trees.get(i);
+                    NodeRefFunnel.funnel(ref, into);
+                }
+            }
+            if (from.features().isPresent()) {
+                ImmutableList<NodeRef> children = from.features().get();
                 NodeRef ref;
                 for (int i = 0; i < children.size(); i++) {
                     ref = children.get(i);

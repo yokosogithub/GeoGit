@@ -13,5 +13,5 @@ import org.geogit.api.Remote;
 public class SendPack {
 
     private Remote remote;
-    
+
 }

@@ -259,23 +259,30 @@ public class TreeDiffEntryIteratorTest extends Assert {
     @SuppressWarnings("unchecked")
     private RevTree childenTree(@Nullable String... pathIdKvps) {
 
-        TreeSet<NodeRef> refs = Sets.newTreeSet(new NodeRefStorageOrder());
+        TreeSet<NodeRef> features = Sets.newTreeSet(new NodeRefStorageOrder());
+        TreeSet<NodeRef> trees = Sets.newTreeSet(new NodeRefStorageOrder());
 
         if (pathIdKvps != null) {
             for (int i = 0; i < pathIdKvps.length; i += 2) {
                 String path = pathIdKvps[i];
                 String idStr = pathIdKvps[i + 1];
                 NodeRef ref = ref(path, idStr);
-                refs.add(ref);
+                if (ref.getType().equals(TYPE.FEATURE)) {
+                    features.add(ref);
+                } else {
+                    trees.add(ref);
+                }
             }
         }
 
         ObjectId id = pathIdKvps == null ? ObjectId.forString("null") : ObjectId.forString(Joiner
                 .on(" ").join(pathIdKvps));
 
-        ImmutableList<NodeRef> sortedRefs = ImmutableList.copyOf(refs);
+        ImmutableList<NodeRef> sortedRefs = ImmutableList.copyOf(features);
         long size = sortedRefs.size();
-        RevTreeImpl tree = RevTreeImpl.createLeafTree(id, size, sortedRefs);
+
+        ImmutableList<NodeRef> treeRefs = ImmutableList.copyOf(trees);
+        RevTreeImpl tree = RevTreeImpl.createLeafTree(id, size, sortedRefs, treeRefs);
 
         when(mockDb.get(eq(id), (ObjectReader<RevTree>) any())).thenReturn(tree);
 

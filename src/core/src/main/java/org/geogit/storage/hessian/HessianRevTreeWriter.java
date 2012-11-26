@@ -49,8 +49,11 @@ class HessianRevTreeWriter extends HessianRevWriter implements ObjectWriter<RevT
             final long size = revTree.size();
             hout.writeLong(size);
 
-            if (revTree.children().isPresent()) {
-                writeChildren(hout, revTree.children().get());
+            if (revTree.trees().isPresent()) {
+                writeChildren(hout, revTree.trees().get());
+            }
+            if (revTree.features().isPresent()) {
+                writeChildren(hout, revTree.features().get());
             } else if (revTree.buckets().isPresent()) {
                 writeBuckets(hout, revTree.buckets().get());
             }
@@ -74,7 +77,7 @@ class HessianRevTreeWriter extends HessianRevWriter implements ObjectWriter<RevT
             throws IOException {
 
         for (Entry<Integer, ObjectId> entry : buckets.entrySet()) {
-            hout.writeInt(HessianRevReader.Node.TREE.getValue());
+            hout.writeInt(HessianRevReader.Node.BUCKET.getValue());
             hout.writeInt(entry.getKey().intValue());
             HessianRevTreeWriter.this.writeObjectId(hout, entry.getValue());
         }

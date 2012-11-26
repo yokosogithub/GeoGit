@@ -20,6 +20,7 @@ import org.geogit.api.RevTree;
 import org.geogit.api.RevTreeBuilder;
 import org.geogit.api.plumbing.FindTreeChild;
 import org.geogit.api.plumbing.diff.DepthTreeIterator;
+import org.geogit.api.plumbing.diff.DepthTreeIterator.Strategy;
 import org.geogit.storage.ObjectDatabase;
 import org.geogit.storage.ObjectSerialisingFactory;
 import org.junit.Test;
@@ -66,7 +67,8 @@ public class RevTreeBuilderTest extends RepositoryTestCase {
         System.err.println("traversing with DepthTreeIterator...");
         sw.reset().start();
         int counted = 0;
-        for (DepthTreeIterator it = new DepthTreeIterator(tree, odb, serialFactory); it.hasNext(); counted++) {
+        for (DepthTreeIterator it = new DepthTreeIterator(tree, odb, Strategy.CHILDREN); it
+                .hasNext(); counted++) {
             NodeRef ref = it.next();
             if ((counted + 1) % (numEntries / 10) == 0) {
                 System.err.print("#" + (counted + 1));
@@ -81,7 +83,8 @@ public class RevTreeBuilderTest extends RepositoryTestCase {
         System.err.println("traversing with DepthTreeIterator...");
         sw.reset().start();
         counted = 0;
-        for (DepthTreeIterator it = new DepthTreeIterator(tree, odb, serialFactory); it.hasNext(); counted++) {
+        for (DepthTreeIterator it = new DepthTreeIterator(tree, odb, Strategy.CHILDREN); it
+                .hasNext(); counted++) {
             NodeRef ref = it.next();
             if ((counted + 1) % (numEntries / 10) == 0) {
                 System.err.print("#" + (counted + 1));
@@ -173,7 +176,7 @@ public class RevTreeBuilderTest extends RepositoryTestCase {
         final Set<String> removedKeys = new HashSet<String>();
         {
             int i = 0;
-            DepthTreeIterator it = new DepthTreeIterator(tree, odb, serialFactory);
+            DepthTreeIterator it = new DepthTreeIterator(tree, odb, Strategy.CHILDREN);
             for (; it.hasNext(); i++) {
                 NodeRef entry = it.next();
                 if (i % 10 == 0) {
@@ -207,7 +210,7 @@ public class RevTreeBuilderTest extends RepositoryTestCase {
         final Set<String> removedKeys = new HashSet<String>();
         {
             int i = 0;
-            DepthTreeIterator it = new DepthTreeIterator(tree, odb, serialFactory);
+            DepthTreeIterator it = new DepthTreeIterator(tree, odb, Strategy.CHILDREN);
             for (; it.hasNext(); i++) {
                 NodeRef entry = it.next();
                 if (i % 10 == 0) {

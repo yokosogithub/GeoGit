@@ -7,17 +7,16 @@ package org.geogit.api.plumbing.diff;
 import static com.google.common.base.Preconditions.checkState;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Iterator;
 import java.util.Set;
 import java.util.SortedSet;
-import java.util.TreeSet;
 
 import javax.annotation.Nonnull;
 
 import org.geogit.api.NodeRef;
 import org.geogit.api.ObjectId;
 import org.geogit.api.RevObject;
+import org.geogit.api.RevObject.TYPE;
 import org.geogit.api.RevTree;
 import org.geogit.storage.NodeRefStorageOrder;
 import org.geogit.storage.ObjectDatabase;
@@ -93,15 +92,13 @@ public class DiffCounter implements Supplier<Long> {
 
         long count = 0L;
 
-        final boolean childrenVsChildren = oldTree.children().isPresent()
-                && newTree.children().isPresent();
+        final boolean childrenVsChildren = !oldTree.buckets().isPresent()
+                && !newTree.buckets().isPresent();
         final boolean bucketsVsBuckets = oldTree.buckets().isPresent()
                 && newTree.buckets().isPresent();
 
         if (childrenVsChildren) {
-            ImmutableList<NodeRef> leftChildren = oldTree.children().get();
-            ImmutableList<NodeRef> rightChildren = newTree.children().get();
-            count = countChildrenDiffs(leftChildren, rightChildren);
+            count = countChildrenDiffs(oldTree, newTree);
         } else if (bucketsVsBuckets) {
             ImmutableSortedMap<Integer, ObjectId> leftBuckets = oldTree.buckets().get();
             ImmutableSortedMap<Integer, ObjectId> rightBuckets = newTree.buckets().get();
@@ -110,13 +107,12 @@ public class DiffCounter implements Supplier<Long> {
             // get the children and buckets from the respective trees, order doesn't matter as we're
             // counting diffs
             ImmutableSortedMap<Integer, ObjectId> buckets;
-            ImmutableList<NodeRef> children;
+            Iterator<NodeRef> children;
 
             buckets = oldTree.buckets().isPresent() ? oldTree.buckets().get() : newTree.buckets()
                     .get();
-            children = oldTree.children().isPresent() ? oldTree.children().get() : newTree
-                    .children().get();
 
+            children = oldTree.buckets().isPresent() ? newTree.children() : oldTree.children();
             count = countBucketsChildren(buckets, children);
         }
 
@@ -125,11 +121,11 @@ public class DiffCounter implements Supplier<Long> {
 
     /**
      * Handles the case where one version of a tree has so few nodes that they all fit in its
-     * {@link RevTree#children()} list, but the other version of the tree has more nodes so its
-     * split into {@link RevTree#buckets()}. Nonetheless, it doesn't mean that the smaller tree
+     * {@link RevTree#children() children}, but the other version of the tree has more nodes so its
+     * split into {@link RevTree#buckets()}.
      */
     private long countBucketsChildren(ImmutableSortedMap<Integer, ObjectId> buckets,
-            ImmutableList<NodeRef> children) {
+            Iterator<NodeRef> children) {
 
         final NodeRefStorageOrder refOrder = new NodeRefStorageOrder();
         final int bucketDepth = 0; // start at depth 0
@@ -137,43 +133,60 @@ public class DiffCounter implements Supplier<Long> {
     }
 
     private long countBucketsChildren(ImmutableSortedMap<Integer, ObjectId> buckets,
-            Collection<NodeRef> children, final NodeRefStorageOrder refOrder, final int depth) {
+            Iterator<NodeRef> children, final NodeRefStorageOrder refOrder, final int depth) {
 
-        final SortedSetMultimap<Integer, NodeRef> childrenByBucket;
+        final SortedSetMultimap<Integer, NodeRef> treesByBucket;
+        final SortedSetMultimap<Integer, NodeRef> featuresByBucket;
         {
-            childrenByBucket = TreeMultimap.create();
-            for (NodeRef ref : children) {
+            treesByBucket = TreeMultimap.create(Ordering.natural(), refOrder); // make sure values
+                                                                               // are sorted
+                                                                               // according to
+                                                                               // refOrder
+            featuresByBucket = TreeMultimap.create(Ordering.natural(), refOrder);// make sure values
+                                                                                 // are sorted
+                                                                                 // according to
+                                                                                 // refOrder
+            while (children.hasNext()) {
+                NodeRef ref = children.next();
                 Integer bucket = refOrder.bucket(ref, depth);
-                childrenByBucket.put(bucket, ref);
+                if (ref.getType().equals(TYPE.TREE)) {
+                    treesByBucket.put(bucket, ref);
+                } else {
+                    featuresByBucket.put(bucket, ref);
+                }
             }
         }
 
         long count = 0;
 
-        {// count full size of all buckets for which no chilren falls into
+        {// count full size of all buckets for which no children falls into
             final Set<Integer> loneleyBuckets = Sets.difference(buckets.keySet(),
-                    childrenByBucket.keySet());
+                    Sets.union(featuresByBucket.keySet(), treesByBucket.keySet()));
+
             for (Integer bucket : loneleyBuckets) {
                 ObjectId bucketId = buckets.get(bucket);
                 count += sizeOfTree(bucketId);
             }
         }
         {// count the full size of all children whose buckets don't exist on the buckets tree
-            final Set<Integer> nonExistingBuckets = Sets.difference(childrenByBucket.keySet(),
-                    buckets.keySet());
+            for (Integer bucket : Sets.difference(featuresByBucket.keySet(), buckets.keySet())) {
+                SortedSet<NodeRef> refs = featuresByBucket.get(bucket);
+                count += refs.size();
+            }
 
-            for (Integer bucket : nonExistingBuckets) {
-                SortedSet<NodeRef> refs = childrenByBucket.get(bucket);
+            for (Integer bucket : Sets.difference(treesByBucket.keySet(), buckets.keySet())) {
+                SortedSet<NodeRef> refs = treesByBucket.get(bucket);
                 count += aggregateSize(refs);
             }
         }
 
         // find the number of diffs of the intersection
         final Set<Integer> commonBuckets = Sets.intersection(buckets.keySet(),
-                childrenByBucket.keySet());
+                Sets.union(featuresByBucket.keySet(), treesByBucket.keySet()));
         for (Integer bucket : commonBuckets) {
 
-            final Set<NodeRef> refs = childrenByBucket.get(bucket);
+            Iterator<NodeRef> refs = Iterators.concat(treesByBucket.get(bucket).iterator(),
+                    featuresByBucket.get(bucket).iterator());
 
             final ObjectId bucketId = buckets.get(bucket);
             final RevTree bucketTree = getTree(bucketId);
@@ -181,11 +194,8 @@ public class DiffCounter implements Supplier<Long> {
             if (bucketTree.isEmpty()) {
                 // unlikely
                 count += aggregateSize(refs);
-            } else if (bucketTree.children().isPresent()) {
-                TreeSet<NodeRef> sortedRefs = Sets.newTreeSet(refOrder);
-                sortedRefs.addAll(refs);
-                ImmutableList<NodeRef> rightChildren = ImmutableList.copyOf(sortedRefs);
-                count += countChildrenDiffs(bucketTree.children().get(), rightChildren);
+            } else if (!bucketTree.buckets().isPresent()) {
+                count += countChildrenDiffs(bucketTree.children(), refs);
             } else {
                 final int deeperBucketsDepth = depth + 1;
                 final ImmutableSortedMap<Integer, ObjectId> deeperBuckets;
@@ -223,15 +233,25 @@ public class DiffCounter implements Supplier<Long> {
         return count;
     }
 
-    private long countChildrenDiffs(ImmutableList<NodeRef> leftChildren,
-            ImmutableList<NodeRef> rightChildren) {
+    private long countChildrenDiffs(RevTree leftTree, RevTree rightTree) {
+        // ImmutableList<NodeRef> empty = ImmutableList.of();
+        //
+        // Set<NodeRef> leftFeatures = ImmutableSet.copyOf(leftTree.features().or(empty));
+        // Set<NodeRef> rightFeatures = ImmutableSet.copyOf(rightTree.features().or(empty));
+        // SetView<NodeRef> featureDiff = Sets.difference(leftFeatures, rightFeatures);
+        // long count = featureDiff.size();
+
+        return countChildrenDiffs(leftTree.children(), rightTree.children());
+    }
+
+    private long countChildrenDiffs(Iterator<NodeRef> leftTree, Iterator<NodeRef> rightTree) {
 
         final Ordering<NodeRef> storageOrder = new NodeRefStorageOrder();
 
         long count = 0;
 
-        PeekingIterator<NodeRef> left = Iterators.peekingIterator(leftChildren.iterator());
-        PeekingIterator<NodeRef> right = Iterators.peekingIterator(rightChildren.iterator());
+        PeekingIterator<NodeRef> left = Iterators.peekingIterator(leftTree);
+        PeekingIterator<NodeRef> right = Iterators.peekingIterator(rightTree);
 
         while (left.hasNext() && right.hasNext()) {
             NodeRef peekLeft = left.peek();
@@ -268,6 +288,8 @@ public class DiffCounter implements Supplier<Long> {
         } else if (right.hasNext()) {
             count += countRemaining(right);
         }
+        Preconditions.checkState(!left.hasNext());
+        Preconditions.checkState(!right.hasNext());
         return count;
     }
 
@@ -297,8 +319,13 @@ public class DiffCounter implements Supplier<Long> {
     }
 
     private long aggregateSize(Iterable<NodeRef> children) {
+        return aggregateSize(children.iterator());
+    }
+
+    private long aggregateSize(Iterator<NodeRef> children) {
         long size = 0;
-        for (NodeRef ref : children) {
+        while (children.hasNext()) {
+            NodeRef ref = children.next();
             if (RevObject.TYPE.FEATURE.equals(ref.getType())) {
                 size++;
             } else if (RevObject.TYPE.TREE.equals(ref.getType())) {

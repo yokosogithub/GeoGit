@@ -2,6 +2,7 @@ package org.geogit.remote;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Iterator;
 
 import org.geogit.api.GeoGIT;
 import org.geogit.api.NodeRef;
@@ -136,10 +137,10 @@ public class LocalRemoteRepo implements IRemoteRepo {
                 for (ObjectId bucketId : tree.buckets().get().values()) {
                     walkTree(bucketId, from, to, objectInserter);
                 }
-            }
-            // get new objects
-            if (tree.children().isPresent()) {
-                for (NodeRef ref : tree.children().get()) {
+            } else {
+                // get new objects
+                for (Iterator<NodeRef> children = tree.children(); children.hasNext();) {
+                    NodeRef ref = children.next();
                     moveObject(ref.getObjectId(), from, to, objectInserter);
                     if (!ref.getMetadataId().isNull()) {
                         moveObject(ref.getMetadataId(), from, to, objectInserter);

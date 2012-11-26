@@ -18,7 +18,6 @@ import org.geogit.api.RevObject.TYPE;
 import org.geogit.api.RevTree;
 import org.geogit.api.plumbing.diff.DepthTreeIterator;
 import org.geogit.repository.WorkingTree;
-import org.geogit.storage.ObjectSerialisingFactory;
 import org.geogit.storage.StagingDatabase;
 
 import com.google.common.base.Optional;
@@ -34,26 +33,49 @@ import com.google.inject.Inject;
  */
 public class LsTreeOp extends AbstractGeoGitOp<Iterator<NodeRef>> {
 
+    public enum Strategy {
+        /**
+         * Default ls strategy, list the all direct child entries of a tree
+         */
+        CHILDREN,
+        /**
+         * List only the direct child entries of a tree that are of type FEATURE
+         */
+        FEATURES_ONLY,
+        /**
+         * List only the direct child entries of a tree that are of type TREE
+         */
+        TREES_ONLY,
+        /**
+         * Recursively list the contents of a tree in depth-first order, returning the tree ref when
+         * a tree node is found followed by the contents of the subtree
+         */
+        DEPTHFIRST,
+        /**
+         * Recursively list the contents of a tree in depth-first order, but do not report TREE
+         * entries, only FEATURE ones
+         */
+        DEPTHFIRST_ONLY_FEATURES,
+        /**
+         * Recursively list the contents of a tree in depth-first order, but do not report TREE
+         * entries, only FEATURE ones
+         */
+        DEPTHFIRST_ONLY_TREES
+    }
+
     private WorkingTree workTree;
 
     private StagingDatabase index;
 
-    private ObjectSerialisingFactory serialFactory;
-
-    private boolean recursive;
+    private Strategy strategy;
 
     private String ref;
 
-    private boolean includeTrees;
-
-    private boolean onlyTrees;
-
     @Inject
-    public LsTreeOp(WorkingTree workTree, StagingDatabase index,
-            ObjectSerialisingFactory serialFactory) {
+    public LsTreeOp(WorkingTree workTree, StagingDatabase index) {
         this.workTree = workTree;
         this.index = index;
-        this.serialFactory = serialFactory;
+        this.strategy = Strategy.CHILDREN;
     }
 
     /**
@@ -65,34 +87,9 @@ public class LsTreeOp extends AbstractGeoGitOp<Iterator<NodeRef>> {
         return this;
     }
 
-    /**
-     * 
-     * @param recursive if true, content of subtrees is listed recursively. If false, only content
-     *        of the given path is listed
-     * @return {@code this}
-     */
-    public LsTreeOp setRecursive(boolean recursive) {
-        this.recursive = recursive;
-        return this;
-    }
-
-    /**
-     * 
-     * @param showTrees if true, returns trees.
-     * @return {@code this}
-     */
-    public LsTreeOp setIncludeTrees(boolean includeTrees) {
-        this.includeTrees = includeTrees;
-        return this;
-    }
-
-    /**
-     * 
-     * @param onlyTrees if true, returns only trees, not children.
-     * @return {@code this}
-     */
-    public LsTreeOp setOnlyTrees(boolean onlyTrees) {
-        this.onlyTrees = onlyTrees;
+    public LsTreeOp setStrategy(final Strategy strategy) {
+        Preconditions.checkNotNull(strategy);
+        this.strategy = strategy;
         return this;
     }
 
@@ -130,16 +127,38 @@ public class LsTreeOp extends AbstractGeoGitOp<Iterator<NodeRef>> {
             ObjectId treeId = revCommit.getTreeId();
             revObject = command(RevObjectParse.class).setObjectId(treeId).call(RevObject.class);
         case TREE:
+
+            DepthTreeIterator.Strategy iterStrategy;
+
+            switch (this.strategy) {
+            case CHILDREN:
+                iterStrategy = DepthTreeIterator.Strategy.CHILDREN;
+                break;
+            case FEATURES_ONLY:
+                iterStrategy = DepthTreeIterator.Strategy.FEATURES_ONLY;
+                break;
+            case TREES_ONLY:
+                iterStrategy = DepthTreeIterator.Strategy.TREES_ONLY;
+                break;
+            case DEPTHFIRST:
+                iterStrategy = DepthTreeIterator.Strategy.RECURSIVE;
+                break;
+            case DEPTHFIRST_ONLY_FEATURES:
+                iterStrategy = DepthTreeIterator.Strategy.RECURSIVE_FEATURES_ONLY;
+                break;
+            case DEPTHFIRST_ONLY_TREES:
+                iterStrategy = DepthTreeIterator.Strategy.RECURSIVE_TREES_ONLY;
+                break;
+            default:
+                throw new IllegalStateException("Unknown strategy: " + this.strategy);
+            }
+
             DepthTreeIterator iter = new DepthTreeIterator((RevTree) revObject.get(), index,
-                    serialFactory);
-            iter.setTraverseSubtrees(recursive);
-            iter.setOnlyTrees(onlyTrees);
-            iter.setIncludeTrees(includeTrees);
+                    iterStrategy);
             return iter;
         default:
             throw new IllegalArgumentException(String.format("Invalid reference: %s", ref));
         }
 
     }
-
 }

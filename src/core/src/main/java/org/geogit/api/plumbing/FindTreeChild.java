@@ -25,6 +25,7 @@ import com.google.inject.Inject;
 /**
  * Finds a {@link NodeRef} by searching the given {@link RevTree} for the given path.
  * 
+ * @see DepthSearch
  * @see ResolveTreeish
  * @see RevObjectParse
  */

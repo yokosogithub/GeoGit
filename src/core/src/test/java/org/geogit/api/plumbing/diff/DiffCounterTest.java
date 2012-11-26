@@ -84,7 +84,8 @@ public class DiffCounterTest extends Assert {
     }
 
     private long count(RevTree left, RevTree right) {
-        Long count = new DiffCounter(odb, left, right, serialFactory).get();
+        DiffCounter counter = new DiffCounter(odb, left, right, serialFactory);
+        Long count = counter.get();
         return count.longValue();
     }
 
@@ -248,7 +249,7 @@ public class DiffCounterTest extends Assert {
         RevTree changed = builder.build();
         assertEquals(RevTree.NORMALIZED_SIZE_LIMIT, changed.size());
         // sanity check
-        assertTrue(changed.children().isPresent());
+        assertTrue(changed.features().isPresent());
         assertFalse(changed.buckets().isPresent());
 
         final long expected = deepTree.size() - changed.size();
