@@ -21,6 +21,8 @@ import com.google.inject.Inject;
 
 /**
  * Incorporates changes from a remote repository into the current branch.
+ * 
+ * @author jgarrett
  */
 public class PullOp extends AbstractGeoGitOp<Void> {
 

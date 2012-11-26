@@ -13,27 +13,51 @@ import org.geogit.repository.Repository;
 import com.google.common.collect.ImmutableSet;
 
 /**
- *
+ * Provides an interface for interacting with remote repositories.
  */
 public interface IRemoteRepo {
 
     /**
+     * Opens the remote repository.
      * 
+     * @throws IOException
      */
     public void open() throws IOException;
 
+    /**
+     * Closes the remote repository.
+     * 
+     * @throws IOException
+     */
     public void close() throws IOException;
 
     /**
+     * List the remote's {@link Ref refs}.
+     * 
      * @param getHeads whether to return refs in the {@code refs/heads} namespace
      * @param getTags whether to return refs in the {@code refs/tags} namespace
-     * @return
+     * @return an immutable set of refs from the remote
      */
     public ImmutableSet<Ref> listRefs(boolean getHeads, boolean getTags);
 
+    /**
+     * @return the remote's HEAD {@link Ref}.
+     */
     public Ref headRef();
 
+    /**
+     * Fetch all new objects from the specified {@link Ref} from the remote.
+     * 
+     * @param localRepository the repository to add new objects to
+     * @param ref the remote ref that points to new commit data
+     */
     public void fetchNewData(Repository localRepository, Ref ref);
 
+    /**
+     * Push all new objects from the specified {@link Ref} to the remote.
+     * 
+     * @param localRepository the repository to get new objects from
+     * @param ref the local ref that points to new commit data
+     */
     public void pushNewData(Repository localRepository, Ref ref);
 }

@@ -28,6 +28,12 @@ import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableSet;
 import com.google.inject.Injector;
 
+/**
+ * An implementation of a remote repository that exists on the local machine.
+ * 
+ * @see IRemoteRepo
+ * @author jgarrett
+ */
 public class LocalRemoteRepo implements IRemoteRepo {
 
     private GeoGIT remoteGeoGit;
@@ -36,15 +42,29 @@ public class LocalRemoteRepo implements IRemoteRepo {
 
     private File workingDirectory;
 
+    /**
+     * Constructs a new {@code LocalRemoteRepo} with the given parameters.
+     * 
+     * @param injector the Guice injector for the new repository
+     * @param workingDirectory the directory of the remote repository
+     */
     public LocalRemoteRepo(Injector injector, File workingDirectory) {
         this.injector = injector;
         this.workingDirectory = workingDirectory;
     }
 
+    /**
+     * @param geogit manually set a geogit for this remote repository
+     */
     public void setGeoGit(GeoGIT geogit) {
         this.remoteGeoGit = geogit;
     }
 
+    /**
+     * Opens the remote repository.
+     * 
+     * @throws IOException
+     */
     @Override
     public void open() throws IOException {
         if (remoteGeoGit == null) {
@@ -54,12 +74,20 @@ public class LocalRemoteRepo implements IRemoteRepo {
 
     }
 
+    /**
+     * Closes the remote repository.
+     * 
+     * @throws IOException
+     */
     @Override
     public void close() throws IOException {
         remoteGeoGit.close();
 
     }
 
+    /**
+     * @return the remote's HEAD {@link Ref}.
+     */
     @Override
     public Ref headRef() {
         final Optional<Ref> currHead = remoteGeoGit.command(RefParse.class).setName(Ref.HEAD)
@@ -68,6 +96,13 @@ public class LocalRemoteRepo implements IRemoteRepo {
         return currHead.get();
     }
 
+    /**
+     * List the remote's {@link Ref refs}.
+     * 
+     * @param getHeads whether to return refs in the {@code refs/heads} namespace
+     * @param getTags whether to return refs in the {@code refs/tags} namespace
+     * @return an immutable set of refs from the remote
+     */
     @Override
     public ImmutableSet<Ref> listRefs(final boolean getHeads, final boolean getTags) {
         Predicate<Ref> filter = new Predicate<Ref>() {
@@ -86,12 +121,24 @@ public class LocalRemoteRepo implements IRemoteRepo {
         return remoteGeoGit.command(ForEachRef.class).setFilter(filter).call();
     }
 
+    /**
+     * Fetch all new objects from the specified {@link Ref} from the remote.
+     * 
+     * @param localRepository the repository to add new objects to
+     * @param ref the remote ref that points to new commit data
+     */
     @Override
     public void fetchNewData(Repository localRepository, Ref ref) {
         ObjectInserter objectInserter = localRepository.newObjectInserter();
         walkCommit(ref.getObjectId(), remoteGeoGit.getRepository(), localRepository, objectInserter);
     }
 
+    /**
+     * Push all new objects from the specified {@link Ref} to the remote.
+     * 
+     * @param localRepository the repository to get new objects from
+     * @param ref the local ref that points to new commit data
+     */
     @Override
     public void pushNewData(Repository localRepository, Ref ref) {
         ObjectInserter objectInserter = remoteGeoGit.getRepository().newObjectInserter();

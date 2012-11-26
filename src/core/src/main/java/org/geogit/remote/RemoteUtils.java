@@ -15,13 +15,17 @@ import com.google.common.base.Throwables;
 import com.google.inject.Injector;
 
 /**
- *
+ * Provides utilities for creating interfaces to remote repositories.
  */
 public class RemoteUtils {
 
     /**
-     * @param remoteConfig
-     * @return
+     * Constructs an interface to allow access to a remote repository.
+     * 
+     * @param injector a Guice injector for the new repository
+     * @param remoteConfig the remote to connect to
+     * @return an {@link Optional} of the interface to the remote repository, or
+     *         {@link Optional#absent()} if a connection to the remote could not be established.
      */
     public static Optional<IRemoteRepo> newRemote(Injector injector, Remote remoteConfig) {
 

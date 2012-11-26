@@ -44,6 +44,7 @@ import com.google.common.base.Throwables;
  * </ul>
  * 
  * @see CloneOp
+ * @author jgarrett
  */
 @Parameters(commandNames = "clone", commandDescription = "Clone a repository into a new directory")
 public class Clone extends AbstractCommand implements CLICommand {

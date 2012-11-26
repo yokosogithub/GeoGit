@@ -28,6 +28,8 @@ import com.google.inject.Inject;
 
 /**
  * Update remote refs along with associated objects.
+ * 
+ * @author jgarrett
  */
 public class PushOp extends AbstractGeoGitOp<Void> {
 
@@ -155,6 +157,10 @@ public class PushOp extends AbstractGeoGitOp<Void> {
         return null;
     }
 
+    /**
+     * @param remote the remote to get
+     * @return an interface for the remote repository
+     */
     public Optional<IRemoteRepo> getRemoteRepo(Remote remote) {
         return RemoteUtils.newRemote(GlobalInjectorBuilder.builder.get(), remote);
     }

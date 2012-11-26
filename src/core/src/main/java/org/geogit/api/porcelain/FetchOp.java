@@ -33,6 +33,8 @@ import com.google.inject.Inject;
 /**
  * Fetches named heads or tags from one or more other repositories, along with the objects necessary
  * to complete them.
+ * 
+ * @author jgarrett
  */
 public class FetchOp extends AbstractGeoGitOp<Void> {
 
@@ -72,7 +74,7 @@ public class FetchOp extends AbstractGeoGitOp<Void> {
     }
 
     /**
-     * @param remote the name or URL of a remote repository to fetch from
+     * @param remoteName the name or URL of a remote repository to fetch from
      * @return {@code this}
      */
     public FetchOp addRemote(final String remoteName) {
@@ -81,7 +83,7 @@ public class FetchOp extends AbstractGeoGitOp<Void> {
     }
 
     /**
-     * @param remote the remote repository to fetch from
+     * @param remoteSupplier the remote repository to fetch from
      * @return {@code this}
      */
     public FetchOp addRemote(Supplier<Optional<Remote>> remoteSupplier) {
@@ -183,6 +185,10 @@ public class FetchOp extends AbstractGeoGitOp<Void> {
         return null;
     }
 
+    /**
+     * @param remote the remote to get
+     * @return an interface for the remote repository
+     */
     public Optional<IRemoteRepo> getRemoteRepo(Remote remote) {
         return RemoteUtils.newRemote(GlobalInjectorBuilder.builder.get(), remote);
     }
