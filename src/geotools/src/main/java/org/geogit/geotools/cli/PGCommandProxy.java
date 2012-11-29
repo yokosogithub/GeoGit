@@ -7,6 +7,7 @@ package org.geogit.geotools.cli;
 
 import org.geogit.cli.CLICommandExtension;
 import org.geogit.geotools.porcelain.PGDescribe;
+import org.geogit.geotools.porcelain.PGExport;
 import org.geogit.geotools.porcelain.PGImport;
 import org.geogit.geotools.porcelain.PGList;
 
@@ -40,6 +41,8 @@ public class PGCommandProxy implements CLICommandExtension {
         commander.addCommand("import", new PGImport());
         commander.addCommand("list", new PGList());
         commander.addCommand("describe", new PGDescribe());
+        commander.addCommand("export", new PGExport());
+
         return commander;
     }
 }

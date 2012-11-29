@@ -51,14 +51,18 @@ public abstract class AbstractShpCommand implements CLICommand {
     @Override
     public void run(GeogitCLI cli) throws Exception {
         if (help) {
-            JCommander jc = new JCommander(this);
-            String commandName = this.getClass().getAnnotation(Parameters.class).commandNames()[0];
-            jc.setProgramName("geogit shp " + commandName);
-            jc.usage();
+            printUsage();
             return;
         }
 
         runInternal(cli);
+    }
+
+    protected void printUsage() {
+        JCommander jc = new JCommander(this);
+        String commandName = this.getClass().getAnnotation(Parameters.class).commandNames()[0];
+        jc.setProgramName("geogit shp " + commandName);
+        jc.usage();
     }
 
     /**

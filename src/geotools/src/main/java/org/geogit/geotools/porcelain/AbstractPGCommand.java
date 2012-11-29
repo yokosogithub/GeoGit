@@ -59,14 +59,18 @@ public abstract class AbstractPGCommand implements CLICommand {
     @Override
     public void run(GeogitCLI cli) throws Exception {
         if (help) {
-            JCommander jc = new JCommander(this);
-            String commandName = this.getClass().getAnnotation(Parameters.class).commandNames()[0];
-            jc.setProgramName("geogit pg " + commandName);
-            jc.usage();
+            printUsage();
             return;
         }
 
         runInternal(cli);
+    }
+
+    protected void printUsage() {
+        JCommander jc = new JCommander(this);
+        String commandName = this.getClass().getAnnotation(Parameters.class).commandNames()[0];
+        jc.setProgramName("geogit pg " + commandName);
+        jc.usage();
     }
 
     /**

@@ -17,8 +17,10 @@ import java.io.File;
 import java.io.IOException;
 import java.net.URI;
 import java.util.List;
+import java.util.Random;
 
 import org.apache.commons.io.FileUtils;
+import org.geogit.cli.test.functional.GlobalState;
 
 import cucumber.annotation.en.Given;
 import cucumber.annotation.en.Then;
@@ -28,6 +30,13 @@ import cucumber.annotation.en.When;
  *
  */
 public class PGInitSteps extends AbstractPGFunctionalTest {
+
+    @cucumber.annotation.After
+    public void after() {
+        if (GlobalState.geogit != null) {
+            GlobalState.geogit.close();
+        }
+    }
 
     @Given("^I am in an empty directory$")
     public void I_am_in_an_empty_directory() throws Throwable {
@@ -122,12 +131,12 @@ public class PGInitSteps extends AbstractPGFunctionalTest {
     }
 
     private void setUpDirectories() throws IOException {
-        homeDirectory = new File("target", "fakeHomeDir");
+        homeDirectory = new File("target", "fakeHomeDir" + new Random().nextInt());
         FileUtils.deleteDirectory(homeDirectory);
         assertFalse(homeDirectory.exists());
         assertTrue(homeDirectory.mkdirs());
 
-        currentDirectory = new File("target", "testrepo");
+        currentDirectory = new File("target", "testrepo" + new Random().nextInt());
         FileUtils.deleteDirectory(currentDirectory);
         assertFalse(currentDirectory.exists());
         assertTrue(currentDirectory.mkdirs());

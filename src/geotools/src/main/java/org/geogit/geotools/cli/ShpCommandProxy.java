@@ -6,6 +6,7 @@
 package org.geogit.geotools.cli;
 
 import org.geogit.cli.CLICommandExtension;
+import org.geogit.geotools.porcelain.ShpExport;
 import org.geogit.geotools.porcelain.ShpImport;
 
 import com.beust.jcommander.JCommander;
@@ -34,6 +35,7 @@ public class ShpCommandProxy implements CLICommandExtension {
         JCommander commander = new JCommander();
         commander.setProgramName("geogit shp");
         commander.addCommand("import", new ShpImport());
+        commander.addCommand("export", new ShpExport());
         return commander;
     }
 }
