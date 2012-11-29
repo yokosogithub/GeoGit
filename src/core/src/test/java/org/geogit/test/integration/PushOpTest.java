@@ -3,6 +3,7 @@ package org.geogit.test.integration;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -10,6 +11,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 import org.geogit.api.RevCommit;
+import org.geogit.api.plumbing.RefParse;
 import org.geogit.api.porcelain.BranchCreateOp;
 import org.geogit.api.porcelain.CheckoutOp;
 import org.geogit.api.porcelain.CloneOp;
@@ -30,9 +32,6 @@ public class PushOpTest extends RemoteRepositoryTestCase {
 
     @Override
     protected void setUpInternal() throws Exception {
-    }
-
-    private void setupClone() throws Exception {
         // Commit several features to the remote
 
         expectedMaster = new LinkedList<RevCommit>();
@@ -117,14 +116,12 @@ public class PushOpTest extends RemoteRepositoryTestCase {
 
     @Test
     public void testPush() throws Exception {
-        setupClone();
-
         // Add a commit to the local repository
         insertAndAdd(localGeogit.geogit, lines3);
         RevCommit commit = localGeogit.geogit.command(CommitOp.class).call();
         expectedMaster.addFirst(commit);
 
-        // Pull the commit
+        // Push the commit
         PushOp push = push();
         push.call();
 
@@ -140,14 +137,12 @@ public class PushOpTest extends RemoteRepositoryTestCase {
 
     @Test
     public void testPushToRemote() throws Exception {
-        setupClone();
-
         // Add a commit to the local repository
         insertAndAdd(localGeogit.geogit, lines3);
         RevCommit commit = localGeogit.geogit.command(CommitOp.class).call();
         expectedMaster.addFirst(commit);
 
-        // Pull the commit
+        // Push the commit
         PushOp push = push();
         push.setRemote("origin").call();
 
@@ -163,14 +158,12 @@ public class PushOpTest extends RemoteRepositoryTestCase {
 
     @Test
     public void testPushAll() throws Exception {
-        setupClone();
-
         // Add a commit to the local repository
         insertAndAdd(localGeogit.geogit, lines3);
         RevCommit commit = localGeogit.geogit.command(CommitOp.class).call();
         expectedMaster.addFirst(commit);
 
-        // Pull the commit
+        // Push the commit
         PushOp push = push();
         push.setAll(true).call();
 
@@ -186,17 +179,161 @@ public class PushOpTest extends RemoteRepositoryTestCase {
 
     @Test
     public void testPushWithRefSpec() throws Exception {
-        setupClone();
-
         // Add a commit to the local repository
         insertAndAdd(localGeogit.geogit, lines3);
         RevCommit commit = localGeogit.geogit.command(CommitOp.class).call();
         expectedMaster.addFirst(commit);
 
-        // Pull the commit
+        // Push the commit
         PushOp push = push();
-        push.addRefSpec("master:Branch1");
-        exception.expect(UnsupportedOperationException.class);
+        push.addRefSpec("master:NewRemoteBranch");
+        push.call();
+
+        assertTrue(remoteGeogit.geogit.command(RefParse.class).setName("NewRemoteBranch").call()
+                .isPresent());
+
+        // verify that the remote got the commit
+        remoteGeogit.geogit.command(CheckoutOp.class).setSource("NewRemoteBranch").call();
+        Iterator<RevCommit> logs = remoteGeogit.geogit.command(LogOp.class).call();
+        List<RevCommit> logged = new ArrayList<RevCommit>();
+        for (; logs.hasNext();) {
+            logged.add(logs.next());
+        }
+
+        assertEquals(expectedMaster, logged);
+    }
+
+    @Test
+    public void testPushWithMultipleRefSpecs() throws Exception {
+        // Add a commit to the local repository
+        insertAndAdd(localGeogit.geogit, lines3);
+        RevCommit commit = localGeogit.geogit.command(CommitOp.class).call();
+        expectedMaster.addFirst(commit);
+
+        // Push the commit
+        PushOp push = push();
+        push.addRefSpec("master:NewRemoteBranch");
+        push.addRefSpec("Branch1:NewRemoteBranch2");
+        push.call();
+
+        assertTrue(remoteGeogit.geogit.command(RefParse.class).setName("NewRemoteBranch").call()
+                .isPresent());
+        assertTrue(remoteGeogit.geogit.command(RefParse.class).setName("NewRemoteBranch2").call()
+                .isPresent());
+
+        // verify that the remote got the commit
+        remoteGeogit.geogit.command(CheckoutOp.class).setSource("NewRemoteBranch").call();
+        Iterator<RevCommit> logs = remoteGeogit.geogit.command(LogOp.class).call();
+        List<RevCommit> logged = new ArrayList<RevCommit>();
+        for (; logs.hasNext();) {
+            logged.add(logs.next());
+        }
+
+        assertEquals(expectedMaster, logged);
+
+        remoteGeogit.geogit.command(CheckoutOp.class).setSource("NewRemoteBranch2").call();
+        logs = remoteGeogit.geogit.command(LogOp.class).call();
+        logged = new ArrayList<RevCommit>();
+        for (; logs.hasNext();) {
+            logged.add(logs.next());
+        }
+
+        assertEquals(expectedBranch, logged);
+    }
+
+    @Test
+    public void testDeleteRemoteBranch() throws Exception {
+        PushOp push = push();
+        push.addRefSpec(":Branch1");
+        push.call();
+
+        assertFalse(remoteGeogit.geogit.command(RefParse.class).setName("Branch1").call()
+                .isPresent());
+    }
+
+    @Test
+    public void testPushWithDefaultRefSpec() throws Exception {
+        // Add a commit to the local repository
+        insertAndAdd(localGeogit.geogit, lines3);
+        RevCommit commit = localGeogit.geogit.command(CommitOp.class).call();
+        expectedMaster.addFirst(commit);
+
+        // Push the commit
+        PushOp push = push();
+        push.addRefSpec(":");
+        push.call();
+
+        // verify that the remote got the commit
+        Iterator<RevCommit> logs = remoteGeogit.geogit.command(LogOp.class).call();
+        List<RevCommit> logged = new ArrayList<RevCommit>();
+        for (; logs.hasNext();) {
+            logged.add(logs.next());
+        }
+
+        assertEquals(expectedMaster, logged);
+    }
+
+    @Test
+    public void testPushBranch() throws Exception {
+        // Add a commit to the local repository
+        localGeogit.geogit.command(CheckoutOp.class).setSource("Branch1").call();
+        insertAndAdd(localGeogit.geogit, lines3);
+        RevCommit commit = localGeogit.geogit.command(CommitOp.class).call();
+        expectedBranch.addFirst(commit);
+        localGeogit.geogit.command(CheckoutOp.class).setSource("master").call();
+
+        // Push the commit
+        PushOp push = push();
+        push.addRefSpec("Branch1");
+        push.call();
+
+        // verify that the remote got the commit
+        remoteGeogit.geogit.command(CheckoutOp.class).setSource("Branch1").call();
+        Iterator<RevCommit> logs = remoteGeogit.geogit.command(LogOp.class).call();
+        List<RevCommit> logged = new ArrayList<RevCommit>();
+        for (; logs.hasNext();) {
+            logged.add(logs.next());
+        }
+
+        assertEquals(expectedBranch, logged);
+    }
+
+    @Test
+    public void testPushBranchForce() throws Exception {
+        // Add a commit to the local repository
+        localGeogit.geogit.command(CheckoutOp.class).setSource("Branch1").call();
+        insertAndAdd(localGeogit.geogit, lines3);
+        RevCommit commit = localGeogit.geogit.command(CommitOp.class).call();
+        expectedBranch.addFirst(commit);
+        localGeogit.geogit.command(CheckoutOp.class).setSource("master").call();
+
+        // Push the commit
+        PushOp push = push();
+        push.addRefSpec("+Branch1");
+        push.call();
+
+        // verify that the remote got the commit
+        remoteGeogit.geogit.command(CheckoutOp.class).setSource("Branch1").call();
+        Iterator<RevCommit> logs = remoteGeogit.geogit.command(LogOp.class).call();
+        List<RevCommit> logged = new ArrayList<RevCommit>();
+        for (; logs.hasNext();) {
+            logged.add(logs.next());
+        }
+
+        assertEquals(expectedBranch, logged);
+    }
+
+    @Test
+    public void testPushTooManyRefArgs() throws Exception {
+        // Add a commit to the local repository
+        insertAndAdd(localGeogit.geogit, lines3);
+        RevCommit commit = localGeogit.geogit.command(CommitOp.class).call();
+        expectedBranch.addFirst(commit);
+
+        // Push the commit
+        PushOp push = push();
+        push.addRefSpec("Branch1:master:HEAD");
+        exception.expect(IllegalArgumentException.class);
         push.call();
     }
 }

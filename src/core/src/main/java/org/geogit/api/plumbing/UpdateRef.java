@@ -118,7 +118,7 @@ public class UpdateRef extends AbstractGeoGitOp<Optional<Ref>> {
         if (delete) {
             Optional<Ref> oldRef = command(RefParse.class).setName(name).call();
             if (oldRef.isPresent()) {
-                refDb.remove(name);
+                refDb.remove(oldRef.get().getName());
             }
             return oldRef;
         }

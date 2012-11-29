@@ -147,6 +147,30 @@ public class LocalRemoteRepo implements IRemoteRepo {
                 .call();
     }
 
+    /**
+     * Push all new objects from the specified {@link Ref} to the given refspec.
+     * 
+     * @param localRepository the repository to get new objects from
+     * @param ref the local ref that points to new commit data
+     * @param refspec the refspec to push to
+     */
+    public void pushNewData(Repository localRepository, Ref ref, String refspec) {
+        ObjectInserter objectInserter = remoteGeoGit.getRepository().newObjectInserter();
+        walkCommit(ref.getObjectId(), localRepository, remoteGeoGit.getRepository(), objectInserter);
+        remoteGeoGit.command(UpdateRef.class).setName(refspec).setNewValue(ref.getObjectId())
+                .call();
+    }
+
+    /**
+     * Delete the given refspec from the remote repository.
+     * 
+     * @param localRepository the repository to get new objects from
+     * @param refspec the refspec to delete
+     */
+    public void deleteRef(Repository localRepository, String refspec) {
+        remoteGeoGit.command(UpdateRef.class).setName(refspec).setDelete(true).call();
+    }
+
     private void walkCommit(ObjectId commitId, Repository from, Repository to,
             ObjectInserter objectInserter) {
         // See if we already have it

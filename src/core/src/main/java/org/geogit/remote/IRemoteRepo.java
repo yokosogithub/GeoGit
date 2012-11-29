@@ -60,4 +60,21 @@ public interface IRemoteRepo {
      * @param ref the local ref that points to new commit data
      */
     public void pushNewData(Repository localRepository, Ref ref);
+
+    /**
+     * Push all new objects from the specified {@link Ref} to the given refspec.
+     * 
+     * @param localRepository the repository to get new objects from
+     * @param ref the local ref that points to new commit data
+     * @param refspec the refspec to push to
+     */
+    public void pushNewData(Repository localRepository, Ref ref, String refspec);
+
+    /**
+     * Delete the given refspec from the remote repository.
+     * 
+     * @param localRepository the repository to get new objects from
+     * @param refspec the refspec to delete
+     */
+    public void deleteRef(Repository localRepository, String refspec);
 }

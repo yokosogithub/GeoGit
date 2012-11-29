@@ -116,6 +116,9 @@ public class RebaseOp extends AbstractGeoGitOp<Boolean> {
             // Fast-forward
             command(UpdateRef.class).setName(currentBranch).setNewValue(upstream.get()).call();
             command(UpdateSymRef.class).setName(Ref.HEAD).setNewValue(currentBranch).call();
+
+            repository.getWorkingTree().updateWorkHead(upstream.get());
+            repository.getIndex().updateStageHead(upstream.get());
             getProgressListener().complete();
             return true;
         }
@@ -127,6 +130,17 @@ public class RebaseOp extends AbstractGeoGitOp<Boolean> {
                 .setRight(targetCommit).setProgressListener(subProgress(10.f)).call();
 
         Preconditions.checkState(ancestorCommit.isPresent(), "No ancestor commit could be found.");
+
+        if (ancestorCommit.get().getId().equals(headCommit.getId())) {
+            // Fast-forward
+            command(UpdateRef.class).setName(currentBranch).setNewValue(upstream.get()).call();
+            command(UpdateSymRef.class).setName(Ref.HEAD).setNewValue(currentBranch).call();
+
+            repository.getWorkingTree().updateWorkHead(upstream.get());
+            repository.getIndex().updateStageHead(upstream.get());
+            getProgressListener().complete();
+            return true;
+        }
 
         // Get all commits between the head commit and the ancestor.
         Iterator<RevCommit> commitIterator = command(LogOp.class).call();
