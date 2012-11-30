@@ -28,7 +28,7 @@ import java.util.Map;
 import java.util.NoSuchElementException;
 
 import org.geogit.api.GeoGIT;
-import org.geogit.api.NodeRef;
+import org.geogit.api.Node;
 import org.geogit.api.ObjectId;
 import org.geogit.api.RevFeature;
 import org.geogit.api.RevTree;
@@ -222,7 +222,7 @@ public class GeoGitSimpleFeatureCollection implements SimpleFeatureCollection {
         try {
             if (refs.isFullySupported()) {
                 while (refs.hasNext()) {
-                    NodeRef ref = refs.next();
+                    Node ref = refs.next();
                     if (ref instanceof SpatialRef) {
                         SpatialRef sp = (SpatialRef) ref;
                         featureBounds = sp.getBounds();
@@ -316,7 +316,7 @@ public class GeoGitSimpleFeatureCollection implements SimpleFeatureCollection {
     /**
      * @author groldan
      */
-    private class BBOXPredicate implements Predicate<NodeRef> {
+    private class BBOXPredicate implements Predicate<Node> {
 
         private BoundingBox filter;
 
@@ -347,7 +347,7 @@ public class GeoGitSimpleFeatureCollection implements SimpleFeatureCollection {
         }
 
         @Override
-        public boolean apply(final NodeRef featureRef) {
+        public boolean apply(final Node featureRef) {
             if (!(featureRef instanceof SpatialRef)) {
                 return false;
             }
@@ -367,9 +367,9 @@ public class GeoGitSimpleFeatureCollection implements SimpleFeatureCollection {
     /**
      * @author groldan
      */
-    private class FeatureRefIterator extends AbstractIterator<NodeRef> {
+    private class FeatureRefIterator extends AbstractIterator<Node> {
 
-        private final Iterator<NodeRef> refs;
+        private final Iterator<Node> refs;
 
         private final Filter filter;
 
@@ -394,7 +394,7 @@ public class GeoGitSimpleFeatureCollection implements SimpleFeatureCollection {
         }
 
         @Override
-        protected NodeRef computeNext() {
+        protected Node computeNext() {
             if (!refs.hasNext()) {
                 return endOfData();
             }
@@ -405,7 +405,7 @@ public class GeoGitSimpleFeatureCollection implements SimpleFeatureCollection {
 
     private class GeoGitFeatureIterator extends AbstractIterator<SimpleFeature> {
 
-        private final Iterator<NodeRef> featureRefs;
+        private final Iterator<Node> featureRefs;
 
         private final SimpleFeatureType type;
 
@@ -415,7 +415,7 @@ public class GeoGitSimpleFeatureCollection implements SimpleFeatureCollection {
 
         private GeoGIT geogit;
 
-        public GeoGitFeatureIterator(final Iterator<NodeRef> featureRefs,
+        public GeoGitFeatureIterator(final Iterator<Node> featureRefs,
                 final SimpleFeatureType type, final Filter filter, final ObjectDatabase odb,
                 final GeoGIT geogit) {
             this.featureRefs = featureRefs;
@@ -434,7 +434,7 @@ public class GeoGitSimpleFeatureCollection implements SimpleFeatureCollection {
             }
             try {
                 while (featureRefs.hasNext()) {
-                    NodeRef featureRef = featureRefs.next();
+                    Node featureRef = featureRefs.next();
                     String featureId = featureRef.getPath();
                     ObjectId contentId = featureRef.getObjectId();
 

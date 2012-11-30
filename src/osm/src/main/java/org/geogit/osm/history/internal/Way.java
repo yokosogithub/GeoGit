@@ -25,7 +25,7 @@ public class Way extends Primitive {
     /**
      * @param nodeRef
      */
-    void addNodeRef(long nodeRef) {
+    void addNode(long nodeRef) {
         nodes.add(Long.valueOf(nodeRef));
     }
 

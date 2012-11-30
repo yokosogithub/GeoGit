@@ -189,14 +189,14 @@ public class Status implements CLICommand {
         NodeRef oldObject = entry.getOldObject();
         NodeRef newObject = entry.getNewObject();
         if (oldObject == null) {
-            path = newObject.getPath();
+            path = newObject.path();
         } else if (newObject == null) {
-            path = oldObject.getPath();
+            path = oldObject.path();
         } else {
-            if (oldObject.getPath().equals(newObject.getPath())) {
-                path = oldObject.getPath();
+            if (oldObject.path().equals(newObject.path())) {
+                path = oldObject.path();
             } else {
-                path = oldObject.getPath() + " -> " + newObject.getPath();
+                path = oldObject.path() + " -> " + newObject.path();
             }
         }
         return path;

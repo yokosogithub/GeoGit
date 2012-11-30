@@ -13,6 +13,7 @@ import java.util.List;
 import java.util.regex.Pattern;
 
 import org.geogit.api.AbstractGeoGitOp;
+import org.geogit.api.Node;
 import org.geogit.api.NodeRef;
 import org.geogit.api.ObjectId;
 import org.geogit.api.Ref;
@@ -165,7 +166,7 @@ public class RevParse extends AbstractGeoGitOp<Optional<ObjectId>> {
                     .call();
             Optional<RevTree> revTree = command(RevObjectParse.class).setObjectId(treeId.get())
                     .call(RevTree.class);
-            Optional<NodeRef> ref = command(FindTreeChild.class).setParent(revTree.get())
+            Optional<Node> ref = command(FindTreeChild.class).setParent(revTree.get())
                     .setChildPath(path).call();
             Preconditions.checkArgument(ref.isPresent(),
                     "pathspec '%s' did not match any valid path", path);

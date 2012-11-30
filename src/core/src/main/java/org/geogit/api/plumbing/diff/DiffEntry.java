@@ -10,6 +10,7 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import javax.annotation.meta.When;
 
+import org.geogit.api.Node;
 import org.geogit.api.NodeRef;
 import org.geogit.api.ObjectId;
 import org.geogit.repository.SpatialOps;
@@ -19,12 +20,12 @@ import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
 
 /**
- * Provides a way of describing the between two different {@link NodeRef}s.
+ * Provides a way of describing the between two different {@link Node}s.
  */
 public class DiffEntry {
 
     /**
-     * The possible types of change between the two {@link NodeRef}s
+     * The possible types of change between the two {@link Node}s
      */
     public static enum ChangeType {
         /**
@@ -70,7 +71,7 @@ public class DiffEntry {
     private final NodeRef newObject;
 
     /**
-     * Constructs a new {@code DiffEntry} from two different {@link NodeRef}s
+     * Constructs a new {@code DiffEntry} from two different {@link Node}s
      * 
      * @param oldObject the old node ref
      * @param newObject the new node ref
@@ -101,7 +102,7 @@ public class DiffEntry {
      *         {@link #changeType()} is {@code ADD}
      */
     public ObjectId oldObjectId() {
-        return oldObject == null ? ObjectId.NULL : oldObject.getObjectId();
+        return oldObject == null ? ObjectId.NULL : oldObject.objectId();
     }
 
     /**
@@ -116,7 +117,7 @@ public class DiffEntry {
      *         {@link #changeType()} is {@code DELETE}
      */
     public ObjectId newObjectId() {
-        return newObject == null ? ObjectId.NULL : newObject.getObjectId();
+        return newObject == null ? ObjectId.NULL : newObject.objectId();
     }
 
     /**
@@ -132,9 +133,9 @@ public class DiffEntry {
      */
     public ChangeType changeType() {
         ChangeType type;
-        if (oldObject == null || oldObject.getObjectId().isNull()) {
+        if (oldObject == null || oldObject.objectId().isNull()) {
             type = ChangeType.ADDED;
-        } else if (newObject == null || newObject.getObjectId().isNull()) {
+        } else if (newObject == null || newObject.objectId().isNull()) {
             type = ChangeType.REMOVED;
         } else {
             type = ChangeType.MODIFIED;
@@ -147,7 +148,7 @@ public class DiffEntry {
      * @return the affected geographic region of the change, may be {@code null}
      */
     public BoundingBox where() {
-        BoundingBox bounds = SpatialOps.aggregatedBounds(oldObject, newObject);
+        BoundingBox bounds = SpatialOps.aggregatedBounds(oldObject.getNode(), newObject.getNode());
         return bounds;
     }
 
@@ -165,7 +166,7 @@ public class DiffEntry {
      */
     public @Nullable
     String oldPath() {
-        return oldObject == null ? null : oldObject.getPath();
+        return oldObject == null ? null : oldObject.path();
     }
 
     /**
@@ -173,7 +174,23 @@ public class DiffEntry {
      */
     public @Nullable
     String newPath() {
-        return newObject == null ? null : newObject.getPath();
+        return newObject == null ? null : newObject.path();
+    }
+
+    /**
+     * @return the name of the new object
+     */
+    public @Nullable
+    String newName() {
+        return newObject == null ? null : newObject.getNode().getName();
+    }
+
+    /**
+     * @return the name of the old object
+     */
+    public @Nullable
+    String oldName() {
+        return oldObject == null ? null : oldObject.getNode().getName();
     }
 
     @Override

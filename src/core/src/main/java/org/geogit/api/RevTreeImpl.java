@@ -10,7 +10,7 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.TreeSet;
 
-import org.geogit.storage.NodeRefStorageOrder;
+import org.geogit.storage.NodeStorageOrder;
 import org.geogit.storage.ObjectDatabase;
 import org.geogit.storage.hessian.HessianFactory;
 
@@ -28,25 +28,24 @@ public abstract class RevTreeImpl extends AbstractRevObject implements RevTree {
 
     private static final class LeafTree extends RevTreeImpl {
 
-        private final Optional<ImmutableList<NodeRef>> features;
+        private final Optional<ImmutableList<Node>> features;
 
-        private final Optional<ImmutableList<NodeRef>> trees;
+        private final Optional<ImmutableList<Node>> trees;
 
         public LeafTree(final ObjectId id, final long size,
-                final Optional<ImmutableList<NodeRef>> features,
-                Optional<ImmutableList<NodeRef>> trees) {
+                final Optional<ImmutableList<Node>> features, Optional<ImmutableList<Node>> trees) {
             super(id, size);
             this.features = features;
             this.trees = trees;
         }
 
         @Override
-        public Optional<ImmutableList<NodeRef>> features() {
+        public Optional<ImmutableList<Node>> features() {
             return features;
         }
 
         @Override
-        public Optional<ImmutableList<NodeRef>> trees() {
+        public Optional<ImmutableList<Node>> trees() {
             return trees;
         }
 
@@ -91,12 +90,12 @@ public abstract class RevTreeImpl extends AbstractRevObject implements RevTree {
     }
 
     @Override
-    public Optional<ImmutableList<NodeRef>> features() {
+    public Optional<ImmutableList<Node>> features() {
         return Optional.absent();
     }
 
     @Override
-    public Optional<ImmutableList<NodeRef>> trees() {
+    public Optional<ImmutableList<Node>> trees() {
         return Optional.absent();
     }
 
@@ -105,15 +104,15 @@ public abstract class RevTreeImpl extends AbstractRevObject implements RevTree {
         return Optional.absent();
     }
 
-    public static RevTreeImpl createLeafTree(ObjectId id, long size,
-            ImmutableList<NodeRef> features, ImmutableList<NodeRef> trees) {
+    public static RevTreeImpl createLeafTree(ObjectId id, long size, ImmutableList<Node> features,
+            ImmutableList<Node> trees) {
 
         Preconditions.checkNotNull(id);
         Preconditions.checkNotNull(features);
         Preconditions.checkNotNull(trees);
 
-        Optional<ImmutableList<NodeRef>> f = Optional.absent();
-        Optional<ImmutableList<NodeRef>> t = Optional.absent();
+        Optional<ImmutableList<Node>> f = Optional.absent();
+        Optional<ImmutableList<Node>> t = Optional.absent();
         if (!features.isEmpty()) {
             f = Optional.of(features);
         }
@@ -123,21 +122,21 @@ public abstract class RevTreeImpl extends AbstractRevObject implements RevTree {
         return new LeafTree(id, size, f, t);
     }
 
-    public static RevTreeImpl createLeafTree(ObjectId id, long size, Collection<NodeRef> features,
-            Collection<NodeRef> trees) {
+    public static RevTreeImpl createLeafTree(ObjectId id, long size, Collection<Node> features,
+            Collection<Node> trees) {
         Preconditions.checkNotNull(id);
         Preconditions.checkNotNull(features);
 
-        ImmutableList<NodeRef> featuresList = ImmutableList.of();
-        ImmutableList<NodeRef> treesList = ImmutableList.of();
+        ImmutableList<Node> featuresList = ImmutableList.of();
+        ImmutableList<Node> treesList = ImmutableList.of();
 
         if (!features.isEmpty()) {
-            TreeSet<NodeRef> featureSet = Sets.newTreeSet(new NodeRefStorageOrder());
+            TreeSet<Node> featureSet = Sets.newTreeSet(new NodeStorageOrder());
             featureSet.addAll(features);
             featuresList = ImmutableList.copyOf(featureSet);
         }
         if (!trees.isEmpty()) {
-            TreeSet<NodeRef> treeSet = Sets.newTreeSet(new NodeRefStorageOrder());
+            TreeSet<Node> treeSet = Sets.newTreeSet(new NodeStorageOrder());
             treeSet.addAll(trees);
             treesList = ImmutableList.copyOf(treeSet);
         }
@@ -157,13 +156,13 @@ public abstract class RevTreeImpl extends AbstractRevObject implements RevTree {
         if (unidentified.buckets().isPresent()) {
             return new NodeTree(id, size, unidentified.buckets().get());
         }
-        final Optional<ImmutableList<NodeRef>> features;
+        final Optional<ImmutableList<Node>> features;
         if (unidentified.features().isPresent()) {
             features = Optional.of(unidentified.features().get());
         } else {
             features = Optional.absent();
         }
-        final Optional<ImmutableList<NodeRef>> trees;
+        final Optional<ImmutableList<Node>> trees;
         if (unidentified.trees().isPresent()) {
             trees = Optional.of(unidentified.trees().get());
         } else {
@@ -185,9 +184,9 @@ public abstract class RevTreeImpl extends AbstractRevObject implements RevTree {
     }
 
     @Override
-    public Iterator<NodeRef> children() {
+    public Iterator<Node> children() {
         Preconditions.checkState(!buckets().isPresent());
-        final ImmutableList<NodeRef> empty = ImmutableList.of();
+        final ImmutableList<Node> empty = ImmutableList.of();
         return Iterators.concat(trees().or(empty).iterator(), features().or(empty).iterator());
     }
 }

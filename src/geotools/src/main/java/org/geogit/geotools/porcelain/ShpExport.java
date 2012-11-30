@@ -12,6 +12,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.geogit.api.NodeRef;
+import org.geogit.api.ObjectId;
 import org.geogit.api.RevFeatureType;
 import org.geogit.api.RevObject;
 import org.geogit.api.RevObject.TYPE;
@@ -127,16 +128,14 @@ public class ShpExport extends AbstractShpCommand implements CLICommand {
                 "%s did not resolve to a tree", refspec);
 
         ObjectDatabase database = cli.getGeogit().getRepository().getObjectDatabase();
-        DepthTreeIterator iter = new DepthTreeIterator((RevTree) revObject.get(), database,
-                Strategy.FEATURES_ONLY);
+        DepthTreeIterator iter = new DepthTreeIterator("", ObjectId.NULL,
+                (RevTree) revObject.get(), database, Strategy.FEATURES_ONLY);
 
         while (iter.hasNext()) {
             NodeRef nodeRef = iter.next();
-            if (nodeRef.getType() == TYPE.FEATURE) {
-                RevFeatureType revFeatureType = cli.getGeogit().command(RevObjectParse.class)
-                        .setObjectId(nodeRef.getMetadataId()).call(RevFeatureType.class).get();
-                return (SimpleFeatureType) revFeatureType.type();
-            }
+            RevFeatureType revFeatureType = cli.getGeogit().command(RevObjectParse.class)
+                    .setObjectId(nodeRef.getMetadataId()).call(RevFeatureType.class).get();
+            return (SimpleFeatureType) revFeatureType.type();
         }
 
         throw new GeoToolsOpException(StatusCode.NO_FEATURES_FOUND);

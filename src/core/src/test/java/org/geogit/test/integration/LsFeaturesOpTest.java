@@ -81,11 +81,11 @@ public class LsFeaturesOpTest extends RepositoryTestCase {
     // @Test
     // public void testHeadVsWorkHeadListing() throws Exception {
     // geogit.command(RemoveOp.class).addPathToRemove(pointsName).call();
-    // Iterator<NodeRef> iterHead = geogit.command(LsFeaturesOp.class).setOrigin("HEAD").call();
-    // Iterator<NodeRef> iterWorkHead = geogit.command(LsFeaturesOp.class).setOrigin("WORK_HEAD")
+    // Iterator<Node> iterHead = geogit.command(LsFeaturesOp.class).setOrigin("HEAD").call();
+    // Iterator<Node> iterWorkHead = geogit.command(LsFeaturesOp.class).setOrigin("WORK_HEAD")
     // .call();
-    // ArrayList<NodeRef> listHead = Lists.newArrayList(iterHead);
-    // ArrayList<NodeRef> listWorkHead = Lists.newArrayList(iterWorkHead);
+    // ArrayList<Node> listHead = Lists.newArrayList(iterHead);
+    // ArrayList<Node> listWorkHead = Lists.newArrayList(iterWorkHead);
     // assertFalse(listHead.size() == listWorkHead.size());
     // }
 

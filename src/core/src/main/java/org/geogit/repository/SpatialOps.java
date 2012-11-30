@@ -4,8 +4,8 @@
  */
 package org.geogit.repository;
 
-import org.geogit.api.NodeRef;
-import org.geogit.api.SpatialRef;
+import org.geogit.api.Node;
+import org.geogit.api.SpatialNode;
 import org.geotools.geometry.jts.JTS;
 import org.geotools.geometry.jts.ReferencedEnvelope;
 import org.geotools.referencing.CRS;
@@ -73,12 +73,12 @@ public class SpatialOps {
      * @param newObject
      * @return the aggregated bounding box
      */
-    public static BoundingBox aggregatedBounds(NodeRef oldObject, NodeRef newObject) {
-        if (!(oldObject instanceof SpatialRef)) {
+    public static BoundingBox aggregatedBounds(Node oldObject, Node newObject) {
+        if (!(oldObject instanceof SpatialNode)) {
             return boundsOf(newObject);
         }
 
-        if (!(newObject instanceof SpatialRef)) {
+        if (!(newObject instanceof SpatialNode)) {
             return boundsOf(oldObject);
         }
         BoundingBox bounds1 = boundsOf(oldObject);
@@ -87,15 +87,14 @@ public class SpatialOps {
     }
 
     /**
-     * @param the {@link NodeRef ref} to get the bounds of
-     * @return the bounding box of the {@code NodeRef}, or null if the {@code NodeRef} has no
-     *         bounds.
+     * @param the {@link Node ref} to get the bounds of
+     * @return the bounding box of the {@code Node}, or null if the {@code Node} has no bounds.
      */
-    private static BoundingBox boundsOf(NodeRef ref) {
-        if (!(ref instanceof SpatialRef)) {
+    private static BoundingBox boundsOf(Node ref) {
+        if (!(ref instanceof SpatialNode)) {
             return null;
         }
-        return ((SpatialRef) ref).getBounds();
+        return ((SpatialNode) ref).getBounds();
     }
 
     /**

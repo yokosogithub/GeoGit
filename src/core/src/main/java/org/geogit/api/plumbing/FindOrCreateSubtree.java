@@ -8,7 +8,7 @@ package org.geogit.api.plumbing;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import org.geogit.api.AbstractGeoGitOp;
-import org.geogit.api.NodeRef;
+import org.geogit.api.Node;
 import org.geogit.api.ObjectId;
 import org.geogit.api.RevObject.TYPE;
 import org.geogit.api.RevTree;
@@ -108,12 +108,12 @@ public class FindOrCreateSubtree extends AbstractGeoGitOp<RevTree> {
         if (parentSupplier.get().isPresent()) {
             RevTree parent = parentSupplier.get().get();
 
-            Optional<NodeRef> treeChildRef = command(FindTreeChild.class).setIndex(indexDb)
+            Optional<Node> treeChildRef = command(FindTreeChild.class).setIndex(indexDb)
                     .setParentPath(parentPath).setChildPath(childPath)
                     .setParent(Suppliers.ofInstance(parent)).call();
 
             if (treeChildRef.isPresent()) {
-                NodeRef treeRef = treeChildRef.get();
+                Node treeRef = treeChildRef.get();
                 if (!TYPE.TREE.equals(treeRef.getType())) {
                     throw new IllegalArgumentException("Object exsits as child of tree "
                             + parent.getId() + " but is not a tree: " + treeChildRef);

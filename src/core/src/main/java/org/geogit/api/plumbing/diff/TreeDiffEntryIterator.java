@@ -15,12 +15,13 @@ import java.util.Set;
 
 import javax.annotation.Nullable;
 
+import org.geogit.api.Node;
 import org.geogit.api.NodeRef;
 import org.geogit.api.ObjectId;
 import org.geogit.api.RevObject.TYPE;
 import org.geogit.api.RevTree;
 import org.geogit.api.plumbing.diff.DiffEntry.ChangeType;
-import org.geogit.storage.NodeRefStorageOrder;
+import org.geogit.storage.NodeStorageOrder;
 import org.geogit.storage.ObjectDatabase;
 import org.geogit.storage.ObjectSerialisingFactory;
 
@@ -51,7 +52,8 @@ class TreeDiffEntryIterator extends AbstractIterator<DiffEntry> {
 
     private final Iterator<DiffEntry> delegate;
 
-    public TreeDiffEntryIterator(@Nullable final RevTree oldTree, @Nullable final RevTree newTree,
+    public TreeDiffEntryIterator(NodeRef oldTreeRef, NodeRef newTreeRef,
+            @Nullable final RevTree oldTree, @Nullable final RevTree newTree,
             final ObjectDatabase db, final ObjectSerialisingFactory serialFactory) {
 
         checkArgument(oldTree != null || newTree != null);
@@ -60,39 +62,45 @@ class TreeDiffEntryIterator extends AbstractIterator<DiffEntry> {
         this.serialFactory = serialFactory;
 
         if (oldTree == null || oldTree.isEmpty()) {
-            delegate = addRemoveAll(newTree, ADDED);
+            delegate = addRemoveAll(newTreeRef, newTree, ADDED);
         } else if (newTree == null || newTree.isEmpty()) {
-            delegate = addRemoveAll(oldTree, REMOVED);
+            delegate = addRemoveAll(oldTreeRef, oldTree, REMOVED);
         } else if (!oldTree.buckets().isPresent() && !newTree.buckets().isPresent()) {
 
-            Iterator<NodeRef> left = oldTree.children();
-            Iterator<NodeRef> right = newTree.children();
+            Iterator<NodeRef> left = new DepthTreeIterator(oldTreeRef.path(),
+                    oldTreeRef.getMetadataId(), oldTree, db, DepthTreeIterator.Strategy.CHILDREN);
+
+            Iterator<NodeRef> right = new DepthTreeIterator(newTreeRef.path(),
+                    newTreeRef.getMetadataId(), newTree, db, DepthTreeIterator.Strategy.CHILDREN);
 
             delegate = new ChildrenChildrenDiff(left, right);
 
         } else if (oldTree.buckets().isPresent() && newTree.buckets().isPresent()) {
-            delegate = new BucketBucketDiff(oldTree.buckets().get(), newTree.buckets().get());
+            delegate = new BucketBucketDiff(oldTreeRef, newTreeRef, oldTree.buckets().get(),
+                    newTree.buckets().get());
 
         } else if (newTree.buckets().isPresent()) {
             checkState(!oldTree.buckets().isPresent());
 
-            DepthTreeIterator left = new DepthTreeIterator(oldTree, objectDb,
+            DepthTreeIterator left = new DepthTreeIterator(oldTreeRef.path(),
+                    oldTreeRef.getMetadataId(), oldTree, objectDb,
                     DepthTreeIterator.Strategy.RECURSIVE_FEATURES_ONLY);
 
             DepthTreeIterator rightIterator;
-            rightIterator = new DepthTreeIterator(newTree, objectDb,
-                    DepthTreeIterator.Strategy.RECURSIVE_FEATURES_ONLY);
+            rightIterator = new DepthTreeIterator(newTreeRef.path(), newTreeRef.getMetadataId(),
+                    newTree, objectDb, DepthTreeIterator.Strategy.RECURSIVE_FEATURES_ONLY);
             delegate = new ChildrenChildrenDiff(left, rightIterator);
 
         } else {
             checkState(oldTree.buckets().isPresent());
 
-            DepthTreeIterator right = new DepthTreeIterator(newTree, objectDb,
+            DepthTreeIterator right = new DepthTreeIterator(newTreeRef.path(),
+                    newTreeRef.getMetadataId(), newTree, objectDb,
                     DepthTreeIterator.Strategy.RECURSIVE_FEATURES_ONLY);
 
             DepthTreeIterator leftIterator;
-            leftIterator = new DepthTreeIterator(oldTree, objectDb,
-                    DepthTreeIterator.Strategy.RECURSIVE_FEATURES_ONLY);
+            leftIterator = new DepthTreeIterator(oldTreeRef.path(), oldTreeRef.getMetadataId(),
+                    oldTree, objectDb, DepthTreeIterator.Strategy.RECURSIVE_FEATURES_ONLY);
             delegate = new ChildrenChildrenDiff(leftIterator, right);
             // delegate = new BucketsChildrenDiff(left, right);
         }
@@ -106,18 +114,19 @@ class TreeDiffEntryIterator extends AbstractIterator<DiffEntry> {
         return endOfData();
     }
 
-    private Iterator<DiffEntry> addRemoveAll(final RevTree tree, final ChangeType changeType) {
+    private Iterator<DiffEntry> addRemoveAll(NodeRef treeRef, final RevTree tree,
+            final ChangeType changeType) {
         DepthTreeIterator treeIterator;
 
-        treeIterator = new DepthTreeIterator(tree, objectDb,
-                DepthTreeIterator.Strategy.RECURSIVE_FEATURES_ONLY);
+        treeIterator = new DepthTreeIterator(treeRef.path(), treeRef.getMetadataId(), tree,
+                objectDb, DepthTreeIterator.Strategy.RECURSIVE_FEATURES_ONLY);
 
         return Iterators.transform(treeIterator, new RefToDiffEntry(changeType));
     }
 
     /**
      * Compares the contents of two leaf trees and spits out the changes. The entries must be in
-     * {@link NodeRef}'s {@link NodeRefStorageOrder storage order}.
+     * {@link NodeRef}'s {@link NodeStorageOrder storage order}.
      * 
      */
     private class ChildrenChildrenDiff extends AbstractIterator<DiffEntry> {
@@ -126,7 +135,7 @@ class TreeDiffEntryIterator extends AbstractIterator<DiffEntry> {
 
         private PeekingIterator<NodeRef> right;
 
-        private Ordering<NodeRef> comparator;
+        private Ordering<Node> comparator;
 
         private @Nullable
         Iterator<DiffEntry> subtreeIterator;
@@ -135,7 +144,7 @@ class TreeDiffEntryIterator extends AbstractIterator<DiffEntry> {
 
             this.left = Iterators.peekingIterator(left);
             this.right = Iterators.peekingIterator(right);
-            this.comparator = new NodeRefStorageOrder();
+            this.comparator = new NodeStorageOrder();
         }
 
         @Override
@@ -158,7 +167,7 @@ class TreeDiffEntryIterator extends AbstractIterator<DiffEntry> {
                 nextRight = right.next();
             } else if (nextRight == null) {
                 nextLeft = left.next();
-            } else if (nextLeft.getPath().equals(nextRight.getPath())) {
+            } else if (nextLeft.path().equals(nextRight.path())) {
                 // same path, consume both
                 nextLeft = left.next();
                 nextRight = right.next();
@@ -166,7 +175,8 @@ class TreeDiffEntryIterator extends AbstractIterator<DiffEntry> {
                     // but not a diff
                     return computeNext();
                 }
-            } else if (comparator.min(nextLeft, nextRight) == nextLeft) {
+            } else if (comparator.min(nextLeft.getNode(), nextRight.getNode()) == nextLeft
+                    .getNode()) {
                 nextLeft = left.next();
                 nextRight = null;
             } else {
@@ -198,12 +208,13 @@ class TreeDiffEntryIterator extends AbstractIterator<DiffEntry> {
 
             if (fromTree == null || fromTree.isEmpty()) {
                 checkState(toTree != null);
-                it = addRemoveAll(toTree, ADDED);
+                it = addRemoveAll(nextRight, toTree, ADDED);
             } else if (toTree == null || toTree.isEmpty()) {
                 checkState(fromTree != null);
-                it = addRemoveAll(fromTree, REMOVED);
+                it = addRemoveAll(nextLeft, fromTree, REMOVED);
             } else {
-                it = new TreeDiffEntryIterator(fromTree, toTree, objectDb, serialFactory);
+                it = new TreeDiffEntryIterator(nextLeft, nextRight, fromTree, toTree, objectDb,
+                        serialFactory);
             }
             return it;
         }
@@ -213,14 +224,14 @@ class TreeDiffEntryIterator extends AbstractIterator<DiffEntry> {
             if (treeRef == null) {
                 return null;
             }
-            ObjectId id = treeRef.getObjectId();
+            ObjectId id = treeRef.objectId();
             RevTree tree = objectDb.get(id, serialFactory.createRevTreeReader());
             return tree;
         }
     }
 
     /**
-     * Function that converts a single {@link NodeRef} to an add or remove {@link DiffEntry}
+     * Function that converts a single {@link Node} to an add or remove {@link DiffEntry}
      */
     private static class RefToDiffEntry implements Function<NodeRef, DiffEntry> {
 
@@ -253,9 +264,16 @@ class TreeDiffEntryIterator extends AbstractIterator<DiffEntry> {
 
         private Iterator<DiffEntry> currentBucketIterator;
 
-        public BucketBucketDiff(final ImmutableSortedMap<Integer, ObjectId> left,
+        private NodeRef leftRef;
+
+        private NodeRef rightRef;
+
+        public BucketBucketDiff(final NodeRef leftRef, final NodeRef rightRef,
+                final ImmutableSortedMap<Integer, ObjectId> left,
                 final ImmutableSortedMap<Integer, ObjectId> right) {
 
+            this.leftRef = leftRef;
+            this.rightRef = rightRef;
             int expectedKeys = left.size() + right.size();
             int expectedValuesPerKey = 2;
             leftRightBuckets = ArrayListMultimap.create(expectedKeys, expectedValuesPerKey);
@@ -283,8 +301,9 @@ class TreeDiffEntryIterator extends AbstractIterator<DiffEntry> {
             final RevTree left = resolveTree(leftTreeId);
             final RevTree right = resolveTree(rightTreeId);
 
-            this.currentBucketIterator = new TreeDiffEntryIterator(left, right, objectDb,
-                    serialFactory);
+            // TODO******
+            this.currentBucketIterator = new TreeDiffEntryIterator(leftRef, rightRef, left, right,
+                    objectDb, serialFactory);
             return computeNext();
         }
 

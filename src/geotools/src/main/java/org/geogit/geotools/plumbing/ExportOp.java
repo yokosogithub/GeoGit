@@ -10,6 +10,7 @@ import java.io.IOException;
 import org.geogit.api.AbstractGeoGitOp;
 import org.geogit.api.FeatureBuilder;
 import org.geogit.api.NodeRef;
+import org.geogit.api.ObjectId;
 import org.geogit.api.RevFeature;
 import org.geogit.api.RevFeatureType;
 import org.geogit.api.RevObject;
@@ -78,12 +79,14 @@ public class ExportOp extends AbstractGeoGitOp<SimpleFeatureStore> {
             throw new GeoToolsOpException(StatusCode.CANNOT_CREATE_FEATURESTORE);
         }
 
-        String refspec;
+        final String refspec;
         if (featureTypeName.contains(":")) {
             refspec = featureTypeName;
         } else {
             refspec = "WORK_HEAD:" + featureTypeName;
         }
+        final String spec = refspec.substring(0, refspec.indexOf(':'));
+        final String treePath = refspec.substring(refspec.indexOf(':') + 1);
 
         Optional<RevObject> revObject = command(RevObjectParse.class).setRefSpec(refspec).call(
                 RevObject.class);
@@ -92,8 +95,11 @@ public class ExportOp extends AbstractGeoGitOp<SimpleFeatureStore> {
         Preconditions.checkArgument(revObject.get().getType() == TYPE.TREE,
                 "%s did not resolve to a tree", refspec);
 
-        DepthTreeIterator iter = new DepthTreeIterator((RevTree) revObject.get(), database,
-                Strategy.FEATURES_ONLY);
+        // TODO: find the actual metadata id
+        ObjectId treeMetadataId = ObjectId.NULL;
+
+        DepthTreeIterator iter = new DepthTreeIterator(treePath, treeMetadataId,
+                (RevTree) revObject.get(), database, Strategy.FEATURES_ONLY);
 
         // Create a FeatureCollection
         DefaultFeatureCollection features = new DefaultFeatureCollection();
@@ -111,7 +117,7 @@ public class ExportOp extends AbstractGeoGitOp<SimpleFeatureStore> {
                     featureBuilder = new FeatureBuilder(revFeatureType);
                 }
                 RevFeature revFeature = command(RevObjectParse.class)
-                        .setObjectId(nodeRef.getObjectId()).call(RevFeature.class).get();
+                        .setObjectId(nodeRef.objectId()).call(RevFeature.class).get();
                 Feature feature = featureBuilder.build(Integer.toString(i), revFeature);
                 Feature validFeature = function.apply(feature);
                 features.add((SimpleFeature) validFeature);

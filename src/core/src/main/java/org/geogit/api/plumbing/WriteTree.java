@@ -5,17 +5,18 @@
 
 package org.geogit.api.plumbing;
 
-import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.Map;
 
 import org.geogit.api.AbstractGeoGitOp;
+import org.geogit.api.Node;
 import org.geogit.api.NodeRef;
 import org.geogit.api.ObjectId;
 import org.geogit.api.Ref;
 import org.geogit.api.RevTree;
 import org.geogit.api.RevTreeBuilder;
 import org.geogit.api.plumbing.diff.DiffEntry;
+import org.geogit.api.plumbing.diff.DiffEntry.ChangeType;
 import org.geogit.repository.StagingArea;
 import org.geogit.storage.ObjectDatabase;
 import org.geogit.storage.StagingDatabase;
@@ -24,7 +25,6 @@ import org.opengis.util.ProgressListener;
 import com.google.common.base.Optional;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
-import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.inject.Inject;
 
@@ -97,7 +97,6 @@ public class WriteTree extends AbstractGeoGitOp<ObjectId> {
 
         Iterator<DiffEntry> staged = index.getStaged(noPathFilter);
 
-        ArrayList<DiffEntry> newArrayList = Lists.newArrayList(index.getStaged(noPathFilter));
         Map<String, RevTreeBuilder> changedTrees = Maps.newHashMap();
 
         NodeRef ref;
@@ -112,11 +111,11 @@ public class WriteTree extends AbstractGeoGitOp<ObjectId> {
             ref = diff.getNewObject();
 
             if (ref == null) {
-                ref = new NodeRef(diff.getOldObject().getPath(), ObjectId.NULL, diff.getOldObject()
-                        .getMetadataId(), diff.getOldObject().getType());
+                ref = new NodeRef(diff.getOldObject().getNode(), diff.getOldObject()
+                        .getParentPath(), ObjectId.NULL);
             }
 
-            final String parentPath = NodeRef.parentPath(ref.getPath());
+            String parentPath = ref.getParentPath();
 
             RevTreeBuilder parentTree = parentPath == null ? null : changedTrees.get(parentPath);
 
@@ -131,12 +130,12 @@ public class WriteTree extends AbstractGeoGitOp<ObjectId> {
                 changedTrees.put(parentPath, parentTree);
             }
 
-            final boolean isDelete = ObjectId.NULL.equals(ref.getObjectId());
+            final boolean isDelete = diff.changeType().equals(ChangeType.REMOVED);
             if (isDelete) {
-                parentTree.remove(ref.getPath());
+                parentTree.remove(diff.getOldObject().getNode().getName());
             } else {
-                deepMove(ref, index.getDatabase(), repositoryDatabase);
-                parentTree.put(ref);
+                deepMove(ref.getNode(), index.getDatabase(), repositoryDatabase);
+                parentTree.put(ref.getNode());
             }
         }
 
@@ -166,10 +165,10 @@ public class WriteTree extends AbstractGeoGitOp<ObjectId> {
         return command(RevObjectParse.class).setObjectId(treeId).call(RevTree.class).get();
     }
 
-    private void deepMove(NodeRef ref, StagingDatabase indexDatabase2,
+    private void deepMove(Node ref, StagingDatabase indexDatabase2,
             ObjectDatabase repositoryDatabase2) {
 
-        Supplier<NodeRef> objectRef = Suppliers.ofInstance(ref);
+        Supplier<Node> objectRef = Suppliers.ofInstance(ref);
         command(DeepMove.class).setObjectRef(objectRef).setToIndex(false).call();
 
     }

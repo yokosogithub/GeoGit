@@ -12,6 +12,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.geogit.api.NodeRef;
+import org.geogit.api.ObjectId;
 import org.geogit.api.RevFeatureType;
 import org.geogit.api.RevObject;
 import org.geogit.api.RevObject.TYPE;
@@ -45,7 +46,7 @@ import com.google.common.base.Preconditions;
 @Parameters(commandNames = "export", commandDescription = "Export to PostGIS")
 public class PGExport extends AbstractPGCommand implements CLICommand {
 
-    @Parameter(description = "<featureType> <table>", arity = 2)
+    @Parameter(description = "<featureType path> <table>", arity = 2)
     public List<String> args;
 
     @Parameter(names = { "--overwrite", "-o" }, description = "Overwrite output table")
@@ -128,7 +129,7 @@ public class PGExport extends AbstractPGCommand implements CLICommand {
 
     private SimpleFeatureType getFeatureType(String featureTypeName, GeogitCLI cli) {
 
-        String refspec;
+        final String refspec;
         if (featureTypeName.contains(":")) {
             refspec = featureTypeName;
         } else {
@@ -144,16 +145,14 @@ public class PGExport extends AbstractPGCommand implements CLICommand {
 
         ObjectDatabase database = cli.getGeogit().getRepository().getObjectDatabase();
 
-        DepthTreeIterator iter = new DepthTreeIterator((RevTree) revObject.get(), database,
-                Strategy.FEATURES_ONLY);
+        DepthTreeIterator iter = new DepthTreeIterator("", ObjectId.NULL,
+                (RevTree) revObject.get(), database, Strategy.FEATURES_ONLY);
 
         while (iter.hasNext()) {
             NodeRef nodeRef = iter.next();
-            if (nodeRef.getType() == TYPE.FEATURE) {
-                RevFeatureType revFeatureType = cli.getGeogit().command(RevObjectParse.class)
-                        .setObjectId(nodeRef.getMetadataId()).call(RevFeatureType.class).get();
-                return (SimpleFeatureType) revFeatureType.type();
-            }
+            RevFeatureType revFeatureType = cli.getGeogit().command(RevObjectParse.class)
+                    .setObjectId(nodeRef.getMetadataId()).call(RevFeatureType.class).get();
+            return (SimpleFeatureType) revFeatureType.type();
         }
 
         throw new GeoToolsOpException(StatusCode.NO_FEATURES_FOUND);

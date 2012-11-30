@@ -11,7 +11,9 @@ import java.util.Iterator;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
+import org.geogit.api.Node;
 import org.geogit.api.NodeRef;
+import org.geogit.api.ObjectId;
 import org.geogit.api.RevObject.TYPE;
 import org.geogit.api.RevTree;
 import org.geogit.repository.DepthSearch;
@@ -69,11 +71,11 @@ public class DiffTreeWalk {
         RevTree oldTree = this.fromRootTree;
         RevTree newTree = this.toRootTree;
 
+        NodeRef oldRef, newRef;
+        Optional<NodeRef> oldObjectRef = getFilteredObjectRef(fromRootTree);
+        Optional<NodeRef> newObjectRef = getFilteredObjectRef(toRootTree);
         boolean pathFiltering = !pathFilter.isEmpty();
         if (pathFiltering) {
-            Optional<NodeRef> oldObjectRef = getFilteredObjectRef(fromRootTree);
-            Optional<NodeRef> newObjectRef = getFilteredObjectRef(toRootTree);
-
             if (Objects.equal(oldObjectRef, newObjectRef)) {
                 // filter didn't match anything
                 return Iterators.emptyIterator();
@@ -92,13 +94,13 @@ public class DiffTreeWalk {
                         newObjectRef.orNull()));
             case TREE:
                 if (oldObjectRef.isPresent()) {
-                    oldTree = objectDb.get(oldObjectRef.get().getObjectId(),
+                    oldTree = objectDb.get(oldObjectRef.get().objectId(),
                             serialFactory.createRevTreeReader());
                 } else {
                     oldTree = RevTree.EMPTY;
                 }
                 if (newObjectRef.isPresent()) {
-                    newTree = objectDb.get(newObjectRef.get().getObjectId(),
+                    newTree = objectDb.get(newObjectRef.get().objectId(),
                             serialFactory.createRevTreeReader());
                 } else {
                     newTree = RevTree.EMPTY;
@@ -106,14 +108,19 @@ public class DiffTreeWalk {
                 break;
             default:
                 throw new IllegalStateException(
-                        "Only FEATURE or TREE obects expected at this stage: " + type);
+                        "Only FEATURE or TREE objects expected at this stage: " + type);
             }
+
         }
+        oldRef = oldObjectRef.or(new NodeRef(
+                new Node("", oldTree.getId(), ObjectId.NULL, TYPE.TREE), "", ObjectId.NULL));
+        newRef = newObjectRef.or(new NodeRef(
+                new Node("", oldTree.getId(), ObjectId.NULL, TYPE.TREE), "", ObjectId.NULL));
 
         // TODO: pass pathFilter to TreeDiffEntryIterator so it ignores inner trees where the path
         // is guaranteed not to be present
-        Iterator<DiffEntry> iterator = new TreeDiffEntryIterator(oldTree, newTree, objectDb,
-                serialFactory);
+        Iterator<DiffEntry> iterator = new TreeDiffEntryIterator(oldRef, newRef, oldTree, newTree,
+                objectDb, serialFactory);
 
         if (pathFiltering) {
             iterator = Iterators.filter(iterator, new Predicate<DiffEntry>() {
@@ -131,7 +138,11 @@ public class DiffTreeWalk {
     }
 
     private Optional<NodeRef> getFilteredObjectRef(RevTree tree) {
-        checkState(!pathFilter.isEmpty());
+        if (pathFilter.isEmpty()) {
+            NodeRef rootRef = new NodeRef(new Node("", tree.getId(), ObjectId.NULL, TYPE.TREE), "",
+                    ObjectId.NULL);
+            return Optional.of(rootRef);
+        }
 
         final DepthSearch search = new DepthSearch(objectDb, serialFactory);
         Optional<NodeRef> ref = search.find(tree, pathFilter);

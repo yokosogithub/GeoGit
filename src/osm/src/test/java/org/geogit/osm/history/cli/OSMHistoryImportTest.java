@@ -69,13 +69,13 @@ public class OSMHistoryImportTest extends Assert {
         assertEquals(1, changes.size());
         DiffEntry entry = changes.get(0);
         assertEquals(ChangeType.MODIFIED, entry.changeType());
-        assertEquals("node/20", entry.getOldObject().getPath());
-        assertEquals("node/20", entry.getNewObject().getPath());
+        assertEquals("node/20", entry.getOldObject().path());
+        assertEquals("node/20", entry.getNewObject().path());
 
         Optional<RevFeature> oldRevFeature = geogit.command(RevObjectParse.class)
-                .setObjectId(entry.getOldObject().getObjectId()).call(RevFeature.class);
+                .setObjectId(entry.getOldObject().objectId()).call(RevFeature.class);
         Optional<RevFeature> newRevFeature = geogit.command(RevObjectParse.class)
-                .setObjectId(entry.getNewObject().getObjectId()).call(RevFeature.class);
+                .setObjectId(entry.getNewObject().objectId()).call(RevFeature.class);
         assertTrue(oldRevFeature.isPresent());
         assertTrue(newRevFeature.isPresent());
 

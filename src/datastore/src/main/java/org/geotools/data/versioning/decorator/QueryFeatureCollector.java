@@ -20,7 +20,7 @@ import java.io.IOException;
 import java.util.Iterator;
 
 import org.geogit.api.GeoGIT;
-import org.geogit.api.NodeRef;
+import org.geogit.api.Node;
 import org.geogit.api.ObjectId;
 import org.geogit.api.RevFeature;
 import org.geogit.storage.ObjectReader;
@@ -51,34 +51,34 @@ public class QueryFeatureCollector implements Iterable<Feature> {
     public Iterator<Feature> iterator() {
 
         VersionQuery versionQuery = new VersionQuery(geogit, featureType.getName());
-        Iterator<NodeRef> featureNodeRefs;
+        Iterator<Node> featureNodes;
         try {
-            featureNodeRefs = versionQuery.getByQuery(query);
+            featureNodes = versionQuery.getByQuery(query);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
 
-        Iterator<Feature> features = Iterators.transform(featureNodeRefs, new NodeRefToFeature(
+        Iterator<Feature> features = Iterators.transform(featureNodes, new NodeToFeature(
                 geogit, featureType));
 
         return features;
     }
 
-    private final class NodeRefToFeature implements Function<NodeRef, Feature> {
+    private final class NodeToFeature implements Function<Node, Feature> {
 
         private final GeoGIT geogit;
 
         private final FeatureType type;
 
-        public NodeRefToFeature(final GeoGIT repo, final FeatureType type) {
+        public NodeToFeature(final GeoGIT repo, final FeatureType type) {
             this.geogit = repo;
             this.type = type;
         }
 
         @Override
-        public Feature apply(final NodeRef featureNodeRef) {
-            String featureId = featureNodeRef.getPath();
-            ObjectId contentId = featureNodeRef.getObjectId();
+        public Feature apply(final Node featureNode) {
+            String featureId = featureNode.getPath();
+            ObjectId contentId = featureNode.getObjectId();
             StagingDatabase database = geogit.getRepository().getIndex().getDatabase();
             RevFeature feature;
             try {
@@ -91,7 +91,7 @@ public class QueryFeatureCollector implements Iterable<Feature> {
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
-            return VersionedFeatureWrapper.wrap((Feature) feature.feature(), featureNodeRef
+            return VersionedFeatureWrapper.wrap((Feature) feature.feature(), featureNode
                     .getObjectId().toString());
         }
 

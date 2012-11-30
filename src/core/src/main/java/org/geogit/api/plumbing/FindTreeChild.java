@@ -8,6 +8,7 @@ package org.geogit.api.plumbing;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import org.geogit.api.AbstractGeoGitOp;
+import org.geogit.api.Node;
 import org.geogit.api.NodeRef;
 import org.geogit.api.ObjectId;
 import org.geogit.api.Ref;
@@ -23,13 +24,13 @@ import com.google.common.base.Suppliers;
 import com.google.inject.Inject;
 
 /**
- * Finds a {@link NodeRef} by searching the given {@link RevTree} for the given path.
+ * Finds a {@link Node} by searching the given {@link RevTree} for the given path.
  * 
  * @see DepthSearch
  * @see ResolveTreeish
  * @see RevObjectParse
  */
-public class FindTreeChild extends AbstractGeoGitOp<Optional<NodeRef>> {
+public class FindTreeChild extends AbstractGeoGitOp<Optional<Node>> {
 
     private Supplier<RevTree> parent;
 
@@ -116,11 +117,11 @@ public class FindTreeChild extends AbstractGeoGitOp<Optional<NodeRef>> {
     /**
      * Executes the command.
      * 
-     * @return an {@code Optional} that contains the NodeRef if it was found, or
+     * @return an {@code Optional} that contains the Node if it was found, or
      *         {@link Optional#absent()} if it wasn't
      */
     @Override
-    public Optional<NodeRef> call() {
+    public Optional<Node> call() {
         checkNotNull(childPath, "childPath");
         final RevTree tree;
         if (parent == null) {
@@ -138,7 +139,11 @@ public class FindTreeChild extends AbstractGeoGitOp<Optional<NodeRef>> {
 
         DepthSearch depthSearch = new DepthSearch(target, serialFactory);
         Optional<NodeRef> childRef = depthSearch.find(tree, parentPath, path);
-        return childRef;
+        if (childRef.isPresent()) {
+            return Optional.of(childRef.get().getNode());
+        } else {
+            return Optional.absent();
+        }
     }
 
 }

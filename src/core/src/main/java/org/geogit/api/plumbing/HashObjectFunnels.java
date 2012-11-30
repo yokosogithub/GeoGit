@@ -16,7 +16,7 @@ import java.math.BigInteger;
 import java.util.Map;
 import java.util.UUID;
 
-import org.geogit.api.NodeRef;
+import org.geogit.api.Node;
 import org.geogit.api.ObjectId;
 import org.geogit.api.RevCommit;
 import org.geogit.api.RevFeature;
@@ -26,7 +26,7 @@ import org.geogit.api.RevObject.TYPE;
 import org.geogit.api.RevPerson;
 import org.geogit.api.RevTag;
 import org.geogit.api.RevTree;
-import org.geogit.api.SpatialRef;
+import org.geogit.api.SpatialNode;
 import org.geogit.storage.GtEntityType;
 import org.geotools.referencing.CRS;
 import org.opengis.feature.type.GeometryDescriptor;
@@ -174,19 +174,19 @@ class HashObjectFunnels {
         public void funnel(RevTree from, PrimitiveSink into) {
             RevObjectTypeFunnel.funnel(TYPE.TREE, into);
             if (from.trees().isPresent()) {
-                ImmutableList<NodeRef> trees = from.trees().get();
-                NodeRef ref;
+                ImmutableList<Node> trees = from.trees().get();
+                Node ref;
                 for (int i = 0; i < trees.size(); i++) {
                     ref = trees.get(i);
-                    NodeRefFunnel.funnel(ref, into);
+                    NodeFunnel.funnel(ref, into);
                 }
             }
             if (from.features().isPresent()) {
-                ImmutableList<NodeRef> children = from.features().get();
-                NodeRef ref;
+                ImmutableList<Node> children = from.features().get();
+                Node ref;
                 for (int i = 0; i < children.size(); i++) {
                     ref = children.get(i);
-                    NodeRefFunnel.funnel(ref, into);
+                    NodeFunnel.funnel(ref, into);
                 }
             }
             if (from.buckets().isPresent()) {
@@ -260,18 +260,18 @@ class HashObjectFunnels {
                 }
             });
 
-    private static final Funnel<NodeRef> NodeRefFunnel = new Funnel<NodeRef>() {
+    private static final Funnel<Node> NodeFunnel = new Funnel<Node>() {
         private static final long serialVersionUID = 1L;
 
         @Override
-        public void funnel(NodeRef ref, PrimitiveSink into) {
+        public void funnel(Node ref, PrimitiveSink into) {
             RevObjectTypeFunnel.funnel(ref.getType(), into);
-            Funnels.stringFunnel().funnel(ref.getPath(), into);
+            Funnels.stringFunnel().funnel(ref.getName(), into);
             ObjectIdFunnel.funnel(ref.getObjectId(), into);
-            ObjectIdFunnel.funnel(ref.getMetadataId(), into);
+            ObjectIdFunnel.funnel(ref.getMetadataId().or(ObjectId.NULL), into);
             BoundingBox bounds = null;
-            if (ref instanceof SpatialRef) {
-                bounds = ((SpatialRef) ref).getBounds();
+            if (ref instanceof SpatialNode) {
+                bounds = ((SpatialNode) ref).getBounds();
             }
             BoundingBoxFunnel.funnel(bounds, into);
         }

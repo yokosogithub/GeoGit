@@ -20,7 +20,7 @@ import java.util.Iterator;
 import java.util.Set;
 
 import org.geogit.api.GeoGIT;
-import org.geogit.api.NodeRef;
+import org.geogit.api.Node;
 import org.geogit.api.ObjectId;
 import org.geogit.api.RevFeature;
 import org.geogit.storage.ObjectReader;
@@ -51,12 +51,12 @@ public class ResourceIdFeatureCollector implements Iterable<Feature> {
     @Override
     public Iterator<Feature> iterator() {
 
-        Iterator<NodeRef> featureRefs = Iterators.emptyIterator();
+        Iterator<Node> featureRefs = Iterators.emptyIterator();
 
         VersionQuery query = new VersionQuery(geogit, featureType.getName());
         try {
             for (ResourceId rid : resourceIds) {
-                Iterator<NodeRef> ridIterator;
+                Iterator<Node> ridIterator;
                 ridIterator = query.get(rid);
                 featureRefs = Iterators.concat(featureRefs, ridIterator);
             }
@@ -70,7 +70,7 @@ public class ResourceIdFeatureCollector implements Iterable<Feature> {
         return features;
     }
 
-    private final class RefToFeature implements Function<NodeRef, Feature> {
+    private final class RefToFeature implements Function<Node, Feature> {
 
         private final GeoGIT repo;
 
@@ -82,7 +82,7 @@ public class ResourceIdFeatureCollector implements Iterable<Feature> {
         }
 
         @Override
-        public Feature apply(final NodeRef featureRef) {
+        public Feature apply(final Node featureRef) {
             String featureId = featureRef.getPath();
             ObjectId contentId = featureRef.getObjectId();
             StagingDatabase database = repo.getRepository().getIndex().getDatabase();

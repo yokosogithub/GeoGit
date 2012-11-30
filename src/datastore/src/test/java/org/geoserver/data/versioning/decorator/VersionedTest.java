@@ -27,7 +27,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
-import org.geogit.api.NodeRef;
+import org.geogit.api.Node;
 import org.geogit.api.ObjectId;
 import org.geogit.api.RevCommit;
 import org.geogit.api.RevTree;
@@ -427,14 +427,14 @@ public class VersionedTest extends DecoratedTestCase {
     private List<SimpleFeature> getFeaturesFromLog(LogOp logOp, SimpleFeatureType featureType) {
         Name typeName = featureType.getName();
         try {
-            Set<NodeRef> refs = new HashSet<NodeRef>();
+            Set<Node> refs = new HashSet<Node>();
             Iterator<RevCommit> featureCommits = logOp.call();
             while (featureCommits.hasNext()) {
                 RevCommit cmt = featureCommits.next();
-                refs.addAll(getNodeRefsByCommit(cmt, typeName));
+                refs.addAll(getNodesByCommit(cmt, typeName));
             }
             List<SimpleFeature> feats = new ArrayList<SimpleFeature>();
-            for (NodeRef ref : refs) {
+            for (Node ref : refs) {
                 SimpleFeature feat = (SimpleFeature) repo.getFeature(
                         new GeoToolsRevFeatureType(featureType), ref.getPath(), ref.getObjectId())
                         .feature();
@@ -450,20 +450,20 @@ public class VersionedTest extends DecoratedTestCase {
         }
     }
 
-    private List<NodeRef> getNodeRefsByCommit(RevCommit commit, Name typeName) {
-        List<NodeRef> treeNodeRefs = new ArrayList<NodeRef>();
+    private List<Node> getNodesByCommit(RevCommit commit, Name typeName) {
+        List<Node> treeNodes = new ArrayList<Node>();
         if (commit != null) {
             ObjectId commitTreeId = commit.getTreeId();
             RevTree commitTree = repo.getTree(commitTreeId);
-            NodeRef typeNodeRef = commitTree.get(typeName.getLocalPart());
-            RevTree typeTree = repo.getTree(typeNodeRef.getObjectId());
-            Iterator<NodeRef> it = typeTree.iterator(null);
+            Node typeNode = commitTree.get(typeName.getLocalPart());
+            RevTree typeTree = repo.getTree(typeNode.getObjectId());
+            Iterator<Node> it = typeTree.iterator(null);
 
             while (it.hasNext()) {
-                NodeRef nextNodeRef = it.next();
-                treeNodeRefs.add(nextNodeRef);
+                Node nextNode = it.next();
+                treeNodes.add(nextNode);
             }
         }
-        return treeNodeRefs;
+        return treeNodes;
     }
 }

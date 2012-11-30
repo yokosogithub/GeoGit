@@ -8,9 +8,9 @@ import org.geogit.api.RevObject.TYPE;
 import org.opengis.geometry.BoundingBox;
 
 /**
- * A NodeRef with spatial hints.
+ * A Node with spatial hints.
  */
-public class SpatialRef extends NodeRef {
+public class SpatialNode extends Node {
 
     private BoundingBox bounds;
 
@@ -23,7 +23,7 @@ public class SpatialRef extends NodeRef {
      * @param type the type of object being stored
      * @param bounds the bounds of the node
      */
-    public SpatialRef(String path, ObjectId oid, ObjectId metadataId, TYPE type, BoundingBox bounds) {
+    public SpatialNode(String path, ObjectId oid, ObjectId metadataId, TYPE type, BoundingBox bounds) {
         super(path, oid, metadataId, type);
         this.bounds = bounds;
     }

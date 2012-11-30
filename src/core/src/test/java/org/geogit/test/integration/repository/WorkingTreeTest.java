@@ -17,7 +17,7 @@ import java.util.List;
 
 import javax.xml.namespace.QName;
 
-import org.geogit.api.NodeRef;
+import org.geogit.api.Node;
 import org.geogit.api.ObjectId;
 import org.geogit.api.plumbing.diff.DiffEntry;
 import org.geogit.repository.WorkingTree;
@@ -49,7 +49,7 @@ public class WorkingTreeTest extends RepositoryTestCase {
     public void testInsertSingle() throws Exception {
         Name name = points1.getType().getName();
         String parentPath = name.getLocalPart();
-        NodeRef ref = workTree.insert(parentPath, points1);
+        Node ref = workTree.insert(parentPath, points1);
         ObjectId objectId = ref.getObjectId();
 
         assertEquals(objectId, workTree.findUnstaged(appendChild(pointsName, idP1)).get()
@@ -63,15 +63,15 @@ public class WorkingTreeTest extends RepositoryTestCase {
         featureList.add(points2);
         featureList.add(points3);
 
-        List<NodeRef> targetList = new LinkedList<NodeRef>();
+        List<Node> targetList = new LinkedList<Node>();
         workTree.insert(pointsName, featureList.iterator(), false, new NullProgressListener(),
                 targetList, 3);
 
         assertEquals(3, targetList.size());
 
-        NodeRef ref1 = targetList.get(0);
-        NodeRef ref2 = targetList.get(1);
-        NodeRef ref3 = targetList.get(2);
+        Node ref1 = targetList.get(0);
+        Node ref2 = targetList.get(1);
+        Node ref3 = targetList.get(2);
 
         assertEquals(ref1.getObjectId(), workTree.findUnstaged(appendChild(pointsName, idP1)).get()
                 .getObjectId());
@@ -88,15 +88,15 @@ public class WorkingTreeTest extends RepositoryTestCase {
         featureList.add(points2);
         featureList.add(points3);
 
-        List<NodeRef> targetList = new LinkedList<NodeRef>();
+        List<Node> targetList = new LinkedList<Node>();
         workTree.insert(pointsName, featureList.iterator(), false, new NullProgressListener(),
                 targetList, null);
 
         assertEquals(3, targetList.size());
 
-        NodeRef ref1 = targetList.get(0);
-        NodeRef ref2 = targetList.get(1);
-        NodeRef ref3 = targetList.get(2);
+        Node ref1 = targetList.get(0);
+        Node ref2 = targetList.get(1);
+        Node ref3 = targetList.get(2);
 
         assertEquals(ref1.getObjectId(), workTree.findUnstaged(appendChild(pointsName, idP1)).get()
                 .getObjectId());
@@ -113,15 +113,15 @@ public class WorkingTreeTest extends RepositoryTestCase {
         featureList.add(points2);
         featureList.add(points3);
 
-        List<NodeRef> targetList = new LinkedList<NodeRef>();
+        List<Node> targetList = new LinkedList<Node>();
         workTree.insert(pointsName, featureList.iterator(), false, new NullProgressListener(),
                 targetList, 0);
 
         assertEquals(3, targetList.size());
 
-        NodeRef ref1 = targetList.get(0);
-        NodeRef ref2 = targetList.get(1);
-        NodeRef ref3 = targetList.get(2);
+        Node ref1 = targetList.get(0);
+        Node ref2 = targetList.get(1);
+        Node ref3 = targetList.get(2);
 
         assertEquals(ref1.getObjectId(), workTree.findUnstaged(appendChild(pointsName, idP1)).get()
                 .getObjectId());
@@ -138,7 +138,7 @@ public class WorkingTreeTest extends RepositoryTestCase {
         featureList.add(points2);
         featureList.add(points3);
 
-        List<NodeRef> targetList = new LinkedList<NodeRef>();
+        List<Node> targetList = new LinkedList<Node>();
 
         exception.expect(IllegalArgumentException.class);
         workTree.insert(pointsName, featureList.iterator(), false, new NullProgressListener(),

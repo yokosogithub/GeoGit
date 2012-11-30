@@ -15,12 +15,13 @@ import java.util.TreeSet;
 
 import javax.annotation.Nullable;
 
+import org.geogit.api.Node;
 import org.geogit.api.NodeRef;
 import org.geogit.api.ObjectId;
 import org.geogit.api.RevObject.TYPE;
 import org.geogit.api.RevTree;
 import org.geogit.api.RevTreeImpl;
-import org.geogit.storage.NodeRefStorageOrder;
+import org.geogit.storage.NodeStorageOrder;
 import org.geogit.storage.ObjectDatabase;
 import org.geogit.storage.ObjectReader;
 import org.geogit.storage.ObjectSerialisingFactory;
@@ -140,8 +141,8 @@ public class TreeDiffEntryIteratorTest extends Assert {
 
         ImmutableSet<DiffEntry> diffset = diffSet(leftTree, rightTree);
         ImmutableSet<DiffEntry> expected = ImmutableSet.of(//
-                entry(null, null, "p1", "aa"),//
-                entry(null, null, "p2", "bb")//
+                entry(null, null, "tree1/p1", "aa"),//
+                entry(null, null, "tree1/p2", "bb")//
                 );
 
         assertEquals(expected, diffset);
@@ -157,8 +158,8 @@ public class TreeDiffEntryIteratorTest extends Assert {
 
         ImmutableSet<DiffEntry> diffset = diffSet(leftTree, rightTree);
         ImmutableSet<DiffEntry> expected = ImmutableSet.of(//
-                entry("p1", "aa", null, null),//
-                entry("p2", "bb", null, null)//
+                entry("tree1/p1", "aa", null, null),//
+                entry("tree1/p2", "bb", null, null)//
                 );
 
         assertEquals(expected, diffset);
@@ -175,8 +176,8 @@ public class TreeDiffEntryIteratorTest extends Assert {
 
         ImmutableSet<DiffEntry> diffset = diffSet(leftTree, rightTree);
         ImmutableSet<DiffEntry> expected = ImmutableSet.of(//
-                entry("p1", "aa", "p1", "a1"),//
-                entry("p2", "bb", "p2", "b2")//
+                entry("tree1/p1", "aa", "tree1/p1", "a1"),//
+                entry("tree1/p2", "bb", "tree1/p2", "b2")//
                 );
 
         assertEquals(expected, diffset);
@@ -188,11 +189,11 @@ public class TreeDiffEntryIteratorTest extends Assert {
         RevTree subtree1_1 = childenTree("t11", "01", "t12", "bb");
         RevTree subtree1_2 = childenTree("t11", "02", "t12", "bc", "t13", "cc");
 
-        RevTree subtree1 = childenTree("treeNested", subtree1_1.getId().toString());
-        RevTree subtree2 = childenTree("treeNested", subtree1_2.getId().toString());
+        RevTree subtree1 = childenTree("tree3", subtree1_1.getId().toString());
+        RevTree subtree2 = childenTree("tree3", subtree1_2.getId().toString());
 
-        RevTree childTreeV1 = childenTree("tree1", subtree1.getId().toString());
-        RevTree childTreeV2 = childenTree("tree1", subtree2.getId().toString());
+        RevTree childTreeV1 = childenTree("tree2", subtree1.getId().toString());
+        RevTree childTreeV2 = childenTree("tree2", subtree2.getId().toString());
 
         RevTree leftTree = childenTree("1", "aa", "tree1", childTreeV1.getId().toString());
         RevTree rightTree = childenTree("1", "ab", "tree1", childTreeV2.getId().toString());
@@ -200,9 +201,9 @@ public class TreeDiffEntryIteratorTest extends Assert {
         ImmutableSet<DiffEntry> diffset = diffSet(leftTree, rightTree);
         ImmutableSet<DiffEntry> expected = ImmutableSet.of(//
                 entry("1", "aa", "1", "ab"),//
-                entry("t11", "01", "t11", "02"),//
-                entry("t12", "bb", "t12", "bc"),//
-                entry(null, null, "t13", "cc")//
+                entry("tree1/tree2/tree3/t11", "01", "tree1/tree2/tree3/t11", "02"),//
+                entry("tree1/tree2/tree3/t12", "bb", "tree1/tree2/tree3/t12", "bc"),//
+                entry(null, null, "tree1/tree2/tree3/t13", "cc")//
                 );
 
         assertEquals(expected, diffset);
@@ -259,8 +260,8 @@ public class TreeDiffEntryIteratorTest extends Assert {
     @SuppressWarnings("unchecked")
     private RevTree childenTree(@Nullable String... pathIdKvps) {
 
-        TreeSet<NodeRef> features = Sets.newTreeSet(new NodeRefStorageOrder());
-        TreeSet<NodeRef> trees = Sets.newTreeSet(new NodeRefStorageOrder());
+        TreeSet<Node> features = Sets.newTreeSet(new NodeStorageOrder());
+        TreeSet<Node> trees = Sets.newTreeSet(new NodeStorageOrder());
 
         if (pathIdKvps != null) {
             for (int i = 0; i < pathIdKvps.length; i += 2) {
@@ -268,9 +269,9 @@ public class TreeDiffEntryIteratorTest extends Assert {
                 String idStr = pathIdKvps[i + 1];
                 NodeRef ref = ref(path, idStr);
                 if (ref.getType().equals(TYPE.FEATURE)) {
-                    features.add(ref);
+                    features.add(ref.getNode());
                 } else {
-                    trees.add(ref);
+                    trees.add(ref.getNode());
                 }
             }
         }
@@ -278,10 +279,10 @@ public class TreeDiffEntryIteratorTest extends Assert {
         ObjectId id = pathIdKvps == null ? ObjectId.forString("null") : ObjectId.forString(Joiner
                 .on(" ").join(pathIdKvps));
 
-        ImmutableList<NodeRef> sortedRefs = ImmutableList.copyOf(features);
+        ImmutableList<Node> sortedRefs = ImmutableList.copyOf(features);
         long size = sortedRefs.size();
 
-        ImmutableList<NodeRef> treeRefs = ImmutableList.copyOf(trees);
+        ImmutableList<Node> treeRefs = ImmutableList.copyOf(trees);
         RevTreeImpl tree = RevTreeImpl.createLeafTree(id, size, sortedRefs, treeRefs);
 
         when(mockDb.get(eq(id), (ObjectReader<RevTree>) any())).thenReturn(tree);
@@ -298,18 +299,25 @@ public class TreeDiffEntryIteratorTest extends Assert {
         return new DiffEntry(left, right);
     }
 
-    private NodeRef ref(String path, String idStr) {
+    private NodeRef ref(String fullPath, String idStr) {
         idStr += Strings.repeat("0", ObjectId.NULL.toString().length() - idStr.length());
         ObjectId objectId = ObjectId.valueOf(idStr);
 
+        String path = NodeRef.nodeFromPath(fullPath);
+        String parentPath = NodeRef.parentPath(fullPath);
         TYPE type = path.startsWith("tree") ? TYPE.TREE : TYPE.FEATURE;
-        NodeRef ref = new NodeRef(path, objectId, ObjectId.NULL, type);
+        NodeRef ref = new NodeRef(new Node(path, objectId, ObjectId.NULL, type), parentPath,
+                ObjectId.NULL);
         return ref;
     }
 
     private ImmutableSet<DiffEntry> diffSet(RevTree leftTree, RevTree rightTree) {
-        ImmutableSet<DiffEntry> diffset = ImmutableSet.copyOf(new TreeDiffEntryIterator(leftTree,
-                rightTree, mockDb, serialFactory));
+        NodeRef leftNodeRef = new NodeRef(new Node("", leftTree.getId(), ObjectId.NULL, TYPE.TREE),
+                "", ObjectId.NULL);
+        NodeRef rightNodeRef = new NodeRef(
+                new Node("", leftTree.getId(), ObjectId.NULL, TYPE.TREE), "", ObjectId.NULL);
+        ImmutableSet<DiffEntry> diffset = ImmutableSet.copyOf(new TreeDiffEntryIterator(
+                leftNodeRef, rightNodeRef, leftTree, rightTree, mockDb, serialFactory));
         return diffset;
     }
 }

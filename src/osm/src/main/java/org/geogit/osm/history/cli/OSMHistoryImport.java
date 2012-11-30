@@ -71,6 +71,8 @@ import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.geom.GeometryFactory;
 import com.vividsolutions.jts.geom.Point;
 
+//import org.geogit.api.Node;
+
 /**
  *
  */
@@ -363,17 +365,17 @@ public class OSMHistoryImport extends AbstractCommand implements CLICommand {
             if (coord == null) {
                 String fid = String.valueOf(nodeId);
                 String path = NodeRef.appendChild(NODE_TYPE_NAME, fid);
-                Optional<NodeRef> ref = index.findStaged(path);
+                Optional<org.geogit.api.Node> ref = index.findStaged(path);
                 if (!ref.isPresent()) {
                     ref = geogit.command(FindTreeChild.class).setChildPath(path).call();
                 }
                 if (ref.isPresent()) {
-                    NodeRef nodeRef = ref.get();
+                    org.geogit.api.Node nodeRef = ref.get();
                     ObjectReader<RevFeature> reader;
                     reader = serialFactory.createFeatureReader();
 
                     RevFeature revFeature = index.getDatabase().get(nodeRef.getObjectId(), reader);
-                    String id = NodeRef.nodeFromPath(nodeRef.getPath());
+                    String id = NodeRef.nodeFromPath(nodeRef.getName());
                     Feature feature = featureBuilder.build(id, revFeature);
 
                     Point p = (Point) ((SimpleFeature) feature).getAttribute("location");

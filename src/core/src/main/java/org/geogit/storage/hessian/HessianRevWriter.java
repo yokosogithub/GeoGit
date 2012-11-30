@@ -9,10 +9,10 @@ import java.util.Collections;
 import java.util.Map;
 
 import org.apache.commons.collections.map.LRUMap;
-import org.geogit.api.NodeRef;
+import org.geogit.api.Node;
 import org.geogit.api.ObjectId;
 import org.geogit.api.Ref;
-import org.geogit.api.SpatialRef;
+import org.geogit.api.SpatialNode;
 import org.geotools.referencing.CRS;
 import org.opengis.geometry.BoundingBox;
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
@@ -49,7 +49,7 @@ class HessianRevWriter {
     protected void writeObjectId(Hessian2Output hout, ObjectId id) throws IOException {
         Preconditions.checkNotNull(id);
         if (id.isNull()) {
-            hout.writeBytes(new byte[0]);
+            hout.writeNull();
         } else {
             hout.writeBytes(id.getRawValue());
         }
@@ -62,16 +62,16 @@ class HessianRevWriter {
         writeObjectId(hout, ref.getObjectId());
     }
 
-    protected void writeNodeRef(Hessian2Output hout, NodeRef ref) throws IOException {
+    protected void writeNode(Hessian2Output hout, Node node) throws IOException {
         BoundingBox bounds = null;
-        if (ref instanceof SpatialRef) {
-            bounds = ((SpatialRef) ref).getBounds();
+        if (node instanceof SpatialNode) {
+            bounds = ((SpatialNode) node).getBounds();
         }
         hout.writeInt(HessianRevReader.Node.REF.getValue());
-        hout.writeInt(ref.getType().value());
-        hout.writeString(ref.getPath());
-        writeObjectId(hout, ref.getObjectId());
-        writeObjectId(hout, ref.getMetadataId());
+        hout.writeInt(node.getType().value());
+        hout.writeString(node.getName());
+        writeObjectId(hout, node.getObjectId());
+        writeObjectId(hout, node.getMetadataId().or(ObjectId.NULL));
         writeBBox(hout, bounds);
     }
 

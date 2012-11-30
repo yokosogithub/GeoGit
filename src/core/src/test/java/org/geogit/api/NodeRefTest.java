@@ -22,7 +22,7 @@ import com.google.common.collect.ImmutableList;
 public class NodeRefTest {
 
     /**
-     * Test method for {@link org.geogit.api.NodeRef#parentPath(java.lang.String)}.
+     * Test method for {@link org.geogit.api.Node#parentPath(java.lang.String)}.
      */
     @Test
     public void testParentPath() {
@@ -34,7 +34,7 @@ public class NodeRefTest {
     }
 
     /**
-     * Test method for {@link org.geogit.api.NodeRef#allPathsTo(java.lang.String)}.
+     * Test method for {@link org.geogit.api.Node#allPathsTo(java.lang.String)}.
      */
     @Test
     public void testAllPathsTo() {
@@ -58,7 +58,7 @@ public class NodeRefTest {
     }
 
     /**
-     * Test method for {@link org.geogit.api.NodeRef#isDirectChild(String, String)}
+     * Test method for {@link org.geogit.api.Node#isDirectChild(String, String)}
      */
     @Test
     public void testIsDirectChild() {
@@ -81,7 +81,7 @@ public class NodeRefTest {
     }
 
     /**
-     * Test method for {@link org.geogit.api.NodeRef#isChild(String, String)}
+     * Test method for {@link org.geogit.api.Node#isChild(String, String)}
      */
     @Test
     public void testIsChild() {

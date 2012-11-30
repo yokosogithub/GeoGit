@@ -9,6 +9,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 import java.util.Iterator;
 
 import org.geogit.api.AbstractGeoGitOp;
+import org.geogit.api.Node;
 import org.geogit.api.NodeRef;
 import org.geogit.api.ObjectId;
 import org.geogit.api.Ref;
@@ -108,7 +109,7 @@ public class LsTreeOp extends AbstractGeoGitOp<Iterator<NodeRef>> {
         if (!revObject.isPresent()) { // let's try to see if it is a feature type or feature in the
                                       // working tree
             NodeRef.checkValidPath(ref);
-            Optional<NodeRef> treeRef = command(FindTreeChild.class).setParent(workTree.getTree())
+            Optional<Node> treeRef = command(FindTreeChild.class).setParent(workTree.getTree())
                     .setChildPath(ref).call();
             Preconditions.checkArgument(treeRef.isPresent(), "Invalid reference: %s", ref);
             ObjectId treeId = treeRef.get().getObjectId();
@@ -153,8 +154,9 @@ public class LsTreeOp extends AbstractGeoGitOp<Iterator<NodeRef>> {
                 throw new IllegalStateException("Unknown strategy: " + this.strategy);
             }
 
-            DepthTreeIterator iter = new DepthTreeIterator((RevTree) revObject.get(), index,
-                    iterStrategy);
+            // TODO: CHANGE METADATAID
+            DepthTreeIterator iter = new DepthTreeIterator(ref, ObjectId.NULL,
+                    (RevTree) revObject.get(), index, iterStrategy);
             return iter;
         default:
             throw new IllegalArgumentException(String.format("Invalid reference: %s", ref));

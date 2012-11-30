@@ -12,7 +12,7 @@ import static org.junit.Assert.assertTrue;
 
 import java.util.List;
 
-import org.geogit.api.NodeRef;
+import org.geogit.api.Node;
 import org.geogit.api.ObjectId;
 import org.geogit.api.Ref;
 import org.geogit.api.RevCommit;
@@ -229,7 +229,7 @@ public class IndexTest extends RepositoryTestCase {
         // staged2.accept(new PrintVisitor(index.getDatabase(), new PrintWriter(System.err)));
 
         // check feature1_2, feature1_3 and feature2_1
-        Optional<NodeRef> treeChild;
+        Optional<Node> treeChild;
 
         assertNotNull(treeChild = index.findStaged(appendChild(pointsName, idP2)));
         assertTrue(treeChild.isPresent());
@@ -320,7 +320,7 @@ public class IndexTest extends RepositoryTestCase {
             RevTree newRepoTree = repo.getTree(newRepoTreeId2);
 
             // check feature1_2, feature1_2 and feature2_1
-            Optional<NodeRef> treeChild;
+            Optional<Node> treeChild;
             assertNotNull(treeChild = repo.getTreeChild(newRepoTree, appendChild(pointsName, idP2)));
             assertEquals(oId1_2, treeChild.get().getObjectId());
 

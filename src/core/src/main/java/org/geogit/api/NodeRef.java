@@ -11,6 +11,7 @@ import java.util.List;
 
 import javax.annotation.Nullable;
 
+import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 
 /**
@@ -26,17 +27,12 @@ public class NodeRef implements Comparable<NodeRef> {
     /**
      * Full path from the root tree to the object this ref points to
      */
-    private String path;
+    private String parentPath;
 
     /**
-     * type of object this ref points to
+     * The {@code Node} this object points to
      */
-    private RevObject.TYPE type;
-
-    /**
-     * Id of the object this ref points to
-     */
-    private ObjectId objectId;
+    private Node node;
 
     /**
      * possibly {@link ObjectId#NULL NULL} id for the object describing the object this ref points
@@ -45,38 +41,63 @@ public class NodeRef implements Comparable<NodeRef> {
     private ObjectId metadataId;
 
     /**
-     * Constructs a new NodeRef.
+     * Constructs a new {@code Node} objects from a {@code Node} object without metadataId. It
+     * assumes that the passed {@code Node} does not have a metadataId value, and will not use it,
+     * even it it is present.
      * 
-     * @param name full path from the root tree to the object this ref points to
-     * @param oid id of the object this ref points to
-     * @param metadataId possibly {@link ObjectId#NULL NULL} id for the object describing the object
-     *        this ref points to
-     * @param type type of object this ref points to
+     * @param node a Node representing the element this Node points to
+     * @param parentPath the path of the parent tree, may be an empty string
+     * @param metadataId the metadataId of the element
      */
-    public NodeRef(final String name, final ObjectId oid, final ObjectId metadataId,
-            final RevObject.TYPE type) {
-        checkNotNull(name);
-        checkNotNull(oid);
-        checkNotNull(metadataId);
-        checkNotNull(type);
-        this.path = name;
-        this.objectId = oid;
+    public NodeRef(Node node, String parentPath, ObjectId metadataId) {
+        Preconditions.checkNotNull(node, "node is null");
+        Preconditions.checkNotNull(parentPath, "parentPath is null, did you mean an empty string?");
+        Preconditions.checkNotNull(metadataId, "metadataId is null, did you mean ObjectId.NULL?");
+        this.node = node;
+        this.parentPath = parentPath;
         this.metadataId = metadataId;
-        this.type = type;
     }
 
     /**
-     * Full path from the root tree to the object this ref points to
+     * Returns the parent path of the object this ref points to
+     * 
+     * @return
      */
-    public String getPath() {
-        return path;
+    public String getParentPath() {
+        return parentPath;
+    }
+
+    /**
+     * Returns the {@code Node} this object points to
+     * 
+     * @return the {@code Node} this object points to
+     */
+    public Node getNode() {
+        return node;
+    }
+
+    /**
+     * Returns the full path from the root tree to the object this ref points to
+     * <p>
+     * This is a derived property, shortcut for
+     * <code>{@link #getParentPath()} + "/" + getNode().getName() </code>
+     */
+    public String path() {
+        return NodeRef.appendChild(parentPath, node.getName());
+    }
+
+    /**
+     * @return the simple name of the {@link Node} this noderef points to
+     */
+    public String name() {
+        return node.getName();
     }
 
     /**
      * The id of the object this edge points to
      */
-    public ObjectId getObjectId() {
-        return objectId;
+    public ObjectId objectId() {
+        return node.getObjectId();
     }
 
     /**
@@ -84,18 +105,22 @@ public class NodeRef implements Comparable<NodeRef> {
      * to
      */
     public ObjectId getMetadataId() {
-        return metadataId;
+        if (node.getMetadataId().isPresent()) {
+            return node.getMetadataId().get();
+        } else {
+            return metadataId;
+        }
     }
 
     /**
      * type of object this ref points to
      */
     public RevObject.TYPE getType() {
-        return type;
+        return node.getType();
     }
 
     /**
-     * Tests equality over another {@code NodeRef}
+     * Tests equality over another {@code Node}
      */
     @Override
     public boolean equals(Object o) {
@@ -103,8 +128,8 @@ public class NodeRef implements Comparable<NodeRef> {
             return false;
         }
         NodeRef r = (NodeRef) o;
-        return path.equals(r.getPath()) && type.equals(r.getType())
-                && objectId.equals(r.getObjectId()) && metadataId.equals(r.getMetadataId());
+        return parentPath.equals(r.parentPath) && node.equals(r.node)
+                && metadataId.equals(r.metadataId);
     }
 
     /**
@@ -112,24 +137,28 @@ public class NodeRef implements Comparable<NodeRef> {
      */
     @Override
     public int hashCode() {
-        return 17 ^ path.hashCode() * objectId.hashCode() * metadataId.hashCode();
+        return 17 ^ parentPath.hashCode() * node.getObjectId().hashCode() * metadataId.hashCode();
     }
 
     /**
-     * Provides for natural ordering of {@code NodeRef}, based on name
+     * Provides for natural ordering of {@code NodeRef}, based on {@link #path()}
      */
     @Override
     public int compareTo(NodeRef o) {
-        return path.compareTo(o.getPath());
+        int c = parentPath.compareTo(o.getParentPath());
+        if (c == 0) {
+            return node.compareTo(o.getNode());
+        }
+        return c;
     }
 
     /**
-     * @return the NodeRef represented as a readable string.
+     * @return the Node represented as a readable string.
      */
     @Override
     public String toString() {
-        return new StringBuilder("NodeRef").append('[').append(path).append(" -> ")
-                .append(objectId).append(']').toString();
+        return new StringBuilder("NodeRef").append('[').append(path()).append(" -> ")
+                .append(node.getObjectId()).append(']').toString();
     }
 
     /**

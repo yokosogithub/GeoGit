@@ -8,7 +8,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.util.Map.Entry;
 
-import org.geogit.api.NodeRef;
+import org.geogit.api.Node;
 import org.geogit.api.ObjectId;
 import org.geogit.api.RevTree;
 import org.geogit.storage.ObjectWriter;
@@ -66,10 +66,10 @@ class HessianRevTreeWriter extends HessianRevWriter implements ObjectWriter<RevT
         }
     }
 
-    private void writeChildren(Hessian2Output hout, ImmutableCollection<NodeRef> children)
+    private void writeChildren(Hessian2Output hout, ImmutableCollection<Node> children)
             throws IOException {
-        for (NodeRef ref : children) {
-            HessianRevTreeWriter.this.writeNodeRef(hout, ref);
+        for (Node ref : children) {
+            HessianRevTreeWriter.this.writeNode(hout, ref);
         }
     }
 

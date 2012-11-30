@@ -12,6 +12,7 @@ import java.util.Map;
 
 import javax.annotation.Nullable;
 
+import org.geogit.api.Node;
 import org.geogit.api.NodeRef;
 import org.geogit.api.ObjectId;
 import org.geogit.api.Ref;
@@ -120,13 +121,13 @@ public class Index implements StagingArea {
     }
 
     /**
-     * @param path the path of the {@link NodeRef} to find
-     * @return the {@code NodeRef} for the feature at the specified path if it exists in the index,
+     * @param path the path of the {@link Node} to find
+     * @return the {@code Node} for the feature at the specified path if it exists in the index,
      *         otherwise {@link Optional#absent()}
      */
     @Override
-    public Optional<NodeRef> findStaged(final String path) {
-        Optional<NodeRef> entry = repository.command(FindTreeChild.class).setIndex(true)
+    public Optional<Node> findStaged(final String path) {
+        Optional<Node> entry = repository.command(FindTreeChild.class).setIndex(true)
                 .setParent(getTree()).setChildPath(path).call();
         return entry;
     }
@@ -152,9 +153,9 @@ public class Index implements StagingArea {
             String path;
             if (newObject == null) {
                 // Delete
-                path = NodeRef.parentPath(oldObject.getPath());
+                path = oldObject.getParentPath();
             } else {
-                path = NodeRef.parentPath(newObject.getPath());
+                path = newObject.getParentPath();
             }
             List<DiffEntry> changeList = changeMap.get(path);
             if (changeList == null) {
@@ -182,13 +183,13 @@ public class Index implements StagingArea {
                 NodeRef newObject = diff.getNewObject();
                 if (newObject == null) {
                     // Delete
-                    parentTree.remove(oldObject.getPath());
+                    parentTree.remove(oldObject.name());
                 } else if (oldObject == null) {
                     // Add
-                    parentTree.put(newObject);
+                    parentTree.put(newObject.getNode());
                 } else {
                     // Modify
-                    parentTree.put(newObject);
+                    parentTree.put(newObject.getNode());
                 }
             }
 

@@ -9,6 +9,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.util.Iterator;
 
+import org.geogit.api.Node;
 import org.geogit.api.NodeRef;
 import org.geogit.api.ObjectId;
 import org.geogit.api.RevObject.TYPE;
@@ -17,6 +18,7 @@ import org.geogit.storage.ObjectDatabase;
 import org.geogit.storage.ObjectSerialisingFactory;
 import org.geogit.storage.hessian.HessianFactory;
 
+import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.AbstractIterator;
 import com.google.common.collect.Iterators;
@@ -56,8 +58,6 @@ public class DepthTreeIterator extends AbstractIterator<NodeRef> {
         RECURSIVE_TREES_ONLY
     }
 
-    private RevTree tree;
-
     private Iterator<NodeRef> iterator;
 
     private ObjectDatabase source;
@@ -66,32 +66,56 @@ public class DepthTreeIterator extends AbstractIterator<NodeRef> {
 
     private Strategy strategy;
 
-    public DepthTreeIterator(RevTree tree, ObjectDatabase source, Strategy strategy) {
+    private static class NodeToRef implements Function<Node, NodeRef> {
+
+        private final String treePath;
+
+        private final ObjectId metadataId;
+
+        public NodeToRef(String treePath, ObjectId metadataId) {
+            this.treePath = treePath;
+            this.metadataId = metadataId;
+        }
+
+        @Override
+        public NodeRef apply(Node node) {
+            return new NodeRef(node, treePath, node.getMetadataId().or(metadataId));
+        }
+    };
+
+    // public DepthTreeIterator(RevTree tree, ObjectDatabase source, Strategy strategy) {
+    // this("", ObjectId.NULL, tree, source, strategy);
+    // }
+
+    public DepthTreeIterator(final String treePath, final ObjectId metadataId, RevTree tree,
+            ObjectDatabase source, Strategy strategy) {
+        checkNotNull(treePath);
+        checkNotNull(metadataId);
         checkNotNull(tree);
         checkNotNull(source);
         checkNotNull(strategy);
 
-        this.tree = tree;
+        NodeToRef functor = new NodeToRef(treePath, metadataId);
         this.source = source;
         this.strategy = strategy;
         switch (strategy) {
         case CHILDREN:
-            iterator = new Children(tree);
+            iterator = Iterators.transform(new Children(tree), functor);
             break;
         case FEATURES_ONLY:
-            iterator = new Features(tree);
+            iterator = Iterators.transform(new Features(tree), functor);
             break;
         case TREES_ONLY:
-            iterator = new Trees(tree);
+            iterator = Iterators.transform(new Trees(tree), functor);
             break;
         case RECURSIVE:
-            iterator = new Recursive(tree, true, true);
+            iterator = new Recursive(treePath, metadataId, tree, true, true);
             break;
         case RECURSIVE_FEATURES_ONLY:
-            iterator = new Recursive(tree, true, false);
+            iterator = new Recursive(treePath, metadataId, tree, true, false);
             break;
         case RECURSIVE_TREES_ONLY:
-            iterator = new Recursive(tree, false, true);
+            iterator = new Recursive(treePath, metadataId, tree, false, true);
             break;
         default:
             throw new IllegalArgumentException("Unrecognized strategy: " + strategy);
@@ -116,12 +140,16 @@ public class DepthTreeIterator extends AbstractIterator<NodeRef> {
 
         private boolean trees;
 
-        private Iterator<NodeRef> myEntries;
+        private Iterator<Node> myEntries;
 
         private Iterator<NodeRef> currEntryIterator;
 
-        public Recursive(RevTree tree, boolean features, boolean trees) {
+        private NodeToRef functor;
+
+        public Recursive(String treePath, ObjectId metadataId, RevTree tree, boolean features,
+                boolean trees) {
             Preconditions.checkArgument(features || trees);
+            this.functor = new NodeToRef(treePath, metadataId);
             this.features = features;
             this.trees = trees;
             if (!features) {
@@ -143,26 +171,32 @@ public class DepthTreeIterator extends AbstractIterator<NodeRef> {
             return currEntryIterator.next();
         }
 
-        @SuppressWarnings("unchecked")
-        private Iterator<NodeRef> resolveEntryIterator(NodeRef next) {
+        private Iterator<NodeRef> resolveEntryIterator(Node next) {
             if (TYPE.FEATURE.equals(next.getType())) {
-                return (Iterator<NodeRef>) (features ? Iterators.singletonIterator(next)
-                        : Iterators.emptyIterator());
+                if (features) {
+                    return Iterators.singletonIterator(functor.apply(next));
+                }
+                return Iterators.emptyIterator();
             }
             Preconditions.checkArgument(TYPE.TREE.equals(next.getType()));
+
             ObjectId treeId = next.getObjectId();
             RevTree childTree = source.get(treeId, serialFactory.createRevTreeReader());
-            Iterator<NodeRef> children = new Recursive(childTree, features, trees);
+
+            String childTreePath = NodeRef.appendChild(this.functor.treePath, next.getName());
+            Iterator<NodeRef> children = new Recursive(childTreePath, next.getMetadataId().or(
+                    functor.metadataId), childTree, features, trees);
             if (trees) {
-                children = Iterators.concat(Iterators.singletonIterator(next), children);
+                children = Iterators.concat(Iterators.singletonIterator(functor.apply(next)),
+                        children);
             }
             return children;
         }
     }
 
-    private class Children extends AbstractIterator<NodeRef> {
+    private class Children extends AbstractIterator<Node> {
 
-        private Iterator<NodeRef> children;
+        private Iterator<Node> children;
 
         public Children(RevTree tree) {
             if (tree.buckets().isPresent()) {
@@ -173,7 +207,7 @@ public class DepthTreeIterator extends AbstractIterator<NodeRef> {
         }
 
         @Override
-        protected NodeRef computeNext() {
+        protected Node computeNext() {
             if (children.hasNext()) {
                 return children.next();
             }
@@ -181,9 +215,9 @@ public class DepthTreeIterator extends AbstractIterator<NodeRef> {
         }
     }
 
-    private class Features extends AbstractIterator<NodeRef> {
+    private class Features extends AbstractIterator<Node> {
 
-        private Iterator<NodeRef> features;
+        private Iterator<Node> features;
 
         public Features(RevTree tree) {
             if (tree.features().isPresent()) {
@@ -196,7 +230,7 @@ public class DepthTreeIterator extends AbstractIterator<NodeRef> {
         }
 
         @Override
-        protected NodeRef computeNext() {
+        protected Node computeNext() {
             if (features.hasNext()) {
                 return features.next();
             }
@@ -204,9 +238,9 @@ public class DepthTreeIterator extends AbstractIterator<NodeRef> {
         }
     }
 
-    private class Trees extends AbstractIterator<NodeRef> {
+    private class Trees extends AbstractIterator<Node> {
 
-        private Iterator<NodeRef> trees;
+        private Iterator<Node> trees;
 
         public Trees(RevTree tree) {
             if (tree.trees().isPresent()) {
@@ -219,7 +253,7 @@ public class DepthTreeIterator extends AbstractIterator<NodeRef> {
         }
 
         @Override
-        protected NodeRef computeNext() {
+        protected Node computeNext() {
             if (trees.hasNext()) {
                 return trees.next();
             }
@@ -230,11 +264,11 @@ public class DepthTreeIterator extends AbstractIterator<NodeRef> {
     /**
      * Returns all direct children of a buckets tree
      */
-    private class Buckets extends AbstractIterator<NodeRef> {
+    private class Buckets extends AbstractIterator<Node> {
 
         private Iterator<ObjectId> buckets;
 
-        private Iterator<NodeRef> bucketEntries;
+        private Iterator<Node> bucketEntries;
 
         public Buckets(RevTree tree) {
             Preconditions.checkArgument(tree.buckets().isPresent());
@@ -242,7 +276,7 @@ public class DepthTreeIterator extends AbstractIterator<NodeRef> {
         }
 
         @Override
-        protected NodeRef computeNext() {
+        protected Node computeNext() {
             while (bucketEntries == null || !bucketEntries.hasNext()) {
                 if (buckets.hasNext()) {
                     bucketEntries = resolveBucketEntries(buckets.next());
@@ -257,7 +291,7 @@ public class DepthTreeIterator extends AbstractIterator<NodeRef> {
          * @param bucketId
          * @return
          */
-        protected Iterator<NodeRef> resolveBucketEntries(ObjectId bucketId) {
+        protected Iterator<Node> resolveBucketEntries(ObjectId bucketId) {
             RevTree bucketTree = source.get(bucketId, serialFactory.createRevTreeReader());
             if (bucketTree.buckets().isPresent()) {
                 return new Buckets(bucketTree);
@@ -276,7 +310,7 @@ public class DepthTreeIterator extends AbstractIterator<NodeRef> {
         }
 
         @Override
-        protected Iterator<NodeRef> resolveBucketEntries(ObjectId bucketId) {
+        protected Iterator<Node> resolveBucketEntries(ObjectId bucketId) {
             RevTree bucketTree = source.get(bucketId, serialFactory.createRevTreeReader());
             if (bucketTree.buckets().isPresent()) {
                 return new Buckets(bucketTree);
@@ -298,7 +332,7 @@ public class DepthTreeIterator extends AbstractIterator<NodeRef> {
         }
 
         @Override
-        protected Iterator<NodeRef> resolveBucketEntries(ObjectId bucketId) {
+        protected Iterator<Node> resolveBucketEntries(ObjectId bucketId) {
             RevTree bucketTree = source.get(bucketId, serialFactory.createRevTreeReader());
             if (bucketTree.buckets().isPresent()) {
                 return new FeatureBuckets(bucketTree);

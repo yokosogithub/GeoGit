@@ -19,7 +19,8 @@ Feature: "remote" command
      When I run the command "remote add myremote http://myremote.com"
       And I run the command "remote add myremote2 http://myremote2.org"
       And I run the command "remote list"
-     Then it should answer "myremotemyremote2"
+     Then the response should contain "myremote"
+      And the response should contain "myremote2"
      
   Scenario: Try to add a remote that already exists
     Given I have a repository
@@ -31,7 +32,8 @@ Feature: "remote" command
     Given I have a repository
      When I run the command "remote add myremote http://myremote.com"
       And I run the command "remote list -v"
-     Then it should answer "myremote http://myremote.com (fetch)myremote http://myremote.com (push)"
+     Then the response should contain "myremote http://myremote.com (fetch)"
+      And the response should contain "myremote http://myremote.com (push)"
      
   Scenario: Try to add a remote that tracks a specific branch
     Given I have a repository

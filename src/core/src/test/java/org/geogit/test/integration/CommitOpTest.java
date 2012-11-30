@@ -16,6 +16,7 @@ import static org.mockito.Mockito.when;
 
 import javax.annotation.Nullable;
 
+import org.geogit.api.Node;
 import org.geogit.api.NodeRef;
 import org.geogit.api.ObjectId;
 import org.geogit.api.Ref;
@@ -78,7 +79,7 @@ public class CommitOpTest extends RepositoryTestCase {
         RevTree root = repo.getTree(treeId);
         assertNotNull(root);
 
-        Optional<NodeRef> typeTreeId = repo.getTreeChild(root, pointsName);
+        Optional<Node> typeTreeId = repo.getTreeChild(root, pointsName);
         assertTrue(typeTreeId.isPresent());
         // BLOBS.print(repo.getRawObject(typeTreeId), System.err);
         RevTree typeTree = repo.getTree(typeTreeId.get().getObjectId());
@@ -87,7 +88,7 @@ public class CommitOpTest extends RepositoryTestCase {
         String featureId = points1.getIdentifier().getID();
 
         String path = NodeRef.appendChild(pointsName, featureId);
-        Optional<NodeRef> featureBlobId = repo.getTreeChild(root, path);
+        Optional<Node> featureBlobId = repo.getTreeChild(root, path);
         assertTrue(featureBlobId.isPresent());
         assertEquals(oid1, featureBlobId.get().getObjectId());
 
@@ -213,14 +214,14 @@ public class CommitOpTest extends RepositoryTestCase {
         RevTree root = repo.getTree(treeId);
         assertNotNull(root);
 
-        Optional<NodeRef> typeTreeId = repo.getTreeChild(root, pointsName);
+        Optional<Node> typeTreeId = repo.getTreeChild(root, pointsName);
         assertTrue(typeTreeId.isPresent());
         // BLOBS.print(repo.getRawObject(typeTreeId), System.err);
         RevTree typeTree = repo.getTree(typeTreeId.get().getObjectId());
         assertNotNull(typeTree);
 
         String featureId = points1.getIdentifier().getID();
-        Optional<NodeRef> featureBlobId = repo.getTreeChild(root,
+        Optional<Node> featureBlobId = repo.getTreeChild(root,
                 NodeRef.appendChild(pointsName, featureId));
         assertTrue(featureBlobId.isPresent());
         assertEquals(oid1, featureBlobId.get().getObjectId());
@@ -267,14 +268,14 @@ public class CommitOpTest extends RepositoryTestCase {
         RevTree root = repo.getTree(treeId);
         assertNotNull(root);
 
-        Optional<NodeRef> typeTreeId = repo.getTreeChild(root, pointsName);
+        Optional<Node> typeTreeId = repo.getTreeChild(root, pointsName);
         assertTrue(typeTreeId.isPresent());
         // BLOBS.print(repo.getRawObject(typeTreeId), System.err);
         RevTree typeTree = repo.getTree(typeTreeId.get().getObjectId());
         assertNotNull(typeTree);
 
         String featureId = points1.getIdentifier().getID();
-        Optional<NodeRef> featureBlobId = repo.getTreeChild(root,
+        Optional<Node> featureBlobId = repo.getTreeChild(root,
                 NodeRef.appendChild(pointsName, featureId));
         assertTrue(featureBlobId.isPresent());
         assertEquals(oid, featureBlobId.get().getObjectId());

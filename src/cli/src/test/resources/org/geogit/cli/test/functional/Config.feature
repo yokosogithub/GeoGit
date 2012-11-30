@@ -116,5 +116,6 @@ Feature: "config" command
      When I run the command "config testing.local true"
       And I run the command "config testing.local2 false"
       And I run the command "config --list"
-     Then it should answer "testing.local=truetesting.local2=false"
+     Then the response should contain "testing.local=true"
+     Then the response should contain "testing.local2=false"
      

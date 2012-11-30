@@ -22,7 +22,7 @@ import org.geogit.api.plumbing.HashObject;
 import org.geogit.api.plumbing.diff.DepthTreeIterator;
 import org.geogit.api.plumbing.diff.DepthTreeIterator.Strategy;
 import org.geogit.repository.DepthSearch;
-import org.geogit.storage.NodeRefPathStorageOrder;
+import org.geogit.storage.NodePathStorageOrder;
 import org.geogit.storage.ObjectDatabase;
 import org.geogit.storage.ObjectReader;
 import org.geogit.storage.ObjectSerialisingFactory;
@@ -38,7 +38,7 @@ import com.google.common.collect.Sets;
 public class RevTreeBuilder {
 
     /**
-     * How many children refs to hold before forcing normalization of the internal data structures
+     * How many children nodes to hold before forcing normalization of the internal data structures
      * into tree buckets on the database
      * 
      * @todo make this configurable
@@ -51,15 +51,15 @@ public class RevTreeBuilder {
 
     private final Set<String> deletes;
 
-    private final Map<String, NodeRef> treeChanges;
+    private final Map<String, Node> treeChanges;
 
-    private final Map<String, NodeRef> featureChanges;
+    private final Map<String, Node> featureChanges;
 
     protected final TreeMap<Integer, ObjectId> bucketTreesByBucket;
 
     private int depth;
 
-    protected NodeRefPathStorageOrder storageOrder = new NodeRefPathStorageOrder();
+    protected NodePathStorageOrder storageOrder = new NodePathStorageOrder();
 
     /**
      * Empty tree constructor, used to create trees from scratch
@@ -99,14 +99,14 @@ public class RevTreeBuilder {
         if (copy != null) {
             if (copy.trees().isPresent()) {
                 checkArgument(!copy.buckets().isPresent());
-                for (NodeRef ref : copy.trees().get()) {
-                    putInternal(ref);
+                for (Node node : copy.trees().get()) {
+                    putInternal(node);
                 }
             }
             if (copy.features().isPresent()) {
                 checkArgument(!copy.buckets().isPresent());
-                for (NodeRef ref : copy.features().get()) {
-                    putInternal(ref);
+                for (Node node : copy.features().get()) {
+                    putInternal(node);
                 }
             }
             if (copy.buckets().isPresent()) {
@@ -118,19 +118,20 @@ public class RevTreeBuilder {
 
     /**
      * @param bucket
-     * @param ref
+     * @param node
      * @return
      */
     private @Nullable
-    NodeRef putInternal(NodeRef ref) {
-        switch (ref.getType()) {
+    Node putInternal(Node node) {
+        switch (node.getType()) {
         case FEATURE:
-            return featureChanges.put(ref.getPath(), ref);
+            return featureChanges.put(node.getName(), node);
         case TREE:
-            return treeChanges.put(ref.getPath(), ref);
+            return treeChanges.put(node.getName(), node);
         default:
-            throw new IllegalArgumentException("Only tree or feature refs can be added to a tree: "
-                    + ref + " " + ref.getType());
+            throw new IllegalArgumentException(
+                    "Only tree or feature nodes can be added to a tree: " + node + " "
+                            + node.getType());
         }
     }
 
@@ -140,8 +141,8 @@ public class RevTreeBuilder {
         return subtree;
     }
 
-    private Optional<NodeRef> getInternal(final String key, final boolean deep) {
-        NodeRef found = featureChanges.get(key);
+    private Optional<Node> getInternal(final String key, final boolean deep) {
+        Node found = featureChanges.get(key);
         if (found == null) {
             found = treeChanges.get(key);
         }
@@ -165,8 +166,13 @@ public class RevTreeBuilder {
         RevTree subtree = loadTree(subtreeId);
 
         DepthSearch depthSearch = new DepthSearch(db, serialFactory);
-        Optional<NodeRef> ref = depthSearch.getDirectChild(subtree, key, depth + 1);
-        return ref;
+        Optional<Node> node = depthSearch.getDirectChild(subtree, key, depth + 1);
+
+        if (node.isPresent()) {
+            return Optional.of(node.get());
+        } else {
+            return Optional.absent();
+        }
     }
 
     private long sizeOfTree(ObjectId treeId) {
@@ -209,10 +215,12 @@ public class RevTreeBuilder {
      */
     private RevTree moveBucketsToChildren(RevTree unnamedTree) {
         checkState(featureChanges.isEmpty());
-        DepthTreeIterator iterator = new DepthTreeIterator(unnamedTree, db, Strategy.CHILDREN);
+        // TODO:**********
+        Iterator<NodeRef> iterator = new DepthTreeIterator("", ObjectId.NULL, unnamedTree, db,
+                Strategy.CHILDREN);
         this.bucketTreesByBucket.clear();
         while (iterator.hasNext()) {
-            put(iterator.next());
+            put(iterator.next().getNode());
         }
         return normalizeToChildren();
     }
@@ -227,18 +235,18 @@ public class RevTreeBuilder {
 
         long size = featureChanges.size();
         if (!treeChanges.isEmpty()) {
-            for (NodeRef treeRef : treeChanges.values()) {
-                size += sizeOf(treeRef);
+            for (Node node : treeChanges.values()) {
+                size += sizeOf(node);
             }
         }
-        Collection<NodeRef> features = featureChanges.values();
-        Collection<NodeRef> trees = treeChanges.values();
+        Collection<Node> features = featureChanges.values();
+        Collection<Node> trees = treeChanges.values();
         RevTreeImpl unnamedTree = RevTreeImpl.createLeafTree(ObjectId.NULL, size, features, trees);
         return unnamedTree;
     }
 
-    private long sizeOf(NodeRef ref) {
-        return ref.getType().equals(TYPE.TREE) ? sizeOfTree(ref.getObjectId()) : 1L;
+    private long sizeOf(Node node) {
+        return node.getType().equals(TYPE.TREE) ? sizeOfTree(node.getObjectId()) : 1L;
     }
 
     /**
@@ -251,18 +259,18 @@ public class RevTreeBuilder {
         long accSize = 0;
 
         try {
-            Multimap<Integer, NodeRef> changesByBucket = ArrayListMultimap.create();
-            for (Iterator<NodeRef> it = featureChanges.values().iterator(); it.hasNext();) {
-                NodeRef change = it.next();
+            Multimap<Integer, Node> changesByBucket = ArrayListMultimap.create();
+            for (Iterator<Node> it = featureChanges.values().iterator(); it.hasNext();) {
+                Node change = it.next();
                 it.remove();
-                Integer bucket = computeBucket(change.getPath());
+                Integer bucket = computeBucket(change.getName());
                 changesByBucket.put(bucket, change);
             }
             Preconditions.checkState(featureChanges.isEmpty());
-            for (Iterator<NodeRef> it = treeChanges.values().iterator(); it.hasNext();) {
-                NodeRef change = it.next();
+            for (Iterator<Node> it = treeChanges.values().iterator(); it.hasNext();) {
+                Node change = it.next();
                 it.remove();
-                Integer bucket = computeBucket(change.getPath());
+                Integer bucket = computeBucket(change.getName());
                 changesByBucket.put(bucket, change);
             }
             Preconditions.checkState(featureChanges.isEmpty());
@@ -273,7 +281,7 @@ public class RevTreeBuilder {
             for (Integer bucket : buckets) {
                 final RevTreeBuilder subtreeBuilder;
                 {
-                    final Collection<NodeRef> bucketEntries = changesByBucket.removeAll(bucket);
+                    final Collection<Node> bucketEntries = changesByBucket.removeAll(bucket);
                     final ObjectId subtreeId = bucketTreesByBucket.get(bucket);
                     if (subtreeId == null) {
                         subtreeBuilder = new RevTreeBuilder(db, serialFactory, null, childDepth);
@@ -287,8 +295,8 @@ public class RevTreeBuilder {
                             subtreeBuilder.remove(deleted);
                         }
                     }
-                    for (NodeRef ref : bucketEntries) {
-                        subtreeBuilder.put(ref);
+                    for (Node node : bucketEntries) {
+                        subtreeBuilder.put(node);
                     }
                 }
                 final RevTree subtree = subtreeBuilder.build();
@@ -319,7 +327,7 @@ public class RevTreeBuilder {
      * @param key
      * @return
      */
-    public Optional<NodeRef> get(final String key) {
+    public Optional<Node> get(final String key) {
         return getInternal(key, true);
     }
 
@@ -335,10 +343,10 @@ public class RevTreeBuilder {
      * @param key non null
      * @param value non null
      */
-    public RevTreeBuilder put(final NodeRef ref) {
-        Preconditions.checkNotNull(ref, "ref can't be null");
+    public RevTreeBuilder put(final Node node) {
+        Preconditions.checkNotNull(node, "node can't be null");
 
-        putInternal(ref);
+        putInternal(node);
         if (numPendingChanges() >= DEFAULT_NORMALIZATION_THRESHOLD) {
             // hit the split factor modification tolerance, lets normalize
             normalize();
@@ -346,19 +354,25 @@ public class RevTreeBuilder {
         return this;
     }
 
-    public RevTreeBuilder remove(final String childPath) {
-        Preconditions.checkNotNull(childPath, "key can't be null");
-        // uses a NodeRef with ObjectId.NULL id signaling the removal
+    /**
+     * Removes an element from the tree
+     * 
+     * @param childName the name of the child to remove
+     * @return {@code this}
+     */
+    public RevTreeBuilder remove(final String childName) {
+        Preconditions.checkNotNull(childName, "key can't be null");
+        // uses a Node with ObjectId.NULL id signaling the removal
         // of the entry. normalize() is gonna take care of removing it from the subtree
         // subsequently
-        featureChanges.remove(childPath);
-        treeChanges.remove(childPath);
-        deletes.add(childPath);
+        featureChanges.remove(childName);
+        treeChanges.remove(childName);
+        deletes.add(childName);
         return this;
     }
 
     /**
-     * @return the new tree, not saved to the object database. Any bucket tree thouh is saved when
+     * @return the new tree, not saved to the object database. Any bucket tree though is saved when
      *         this method returns.
      */
     public RevTree build() {

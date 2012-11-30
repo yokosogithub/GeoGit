@@ -6,6 +6,7 @@
 package org.geogit.api.plumbing;
 
 import org.geogit.api.MemoryModule;
+import org.geogit.api.Node;
 import org.geogit.api.NodeRef;
 import org.geogit.api.ObjectId;
 import org.geogit.api.RevObject.TYPE;
@@ -70,7 +71,7 @@ public class WriteBackTest extends Assert {
 
         RevTreeBuilder oldRoot = new RevTreeBuilder(odb, serialFactory);
 
-        RevTree tree = new RevTreeBuilder(odb, serialFactory).put(blob("level1/blob")).build();
+        RevTree tree = new RevTreeBuilder(odb, serialFactory).put(blob("blob")).build();
 
         ObjectId newRootId = writeBack.setAncestor(oldRoot).setChildPath("level1").setTree(tree)
                 .call();
@@ -90,8 +91,7 @@ public class WriteBackTest extends Assert {
 
         RevTreeBuilder oldRoot = new RevTreeBuilder(odb, serialFactory);
 
-        RevTree tree = new RevTreeBuilder(odb, serialFactory).put(blob("level1/level2/blob"))
-                .build();
+        RevTree tree = new RevTreeBuilder(odb, serialFactory).put(blob("blob")).build();
 
         ObjectId newRootId = writeBack.setAncestor(oldRoot).setChildPath("level1/level2")
                 .setTree(tree).call();
@@ -114,8 +114,8 @@ public class WriteBackTest extends Assert {
 
         RevTreeBuilder ancestor = new RevTreeBuilder(odb, serialFactory);
 
-        RevTree tree1 = new RevTreeBuilder(odb, serialFactory).put(blob("subtree1/blob")).build();
-        RevTree tree2 = new RevTreeBuilder(odb, serialFactory).put(blob("subtree2/blob")).build();
+        RevTree tree1 = new RevTreeBuilder(odb, serialFactory).put(blob("blob")).build();
+        RevTree tree2 = new RevTreeBuilder(odb, serialFactory).put(blob("blob")).build();
 
         ObjectId newRootId1 = writeBack.setAncestor(ancestor).setChildPath("subtree1")
                 .setTree(tree1).call();
@@ -137,10 +137,8 @@ public class WriteBackTest extends Assert {
 
         RevTreeBuilder oldRoot = new RevTreeBuilder(odb, serialFactory);
 
-        RevTree tree1 = new RevTreeBuilder(odb, serialFactory).put(blob("subtree1/level2/blob"))
-                .build();
-        RevTree tree2 = new RevTreeBuilder(odb, serialFactory).put(
-                blob("subtree2/level2/level3/blob")).build();
+        RevTree tree1 = new RevTreeBuilder(odb, serialFactory).put(blob("blob")).build();
+        RevTree tree2 = new RevTreeBuilder(odb, serialFactory).put(blob("blob")).build();
 
         ObjectId newRootId1 = writeBack.setAncestor(oldRoot).setChildPath("subtree1/level2")
                 .setTree(tree1).call();
@@ -161,7 +159,7 @@ public class WriteBackTest extends Assert {
         assertTrue(depthSearch.find(newRootId2, "subtree2/level2/level3/blob").isPresent());
     }
 
-    private NodeRef blob(String path) {
-        return new NodeRef(path, ObjectId.forString(path), ObjectId.NULL, TYPE.FEATURE);
+    private Node blob(String path) {
+        return new Node(path, ObjectId.forString(path), ObjectId.NULL, TYPE.FEATURE);
     }
 }

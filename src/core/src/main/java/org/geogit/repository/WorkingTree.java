@@ -14,6 +14,7 @@ import java.util.Map;
 import javax.annotation.Nullable;
 import javax.xml.namespace.QName;
 
+import org.geogit.api.Node;
 import org.geogit.api.NodeRef;
 import org.geogit.api.ObjectId;
 import org.geogit.api.Ref;
@@ -23,7 +24,7 @@ import org.geogit.api.RevFeatureType;
 import org.geogit.api.RevObject.TYPE;
 import org.geogit.api.RevTree;
 import org.geogit.api.RevTreeBuilder;
-import org.geogit.api.SpatialRef;
+import org.geogit.api.SpatialNode;
 import org.geogit.api.plumbing.DiffCount;
 import org.geogit.api.plumbing.DiffWorkTree;
 import org.geogit.api.plumbing.FindOrCreateSubtree;
@@ -146,9 +147,9 @@ public class WorkingTree {
                 .builder(indexDatabase);
 
         String featurePath = NodeRef.appendChild(path, featureId);
-        Optional<NodeRef> ref = findUnstaged(featurePath);
-        if (ref.isPresent()) {
-            parentTree.remove(ref.get().getPath());
+        Optional<Node> node = findUnstaged(featurePath);
+        if (node.isPresent()) {
+            parentTree.remove(node.get().getName());
         }
 
         ObjectId newTree = repository.command(WriteBack.class).setAncestor(getTreeSupplier())
@@ -156,7 +157,7 @@ public class WorkingTree {
 
         updateWorkHead(newTree);
 
-        return ref.isPresent();
+        return node.isPresent();
     }
 
     /**
@@ -181,9 +182,9 @@ public class WorkingTree {
         while (affectedFeatures.hasNext()) {
             fid = affectedFeatures.next().getIdentifier().getID();
             featurePath = NodeRef.appendChild(typeName.getLocalPart(), fid);
-            Optional<NodeRef> ref = findUnstaged(featurePath);
+            Optional<Node> ref = findUnstaged(featurePath);
             if (ref.isPresent()) {
-                parentTree.remove(ref.get().getPath());
+                parentTree.remove(ref.get().getName());
             }
         }
 
@@ -234,8 +235,8 @@ public class WorkingTree {
                         .setChildPath(parentPath).call().builder(indexDatabase);
                 parents.put(parentPath, parentTree);
             }
-
-            parentTree.remove(featurePath);
+            String featureName = NodeRef.nodeFromPath(featurePath);
+            parentTree.remove(featureName);
         }
         ObjectId newTree = null;
         for (Map.Entry<String, RevTreeBuilder> entry : parents.entrySet()) {
@@ -257,7 +258,7 @@ public class WorkingTree {
      * @param parentTreePath path of the parent tree to insert the feature into
      * @param feature the feature to insert
      */
-    public NodeRef insert(final String parentTreePath, final Feature feature) {
+    public Node insert(final String parentTreePath, final Feature feature) {
 
         final FeatureType featureType = feature.getType();
         RevFeatureType newFeatureType = new RevFeatureType(featureType);
@@ -269,18 +270,18 @@ public class WorkingTree {
 
         indexDatabase.put(revFeatureTypeId, featureTypeWriter);
 
-        NodeRef ref = putInDatabase(parentTreePath, feature, revFeatureTypeId);
+        Node node = putInDatabase(feature, revFeatureTypeId);
         RevTreeBuilder parentTree = repository.command(FindOrCreateSubtree.class).setIndex(true)
                 .setParent(Suppliers.ofInstance(Optional.of(getTree())))
                 .setChildPath(parentTreePath).call().builder(indexDatabase);
 
-        parentTree.put(ref);
+        parentTree.put(node);
 
         ObjectId newTree = repository.command(WriteBack.class).setAncestor(getTreeSupplier())
                 .setChildPath(parentTreePath).setToIndex(true).setTree(parentTree.build()).call();
 
         updateWorkHead(newTree);
-        return ref;
+        return node;
     }
 
     /**
@@ -296,8 +297,7 @@ public class WorkingTree {
      */
     public void insert(final String treePath, Iterator<Feature> features,
             boolean forceUseProvidedFID, ProgressListener listener,
-            @Nullable List<NodeRef> insertedTarget, @Nullable Integer collectionSize)
-            throws Exception {
+            @Nullable List<Node> insertedTarget, @Nullable Integer collectionSize) throws Exception {
 
         checkArgument(collectionSize == null || collectionSize.intValue() > -1);
 
@@ -345,7 +345,7 @@ public class WorkingTree {
      */
     public boolean hasRoot(final QName typeName) {
         String localPart = typeName.getLocalPart();
-        Optional<NodeRef> typeNameTreeRef = repository.command(FindTreeChild.class)
+        Optional<Node> typeNameTreeRef = repository.command(FindTreeChild.class)
                 .setChildPath(localPart).call();
         return typeNameTreeRef.isPresent();
     }
@@ -372,12 +372,12 @@ public class WorkingTree {
     }
 
     /**
-     * @param path finds a {@link NodeRef} for the feature at the given path in the index
-     * @return the NodeRef for the feature at the specified path if it exists in the work tree,
+     * @param path finds a {@link Node} for the feature at the given path in the index
+     * @return the Node for the feature at the specified path if it exists in the work tree,
      *         otherwise Optional.absent()
      */
-    public Optional<NodeRef> findUnstaged(final String path) {
-        Optional<NodeRef> entry = repository.command(FindTreeChild.class).setIndex(true)
+    public Optional<Node> findUnstaged(final String path) {
+        Optional<Node> entry = repository.command(FindTreeChild.class).setIndex(true)
                 .setParent(getTree()).setChildPath(path).call();
         return entry;
     }
@@ -385,33 +385,29 @@ public class WorkingTree {
     /**
      * Adds a single feature to the staging database.
      * 
-     * @param parentTreePath the path of the feature
      * @param feature the feature to add
      * @param metadataId
-     * @return the NodeRef for the inserted feature
+     * @return the Node for the inserted feature
      */
-    private NodeRef putInDatabase(final String parentTreePath, final Feature feature,
-            final ObjectId metadataId) {
+    private Node putInDatabase(final Feature feature, final ObjectId metadataId) {
 
-        NodeRef.checkValidPath(parentTreePath);
         checkNotNull(feature);
         checkNotNull(metadataId);
 
         final RevFeature newFeature = new RevFeatureBuilder().build(feature);
         final ObjectId objectId = repository.command(HashObject.class).setObject(newFeature).call();
         final BoundingBox bounds = feature.getBounds();
-        final String nodePath = NodeRef
-                .appendChild(parentTreePath, feature.getIdentifier().getID());
+        final String nodeName = feature.getIdentifier().getID();
 
         final ObjectWriter<?> featureWriter = serialFactory.createFeatureWriter(newFeature);
 
         indexDatabase.put(objectId, featureWriter);
 
-        NodeRef newObject;
+        Node newObject;
         if (bounds == null) {
-            newObject = new NodeRef(nodePath, objectId, metadataId, TYPE.FEATURE);
+            newObject = new Node(nodeName, objectId, metadataId, TYPE.FEATURE);
         } else {
-            newObject = new SpatialRef(nodePath, objectId, metadataId, TYPE.FEATURE, bounds);
+            newObject = new SpatialNode(nodeName, objectId, metadataId, TYPE.FEATURE, bounds);
         }
 
         return newObject;
@@ -424,12 +420,12 @@ public class WorkingTree {
      * @param objects the features to insert
      * @param progress the {@link ProgressListener} for this process
      * @param size number of features to add
-     * @param target if specified, created {@link NodeRef}s will be added to the list
+     * @param target if specified, created {@link Node}s will be added to the list
      * @throws Exception
      */
     private void putInDatabase(final String parentTreePath, final Iterator<Feature> objects,
             final ProgressListener progress, final @Nullable Integer size,
-            @Nullable final List<NodeRef> target, final RevTreeBuilder parentTree) throws Exception {
+            @Nullable final List<Node> target, final RevTreeBuilder parentTree) throws Exception {
 
         checkNotNull(objects);
         checkNotNull(progress);
@@ -469,7 +465,7 @@ public class WorkingTree {
                 revFeatureTypes.put(featureType.getName(), revFeatureTypeId);
             }
 
-            final NodeRef objectRef = putInDatabase(parentTreePath, feature, revFeatureTypeId);
+            final Node objectRef = putInDatabase(feature, revFeatureTypeId);
             parentTree.put(objectRef);
             if (target != null) {
                 target.add(objectRef);
@@ -495,7 +491,7 @@ public class WorkingTree {
                     @Override
                     public QName apply(NodeRef treeRef) {
                         Preconditions.checkArgument(TYPE.TREE.equals(treeRef.getType()));
-                        String localName = NodeRef.nodeFromPath(treeRef.getPath());
+                        String localName = NodeRef.nodeFromPath(treeRef.path());
                         return new QName(localName);
                     }
                 }));
@@ -503,8 +499,8 @@ public class WorkingTree {
 
         // final List<QName> typeNames = Lists.newLinkedList();
         // if (root.features().isPresent()) {
-        // for (NodeRef typeTreeRef : root.features().get()) {
-        // String localName = NodeRef.nodeFromPath(typeTreeRef.getPath());
+        // for (Node typeTreeRef : root.features().get()) {
+        // String localName = Node.nodeFromPath(typeTreeRef.getPath());
         // typeNames.add(new QName(localName));
         // }
         // }

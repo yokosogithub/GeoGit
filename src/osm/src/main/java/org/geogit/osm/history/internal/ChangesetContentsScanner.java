@@ -313,7 +313,7 @@ class ChangesetContentsScanner {
                     long nodeRef = Long.valueOf(reader.getAttributeValue(null, "ref"));
                     reader.nextTag();
                     reader.require(END_ELEMENT, null, "nd");
-                    way.addNodeRef(nodeRef);
+                    way.addNode(nodeRef);
                 }
             } else if (tag == END_DOCUMENT) {
                 throw new IllegalStateException("premature end of document");

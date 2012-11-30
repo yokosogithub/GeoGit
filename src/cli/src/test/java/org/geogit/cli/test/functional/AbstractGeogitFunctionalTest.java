@@ -23,7 +23,7 @@ import jline.console.ConsoleReader;
 
 import org.geogit.api.GeoGIT;
 import org.geogit.api.GlobalInjectorBuilder;
-import org.geogit.api.NodeRef;
+import org.geogit.api.Node;
 import org.geogit.api.ObjectId;
 import org.geogit.api.Platform;
 import org.geogit.api.porcelain.AddOp;
@@ -220,7 +220,7 @@ public abstract class AbstractGeogitFunctionalTest {
         final WorkingTree workTree = geogit.getRepository().getWorkingTree();
         Name name = f.getType().getName();
         String parentPath = name.getLocalPart();
-        NodeRef ref = workTree.insert(parentPath, f);
+        Node ref = workTree.insert(parentPath, f);
         ObjectId objectId = ref.getObjectId();
         return objectId;
     }

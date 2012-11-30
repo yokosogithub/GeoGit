@@ -82,12 +82,12 @@ public class LsTree extends AbstractCommand implements CLICommand {
             @Override
             public CharSequence apply(NodeRef input) {
                 if (!verbose) {
-                    return input.getPath();
+                    return input.path();
                 }
                 StringBuilder sb = new StringBuilder();
                 sb.append(abbrev(input.getMetadataId())).append(" ")
                         .append(input.getType().toString().toLowerCase()).append(' ')
-                        .append(abbrev(input.getObjectId())).append(' ').append(input.getPath());
+                        .append(abbrev(input.objectId())).append(' ').append(input.path());
                 return sb;
             }
 

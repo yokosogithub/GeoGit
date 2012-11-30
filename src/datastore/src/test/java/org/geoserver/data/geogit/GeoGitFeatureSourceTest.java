@@ -32,7 +32,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.geogit.api.NodeRef;
+import org.geogit.api.Node;
 import org.geogit.api.RevTree;
 import org.geogit.test.integration.RepositoryTestCase;
 import org.geotools.data.Query;
@@ -337,14 +337,14 @@ public class GeoGitFeatureSourceTest extends RepositoryTestCase {
             ids.add(identifier);
         }
 
-        NodeRef typeTreeRef = repo.getRootTreeChild(pointsName);
+        Node typeTreeRef = repo.getRootTreeChild(pointsName);
         RevTree tree = repo.getTree(typeTreeRef.getObjectId());
 
-        List<NodeRef> refs = toList(tree.iterator(null));
+        List<Node> refs = toList(tree.iterator(null));
         assertEquals(3, refs.size());
 
-        Map<String, NodeRef> expected = new HashMap<String, NodeRef>();
-        for (NodeRef ref : refs) {
+        Map<String, Node> expected = new HashMap<String, Node>();
+        for (Node ref : refs) {
             expected.put(ref.getPath(), ref);
         }
 
@@ -352,7 +352,7 @@ public class GeoGitFeatureSourceTest extends RepositoryTestCase {
             assertFalse(id instanceof ResourceId);
             assertNotNull(id.getID());
             assertNotNull(id + " has no featureVersion set", id.getFeatureVersion());
-            NodeRef ref = expected.get(id.getID());
+            Node ref = expected.get(id.getID());
             assertNotNull(ref);
             assertEquals(ref.getObjectId().toString(), id.getFeatureVersion());
         }

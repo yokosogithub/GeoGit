@@ -8,7 +8,7 @@ import java.util.Iterator;
 
 import javax.annotation.Nullable;
 
-import org.geogit.api.NodeRef;
+import org.geogit.api.Node;
 import org.geogit.api.ObjectId;
 import org.geogit.api.RevTree;
 import org.geogit.api.plumbing.diff.DiffEntry;
@@ -44,10 +44,10 @@ public interface StagingArea {
 
     /**
      * @param path
-     * @return the NodeRef for the feature at the specified path if it exists in the index,
-     *         otherwise Optional.absent()
+     * @return the Node for the feature at the specified path if it exists in the index, otherwise
+     *         Optional.absent()
      */
-    public abstract Optional<NodeRef> findStaged(final String path);
+    public abstract Optional<Node> findStaged(final String path);
 
     /**
      * Stages the changes indicated by the {@link DiffEntry} iterator.

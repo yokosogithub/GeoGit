@@ -11,7 +11,7 @@ import java.io.InputStream;
 import java.util.Iterator;
 
 import org.geogit.api.AbstractGeoGitOp;
-import org.geogit.api.NodeRef;
+import org.geogit.api.Node;
 import org.geogit.api.ObjectId;
 import org.geogit.api.RevObject.TYPE;
 import org.geogit.api.RevTree;
@@ -39,7 +39,7 @@ public class DeepMove extends AbstractGeoGitOp<ObjectId> {
 
     private StagingDatabase index;
 
-    private Supplier<NodeRef> objectRef;
+    private Supplier<Node> objectRef;
 
     private ObjectSerialisingFactory serialFactory;
 
@@ -72,13 +72,13 @@ public class DeepMove extends AbstractGeoGitOp<ObjectId> {
      * @param objectRef the object to move from the origin database to the destination one
      * @return {@code this}
      */
-    public DeepMove setObjectRef(Supplier<NodeRef> objectRef) {
+    public DeepMove setObjectRef(Supplier<Node> objectRef) {
         this.objectRef = objectRef;
         return this;
     }
 
     /**
-     * Executes a deep move using the supplied {@link NodeRef}.
+     * Executes a deep move using the supplied {@link Node}.
      * 
      * @return the {@link ObjectId} of the moved object
      */
@@ -86,7 +86,7 @@ public class DeepMove extends AbstractGeoGitOp<ObjectId> {
     public ObjectId call() {
         ObjectDatabase from = toIndex ? odb : index;
         ObjectDatabase to = toIndex ? index : odb;
-        NodeRef ref = objectRef.get();
+        Node ref = objectRef.get();
         deepMove(ref, from, to);
         return null;
     }
@@ -99,8 +99,7 @@ public class DeepMove extends AbstractGeoGitOp<ObjectId> {
      * @param repositoryObjectInserter
      * @throws Exception
      */
-    private void deepMove(final NodeRef objectRef, final ObjectDatabase from,
-            final ObjectDatabase to) {
+    private void deepMove(final Node objectRef, final ObjectDatabase from, final ObjectDatabase to) {
 
         final ObjectId objectId = objectRef.getObjectId();
         if (TYPE.TREE.equals(objectRef.getType())) {
@@ -111,19 +110,19 @@ public class DeepMove extends AbstractGeoGitOp<ObjectId> {
         }
     }
 
-    private void moveFeature(NodeRef objectRef, ObjectDatabase from, ObjectDatabase to) {
+    private void moveFeature(Node objectRef, ObjectDatabase from, ObjectDatabase to) {
         moveObject(objectRef.getObjectId(), from, to, true);
 
-        final ObjectId metadataId = objectRef.getMetadataId();
+        final ObjectId metadataId = objectRef.getMetadataId().or(ObjectId.NULL);
         if (!metadataId.isNull()) {
             moveObject(metadataId, from, to, false);
         }
     }
 
     private void moveTree(RevTree tree, ObjectDatabase from, ObjectDatabase to) {
-        Iterator<NodeRef> children = tree.children();
+        Iterator<Node> children = tree.children();
         while (children.hasNext()) {
-            NodeRef ref = children.next();
+            Node ref = children.next();
             deepMove(ref, from, to);
         }
         if (tree.buckets().isPresent()) {

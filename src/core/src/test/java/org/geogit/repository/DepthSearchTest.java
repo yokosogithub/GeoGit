@@ -18,6 +18,7 @@ import java.io.IOException;
 import org.apache.commons.io.FileUtils;
 import org.geogit.api.GeoGIT;
 import org.geogit.api.MemoryModule;
+import org.geogit.api.Node;
 import org.geogit.api.NodeRef;
 import org.geogit.api.ObjectId;
 import org.geogit.api.Platform;
@@ -90,8 +91,8 @@ public class DepthSearchTest {
                 String nodePath = NodeRef.appendChild(treePath, singleNodeName);
                 ObjectId fakeFeatureOId = ObjectId.forString(nodePath);
                 ObjectId fakeTypeOId = ObjectId.forString(treePath);
-                subTreeBuilder
-                        .put(new NodeRef(nodePath, fakeFeatureOId, fakeTypeOId, TYPE.FEATURE));
+                subTreeBuilder.put(new Node(singleNodeName, fakeFeatureOId, fakeTypeOId,
+                        TYPE.FEATURE));
             }
         }
 
@@ -106,24 +107,24 @@ public class DepthSearchTest {
 
     @Test
     public void testFindFromRoot() {
-        assertNodeRef(find(rootTreeId, "path"), TREE, "path");
-        assertNodeRef(find(rootTreeId, "path/to"), TREE, "path/to");
-        assertNodeRef(find(rootTreeId, "path/to/tree1"), TREE, "path/to/tree1");
-        assertNodeRef(find(rootTreeId, "path/to/tree1/node11"), FEATURE, "path/to/tree1/node11");
-        assertNodeRef(find(rootTreeId, "path/to/tree1/node12"), FEATURE, "path/to/tree1/node12");
-        assertNodeRef(find(rootTreeId, "path/to/tree1/node13"), FEATURE, "path/to/tree1/node13");
+        assertNode(find(rootTreeId, "path"), TREE, "path");
+        assertNode(find(rootTreeId, "path/to"), TREE, "path/to");
+        assertNode(find(rootTreeId, "path/to/tree1"), TREE, "path/to/tree1");
+        assertNode(find(rootTreeId, "path/to/tree1/node11"), FEATURE, "path/to/tree1/node11");
+        assertNode(find(rootTreeId, "path/to/tree1/node12"), FEATURE, "path/to/tree1/node12");
+        assertNode(find(rootTreeId, "path/to/tree1/node13"), FEATURE, "path/to/tree1/node13");
         assertFalse(find(rootTreeId, "path/to/tree1/node14").isPresent());
 
-        assertNodeRef(find(rootTreeId, "path/to/tree2"), TREE, "path/to/tree2");
-        assertNodeRef(find(rootTreeId, "path/to/tree2/node21"), FEATURE, "path/to/tree2/node21");
-        assertNodeRef(find(rootTreeId, "path/to/tree2/node22"), FEATURE, "path/to/tree2/node22");
-        assertNodeRef(find(rootTreeId, "path/to/tree2/node23"), FEATURE, "path/to/tree2/node23");
+        assertNode(find(rootTreeId, "path/to/tree2"), TREE, "path/to/tree2");
+        assertNode(find(rootTreeId, "path/to/tree2/node21"), FEATURE, "path/to/tree2/node21");
+        assertNode(find(rootTreeId, "path/to/tree2/node22"), FEATURE, "path/to/tree2/node22");
+        assertNode(find(rootTreeId, "path/to/tree2/node23"), FEATURE, "path/to/tree2/node23");
         assertFalse(find(rootTreeId, "path/to/tree2/node24").isPresent());
 
-        assertNodeRef(find(rootTreeId, "tree3"), TYPE.TREE, "tree3");
-        assertNodeRef(find(rootTreeId, "tree3/node31"), FEATURE, "tree3/node31");
-        assertNodeRef(find(rootTreeId, "tree3/node32"), FEATURE, "tree3/node32");
-        assertNodeRef(find(rootTreeId, "tree3/node33"), FEATURE, "tree3/node33");
+        assertNode(find(rootTreeId, "tree3"), TYPE.TREE, "tree3");
+        assertNode(find(rootTreeId, "tree3/node31"), FEATURE, "tree3/node31");
+        assertNode(find(rootTreeId, "tree3/node32"), FEATURE, "tree3/node32");
+        assertNode(find(rootTreeId, "tree3/node33"), FEATURE, "tree3/node33");
         assertFalse(find(rootTreeId, "tree3/node34").isPresent());
 
         assertFalse(find(rootTreeId, "tree4").isPresent());
@@ -147,9 +148,9 @@ public class DepthSearchTest {
         return search.find(rootTreeId, rootChildPath);
     }
 
-    private void assertNodeRef(Optional<NodeRef> ref, TYPE type, String path) {
+    private void assertNode(Optional<NodeRef> ref, TYPE type, String path) {
         assertTrue(ref.isPresent());
         assertEquals(type, ref.get().getType());
-        assertEquals(path, ref.get().getPath());
+        assertEquals(path, ref.get().path());
     }
 }

@@ -13,6 +13,7 @@ import java.util.List;
 import jline.console.ConsoleReader;
 
 import org.geogit.api.GeoGIT;
+import org.geogit.api.Node;
 import org.geogit.api.NodeRef;
 import org.geogit.api.RevObject.TYPE;
 import org.geogit.api.plumbing.DiffWorkTree;
@@ -59,7 +60,7 @@ public class Clean implements CLICommand {
                 // check that is a valid path
                 Repository repository = cli.getGeogit().getRepository();
                 NodeRef.checkValidPath(pathFilter);
-                Optional<NodeRef> ref = repository.command(FindTreeChild.class)
+                Optional<Node> ref = repository.command(FindTreeChild.class)
                         .setParent(repository.getWorkingTree().getTree()).setChildPath(pathFilter)
                         .call();
                 Preconditions.checkArgument(ref.isPresent(),

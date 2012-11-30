@@ -24,7 +24,7 @@ import java.util.logging.Logger;
 
 import org.geogit.api.GeoGIT;
 import org.geogit.api.MutableTree;
-import org.geogit.api.NodeRef;
+import org.geogit.api.Node;
 import org.geogit.api.ObjectId;
 import org.geogit.api.Ref;
 import org.geogit.api.RevFeatureType;
@@ -136,8 +136,8 @@ public class GeoGitDataStore implements VersioningDataStore {
         RevTree typesTree = geogit.getRepository().getTree(typesTreeRef.getObjectId());
 
         List<Name> names = new ArrayList<Name>();
-        for (Iterator<NodeRef> simpleNames = typesTree.iterator(null); simpleNames.hasNext();) {
-            final NodeRef typeNameRef = simpleNames.next();
+        for (Iterator<Node> simpleNames = typesTree.iterator(null); simpleNames.hasNext();) {
+            final Node typeNameRef = simpleNames.next();
             RevFeatureType featureType = geogit.getRepository().getObjectDatabase()
                     .get(typeNameRef.getObjectId(), geogit.getRepository().newFeatureTypeReader());
             names.add(((FeatureType) featureType.type()).getName());
@@ -218,7 +218,7 @@ public class GeoGitDataStore implements VersioningDataStore {
             featureTypeBlobId = objectDatabase.put(geogit.getRepository().newFeatureTypeWriter(
                     new GeoToolsRevFeatureType(createType)));
 
-            typesTree.put(new NodeRef(localName, featureTypeBlobId, TYPE.FEATURE));
+            typesTree.put(new Node(localName, featureTypeBlobId, TYPE.FEATURE));
 
             final ObjectId newTypeRefsTreeId;
             newTypeRefsTreeId = objectDatabase.put(geogit.getRepository().newRevTreeWriter(
@@ -252,7 +252,7 @@ public class GeoGitDataStore implements VersioningDataStore {
 
         final String path = name.getLocalPart();
 
-        final NodeRef typeRef = objectDatabase.getTreeChild(namespacesRootTree, path);
+        final Node typeRef = objectDatabase.getTreeChild(namespacesRootTree, path);
         if (typeRef == null) {
             throw new SchemaNotFoundException(name.toString());
         }

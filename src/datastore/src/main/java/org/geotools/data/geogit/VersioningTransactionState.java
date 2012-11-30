@@ -29,7 +29,7 @@ import java.util.logging.Logger;
 import javax.xml.namespace.QName;
 
 import org.geogit.api.GeoGIT;
-import org.geogit.api.NodeRef;
+import org.geogit.api.Node;
 import org.geogit.api.RevCommit;
 import org.geogit.api.RevFeature;
 import org.geogit.api.porcelain.CommitOp;
@@ -124,12 +124,12 @@ public class VersioningTransactionState implements Transaction.State {
         LOGGER.info("Committing changeset " + id);
         try {
             // GeoToolsCommitStateResolver.CURRENT_TRANSACTION.set(transaction);
-            // final NodeRef branch =
+            // final Node branch =
             // geoGit.checkout().setName(transactionID).call();
             // commit to the branch
             RevCommit commit = null;
             // checkout master
-            // final NodeRef master = geoGit.checkout().setName("master").call();
+            // final Node master = geoGit.checkout().setName("master").call();
             // merge branch to master
             // MergeResult mergeResult = geoGit.merge().include(branch).call();
             // TODO: check mergeResult is success?
@@ -168,12 +168,12 @@ public class VersioningTransactionState implements Transaction.State {
         return stageInsert(typeName, affectedFeatures, false);
     }
 
-    private static Function<NodeRef, FeatureId> NodeRefToFeatureId = new Function<NodeRef, FeatureId>() {
+    private static Function<Node, FeatureId> NodeToFeatureId = new Function<Node, FeatureId>() {
 
         private final FilterFactory filterFactory = CommonFactoryFinder.getFilterFactory();
 
         @Override
-        public FeatureId apply(NodeRef input) {
+        public FeatureId apply(Node input) {
             return filterFactory.featureId(input.getPath(), input.getObjectId().toString());
         }
 
@@ -185,7 +185,7 @@ public class VersioningTransactionState implements Transaction.State {
         changedTypes.add(typeName);
 
         WorkingTree workingTree = geoGit.getRepository().getWorkingTree();
-        List<NodeRef> inserted = new LinkedList<NodeRef>();
+        List<Node> inserted = new LinkedList<Node>();
 
         int collectionSize = affectedFeatures.size();
         String treePath = typeName.getLocalPart();
@@ -198,7 +198,7 @@ public class VersioningTransactionState implements Transaction.State {
             features.close();
         }
         geoGit.add().call();
-        return Lists.transform(inserted, NodeRefToFeatureId);
+        return Lists.transform(inserted, NodeToFeatureId);
     }
 
     public void stageUpdate(final Name typeName, final FeatureCollection newValues)

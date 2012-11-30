@@ -11,7 +11,7 @@ import java.security.NoSuchAlgorithmException;
 import java.util.Map;
 import java.util.WeakHashMap;
 
-import org.geogit.api.NodeRef;
+import org.geogit.api.Node;
 import org.geogit.api.ObjectId;
 import org.geogit.api.RevTree;
 
@@ -20,13 +20,13 @@ import com.google.common.base.Throwables;
 import com.google.common.collect.Ordering;
 
 /**
- * Implements storage order of {@link NodeRef} based on its {@link #pathHash(NodeRef) hashed path}
+ * Implements storage order of {@link Node} based on its {@link #pathHash(Node) hashed path}
  */
-public final class NodeRefPathStorageOrder extends Ordering<String> {
+public final class NodePathStorageOrder extends Ordering<String> {
 
     private final MessageDigest hasher;
 
-    public NodeRefPathStorageOrder() {
+    public NodePathStorageOrder() {
         try {
             hasher = MessageDigest.getInstance("SHA1");
         } catch (NoSuchAlgorithmException e) {

@@ -65,7 +65,7 @@ public class InitSteps extends AbstractGeogitFunctionalTest {
     public void it_should_answer_exactly(String expected) throws Throwable {
         expected = expected.replace("${currentdir}", currentDirectory.getAbsolutePath())
                 .toLowerCase();
-        String actual = stdOut.toString().replaceAll("\n", "").toLowerCase();
+        String actual = stdOut.toString().replaceAll("\n", "").trim().toLowerCase();
         assertEquals(expected, actual);
     }
 

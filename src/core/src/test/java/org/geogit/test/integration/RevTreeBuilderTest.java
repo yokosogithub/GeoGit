@@ -13,6 +13,7 @@ import java.util.Map;
 import java.util.Random;
 import java.util.Set;
 
+import org.geogit.api.Node;
 import org.geogit.api.NodeRef;
 import org.geogit.api.ObjectId;
 import org.geogit.api.RevObject.TYPE;
@@ -67,8 +68,8 @@ public class RevTreeBuilderTest extends RepositoryTestCase {
         System.err.println("traversing with DepthTreeIterator...");
         sw.reset().start();
         int counted = 0;
-        for (DepthTreeIterator it = new DepthTreeIterator(tree, odb, Strategy.CHILDREN); it
-                .hasNext(); counted++) {
+        for (DepthTreeIterator it = new DepthTreeIterator("", ObjectId.NULL, tree, odb,
+                Strategy.CHILDREN); it.hasNext(); counted++) {
             NodeRef ref = it.next();
             if ((counted + 1) % (numEntries / 10) == 0) {
                 System.err.print("#" + (counted + 1));
@@ -83,8 +84,8 @@ public class RevTreeBuilderTest extends RepositoryTestCase {
         System.err.println("traversing with DepthTreeIterator...");
         sw.reset().start();
         counted = 0;
-        for (DepthTreeIterator it = new DepthTreeIterator(tree, odb, Strategy.CHILDREN); it
-                .hasNext(); counted++) {
+        for (DepthTreeIterator it = new DepthTreeIterator("", ObjectId.NULL, tree, odb,
+                Strategy.CHILDREN); it.hasNext(); counted++) {
             NodeRef ref = it.next();
             if ((counted + 1) % (numEntries / 10) == 0) {
                 System.err.print("#" + (counted + 1));
@@ -116,7 +117,7 @@ public class RevTreeBuilderTest extends RepositoryTestCase {
         System.err.println("Retrieved tree in " + sw);
 
         {
-            Map<Integer, NodeRef> randomEdits = Maps.newHashMap();
+            Map<Integer, Node> randomEdits = Maps.newHashMap();
             Random randGen = new Random();
             for (int i = 0; i < tree.size() / 2; i++) {
                 int random;
@@ -125,12 +126,12 @@ public class RevTreeBuilderTest extends RepositoryTestCase {
                 }
                 String path = "Feature." + random;
                 ObjectId newid = ObjectId.forString(path + "changed");
-                NodeRef ref = new NodeRef(path, newid, ObjectId.NULL, TYPE.FEATURE);
+                Node ref = new Node(path, newid, ObjectId.NULL, TYPE.FEATURE);
                 randomEdits.put(random, ref);
             }
             RevTreeBuilder mutable = tree.builder(odb);
             sw.reset().start();
-            for (NodeRef ref : randomEdits.values()) {
+            for (Node ref : randomEdits.values()) {
                 mutable.put(ref);
             }
             mutable.build();
@@ -155,7 +156,7 @@ public class RevTreeBuilderTest extends RepositoryTestCase {
             }
             String key = "Feature." + i;
             // ObjectId oid = ObjectId.forString(key);
-            Optional<NodeRef> ref = childFinder.setChildPath(key).call();
+            Optional<Node> ref = childFinder.setChildPath(key).call();
             assertTrue(key, ref.isPresent());
             // assertEquals(key, ref.get().getPath());
             // assertEquals(key, oid, ref.get().getObjectId());
@@ -176,11 +177,12 @@ public class RevTreeBuilderTest extends RepositoryTestCase {
         final Set<String> removedKeys = new HashSet<String>();
         {
             int i = 0;
-            DepthTreeIterator it = new DepthTreeIterator(tree, odb, Strategy.CHILDREN);
+            DepthTreeIterator it = new DepthTreeIterator("", ObjectId.NULL, tree, odb,
+                    Strategy.CHILDREN);
             for (; it.hasNext(); i++) {
                 NodeRef entry = it.next();
                 if (i % 10 == 0) {
-                    removedKeys.add(entry.getPath());
+                    removedKeys.add(entry.path());
                 }
             }
             assertEquals(100, removedKeys.size());
@@ -210,11 +212,12 @@ public class RevTreeBuilderTest extends RepositoryTestCase {
         final Set<String> removedKeys = new HashSet<String>();
         {
             int i = 0;
-            DepthTreeIterator it = new DepthTreeIterator(tree, odb, Strategy.CHILDREN);
+            DepthTreeIterator it = new DepthTreeIterator("", ObjectId.NULL, tree, odb,
+                    Strategy.CHILDREN);
             for (; it.hasNext(); i++) {
                 NodeRef entry = it.next();
                 if (i % 10 == 0) {
-                    removedKeys.add(entry.getPath());
+                    removedKeys.add(entry.path());
                 }
             }
             assertTrue(removedKeys.size() > 0);
@@ -277,7 +280,7 @@ public class RevTreeBuilderTest extends RepositoryTestCase {
 
         int c = 0;
         for (int i = from; i != breakAt; i += increment, c++) {
-            addNodeRef(tree, i);
+            addNode(tree, i);
             if ((c + 1) % (numEntries / 10) == 0) {
                 System.err.print("#" + (c + 1));
             } else if ((c + 1) % (numEntries / 100) == 0) {
@@ -290,12 +293,12 @@ public class RevTreeBuilderTest extends RepositoryTestCase {
 
     private static final ObjectId FAKE_ID = ObjectId.forString("fake");
 
-    private void addNodeRef(RevTreeBuilder tree, int i) {
+    private void addNode(RevTreeBuilder tree, int i) {
         String key = "Feature." + i;
         // ObjectId oid = ObjectId.forString(key);
         // ObjectId metadataId = ObjectId.forString("FeatureType");
-        // NodeRef ref = new NodeRef(key, oid, metadataId, TYPE.FEATURE);
-        NodeRef ref = new NodeRef(key, FAKE_ID, FAKE_ID, TYPE.FEATURE);
+        // Node ref = new Node(key, oid, metadataId, TYPE.FEATURE);
+        Node ref = new Node(key, FAKE_ID, FAKE_ID, TYPE.FEATURE);
         tree.put(ref);
     }
 }

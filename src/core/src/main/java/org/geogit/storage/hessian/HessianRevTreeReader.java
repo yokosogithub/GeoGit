@@ -8,7 +8,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.TreeMap;
 
-import org.geogit.api.NodeRef;
 import org.geogit.api.ObjectId;
 import org.geogit.api.RevObject.TYPE;
 import org.geogit.api.RevTree;
@@ -42,15 +41,15 @@ class HessianRevTreeReader extends HessianRevReader implements ObjectReader<RevT
 
             final long size = hin.readLong();
 
-            Builder<NodeRef> features = ImmutableList.builder();
-            Builder<NodeRef> trees = ImmutableList.builder();
+            Builder<org.geogit.api.Node> features = ImmutableList.builder();
+            Builder<org.geogit.api.Node> trees = ImmutableList.builder();
             TreeMap<Integer, ObjectId> subtrees = Maps.newTreeMap();
 
             while (true) {
                 Node type = Node.fromValue(hin.readInt());
 
                 if (type.equals(Node.REF)) {
-                    NodeRef entryRef = readNodeRef(hin);
+                    org.geogit.api.Node entryRef = readNode(hin);
                     if (entryRef.getType().equals(TYPE.TREE)) {
                         trees.add(entryRef);
                     } else {
