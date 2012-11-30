@@ -161,6 +161,40 @@ public class WorkingTree {
     }
 
     /**
+     * Deletes a tree and the features it contains from the working tree and updates the WORK_HEAD
+     * ref.
+     * 
+     * @param path the path to the tree to delete
+     * @throws Exception
+     */
+    public void delete(final String path) {
+
+        RevTreeBuilder parentTree = repository.command(FindOrCreateSubtree.class)
+                .setParent(Suppliers.ofInstance(Optional.of(getTree()))).setIndex(true)
+                .setChildPath(path).call().builder(indexDatabase);
+
+        Iterator<Node> children = parentTree.build().children();
+        if (!children.hasNext()) {
+            return;
+        }
+        while (children.hasNext()) {
+            Node next = children.next();
+            parentTree.remove(next.getName());
+        }
+
+        ObjectId newWorkHead = repository.command(WriteBack.class).setToIndex(true)
+                .setAncestor(getTreeSupplier()).setChildPath(path).setTree(parentTree.build())
+                .call();
+        updateWorkHead(newWorkHead);
+        // RevTreeBuilder workRoot = getTree().builder(indexDatabase);
+        // workRoot.remove(path);
+        // RevTree newRoot = workRoot.build();
+        // indexDatabase.put(newRoot.getId(), serialFactory.createRevTreeWriter(newRoot));
+        // updateWorkHead(newRoot.getId());
+
+    }
+
+    /**
      * Deletes a collection of features of the same type from the working tree and updates the
      * WORK_HEAD ref.
      * 
