@@ -25,7 +25,6 @@ import com.google.common.base.Optional;
  * 
  * PostGIS CLI proxy for {@link DescribeOp}
  * 
- * @author jgarrett
  * @see DescribeOp
  */
 @Parameters(commandNames = "describe", commandDescription = "Describe a PostGIS table")

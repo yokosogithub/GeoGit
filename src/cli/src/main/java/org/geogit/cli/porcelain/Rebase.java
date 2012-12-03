@@ -49,7 +49,6 @@ import com.google.common.base.Suppliers;
  * <li> {@code geogit rebase [--onto <newbase>] [<upstream>] [<branch>]}
  * </ul>
  * 
- * @author jgarrett
  * @see RebaseOp
  */
 @Parameters(commandNames = { "rebase" }, commandDescription = "Forward-port local commits to the updated upstream head")

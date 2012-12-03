@@ -25,7 +25,6 @@ import com.google.common.base.Throwables;
  * Abstract parent class to readers of Rev's. This class provides some common functions used by
  * various Rev readers and printers.
  * 
- * @author mleslie
  */
 abstract class HessianRevReader {
     /**

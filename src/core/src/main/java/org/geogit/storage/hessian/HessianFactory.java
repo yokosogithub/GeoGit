@@ -21,8 +21,6 @@ import org.opengis.feature.simple.SimpleFeatureType;
  * The HessianFactory is used to create instances of the various writers and readers used to work
  * with the serialized forms of various repository elements in the hessian format.
  * 
- * @author mleslie
- * 
  */
 public class HessianFactory implements ObjectSerialisingFactory {
 

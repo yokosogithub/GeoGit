@@ -7,7 +7,6 @@ package org.geogit.api;
 /**
  * Base object type accessed during revision walking.
  * 
- * @author groldan
  * @see RevCommit
  * @see RevTree
  * @see RevFeature

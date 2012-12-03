@@ -51,8 +51,6 @@ import com.vividsolutions.jts.geom.Geometry;
 /**
  * Hashes a RevObject and returns the ObjectId.
  * 
- * @author jgarrett
- * @author groldan
  * @see RevObject
  * @see ObjectId
  */

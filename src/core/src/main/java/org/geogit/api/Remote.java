@@ -3,7 +3,6 @@ package org.geogit.api;
 /**
  * Internal representation of a GeoGit remote repository.
  * 
- * @author jgarrett
  */
 public class Remote {
     private String name;

@@ -3,7 +3,6 @@ package org.geogit.geotools.plumbing;
 /**
  * Exception thrown by operations within the GeoTools extension.
  * 
- * @author jgarrett
  */
 @SuppressWarnings("serial")
 public class GeoToolsOpException extends RuntimeException {

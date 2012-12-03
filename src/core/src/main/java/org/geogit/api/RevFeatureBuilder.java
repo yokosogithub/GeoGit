@@ -19,7 +19,6 @@ import com.google.common.collect.Ordering;
 /**
  * Provides a method of building a {@link RevFeature} from a {@link Feature}.
  * 
- * @author jgarrett
  * @see RevFeature
  * @see Feature
  */

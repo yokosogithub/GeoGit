@@ -53,8 +53,6 @@ import com.google.inject.Inject;
  * committed is performed through a diff tree walk comparing the staged changes tree and the
  * repository's head tree.
  * 
- * @author Gabriel Roldan
- * 
  */
 public class Index implements StagingArea {
 

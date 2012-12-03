@@ -28,7 +28,6 @@ import com.google.inject.Inject;
  * Manipulates the index (staging area) by setting the unstaged changes that match this operation
  * criteria as staged.
  * 
- * @author groldan
  * @see WorkingTree
  * @see StagingArea
  */

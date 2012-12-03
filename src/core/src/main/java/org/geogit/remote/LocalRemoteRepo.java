@@ -32,7 +32,6 @@ import com.google.inject.Injector;
  * An implementation of a remote repository that exists on the local machine.
  * 
  * @see IRemoteRepo
- * @author jgarrett
  */
 public class LocalRemoteRepo implements IRemoteRepo {
 

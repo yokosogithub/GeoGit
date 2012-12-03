@@ -45,7 +45,6 @@ import com.google.inject.Injector;
  * name.
  * </p>
  * 
- * @author Gabriel Roldan
  * @see WorkingTree
  */
 public class Repository {

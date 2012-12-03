@@ -45,8 +45,6 @@ import com.google.inject.Inject;
  * already staged.
  * </p>
  * 
- * @author groldan
- * 
  */
 public class CommitOp extends AbstractGeoGitOp<RevCommit> {
 

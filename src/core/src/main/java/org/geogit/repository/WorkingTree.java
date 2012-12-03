@@ -76,7 +76,6 @@ import com.google.inject.Inject;
  * to reflect the state of that branch
  * </ul>
  * 
- * @author Gabriel Roldan
  * @see Repository
  */
 public class WorkingTree {

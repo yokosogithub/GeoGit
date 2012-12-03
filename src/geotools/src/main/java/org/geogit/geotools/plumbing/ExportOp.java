@@ -41,7 +41,6 @@ import com.google.inject.Inject;
 /**
  * Internal operation for creating a FeatureCollection from a tree content.
  * 
- * @author volaya
  */
 public class ExportOp extends AbstractGeoGitOp<SimpleFeatureStore> {
 

@@ -31,7 +31,6 @@ import com.vividsolutions.jts.io.WKBReader;
 /**
  * Reads features from a binary encoded stream. Refer to HessianFeatureWriter for encoding details.
  * 
- * @author mleslie
  */
 class HessianFeatureReader implements ObjectReader<RevFeature> {
 

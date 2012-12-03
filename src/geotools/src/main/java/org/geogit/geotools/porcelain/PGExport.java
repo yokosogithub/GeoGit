@@ -40,7 +40,6 @@ import com.google.common.base.Preconditions;
 /**
  * Exports features from a feature type into a PostGIS database.
  * 
- * @author volaya
  * @see ExportOp
  */
 @Parameters(commandNames = "export", commandDescription = "Export to PostGIS")

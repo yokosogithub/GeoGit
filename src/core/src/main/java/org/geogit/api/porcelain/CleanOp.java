@@ -27,8 +27,6 @@ import com.google.inject.Inject;
 /**
  * Removes untracked features from the working tree
  * 
- * @author volaya
- * 
  */
 public class CleanOp extends AbstractGeoGitOp<WorkingTree> {
 

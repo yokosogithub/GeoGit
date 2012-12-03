@@ -14,7 +14,6 @@ import com.google.inject.Inject;
 /**
  * Return a list of all of the remotes from the local config database.
  * 
- * @author jgarrett
  * @see ConfigDatabase
  */
 public class RemoteListOp extends AbstractGeoGitOp<ImmutableList<Remote>> {

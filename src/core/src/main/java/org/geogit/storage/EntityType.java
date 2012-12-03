@@ -18,7 +18,6 @@ import com.vividsolutions.jts.geom.Geometry;
  * created, with a new value, and the writers updated to use it. The readers should continue to
  * support both the old and new versions.
  * 
- * @author mleslie
  */
 public enum EntityType implements Serializable {
     STRING(0), BOOLEAN(1), BYTE(2), DOUBLE(3), BIGDECIMAL(4), FLOAT(5), INT(6), BIGINT(7), LONG(8), BOOLEAN_ARRAY(

@@ -28,8 +28,6 @@ import com.google.inject.Inject;
 /**
  * List index contents
  * 
- * @author volaya
- * 
  */
 public class LsTreeOp extends AbstractGeoGitOp<Iterator<NodeRef>> {
 

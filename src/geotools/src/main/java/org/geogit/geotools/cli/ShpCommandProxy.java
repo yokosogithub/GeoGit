@@ -20,7 +20,6 @@ import com.beust.jcommander.Parameters;
  * <li> {@code geogit shp <command> <args>...}
  * </ul>
  * 
- * @author jgarrett
  * @see ShpImport
  */
 @Parameters(commandNames = "shp", commandDescription = "GeoGit/Shapefile integration utilities")

@@ -23,7 +23,6 @@ import com.google.common.base.Optional;
 /**
  * Internal operation for describing a table from a GeoTools {@link DataStore}.
  * 
- * @author jgarrett
  * @see DataStore
  */
 public class DescribeOp extends AbstractGeoGitOp<Optional<Map<String, String>>> {

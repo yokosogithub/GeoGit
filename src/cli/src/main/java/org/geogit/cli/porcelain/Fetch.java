@@ -32,7 +32,6 @@ import com.beust.jcommander.Parameters;
  * </ul>
  * 
  * @see FetchOp
- * @author jgarrett
  */
 @Parameters(commandNames = "fetch", commandDescription = "Download objects and refs from another repository")
 public class Fetch extends AbstractCommand implements CLICommand {

@@ -38,9 +38,6 @@ import com.google.inject.Inject;
  * 
  * Rebase the current head to the included branch head.
  * 
- * @author jgarrett
- * @author jhudson
- * @since 1.2.0
  */
 public class RebaseOp extends AbstractGeoGitOp<Boolean> {
 

@@ -18,7 +18,6 @@ import com.google.inject.Inject;
 /**
  * Removes a remote from the local config database.
  * 
- * @author jgarrett
  * @see ConfigDatabase
  */
 public class RemoteRemoveOp extends AbstractGeoGitOp<Remote> {

@@ -38,7 +38,6 @@ import com.vividsolutions.jts.io.WKBWriter;
  * 
  * For the encoding details of each property, refer to HessianFeatureWriter.writeProperty
  * 
- * @author mleslie
  */
 class HessianFeatureWriter implements ObjectWriter<RevFeature> {
 

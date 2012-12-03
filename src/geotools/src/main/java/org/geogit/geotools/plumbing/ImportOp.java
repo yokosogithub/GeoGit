@@ -27,8 +27,6 @@ import com.google.inject.Inject;
 /**
  * Internal operation for importing tables from a GeoTools {@link DataStore}.
  * 
- * @author groldan
- * @author jgarrett
  * @see DataStore
  */
 public class ImportOp extends AbstractGeoGitOp<RevTree> {

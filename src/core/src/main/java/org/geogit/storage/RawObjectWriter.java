@@ -12,8 +12,6 @@ import java.io.OutputStream;
  * Object writer that merely transfers the contents of an {@link InputStream} to the target
  * {@link OutputStream}, mainly used to copy raw objects from one {@link ObjectDatabase} to another.
  * 
- * @author groldan
- * 
  */
 public class RawObjectWriter implements ObjectWriter<Object> {
 

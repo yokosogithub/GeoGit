@@ -13,7 +13,6 @@ import com.google.inject.Inject;
 /**
  * Adds a remote to the local config database.
  * 
- * @author jgarrett
  * @see ConfigDatabase
  * @see Remote
  */

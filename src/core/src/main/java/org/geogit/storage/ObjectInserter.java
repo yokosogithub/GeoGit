@@ -12,8 +12,6 @@ import org.geogit.api.ObjectId;
  * Use the same ObjectInserter for a single transaction
  * </p>
  * 
- * @author groldan
- * 
  */
 public class ObjectInserter {
 

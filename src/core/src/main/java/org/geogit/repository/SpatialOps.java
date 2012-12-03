@@ -22,8 +22,6 @@ import com.vividsolutions.jts.geom.GeometryFactory;
 /**
  * Utility methods to deal with various spatial operations
  * 
- * @author groldan
- * 
  */
 public class SpatialOps {
 

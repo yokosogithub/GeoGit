@@ -44,8 +44,6 @@ import com.sleepycat.je.Environment;
  * A diff operation between the repository root tree and the index staged root tree results in the
  * list of staged objects.
  * 
- * @author groldan
- * 
  */
 public class JEStagingDatabase implements ObjectDatabase, StagingDatabase {
 

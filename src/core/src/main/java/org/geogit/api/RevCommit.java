@@ -18,8 +18,6 @@ import com.google.common.base.Optional;
 /**
  * A reference to a commit in the DAG.
  * 
- * @author groldan
- * 
  */
 public class RevCommit extends AbstractRevObject {
 

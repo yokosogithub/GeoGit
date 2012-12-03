@@ -18,7 +18,6 @@ import com.google.common.base.Optional;
 /**
  * Internal operation for listing tables from a GeoTools {@link DataStore}.
  * 
- * @author jgarrett
  * @see DataStore
  */
 public class ListOp extends AbstractGeoGitOp<Optional<List<String>>> {

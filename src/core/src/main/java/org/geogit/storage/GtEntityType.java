@@ -25,7 +25,6 @@ import com.vividsolutions.jts.geom.Polygon;
  * created, with a new value, and the writers updated to use it. The readers should continue to
  * support both the old and new versions.
  * 
- * @author mleslie
  */
 @SuppressWarnings("rawtypes")
 public enum GtEntityType implements Serializable {

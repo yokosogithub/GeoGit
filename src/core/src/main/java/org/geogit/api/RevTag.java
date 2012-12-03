@@ -7,8 +7,6 @@ package org.geogit.api;
 /**
  * An annotated tag.
  * 
- * @author groldan
- * 
  */
 public class RevTag extends AbstractRevObject {
 

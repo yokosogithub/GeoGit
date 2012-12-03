@@ -34,7 +34,6 @@ import com.google.inject.Inject;
  * Fetches named heads or tags from one or more other repositories, along with the objects necessary
  * to complete them.
  * 
- * @author jgarrett
  */
 public class FetchOp extends AbstractGeoGitOp<Void> {
 

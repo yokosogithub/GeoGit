@@ -7,7 +7,6 @@ package org.geogit.storage.hessian;
 /**
  * This enum describes what is encoded in a blob.
  * 
- * @author mleslie
  */
 enum BlobType {
     /**

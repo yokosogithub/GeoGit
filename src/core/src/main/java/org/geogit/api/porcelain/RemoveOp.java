@@ -19,8 +19,6 @@ import com.google.inject.Inject;
 /**
  * Removes a feature or a tree from the working tree and the index
  * 
- * @author volaya
- * 
  */
 public class RemoveOp extends AbstractGeoGitOp<WorkingTree> {
 

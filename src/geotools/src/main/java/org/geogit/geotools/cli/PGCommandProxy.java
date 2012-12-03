@@ -22,7 +22,6 @@ import com.beust.jcommander.Parameters;
  * <li> {@code geogit pg <command> <args>...}
  * </ul>
  * 
- * @author jgarrett
  * @see PGImport
  * @see PGList
  * @see PGDescribe

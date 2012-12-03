@@ -17,8 +17,6 @@ import org.geogit.api.RevTree;
  * The ObjectSerialisingFactory is used to create instances of the various writers and readers used
  * to work with the serialized forms of various repository elements.
  * 
- * @author mleslie
- * 
  */
 public interface ObjectSerialisingFactory {
 
