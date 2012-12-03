@@ -367,7 +367,13 @@ public class OSMHistoryImport extends AbstractCommand implements CLICommand {
                 String path = NodeRef.appendChild(NODE_TYPE_NAME, fid);
                 Optional<org.geogit.api.Node> ref = index.findStaged(path);
                 if (!ref.isPresent()) {
-                    ref = geogit.command(FindTreeChild.class).setChildPath(path).call();
+                    Optional<NodeRef> nodeRef = geogit.command(FindTreeChild.class)
+                            .setChildPath(path).call();
+                    if (nodeRef.isPresent()) {
+                        ref = Optional.of(nodeRef.get().getNode());
+                    } else {
+                        ref = Optional.absent();
+                    }
                 }
                 if (ref.isPresent()) {
                     org.geogit.api.Node nodeRef = ref.get();

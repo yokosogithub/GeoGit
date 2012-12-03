@@ -1,3 +1,7 @@
+/* Copyright (c) 2011 TOPP - www.openplans.org. All rights reserved.
+ * This code is licensed under the LGPL 2.1 license, available at the root
+ * application directory.
+ */
 package org.geogit.api;
 
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -9,9 +13,7 @@ import org.geogit.api.RevObject.TYPE;
 import com.google.common.base.Optional;
 
 /**
- * A Node stores information about needed to create a {@code Node} for a given element
- * 
- * @author volaya
+ * An identifier->object id mapping for an object
  * 
  */
 public class Node implements Comparable<Node> {
@@ -55,20 +57,29 @@ public class Node implements Comparable<Node> {
         return Optional.fromNullable(metadataId);
     }
 
+    /**
+     * @return the name of the {@link RevObject} this node points to
+     */
     public String getName() {
         return name;
     }
 
+    /**
+     * @return the id of the {@link RevObject} this Node points to
+     */
     public ObjectId getObjectId() {
         return objectId;
     }
 
+    /**
+     * @return the type of {@link RevObject} this node points to
+     */
     public TYPE getType() {
         return type;
     }
 
     /**
-     * Provides for natural ordering of {@code Node}, based on name
+     * Provides for natural ordering of {@code Node}, based on {@link #getName() name}
      */
     @Override
     public int compareTo(Node o) {
@@ -83,6 +94,7 @@ public class Node implements Comparable<Node> {
         return 17 ^ name.hashCode() * objectId.hashCode() * metadataId.hashCode();
     }
 
+    @Override
     public boolean equals(Object o) {
         if (!(o instanceof Node)) {
             return false;

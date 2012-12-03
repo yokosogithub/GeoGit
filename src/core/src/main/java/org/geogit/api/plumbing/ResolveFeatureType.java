@@ -7,6 +7,7 @@ package org.geogit.api.plumbing;
 
 import org.geogit.api.AbstractGeoGitOp;
 import org.geogit.api.Node;
+import org.geogit.api.NodeRef;
 import org.geogit.api.ObjectId;
 import org.geogit.api.RevFeatureType;
 import org.geogit.api.RevTree;
@@ -48,16 +49,16 @@ public class ResolveFeatureType extends AbstractGeoGitOp<Optional<RevFeatureType
         Preconditions
                 .checkArgument(treeId.isPresent(), "spec '%s' did not resolve to a tree", spec);
 
-        Optional<Node> node = command(FindTreeChild.class)
+        Optional<NodeRef> node = command(FindTreeChild.class)
                 .setParent(
                         command(RevObjectParse.class).setObjectId(treeId.get()).call(RevTree.class)
                                 .get())//
                 .setChildPath(treePath).setIndex(true).call();
-        if (!node.isPresent() || !node.get().getMetadataId().isPresent()) {
+        if (!node.isPresent() /* || !node.get().getMetadataId().isPresent() */) {
             return Optional.absent();
         }
-        Node found = node.get();
-        ObjectId metadataID = found.getMetadataId().get();
+        NodeRef found = node.get();
+        ObjectId metadataID = found.getMetadataId();
         Optional<RevFeatureType> ft = command(RevObjectParse.class).setObjectId(metadataID).call(
                 RevFeatureType.class);
         return ft;

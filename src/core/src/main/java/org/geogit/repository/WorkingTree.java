@@ -379,7 +379,7 @@ public class WorkingTree {
      */
     public boolean hasRoot(final QName typeName) {
         String localPart = typeName.getLocalPart();
-        Optional<Node> typeNameTreeRef = repository.command(FindTreeChild.class)
+        Optional<NodeRef> typeNameTreeRef = repository.command(FindTreeChild.class)
                 .setChildPath(localPart).call();
         return typeNameTreeRef.isPresent();
     }
@@ -411,9 +411,13 @@ public class WorkingTree {
      *         otherwise Optional.absent()
      */
     public Optional<Node> findUnstaged(final String path) {
-        Optional<Node> entry = repository.command(FindTreeChild.class).setIndex(true)
+        Optional<NodeRef> nodeRef = repository.command(FindTreeChild.class).setIndex(true)
                 .setParent(getTree()).setChildPath(path).call();
-        return entry;
+        if (nodeRef.isPresent()) {
+            return Optional.of(nodeRef.get().getNode());
+        } else {
+            return Optional.absent();
+        }
     }
 
     /**

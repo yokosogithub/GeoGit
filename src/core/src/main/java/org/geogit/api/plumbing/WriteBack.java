@@ -231,7 +231,13 @@ public class WriteBack extends AbstractGeoGitOp<ObjectId> {
         FindTreeChild cmd = command(FindTreeChild.class).setIndex(true).setParent(realParent)
                 .setChildPath(childPath);
 
-        return cmd.call();
+        Optional<NodeRef> nodeRef = cmd.call();
+        if (nodeRef.isPresent()) {
+            return Optional.of(nodeRef.get().getNode());
+        } else {
+            return Optional.absent();
+        }
+
     }
 
 }

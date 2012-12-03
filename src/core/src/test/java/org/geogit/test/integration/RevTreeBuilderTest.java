@@ -156,7 +156,7 @@ public class RevTreeBuilderTest extends RepositoryTestCase {
             }
             String key = "Feature." + i;
             // ObjectId oid = ObjectId.forString(key);
-            Optional<Node> ref = childFinder.setChildPath(key).call();
+            Optional<NodeRef> ref = childFinder.setChildPath(key).call();
             assertTrue(key, ref.isPresent());
             // assertEquals(key, ref.get().getPath());
             // assertEquals(key, oid, ref.get().getObjectId());

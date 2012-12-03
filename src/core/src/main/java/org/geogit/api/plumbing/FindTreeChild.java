@@ -24,13 +24,14 @@ import com.google.common.base.Suppliers;
 import com.google.inject.Inject;
 
 /**
- * Finds a {@link Node} by searching the given {@link RevTree} for the given path.
+ * Finds a {@link Node} by searching the given {@link RevTree} for the given path, returns the
+ * {@link NodeRef} that wraps it.
  * 
  * @see DepthSearch
  * @see ResolveTreeish
  * @see RevObjectParse
  */
-public class FindTreeChild extends AbstractGeoGitOp<Optional<Node>> {
+public class FindTreeChild extends AbstractGeoGitOp<Optional<NodeRef>> {
 
     private Supplier<RevTree> parent;
 
@@ -121,7 +122,7 @@ public class FindTreeChild extends AbstractGeoGitOp<Optional<Node>> {
      *         {@link Optional#absent()} if it wasn't
      */
     @Override
-    public Optional<Node> call() {
+    public Optional<NodeRef> call() {
         checkNotNull(childPath, "childPath");
         final RevTree tree;
         if (parent == null) {
@@ -139,11 +140,8 @@ public class FindTreeChild extends AbstractGeoGitOp<Optional<Node>> {
 
         DepthSearch depthSearch = new DepthSearch(target, serialFactory);
         Optional<NodeRef> childRef = depthSearch.find(tree, parentPath, path);
-        if (childRef.isPresent()) {
-            return Optional.of(childRef.get().getNode());
-        } else {
-            return Optional.absent();
-        }
+        return childRef;
+
     }
 
 }

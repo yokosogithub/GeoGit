@@ -127,9 +127,13 @@ public class Index implements StagingArea {
      */
     @Override
     public Optional<Node> findStaged(final String path) {
-        Optional<Node> entry = repository.command(FindTreeChild.class).setIndex(true)
+        Optional<NodeRef> entry = repository.command(FindTreeChild.class).setIndex(true)
                 .setParent(getTree()).setChildPath(path).call();
-        return entry;
+        if (entry.isPresent()) {
+            return Optional.of(entry.get().getNode());
+        } else {
+            return Optional.absent();
+        }
     }
 
     /**

@@ -8,7 +8,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.geogit.api.AbstractGeoGitOp;
-import org.geogit.api.Node;
 import org.geogit.api.NodeRef;
 import org.geogit.api.plumbing.FindTreeChild;
 import org.geogit.repository.WorkingTree;
@@ -52,7 +51,7 @@ public class RemoveOp extends AbstractGeoGitOp<WorkingTree> {
         // Check that all paths are valid and exist
         for (String pathToRemove : pathsToRemove) {
             NodeRef.checkValidPath(pathToRemove);
-            Optional<Node> node;
+            Optional<NodeRef> node;
             try {
                 node = command(FindTreeChild.class).setParent(workTree.getTree())
                         .setChildPath(pathToRemove).call();
@@ -66,7 +65,7 @@ public class RemoveOp extends AbstractGeoGitOp<WorkingTree> {
 
         // separate trees from features an delete accordingly
         for (String pathToRemove : pathsToRemove) {
-            Optional<Node> node = command(FindTreeChild.class).setParent(workTree.getTree())
+            Optional<NodeRef> node = command(FindTreeChild.class).setParent(workTree.getTree())
                     .setChildPath(pathToRemove).call();
             switch (node.get().getType()) {
             case TREE:
@@ -74,7 +73,7 @@ public class RemoveOp extends AbstractGeoGitOp<WorkingTree> {
                 break;
             case FEATURE:
                 String parentPath = NodeRef.parentPath(pathToRemove);
-                String name = node.get().getName();
+                String name = node.get().name();
                 workTree.delete(parentPath, name);
                 break;
             default:

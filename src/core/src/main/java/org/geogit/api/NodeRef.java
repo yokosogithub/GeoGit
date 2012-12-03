@@ -101,15 +101,15 @@ public class NodeRef implements Comparable<NodeRef> {
     }
 
     /**
-     * possibly {@link ObjectId#NULL NULL} id for the object describing the object this ref points
-     * to
+     * The node's metadata id, which can be given by the {@link Node#getMetadataId() node itself} or
+     * the metadata id given to this {@link NodeRef} constructor if the {@code Node} does not have a
+     * metadata id set, so that Nodes can inherit the metadata id from its parent tree.
+     * 
+     * @return the node's metadata id if provided by {@link Node#getMetadataId()} or this node ref
+     *         metadata id otherwise.
      */
     public ObjectId getMetadataId() {
-        if (node.getMetadataId().isPresent()) {
-            return node.getMetadataId().get();
-        } else {
-            return metadataId;
-        }
+        return node.getMetadataId().or(this.metadataId);
     }
 
     /**
@@ -120,7 +120,8 @@ public class NodeRef implements Comparable<NodeRef> {
     }
 
     /**
-     * Tests equality over another {@code Node}
+     * Tests equality over another {@code NodeRef} based on {@link #getParentPath() parent path},
+     * {@link #getNode() node} name and id, and {@link #getMetadataId()}
      */
     @Override
     public boolean equals(Object o) {
@@ -129,15 +130,17 @@ public class NodeRef implements Comparable<NodeRef> {
         }
         NodeRef r = (NodeRef) o;
         return parentPath.equals(r.parentPath) && node.equals(r.node)
-                && metadataId.equals(r.metadataId);
+                && getMetadataId().equals(r.getMetadataId());
     }
 
     /**
-     * Hash code is based on name and object id
+     * Hash code is based on {@link #getParentPath() parent path}, {@link #getNode() node} name and
+     * id, and {@link #getMetadataId()}
      */
     @Override
     public int hashCode() {
-        return 17 ^ parentPath.hashCode() * node.getObjectId().hashCode() * metadataId.hashCode();
+        return 17 ^ parentPath.hashCode() * node.getObjectId().hashCode()
+                * getMetadataId().hashCode();
     }
 
     /**

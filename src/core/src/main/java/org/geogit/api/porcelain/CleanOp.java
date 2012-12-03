@@ -9,7 +9,6 @@ import java.util.Iterator;
 import javax.annotation.Nullable;
 
 import org.geogit.api.AbstractGeoGitOp;
-import org.geogit.api.Node;
 import org.geogit.api.NodeRef;
 import org.geogit.api.RevObject.TYPE;
 import org.geogit.api.plumbing.DiffWorkTree;
@@ -50,7 +49,7 @@ public class CleanOp extends AbstractGeoGitOp<WorkingTree> {
         if (path != null) {
             // check that is a valid path
             NodeRef.checkValidPath(path);
-            Optional<Node> ref = command(FindTreeChild.class).setParent(workTree.getTree())
+            Optional<NodeRef> ref = command(FindTreeChild.class).setParent(workTree.getTree())
                     .setChildPath(path).call();
             Preconditions.checkArgument(ref.isPresent(), "pathspec '%s' did not match any tree",
                     path);

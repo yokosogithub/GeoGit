@@ -12,6 +12,7 @@ import java.util.Map;
 import org.geogit.api.AbstractGeoGitOp;
 import org.geogit.api.InjectorBuilder;
 import org.geogit.api.Node;
+import org.geogit.api.NodeRef;
 import org.geogit.api.ObjectId;
 import org.geogit.api.Ref;
 import org.geogit.api.RevCommit;
@@ -351,7 +352,12 @@ public class Repository {
      *         if it wasn't found
      */
     public Optional<Node> getRootTreeChild(String path) {
-        return command(FindTreeChild.class).setChildPath(path).call();
+        Optional<NodeRef> nodeRef = command(FindTreeChild.class).setChildPath(path).call();
+        if (nodeRef.isPresent()) {
+            return Optional.of(nodeRef.get().getNode());
+        } else {
+            return Optional.absent();
+        }
     }
 
     /**
@@ -363,7 +369,13 @@ public class Repository {
      *         {@link Optional#absent()} if it wasn't found
      */
     public Optional<Node> getTreeChild(RevTree tree, String childPath) {
-        return command(FindTreeChild.class).setParent(tree).setChildPath(childPath).call();
+        Optional<NodeRef> nodeRef = command(FindTreeChild.class).setParent(tree)
+                .setChildPath(childPath).call();
+        if (nodeRef.isPresent()) {
+            return Optional.of(nodeRef.get().getNode());
+        } else {
+            return Optional.absent();
+        }
     }
 
 }
