@@ -85,7 +85,7 @@ public class ExportOp extends AbstractGeoGitOp<SimpleFeatureStore> {
         } else {
             refspec = "WORK_HEAD:" + featureTypeName;
         }
-        final String spec = refspec.substring(0, refspec.indexOf(':'));
+        // final String spec = refspec.substring(0, refspec.indexOf(':'));
         final String treePath = refspec.substring(refspec.indexOf(':') + 1);
 
         Optional<RevObject> revObject = command(RevObjectParse.class).setRefSpec(refspec).call(
@@ -95,10 +95,7 @@ public class ExportOp extends AbstractGeoGitOp<SimpleFeatureStore> {
         Preconditions.checkArgument(revObject.get().getType() == TYPE.TREE,
                 "%s did not resolve to a tree", refspec);
 
-        // TODO: find the actual metadata id
-        ObjectId treeMetadataId = ObjectId.NULL;
-
-        DepthTreeIterator iter = new DepthTreeIterator(treePath, treeMetadataId,
+        DepthTreeIterator iter = new DepthTreeIterator(treePath, ObjectId.NULL,
                 (RevTree) revObject.get(), database, Strategy.FEATURES_ONLY);
 
         // Create a FeatureCollection

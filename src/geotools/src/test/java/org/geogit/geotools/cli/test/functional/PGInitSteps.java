@@ -141,4 +141,30 @@ public class PGInitSteps extends AbstractPGFunctionalTest {
         assertFalse(currentDirectory.exists());
         assertTrue(currentDirectory.mkdirs());
     }
+
+    @Given("^I have 6 unstaged features$")
+    public void I_have_6_unstaged_features() throws Throwable {
+        insertFeatures();
+    }
+
+    @Given("^I stage 6 features$")
+    public void I_stage_6_features() throws Throwable {
+        insertAndAddFeatures();
+    }
+
+    @Given("^I have several commits")
+    public void I_have_several_commits() throws Throwable {
+        insertAndAdd(points1);
+        insertAndAdd(points2);
+        runCommand(("commit -m Commit1").split(" "));
+        insertAndAdd(points3);
+        insertAndAdd(lines1);
+        runCommand(("commit -m Commit2").split(" "));
+        insertAndAdd(lines2);
+        insertAndAdd(lines3);
+        runCommand(("commit -m Commit3").split(" "));
+        insertAndAdd(points1_modified);
+        runCommand(("commit -m Commit4").split(" "));
+
+    }
 }

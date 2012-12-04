@@ -29,6 +29,8 @@ import org.geogit.storage.ObjectDatabase;
 import org.geotools.data.DataStore;
 import org.geotools.data.simple.SimpleFeatureSource;
 import org.geotools.data.simple.SimpleFeatureStore;
+import org.geotools.feature.NameImpl;
+import org.geotools.feature.simple.SimpleFeatureTypeImpl;
 import org.geotools.jdbc.JDBCDataStore;
 import org.opengis.feature.simple.SimpleFeatureType;
 
@@ -40,7 +42,6 @@ import com.google.common.base.Preconditions;
 /**
  * Exports features from a feature type into a PostGIS database.
  * 
- * @author volaya
  * @see ExportOp
  */
 @Parameters(commandNames = "export", commandDescription = "Export to PostGIS")
@@ -92,10 +93,10 @@ public class PGExport extends AbstractPGCommand implements CLICommand {
             ((JDBCDataStore) dataStore).closeSafe(con);
         }
 
-        if (!Arrays.asList(dataStore.getTypeNames()).contains(featureTypeName)) {
+        if (!Arrays.asList(dataStore.getTypeNames()).contains(tableName)) {
             SimpleFeatureType featureType;
             try {
-                featureType = getFeatureType(featureTypeName, cli);
+                featureType = getFeatureType(featureTypeName, tableName, cli);
             } catch (GeoToolsOpException e) {
                 cli.getConsole().println("No features to export.");
                 return;
@@ -116,7 +117,7 @@ public class PGExport extends AbstractPGCommand implements CLICommand {
         SimpleFeatureSource featureSource = dataStore.getFeatureSource(tableName);
         if (featureSource instanceof SimpleFeatureStore) {
             SimpleFeatureStore featureStore = (SimpleFeatureStore) featureSource;
-            cli.getGeogit().command(ExportOp.class).setFeatureTypeName(tableName)
+            cli.getGeogit().command(ExportOp.class).setFeatureTypeName(featureTypeName)
                     .setFeatureStore(featureStore).call();
 
             cli.getConsole().println(featureTypeName + " exported successfully to " + tableName);
@@ -127,7 +128,7 @@ public class PGExport extends AbstractPGCommand implements CLICommand {
 
     }
 
-    private SimpleFeatureType getFeatureType(String featureTypeName, GeogitCLI cli) {
+    private SimpleFeatureType getFeatureType(String featureTypeName, String tableName, GeogitCLI cli) {
 
         final String refspec;
         if (featureTypeName.contains(":")) {
@@ -151,8 +152,13 @@ public class PGExport extends AbstractPGCommand implements CLICommand {
         while (iter.hasNext()) {
             NodeRef nodeRef = iter.next();
             RevFeatureType revFeatureType = cli.getGeogit().command(RevObjectParse.class)
-                    .setObjectId(nodeRef.getMetadataId()).call(RevFeatureType.class).get();
-            return (SimpleFeatureType) revFeatureType.type();
+                    .setObjectId(nodeRef.getMetadataId()).call(RevFeatureType.class).get();            
+            SimpleFeatureType sft = (SimpleFeatureType) revFeatureType.type();
+            SimpleFeatureTypeImpl newSFT = new SimpleFeatureTypeImpl(new NameImpl(tableName),
+                    sft.getAttributeDescriptors(), sft.getGeometryDescriptor(), sft.isAbstract(),
+                    sft.getRestrictions(), sft.getSuper(), sft.getDescription());
+            return newSFT;
+            
         }
 
         throw new GeoToolsOpException(StatusCode.NO_FEATURES_FOUND);
