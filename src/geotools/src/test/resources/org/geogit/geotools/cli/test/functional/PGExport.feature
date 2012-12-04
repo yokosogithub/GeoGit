@@ -11,8 +11,8 @@ Feature: "export" command
   Scenario: Try exporting a feature type
     Given I have a repository
       And I stage 6 features
-     When I run the command "pg export Points Points" on the database
-     Then the response should contain "Points exported successfully to Points"
+     When I run the command "pg export Points MyPoints" on the database
+     Then the response should contain "Points exported successfully to MyPoints"
      
   Scenario: Try exporting an inexistent feature type
   	Given I have a repository
@@ -30,5 +30,5 @@ Scenario: Try exporting to a table that already exists
     Given I have a repository
       And I stage 6 features
      When I run the command "commit -m TestCommit"
-     When I run the command "pg export HEAD:Points Points" on the database
-     Then the response should contain "Points exported successfully to Points"    
+     When I run the command "pg export HEAD:Points CommitedPoints" on the database
+     Then the response should contain "Points exported successfully to CommitedPoints"    
