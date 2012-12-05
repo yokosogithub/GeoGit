@@ -151,8 +151,10 @@ public class LsTreeOp extends AbstractGeoGitOp<Iterator<NodeRef>> {
                 throw new IllegalStateException("Unknown strategy: " + this.strategy);
             }
 
+            final String path = ref.lastIndexOf(':') != -1 ? ref
+                    .substring(ref.lastIndexOf(':') + 1) : "";
             // TODO: CHANGE METADATAID
-            DepthTreeIterator iter = new DepthTreeIterator(ref, ObjectId.NULL,
+            DepthTreeIterator iter = new DepthTreeIterator(path, ObjectId.NULL,
                     (RevTree) revObject.get(), index, iterStrategy);
             return iter;
         default:
