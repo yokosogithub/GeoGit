@@ -15,13 +15,12 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 
-import javax.xml.namespace.QName;
-
 import org.geogit.api.Node;
 import org.geogit.api.ObjectId;
 import org.geogit.api.plumbing.diff.DiffEntry;
 import org.geogit.repository.WorkingTree;
 import org.geogit.test.integration.RepositoryTestCase;
+import org.geotools.feature.NameImpl;
 import org.geotools.util.NullProgressListener;
 import org.junit.Ignore;
 import org.junit.Rule;
@@ -334,8 +333,7 @@ public class WorkingTreeTest extends RepositoryTestCase {
 
         Name typeName = points1.getName();
 
-        workTree.delete(new QName(typeName.getNamespaceURI(), typeName.getLocalPart()), null,
-                deleteFeatures.iterator());
+        workTree.delete(typeName, null, deleteFeatures.iterator());
 
         assertFalse(workTree.findUnstaged(appendChild(pointsName, idP1)).isPresent());
         assertTrue(workTree.findUnstaged(appendChild(pointsName, idP2)).isPresent());
@@ -360,8 +358,7 @@ public class WorkingTreeTest extends RepositoryTestCase {
 
         Name typeName = points1.getName();
 
-        workTree.delete(new QName(typeName.getNamespaceURI(), typeName.getLocalPart()), null,
-                deleteFeatures.iterator());
+        workTree.delete(typeName, null, deleteFeatures.iterator());
 
         assertTrue(workTree.findUnstaged(appendChild(pointsName, idP1)).isPresent());
         assertTrue(workTree.findUnstaged(appendChild(pointsName, idP2)).isPresent());
@@ -394,7 +391,7 @@ public class WorkingTreeTest extends RepositoryTestCase {
         assertTrue(workTree.findUnstaged(appendChild(linesName, idL2)).isPresent());
         assertTrue(workTree.findUnstaged(appendChild(linesName, idL3)).isPresent());
 
-        workTree.delete(new QName(pointsName));
+        workTree.delete(new NameImpl(pointsName));
 
         assertFalse(workTree.findUnstaged(appendChild(pointsName, idP1)).isPresent());
         assertFalse(workTree.findUnstaged(appendChild(pointsName, idP2)).isPresent());
@@ -408,8 +405,7 @@ public class WorkingTreeTest extends RepositoryTestCase {
     public void testHasRoot() throws Exception {
         insert(points1);
         Name typeName = points1.getName();
-        assertFalse(workTree
-                .hasRoot(new QName(typeName.getNamespaceURI(), typeName.getLocalPart())));
+        assertFalse(workTree.hasRoot(typeName));
     }
 
     @Test
@@ -474,12 +470,12 @@ public class WorkingTreeTest extends RepositoryTestCase {
         workTree.insert(linesName, featureList.iterator(), false, new NullProgressListener(), null,
                 3);
 
-        List<QName> featureTypes = workTree.getFeatureTypeNames();
+        List<Name> featureTypes = workTree.getFeatureTypeNames();
 
         assertEquals(2, featureTypes.size());
 
         List<String> featureTypeNames = new LinkedList<String>();
-        for (QName name : featureTypes) {
+        for (Name name : featureTypes) {
             featureTypeNames.add(name.getLocalPart());
         }
 

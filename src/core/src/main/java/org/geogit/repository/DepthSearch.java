@@ -16,7 +16,6 @@ import org.geogit.api.ObjectId;
 import org.geogit.api.RevTree;
 import org.geogit.storage.NodePathStorageOrder;
 import org.geogit.storage.ObjectDatabase;
-import org.geogit.storage.ObjectSerialisingFactory;
 
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
@@ -33,19 +32,15 @@ public class DepthSearch {
 
     private final ObjectDatabase objectDb;
 
-    private ObjectSerialisingFactory serialFactory;
-
     private NodePathStorageOrder refOrder = new NodePathStorageOrder();
 
     /**
      * Constructs a new {@code DepthSearch} with the given parameters.
      * 
      * @param db the object database where {@link Node}s and {@link RevTree}s are stored
-     * @param serialFactory the serialization factor
      */
-    public DepthSearch(final ObjectDatabase db, ObjectSerialisingFactory serialFactory) {
+    public DepthSearch(final ObjectDatabase db) {
         this.objectDb = db;
-        this.serialFactory = serialFactory;
     }
 
     /**
@@ -57,7 +52,7 @@ public class DepthSearch {
      *         if it wasn't found.
      */
     public Optional<NodeRef> find(final ObjectId rootTreeId, final String path) {
-        RevTree tree = objectDb.get(rootTreeId, serialFactory.createRevTreeReader());
+        RevTree tree = objectDb.get(rootTreeId, RevTree.class);
         if (tree == null) {
             return null;
         }
@@ -113,8 +108,7 @@ public class DepthSearch {
             return Optional.of(new NodeRef(childTreeRef.get(), NodeRef.parentPath(directChildPath),
                     ObjectId.NULL));
         }
-        final RevTree childTree = objectDb.get(childTreeRef.get().getObjectId(),
-                serialFactory.createRevTreeReader());
+        final RevTree childTree = objectDb.get(childTreeRef.get().getObjectId(), RevTree.class);
         return find(childTree, directChildPath, childPath);
     }
 
@@ -155,7 +149,7 @@ public class DepthSearch {
         if (subtreeId == null) {
             return Optional.absent();
         }
-        RevTree subtree = objectDb.get(subtreeId, serialFactory.createRevTreeReader());
+        RevTree subtree = objectDb.get(subtreeId, RevTree.class);
         return getDirectChild(subtree, directChildName, subtreesDepth + 1);
     }
 }

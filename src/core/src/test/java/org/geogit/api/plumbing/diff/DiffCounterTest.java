@@ -12,7 +12,6 @@ import org.geogit.api.RevObject.TYPE;
 import org.geogit.api.RevTree;
 import org.geogit.api.RevTreeBuilder;
 import org.geogit.storage.ObjectDatabase;
-import org.geogit.storage.ObjectSerialisingFactory;
 import org.geogit.storage.hessian.HessianFactory;
 import org.geogit.storage.memory.HeapObjectDatabse;
 import org.junit.Assert;
@@ -38,8 +37,6 @@ public class DiffCounterTest extends Assert {
 
     private ObjectDatabase odb;
 
-    private ObjectSerialisingFactory serialFactory;
-
     private RevTree childrenFeatureTree;
 
     /** single level tree with 2 * {@link RevTree#NORMALIZED_SIZE_LIMIT} feature references */
@@ -53,15 +50,14 @@ public class DiffCounterTest extends Assert {
 
     @Before
     public void setUp() {
-        serialFactory = new HessianFactory();
-        odb = new HeapObjectDatabse();
+        odb = new HeapObjectDatabse(new HessianFactory());
         odb.open();
         {
             RevTreeBuilder builder = createFeaturesTree("", 10);
             this.childrenFeatureTree = builder.build();
         }
         {
-            RevTreeBuilder rootBuilder = new RevTreeBuilder(odb, serialFactory);
+            RevTreeBuilder rootBuilder = new RevTreeBuilder(odb);
             childTree1 = createFeaturesTree("tree1", 10);
             createFeatureTypesTree(rootBuilder, "tree1", childTree1);
             childTree2 = createFeaturesTree("tree2", 5);
@@ -79,13 +75,13 @@ public class DiffCounterTest extends Assert {
     private void createFeatureTypesTree(RevTreeBuilder rootBuilder, String treePath,
             RevTreeBuilder childBuilder) {
         RevTree childTree = childBuilder.build();
-        odb.put(childTree.getId(), serialFactory.createRevTreeWriter(childTree));
+        odb.put(childTree);
         Node childRef = new Node(treePath, childTree.getId(), ObjectId.NULL, TYPE.TREE);
         rootBuilder.put(childRef);
     }
 
     private long count(RevTree left, RevTree right) {
-        DiffCounter counter = new DiffCounter(odb, left, right, serialFactory);
+        DiffCounter counter = new DiffCounter(odb, left, right);
         Long count = counter.get();
         return count.longValue();
     }
@@ -104,7 +100,7 @@ public class DiffCounterTest extends Assert {
 
     @Test
     public void testChildrenChildren() {
-        RevTreeBuilder builder = new RevTreeBuilder(odb, serialFactory, childrenFeatureTree);
+        RevTreeBuilder builder = new RevTreeBuilder(odb, childrenFeatureTree);
         RevTree changed = builder.remove("3").build();
         assertEquals(1, count(childrenFeatureTree, changed));
         assertEquals(1, count(changed, childrenFeatureTree));
@@ -122,8 +118,7 @@ public class DiffCounterTest extends Assert {
 
     @Test
     public void testChildrenChildrenNestedTrees() {
-        RevTreeBuilder rootBuilder = new RevTreeBuilder(odb, serialFactory,
-                childrenFeatureTypesTree);
+        RevTreeBuilder rootBuilder = new RevTreeBuilder(odb, childrenFeatureTypesTree);
         childTree1.put(featureRef("tree1", 1000));
         createFeatureTypesTree(rootBuilder, "tree1", childTree1);
         RevTree newRoot = rootBuilder.build();
@@ -143,7 +138,7 @@ public class DiffCounterTest extends Assert {
 
     @Test
     public void testBucketBucketAdd() {
-        RevTreeBuilder builder = new RevTreeBuilder(odb, serialFactory, bucketsFeatureTree);
+        RevTreeBuilder builder = new RevTreeBuilder(odb, bucketsFeatureTree);
 
         final int from = (int) bucketsFeatureTree.size();
         final int added = 2 * RevTree.NORMALIZED_SIZE_LIMIT;
@@ -160,7 +155,7 @@ public class DiffCounterTest extends Assert {
 
     @Test
     public void testBucketBucketRemove() {
-        RevTreeBuilder builder = new RevTreeBuilder(odb, serialFactory, bucketsFeatureTree);
+        RevTreeBuilder builder = new RevTreeBuilder(odb, bucketsFeatureTree);
 
         RevTree changed;
         changed = builder.remove("3").build();
@@ -189,14 +184,14 @@ public class DiffCounterTest extends Assert {
         RevTreeBuilder builder;
         RevTree changed;
 
-        builder = new RevTreeBuilder(odb, serialFactory, bucketsFeatureTree);
+        builder = new RevTreeBuilder(odb, bucketsFeatureTree);
 
         changed = builder.put(
                 new Node("1023", FAKE_FEATURE_ID_CHANGED, ObjectId.NULL, TYPE.FEATURE)).build();
         assertEquals(1, count(bucketsFeatureTree, changed));
         assertEquals(1, count(changed, bucketsFeatureTree));
 
-        builder = new RevTreeBuilder(odb, serialFactory, bucketsFeatureTree);
+        builder = new RevTreeBuilder(odb, bucketsFeatureTree);
         int expected = 0;
         for (int i = 0; i < bucketsFeatureTree.size(); i += 2) {
             changed = builder.put(
@@ -211,7 +206,7 @@ public class DiffCounterTest extends Assert {
 
     @Test
     public void testBucketChildren() {
-        RevTreeBuilder builder = new RevTreeBuilder(odb, serialFactory, bucketsFeatureTree);
+        RevTreeBuilder builder = new RevTreeBuilder(odb, bucketsFeatureTree);
         RevTree changed;
         for (int i = 0; i < RevTree.NORMALIZED_SIZE_LIMIT; i++) {
             builder.remove(String.valueOf(i));
@@ -238,7 +233,7 @@ public class DiffCounterTest extends Assert {
             assertTrue(maxDepth > 1);
         }
 
-        RevTreeBuilder builder = new RevTreeBuilder(odb, serialFactory, deepTree);
+        RevTreeBuilder builder = new RevTreeBuilder(odb, deepTree);
         {
             final int count = (int) (deepTree.size() - RevTree.NORMALIZED_SIZE_LIMIT);
             for (int i = 0; i < count; i++) {
@@ -264,7 +259,7 @@ public class DiffCounterTest extends Assert {
         }
         int depth = currDepth;
         for (ObjectId bucketId : deepTree.buckets().get().values()) {
-            RevTree bucketTree = odb.get(bucketId, serialFactory.createRevTreeReader());
+            RevTree bucketTree = odb.get(bucketId, RevTree.class);
             int d = depth(bucketTree, currDepth + 1);
             depth = Math.max(depth, d);
         }
@@ -273,7 +268,7 @@ public class DiffCounterTest extends Assert {
 
     private RevTreeBuilder createFeaturesTree(final String parentPath, final int numEntries) {
 
-        RevTreeBuilder tree = new RevTreeBuilder(odb, serialFactory);
+        RevTreeBuilder tree = new RevTreeBuilder(odb);
         for (int i = 0; i < numEntries; i++) {
             tree.put(featureRef(parentPath, i));
         }

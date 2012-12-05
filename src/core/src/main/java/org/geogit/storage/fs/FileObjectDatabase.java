@@ -22,6 +22,7 @@ import org.geogit.api.Platform;
 import org.geogit.api.plumbing.ResolveGeogitDir;
 import org.geogit.storage.AbstractObjectDatabase;
 import org.geogit.storage.ObjectDatabase;
+import org.geogit.storage.ObjectSerialisingFactory;
 
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
@@ -50,11 +51,13 @@ public class FileObjectDatabase extends AbstractObjectDatabase implements Object
      * @param platform the platform to use.
      */
     @Inject
-    public FileObjectDatabase(final Platform platform) {
-        this(platform, "objects");
+    public FileObjectDatabase(final Platform platform, final ObjectSerialisingFactory serialFactory) {
+        this(platform, "objects", serialFactory);
     }
 
-    protected FileObjectDatabase(final Platform platform, final String databaseName) {
+    protected FileObjectDatabase(final Platform platform, final String databaseName,
+            final ObjectSerialisingFactory serialFactory) {
+        super(serialFactory);
         checkNotNull(platform);
         checkNotNull(databaseName);
         this.platform = platform;

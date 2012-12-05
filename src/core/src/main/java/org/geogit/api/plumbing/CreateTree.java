@@ -8,7 +8,6 @@ package org.geogit.api.plumbing;
 import org.geogit.api.AbstractGeoGitOp;
 import org.geogit.api.RevTreeBuilder;
 import org.geogit.storage.ObjectDatabase;
-import org.geogit.storage.ObjectSerialisingFactory;
 import org.geogit.storage.StagingDatabase;
 
 import com.google.inject.Inject;
@@ -25,21 +24,16 @@ public class CreateTree extends AbstractGeoGitOp<RevTreeBuilder> {
 
     private StagingDatabase indexDb;
 
-    private ObjectSerialisingFactory serialFactory;
-
     /**
      * Constructs a new {@code CreateTree} operation with the specified parameters.
      * 
      * @param odb the repository object database
      * @param indexDb the staging database
-     * @param serialFactory the serialization factory
      */
     @Inject
-    public CreateTree(ObjectDatabase odb, StagingDatabase indexDb,
-            ObjectSerialisingFactory serialFactory) {
+    public CreateTree(ObjectDatabase odb, StagingDatabase indexDb) {
         this.odb = odb;
         this.indexDb = indexDb;
-        this.serialFactory = serialFactory;
     }
 
     /**
@@ -60,7 +54,7 @@ public class CreateTree extends AbstractGeoGitOp<RevTreeBuilder> {
     @Override
     public RevTreeBuilder call() {
         ObjectDatabase storage = index ? indexDb : odb;
-        return new RevTreeBuilder(storage, serialFactory);
+        return new RevTreeBuilder(storage);
     }
 
 }

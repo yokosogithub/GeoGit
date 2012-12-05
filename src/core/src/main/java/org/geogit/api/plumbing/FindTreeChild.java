@@ -15,7 +15,6 @@ import org.geogit.api.Ref;
 import org.geogit.api.RevTree;
 import org.geogit.repository.DepthSearch;
 import org.geogit.storage.ObjectDatabase;
-import org.geogit.storage.ObjectSerialisingFactory;
 import org.geogit.storage.StagingDatabase;
 
 import com.google.common.base.Optional;
@@ -37,8 +36,6 @@ public class FindTreeChild extends AbstractGeoGitOp<Optional<NodeRef>> {
 
     private String childPath;
 
-    private ObjectSerialisingFactory serialFactory;
-
     private String parentPath;
 
     private boolean indexDb;
@@ -50,20 +47,16 @@ public class FindTreeChild extends AbstractGeoGitOp<Optional<NodeRef>> {
     /**
      * Constructs a new {@code FindTreeChild} instance with the specified parameters.
      * 
-     * @param serialFactory the serialization factory
      * @param odb the repository object database
      * @param index the staging database
      */
     @Inject
-    public FindTreeChild(ObjectSerialisingFactory serialFactory, ObjectDatabase odb,
-            StagingDatabase index) {
-        this.serialFactory = serialFactory;
+    public FindTreeChild(ObjectDatabase odb, StagingDatabase index) {
         this.odb = odb;
         this.index = index;
     }
 
-    public FindTreeChild(ObjectSerialisingFactory serialFactory, ObjectDatabase odb) {
-        this.serialFactory = serialFactory;
+    public FindTreeChild(ObjectDatabase odb) {
         this.odb = odb;
         this.index = odb;
     }
@@ -138,7 +131,7 @@ public class FindTreeChild extends AbstractGeoGitOp<Optional<NodeRef>> {
         final String parentPath = this.parentPath == null ? "" : this.parentPath;
         final ObjectDatabase target = indexDb ? index : odb;
 
-        DepthSearch depthSearch = new DepthSearch(target, serialFactory);
+        DepthSearch depthSearch = new DepthSearch(target);
         Optional<NodeRef> childRef = depthSearch.find(tree, parentPath, path);
         return childRef;
 

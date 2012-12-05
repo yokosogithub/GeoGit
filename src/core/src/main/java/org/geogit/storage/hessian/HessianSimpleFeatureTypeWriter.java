@@ -9,6 +9,7 @@ import java.io.OutputStream;
 import java.util.List;
 
 import org.geogit.api.RevFeatureType;
+import org.geogit.api.RevObject;
 import org.geogit.storage.GtEntityType;
 import org.geogit.storage.ObjectWriter;
 import org.geotools.referencing.CRS;
@@ -22,37 +23,24 @@ import org.opengis.feature.type.Name;
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
 
 import com.caucho.hessian.io.Hessian2Output;
-import com.google.common.base.Preconditions;
 
 /**
  * Writes a {@link SimpleFeatureType feature type} to a binary encoded stream.
  */
 public class HessianSimpleFeatureTypeWriter implements ObjectWriter<RevFeatureType> {
 
-    private SimpleFeatureType type;
-
-    /**
-     * Constructs a new {@code HessianSimpleFeatureTypeWriter} to write the provided
-     * {@link SimpleFeatureType}.
-     * 
-     * @param type the feature type to write
-     */
-    public HessianSimpleFeatureTypeWriter(final SimpleFeatureType type) {
-        Preconditions.checkNotNull(type);
-        this.type = type;
-    }
-
     /**
      * Writes the provided feature type to the output stream.
-     * 
-     * @param out the output stream to write to
      */
     @Override
-    public void write(OutputStream out) throws IOException {
+    public void write(final RevFeatureType revType, OutputStream out) throws IOException {
+
+        final SimpleFeatureType type = (SimpleFeatureType) revType.type();
+
         Hessian2Output hout = new Hessian2Output(out);
         try {
             hout.startMessage();
-            hout.writeInt(BlobType.FEATURETYPE.getValue());
+            hout.writeInt(RevObject.TYPE.FEATURETYPE.value());
             Name typeName = type.getName();
             hout.writeString(typeName.getNamespaceURI() == null ? "" : typeName.getNamespaceURI());
             hout.writeString(typeName.getLocalPart());

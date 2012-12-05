@@ -24,9 +24,9 @@ import com.google.common.collect.Maps;
  * Reads {@link RevTree trees} from a binary encoded stream.
  * 
  */
-class HessianRevTreeReader extends HessianRevReader<RevTree> implements ObjectReader<RevTree> {
+class HessianRevTagReader extends HessianRevReader<RevTree> implements ObjectReader<RevTree> {
 
-    public HessianRevTreeReader() {
+    public HessianRevTagReader() {
     }
 
     @Override

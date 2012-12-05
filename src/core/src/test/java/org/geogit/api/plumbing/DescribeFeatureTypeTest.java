@@ -20,7 +20,7 @@ public class DescribeFeatureTypeTest extends RepositoryTestCase {
 
     @Override
     protected void setUpInternal() throws Exception {
-        featureType = new RevFeatureType(pointsType);
+        featureType = RevFeatureType.build(pointsType);
     }
 
     @Test

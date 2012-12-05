@@ -26,8 +26,7 @@ import org.geogit.api.plumbing.UpdateRef;
 import org.geogit.api.plumbing.UpdateSymRef;
 import org.geogit.api.plumbing.WriteTree;
 import org.geogit.api.porcelain.ConfigOp.ConfigAction;
-import org.geogit.repository.Repository;
-import org.geogit.storage.ObjectInserter;
+import org.geogit.storage.ObjectDatabase;
 
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
@@ -48,6 +47,10 @@ import com.google.inject.Inject;
  */
 public class CommitOp extends AbstractGeoGitOp<RevCommit> {
 
+    private final ObjectDatabase objectDb;
+
+    private final Platform platform;
+
     private Optional<String> authorName;
 
     private Optional<String> authorEmail;
@@ -65,10 +68,6 @@ public class CommitOp extends AbstractGeoGitOp<RevCommit> {
     // like the -a option in git commit
     private boolean all;
 
-    private Repository repository;
-
-    private Platform platform;
-
     private boolean allowEmpty;
 
     private String committerName;
@@ -78,12 +77,11 @@ public class CommitOp extends AbstractGeoGitOp<RevCommit> {
     /**
      * Constructs a new {@code CommitOp} with the given parameters.
      * 
-     * @param repository the respository to commit to
      * @param platform the current platform
      */
     @Inject
-    public CommitOp(final Repository repository, final Platform platform) {
-        this.repository = repository;
+    public CommitOp(final ObjectDatabase objectDb, final Platform platform) {
+        this.objectDb = objectDb;
         this.platform = platform;
     }
 
@@ -260,9 +258,8 @@ public class CommitOp extends AbstractGeoGitOp<RevCommit> {
             if (getProgressListener().isCanceled()) {
                 return null;
             }
-            ObjectInserter objectInserter = repository.newObjectInserter();
             commit = cb.build();
-            objectInserter.insert(commit.getId(), repository.newCommitWriter(commit));
+            objectDb.put(commit);
         }
         // set the HEAD pointing to the new commit
         final Optional<Ref> branchHead = command(UpdateRef.class).setName(currentBranch)
@@ -275,8 +272,10 @@ public class CommitOp extends AbstractGeoGitOp<RevCommit> {
 
         Preconditions.checkState(currentBranch.equals(((SymRef) newHead.get()).getTarget()));
 
-        ObjectId treeId = repository.getCommit(branchHead.get().getObjectId()).getTreeId();
-        Preconditions.checkState(newTreeId.equals(treeId));
+        Optional<ObjectId> treeId = command(ResolveTreeish.class).setTreeish(
+                branchHead.get().getObjectId()).call();
+        Preconditions.checkState(treeId.isPresent());
+        Preconditions.checkState(newTreeId.equals(treeId.get()));
 
         getProgressListener().progress(100f);
         getProgressListener().complete();

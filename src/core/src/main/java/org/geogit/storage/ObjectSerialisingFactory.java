@@ -11,6 +11,7 @@ import org.geogit.api.RevCommit;
 import org.geogit.api.RevFeature;
 import org.geogit.api.RevFeatureType;
 import org.geogit.api.RevObject;
+import org.geogit.api.RevObject.TYPE;
 import org.geogit.api.RevTree;
 
 /**
@@ -21,14 +22,6 @@ import org.geogit.api.RevTree;
 public interface ObjectSerialisingFactory {
 
     /**
-     * Creates an instance of a commit writer to serialise the provided RevCommit
-     * 
-     * @param commit RevCommit to be written
-     * @return commit writer
-     */
-    public ObjectWriter<RevCommit> createCommitWriter(final RevCommit commit);
-
-    /**
      * Creates an instance of a commit reader.
      * 
      * @return commit reader
@@ -37,25 +30,9 @@ public interface ObjectSerialisingFactory {
     public ObjectReader<RevCommit> createCommitReader();
 
     /**
-     * Creates an instance of a RevTree writer to serialise the provided RevTree
-     * 
-     * @param tree RevTree to be written
-     * @return revtree writer
-     */
-    public ObjectWriter<RevTree> createRevTreeWriter(RevTree tree);
-
-    /**
      * Creates an instance of a RevTree reader.
      */
     public ObjectReader<RevTree> createRevTreeReader();
-
-    /**
-     * Creates an instance of a Feature writer to serialise the provided feature.
-     * 
-     * @param feature Feature to be written
-     * @return feature writer
-     */
-    public ObjectWriter<RevFeature> createFeatureWriter(final RevFeature feature);
 
     /**
      * Creates an instance of a Feature reader that can parse features.
@@ -73,23 +50,19 @@ public interface ObjectSerialisingFactory {
     public ObjectReader<RevFeature> createFeatureReader(final Map<String, Serializable> hints);
 
     /**
-     * @param type
-     * @return
-     */
-    public ObjectWriter<RevFeatureType> createFeatureTypeWriter(RevFeatureType type);
-
-    /**
      * Creates an instance of a feature type reader that can parse feature types.
      * 
      * @return feature type reader
      */
     public ObjectReader<RevFeatureType> createFeatureTypeReader();
 
-    /**
-     * Creates an instance of an object type reader that can determine the type of objects.
-     * 
-     * @return object type reader
-     */
-    public ObjectReader<RevObject.TYPE> createObjectTypeReader();
+    public ObjectWriter<RevObject> createObjectWriter(TYPE type);
 
+    /**
+     * @param type
+     * @return
+     */
+    public <T> ObjectReader<T> createObjectReader(TYPE type);
+
+    public ObjectReader<RevObject> createObjectReader();
 }

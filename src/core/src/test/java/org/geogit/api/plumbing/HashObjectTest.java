@@ -70,9 +70,9 @@ public class HashObjectTest extends RepositoryTestCase {
 
     @Override
     protected void setUpInternal() throws Exception {
-        featureType1 = new RevFeatureType(pointsType);
-        featureType2 = new RevFeatureType(linesType);
-        featureType1Duplicate = new RevFeatureType(pointsType);
+        featureType1 = RevFeatureType.build(pointsType);
+        featureType2 = RevFeatureType.build(linesType);
+        featureType1Duplicate = RevFeatureType.build(pointsType);
 
         RevFeatureBuilder featureBuilder = new RevFeatureBuilder();
         pointFeature1 = featureBuilder.build(points1);
@@ -129,7 +129,7 @@ public class HashObjectTest extends RepositoryTestCase {
                         + "serialized:java.io.Serializable," + "randomClass:java.lang.Object,"
                         + "pp:Point:srid=4326," + "lng:java.lang.Long," + "uuid:java.util.UUID");
 
-        coverageRevFeatureType = new RevFeatureType(coverageFeatureType);
+        coverageRevFeatureType = RevFeatureType.build(coverageFeatureType);
 
         Feature coverageFeature = feature(coverageFeatureType, "TestType.Coverage.1",
                 "StringProp1_1", null, Boolean.TRUE, Byte.valueOf("18"), new Double(100.01),

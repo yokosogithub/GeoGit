@@ -94,7 +94,7 @@ public class ImportOp extends AbstractGeoGitOp<RevTree> {
                 throw new GeoToolsOpException(StatusCode.UNABLE_TO_GET_FEATURES);
             }
 
-            RevFeatureType revType = new RevFeatureType(featureSource.getSchema());
+            RevFeatureType revType = RevFeatureType.build(featureSource.getSchema());
 
             String treePath = revType.getName().getLocalPart();
 

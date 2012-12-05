@@ -29,8 +29,6 @@ public class DiffIndex extends AbstractGeoGitOp<Iterator<DiffEntry>> {
 
     private StagingArea index;
 
-    private ObjectSerialisingFactory serialFactory;
-
     private String refSpec;
 
     private String pathFilter;
@@ -40,12 +38,10 @@ public class DiffIndex extends AbstractGeoGitOp<Iterator<DiffEntry>> {
      * {@link ObjectSerialisingFactory}.
      * 
      * @param index the staging area
-     * @param serialFactory the serialization factory
      */
     @Inject
-    public DiffIndex(StagingArea index, ObjectSerialisingFactory serialFactory) {
+    public DiffIndex(StagingArea index) {
         this.index = index;
-        this.serialFactory = serialFactory;
     }
 
     /**
@@ -91,8 +87,7 @@ public class DiffIndex extends AbstractGeoGitOp<Iterator<DiffEntry>> {
 
         final RevTree newTree = index.getTree();
 
-        DiffTreeWalk treeWalk = new DiffTreeWalk(index.getDatabase(), rootTree, newTree,
-                serialFactory);
+        DiffTreeWalk treeWalk = new DiffTreeWalk(index.getDatabase(), rootTree, newTree);
         treeWalk.setFilter(pathFilter);
         return treeWalk.get();
     }

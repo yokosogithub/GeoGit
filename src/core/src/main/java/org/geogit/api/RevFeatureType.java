@@ -7,8 +7,7 @@ package org.geogit.api;
 import java.util.ArrayList;
 import java.util.Collections;
 
-import javax.xml.namespace.QName;
-
+import org.geogit.api.plumbing.HashObject;
 import org.opengis.feature.type.FeatureType;
 import org.opengis.feature.type.Name;
 import org.opengis.feature.type.PropertyDescriptor;
@@ -42,12 +41,18 @@ public class RevFeatureType extends AbstractRevObject {
         }
     };
 
+    public static RevFeatureType build(FeatureType type) {
+        RevFeatureType unnamed = new RevFeatureType(type);
+        ObjectId id = new HashObject().setObject(unnamed).call();
+        return new RevFeatureType(id, type);
+    }
+
     /**
      * Constructs a new {@code RevFeatureType} from the given {@link FeatureType}.
      * 
      * @param featureType the feature type to use
      */
-    public RevFeatureType(FeatureType featureType) {
+    private RevFeatureType(FeatureType featureType) {
         this(ObjectId.NULL, featureType);
     }
 
@@ -87,8 +92,8 @@ public class RevFeatureType extends AbstractRevObject {
     /**
      * @return the name of the feature type
      */
-    public QName getName() {
+    public Name getName() {
         Name name = type().getName();
-        return new QName(name.getNamespaceURI(), name.getLocalPart());
+        return name;
     }
 }

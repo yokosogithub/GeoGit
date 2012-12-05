@@ -23,7 +23,6 @@ import org.geogit.api.RevTree;
 import org.geogit.api.plumbing.diff.DiffEntry.ChangeType;
 import org.geogit.storage.NodeStorageOrder;
 import org.geogit.storage.ObjectDatabase;
-import org.geogit.storage.ObjectSerialisingFactory;
 
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
@@ -48,18 +47,15 @@ class TreeDiffEntryIterator extends AbstractIterator<DiffEntry> {
 
     private final ObjectDatabase objectDb;
 
-    private final ObjectSerialisingFactory serialFactory;
-
     private final Iterator<DiffEntry> delegate;
 
     public TreeDiffEntryIterator(NodeRef oldTreeRef, NodeRef newTreeRef,
             @Nullable final RevTree oldTree, @Nullable final RevTree newTree,
-            final ObjectDatabase db, final ObjectSerialisingFactory serialFactory) {
+            final ObjectDatabase db) {
 
         checkArgument(oldTree != null || newTree != null);
 
         this.objectDb = db;
-        this.serialFactory = serialFactory;
 
         if (oldTree == null || oldTree.isEmpty()) {
             delegate = addRemoveAll(newTreeRef, newTree, ADDED);
@@ -213,8 +209,7 @@ class TreeDiffEntryIterator extends AbstractIterator<DiffEntry> {
                 checkState(fromTree != null);
                 it = addRemoveAll(nextLeft, fromTree, REMOVED);
             } else {
-                it = new TreeDiffEntryIterator(nextLeft, nextRight, fromTree, toTree, objectDb,
-                        serialFactory);
+                it = new TreeDiffEntryIterator(nextLeft, nextRight, fromTree, toTree, objectDb);
             }
             return it;
         }
@@ -225,7 +220,7 @@ class TreeDiffEntryIterator extends AbstractIterator<DiffEntry> {
                 return null;
             }
             ObjectId id = treeRef.objectId();
-            RevTree tree = objectDb.get(id, serialFactory.createRevTreeReader());
+            RevTree tree = objectDb.getTree(id);
             return tree;
         }
     }
@@ -303,7 +298,7 @@ class TreeDiffEntryIterator extends AbstractIterator<DiffEntry> {
 
             // TODO******
             this.currentBucketIterator = new TreeDiffEntryIterator(leftRef, rightRef, left, right,
-                    objectDb, serialFactory);
+                    objectDb);
             return computeNext();
         }
 
@@ -311,7 +306,7 @@ class TreeDiffEntryIterator extends AbstractIterator<DiffEntry> {
             if (treeId == null) {
                 return null;
             }
-            return objectDb.get(treeId, serialFactory.createRevTreeReader());
+            return objectDb.getTree(treeId);
         }
     }
 }

@@ -46,7 +46,7 @@ public class FeatureBuilder {
      * @param type the feature type of the features that will be built
      */
     public FeatureBuilder(SimpleFeatureType type) {
-        this(new RevFeatureType(type));
+        this(RevFeatureType.build(type));
     }
 
     /**

@@ -15,8 +15,6 @@ import org.geogit.api.ObjectId;
 import org.geogit.api.RevObject.TYPE;
 import org.geogit.api.RevTree;
 import org.geogit.storage.ObjectDatabase;
-import org.geogit.storage.ObjectSerialisingFactory;
-import org.geogit.storage.hessian.HessianFactory;
 
 import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
@@ -61,8 +59,6 @@ public class DepthTreeIterator extends AbstractIterator<NodeRef> {
     private Iterator<NodeRef> iterator;
 
     private ObjectDatabase source;
-
-    private ObjectSerialisingFactory serialFactory = new HessianFactory();
 
     private Strategy strategy;
 
@@ -181,7 +177,7 @@ public class DepthTreeIterator extends AbstractIterator<NodeRef> {
             Preconditions.checkArgument(TYPE.TREE.equals(next.getType()));
 
             ObjectId treeId = next.getObjectId();
-            RevTree childTree = source.get(treeId, serialFactory.createRevTreeReader());
+            RevTree childTree = source.getTree(treeId);
 
             String childTreePath = NodeRef.appendChild(this.functor.treePath, next.getName());
             Iterator<NodeRef> children = new Recursive(childTreePath, next.getMetadataId().or(
@@ -292,7 +288,7 @@ public class DepthTreeIterator extends AbstractIterator<NodeRef> {
          * @return
          */
         protected Iterator<Node> resolveBucketEntries(ObjectId bucketId) {
-            RevTree bucketTree = source.get(bucketId, serialFactory.createRevTreeReader());
+            RevTree bucketTree = source.getTree(bucketId);
             if (bucketTree.buckets().isPresent()) {
                 return new Buckets(bucketTree);
             }
@@ -311,7 +307,7 @@ public class DepthTreeIterator extends AbstractIterator<NodeRef> {
 
         @Override
         protected Iterator<Node> resolveBucketEntries(ObjectId bucketId) {
-            RevTree bucketTree = source.get(bucketId, serialFactory.createRevTreeReader());
+            RevTree bucketTree = source.getTree(bucketId);
             if (bucketTree.buckets().isPresent()) {
                 return new Buckets(bucketTree);
             }
@@ -333,7 +329,7 @@ public class DepthTreeIterator extends AbstractIterator<NodeRef> {
 
         @Override
         protected Iterator<Node> resolveBucketEntries(ObjectId bucketId) {
-            RevTree bucketTree = source.get(bucketId, serialFactory.createRevTreeReader());
+            RevTree bucketTree = source.getTree(bucketId);
             if (bucketTree.buckets().isPresent()) {
                 return new FeatureBuckets(bucketTree);
             }

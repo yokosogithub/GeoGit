@@ -22,7 +22,7 @@ import com.google.common.collect.ImmutableSortedMap;
  * Writes a {@link RevTree tree} to a binary encoded stream.
  */
 
-class HessianRevTreeWriter extends HessianRevWriter implements ObjectWriter<RevTree> {
+class HessianRevTagWriter extends HessianRevWriter implements ObjectWriter<RevTree> {
 
     /**
      * Writes the provided {@link RevTree} to the output stream.
@@ -59,7 +59,7 @@ class HessianRevTreeWriter extends HessianRevWriter implements ObjectWriter<RevT
     private void writeChildren(Hessian2Output hout, ImmutableCollection<Node> children)
             throws IOException {
         for (Node ref : children) {
-            HessianRevTreeWriter.this.writeNode(hout, ref);
+            HessianRevTagWriter.this.writeNode(hout, ref);
         }
     }
 
@@ -69,7 +69,7 @@ class HessianRevTreeWriter extends HessianRevWriter implements ObjectWriter<RevT
         for (Entry<Integer, ObjectId> entry : buckets.entrySet()) {
             hout.writeInt(HessianRevReader.Node.BUCKET.getValue());
             hout.writeInt(entry.getKey().intValue());
-            HessianRevTreeWriter.this.writeObjectId(hout, entry.getValue());
+            HessianRevTagWriter.this.writeObjectId(hout, entry.getValue());
         }
     }
 }

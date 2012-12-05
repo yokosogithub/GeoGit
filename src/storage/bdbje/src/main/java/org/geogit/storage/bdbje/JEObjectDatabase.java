@@ -21,6 +21,7 @@ import javax.annotation.Nullable;
 import org.geogit.api.ObjectId;
 import org.geogit.storage.AbstractObjectDatabase;
 import org.geogit.storage.ObjectDatabase;
+import org.geogit.storage.ObjectSerialisingFactory;
 import org.geotools.util.logging.Logging;
 
 import com.google.common.base.Preconditions;
@@ -56,13 +57,14 @@ public class JEObjectDatabase extends AbstractObjectDatabase implements ObjectDa
     private CurrentTransaction txn;
 
     @Inject
-    public JEObjectDatabase(final EnvironmentBuilder envProvider) {
-        super();
+    public JEObjectDatabase(final ObjectSerialisingFactory serialFactory,
+            final EnvironmentBuilder envProvider) {
+        super(serialFactory);
         this.envProvider = envProvider;
     }
 
-    public JEObjectDatabase(final Environment env) {
-        super();
+    public JEObjectDatabase(final ObjectSerialisingFactory serialFactory, final Environment env) {
+        super(serialFactory);
         this.env = env;
     }
 

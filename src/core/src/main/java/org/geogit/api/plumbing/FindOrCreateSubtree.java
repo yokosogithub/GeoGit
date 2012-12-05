@@ -13,7 +13,6 @@ import org.geogit.api.ObjectId;
 import org.geogit.api.RevObject.TYPE;
 import org.geogit.api.RevTree;
 import org.geogit.storage.ObjectDatabase;
-import org.geogit.storage.ObjectSerialisingFactory;
 import org.geogit.storage.StagingDatabase;
 
 import com.google.common.base.Optional;
@@ -45,14 +44,10 @@ public class FindOrCreateSubtree extends AbstractGeoGitOp<RevTree> {
 
     private StagingDatabase index;
 
-    private ObjectSerialisingFactory serialFactory;
-
     @Inject
-    public FindOrCreateSubtree(ObjectDatabase odb, StagingDatabase index,
-            ObjectSerialisingFactory serialFactory) {
+    public FindOrCreateSubtree(ObjectDatabase odb, StagingDatabase index) {
         this.odb = odb;
         this.index = index;
-        this.serialFactory = serialFactory;
     }
 
     /**
@@ -129,7 +124,7 @@ public class FindOrCreateSubtree extends AbstractGeoGitOp<RevTree> {
             return RevTree.EMPTY;
         }
         ObjectDatabase target = indexDb ? index : odb;
-        RevTree tree = target.get(subtreeId, serialFactory.createRevTreeReader());
+        RevTree tree = target.getTree(subtreeId);
         return tree;
     }
 }

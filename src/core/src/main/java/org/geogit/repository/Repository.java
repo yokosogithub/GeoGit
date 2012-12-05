@@ -6,18 +6,14 @@ package org.geogit.repository;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.Serializable;
-import java.util.Map;
 
 import org.geogit.api.AbstractGeoGitOp;
-import org.geogit.api.InjectorBuilder;
 import org.geogit.api.Node;
 import org.geogit.api.NodeRef;
 import org.geogit.api.ObjectId;
 import org.geogit.api.Ref;
 import org.geogit.api.RevCommit;
 import org.geogit.api.RevFeature;
-import org.geogit.api.RevFeatureType;
 import org.geogit.api.RevTree;
 import org.geogit.api.plumbing.FindTreeChild;
 import org.geogit.api.plumbing.RefParse;
@@ -27,9 +23,6 @@ import org.geogit.api.plumbing.RevParse;
 import org.geogit.storage.ConfigDatabase;
 import org.geogit.storage.ObjectDatabase;
 import org.geogit.storage.ObjectInserter;
-import org.geogit.storage.ObjectReader;
-import org.geogit.storage.ObjectSerialisingFactory;
-import org.geogit.storage.ObjectWriter;
 import org.geogit.storage.RefDatabase;
 
 import com.google.common.base.Optional;
@@ -56,9 +49,6 @@ public class Repository {
     private WorkingTree workingTree;
 
     @Inject
-    private ObjectSerialisingFactory serialFactory;
-
-    @Inject
     private Injector injector;
 
     @Inject
@@ -69,8 +59,6 @@ public class Repository {
 
     @Inject
     private ObjectDatabase objectDatabase;
-
-    private InjectorBuilder injectorBuilder = new InjectorBuilder();
 
     /**
      * Creates the repository.
@@ -182,7 +170,7 @@ public class Repository {
      */
     public boolean commitExists(final ObjectId id) {
         try {
-            getObjectDatabase().get(id, newCommitReader());
+            getObjectDatabase().getCommit(id);
         } catch (IllegalArgumentException e) {
             return false;
         }
@@ -197,7 +185,7 @@ public class Repository {
      * @return the {@code RevCommit}
      */
     public RevCommit getCommit(final ObjectId commitId) {
-        RevCommit commit = getObjectDatabase().get(commitId, newCommitReader());
+        RevCommit commit = getObjectDatabase().getCommit(commitId);
 
         return commit;
     }
@@ -210,7 +198,7 @@ public class Repository {
      */
     public boolean treeExists(final ObjectId id) {
         try {
-            getObjectDatabase().get(id, newRevTreeReader());
+            getObjectDatabase().getTree(id);
         } catch (IllegalArgumentException e) {
             return false;
         }
@@ -245,84 +233,10 @@ public class Repository {
      * @return the {@link RevFeature} that was found in the object database
      */
     public RevFeature getFeature(final ObjectId contentId) {
-        ObjectReader<RevFeature> reader = newFeatureReader();
 
-        RevFeature revFeature = getObjectDatabase().get(contentId, reader);
+        RevFeature revFeature = getObjectDatabase().getFeature(contentId);
 
         return revFeature;
-    }
-
-    /**
-     * @param commit commit to write
-     * @return a new ObjectWriter for the given commit
-     */
-    public ObjectWriter<RevCommit> newCommitWriter(RevCommit commit) {
-        return serialFactory.createCommitWriter(commit);
-    }
-
-    public ObjectReader<RevTree> newRevTreeReader() {
-        return serialFactory.createRevTreeReader();
-    }
-
-    /**
-     * @param tree the {@link RevTree} to write
-     * @return a newly constructed {@link ObjectWriter} for the {@code RevTree}
-     */
-    public ObjectWriter<RevTree> newRevTreeWriter(RevTree tree) {
-        return serialFactory.createRevTreeWriter(tree);
-    }
-
-    /**
-     * @return a newly constructed {@link ObjectReader} for {@link RevCommit}s
-     */
-    public ObjectReader<RevCommit> newCommitReader() {
-        return serialFactory.createCommitReader();
-    }
-
-    /**
-     * @return a newly constructed {@link ObjectReader} for {@link RevFeature}s
-     */
-    public ObjectReader<RevFeature> newFeatureReader() {
-        ObjectReader<RevFeature> reader = serialFactory.createFeatureReader();
-        return reader;
-    }
-
-    /**
-     * @param hints hints for feature reading
-     * @return a newly constructed {@link ObjectReader} for {@link RevFeature}s
-     */
-    public ObjectReader<RevFeature> newFeatureReader(final Map<String, Serializable> hints) {
-        return serialFactory.createFeatureReader(hints);
-    }
-
-    /**
-     * @param feature the {@link RevFeature} to write
-     * @return a newly constructed {@link ObjectWriter} for the given {@code RevFeature}
-     */
-    public ObjectWriter<RevFeature> newFeatureWriter(RevFeature feature) {
-        return serialFactory.createFeatureWriter(feature);
-    }
-
-    /**
-     * @param type the {@link RevFeatureType} to write
-     * @return a newly constructed {@link ObjectWriter} for the given {@code RevFeatureType}
-     */
-    public ObjectWriter<RevFeatureType> newFeatureTypeWriter(RevFeatureType type) {
-        return serialFactory.createFeatureTypeWriter(type);
-    }
-
-    /**
-     * @return a newly constructed {@link ObjectReader} for {@link RevFeatureType}s
-     */
-    public ObjectReader<RevFeatureType> newFeatureTypeReader() {
-        return serialFactory.createFeatureTypeReader();
-    }
-
-    /**
-     * @return the {@link ObjectSerialisingFactory} for this repository
-     */
-    public ObjectSerialisingFactory getSerializationFactory() {
-        return serialFactory;
     }
 
     /**

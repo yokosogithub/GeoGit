@@ -12,7 +12,6 @@ import java.util.List;
 import java.util.Map;
 
 import javax.annotation.Nullable;
-import javax.xml.namespace.QName;
 
 import org.geogit.api.Node;
 import org.geogit.api.NodeRef;
@@ -29,7 +28,6 @@ import org.geogit.api.plumbing.DiffCount;
 import org.geogit.api.plumbing.DiffWorkTree;
 import org.geogit.api.plumbing.FindOrCreateSubtree;
 import org.geogit.api.plumbing.FindTreeChild;
-import org.geogit.api.plumbing.HashObject;
 import org.geogit.api.plumbing.LsTreeOp;
 import org.geogit.api.plumbing.ResolveTreeish;
 import org.geogit.api.plumbing.RevObjectParse;
@@ -37,8 +35,8 @@ import org.geogit.api.plumbing.UpdateRef;
 import org.geogit.api.plumbing.WriteBack;
 import org.geogit.api.plumbing.diff.DiffEntry;
 import org.geogit.storage.ObjectSerialisingFactory;
-import org.geogit.storage.ObjectWriter;
 import org.geogit.storage.StagingDatabase;
+import org.geotools.feature.NameImpl;
 import org.opengis.feature.Feature;
 import org.opengis.feature.type.FeatureType;
 import org.opengis.feature.type.Name;
@@ -202,7 +200,7 @@ public class WorkingTree {
      * @param affectedFeatures features to remove
      * @throws Exception
      */
-    public void delete(final QName typeName, final Filter filter,
+    public void delete(final Name typeName, final Filter filter,
             final Iterator<Feature> affectedFeatures) throws Exception {
 
         RevTreeBuilder parentTree = repository.command(FindOrCreateSubtree.class)
@@ -235,7 +233,7 @@ public class WorkingTree {
      * @param typeName feature type to remove
      * @throws Exception
      */
-    public void delete(final QName typeName) throws Exception {
+    public void delete(final Name typeName) throws Exception {
         checkNotNull(typeName);
 
         RevTreeBuilder workRoot = getTree().builder(indexDatabase);
@@ -244,7 +242,7 @@ public class WorkingTree {
         if (workRoot.get(treePath).isPresent()) {
             workRoot.remove(treePath);
             RevTree newRoot = workRoot.build();
-            indexDatabase.put(newRoot.getId(), serialFactory.createRevTreeWriter(newRoot));
+            indexDatabase.put(newRoot);
             updateWorkHead(newRoot.getId());
         }
     }
@@ -294,14 +292,10 @@ public class WorkingTree {
     public Node insert(final String parentTreePath, final Feature feature) {
 
         final FeatureType featureType = feature.getType();
-        RevFeatureType newFeatureType = new RevFeatureType(featureType);
-        ObjectId revFeatureTypeId = repository.command(HashObject.class).setObject(newFeatureType)
-                .call();
+        RevFeatureType newFeatureType = RevFeatureType.build(featureType);
+        ObjectId revFeatureTypeId = newFeatureType.getId();
 
-        final ObjectWriter<RevFeatureType> featureTypeWriter = serialFactory
-                .createFeatureTypeWriter(newFeatureType);
-
-        indexDatabase.put(revFeatureTypeId, featureTypeWriter);
+        indexDatabase.put(newFeatureType);
 
         Node node = putInDatabase(feature, revFeatureTypeId);
         RevTreeBuilder parentTree = repository.command(FindOrCreateSubtree.class).setIndex(true)
@@ -376,7 +370,7 @@ public class WorkingTree {
      * @param typeName feature type to check
      * @return true if the feature type is versioned, false otherwise.
      */
-    public boolean hasRoot(final QName typeName) {
+    public boolean hasRoot(final Name typeName) {
         String localPart = typeName.getLocalPart();
         Optional<NodeRef> typeNameTreeRef = repository.command(FindTreeChild.class)
                 .setChildPath(localPart).call();
@@ -432,13 +426,11 @@ public class WorkingTree {
         checkNotNull(metadataId);
 
         final RevFeature newFeature = new RevFeatureBuilder().build(feature);
-        final ObjectId objectId = repository.command(HashObject.class).setObject(newFeature).call();
+        final ObjectId objectId = newFeature.getId();
         final BoundingBox bounds = feature.getBounds();
         final String nodeName = feature.getIdentifier().getID();
 
-        final ObjectWriter<?> featureWriter = serialFactory.createFeatureWriter(newFeature);
-
-        indexDatabase.put(objectId, featureWriter);
+        indexDatabase.put(newFeature);
 
         Node newObject;
         if (bounds == null) {
@@ -490,15 +482,11 @@ public class WorkingTree {
             ObjectId revFeatureTypeId = revFeatureTypes.get(featureType.getName());
 
             if (null == revFeatureTypeId) {
-                RevFeatureType newFeatureType = new RevFeatureType(featureType);
+                RevFeatureType newFeatureType = RevFeatureType.build(featureType);
 
-                revFeatureTypeId = repository.command(HashObject.class).setObject(newFeatureType)
-                        .call();
+                revFeatureTypeId = newFeatureType.getId();
 
-                final ObjectWriter<RevFeatureType> featureTypeWriter = serialFactory
-                        .createFeatureTypeWriter(newFeatureType);
-
-                indexDatabase.put(revFeatureTypeId, featureTypeWriter);
+                indexDatabase.put(newFeatureType);
                 revFeatureTypes.put(featureType.getName(), revFeatureTypeId);
             }
 
@@ -515,21 +503,21 @@ public class WorkingTree {
     /**
      * @return a list of all the feature type names in the working tree
      */
-    public List<QName> getFeatureTypeNames() {
+    public List<Name> getFeatureTypeNames() {
         // List<QName> names = new ArrayList<QName>();
         // RevTree root = getTree();
 
         Iterator<NodeRef> allTrees = repository.command(LsTreeOp.class).setReference(Ref.WORK_HEAD)
                 .setStrategy(LsTreeOp.Strategy.DEPTHFIRST_ONLY_TREES).call();
 
-        ImmutableList<QName> treeNames = ImmutableList.copyOf(Iterators.transform(allTrees,
-                new Function<NodeRef, QName>() {
+        ImmutableList<Name> treeNames = ImmutableList.copyOf(Iterators.transform(allTrees,
+                new Function<NodeRef, Name>() {
 
                     @Override
-                    public QName apply(NodeRef treeRef) {
+                    public Name apply(NodeRef treeRef) {
                         Preconditions.checkArgument(TYPE.TREE.equals(treeRef.getType()));
                         String localName = NodeRef.nodeFromPath(treeRef.path());
-                        return new QName(localName);
+                        return new NameImpl(localName);
                     }
                 }));
         return treeNames;

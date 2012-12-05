@@ -5,7 +5,6 @@
 
 package org.geogit.api.plumbing.diff;
 
-import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -23,9 +22,6 @@ import org.geogit.api.RevTree;
 import org.geogit.api.RevTreeImpl;
 import org.geogit.storage.NodeStorageOrder;
 import org.geogit.storage.ObjectDatabase;
-import org.geogit.storage.ObjectReader;
-import org.geogit.storage.ObjectSerialisingFactory;
-import org.geogit.storage.hessian.HessianFactory;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -44,12 +40,9 @@ public class TreeDiffEntryIteratorTest extends Assert {
 
     private ObjectDatabase mockDb;
 
-    private ObjectSerialisingFactory serialFactory;
-
     @Before
     public void setUp() throws Exception {
         mockDb = mock(ObjectDatabase.class);
-        serialFactory = new HessianFactory();
     }
 
     @Test
@@ -245,19 +238,17 @@ public class TreeDiffEntryIteratorTest extends Assert {
         assertEquals(expected, diffset);
     }
 
-    @SuppressWarnings("unchecked")
     private RevTree bucketTree() {
 
         ObjectId id = ObjectId.forString("null");
         Map<Integer, ObjectId> bucketTrees = ImmutableMap.of();
         RevTreeImpl tree = RevTreeImpl.createNodeTree(id, 0, bucketTrees);
 
-        when(mockDb.get(eq(id), (ObjectReader<RevTree>) any())).thenReturn(tree);
+        when(mockDb.getTree(eq(id))).thenReturn(tree);
 
         return tree;
     }
 
-    @SuppressWarnings("unchecked")
     private RevTree childenTree(@Nullable String... pathIdKvps) {
 
         TreeSet<Node> features = Sets.newTreeSet(new NodeStorageOrder());
@@ -285,7 +276,7 @@ public class TreeDiffEntryIteratorTest extends Assert {
         ImmutableList<Node> treeRefs = ImmutableList.copyOf(trees);
         RevTreeImpl tree = RevTreeImpl.createLeafTree(id, size, sortedRefs, treeRefs);
 
-        when(mockDb.get(eq(id), (ObjectReader<RevTree>) any())).thenReturn(tree);
+        when(mockDb.getTree(eq(id))).thenReturn(tree);
 
         return tree;
     }
@@ -317,7 +308,7 @@ public class TreeDiffEntryIteratorTest extends Assert {
         NodeRef rightNodeRef = new NodeRef(
                 new Node("", leftTree.getId(), ObjectId.NULL, TYPE.TREE), "", ObjectId.NULL);
         ImmutableSet<DiffEntry> diffset = ImmutableSet.copyOf(new TreeDiffEntryIterator(
-                leftNodeRef, rightNodeRef, leftTree, rightTree, mockDb, serialFactory));
+                leftNodeRef, rightNodeRef, leftTree, rightTree, mockDb));
         return diffset;
     }
 }

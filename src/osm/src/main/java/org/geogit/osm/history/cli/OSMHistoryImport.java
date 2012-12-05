@@ -23,7 +23,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.management.relation.Relation;
-import javax.xml.namespace.QName;
 
 import jline.console.ConsoleReader;
 
@@ -47,15 +46,12 @@ import org.geogit.osm.history.internal.Way;
 import org.geogit.repository.Repository;
 import org.geogit.repository.StagingArea;
 import org.geogit.repository.WorkingTree;
-import org.geogit.storage.ObjectReader;
-import org.geogit.storage.ObjectSerialisingFactory;
 import org.geotools.data.DataUtilities;
 import org.geotools.feature.simple.SimpleFeatureBuilder;
 import org.geotools.referencing.CRS;
 import org.opengis.feature.Feature;
 import org.opengis.feature.simple.SimpleFeature;
 import org.opengis.feature.simple.SimpleFeatureType;
-import org.opengis.feature.type.Name;
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
 import org.opengis.util.ProgressListener;
 
@@ -354,8 +350,6 @@ public class OSMHistoryImport extends AbstractCommand implements CLICommand {
         final Way way = (Way) primitive;
         final ImmutableList<Long> nodes = way.getNodes();
 
-        final ObjectSerialisingFactory serialFactory = geogit.getRepository()
-                .getSerializationFactory();
         StagingArea index = geogit.getRepository().getIndex();
 
         FeatureBuilder featureBuilder = new FeatureBuilder(NODE_REV_TYPE);
@@ -377,10 +371,8 @@ public class OSMHistoryImport extends AbstractCommand implements CLICommand {
                 }
                 if (ref.isPresent()) {
                     org.geogit.api.Node nodeRef = ref.get();
-                    ObjectReader<RevFeature> reader;
-                    reader = serialFactory.createFeatureReader();
 
-                    RevFeature revFeature = index.getDatabase().get(nodeRef.getObjectId(), reader);
+                    RevFeature revFeature = index.getDatabase().getFeature(nodeRef.getObjectId());
                     String id = NodeRef.nodeFromPath(nodeRef.getName());
                     Feature feature = featureBuilder.build(id, revFeature);
 
@@ -455,47 +447,9 @@ public class OSMHistoryImport extends AbstractCommand implements CLICommand {
         return WayType;
     }
 
-    public static class OsmRevFeatureTypeNode extends RevFeatureType {
+    private static final RevFeatureType NODE_REV_TYPE = RevFeatureType.build(nodeType());
 
-        private final QName name;
-
-        /**
-         * @param parsed
-         */
-        public OsmRevFeatureTypeNode() {
-            super(nodeType());
-            Name typeName = nodeType().getName();
-            name = new QName(typeName.getNamespaceURI(), typeName.getLocalPart());
-        }
-
-        @Override
-        public QName getName() {
-            return name;
-        }
-    }
-
-    public static class OsmRevFeatureTypeWay extends RevFeatureType {
-
-        private final QName name;
-
-        /**
-         * @param parsed
-         */
-        public OsmRevFeatureTypeWay() {
-            super(wayType());
-            Name typeName = wayType().getName();
-            name = new QName(typeName.getNamespaceURI(), typeName.getLocalPart());
-        }
-
-        @Override
-        public QName getName() {
-            return name;
-        }
-    }
-
-    private static final RevFeatureType NODE_REV_TYPE = new OsmRevFeatureTypeNode();
-
-    private static final RevFeatureType WAY_REV_TYPE = new OsmRevFeatureTypeWay();
+    private static final RevFeatureType WAY_REV_TYPE = RevFeatureType.build(wayType());
 
     private static SimpleFeature toFeature(Primitive feature, Geometry geom) {
 

@@ -152,13 +152,13 @@ public class PGExport extends AbstractPGCommand implements CLICommand {
         while (iter.hasNext()) {
             NodeRef nodeRef = iter.next();
             RevFeatureType revFeatureType = cli.getGeogit().command(RevObjectParse.class)
-                    .setObjectId(nodeRef.getMetadataId()).call(RevFeatureType.class).get();            
+                    .setObjectId(nodeRef.getMetadataId()).call(RevFeatureType.class).get();
             SimpleFeatureType sft = (SimpleFeatureType) revFeatureType.type();
             SimpleFeatureTypeImpl newSFT = new SimpleFeatureTypeImpl(new NameImpl(tableName),
                     sft.getAttributeDescriptors(), sft.getGeometryDescriptor(), sft.isAbstract(),
                     sft.getRestrictions(), sft.getSuper(), sft.getDescription());
             return newSFT;
-            
+
         }
 
         throw new GeoToolsOpException(StatusCode.NO_FEATURES_FOUND);

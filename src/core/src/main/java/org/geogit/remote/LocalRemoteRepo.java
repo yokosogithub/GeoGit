@@ -9,8 +9,6 @@ import org.geogit.api.Node;
 import org.geogit.api.ObjectId;
 import org.geogit.api.Ref;
 import org.geogit.api.RevCommit;
-import org.geogit.api.RevFeature;
-import org.geogit.api.RevFeatureType;
 import org.geogit.api.RevObject;
 import org.geogit.api.RevObject.TYPE;
 import org.geogit.api.RevTree;
@@ -20,7 +18,6 @@ import org.geogit.api.plumbing.RevObjectParse;
 import org.geogit.api.plumbing.UpdateRef;
 import org.geogit.repository.Repository;
 import org.geogit.storage.ObjectInserter;
-import org.geogit.storage.ObjectWriter;
 
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
@@ -183,7 +180,7 @@ public class LocalRemoteRepo implements IRemoteRepo {
             RevCommit commit = (RevCommit) object.get();
             walkTree(commit.getTreeId(), from, to, objectInserter);
 
-            objectInserter.insert(commit.getId(), to.newCommitWriter(commit));
+            objectInserter.insert(commit);
             for (ObjectId parentCommit : commit.getParentIds()) {
                 walkCommit(parentCommit, from, to, objectInserter);
             }
@@ -201,7 +198,7 @@ public class LocalRemoteRepo implements IRemoteRepo {
         if (object.isPresent() && object.get().getType().equals(TYPE.TREE)) {
             RevTree tree = (RevTree) object.get();
 
-            objectInserter.insert(tree.getId(), to.newRevTreeWriter(tree));
+            objectInserter.insert(tree);
             // walk subtrees
             if (tree.buckets().isPresent()) {
                 for (ObjectId bucketId : tree.buckets().get().values()) {
@@ -231,24 +228,11 @@ public class LocalRemoteRepo implements IRemoteRepo {
         Optional<RevObject> childObject = from.command(RevObjectParse.class).setObjectId(objectId)
                 .call();
         if (childObject.isPresent()) {
-            ObjectWriter<? extends RevObject> objectWriter = null;
-            switch (childObject.get().getType()) {
-            case TREE:
+            RevObject revObject = childObject.get();
+            if (TYPE.TREE.equals(revObject.getType())) {
                 walkTree(objectId, from, to, objectInserter);
-                objectWriter = to.newRevTreeWriter((RevTree) childObject.get());
-                break;
-            case FEATURE:
-                objectWriter = to.newFeatureWriter((RevFeature) childObject.get());
-                break;
-            case FEATURETYPE:
-                objectWriter = to.newFeatureTypeWriter((RevFeatureType) childObject.get());
-                break;
-            default:
-                break;
             }
-            if (objectWriter != null) {
-                objectInserter.insert(childObject.get().getId(), objectWriter);
-            }
+            objectInserter.insert(revObject);
         }
     }
 }

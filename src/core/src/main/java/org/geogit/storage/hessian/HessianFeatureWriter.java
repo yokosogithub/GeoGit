@@ -11,6 +11,7 @@ import java.math.BigInteger;
 import java.util.UUID;
 
 import org.geogit.api.RevFeature;
+import org.geogit.api.RevObject;
 import org.geogit.storage.EntityType;
 import org.geogit.storage.ObjectWriter;
 import org.geotools.referencing.CRS;
@@ -41,27 +42,14 @@ import com.vividsolutions.jts.io.WKBWriter;
  */
 class HessianFeatureWriter implements ObjectWriter<RevFeature> {
 
-    private RevFeature feat;
-
-    /**
-     * Constructs a new {@code HessianFeatureWriter} to write the provided feature.
-     * 
-     * @param feature the feature to write
-     */
-    public HessianFeatureWriter(final RevFeature feature) {
-        this.feat = feature;
-    }
-
     /**
      * Writes the provided feature to the given output stream.
-     * 
-     * @param out the output stream to write to
      */
-    public void write(final OutputStream out) throws IOException {
+    public void write(final RevFeature feat, final OutputStream out) throws IOException {
         Hessian2Output hout = new Hessian2Output(out);
         try {
             hout.startMessage();
-            hout.writeInt(BlobType.FEATURE.getValue());
+            hout.writeInt(RevObject.TYPE.FEATURE.value());
             ImmutableList<Optional<Object>> values = feat.getValues();
 
             hout.writeInt(values.size());

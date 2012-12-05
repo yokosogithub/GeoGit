@@ -4,7 +4,7 @@
  */
 package org.geogit.storage;
 
-import org.geogit.api.ObjectId;
+import org.geogit.api.RevObject;
 
 /**
  * Encapsulates a transaction.
@@ -28,13 +28,10 @@ public class ObjectInserter {
     }
 
     /**
-     * Inserts a provided object into the database.
-     * 
-     * @param objectID the {@link ObjectId id} of the object to insert
-     * @param writer the object writer for the object
+     * @param object
      */
-    public void insert(final ObjectId objectID, final ObjectWriter<?> writer) {
-        objectDb.put(objectID, writer);
+    public void insert(RevObject object) {
+        objectDb.put(object);
     }
 
 }

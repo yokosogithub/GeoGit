@@ -31,7 +31,7 @@ import org.geogit.api.plumbing.RevObjectParse;
 import org.geogit.api.plumbing.WriteBack;
 import org.geogit.di.GeogitModule;
 import org.geogit.storage.ObjectDatabase;
-import org.geogit.storage.ObjectSerialisingFactory;
+import org.geogit.storage.StagingDatabase;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -48,8 +48,6 @@ public class DepthSearchTest {
     private GeoGIT fakeGeogit;
 
     private ObjectDatabase odb;
-
-    private ObjectSerialisingFactory serialFactory;
 
     private DepthSearch search;
 
@@ -69,22 +67,21 @@ public class DepthSearchTest {
         fakeGeogit = new GeoGIT(injector);
         Repository fakeRepo = fakeGeogit.getOrCreateRepository();
         odb = fakeRepo.getObjectDatabase();
-        serialFactory = fakeRepo.getSerializationFactory();
-        search = new DepthSearch(odb, serialFactory);
+        search = new DepthSearch(odb);
 
-        RevTreeBuilder root = new RevTreeBuilder(odb, serialFactory);
+        RevTreeBuilder root = new RevTreeBuilder(odb);
         root = addTree(root, "path/to/tree1", "node11", "node12", "node13");
         root = addTree(root, "path/to/tree2", "node21", "node22", "node23");
         root = addTree(root, "tree3", "node31", "node32", "node33");
         RevTree rootTree = root.build();
-        odb.put(rootTree.getId(), serialFactory.createRevTreeWriter(rootTree));
+        odb.put(rootTree);
         rootTreeId = rootTree.getId();
     }
 
     private RevTreeBuilder addTree(RevTreeBuilder root, final String treePath,
             String... singleNodeNames) {
 
-        RevTreeBuilder subTreeBuilder = new CreateTree(odb, null, serialFactory).setIndex(false)
+        RevTreeBuilder subTreeBuilder = new CreateTree(odb, (StagingDatabase) null).setIndex(false)
                 .call();
         if (singleNodeNames != null) {
             for (String singleNodeName : singleNodeNames) {

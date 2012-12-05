@@ -9,8 +9,6 @@ import org.geogit.api.AbstractGeoGitOp;
 import org.geogit.api.ObjectId;
 import org.geogit.api.RevObject;
 import org.geogit.api.RevObject.TYPE;
-import org.geogit.storage.ObjectReader;
-import org.geogit.storage.ObjectSerialisingFactory;
 import org.geogit.storage.StagingDatabase;
 
 import com.google.common.base.Optional;
@@ -27,8 +25,6 @@ public class RevObjectParse extends AbstractGeoGitOp<Optional<RevObject>> {
 
     private StagingDatabase indexDb;
 
-    private ObjectSerialisingFactory serialFactory;
-
     private ObjectId objectId;
 
     private String refSpec;
@@ -37,12 +33,10 @@ public class RevObjectParse extends AbstractGeoGitOp<Optional<RevObject>> {
      * Constructs a new {@code RevObjectParse} operation with the given parameters.
      * 
      * @param indexDb the staging database
-     * @param serialFactory the serialization factory
      */
     @Inject
-    public RevObjectParse(StagingDatabase indexDb, ObjectSerialisingFactory serialFactory) {
+    public RevObjectParse(StagingDatabase indexDb) {
         this.indexDb = indexDb;
-        this.serialFactory = serialFactory;
     }
 
     /**
@@ -97,28 +91,7 @@ public class RevObjectParse extends AbstractGeoGitOp<Optional<RevObject>> {
         }
 
         final TYPE type = command(ResolveObjectType.class).setObjectId(resolvedObjectId).call();
-        ObjectReader<? extends RevObject> reader;
-        switch (type) {
-        case FEATURE:
-            reader = serialFactory.createFeatureReader();
-            break;
-        case COMMIT:
-            reader = serialFactory.createCommitReader();
-            break;
-        case TAG:
-            throw new UnsupportedOperationException("not yet implemented");
-            // break;
-        case TREE:
-            reader = serialFactory.createRevTreeReader();
-            break;
-        case FEATURETYPE:
-            reader = serialFactory.createFeatureTypeReader();
-            break;
-        default:
-            throw new IllegalArgumentException("Unknown object type " + type);
-        }
-
-        RevObject revObject = indexDb.get(resolvedObjectId, reader);
+        RevObject revObject = indexDb.get(resolvedObjectId, type.binding());
         return Optional.of(clazz.cast(revObject));
     }
 }

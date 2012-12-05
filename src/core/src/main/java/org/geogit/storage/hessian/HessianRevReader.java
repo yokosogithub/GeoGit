@@ -5,14 +5,17 @@
 package org.geogit.storage.hessian;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.Collections;
 import java.util.Map;
 
 import org.apache.commons.collections.map.LRUMap;
 import org.geogit.api.ObjectId;
 import org.geogit.api.Ref;
+import org.geogit.api.RevObject;
 import org.geogit.api.RevObject.TYPE;
 import org.geogit.api.SpatialNode;
+import org.geogit.storage.ObjectReader;
 import org.geotools.geometry.jts.ReferencedEnvelope;
 import org.geotools.referencing.CRS;
 import org.opengis.geometry.BoundingBox;
@@ -26,7 +29,7 @@ import com.google.common.base.Throwables;
  * various Rev readers and printers.
  * 
  */
-abstract class HessianRevReader {
+abstract class HessianRevReader<T> implements ObjectReader<T> {
     /**
      * Different types of tree nodes.
      */
@@ -76,6 +79,29 @@ abstract class HessianRevReader {
     public HessianRevReader() {
         super();
     }
+
+    @Override
+    public final T read(ObjectId id, InputStream rawData) throws IllegalArgumentException {
+        Hessian2Input hin = new Hessian2Input(rawData);
+        try {
+            hin.startMessage();
+            RevObject.TYPE type = RevObject.TYPE.valueOf(hin.readInt());
+            T object = read(id, hin, type);
+            hin.completeMessage();
+            return object;
+        } catch (IOException e) {
+            throw Throwables.propagate(e);
+        } finally {
+            try {
+                hin.close();
+            } catch (IOException e) {
+                throw Throwables.propagate(e);
+            }
+        }
+    }
+
+    protected abstract T read(ObjectId id, Hessian2Input hin, RevObject.TYPE type)
+            throws IOException;
 
     /**
      * Reads the ObjectId content from the given input stream and creates a new ObjectId object from

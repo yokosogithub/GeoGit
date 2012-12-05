@@ -20,7 +20,6 @@ import org.geogit.repository.WorkingTree;
 import org.geogit.storage.CachingObjectDatabaseGetInterceptor;
 import org.geogit.storage.ConfigDatabase;
 import org.geogit.storage.ObjectDatabase;
-import org.geogit.storage.ObjectReader;
 import org.geogit.storage.ObjectSerialisingFactory;
 import org.geogit.storage.RefDatabase;
 import org.geogit.storage.fs.FileObjectDatabase;
@@ -71,8 +70,7 @@ public class GeogitModule extends AbstractModule {
 
         final Method interceptedGettter;
         try {
-            interceptedGettter = ObjectDatabase.class.getMethod("get", ObjectId.class,
-                    ObjectReader.class);
+            interceptedGettter = ObjectDatabase.class.getMethod("get", ObjectId.class, Class.class);
         } catch (Exception e) {
             throw Throwables.propagate(e);
         }
