@@ -12,7 +12,6 @@ import com.google.inject.Binder;
 /**
  * Provides bindings for GeoTools command extensions to the GeoGit command line interface.
  * 
- * @author jgarrett
  * @see PGCommandProxy
  * @see ShpCommandProxy
  */

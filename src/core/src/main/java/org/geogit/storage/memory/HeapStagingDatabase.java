@@ -12,10 +12,12 @@ import java.util.List;
 import java.util.Set;
 
 import org.geogit.api.ObjectId;
+import org.geogit.api.RevObject;
 import org.geogit.storage.AbstractObjectDatabase;
 import org.geogit.storage.ObjectDatabase;
 import org.geogit.storage.ObjectInserter;
 import org.geogit.storage.ObjectReader;
+import org.geogit.storage.ObjectSerialisingFactory;
 import org.geogit.storage.StagingDatabase;
 
 import com.google.common.base.Throwables;
@@ -37,7 +39,9 @@ public class HeapStagingDatabase extends HeapObjectDatabse implements StagingDat
      *        to for objects not found here
      */
     @Inject
-    public HeapStagingDatabase(final ObjectDatabase repositoryDb) {
+    public HeapStagingDatabase(final ObjectDatabase repositoryDb,
+            final ObjectSerialisingFactory serialFactory) {
+        super(serialFactory);
         this.repositoryDb = repositoryDb;
     }
 
@@ -116,11 +120,19 @@ public class HeapStagingDatabase extends HeapObjectDatabse implements StagingDat
      * @return the object, as read in from the {@link ObjectReader}
      */
     @Override
-    public <T> T get(ObjectId id, ObjectReader<T> reader) {
+    public <T extends RevObject> T get(ObjectId id, Class<T> type) {
         if (super.exists(id)) {
-            return super.get(id, reader);
+            return super.get(id, type);
         }
-        return repositoryDb.get(id, reader);
+        return repositoryDb.get(id, type);
+    }
+
+    @Override
+    public RevObject get(ObjectId id) {
+        if (super.exists(id)) {
+            return super.get(id);
+        }
+        return repositoryDb.get(id);
     }
 
     /**

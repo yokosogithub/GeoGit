@@ -17,7 +17,6 @@ import org.geogit.api.RevObject.TYPE;
 import org.geogit.api.RevTree;
 import org.geogit.api.RevTreeBuilder;
 import org.geogit.storage.ObjectDatabase;
-import org.geogit.storage.ObjectSerialisingFactory;
 import org.geogit.storage.StagingDatabase;
 
 import com.google.common.base.Optional;
@@ -40,8 +39,6 @@ import com.google.inject.Inject;
  * @see FindTreeChild
  */
 public class WriteBack extends AbstractGeoGitOp<ObjectId> {
-
-    private final ObjectSerialisingFactory serialFactory;
 
     private final ObjectDatabase odb;
 
@@ -67,15 +64,12 @@ public class WriteBack extends AbstractGeoGitOp<ObjectId> {
      * 
      * @param odb the object database to use
      * @param index the staging database to use
-     * @param serialFactory the serialization factory
      */
     @Inject
-    public WriteBack(ObjectDatabase odb, StagingDatabase index,
-            ObjectSerialisingFactory serialFactory) {
+    public WriteBack(ObjectDatabase odb, StagingDatabase index) {
         this.odb = odb;
         this.index = index;
         this.targetdb = odb;
-        this.serialFactory = serialFactory;
     }
 
     /**
@@ -190,14 +184,14 @@ public class WriteBack extends AbstractGeoGitOp<ObjectId> {
             final RevTree childTree, final String childPath, final ObjectDatabase targetDatabase) {
 
         final ObjectId treeId = childTree.getId();
-        targetDatabase.put(treeId, serialFactory.createRevTreeWriter(childTree));
+        targetDatabase.put(childTree);
 
         final boolean isDirectChild = NodeRef.isDirectChild(ancestorPath, childPath);
         if (isDirectChild) {
             ObjectId metadataId = ObjectId.NULL;
             ancestor.put(new Node(childPath, treeId, metadataId, TYPE.TREE));
             RevTree newAncestor = ancestor.build();
-            targetDatabase.put(newAncestor.getId(), serialFactory.createRevTreeWriter(newAncestor));
+            targetDatabase.put(newAncestor);
             return newAncestor.getId();
         }
 
@@ -222,7 +216,7 @@ public class WriteBack extends AbstractGeoGitOp<ObjectId> {
         if (treeId.isNull()) {
             return RevTree.EMPTY;
         }
-        RevTree revTree = targetdb.get(treeId, serialFactory.createRevTreeReader());
+        RevTree revTree = targetdb.getTree(treeId);
         return revTree;
     }
 
@@ -231,7 +225,13 @@ public class WriteBack extends AbstractGeoGitOp<ObjectId> {
         FindTreeChild cmd = command(FindTreeChild.class).setIndex(true).setParent(realParent)
                 .setChildPath(childPath);
 
-        return cmd.call();
+        Optional<NodeRef> nodeRef = cmd.call();
+        if (nodeRef.isPresent()) {
+            return Optional.of(nodeRef.get().getNode());
+        } else {
+            return Optional.absent();
+        }
+
     }
 
 }

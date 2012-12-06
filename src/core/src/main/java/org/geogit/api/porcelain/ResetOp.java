@@ -31,7 +31,6 @@ import com.google.inject.Inject;
  * 
  * Reset current HEAD to the specified state.
  * 
- * @author jgarrett
  */
 public class ResetOp extends AbstractGeoGitOp<Boolean> {
 

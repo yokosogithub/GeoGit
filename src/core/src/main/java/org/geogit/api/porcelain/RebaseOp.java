@@ -25,7 +25,6 @@ import org.geogit.api.plumbing.WriteTree;
 import org.geogit.api.plumbing.diff.DiffEntry;
 import org.geogit.repository.Repository;
 import org.geogit.repository.StagingArea;
-import org.geogit.storage.ObjectInserter;
 import org.opengis.util.ProgressListener;
 
 import com.google.common.base.Optional;
@@ -38,9 +37,6 @@ import com.google.inject.Inject;
  * 
  * Rebase the current head to the included branch head.
  * 
- * @author jgarrett
- * @author jhudson
- * @since 1.2.0
  */
 public class RebaseOp extends AbstractGeoGitOp<Boolean> {
 
@@ -181,9 +177,8 @@ public class RebaseOp extends AbstractGeoGitOp<Boolean> {
             builder.setTreeId(newTreeId);
             builder.setTimestamp(platform.currentTimeMillis());
 
-            ObjectInserter objectInserter = repository.newObjectInserter();
             RevCommit newCommit = builder.build();
-            objectInserter.insert(newCommit.getId(), repository.newCommitWriter(newCommit));
+            repository.getObjectDatabase().put(newCommit);
 
             rebaseHead = newCommit.getId();
 

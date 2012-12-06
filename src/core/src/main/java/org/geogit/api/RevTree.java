@@ -7,7 +7,6 @@ package org.geogit.api;
 import java.util.Iterator;
 
 import org.geogit.storage.ObjectDatabase;
-import org.geogit.storage.hessian.HessianFactory;
 
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
@@ -56,14 +55,9 @@ public interface RevTree extends RevObject {
             return ObjectId.NULL;
         }
 
-        // @Override
-        // public BigInteger size() {
-        // return BigInteger.ZERO;
-        // }
-
         @Override
         public RevTreeBuilder builder(ObjectDatabase target) {
-            return new RevTreeBuilder(target, new HessianFactory());
+            return new RevTreeBuilder(target);
         }
 
         @Override

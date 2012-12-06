@@ -11,10 +11,12 @@ import java.util.Map;
 import org.geogit.api.ObjectId;
 import org.geogit.storage.AbstractObjectDatabase;
 import org.geogit.storage.ObjectDatabase;
+import org.geogit.storage.ObjectSerialisingFactory;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.inject.Inject;
 
 /**
  * Provides an implementation of a GeoGit object database that utilizes the heap for the storage of
@@ -25,6 +27,11 @@ import com.google.common.collect.Maps;
 public class HeapObjectDatabse extends AbstractObjectDatabase implements ObjectDatabase {
 
     private Map<ObjectId, byte[]> objects;
+
+    @Inject
+    public HeapObjectDatabse(final ObjectSerialisingFactory sfac) {
+        super(sfac);
+    }
 
     /**
      * Closes the database.

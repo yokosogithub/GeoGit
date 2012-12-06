@@ -24,8 +24,6 @@ import org.geogit.api.plumbing.diff.DepthTreeIterator.Strategy;
 import org.geogit.repository.DepthSearch;
 import org.geogit.storage.NodePathStorageOrder;
 import org.geogit.storage.ObjectDatabase;
-import org.geogit.storage.ObjectReader;
-import org.geogit.storage.ObjectSerialisingFactory;
 
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
@@ -47,8 +45,6 @@ public class RevTreeBuilder {
 
     private final ObjectDatabase db;
 
-    protected final ObjectSerialisingFactory serialFactory;
-
     private final Set<String> deletes;
 
     private final Map<String, Node> treeChanges;
@@ -67,29 +63,25 @@ public class RevTreeBuilder {
      * @param db
      * @param serialFactory
      */
-    public RevTreeBuilder(ObjectDatabase db, final ObjectSerialisingFactory serialFactory) {
-        this(db, serialFactory, null);
+    public RevTreeBuilder(ObjectDatabase db) {
+        this(db, null);
     }
 
     /**
      * Copy constructor with tree depth
      */
-    public RevTreeBuilder(ObjectDatabase db, final ObjectSerialisingFactory serialFactory,
-            @Nullable final RevTree copy) {
-        this(db, serialFactory, copy, 0);
+    public RevTreeBuilder(ObjectDatabase db, @Nullable final RevTree copy) {
+        this(db, copy, 0);
     }
 
     /**
      * Copy constructor
      */
-    public RevTreeBuilder(ObjectDatabase db, final ObjectSerialisingFactory serialFactory,
-            @Nullable final RevTree copy, int depth) {
+    public RevTreeBuilder(ObjectDatabase db, @Nullable final RevTree copy, int depth) {
 
         checkNotNull(db);
-        checkNotNull(serialFactory);
         this.db = db;
         this.depth = depth;
-        this.serialFactory = serialFactory;
 
         this.deletes = Sets.newHashSet();
         this.treeChanges = Maps.newHashMap();
@@ -136,8 +128,7 @@ public class RevTreeBuilder {
     }
 
     private RevTree loadTree(final ObjectId subtreeId) {
-        ObjectReader<RevTree> reader = serialFactory.createRevTreeReader();
-        RevTree subtree = db.get(subtreeId, reader);
+        RevTree subtree = db.getTree(subtreeId);
         return subtree;
     }
 
@@ -165,7 +156,7 @@ public class RevTreeBuilder {
 
         RevTree subtree = loadTree(subtreeId);
 
-        DepthSearch depthSearch = new DepthSearch(db, serialFactory);
+        DepthSearch depthSearch = new DepthSearch(db);
         Optional<Node> node = depthSearch.getDirectChild(subtree, key, depth + 1);
 
         if (node.isPresent()) {
@@ -284,10 +275,9 @@ public class RevTreeBuilder {
                     final Collection<Node> bucketEntries = changesByBucket.removeAll(bucket);
                     final ObjectId subtreeId = bucketTreesByBucket.get(bucket);
                     if (subtreeId == null) {
-                        subtreeBuilder = new RevTreeBuilder(db, serialFactory, null, childDepth);
+                        subtreeBuilder = new RevTreeBuilder(db, null, childDepth);
                     } else {
-                        subtreeBuilder = new RevTreeBuilder(db, serialFactory, loadTree(subtreeId),
-                                childDepth);
+                        subtreeBuilder = new RevTreeBuilder(db, loadTree(subtreeId), childDepth);
                     }
                     for (String deleted : deletes) {
                         Integer bucketOfDelete = computeBucket(deleted);
@@ -304,9 +294,8 @@ public class RevTreeBuilder {
                 if (subtree.isEmpty()) {
                     bucketTreesByBucket.remove(bucket);
                 } else {
-                    final ObjectId newSubtreeId = subtree.getId();
-                    db.put(newSubtreeId, serialFactory.createRevTreeWriter(subtree));
-                    bucketTreesByBucket.put(bucket, newSubtreeId);
+                    db.put(subtree);
+                    bucketTreesByBucket.put(bucket, subtree.getId());
                 }
             }
         } catch (RuntimeException e) {

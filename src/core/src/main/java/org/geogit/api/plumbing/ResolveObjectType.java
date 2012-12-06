@@ -9,7 +9,6 @@ import org.geogit.api.AbstractGeoGitOp;
 import org.geogit.api.ObjectId;
 import org.geogit.api.RevObject;
 import org.geogit.api.RevObject.TYPE;
-import org.geogit.storage.ObjectSerialisingFactory;
 import org.geogit.storage.StagingDatabase;
 
 import com.google.inject.Inject;
@@ -21,20 +20,16 @@ public class ResolveObjectType extends AbstractGeoGitOp<RevObject.TYPE> {
 
     private StagingDatabase indexDb;
 
-    private ObjectSerialisingFactory serialFactory;
-
     private ObjectId oid;
 
     /**
      * Constructs a new instance of {@code ResolveObjectType} using the specified parameters.
      * 
      * @param indexDb the staging database
-     * @param serialFactory the serialization factory
      */
     @Inject
-    public ResolveObjectType(StagingDatabase indexDb, ObjectSerialisingFactory serialFactory) {
+    public ResolveObjectType(StagingDatabase indexDb) {
         this.indexDb = indexDb;
-        this.serialFactory = serialFactory;
     }
 
     /**
@@ -54,10 +49,7 @@ public class ResolveObjectType extends AbstractGeoGitOp<RevObject.TYPE> {
      */
     @Override
     public TYPE call() throws IllegalArgumentException {
-        Object o = indexDb.get(oid, serialFactory.createObjectTypeReader());
-        if (o instanceof RevObject) {
-            return ((RevObject) o).getType();
-        }
-        return (RevObject.TYPE) o;
+        RevObject o = indexDb.get(oid);
+        return o.getType();
     }
 }

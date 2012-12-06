@@ -12,7 +12,6 @@ import java.util.List;
 
 import jline.console.ConsoleReader;
 
-import org.geogit.api.Node;
 import org.geogit.api.NodeRef;
 import org.geogit.api.RevObject.TYPE;
 import org.geogit.api.plumbing.FindTreeChild;
@@ -64,7 +63,7 @@ public class Remove extends AbstractCommand implements CLICommand {
         Repository repository = cli.getGeogit().getRepository();
         for (String pathToRemove : pathsToRemove) {
             NodeRef.checkValidPath(pathToRemove);
-            Optional<Node> node = repository.command(FindTreeChild.class)
+            Optional<NodeRef> node = repository.command(FindTreeChild.class)
                     .setParent(repository.getWorkingTree().getTree()).setIndex(true)
                     .setChildPath(pathToRemove).call();
             Preconditions.checkState(node.isPresent(),

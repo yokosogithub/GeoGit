@@ -19,7 +19,6 @@ import com.google.common.collect.Ordering;
 /**
  * Provides a method of building a {@link RevFeature} from a {@link Feature}.
  * 
- * @author jgarrett
  * @see RevFeature
  * @see Feature
  */
@@ -56,6 +55,6 @@ public final class RevFeatureBuilder {
             valuesBuilder.add(Optional.fromNullable(prop.getValue()));
         }
 
-        return new RevFeature(valuesBuilder.build());
+        return RevFeature.build(valuesBuilder.build());
     }
 }

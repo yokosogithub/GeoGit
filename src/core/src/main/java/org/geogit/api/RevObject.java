@@ -4,10 +4,12 @@
  */
 package org.geogit.api;
 
+import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableMap;
+
 /**
  * Base object type accessed during revision walking.
  * 
- * @author groldan
  * @see RevCommit
  * @see RevTree
  * @see RevFeature
@@ -24,11 +26,21 @@ public interface RevObject {
             public int value() {
                 return 0;
             }
+
+            @Override
+            public Class<RevCommit> binding() {
+                return RevCommit.class;
+            }
         },
         TREE {
             @Override
             public int value() {
                 return 1;
+            }
+
+            @Override
+            public Class<RevTree> binding() {
+                return RevTree.class;
             }
         },
         FEATURE {
@@ -36,11 +48,21 @@ public interface RevObject {
             public int value() {
                 return 2;
             }
+
+            @Override
+            public Class<RevFeature> binding() {
+                return RevFeature.class;
+            }
         },
         TAG {
             @Override
             public int value() {
                 return 3;
+            }
+
+            @Override
+            public Class<RevTag> binding() {
+                return RevTag.class;
             }
         },
         FEATURETYPE {
@@ -48,12 +70,31 @@ public interface RevObject {
             public int value() {
                 return 4;
             }
+
+            @Override
+            public Class<RevFeatureType> binding() {
+                return RevFeatureType.class;
+            }
         };
 
         public abstract int value();
 
+        public abstract Class<? extends RevObject> binding();
+
         public static TYPE valueOf(final int value) {
             return TYPE.values()[value];
+        }
+
+        private static final ImmutableMap<Class<? extends RevObject>, Integer> byBinding = ImmutableMap
+                .of(COMMIT.binding(), COMMIT.value(), TREE.binding(), TREE.value(),
+                        FEATURE.binding(), FEATURE.value(), TAG.binding(), TAG.value(),
+                        FEATURETYPE.binding(), FEATURETYPE.value());
+
+        public static TYPE valueOf(final Class<? extends RevObject> binding) {
+            Preconditions.checkNotNull(binding);
+            Integer value = byBinding.get(binding);
+            Preconditions.checkNotNull(value);
+            return valueOf(value);
         }
     }
 

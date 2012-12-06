@@ -39,7 +39,6 @@ import com.google.inject.Inject;
  * </ul>
  * </p>
  * 
- * @author groldan
  * 
  */
 public class LogOp extends AbstractGeoGitOp<Iterator<RevCommit>> {
@@ -195,8 +194,6 @@ public class LogOp extends AbstractGeoGitOp<Iterator<RevCommit>> {
 
     /**
      * Iterator that traverses the commit history backwards starting from the provided commmit
-     * 
-     * @author groldan
      * 
      */
     private static class LinearHistoryIterator extends AbstractIterator<RevCommit> {

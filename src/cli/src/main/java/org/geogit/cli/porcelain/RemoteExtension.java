@@ -18,7 +18,6 @@ import com.beust.jcommander.Parameters;
  * <li> {@code geogit remote <command> <args>...}
  * </ul>
  * 
- * @author jgarrett
  * @see RemoteAdd
  * @see RemoteRemove
  * @see RemoteList

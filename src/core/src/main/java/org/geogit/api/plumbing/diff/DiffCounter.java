@@ -20,7 +20,6 @@ import org.geogit.api.RevObject.TYPE;
 import org.geogit.api.RevTree;
 import org.geogit.storage.NodeStorageOrder;
 import org.geogit.storage.ObjectDatabase;
-import org.geogit.storage.ObjectSerialisingFactory;
 
 import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
@@ -52,18 +51,13 @@ public class DiffCounter implements Supplier<Long> {
     @Nonnull
     private ObjectDatabase objectDb;
 
-    private ObjectSerialisingFactory serialFactory;
-
-    public DiffCounter(final ObjectDatabase db, final RevTree fromRootTree,
-            final RevTree toRootTree, final ObjectSerialisingFactory serialFactory) {
+    public DiffCounter(final ObjectDatabase db, final RevTree fromRootTree, final RevTree toRootTree) {
         Preconditions.checkNotNull(db);
         Preconditions.checkNotNull(fromRootTree);
         Preconditions.checkNotNull(toRootTree);
-        Preconditions.checkNotNull(serialFactory);
         this.objectDb = db;
         this.fromRootTree = fromRootTree;
         this.toRootTree = toRootTree;
-        this.serialFactory = serialFactory;
     }
 
     @Override
@@ -307,7 +301,7 @@ public class DiffCounter implements Supplier<Long> {
         if (treeId.isNull()) {
             return RevTree.EMPTY;
         }
-        RevTree tree = objectDb.get(treeId, serialFactory.createRevTreeReader());
+        RevTree tree = objectDb.get(treeId, RevTree.class);
         return tree;
     }
 

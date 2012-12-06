@@ -269,7 +269,7 @@ public class GeogitCLI {
                     consoleReader.flush();
                 } else if (e instanceof IllegalArgumentException
                         || e instanceof IllegalStateException) {
-                    e.printStackTrace();
+                    // e.printStackTrace();
                     consoleReader.println(Optional.fromNullable(e.getMessage()).or("Uknown error"));
                     consoleReader.flush();
                 } else {

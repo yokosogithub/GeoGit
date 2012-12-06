@@ -137,6 +137,8 @@ public class InitSteps extends AbstractGeogitFunctionalTest {
         assertNotNull(output.get(0));
         assertTrue(output.get(0), output.get(0).startsWith("Initialized"));
         geogit = geogitCLI.getGeogit();
+        runCommand("config", "--global", "user.name", "John Doe");
+        runCommand("config", "--global", "user.email", "JohnDoe@example.com");
         insertAndAdd(points1);
         runCommand(("commit -m Commit1").split(" "));
         runCommand(("branch -c branch1").split(" "));

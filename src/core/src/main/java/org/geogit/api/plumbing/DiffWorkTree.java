@@ -17,7 +17,6 @@ import org.geogit.api.plumbing.diff.DiffEntry;
 import org.geogit.api.plumbing.diff.DiffTreeWalk;
 import org.geogit.repository.StagingArea;
 import org.geogit.repository.WorkingTree;
-import org.geogit.storage.ObjectSerialisingFactory;
 
 import com.google.common.base.Optional;
 import com.google.inject.Inject;
@@ -34,8 +33,6 @@ public class DiffWorkTree extends AbstractGeoGitOp<Iterator<DiffEntry>> {
 
     private String pathFilter;
 
-    private ObjectSerialisingFactory serialFactory;
-
     private String refSpec;
 
     /**
@@ -43,14 +40,11 @@ public class DiffWorkTree extends AbstractGeoGitOp<Iterator<DiffEntry>> {
      * 
      * @param index the staging area
      * @param workTree the working tree
-     * @param serialFactory the serialization factory
      */
     @Inject
-    public DiffWorkTree(StagingArea index, WorkingTree workTree,
-            ObjectSerialisingFactory serialFactory) {
+    public DiffWorkTree(StagingArea index, WorkingTree workTree) {
         this.index = index;
         this.workTree = workTree;
-        this.serialFactory = serialFactory;
     }
 
     /**
@@ -88,8 +82,7 @@ public class DiffWorkTree extends AbstractGeoGitOp<Iterator<DiffEntry>> {
         final RevTree oldTree = ref.isPresent() ? getOldTree() : index.getTree();
         final RevTree newTree = workTree.getTree();
 
-        DiffTreeWalk treeWalk = new DiffTreeWalk(index.getDatabase(), oldTree, newTree,
-                serialFactory);
+        DiffTreeWalk treeWalk = new DiffTreeWalk(index.getDatabase(), oldTree, newTree);
         treeWalk.setFilter(pathFilter);
         return treeWalk.get();
     }

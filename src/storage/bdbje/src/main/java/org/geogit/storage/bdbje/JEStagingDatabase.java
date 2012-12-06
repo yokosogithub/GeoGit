@@ -11,11 +11,15 @@ import java.util.List;
 import java.util.Set;
 
 import org.geogit.api.ObjectId;
+import org.geogit.api.RevCommit;
+import org.geogit.api.RevFeature;
+import org.geogit.api.RevFeatureType;
+import org.geogit.api.RevObject;
+import org.geogit.api.RevTag;
 import org.geogit.api.RevTree;
 import org.geogit.storage.ObjectDatabase;
 import org.geogit.storage.ObjectInserter;
-import org.geogit.storage.ObjectReader;
-import org.geogit.storage.ObjectWriter;
+import org.geogit.storage.ObjectSerialisingFactory;
 import org.geogit.storage.StagingDatabase;
 
 import com.google.inject.Inject;
@@ -44,8 +48,6 @@ import com.sleepycat.je.Environment;
  * A diff operation between the repository root tree and the index staged root tree results in the
  * list of staged objects.
  * 
- * @author groldan
- * 
  */
 public class JEStagingDatabase implements ObjectDatabase, StagingDatabase {
 
@@ -64,13 +66,17 @@ public class JEStagingDatabase implements ObjectDatabase, StagingDatabase {
      */
     private ObjectDatabase repositoryDb;
 
+    private ObjectSerialisingFactory sfac;
+
     /**
      * @param referenceDatabase the repository reference database, used to get the head re
      * @param repoDb
      * @param stagingDb
      */
     @Inject
-    public JEStagingDatabase(final ObjectDatabase repositoryDb, final EnvironmentBuilder envBuilder) {
+    public JEStagingDatabase(final ObjectSerialisingFactory sfac,
+            final ObjectDatabase repositoryDb, final EnvironmentBuilder envBuilder) {
+        this.sfac = sfac;
         this.repositoryDb = repositoryDb;
         this.envProvider = envBuilder;
     }
@@ -87,7 +93,7 @@ public class JEStagingDatabase implements ObjectDatabase, StagingDatabase {
         }
         envProvider.setRelativePath("index");
         Environment environment = envProvider.get();
-        stagingDb = new JEObjectDatabase(environment);
+        stagingDb = new JEObjectDatabase(sfac, environment);
         stagingDb.open();
         {
             DatabaseConfig stagedDbConfig = new DatabaseConfig();
@@ -133,16 +139,19 @@ public class JEStagingDatabase implements ObjectDatabase, StagingDatabase {
     }
 
     @Override
-    public <T> T get(ObjectId id, ObjectReader<T> reader) {
+    public <T extends RevObject> T get(ObjectId id, Class<T> type) {
         if (stagingDb.exists(id)) {
-            return stagingDb.get(id, reader);
+            return stagingDb.get(id, type);
         }
-        return repositoryDb.get(id, reader);
+        return repositoryDb.get(id, type);
     }
 
     @Override
-    public boolean put(ObjectId id, ObjectWriter<?> writer) {
-        return stagingDb.put(id, writer);
+    public RevObject get(ObjectId id) {
+        if (stagingDb.exists(id)) {
+            return stagingDb.get(id);
+        }
+        return repositoryDb.get(id);
     }
 
     @Override
@@ -153,6 +162,41 @@ public class JEStagingDatabase implements ObjectDatabase, StagingDatabase {
     @Override
     public boolean delete(ObjectId objectId) {
         return stagingDb.delete(objectId);
+    }
+
+    @Override
+    public boolean put(RevObject object) {
+        return stagingDb.put(object);
+    }
+
+    @Override
+    public boolean put(ObjectId objectId, InputStream raw) {
+        return stagingDb.put(objectId, raw);
+    }
+
+    @Override
+    public RevTree getTree(ObjectId id) {
+        return get(id, RevTree.class);
+    }
+
+    @Override
+    public RevFeature getFeature(ObjectId id) {
+        return get(id, RevFeature.class);
+    }
+
+    @Override
+    public RevFeatureType getFeatureType(ObjectId id) {
+        return get(id, RevFeatureType.class);
+    }
+
+    @Override
+    public RevCommit getCommit(ObjectId id) {
+        return get(id, RevCommit.class);
+    }
+
+    @Override
+    public RevTag getTag(ObjectId id) {
+        return get(id, RevTag.class);
     }
 
 }

@@ -23,8 +23,6 @@ import com.beust.jcommander.Parameters;
  * 
  * PostGIS CLI proxy for {@link ImportOp}
  * 
- * @author groldan
- * @author jgarrett
  * @see ImportOp
  */
 @Parameters(commandNames = "import", commandDescription = "Import Shapefile")

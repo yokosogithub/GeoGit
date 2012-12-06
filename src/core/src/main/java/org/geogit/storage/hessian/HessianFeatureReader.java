@@ -5,7 +5,6 @@
 package org.geogit.storage.hessian;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.Serializable;
 import java.math.BigDecimal;
 import java.math.BigInteger;
@@ -14,12 +13,13 @@ import java.util.UUID;
 
 import org.geogit.api.ObjectId;
 import org.geogit.api.RevFeature;
+import org.geogit.api.RevObject;
 import org.geogit.storage.EntityType;
 import org.geogit.storage.ObjectReader;
 
 import com.caucho.hessian.io.Hessian2Input;
 import com.google.common.base.Optional;
-import com.google.common.base.Throwables;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.geom.GeometryFactory;
@@ -31,9 +31,8 @@ import com.vividsolutions.jts.io.WKBReader;
 /**
  * Reads features from a binary encoded stream. Refer to HessianFeatureWriter for encoding details.
  * 
- * @author mleslie
  */
-class HessianFeatureReader implements ObjectReader<RevFeature> {
+class HessianFeatureReader extends HessianRevReader<RevFeature> implements ObjectReader<RevFeature> {
 
     private static GeometryFactory geometryFactory = new GeometryFactory();
 
@@ -61,27 +60,19 @@ class HessianFeatureReader implements ObjectReader<RevFeature> {
      * @throws IllegalArgumentException if the provided stream does not represent a
      *         {@code RevFeature}
      */
-    public RevFeature read(ObjectId id, InputStream rawData) throws IllegalArgumentException {
-        try {
-            Hessian2Input in = new Hessian2Input(rawData);
-            in.startMessage();
-            BlobType type = BlobType.fromValue(in.readInt());
-            if (type != BlobType.FEATURE) {
-                throw new IllegalArgumentException("Could not parse blob of type " + type
-                        + " as a feature.");
-            }
-            ImmutableList.Builder<Optional<Object>> valuesBuilder = new ImmutableList.Builder<Optional<Object>>();
+    @Override
+    protected RevFeature read(ObjectId id, Hessian2Input hin, RevObject.TYPE type)
+            throws IOException {
+        Preconditions.checkArgument(RevObject.TYPE.FEATURE.equals(type));
 
-            int attrCount = in.readInt();
-            for (int i = 0; i < attrCount; i++) {
-                Object obj = readValue(in);
-                valuesBuilder.add(Optional.fromNullable(obj));
-            }
-            in.completeMessage();
-            return new RevFeature(id, valuesBuilder.build());
-        } catch (Exception e) {
-            throw Throwables.propagate(e);
+        ImmutableList.Builder<Optional<Object>> valuesBuilder = new ImmutableList.Builder<Optional<Object>>();
+
+        int attrCount = hin.readInt();
+        for (int i = 0; i < attrCount; i++) {
+            Object obj = readValue(hin);
+            valuesBuilder.add(Optional.fromNullable(obj));
         }
+        return new RevFeature(id, valuesBuilder.build());
     }
 
     /**

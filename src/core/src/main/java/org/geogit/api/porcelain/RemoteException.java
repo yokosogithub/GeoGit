@@ -3,7 +3,6 @@ package org.geogit.api.porcelain;
 /**
  * Exception thrown by remote commands.
  * 
- * @author jgarrett
  */
 @SuppressWarnings("serial")
 public class RemoteException extends RuntimeException {

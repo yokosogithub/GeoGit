@@ -29,7 +29,6 @@ import com.google.inject.Inject;
 /**
  * Update remote refs along with associated objects.
  * 
- * @author jgarrett
  */
 public class PushOp extends AbstractGeoGitOp<Void> {
 

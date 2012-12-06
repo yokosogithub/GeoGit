@@ -8,12 +8,11 @@ package org.geogit.api.plumbing;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import org.geogit.api.AbstractGeoGitOp;
-import org.geogit.api.Node;
+import org.geogit.api.NodeRef;
 import org.geogit.api.ObjectId;
 import org.geogit.api.RevObject.TYPE;
 import org.geogit.api.RevTree;
 import org.geogit.storage.ObjectDatabase;
-import org.geogit.storage.ObjectSerialisingFactory;
 import org.geogit.storage.StagingDatabase;
 
 import com.google.common.base.Optional;
@@ -45,14 +44,10 @@ public class FindOrCreateSubtree extends AbstractGeoGitOp<RevTree> {
 
     private StagingDatabase index;
 
-    private ObjectSerialisingFactory serialFactory;
-
     @Inject
-    public FindOrCreateSubtree(ObjectDatabase odb, StagingDatabase index,
-            ObjectSerialisingFactory serialFactory) {
+    public FindOrCreateSubtree(ObjectDatabase odb, StagingDatabase index) {
         this.odb = odb;
         this.index = index;
-        this.serialFactory = serialFactory;
     }
 
     /**
@@ -108,17 +103,17 @@ public class FindOrCreateSubtree extends AbstractGeoGitOp<RevTree> {
         if (parentSupplier.get().isPresent()) {
             RevTree parent = parentSupplier.get().get();
 
-            Optional<Node> treeChildRef = command(FindTreeChild.class).setIndex(indexDb)
+            Optional<NodeRef> treeChildRef = command(FindTreeChild.class).setIndex(indexDb)
                     .setParentPath(parentPath).setChildPath(childPath)
                     .setParent(Suppliers.ofInstance(parent)).call();
 
             if (treeChildRef.isPresent()) {
-                Node treeRef = treeChildRef.get();
+                NodeRef treeRef = treeChildRef.get();
                 if (!TYPE.TREE.equals(treeRef.getType())) {
-                    throw new IllegalArgumentException("Object exsits as child of tree "
+                    throw new IllegalArgumentException("Object exists as child of tree "
                             + parent.getId() + " but is not a tree: " + treeChildRef);
                 }
-                subtreeId = treeRef.getObjectId();
+                subtreeId = treeRef.objectId();
             } else {
                 subtreeId = ObjectId.NULL;
             }
@@ -129,7 +124,7 @@ public class FindOrCreateSubtree extends AbstractGeoGitOp<RevTree> {
             return RevTree.EMPTY;
         }
         ObjectDatabase target = indexDb ? index : odb;
-        RevTree tree = target.get(subtreeId, serialFactory.createRevTreeReader());
+        RevTree tree = target.getTree(subtreeId);
         return tree;
     }
 }

@@ -8,6 +8,12 @@ import java.io.InputStream;
 import java.util.List;
 
 import org.geogit.api.ObjectId;
+import org.geogit.api.RevCommit;
+import org.geogit.api.RevFeature;
+import org.geogit.api.RevFeatureType;
+import org.geogit.api.RevObject;
+import org.geogit.api.RevTag;
+import org.geogit.api.RevTree;
 
 /**
  * Provides an interface for implementations of GeoGit object databases.
@@ -56,27 +62,44 @@ public interface ObjectDatabase {
 
     /**
      * Reads an object with the given {@link ObjectId id} out of the database.
-     * 
-     * @param id the id of the object to read
-     * @param reader the reader of the object
-     * @return the object, as read in from the {@link ObjectReader}
      */
-    public <T> T get(final ObjectId id, final ObjectReader<T> reader);
+    public RevObject get(ObjectId id);
+
+    public <T extends RevObject> T get(ObjectId id, Class<T> type);
 
     /**
-     * 
+     * Shortcut for {@link #get(ObjectId, Class)) get(id, RevTree.class)}
      */
-    // public <T> ObjectId put(final ObjectWriter<T> writer);
+    public RevTree getTree(ObjectId id);
+
+    /**
+     * Shortcut for {@link #get(ObjectId, Class)) get(id, RevFeature.class)}
+     */
+    public RevFeature getFeature(ObjectId id);
+
+    /**
+     * Shortcut for {@link #get(ObjectId, Class)) get(id, RevFeatureType.class)}
+     */
+    public RevFeatureType getFeatureType(ObjectId id);
+
+    /**
+     * Shortcut for {@link #get(ObjectId, Class)) get(id, RevCommit.class)}
+     */
+    public RevCommit getCommit(ObjectId id);
+
+    /**
+     * Shortcut for {@link #get(ObjectId, Class)) get(id, RevTag.class)}
+     */
+    public RevTag getTag(ObjectId id);
 
     /**
      * Adds an object to the database with the given {@link ObjectId id}. If an object with the same
      * id already exists, it will not be inserted.
      * 
-     * @param id the id of the object to insert
-     * @param writer the writer for the object
+     * @param object the object to insert, key'ed by its {@link RevObject#getId() id}
      * @return true if the object was inserted, false otherwise
      */
-    public boolean put(final ObjectId id, final ObjectWriter<?> writer);
+    public boolean put(final RevObject object);
 
     /**
      * @return a newly constructed {@link ObjectInserter} for this database
@@ -90,4 +113,12 @@ public interface ObjectDatabase {
      * @return true if the object was deleted, false if it was not found
      */
     public boolean delete(ObjectId objectId);
+
+    /**
+     * @param objectId
+     * @param raw
+     * @return
+     */
+    public boolean put(ObjectId objectId, InputStream raw);
+
 }

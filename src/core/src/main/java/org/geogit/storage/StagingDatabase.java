@@ -7,7 +7,6 @@ package org.geogit.storage;
 /**
  * Provides an interface for GeoGit staging databases.
  * 
- * @author groldan
  */
 public interface StagingDatabase extends ObjectDatabase {
 

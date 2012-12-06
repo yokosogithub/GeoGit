@@ -10,7 +10,6 @@ import com.beust.jcommander.Parameter;
 /**
  * Common arguments for PostGIS porcelain commands.
  * 
- * @author jgarrett
  */
 public class PGCommonArgs {
 

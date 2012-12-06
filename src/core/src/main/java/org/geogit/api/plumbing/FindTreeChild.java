@@ -15,7 +15,6 @@ import org.geogit.api.Ref;
 import org.geogit.api.RevTree;
 import org.geogit.repository.DepthSearch;
 import org.geogit.storage.ObjectDatabase;
-import org.geogit.storage.ObjectSerialisingFactory;
 import org.geogit.storage.StagingDatabase;
 
 import com.google.common.base.Optional;
@@ -24,19 +23,18 @@ import com.google.common.base.Suppliers;
 import com.google.inject.Inject;
 
 /**
- * Finds a {@link Node} by searching the given {@link RevTree} for the given path.
+ * Finds a {@link Node} by searching the given {@link RevTree} for the given path, returns the
+ * {@link NodeRef} that wraps it.
  * 
  * @see DepthSearch
  * @see ResolveTreeish
  * @see RevObjectParse
  */
-public class FindTreeChild extends AbstractGeoGitOp<Optional<Node>> {
+public class FindTreeChild extends AbstractGeoGitOp<Optional<NodeRef>> {
 
     private Supplier<RevTree> parent;
 
     private String childPath;
-
-    private ObjectSerialisingFactory serialFactory;
 
     private String parentPath;
 
@@ -49,20 +47,16 @@ public class FindTreeChild extends AbstractGeoGitOp<Optional<Node>> {
     /**
      * Constructs a new {@code FindTreeChild} instance with the specified parameters.
      * 
-     * @param serialFactory the serialization factory
      * @param odb the repository object database
      * @param index the staging database
      */
     @Inject
-    public FindTreeChild(ObjectSerialisingFactory serialFactory, ObjectDatabase odb,
-            StagingDatabase index) {
-        this.serialFactory = serialFactory;
+    public FindTreeChild(ObjectDatabase odb, StagingDatabase index) {
         this.odb = odb;
         this.index = index;
     }
 
-    public FindTreeChild(ObjectSerialisingFactory serialFactory, ObjectDatabase odb) {
-        this.serialFactory = serialFactory;
+    public FindTreeChild(ObjectDatabase odb) {
         this.odb = odb;
         this.index = odb;
     }
@@ -121,7 +115,7 @@ public class FindTreeChild extends AbstractGeoGitOp<Optional<Node>> {
      *         {@link Optional#absent()} if it wasn't
      */
     @Override
-    public Optional<Node> call() {
+    public Optional<NodeRef> call() {
         checkNotNull(childPath, "childPath");
         final RevTree tree;
         if (parent == null) {
@@ -137,13 +131,10 @@ public class FindTreeChild extends AbstractGeoGitOp<Optional<Node>> {
         final String parentPath = this.parentPath == null ? "" : this.parentPath;
         final ObjectDatabase target = indexDb ? index : odb;
 
-        DepthSearch depthSearch = new DepthSearch(target, serialFactory);
+        DepthSearch depthSearch = new DepthSearch(target);
         Optional<NodeRef> childRef = depthSearch.find(tree, parentPath, path);
-        if (childRef.isPresent()) {
-            return Optional.of(childRef.get().getNode());
-        } else {
-            return Optional.absent();
-        }
+        return childRef;
+
     }
 
 }

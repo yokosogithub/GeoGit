@@ -5,11 +5,11 @@
 package org.geogit.storage.hessian;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.List;
 
 import org.geogit.api.ObjectId;
 import org.geogit.api.RevFeatureType;
+import org.geogit.api.RevObject;
 import org.geogit.storage.GtEntityType;
 import org.geogit.storage.ObjectReader;
 import org.geotools.feature.NameImpl;
@@ -27,12 +27,14 @@ import org.opengis.referencing.crs.CoordinateReferenceSystem;
 import org.opengis.util.InternationalString;
 
 import com.caucho.hessian.io.Hessian2Input;
+import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
 
 /**
  * Reads {@link RevFeatureType feature types} from a binary encoded stream.
  */
-public class HessianSimpleFeatureTypeReader implements ObjectReader<RevFeatureType> {
+public class HessianSimpleFeatureTypeReader extends HessianRevReader<RevFeatureType> implements
+        ObjectReader<RevFeatureType> {
 
     private SimpleFeatureTypeBuilder builder;
 
@@ -57,41 +59,24 @@ public class HessianSimpleFeatureTypeReader implements ObjectReader<RevFeatureTy
      *         {@code RevFeatureType}
      */
     @Override
-    public RevFeatureType read(ObjectId id, InputStream rawData) {
-        Hessian2Input hin = new Hessian2Input(rawData);
-        try {
-            hin.startMessage();
-            BlobType blobType = BlobType.fromValue(hin.readInt());
-            if (blobType != BlobType.FEATURETYPE) {
-                throw new IllegalArgumentException("Could not parse blob of type " + blobType
-                        + " as a feature type.");
-            }
+    protected RevFeatureType read(ObjectId id, Hessian2Input hin, RevObject.TYPE blobType)
+            throws IOException {
+        Preconditions.checkArgument(RevObject.TYPE.FEATURETYPE.equals(blobType));
 
-            String typeNamespace = hin.readString();
-            String typeName = hin.readString();
-            int attributeCount = hin.readInt();
-            SimpleFeatureTypeBuilder builder = new SimpleFeatureTypeBuilder();
-            for (int i = 0; i < attributeCount; i++) {
-                try {
-                    builder.add(readDescriptor(hin));
-                } catch (FactoryException ex) {
-                    Throwables.propagate(ex);
-                }
-            }
-            hin.completeMessage();
-
-            builder.setName(new NameImpl("".equals(typeNamespace) ? null : typeNamespace, typeName));
-            SimpleFeatureType type = builder.buildFeatureType();
-            return new RevFeatureType(type);
-        } catch (Exception e) {
-            throw Throwables.propagate(e);
-        } finally {
+        String typeNamespace = hin.readString();
+        String typeName = hin.readString();
+        int attributeCount = hin.readInt();
+        SimpleFeatureTypeBuilder builder = new SimpleFeatureTypeBuilder();
+        for (int i = 0; i < attributeCount; i++) {
             try {
-                hin.close();
-            } catch (IOException e) {
-                throw Throwables.propagate(e);
+                builder.add(readDescriptor(hin));
+            } catch (FactoryException ex) {
+                Throwables.propagate(ex);
             }
         }
+        builder.setName(new NameImpl("".equals(typeNamespace) ? null : typeNamespace, typeName));
+        SimpleFeatureType type = builder.buildFeatureType();
+        return new RevFeatureType(id, type);
     }
 
     /**

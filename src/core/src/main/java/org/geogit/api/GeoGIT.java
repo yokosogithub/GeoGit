@@ -25,7 +25,6 @@ import com.google.inject.Injector;
  * on them.
  * </p>
  * 
- * @author groldan
  */
 public class GeoGIT {
 

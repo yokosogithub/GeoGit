@@ -10,9 +10,17 @@ import java.io.InputStream;
 import java.util.List;
 
 import org.geogit.api.ObjectId;
+import org.geogit.api.RevCommit;
+import org.geogit.api.RevFeature;
+import org.geogit.api.RevFeatureType;
+import org.geogit.api.RevObject;
+import org.geogit.api.RevObject.TYPE;
+import org.geogit.api.RevTag;
+import org.geogit.api.RevTree;
 
 import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
+import com.google.common.io.ByteStreams;
 import com.google.common.io.Closeables;
 import com.ning.compress.lzf.LZFInputStream;
 import com.ning.compress.lzf.LZFOutputStream;
@@ -24,8 +32,11 @@ import com.ning.compress.lzf.LZFOutputStream;
  */
 public abstract class AbstractObjectDatabase implements ObjectDatabase {
 
-    public AbstractObjectDatabase() {
-        // TODO: use an external cache
+    private ObjectSerialisingFactory serializationFactory;
+
+    public AbstractObjectDatabase(final ObjectSerialisingFactory serializationFactory) {
+        Preconditions.checkNotNull(serializationFactory);
+        this.serializationFactory = serializationFactory;
     }
 
     /**
@@ -62,10 +73,24 @@ public abstract class AbstractObjectDatabase implements ObjectDatabase {
      *      org.geogit.storage.ObjectReader)
      */
     @Override
-    public <T> T get(final ObjectId id, final ObjectReader<T> reader) {
+    public <T extends RevObject> T get(final ObjectId id, final Class<T> clazz) {
         Preconditions.checkNotNull(id, "id");
-        Preconditions.checkNotNull(reader, "reader");
+        Preconditions.checkNotNull(clazz, "class");
 
+        final ObjectReader<T> reader = serializationFactory.createObjectReader(getType(clazz));
+
+        return get(id, reader);
+    }
+
+    @Override
+    public RevObject get(ObjectId id) {
+        Preconditions.checkNotNull(id, "id");
+
+        final ObjectReader<RevObject> reader = serializationFactory.createObjectReader();
+        return get(id, reader);
+    }
+
+    private <T extends RevObject> T get(final ObjectId id, final ObjectReader<T> reader) {
         InputStream raw = getRaw(id);
         T object;
         try {
@@ -74,6 +99,35 @@ public abstract class AbstractObjectDatabase implements ObjectDatabase {
             Closeables.closeQuietly(raw);
         }
         return object;
+    }
+
+    @Override
+    public RevTree getTree(ObjectId id) {
+        return get(id, RevTree.class);
+    }
+
+    @Override
+    public RevFeature getFeature(ObjectId id) {
+        return get(id, RevFeature.class);
+    }
+
+    @Override
+    public RevFeatureType getFeatureType(ObjectId id) {
+        return get(id, RevFeatureType.class);
+    }
+
+    @Override
+    public RevCommit getCommit(ObjectId id) {
+        return get(id, RevCommit.class);
+    }
+
+    @Override
+    public RevTag getTag(ObjectId id) {
+        return get(id, RevTag.class);
+    }
+
+    private RevObject.TYPE getType(Class<? extends RevObject> clazz) {
+        return TYPE.valueOf(clazz);
     }
 
     /**
@@ -95,24 +149,46 @@ public abstract class AbstractObjectDatabase implements ObjectDatabase {
 
     protected abstract InputStream getRawInternal(ObjectId id) throws IllegalArgumentException;
 
-    /**
-     * @see org.geogit.storage.ObjectDatabase#put(org.geogit.api.ObjectId,
-     *      org.geogit.storage.ObjectWriter)
-     */
     @Override
-    public final boolean put(final ObjectId id, final ObjectWriter<?> writer) {
+    public boolean put(ObjectId objectId, InputStream raw) {
+        Preconditions.checkNotNull(objectId);
+        Preconditions.checkNotNull(raw);
+        Preconditions.checkArgument(!objectId.isNull(), "ObjectId is NULL");
+
+        ByteArrayOutputStream rawOut = new ByteArrayOutputStream();
+        LZFOutputStream cOut = new LZFOutputStream(rawOut);
+
+        try {
+            ByteStreams.copy(raw, cOut);
+            cOut.flush();
+            cOut.close();
+        } catch (IOException e) {
+            throw Throwables.propagate(e);
+        }
+
+        final byte[] rawData = rawOut.toByteArray();
+        final boolean inserted = putInternal(objectId, rawData);
+        return inserted;
+    }
+
+    @Override
+    public final boolean put(final RevObject object) {
+        Preconditions.checkNotNull(object);
+        Preconditions.checkArgument(!object.getId().isNull(), "ObjectId is NULL %s", object);
+
+        final ObjectId id = object.getId();
+        ObjectWriter<RevObject> writer = serializationFactory.createObjectWriter(object.getType());
+
         ByteArrayOutputStream rawOut = new ByteArrayOutputStream();
         LZFOutputStream cOut = new LZFOutputStream(rawOut);
         try {
-            writer.write(cOut);
+            writer.write(object, cOut);
         } catch (IOException e) {
             throw Throwables.propagate(e);
         } finally {
             try {
                 cOut.flush();
                 cOut.close();
-                rawOut.flush();
-                rawOut.close();
             } catch (Exception e) {
                 throw Throwables.propagate(e);
             }

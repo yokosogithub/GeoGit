@@ -24,7 +24,6 @@ import com.google.inject.Inject;
 /**
  * Clones a remote repository to a given directory.
  * 
- * @author jgarrett
  */
 public class CloneOp extends AbstractGeoGitOp<Void> {
 

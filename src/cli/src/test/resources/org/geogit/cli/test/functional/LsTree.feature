@@ -44,7 +44,7 @@ Scenario: Show a verbose list of features in a path
       And I stage 6 features
      When I run the command "ls-tree -v Points"
      Then the response should not contain "tree"
-     Then the response should contain "Points/Points.1"    
+     Then the response should contain "Points.1"    
      
      
 Scenario: Show a list of features using STAGE_HEAD as non-recursively, including trees
@@ -77,8 +77,8 @@ Scenario: Show a list of features in a path, using HEAD as origin
       And I stage 6 features
       And I run the command "commit -m Test"
      When I run the command "ls-tree HEAD:Points"
-     Then the response should contain "Points/Points.1" 
-     Then the response should not contain "Lines/Lines.1"        
+     Then the response should contain "Points.1" 
+     Then the response should not contain "Lines.1"        
      
 Scenario: Show a list from an empty directory
     Given I am in an empty directory

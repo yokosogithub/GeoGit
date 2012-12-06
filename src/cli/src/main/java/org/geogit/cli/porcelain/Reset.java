@@ -62,7 +62,6 @@ import com.google.common.base.Suppliers;
  * <li> {@code geogit reset --(hard|soft|mixed) [<commit>]}
  * </ul>
  * 
- * @author jgarrett
  * @see ResetOp
  */
 @Parameters(commandNames = { "reset" }, commandDescription = "Reset current HEAD to the specified state, optionally modifying index and working tree to match")

@@ -10,8 +10,6 @@ import static org.mockito.Mockito.when;
 
 import java.io.File;
 
-import javax.xml.namespace.QName;
-
 import jline.UnsupportedTerminal;
 import jline.console.ConsoleReader;
 
@@ -27,6 +25,7 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.junit.rules.TemporaryFolder;
+import org.opengis.feature.type.Name;
 
 public class ImportOpTest {
 
@@ -172,7 +171,7 @@ public class ImportOpTest {
     @Test
     public void testDeleteException() throws Exception {
         WorkingTree workTree = mock(WorkingTree.class);
-        doThrow(new Exception("Exception")).when(workTree).delete(any(QName.class));
+        doThrow(new Exception("Exception")).when(workTree).delete(any(Name.class));
         ImportOp importOp = new ImportOp(workTree);
         importOp.setDataStore(TestHelper.createTestFactory().createDataStore(null));
         importOp.setAll(true);

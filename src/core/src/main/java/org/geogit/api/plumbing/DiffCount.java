@@ -17,7 +17,6 @@ import org.geogit.api.RevTree;
 import org.geogit.api.plumbing.diff.DiffCounter;
 import org.geogit.api.plumbing.diff.DiffEntry;
 import org.geogit.api.plumbing.diff.DiffTreeWalk;
-import org.geogit.storage.ObjectSerialisingFactory;
 import org.geogit.storage.StagingDatabase;
 
 import com.google.common.base.Optional;
@@ -35,16 +34,13 @@ public class DiffCount extends AbstractGeoGitOp<Long> {
 
     private String pathFilter;
 
-    private ObjectSerialisingFactory serialFactory;
-
     private String oldRefSpec;
 
     private String newRefSpec;
 
     @Inject
-    public DiffCount(StagingDatabase index, ObjectSerialisingFactory serialFactory) {
+    public DiffCount(StagingDatabase index) {
         this.index = index;
-        this.serialFactory = serialFactory;
     }
 
     public DiffCount setOldVersion(@Nullable String refSpec) {
@@ -76,10 +72,10 @@ public class DiffCount extends AbstractGeoGitOp<Long> {
 
         Long diffCount;
         if (null == pathFilter) {
-            DiffCounter counter = new DiffCounter(index, oldTree, newTree, serialFactory);
+            DiffCounter counter = new DiffCounter(index, oldTree, newTree);
             diffCount = counter.get();
         } else {
-            DiffTreeWalk treeWalk = new DiffTreeWalk(index, oldTree, newTree, serialFactory);
+            DiffTreeWalk treeWalk = new DiffTreeWalk(index, oldTree, newTree);
             treeWalk.setFilter(pathFilter);
             Iterator<DiffEntry> iterator = treeWalk.get();
             long count = 0;

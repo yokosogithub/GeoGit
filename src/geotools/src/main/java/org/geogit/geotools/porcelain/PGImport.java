@@ -24,7 +24,6 @@ import com.beust.jcommander.Parameters;
  * 
  * PostGIS CLI proxy for {@link ImportOp}
  * 
- * @author jgarrett
  * @see ImportOp
  */
 @Parameters(commandNames = "import", commandDescription = "Import PostGIS database")

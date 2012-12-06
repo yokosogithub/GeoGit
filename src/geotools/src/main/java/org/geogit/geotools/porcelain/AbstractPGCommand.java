@@ -23,7 +23,6 @@ import com.beust.jcommander.internal.Maps;
 /**
  * A template for PostGIS commands; provides out of the box support for the --help argument so far.
  * 
- * @author jgarrett
  * @see CLICommand
  */
 public abstract class AbstractPGCommand implements CLICommand {

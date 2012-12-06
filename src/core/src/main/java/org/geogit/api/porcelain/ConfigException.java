@@ -3,7 +3,6 @@ package org.geogit.api.porcelain;
 /**
  * Exception thrown by ConfigDatabase that contains the error status code.
  * 
- * @author mfawcett
  */
 @SuppressWarnings("serial")
 public class ConfigException extends RuntimeException {

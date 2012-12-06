@@ -27,8 +27,6 @@ import com.google.inject.Inject;
 /**
  * Internal operation for importing tables from a GeoTools {@link DataStore}.
  * 
- * @author groldan
- * @author jgarrett
  * @see DataStore
  */
 public class ImportOp extends AbstractGeoGitOp<RevTree> {
@@ -96,7 +94,7 @@ public class ImportOp extends AbstractGeoGitOp<RevTree> {
                 throw new GeoToolsOpException(StatusCode.UNABLE_TO_GET_FEATURES);
             }
 
-            RevFeatureType revType = new RevFeatureType(featureSource.getSchema());
+            RevFeatureType revType = RevFeatureType.build(featureSource.getSchema());
 
             String treePath = revType.getName().getLocalPart();
 

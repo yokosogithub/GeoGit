@@ -20,8 +20,6 @@ import com.google.common.hash.Hasher;
 /**
  * Hashes a RevObject and returns the ObjectId.
  * 
- * @author jgarrett
- * @author groldan
  * @see RevObject
  * @see ObjectId#HASH_FUNCTION
  */

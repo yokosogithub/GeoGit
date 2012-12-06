@@ -23,7 +23,6 @@ import org.geogit.api.plumbing.FindTreeChild;
 import org.geogit.api.plumbing.diff.DepthTreeIterator;
 import org.geogit.api.plumbing.diff.DepthTreeIterator.Strategy;
 import org.geogit.storage.ObjectDatabase;
-import org.geogit.storage.ObjectSerialisingFactory;
 import org.junit.Test;
 
 import com.google.common.base.Optional;
@@ -34,12 +33,9 @@ public class RevTreeBuilderTest extends RepositoryTestCase {
 
     private ObjectDatabase odb;
 
-    private ObjectSerialisingFactory serialFactory;
-
     @Override
     protected void setUpInternal() throws Exception {
         odb = repo.getObjectDatabase();
-        serialFactory = repo.getSerializationFactory();
     }
 
     @Test
@@ -61,7 +57,7 @@ public class RevTreeBuilderTest extends RepositoryTestCase {
                 + Math.round(numEntries / (sw.elapsedMillis() / 1000D)) + "/s)");
 
         sw.reset().start();
-        final RevTree tree = odb.get(treeId, serialFactory.createRevTreeReader());
+        final RevTree tree = odb.getTree(treeId);
         sw.stop();
         System.err.println("Retrieved tree in " + sw);
 
@@ -112,7 +108,7 @@ public class RevTreeBuilderTest extends RepositoryTestCase {
                 + Math.round(numEntries / (sw.elapsedMillis() / 1000D)) + "/s)");
 
         sw.reset().start();
-        final RevTree tree = odb.get(treeId, serialFactory.createRevTreeReader());
+        final RevTree tree = odb.getTree(treeId);
         sw.stop();
         System.err.println("Retrieved tree in " + sw);
 
@@ -156,7 +152,7 @@ public class RevTreeBuilderTest extends RepositoryTestCase {
             }
             String key = "Feature." + i;
             // ObjectId oid = ObjectId.forString(key);
-            Optional<Node> ref = childFinder.setChildPath(key).call();
+            Optional<NodeRef> ref = childFinder.setChildPath(key).call();
             assertTrue(key, ref.isPresent());
             // assertEquals(key, ref.get().getPath());
             // assertEquals(key, oid, ref.get().getObjectId());
@@ -171,7 +167,7 @@ public class RevTreeBuilderTest extends RepositoryTestCase {
     public void testRemove() throws Exception {
         final int numEntries = 1000;
         ObjectId treeId = createAndSaveTree(numEntries, true);
-        final RevTree tree = odb.get(treeId, serialFactory.createRevTreeReader());
+        final RevTree tree = odb.getTree(treeId);
 
         // collect some keys to remove
         final Set<String> removedKeys = new HashSet<String>();
@@ -206,7 +202,7 @@ public class RevTreeBuilderTest extends RepositoryTestCase {
     public void testRemoveSplittedTree() throws Exception {
         final int numEntries = (int) (1.5 * RevTree.NORMALIZED_SIZE_LIMIT);
         final ObjectId treeId = createAndSaveTree(numEntries, true);
-        final RevTree tree = odb.get(treeId, serialFactory.createRevTreeReader());
+        final RevTree tree = odb.getTree(treeId);
 
         // collect some keys to remove
         final Set<String> removedKeys = new HashSet<String>();
@@ -267,12 +263,12 @@ public class RevTreeBuilderTest extends RepositoryTestCase {
 
         RevTreeBuilder treeBuilder = createTree(numEntries, insertInAscendingKeyOrder);
         RevTree tree = treeBuilder.build();
-        odb.put(tree.getId(), serialFactory.createRevTreeWriter(tree));
+        odb.put(tree);
         return tree.getId();
     }
 
     private RevTreeBuilder createTree(final int numEntries, final boolean insertInAscendingKeyOrder) {
-        RevTreeBuilder tree = new RevTreeBuilder(odb, serialFactory);
+        RevTreeBuilder tree = new RevTreeBuilder(odb);
 
         final int increment = insertInAscendingKeyOrder ? 1 : -1;
         final int from = insertInAscendingKeyOrder ? 0 : numEntries - 1;

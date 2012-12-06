@@ -17,8 +17,6 @@ import org.geogit.api.RevObject.TYPE;
 import org.geogit.api.RevTree;
 import org.geogit.repository.StagingArea;
 import org.geogit.storage.ObjectDatabase;
-import org.geogit.storage.ObjectSerialisingFactory;
-import org.geogit.storage.RawObjectWriter;
 import org.geogit.storage.StagingDatabase;
 
 import com.google.common.base.Supplier;
@@ -41,21 +39,16 @@ public class DeepMove extends AbstractGeoGitOp<ObjectId> {
 
     private Supplier<Node> objectRef;
 
-    private ObjectSerialisingFactory serialFactory;
-
     /**
      * Constructs a new instance of the {@code DeepMove} operation with the specified parameters.
      * 
      * @param odb the repository object database
      * @param index the staging database
-     * @param serialFactory the serialization factory
      */
     @Inject
-    public DeepMove(ObjectDatabase odb, StagingDatabase index,
-            ObjectSerialisingFactory serialFactory) {
+    public DeepMove(ObjectDatabase odb, StagingDatabase index) {
         this.odb = odb;
         this.index = index;
-        this.serialFactory = serialFactory;
     }
 
     /**
@@ -103,7 +96,7 @@ public class DeepMove extends AbstractGeoGitOp<ObjectId> {
 
         final ObjectId objectId = objectRef.getObjectId();
         if (TYPE.TREE.equals(objectRef.getType())) {
-            RevTree tree = from.get(objectId, serialFactory.createRevTreeReader());
+            RevTree tree = from.getTree(objectId);
             moveTree(tree, from, to);
         } else {
             moveFeature(objectRef, from, to);
@@ -127,7 +120,7 @@ public class DeepMove extends AbstractGeoGitOp<ObjectId> {
         }
         if (tree.buckets().isPresent()) {
             for (ObjectId bucketId : tree.buckets().get().values()) {
-                RevTree bucketTree = from.get(bucketId, serialFactory.createRevTreeReader());
+                RevTree bucketTree = from.getTree(bucketId);
                 moveTree(bucketTree, from, to);
             }
         }
@@ -144,7 +137,7 @@ public class DeepMove extends AbstractGeoGitOp<ObjectId> {
 
         final InputStream raw = from.getRaw(objectId);
         try {
-            to.put(objectId, new RawObjectWriter(raw));
+            to.put(objectId, raw);
             from.delete(objectId);
 
             checkState(to.exists(objectId));

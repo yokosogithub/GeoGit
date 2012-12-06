@@ -39,7 +39,6 @@ import org.geogit.cli.AnsiDecorator;
 import org.geogit.cli.CLICommand;
 import org.geogit.cli.GeogitCLI;
 import org.geogit.repository.Repository;
-import org.geogit.storage.ObjectReader;
 import org.geogit.storage.StagingDatabase;
 
 import com.beust.jcommander.Parameter;
@@ -183,8 +182,7 @@ public class Diff extends AbstractCommand implements CLICommand {
             // final String newPath = entry.newPath();
 
             ObjectId id = null;
-            ObjectReader<Object> reader = null;
-            index.get(id, reader);
+            index.get(id);
         }
     }
 

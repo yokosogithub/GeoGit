@@ -34,8 +34,6 @@ import com.google.common.collect.Sets;
 /**
  * Unit test suite for {@link DiffOp}, must cover {@link DiffTreeWalk} too.
  * 
- * @author groldan
- * 
  */
 public class DiffOpTest extends RepositoryTestCase {
 

@@ -33,11 +33,11 @@ public class HessianSimpleFeatureTypeSerialization {
 
     @Test
     public void testSerialization() throws Exception {
-        RevFeatureType revFeatureType = new RevFeatureType(featureType);
-        HessianSimpleFeatureTypeWriter writer = new HessianSimpleFeatureTypeWriter(featureType);
+        RevFeatureType revFeatureType = RevFeatureType.build(featureType);
+        HessianSimpleFeatureTypeWriter writer = new HessianSimpleFeatureTypeWriter();
 
         ByteArrayOutputStream output = new ByteArrayOutputStream();
-        writer.write(output);
+        writer.write(revFeatureType, output);
 
         byte[] data = output.toByteArray();
         assertTrue(data.length > 0);

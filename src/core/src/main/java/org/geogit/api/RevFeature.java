@@ -4,6 +4,8 @@
  */
 package org.geogit.api;
 
+import org.geogit.api.plumbing.HashObject;
+
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 
@@ -15,12 +17,18 @@ public class RevFeature extends AbstractRevObject {
 
     private final ImmutableList<Optional<Object>> values;
 
+    public static RevFeature build(ImmutableList<Optional<Object>> values) {
+        RevFeature unnamed = new RevFeature(values);
+        ObjectId id = new HashObject().setObject(unnamed).call();
+        return new RevFeature(id, values);
+    }
+
     /**
      * Constructs a new {@code RevFeature} with the provided set of values.
      * 
      * @param values a list of values, with {@link Optional#absent()} representing a null value
      */
-    public RevFeature(ImmutableList<Optional<Object>> values) {
+    private RevFeature(ImmutableList<Optional<Object>> values) {
         this(ObjectId.NULL, values);
     }
 

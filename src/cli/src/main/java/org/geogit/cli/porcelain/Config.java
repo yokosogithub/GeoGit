@@ -43,7 +43,6 @@ import com.google.common.base.Optional;
  * <li> {@code geogit config [--global] -l}: lists all config variables
  * </ul>
  * 
- * @author mfawcett
  * @see ConfigOp
  */
 @Parameters(commandNames = "config", commandDescription = "Get and set repository or global options")

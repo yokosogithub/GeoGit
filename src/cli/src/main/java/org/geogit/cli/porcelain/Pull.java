@@ -32,7 +32,6 @@ import com.beust.jcommander.Parameters;
  * </ul>
  * 
  * @see PullOp
- * @author jgarrett
  */
 @Parameters(commandNames = "pull", commandDescription = "Fetch from and merge with another repository or a local branch")
 public class Pull extends AbstractCommand implements CLICommand {

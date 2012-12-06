@@ -54,10 +54,10 @@ public class HessianFeatureSerialisationTest extends TestCase {
 
         RevFeatureBuilder builder = new RevFeatureBuilder();
         RevFeature newFeature = builder.build(feature1_1);
-        HessianFeatureWriter writer = new HessianFeatureWriter(newFeature);
+        HessianFeatureWriter writer = new HessianFeatureWriter();
 
         ByteArrayOutputStream output = new ByteArrayOutputStream();
-        writer.write(output);
+        writer.write(newFeature, output);
 
         byte[] data = output.toByteArray();
         assertTrue(data.length > 0);

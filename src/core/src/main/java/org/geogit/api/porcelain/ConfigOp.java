@@ -19,7 +19,6 @@ import com.google.inject.Inject;
  * Global options are usually stored in ~/.geogitconfig. Repository options will be stored in
  * repo/.geogit/config
  * 
- * @author mfawcett
  * @see ConfigDatabase
  */
 public class ConfigOp extends AbstractGeoGitOp<Optional<Map<String, String>>> {

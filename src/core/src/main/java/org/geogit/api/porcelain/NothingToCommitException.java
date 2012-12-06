@@ -8,8 +8,6 @@ package org.geogit.api.porcelain;
  * Indicates there are no staged changes to commit as the result of the execution of a
  * {@link CommitOp}
  * 
- * @author groldan
- * 
  */
 public class NothingToCommitException extends RuntimeException {
 

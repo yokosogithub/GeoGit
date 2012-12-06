@@ -41,8 +41,8 @@ public class HessianCommitSerialisationTest extends TestCase {
         assertNotNull(cmtIn);
 
         ByteArrayOutputStream bout = new ByteArrayOutputStream();
-        HessianCommitWriter write = new HessianCommitWriter(cmtIn);
-        write.write(bout);
+        HessianCommitWriter write = new HessianCommitWriter();
+        write.write(cmtIn, bout);
 
         byte[] bytes = bout.toByteArray();
         assertTrue(bytes.length > 0);

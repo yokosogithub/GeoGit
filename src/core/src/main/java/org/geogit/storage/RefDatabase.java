@@ -9,7 +9,6 @@ import java.util.Map;
 /**
  * Provides an interface for GeoGit reference databases.
  * 
- * @author groldan
  */
 public interface RefDatabase {
 

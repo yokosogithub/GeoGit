@@ -53,8 +53,6 @@ import com.google.inject.Inject;
  * committed is performed through a diff tree walk comparing the staged changes tree and the
  * repository's head tree.
  * 
- * @author Gabriel Roldan
- * 
  */
 public class Index implements StagingArea {
 
@@ -127,9 +125,13 @@ public class Index implements StagingArea {
      */
     @Override
     public Optional<Node> findStaged(final String path) {
-        Optional<Node> entry = repository.command(FindTreeChild.class).setIndex(true)
+        Optional<NodeRef> entry = repository.command(FindTreeChild.class).setIndex(true)
                 .setParent(getTree()).setChildPath(path).call();
-        return entry;
+        if (entry.isPresent()) {
+            return Optional.of(entry.get().getNode());
+        } else {
+            return Optional.absent();
+        }
     }
 
     /**

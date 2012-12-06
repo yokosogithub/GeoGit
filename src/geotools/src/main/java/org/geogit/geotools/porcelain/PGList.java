@@ -24,7 +24,6 @@ import com.google.common.base.Optional;
  * 
  * PostGIS CLI proxy for {@link ListOp}
  * 
- * @author jgarrett
  * @see ListOp
  */
 @Parameters(commandNames = "list", commandDescription = "List available feature types in a database")

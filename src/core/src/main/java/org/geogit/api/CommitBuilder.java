@@ -55,8 +55,9 @@ public final class CommitBuilder {
     /**
      * @param treeId the treeId to set
      */
-    public void setTreeId(ObjectId treeId) {
+    public CommitBuilder setTreeId(ObjectId treeId) {
         this.treeId = treeId;
+        return this;
     }
 
     /**
@@ -69,8 +70,9 @@ public final class CommitBuilder {
     /**
      * @param parentIds the parentIds to set
      */
-    public void setParentIds(List<ObjectId> parentIds) {
+    public CommitBuilder setParentIds(List<ObjectId> parentIds) {
         this.parentIds = parentIds;
+        return this;
     }
 
     /**
@@ -90,15 +92,17 @@ public final class CommitBuilder {
     /**
      * @param author the author to set
      */
-    public void setAuthor(String author) {
+    public CommitBuilder setAuthor(String author) {
         this.author = author;
+        return this;
     }
 
     /**
      * @param email the author's email to set
      */
-    public void setAuthorEmail(String email) {
+    public CommitBuilder setAuthorEmail(String email) {
         this.authorEmail = email;
+        return this;
     }
 
     /**
@@ -118,15 +122,17 @@ public final class CommitBuilder {
     /**
      * @param committer the committer to set
      */
-    public void setCommitter(String committer) {
+    public CommitBuilder setCommitter(String committer) {
         this.committer = committer;
+        return this;
     }
 
     /**
      * @param email the committer's email to set
      */
-    public void setCommitterEmail(String email) {
+    public CommitBuilder setCommitterEmail(String email) {
         this.committerEmail = email;
+        return this;
     }
 
     /**
@@ -139,8 +145,9 @@ public final class CommitBuilder {
     /**
      * @param message the message to set
      */
-    public void setMessage(String message) {
+    public CommitBuilder setMessage(String message) {
         this.message = message;
+        return this;
     }
 
     /**
@@ -154,8 +161,9 @@ public final class CommitBuilder {
      * @param timestamp timestamp, in UTC, of the commit. Let it blank for the builder to auto-set
      *        it at {@link #build()} time
      */
-    public void setTimestamp(long timestamp) {
+    public CommitBuilder setTimestamp(long timestamp) {
         this.timestamp = timestamp;
+        return this;
     }
 
     public RevCommit build() {
