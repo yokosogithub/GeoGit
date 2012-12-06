@@ -61,7 +61,7 @@ Participation is encouraged using the github *fork* and *pull request* workflow:
 
 Project resources:
 
-* `Full on-line project documentation <http://opengeo.github.com/GeoGit>`_
+* `Full on-line project documentation <https://sites.google.com/a/opengeo.org/geogit-project-guide/>`_
 * `GeoGit Discussion Group <https://groups.google.com/a/opengeo.org/group/geogit/>`_
 * The build is `actively monitored using hudson <http://hudson.opengeo.org/hudson/view/geogit/>`_
 * https://github.com/opengeo/GeoGit/issues
