@@ -11,7 +11,7 @@ SET default_tablespace = '';
 SET default_with_oids = false;
 
 CREATE TABLE geogit_pg_test (
-    gid integer DEFAULT nextval('hospitals_gid_seq'::regclass) NOT NULL,
+    gid integer DEFAULT nextval(1) NOT NULL,
     geom geometry(Point),
     name character varying(35)
 );
