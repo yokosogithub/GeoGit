@@ -2,7 +2,7 @@
 .. _geogit-pg-import:
 
 geogit-pg-import documentation
-#########################
+##############################
 
 
 

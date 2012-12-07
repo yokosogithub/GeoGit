@@ -2,7 +2,7 @@
 .. _geogit-pg-describe:
 
 geogit-pg-describe documentation
-#########################
+################################
 
 
 

@@ -50,6 +50,7 @@ SEE ALSO
 :ref:`geogit-merge`
 :ref:`geogit-rebase`
 :ref:`geogit-reset`
+:ref:`geogit-remote`
 :ref:`geogit-clone`
 :ref:`geogit-cherrypick`
 :ref:`geogit-fetch`
