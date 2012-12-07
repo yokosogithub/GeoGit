@@ -313,7 +313,9 @@ public class GeogitCLI {
         mainCommander.parse(args);
         final String parsedCommand = mainCommander.getParsedCommand();
         if (null == parsedCommand) {
-            if (mainCommander.getObjects().get(0) instanceof CLICommandExtension) {
+            if (mainCommander.getObjects().size() == 0) {
+                mainCommander.usage();
+            } else if (mainCommander.getObjects().get(0) instanceof CLICommandExtension) {
                 CLICommandExtension extension = (CLICommandExtension) mainCommander.getObjects()
                         .get(0);
                 extension.getCommandParser().usage();
