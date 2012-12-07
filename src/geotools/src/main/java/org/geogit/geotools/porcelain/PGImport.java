@@ -85,6 +85,9 @@ public class PGImport extends AbstractPGCommand implements CLICommand {
 
         } catch (GeoToolsOpException e) {
             switch (e.statusCode) {
+            case TABLE_NOT_DEFINED:
+                cli.getConsole().println("You need to specify a table or use the --all option.");
+                break;
             case ALL_AND_TABLE_DEFINED:
                 cli.getConsole().println("Specify --all or --table, both cannot be set.");
                 break;

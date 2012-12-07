@@ -22,3 +22,8 @@ Feature: "import" command
     Given I have a repository
      When I run the command "pg import --table nonexistant_table" on the database
      Then the response should contain "Could not find the specified table."
+     
+  Scenario: Try to import without specifying table or -all
+    Given I have a repository
+     When I run the command "pg import" on the database
+     Then the response should contain "You need to specify a table or use the --all option"     
