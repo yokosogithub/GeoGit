@@ -2,7 +2,10 @@ package org.geogit.api;
 
 import static com.google.common.base.Objects.equal;
 
+import javax.annotation.Nullable;
+
 import com.google.common.base.Objects;
+import com.google.common.base.Optional;
 
 /**
  * The GeoGit identity of a single individual, composed of a name and email address.
@@ -19,7 +22,7 @@ public class RevPerson {
      * @param name
      * @param email
      */
-    public RevPerson(String name, String email) {
+    public RevPerson(@Nullable String name, @Nullable String email) {
         this.name = name;
         this.email = email;
     }
@@ -55,5 +58,11 @@ public class RevPerson {
     @Override
     public int hashCode() {
         return Objects.hashCode(getName(), getEmail());
+    }
+
+    @Override
+    public String toString() {
+        return Optional.fromNullable(name).or("<>") + " <" + Optional.fromNullable(email).or("")
+                + ">";
     }
 }

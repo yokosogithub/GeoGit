@@ -9,6 +9,7 @@ import java.util.List;
 import org.geogit.api.plumbing.HashObject;
 
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
 
 public final class CommitBuilder {
 
@@ -29,6 +30,7 @@ public final class CommitBuilder {
     private long timestamp;
 
     public CommitBuilder() {
+        parentIds = ImmutableList.of();
     }
 
     /**
@@ -70,8 +72,10 @@ public final class CommitBuilder {
     /**
      * @param parentIds the parentIds to set
      */
+    @SuppressWarnings("unchecked")
     public CommitBuilder setParentIds(List<ObjectId> parentIds) {
-        this.parentIds = parentIds;
+        this.parentIds = (List<ObjectId>) (parentIds == null ? ImmutableList.of() : ImmutableList
+                .copyOf(parentIds));
         return this;
     }
 
@@ -176,7 +180,7 @@ public final class CommitBuilder {
         final RevPerson author = new RevPerson(this.author, authorEmail);
         final RevPerson committer = new RevPerson(this.committer, committerEmail);
         final long timestamp = getTimestamp();
-        final String commitMessage = this.message;
+        final String commitMessage = this.message == null ? "" : this.message;
 
         RevCommit unnnamedCommit = new RevCommit(ObjectId.NULL, treeId, parentIds, author,
                 committer, commitMessage, timestamp);
