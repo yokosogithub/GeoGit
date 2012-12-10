@@ -103,6 +103,8 @@ public class LsTreeOp extends AbstractGeoGitOp<Iterator<NodeRef>> {
         Optional<RevObject> revObject = command(RevObjectParse.class).setRefSpec(ref).call(
                 RevObject.class);
 
+        ObjectId parentObjectId = ObjectId.NULL;
+
         if (!revObject.isPresent()) { // let's try to see if it is a feature type or feature in the
                                       // working tree
             NodeRef.checkValidPath(ref);
@@ -110,6 +112,7 @@ public class LsTreeOp extends AbstractGeoGitOp<Iterator<NodeRef>> {
                     .setChildPath(ref).call();
             Preconditions.checkArgument(treeRef.isPresent(), "Invalid reference: %s", ref);
             ObjectId treeId = treeRef.get().objectId();
+            parentObjectId = treeRef.get().getMetadataId();
             revObject = command(RevObjectParse.class).setObjectId(treeId).call(RevObject.class);
         }
 
@@ -153,8 +156,8 @@ public class LsTreeOp extends AbstractGeoGitOp<Iterator<NodeRef>> {
 
             final String path = ref.lastIndexOf(':') != -1 ? ref
                     .substring(ref.lastIndexOf(':') + 1) : "";
-            // TODO: CHANGE METADATAID
-            DepthTreeIterator iter = new DepthTreeIterator(path, ObjectId.NULL,
+
+            DepthTreeIterator iter = new DepthTreeIterator(path, parentObjectId,
                     (RevTree) revObject.get(), index, iterStrategy);
             return iter;
         default:
