@@ -140,6 +140,14 @@ public class WorkingTree {
      * @return true if the object was found and deleted, false otherwise
      */
     public boolean delete(final String path, final String featureId) {
+        Optional<NodeRef> typeTreeRef = repository.command(FindTreeChild.class).setIndex(true)
+                .setParent(getTree()).setChildPath(path).call();
+
+        ObjectId metadataId = null;
+        if (typeTreeRef.isPresent()) {
+            metadataId = typeTreeRef.get().getMetadataId();
+        }
+
         RevTreeBuilder parentTree = repository.command(FindOrCreateSubtree.class).setIndex(true)
                 .setParent(Suppliers.ofInstance(Optional.of(getTree()))).setChildPath(path).call()
                 .builder(indexDatabase);
@@ -151,7 +159,8 @@ public class WorkingTree {
         }
 
         ObjectId newTree = repository.command(WriteBack.class).setAncestor(getTreeSupplier())
-                .setChildPath(path).setToIndex(true).setTree(parentTree.build()).call();
+                .setChildPath(path).setToIndex(true).setMetadataId(metadataId)
+                .setTree(parentTree.build()).call();
 
         updateWorkHead(newTree);
 
@@ -166,6 +175,7 @@ public class WorkingTree {
      * @throws Exception
      */
     public void delete(final String path) {
+        ObjectId parentMetadataId = null;
 
         final String parentPath = NodeRef.parentPath(path);
         final String childName = NodeRef.nodeFromPath(path);
@@ -183,6 +193,8 @@ public class WorkingTree {
             if (!parentRef.isPresent()) {
                 return;
             }
+
+            parentMetadataId = parentRef.get().getMetadataId();
             parent = repository.command(RevObjectParse.class)
                     .setObjectId(parentRef.get().objectId()).call(RevTree.class).get();
             parentBuilder = parent.builder(indexDatabase);
@@ -199,7 +211,7 @@ public class WorkingTree {
         } else {
             newWorkHead = repository.command(WriteBack.class).setToIndex(true)
                     .setAncestor(workHead.builder(indexDatabase)).setChildPath(parentPath)
-                    .setTree(newParent).call();
+                    .setTree(newParent).setMetadataId(parentMetadataId).call();
         }
         updateWorkHead(newWorkHead);
     }
@@ -215,6 +227,14 @@ public class WorkingTree {
      */
     public void delete(final Name typeName, final Filter filter,
             final Iterator<Feature> affectedFeatures) throws Exception {
+
+        Optional<NodeRef> typeTreeRef = repository.command(FindTreeChild.class).setIndex(true)
+                .setParent(getTree()).setChildPath(typeName.getLocalPart()).call();
+
+        ObjectId parentMetadataId = null;
+        if (typeTreeRef.isPresent()) {
+            parentMetadataId = typeTreeRef.get().getMetadataId();
+        }
 
         RevTreeBuilder parentTree = repository.command(FindOrCreateSubtree.class)
                 .setParent(Suppliers.ofInstance(Optional.of(getTree()))).setIndex(true)
@@ -233,7 +253,7 @@ public class WorkingTree {
         }
 
         ObjectId newTree = repository.command(WriteBack.class)
-                .setAncestor(getTree().builder(indexDatabase))
+                .setAncestor(getTree().builder(indexDatabase)).setMetadataId(parentMetadataId)
                 .setChildPath(typeName.getLocalPart()).setToIndex(true).setTree(parentTree.build())
                 .call();
 
@@ -285,9 +305,18 @@ public class WorkingTree {
         ObjectId newTree = null;
         for (Map.Entry<String, RevTreeBuilder> entry : parents.entrySet()) {
             String path = entry.getKey();
+            Optional<NodeRef> typeTreeRef = repository.command(FindTreeChild.class).setIndex(true)
+                    .setParent(getTree()).setChildPath(path).call();
+
+            ObjectId parentMetadataId = null;
+            if (typeTreeRef.isPresent()) {
+                parentMetadataId = typeTreeRef.get().getMetadataId();
+            }
+
             RevTreeBuilder parentTree = entry.getValue();
             newTree = repository.command(WriteBack.class).setAncestor(getTreeSupplier())
-                    .setChildPath(path).setToIndex(true).setTree(parentTree.build()).call();
+                    .setChildPath(path).setToIndex(true).setTree(parentTree.build())
+                    .setMetadataId(parentMetadataId).call();
             updateWorkHead(newTree);
         }
         /*
@@ -340,8 +369,7 @@ public class WorkingTree {
             treeRef = createTypeTree(parentTreePath, featureType);
         }
 
-        ObjectId metadataId = treeRef.getMetadataId();
-        final Node node = putInDatabase(feature, metadataId);
+        final Node node = putInDatabase(feature, ObjectId.NULL);
 
         RevTreeBuilder parentTree = repository.command(FindOrCreateSubtree.class).setIndex(true)
                 .setParent(Suppliers.ofInstance(Optional.of(getTree())))
@@ -379,9 +407,10 @@ public class WorkingTree {
 
         checkArgument(collectionSize == null || collectionSize.intValue() > -1);
 
-        NodeRef treeRef;
         Optional<NodeRef> typeTreeRef = repository.command(FindTreeChild.class).setIndex(true)
                 .setParent(getTree()).setChildPath(treePath).call();
+
+        NodeRef treeRef;
 
         if (typeTreeRef.isPresent()) {
             treeRef = typeTreeRef.get();
@@ -403,12 +432,11 @@ public class WorkingTree {
                 .setParent(Suppliers.ofInstance(Optional.of(getTree()))).setChildPath(treePath)
                 .call().builder(indexDatabase);
 
-        final ObjectId defaultMetadataId = treeRef.getMetadataId();
-        putInDatabase(treePath, features, listener, size, insertedTarget, parentTree,
-                defaultMetadataId);
+        putInDatabase(treePath, features, listener, size, insertedTarget, parentTree, ObjectId.NULL);
 
         ObjectId newTree = repository.command(WriteBack.class).setAncestor(getTreeSupplier())
-                .setChildPath(treePath).setToIndex(true).setTree(parentTree.build()).call();
+                .setChildPath(treePath).setMetadataId(treeRef.getMetadataId()).setToIndex(true)
+                .setTree(parentTree.build()).call();
 
         updateWorkHead(newTree);
     }
