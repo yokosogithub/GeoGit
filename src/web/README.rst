@@ -1,0 +1,104 @@
+*******************
+GeoGit Web API
+*******************
+
+Proof-of-concept straw-man web API for a single repository.
+
+It does:
+
+* handle `status`, `log`, `commit`
+* allow XML or JSON responses, including JSONP callbacks
+* allow specification of the repository via the command line
+
+It does **not**:
+
+* allow concurrent use with command-line (bdb lock)
+* look RESTful
+* attempt to be complete or even consistent
+* have tests yet
+
+Implementation
+==============
+
+Currently using Restlet running on Jetty. This layer is relatively small and the bulk of the code
+is in actual command implementation and response formatting.
+
+Discussion
+----------
+
+The command implementation looks so similar to the CLI commands (with some duplication), it may
+make sense to evaluate breaking a CLI command into 3 pieces: CLI argument parsing/binding, actual
+execution, and output. This way the web api commands could provide specific implementations of
+argument parsing and binding and output. The duplicated code (so far) is not large so this might
+just add overhead for little gain.
+
+
+Running
+=======
+
+To run the jetty server via maven, in the web module directory, run:
+
+  mvn -o exec:java -Dexec.mainClass=org.geogit.web.Main -Dexec.args=PATH_TO_YOUR_REPO
+
+URLS
+====
+
+All endpoints respond to POST operations only:
+
+|  /status
+|  /log
+|  /commit
+
+Note: Unless `commit` is run with the `all` option or changes are staged using the command line,
+nothing will happen. In other words, one cannot specify paths at the moment.
+
+URL Parameters
+--------------
+
+Parameters may be provided as URL query items or as form-encoded POST body.
+
+`status` and `log` accept `offset` and `limit` parameters to support paging.
+
+`commit` requires a `message` parameter and allows an optional `all` parameter to stage everything first.
+
+An optional `callback` parameter in JSON requests will result in a JSONP response.
+
+Content-Type
+------------
+
+The default `Accept` value is assumed to be `application/json`. `text/xml` can also be specified.
+
+Examples
+========
+
+Note: piping output into `json_pp` or `xmllint` will help.
+
+JSON Status:
+
+  curl -XPOST localhost:8182/status
+
+Bunk Request:
+
+  curl -XPOST localhost:8182/bunk
+
+JSONP Status:
+
+  curl -XPOST localhost:8182/status?callback=handle
+
+XML Status (piped to xmllint for formatting):
+
+  curl -XPOST -H 'Accept: text/xml' localhost:8182/status | xmllint --format - 
+
+The Future
+==========
+
+It would be trivial to expand the URL routing to one or more directory roots containing one
+or more geogit repositories. For example:
+
+  http://host/{directory}/{repo}/{command} 
+
+To consider:
+
+* authentication/authorization
+* async processing if needed?
+
