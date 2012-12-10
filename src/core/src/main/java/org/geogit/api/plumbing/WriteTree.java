@@ -19,10 +19,10 @@ import org.geogit.api.plumbing.diff.DiffEntry;
 import org.geogit.api.plumbing.diff.DiffEntry.ChangeType;
 import org.geogit.repository.StagingArea;
 import org.geogit.storage.ObjectDatabase;
-import org.geogit.storage.StagingDatabase;
 import org.opengis.util.ProgressListener;
 
 import com.google.common.base.Optional;
+import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.Maps;
@@ -31,7 +31,7 @@ import com.google.inject.Inject;
 /**
  * Create a tree object from the current index and returns the new root tree id.
  * <p>
- * Creates a tree object using the current index. The id of the new tree object is returned.
+ * Creates a tree object using the current index. The id of the new root tree object is returned.
  * 
  * The index must be in a fully merged state.
  * 
@@ -83,24 +83,23 @@ public class WriteTree extends AbstractGeoGitOp<ObjectId> {
     public ObjectId call() {
         final ProgressListener progress = getProgressListener();
 
-        final ObjectId oldRootTreeId = resolveRootTreeId();
-        final RevTree oldRootTree = resolveRootTree(oldRootTreeId);
+        final RevTree oldRootTree = resolveRootTree();
 
-        final String noPathFilter = null;
-        final long numChanges = index.countStaged(noPathFilter);
-        if (numChanges == 0) {
-            return oldRootTreeId;
+        Iterator<DiffEntry> staged = index.getStaged(null);
+        if (!staged.hasNext()) {
+            return oldRootTree.getId();
         }
         if (progress.isCanceled()) {
             return null;
         }
 
-        Iterator<DiffEntry> staged = index.getStaged(noPathFilter);
-
-        Map<String, RevTreeBuilder> changedTrees = Maps.newHashMap();
+        Map<String, RevTreeBuilder> repositoryChangedTrees = Maps.newHashMap();
+        Map<String, NodeRef> indexChangedTrees = Maps.newHashMap();
+        Map<String, ObjectId> changedTreesMetadataId = Maps.newHashMap();
 
         NodeRef ref;
         int i = 0;
+        final long numChanges = index.countStaged(null);
         while (staged.hasNext()) {
             progress.progress((float) (++i * 100) / numChanges);
             if (progress.isCanceled()) {
@@ -111,30 +110,25 @@ public class WriteTree extends AbstractGeoGitOp<ObjectId> {
             ref = diff.getNewObject();
 
             if (ref == null) {
+                ObjectId metadataId = diff.getOldObject().getMetadataId();
                 ref = new NodeRef(diff.getOldObject().getNode(), diff.getOldObject()
-                        .getParentPath(), ObjectId.NULL);
+                        .getParentPath(), metadataId);
             }
 
-            String parentPath = ref.getParentPath();
+            final String parentPath = ref.getParentPath();
 
-            RevTreeBuilder parentTree = parentPath == null ? null : changedTrees.get(parentPath);
+            RevTreeBuilder parentTree = resolveTargetTree(oldRootTree, parentPath,
+                    repositoryChangedTrees, changedTreesMetadataId);
 
-            if (parentPath != null && parentTree == null) {
+            resolveSourceTreeRef(parentPath, indexChangedTrees, changedTreesMetadataId);
 
-                Supplier<Optional<RevTree>> rootSupp = Suppliers.ofInstance(Optional
-                        .of(oldRootTree));
+            Preconditions.checkState(parentTree != null);
 
-                parentTree = command(FindOrCreateSubtree.class).setParent(rootSupp)
-                        .setChildPath(parentPath).call().builder(repositoryDatabase);// repositoryDatabase
-                                                                                     // for sure?
-                changedTrees.put(parentPath, parentTree);
-            }
-
-            final boolean isDelete = diff.changeType().equals(ChangeType.REMOVED);
+            final boolean isDelete = ChangeType.REMOVED.equals(diff.changeType());
             if (isDelete) {
                 parentTree.remove(diff.getOldObject().getNode().getName());
             } else {
-                deepMove(ref.getNode(), index.getDatabase(), repositoryDatabase);
+                deepMove(ref.getNode());
                 parentTree.put(ref.getNode());
             }
         }
@@ -144,18 +138,72 @@ public class WriteTree extends AbstractGeoGitOp<ObjectId> {
         }
 
         // now write back all changed trees
-        ObjectId newTargetRootId = oldRootTreeId;
-        for (Map.Entry<String, RevTreeBuilder> e : changedTrees.entrySet()) {
+        ObjectId newTargetRootId = oldRootTree.getId();
+        for (Map.Entry<String, RevTreeBuilder> e : repositoryChangedTrees.entrySet()) {
             String treePath = e.getKey();
+            ObjectId metadataId = changedTreesMetadataId.get(treePath);
             RevTreeBuilder treeBuilder = e.getValue();
             RevTree newRoot = getTree(newTargetRootId);
             RevTree tree = treeBuilder.build();
-            newTargetRootId = writeBack(newRoot.builder(repositoryDatabase), tree, treePath);
+            newTargetRootId = writeBack(newRoot.builder(repositoryDatabase), tree, treePath,
+                    metadataId);
         }
 
         progress.complete();
 
         return newTargetRootId;
+    }
+
+    /**
+     * @param parentPath2
+     * @param indexChangedTrees
+     * @param metadataCache
+     * @return
+     */
+    private void resolveSourceTreeRef(String parentPath, Map<String, NodeRef> indexChangedTrees,
+            Map<String, ObjectId> metadataCache) {
+
+        NodeRef indexTreeRef = indexChangedTrees.get(parentPath);
+
+        if (indexTreeRef == null) {
+            RevTree stageHead = index.getTree();
+            Optional<NodeRef> treeRef = command(FindTreeChild.class).setIndex(true)
+                    .setParent(stageHead).setChildPath(parentPath).call();
+            if (treeRef.isPresent()) {// may not be in case of a delete
+                indexTreeRef = treeRef.get();
+                indexChangedTrees.put(parentPath, indexTreeRef);
+                metadataCache.put(parentPath, indexTreeRef.getMetadataId());
+            }
+        } else {
+            metadataCache.put(parentPath, indexTreeRef.getMetadataId());
+        }
+    }
+
+    /**
+     * @param treePath
+     * @param treeCache
+     * @param metadataCache
+     * @return
+     */
+    private RevTreeBuilder resolveTargetTree(final RevTree root, String treePath,
+            Map<String, RevTreeBuilder> treeCache, Map<String, ObjectId> metadataCache) {
+
+        RevTreeBuilder treeBuilder = treeCache.get(treePath);
+        if (treeBuilder == null) {
+            Optional<NodeRef> treeRef = command(FindTreeChild.class).setIndex(false)
+                    .setParent(root).setChildPath(treePath).call();
+            if (treeRef.isPresent()) {
+                metadataCache.put(treePath, treeRef.get().getMetadataId());
+                treeBuilder = command(RevObjectParse.class).setObjectId(treeRef.get().objectId())
+                        .call(RevTree.class).get().builder(repositoryDatabase);
+                treeCache.put(treePath, treeBuilder);
+            } else {
+                metadataCache.put(treePath, ObjectId.NULL);
+                treeBuilder = new RevTreeBuilder(repositoryDatabase);
+                treeCache.put(treePath, treeBuilder);
+            }
+        }
+        return treeBuilder;
     }
 
     private RevTree getTree(ObjectId treeId) {
@@ -165,8 +213,7 @@ public class WriteTree extends AbstractGeoGitOp<ObjectId> {
         return command(RevObjectParse.class).setObjectId(treeId).call(RevTree.class).get();
     }
 
-    private void deepMove(Node ref, StagingDatabase indexDatabase2,
-            ObjectDatabase repositoryDatabase2) {
+    private void deepMove(Node ref) {
 
         Supplier<Node> objectRef = Suppliers.ofInstance(ref);
         command(DeepMove.class).setObjectRef(objectRef).setToIndex(false).call();
@@ -186,23 +233,24 @@ public class WriteTree extends AbstractGeoGitOp<ObjectId> {
     }
 
     /**
-     * @param targetTreeId the tree to resolve
      * @return the resolved root tree
      */
-    private RevTree resolveRootTree(ObjectId targetTreeId) {
+    private RevTree resolveRootTree() {
         if (oldRoot != null) {
             return oldRoot.get();
         }
+        final ObjectId targetTreeId = resolveRootTreeId();
         if (targetTreeId.isNull()) {
             return RevTree.EMPTY;
         }
         return command(RevObjectParse.class).setObjectId(targetTreeId).call(RevTree.class).get();
     }
 
-    private ObjectId writeBack(RevTreeBuilder root, final RevTree tree, final String pathToTree) {
+    private ObjectId writeBack(RevTreeBuilder root, final RevTree tree, final String pathToTree,
+            final ObjectId metadataId) {
 
         return command(WriteBack.class).setAncestor(root).setAncestorPath("").setTree(tree)
-                .setChildPath(pathToTree).setToIndex(false).call();
+                .setChildPath(pathToTree).setToIndex(false).setMetadataId(metadataId).call();
     }
 
 }

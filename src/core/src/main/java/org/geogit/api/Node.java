@@ -49,7 +49,7 @@ public class Node implements Comparable<Node> {
         checkNotNull(type);
         this.name = name;
         this.objectId = oid;
-        this.metadataId = metadataId;
+        this.metadataId = metadataId.isNull() ? null : metadataId;
         this.type = type;
     }
 
@@ -91,17 +91,20 @@ public class Node implements Comparable<Node> {
      */
     @Override
     public int hashCode() {
-        return 17 ^ name.hashCode() * objectId.hashCode() * metadataId.hashCode();
+        return 17 ^ type.hashCode() * name.hashCode() * objectId.hashCode();
     }
 
+    /**
+     * Equality check based on {@link #getName() name}, {@link #getType() type}, and
+     * {@link #getObjectId() objectId}; {@link #getMetadataId()} is NOT part of the equality check.
+     */
     @Override
     public boolean equals(Object o) {
         if (!(o instanceof Node)) {
             return false;
         }
         Node r = (Node) o;
-        return name.equals(r.name) && type.equals(r.type) && metadataId.equals(r.metadataId)
-                && objectId.equals(r.objectId);
+        return name.equals(r.name) && type.equals(r.type) && objectId.equals(r.objectId);
     }
 
     /**
