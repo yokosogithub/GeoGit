@@ -99,7 +99,7 @@ public interface ObjectDatabase {
      * @param object the object to insert, key'ed by its {@link RevObject#getId() id}
      * @return true if the object was inserted, false otherwise
      */
-    public boolean put(final RevObject object);
+    public <T extends RevObject> boolean put(final T object);
 
     /**
      * @return a newly constructed {@link ObjectInserter} for this database

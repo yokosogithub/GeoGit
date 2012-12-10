@@ -56,7 +56,7 @@ public interface ObjectSerialisingFactory {
      */
     public ObjectReader<RevFeatureType> createFeatureTypeReader();
 
-    public ObjectWriter<RevObject> createObjectWriter(TYPE type);
+    public <T extends RevObject> ObjectWriter<T> createObjectWriter(TYPE type);
 
     /**
      * @param type

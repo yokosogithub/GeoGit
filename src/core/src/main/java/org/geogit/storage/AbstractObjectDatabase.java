@@ -98,6 +98,9 @@ public abstract class AbstractObjectDatabase implements ObjectDatabase {
         } finally {
             Closeables.closeQuietly(raw);
         }
+        Preconditions.checkState(id.equals(object.getId()),
+                "Expected id doesn't match parsed id %s, %s. Object: %s", id, object.getId(),
+                object);
         return object;
     }
 
@@ -172,12 +175,12 @@ public abstract class AbstractObjectDatabase implements ObjectDatabase {
     }
 
     @Override
-    public final boolean put(final RevObject object) {
+    public final <T extends RevObject> boolean put(final T object) {
         Preconditions.checkNotNull(object);
         Preconditions.checkArgument(!object.getId().isNull(), "ObjectId is NULL %s", object);
 
         final ObjectId id = object.getId();
-        ObjectWriter<RevObject> writer = serializationFactory.createObjectWriter(object.getType());
+        ObjectWriter<T> writer = serializationFactory.createObjectWriter(object.getType());
 
         ByteArrayOutputStream rawOut = new ByteArrayOutputStream();
         LZFOutputStream cOut = new LZFOutputStream(rawOut);
