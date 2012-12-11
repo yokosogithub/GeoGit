@@ -22,7 +22,6 @@ public class GeoToolsModule implements CLIModule {
      */
     @Override
     public void configure(Binder binder) {
-        binder.bind(PropertiesEditCommandProxy.class);
         binder.bind(PGCommandProxy.class);
         binder.bind(ShpCommandProxy.class);
     }
