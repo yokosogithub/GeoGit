@@ -8,6 +8,7 @@ package org.geogit.geotools.porcelain;
 import java.io.FileNotFoundException;
 import java.util.List;
 
+import org.geogit.api.hooks.Hookable;
 import org.geogit.cli.CLICommand;
 import org.geogit.cli.GeogitCLI;
 import org.geogit.geotools.plumbing.GeoToolsOpException;
@@ -25,6 +26,7 @@ import com.beust.jcommander.Parameters;
  * 
  * @see ImportOp
  */
+@Hookable(name = "import")
 @Parameters(commandNames = "import", commandDescription = "Import Shapefile")
 public class ShpImport extends AbstractShpCommand implements CLICommand {
 

@@ -25,6 +25,7 @@ import org.geogit.api.DefaultPlatform;
 import org.geogit.api.GeoGIT;
 import org.geogit.api.GlobalInjectorBuilder;
 import org.geogit.api.Platform;
+import org.geogit.api.hooks.CannotRunGeogitOperationException;
 import org.geogit.api.plumbing.ResolveGeogitDir;
 import org.geogit.api.porcelain.ConfigException;
 import org.geogit.api.porcelain.ConfigGet;
@@ -47,6 +48,7 @@ import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Key;
 import com.google.inject.Module;
+//import org.python.core.exceptions;
 
 /**
  * Command Line Interface for geogit.
@@ -275,7 +277,8 @@ public class GeogitCLI {
                     consoleReader.println(e.getMessage() + ". See geogit --help.");
                     consoleReader.flush();
                 } else if (e instanceof IllegalArgumentException
-                        || e instanceof IllegalStateException) {
+                        || e instanceof IllegalStateException
+                        || e instanceof CannotRunGeogitOperationException) {
                     consoleReader.println(Optional.fromNullable(e.getMessage()).or("Uknown error"));
                     consoleReader.flush();
                 } else if (e instanceof CommandFailedException) {

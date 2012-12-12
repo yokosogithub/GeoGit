@@ -70,7 +70,7 @@ Here is an example of a way imported into the ``way`` tree, as described by the 
 	----------
 	changeset: 14220478
 	nodes: 269237860;2059114068;269237861;278905850;269237862;269237863;278904103;1300224351;269237865;345117527
-	tags: highway:residential|lit:yes|name:Gielgenstra▀e
+	tags: highway:residential|lit:yes|name:Gielgenstrasse
 	timestamp: 1355097350000
 	user: adjuva:92274
 	version: 5
@@ -267,7 +267,7 @@ This option is only available for the ``osm import`` command, but not for the ``
 
 Be aware that, when you import using the ``--no-raw`` switch, you will not be able to use OSM operations on the imported data, since GeoGit will not consider it as OSM data. When using a mapping, the mapped data is an additional version of the data that is imported in a different tree to give a more practical alternative to the *raw* one, but that data is not guaranteed to have the necessary information to be able to reconstruct OSM entities. In short, GeoGit will not track data other than the data stored in the ``way`` and ``node`` trees as OSM data, so you should not to use the ``--no-raw`` switch if you plan to do OSM-like work on the imported data.
 
-if ``--mapping`` is used and the ``--no-raw`` switch is not, the working tree and index have to be clean, and after the import and mapping, a commit will be made. This is done to allow geoGit to keep track of mappings, so then the unmmaping operations can provide additional functionality. The comit message is automatically generated, but if you want to define your own message, you can do it using the ``--message`` option
+if ``--mapping`` is used and the ``--no-raw`` switch is not, the working tree and index have to be clean, and after the import and mapping, a commit will be made (just like when you use the ``download`` command, eve without mapping). This is done to allow geoGit to keep track of mappings, so then the unmmaping operations can provide additional functionality. The comit message is automatically generated, but if you want to define your own message, you can do it using the ``--message`` option
 
 ::
 

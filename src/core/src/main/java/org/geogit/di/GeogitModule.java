@@ -17,6 +17,8 @@ import org.geogit.api.DefaultPlatform;
 import org.geogit.api.ObjectId;
 import org.geogit.api.Platform;
 import org.geogit.api.RevObject;
+import org.geogit.api.hooks.CommandCallInterceptor;
+import org.geogit.api.hooks.Hookables;
 import org.geogit.repository.Index;
 import org.geogit.repository.Repository;
 import org.geogit.repository.StagingArea;
@@ -124,6 +126,10 @@ public class GeogitModule extends AbstractModule {
 
         bindInterceptor(subclassesOf(ObjectDatabase.class), methodMatcher,
                 new CachingObjectDatabaseGetInterceptor());
+
+        bindInterceptor(Hookables.classMatcher(), Hookables.methodMatcher(),
+                new CommandCallInterceptor());
+
     }
 
     private void bindConflictCheckingInterceptor() {

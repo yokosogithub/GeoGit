@@ -23,6 +23,7 @@ import org.geogit.api.RevCommit;
 import org.geogit.api.RevPerson;
 import org.geogit.api.RevTree;
 import org.geogit.api.SymRef;
+import org.geogit.api.hooks.Hookable;
 import org.geogit.api.plumbing.RefParse;
 import org.geogit.api.plumbing.ResolveTreeish;
 import org.geogit.api.plumbing.RevObjectParse;
@@ -54,6 +55,7 @@ import com.google.inject.Inject;
  * 
  */
 @CanRunDuringConflict
+@Hookable(name = "commit")
 public class CommitOp extends AbstractGeoGitOp<RevCommit> {
 
     private final ObjectDatabase objectDb;

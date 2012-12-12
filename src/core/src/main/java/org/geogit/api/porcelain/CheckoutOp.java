@@ -23,6 +23,7 @@ import org.geogit.api.RevObject.TYPE;
 import org.geogit.api.RevTree;
 import org.geogit.api.RevTreeBuilder;
 import org.geogit.api.SymRef;
+import org.geogit.api.hooks.Hookable;
 import org.geogit.api.plumbing.FindTreeChild;
 import org.geogit.api.plumbing.RefParse;
 import org.geogit.api.plumbing.ResolveTreeish;
@@ -50,6 +51,7 @@ import com.google.inject.Inject;
  * symbolic ref, hence making it a "dettached head".
  */
 @CanRunDuringConflict
+@Hookable(name = "checkout")
 public class CheckoutOp extends AbstractGeoGitOp<CheckoutResult> {
 
     private String branchOrCommit;

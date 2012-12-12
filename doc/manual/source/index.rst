@@ -37,4 +37,5 @@ Contents:
   configuration
   console
   osm
+  hooks
 

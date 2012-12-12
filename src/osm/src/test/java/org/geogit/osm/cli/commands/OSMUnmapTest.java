@@ -93,7 +93,7 @@ public class OSMUnmapTest extends Assert {
         assertTrue(unmapped.isPresent());
         ImmutableList<Optional<Object>> values = unmapped.get().getValues();
         assertEquals("POINT (7.1959361 50.739397)", values.get(6).get().toString());
-        assertEquals("name:Gielgen", values.get(3).get().toString());
+        assertEquals("name_alias:Gielgen", values.get(3).get().toString());
 
     }
 

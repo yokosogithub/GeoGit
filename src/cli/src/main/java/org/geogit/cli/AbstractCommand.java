@@ -9,7 +9,7 @@ import com.beust.jcommander.Parameter;
 import com.beust.jcommander.Parameters;
 
 /**
- * A template command; provides out of the box support for the --help argument so far.
+ * A template command; provides out of the box support for the --help argument
  * 
  */
 public abstract class AbstractCommand implements CLICommand {
@@ -30,6 +30,7 @@ public abstract class AbstractCommand implements CLICommand {
         }
 
         runInternal(cli);
+
     }
 
     /**
@@ -49,4 +50,5 @@ public abstract class AbstractCommand implements CLICommand {
         jc.setProgramName("geogit " + commandName);
         jc.usage();
     }
+
 }

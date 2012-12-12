@@ -8,9 +8,12 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 
 import java.io.File;
+import java.io.IOException;
+import java.io.OutputStream;
 import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.nio.file.Files;
 
 import org.geogit.api.AbstractGeoGitOp;
 import org.geogit.api.ObjectId;
@@ -25,6 +28,7 @@ import org.geogit.repository.Repository;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
+import com.google.common.io.Resources;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 
@@ -109,6 +113,7 @@ public class InitOp extends AbstractGeoGitOp<Repository> {
         try {
             repository = injector.getInstance(Repository.class);
             repository.open();
+            createSampleHooks(envHome);
         } catch (RuntimeException e) {
             throw new IllegalStateException("Can't access repository at '"
                     + envHome.getAbsolutePath() + "'", e);
@@ -125,9 +130,31 @@ public class InitOp extends AbstractGeoGitOp<Repository> {
         return repoExisted ? null : repository;
     }
 
-    /**
-     * 
-     */
+    private void createSampleHooks(File envHome) {
+
+        File hooks = new File(envHome, "hooks");
+        hooks.mkdirs();
+        if (!hooks.exists()) {
+            throw new RuntimeException();
+        }
+        try {
+            copyHookFile(hooks.getAbsolutePath(), "pre_commit.js.sample");
+            // TODO: add other example hooks
+        } catch (IOException e) {
+            throw new RuntimeException();
+        }
+
+    }
+
+    private void copyHookFile(String folder, String file) throws IOException {
+
+        URL url = Resources.getResource("org/geogit/api/hooks/" + file);
+        OutputStream os = Files.newOutputStream(new File(folder, file).toPath());
+        Resources.copy(url, os);
+        os.close();
+
+    }
+
     private void createDefaultRefs() {
         Optional<Ref> master = command(RefParse.class).setName(Ref.MASTER).call();
         Preconditions.checkState(!master.isPresent(), Ref.MASTER + " was already initialized.");

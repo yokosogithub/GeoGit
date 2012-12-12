@@ -6,20 +6,19 @@
 package org.geogit.osm.cli.commands;
 
 import java.io.File;
-import java.util.ArrayList;
 import java.util.Iterator;
 
 import jline.UnsupportedTerminal;
 import jline.console.ConsoleReader;
 
-import org.geogit.api.NodeRef;
+import org.geogit.api.Node;
 import org.geogit.api.Platform;
 import org.geogit.api.RevFeature;
 import org.geogit.api.RevFeatureType;
 import org.geogit.api.TestPlatform;
-import org.geogit.api.plumbing.LsTreeOp;
 import org.geogit.api.plumbing.ResolveFeatureType;
 import org.geogit.api.plumbing.RevObjectParse;
+import org.geogit.api.plumbing.diff.DiffEntry;
 import org.geogit.cli.GeogitCLI;
 import org.geogit.osm.internal.OSMImportOp;
 import org.geogit.repository.WorkingTree;
@@ -31,7 +30,6 @@ import org.junit.rules.TemporaryFolder;
 
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Lists;
 import com.vividsolutions.jts.geom.Polygon;
 
 public class OSMMapTest extends Assert {
@@ -67,8 +65,6 @@ public class OSMMapTest extends Assert {
         assertTrue(unstaged > 0);
         unstaged = workTree.countUnstaged("node").getCount();
         assertTrue(unstaged > 0);
-        cli.execute("add");
-        cli.execute("commit", "-m", "message");
         // map
         String mappingFilename = OSMMap.class.getResource("mapping.json").getFile();
         File mappingFile = new File(mappingFilename);
@@ -80,7 +76,7 @@ public class OSMMapTest extends Assert {
         assertTrue(feature.isPresent());
         // check that a feature was correctly mapped
         Optional<RevFeature> revFeature = cli.getGeogit().command(RevObjectParse.class)
-                .setRefSpec("HEAD:onewaystreets/31045880").call(RevFeature.class);
+                .setObjectId(feature.get().getObjectId()).call(RevFeature.class);
         assertTrue(revFeature.isPresent());
         ImmutableList<Optional<Object>> values = revFeature.get().getValues();
         String wkt = "LINESTRING (7.1923367 50.7395887, 7.1923127 50.7396946, 7.1923444 50.7397419, 7.1924199 50.7397781)";
@@ -99,8 +95,6 @@ public class OSMMapTest extends Assert {
         assertTrue(unstaged > 0);
         unstaged = workTree.countUnstaged("node").getCount();
         assertTrue(unstaged > 0);
-        cli.execute("add");
-        cli.execute("commit", "-m", "message");
         String mappingFilename = OSMMap.class.getResource("wrong_mapping.json").getFile();
         File mappingFile = new File(mappingFilename);
         try {
@@ -121,8 +115,6 @@ public class OSMMapTest extends Assert {
         assertTrue(unstaged > 0);
         unstaged = workTree.countUnstaged("node").getCount();
         assertTrue(unstaged > 0);
-        cli.execute("add");
-        cli.execute("commit", "-m", "message");
         try {
             cli.execute("osm", "map", "awrongpath/awroongfile.json");
             fail();
@@ -140,15 +132,13 @@ public class OSMMapTest extends Assert {
         WorkingTree workTree = cli.getGeogit().getRepository().getWorkingTree();
         long unstaged = workTree.countUnstaged("way").getCount();
         assertTrue(unstaged > 0);
-        cli.execute("add");
-        cli.execute("commit", "-m", "message");
         String mappingFilename = OSMMap.class.getResource("no_filter_mapping.json").getFile();
         File mappingFile = new File(mappingFilename);
         cli.execute("osm", "map", mappingFile.getAbsolutePath());
-        Iterator<NodeRef> allways = cli.getGeogit().command(LsTreeOp.class)
-                .setReference("HEAD:all_ways").call();
-        ArrayList<NodeRef> listAllways = Lists.newArrayList(allways);
-        assertEquals(4, listAllways.size());
+        long allways = workTree.countUnstaged("all_ways");
+        assertTrue(allways > 0);
+        long ways = workTree.countUnstaged("way");
+        assertEquals(ways, allways);
     }
 
     @Test
@@ -160,38 +150,16 @@ public class OSMMapTest extends Assert {
         WorkingTree workTree = cli.getGeogit().getRepository().getWorkingTree();
         long unstaged = workTree.countUnstaged("way").getCount();
         assertTrue(unstaged > 0);
-        cli.execute("add");
-        cli.execute("commit", "-m", "message");
         String mappingFilename = OSMMap.class.getResource("polygons_mapping.json").getFile();
         File mappingFile = new File(mappingFilename);
         cli.execute("osm", "map", mappingFile.getAbsolutePath());
-        Iterator<NodeRef> iter = cli.getGeogit().command(LsTreeOp.class).setReference("HEAD:areas")
-                .call();
+        Iterator<DiffEntry> iter = workTree.getUnstaged("areas");
         assertTrue(iter.hasNext());
         Optional<RevFeatureType> ft = cli.getGeogit().command(ResolveFeatureType.class)
-                .setRefSpec("HEAD:" + iter.next().path()).call();
+                .setRefSpec("WORK_HEAD:" + iter.next().newPath()).call();
         assertTrue(ft.isPresent());
         assertEquals(Polygon.class, ft.get().sortedDescriptors().get(1).getType().getBinding());
 
     }
 
-    @Test
-    public void testMappingWithDirtyWorkingTree() throws Exception {
-        // check that if no filter is passed, all entities are mapped
-        String filename = OSMImportOp.class.getResource("ways.xml").getFile();
-        File file = new File(filename);
-        cli.execute("osm", "import", file.getAbsolutePath());
-        WorkingTree workTree = cli.getGeogit().getRepository().getWorkingTree();
-        long unstaged = workTree.countUnstaged("way");
-        assertTrue(unstaged > 0);
-        String mappingFilename = OSMMap.class.getResource("no_filter_mapping.json").getFile();
-        File mappingFile = new File(mappingFilename);
-        try {
-            cli.execute("osm", "map", mappingFile.getAbsolutePath());
-            fail();
-        } catch (IllegalStateException e) {
-            assertEquals("Working tree and index are not clean", e.getMessage());
-        }
-
-    }
 }

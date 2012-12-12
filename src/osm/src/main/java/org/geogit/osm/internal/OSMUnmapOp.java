@@ -107,19 +107,6 @@ public class OSMUnmapOp extends AbstractGeoGitOp<RevTree> {
         return this;
     }
 
-    /**
-     * Sets the mapping to use, which has to be the same used to create the mapped tree to be
-     * unmapped. This mapping is used to resolve field aliases to original tag names. If no mapping
-     * is set, field names are assumed to be tag names
-     * 
-     * @param mapping
-     * @return
-     */
-    public OSMUnmapOp setMapping(Mapping mapping) {
-        this.mapping = mapping;
-        return this;
-    }
-
     @Override
     public RevTree call() {
 
