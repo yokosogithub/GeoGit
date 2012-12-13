@@ -6,7 +6,7 @@ Proof-of-concept straw-man web API for a single repository.
 
 It does:
 
-* handle `status`, `log`, `commit`
+* handle `status`, `log`, `commit`, `ls-tree`
 * allow XML or JSON responses, including JSONP callbacks
 * allow specification of the repository via the command line
 
@@ -36,6 +36,8 @@ just add overhead for little gain.
 Running
 =======
 
+First, build the whole project via the `parent` module.
+
 To run the jetty server via maven, in the web module directory, run:
 
   mvn -o exec:java -Dexec.mainClass=org.geogit.web.Main -Dexec.args=PATH_TO_YOUR_REPO
@@ -43,11 +45,12 @@ To run the jetty server via maven, in the web module directory, run:
 URLS
 ====
 
-All endpoints respond to POST operations only:
+All endpoints respond to GET or POST operations:
 
 |  /status
 |  /log
 |  /commit
+|  /ls-tree
 
 Note: Unless `commit` is run with the `all` option or changes are staged using the command line,
 nothing will happen. In other words, one cannot specify paths at the moment.
@@ -60,6 +63,11 @@ Parameters may be provided as URL query items or as form-encoded POST body.
 `status` and `log` accept `offset` and `limit` parameters to support paging.
 
 `commit` requires a `message` parameter and allows an optional `all` parameter to stage everything first.
+
+`log` accepts one or more `path` parameters.
+
+`ls-tree` accepts an optional `ref` parameter (? tree-ish, not clear) and has
+optional parameters for `showTree`, `onlyTree`, `recursive`, `verbose`
 
 An optional `callback` parameter in JSON requests will result in a JSONP response.
 
@@ -77,9 +85,9 @@ JSON Status:
 
   curl -XPOST localhost:8182/status
 
-Bunk Request:
+Invalid Request:
 
-  curl -XPOST localhost:8182/bunk
+  curl -XPOST localhost:8182/invalid
 
 JSONP Status:
 
