@@ -83,7 +83,7 @@ public class CommandBuilder {
         lsTree.setOnlyTrees(Boolean.valueOf(options.getFirstValue("onlyTree", "false")));
         lsTree.setRecursive(Boolean.valueOf(options.getFirstValue("recursive", "false")));
         lsTree.setVerbose(Boolean.valueOf(options.getFirstValue("verbose", "false")));
-        lsTree.setRefList(Arrays.asList(options.getValuesArray("ref")));
+        lsTree.setRefList(Arrays.asList(options.getValuesArray("path")));
         return lsTree;
     }
 }
