@@ -56,7 +56,7 @@ public class CommandResource extends ServerResource {
                 command.run(ctx);
                 rep = ctx.getRepresentation(variant, getJSONPCallback());
             }
-        } catch (CommandSpecException ex) {
+        } catch (IllegalArgumentException ex) {
             rep = formatException(ex, variant);
         } catch (Exception ex) {
             rep = formatUnexpectedException(ex, variant);
@@ -64,8 +64,7 @@ public class CommandResource extends ServerResource {
         return rep;
     }
 
-
-    private Representation formatException(CommandSpecException ex, Variant variant) {
+    private Representation formatException(IllegalArgumentException ex, Variant variant) {
         Logger logger = getLogger();
         if (logger.isLoggable(Level.FINE)) {
             logger.log(Level.FINE, "CommandSpecException", ex);
