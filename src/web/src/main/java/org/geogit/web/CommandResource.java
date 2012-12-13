@@ -21,6 +21,7 @@ import org.restlet.data.MediaType;
 import org.restlet.representation.Representation;
 import org.restlet.representation.Variant;
 import org.restlet.representation.WriterRepresentation;
+import org.restlet.resource.Get;
 import org.restlet.resource.Post;
 import org.restlet.resource.ServerResource;
 
@@ -30,7 +31,16 @@ import org.restlet.resource.ServerResource;
 public class CommandResource extends ServerResource {
 
     @Post("json|xml")
-    public Representation runCommand(Variant variant) {
+    public Representation postCommand(Variant variant) {
+        return runCommand(variant);
+    }
+
+    @Get("json|xml")
+    public Representation getCommand(Variant variant) {
+        return runCommand(variant);
+    }
+
+    private Representation runCommand(Variant variant) {
         Representation rep = null;
         WebAPICommand command = null;
         try {
