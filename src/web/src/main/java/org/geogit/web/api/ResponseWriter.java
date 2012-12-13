@@ -140,4 +140,20 @@ public class ResponseWriter {
         writeElement("deleted", Integer.toString(deletes));
     }
 
+    public void writeLsTreeResponse(Iterator<NodeRef> iter, boolean verbose) throws XMLStreamException {
+
+        while (iter.hasNext()) {
+            NodeRef node = iter.next();
+            out.writeStartElement("node");
+            writeElement("path", node.path());
+            if (verbose) {
+                writeElement("metadataId", node.getMetadataId().toString());
+                writeElement("type", node.getType().toString().toLowerCase());
+                writeElement("objectId", node.objectId().toString());
+            }
+            out.writeEndElement();
+        }
+
+    }
+
 }

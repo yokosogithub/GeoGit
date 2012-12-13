@@ -6,6 +6,7 @@ import org.geogit.web.api.commands.Status;
 import org.geogit.web.api.WebAPICommand;
 import org.geogit.web.api.commands.Commit;
 import org.geogit.web.api.commands.Log;
+import org.geogit.web.api.commands.LsTree;
 import org.restlet.Request;
 import org.restlet.data.Form;
 
@@ -31,6 +32,8 @@ public class CommandBuilder {
             command = buildLog(options);
         } else if ("commit".equalsIgnoreCase(commandName)) {
             command = buildCommit(options);
+        } else if ("ls-tree".equalsIgnoreCase(commandName)) {
+            command = buildLsTree(options);
         } else {
             throw new CommandSpecException("'" + commandName + "' is not a geogit command");
         }
@@ -72,5 +75,15 @@ public class CommandBuilder {
         commit.setAll(Boolean.valueOf(options.getFirstValue("all", "false")));
         commit.setMessage(options.getFirstValue("message", null));
         return commit;
+    }
+
+    static LsTree buildLsTree(Form options) {
+        LsTree lsTree = new LsTree();
+        lsTree.setIncludeTrees(Boolean.valueOf(options.getFirstValue("showTree", "false")));
+        lsTree.setOnlyTrees(Boolean.valueOf(options.getFirstValue("onlyTree", "false")));
+        lsTree.setRecursive(Boolean.valueOf(options.getFirstValue("recursive", "false")));
+        lsTree.setVerbose(Boolean.valueOf(options.getFirstValue("verbose", "false")));
+        lsTree.setRefList(Arrays.asList(options.getValuesArray("ref")));
+        return lsTree;
     }
 }
