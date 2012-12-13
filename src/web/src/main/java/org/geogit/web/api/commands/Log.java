@@ -1,8 +1,13 @@
 package org.geogit.web.api.commands;
 
+import com.google.common.base.Optional;
+import com.google.common.base.Preconditions;
 import java.util.Iterator;
+import java.util.List;
 import org.geogit.api.GeoGIT;
+import org.geogit.api.ObjectId;
 import org.geogit.api.RevCommit;
+import org.geogit.api.plumbing.RevParse;
 import org.geogit.api.porcelain.LogOp;
 import org.geogit.web.api.CommandContext;
 import org.geogit.web.api.CommandResponse;
@@ -16,14 +21,28 @@ public class Log implements WebAPICommand {
 
     Integer skip;
     Integer limit;
+    String since;
+    String until;
+    List<String> paths;
 
-
-    public void setLimit(Integer parseInt) {
-
+    public void setLimit(Integer limit) {
+        this.limit = limit;
     }
 
-    public void setOffset(Integer parseInt) {
+    public void setOffset(Integer offset) {
+        this.skip = offset;
+    }
 
+    public void setSince(String since) {
+        this.since = since;
+    }
+
+    public void setUntil(String until) {
+        this.until = until;
+    }
+
+    public void setPaths(List<String> paths) {
+        this.paths = paths;
     }
 
     @Override
@@ -38,41 +57,29 @@ public class Log implements WebAPICommand {
         if (limit != null) {
             op.setLimit(limit.intValue());
         }
-//        if (!sinceUntilPaths.isEmpty()) {
-//            List<String> sinceUntil = ImmutableList.copyOf((Splitter.on("..").split(sinceUntilPaths
-//                    .get(0))));
-//            Preconditions.checkArgument(sinceUntil.size() == 1 || sinceUntil.size() == 2,
-//                    "Invalid refSpec format, expected [<until>]|[<since>..<until>]: %s",
-//                    sinceUntilPaths.get(0));
-//
-//            String sinceRefSpec;
-//            String untilRefSpec;
-//            if (sinceUntil.size() == 1) {
-//                // just until was given
-//                sinceRefSpec = null;
-//                untilRefSpec = sinceUntil.get(0);
-//            } else {
-//                sinceRefSpec = sinceUntil.get(0);
-//                untilRefSpec = sinceUntil.get(1);
-//            }
-//            if (sinceRefSpec != null) {
-//                Optional<ObjectId> since;
-//                since = geogit.command(RevParse.class).setRefSpec(sinceRefSpec).call();
-//                Preconditions.checkArgument(since.isPresent(), "Object not found '%s'",
-//                        sinceRefSpec);
-//                op.setSince(since.get());
-//            }
-//            if (untilRefSpec != null) {
-//                Optional<ObjectId> until;
-//                until = geogit.command(RevParse.class).setRefSpec(untilRefSpec).call();
-//                Preconditions.checkArgument(until.isPresent(), "Object not found '%s'",
-//                        sinceRefSpec);
-//                op.setUntil(until.get());
-//            }
-//        }
+
+        if (this.since != null) {
+            Optional<ObjectId> since;
+            since = geogit.command(RevParse.class).setRefSpec(this.since).call();
+            Preconditions.checkArgument(since.isPresent(), "Object not found '%s'",
+                    this.since);
+            op.setSince(since.get());
+        }
+        if (this.until != null) {
+            Optional<ObjectId> until;
+            until = geogit.command(RevParse.class).setRefSpec(this.until).call();
+            Preconditions.checkArgument(until.isPresent(), "Object not found '%s'",
+                    this.until);
+            op.setUntil(until.get());
+        }
+        if (paths != null && !paths.isEmpty()) {
+            for (String path : paths) {
+                op.addPath(path);
+            }
+        }
+
         final Iterator<RevCommit> log = op.call();
         context.setResponseContent(new CommandResponse() {
-
             @Override
             public void write(ResponseWriter out) throws Exception {
                 out.start();
@@ -82,5 +89,4 @@ public class Log implements WebAPICommand {
         });
 
     }
-
 }

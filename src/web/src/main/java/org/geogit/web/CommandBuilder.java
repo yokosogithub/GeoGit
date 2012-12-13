@@ -1,5 +1,6 @@
 package org.geogit.web;
 
+import java.util.Arrays;
 import org.geogit.web.api.CommandSpecException;
 import org.geogit.web.api.commands.Status;
 import org.geogit.web.api.WebAPICommand;
@@ -36,12 +37,12 @@ public class CommandBuilder {
         return command;
     }
 
-    static int parseInt(Form form, String key, int defaultValue) {
+    static Integer parseInt(Form form, String key, Integer defaultValue) {
         String val = form.getFirstValue(key);
-        int retval = defaultValue;
+        Integer retval = defaultValue;
         if (val != null) {
             try {
-                retval = Integer.parseInt(val);
+                retval = new Integer(val);
             } catch (NumberFormatException nfe) {
                 throw new CommandSpecException("Invalid value '" + val + "' specified for option: " + key);
             }
@@ -59,7 +60,10 @@ public class CommandBuilder {
     static Log buildLog(Form options) {
         Log command = new Log();
         command.setLimit(parseInt(options, "limit", 50));
-        command.setOffset(parseInt(options, "offset", 0));
+        command.setOffset(parseInt(options, "offset", null));
+        command.setPaths(Arrays.asList(options.getValuesArray("path")));
+        command.setSince(options.getFirstValue("since"));
+        command.setUntil(options.getFirstValue("until"));
         return command;
     }
 
