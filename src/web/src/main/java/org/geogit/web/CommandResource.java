@@ -18,11 +18,13 @@ import org.geogit.web.api.ResponseWriter;
 import org.geogit.web.api.WebAPICommand;
 import org.restlet.data.Form;
 import org.restlet.data.MediaType;
+import org.restlet.data.Status;
 import org.restlet.representation.Representation;
 import org.restlet.representation.Variant;
 import org.restlet.representation.WriterRepresentation;
 import org.restlet.resource.Get;
 import org.restlet.resource.Post;
+import org.restlet.resource.ResourceException;
 import org.restlet.resource.ServerResource;
 
 /**
@@ -43,47 +45,65 @@ public class CommandResource extends ServerResource {
     private Representation runCommand(Variant variant) {
         Representation rep = null;
         WebAPICommand command = null;
+        Form options = getRequest().getResourceRef().getQueryAsForm();
+        String commandName = (String) getRequest().getAttributes().get("command");
+        MediaType format = resolveFormat(options, variant);
         try {
-            command = CommandBuilder.build(getRequest());
+            command = CommandBuilder.build(commandName, options);
             assert command != null;
         } catch (CommandSpecException ex) {
-            rep = formatException(ex, variant);
+            rep = formatException(ex, format);
         }
         try {
             if (command != null) {
                 GeoGIT geogit = (GeoGIT) getApplication().getContext().getAttributes().get("geogit");
                 RestletContext ctx = new RestletContext(geogit);
                 command.run(ctx);
-                rep = ctx.getRepresentation(variant, getJSONPCallback());
+                rep = ctx.getRepresentation(format, getJSONPCallback());
             }
         } catch (IllegalArgumentException ex) {
-            rep = formatException(ex, variant);
+            rep = formatException(ex, format);
         } catch (Exception ex) {
-            rep = formatUnexpectedException(ex, variant);
+            rep = formatUnexpectedException(ex, format);
         }
         return rep;
     }
 
-    private Representation formatException(IllegalArgumentException ex, Variant variant) {
+    private Representation formatException(IllegalArgumentException ex, MediaType format) {
         Logger logger = getLogger();
         if (logger.isLoggable(Level.FINE)) {
             logger.log(Level.FINE, "CommandSpecException", ex);
         }
-        return new JettisonRepresentation(variant.getMediaType(),
+        return new JettisonRepresentation(format,
                 CommandResponse.error(ex.getMessage()), getJSONPCallback());
     }
 
-    private Representation formatUnexpectedException(Exception ex, Variant variant) {
+    private Representation formatUnexpectedException(Exception ex, MediaType format) {
         Logger logger = getLogger();
         UUID uuid = UUID.randomUUID();
         logger.log(Level.SEVERE, "Unexpected exception : " + uuid, ex);
-        return new JettisonRepresentation(variant.getMediaType(),
+        return new JettisonRepresentation(format,
                 CommandResponse.error("Unexpected exception : " + uuid), getJSONPCallback());
     }
 
     private String getJSONPCallback() {
         Form form = getRequest().getResourceRef().getQueryAsForm();
         return form.getFirstValue("callback", null);
+    }
+
+    private MediaType resolveFormat(Form options, Variant variant) {
+        MediaType retval = variant.getMediaType();
+        String requested = options.getFirstValue("output_format");
+        if (requested != null) {
+            if (requested.equalsIgnoreCase("xml")) {
+                retval = MediaType.APPLICATION_XML;
+            } else if (requested.equalsIgnoreCase("json")) {
+                retval = MediaType.APPLICATION_JSON;
+            } else {
+                throw new ResourceException(Status.CLIENT_ERROR_BAD_REQUEST, "Invalid output_format '" + requested + "'");
+            }
+        }
+        return retval;
     }
 
     static class RestletContext implements CommandContext {
@@ -100,8 +120,8 @@ public class CommandResource extends ServerResource {
             return geogit;
         }
 
-        Representation getRepresentation(Variant variant, String callback) {
-            return new JettisonRepresentation(variant.getMediaType(), responseContent, callback);
+        Representation getRepresentation(MediaType format, String callback) {
+            return new JettisonRepresentation(format, responseContent, callback);
         }
 
         @Override

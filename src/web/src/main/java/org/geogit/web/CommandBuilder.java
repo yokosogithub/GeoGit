@@ -7,7 +7,6 @@ import org.geogit.web.api.WebAPICommand;
 import org.geogit.web.api.commands.Commit;
 import org.geogit.web.api.commands.Log;
 import org.geogit.web.api.commands.LsTree;
-import org.restlet.Request;
 import org.restlet.data.Form;
 
 /**
@@ -15,17 +14,8 @@ import org.restlet.data.Form;
  */
 public class CommandBuilder {
 
-    public static WebAPICommand build(Request request) throws CommandSpecException {
+    public static WebAPICommand build(String commandName, Form options) throws CommandSpecException {
         WebAPICommand command = null;
-        String commandName = (String) request.getAttributes().get("command");
-        Form options;
-        if (request.getEntity().isAvailable()) {
-            options = new Form(request.getEntity());
-        } else {
-            options = new Form();
-        }
-        Form query = request.getResourceRef().getQueryAsForm();
-        options.addAll(query);
         if ("status".equalsIgnoreCase(commandName)) {
             command = buildStatus(options);
         } else if ("log".equalsIgnoreCase(commandName)) {

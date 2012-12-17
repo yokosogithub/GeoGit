@@ -71,10 +71,15 @@ optional parameters for `showTree`, `onlyTree`, `recursive`, `verbose`
 
 An optional `callback` parameter in JSON requests will result in a JSONP response.
 
+An optional `output_format` parameter can specify the response type (see Content-Type below)
+
 Content-Type
 ------------
 
 The default `Accept` value is assumed to be `application/json`. `text/xml` can also be specified.
+
+Additionally, the format can be specified by providing the `output_format` parameter
+as either `xml` or `json`.
 
 Examples
 ========
