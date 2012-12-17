@@ -604,7 +604,8 @@ public class WorkingTree {
                 revFeatureTypes.put(featureType.getName(), revFeatureTypeId);
             }
 
-            final Node objectRef = putInDatabase(feature, defaultMetadataId);
+            final Node objectRef = putInDatabase(feature,
+                    defaultMetadataId.equals(revFeatureTypeId) ? ObjectId.NULL : revFeatureTypeId);
             parentTree.put(objectRef);
             if (target != null) {
                 target.add(objectRef);
