@@ -4,6 +4,7 @@
  */
 package org.geogit.api.porcelain;
 
+import java.util.Collection;
 import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
@@ -188,6 +189,15 @@ public class CommitOp extends AbstractGeoGitOp<RevCommit> {
     }
 
     /**
+     * @param parents parents to add
+     * @return {@code this}
+     */
+    public CommitOp addParents(Collection<ObjectId> parents) {
+        this.parents.addAll(parents);
+        return this;
+    }
+
+    /**
      * Executes the commit operation.
      * 
      * @return the commit just applied, or {@code null} if
@@ -223,7 +233,7 @@ public class CommitOp extends AbstractGeoGitOp<RevCommit> {
         final String currentBranch = ((SymRef) headRef).getTarget();
         final ObjectId currHeadCommitId = headRef.getObjectId();
         if (!currHeadCommitId.isNull()) {
-            parents.add(currHeadCommitId);
+            parents.add(0, currHeadCommitId);
         }
 
         // final ObjectId newTreeId = index.writeTree(currHead.get(), subProgress(49f));
