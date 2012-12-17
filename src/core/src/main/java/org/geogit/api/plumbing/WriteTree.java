@@ -56,6 +56,8 @@ public class WriteTree extends AbstractGeoGitOp<ObjectId> {
 
     private Supplier<RevTree> oldRoot;
 
+    private String pathFilter;
+
     /**
      * Creates a new {@code WriteTree} operation using the specified parameters.
      * 
@@ -76,6 +78,16 @@ public class WriteTree extends AbstractGeoGitOp<ObjectId> {
     }
 
     /**
+     * 
+     * @param pathFilter the pathfilter to pass on to the index
+     * @return {@code this}
+     */
+    public WriteTree setPathFilter(String pathFilter) {
+        this.pathFilter = pathFilter;
+        return this;
+    }
+
+    /**
      * Executes the write tree operation.
      * 
      * @return the new root tree id
@@ -86,7 +98,7 @@ public class WriteTree extends AbstractGeoGitOp<ObjectId> {
 
         final RevTree oldRootTree = resolveRootTree();
 
-        Iterator<DiffEntry> staged = getIndex().getStaged(null);
+        Iterator<DiffEntry> staged = getIndex().getStaged(pathFilter);
         if (!staged.hasNext()) {
             return oldRootTree.getId();
         }
@@ -100,7 +112,7 @@ public class WriteTree extends AbstractGeoGitOp<ObjectId> {
         Set<String> deletedTrees = Sets.newHashSet();
         NodeRef ref;
         int i = 0;
-        final long numChanges = getIndex().countStaged(null);
+        final long numChanges = getIndex().countStaged(pathFilter);
         while (staged.hasNext()) {
             progress.progress((float) (++i * 100) / numChanges);
             if (progress.isCanceled()) {
