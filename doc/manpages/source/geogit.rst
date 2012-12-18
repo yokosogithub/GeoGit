@@ -47,6 +47,7 @@ SEE ALSO
 :ref:`geogit-log`
 :ref:`geogit-status`
 :ref:`geogit-config`
+:ref:`geogit-merge`
 :ref:`geogit-rebase`
 :ref:`geogit-reset`
 :ref:`geogit-clone`

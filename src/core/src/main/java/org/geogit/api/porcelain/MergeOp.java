@@ -36,7 +36,7 @@ import com.google.inject.Inject;
  */
 public class MergeOp extends AbstractGeoGitOp<RevCommit> {
 
-    private List<ObjectId> commits;
+    private List<ObjectId> commits = new ArrayList<ObjectId>();;
 
     private String message = null;
 
@@ -74,9 +74,6 @@ public class MergeOp extends AbstractGeoGitOp<RevCommit> {
     public MergeOp addCommit(final Supplier<ObjectId> commit) {
         Preconditions.checkNotNull(commit);
 
-        if (this.commits == null) {
-            this.commits = new ArrayList<ObjectId>();
-        }
         this.commits.add(commit.get());
         return this;
     }
@@ -89,6 +86,8 @@ public class MergeOp extends AbstractGeoGitOp<RevCommit> {
     @Override
     public RevCommit call() {
 
+        Preconditions.checkArgument(commits.size() > 0, "No commits specified for merge.");
+
         final Optional<Ref> currHead = command(RefParse.class).setName(Ref.HEAD).call();
         Preconditions.checkState(currHead.isPresent(), "Repository has no HEAD, can't rebase.");
         Preconditions.checkState(currHead.get() instanceof SymRef,
@@ -98,11 +97,14 @@ public class MergeOp extends AbstractGeoGitOp<RevCommit> {
 
         getProgressListener().started();
 
+        boolean fastForward = true;
+        boolean changed = false;
+
         for (ObjectId commitId : commits) {
             ProgressListener subProgress = subProgress(100.f / commits.size());
 
-            Preconditions
-                    .checkState(!ObjectId.NULL.equals(commitId), "Cannot merge a NULL commit.");
+            Preconditions.checkArgument(!ObjectId.NULL.equals(commitId),
+                    "Cannot merge a NULL commit.");
             Preconditions.checkArgument(repository.commitExists(commitId), "Not a valid commit: "
                     + commitId.toString());
 
@@ -116,6 +118,7 @@ public class MergeOp extends AbstractGeoGitOp<RevCommit> {
                 repository.getWorkingTree().updateWorkHead(commitId);
                 repository.getIndex().updateStageHead(commitId);
                 subProgress.complete();
+                changed = true;
                 continue;
             }
 
@@ -138,6 +141,9 @@ public class MergeOp extends AbstractGeoGitOp<RevCommit> {
                 repository.getWorkingTree().updateWorkHead(commitId);
                 repository.getIndex().updateStageHead(commitId);
                 subProgress.complete();
+                changed = true;
+                continue;
+            } else if (ancestorCommit.get().getId().equals(commitId)) {
                 continue;
             }
 
@@ -165,19 +171,31 @@ public class MergeOp extends AbstractGeoGitOp<RevCommit> {
                 // stage changes
                 index.stage(new SubProgressListener(subProgress, commitCount * 100.f / numCommits),
                         diff, 0);
+                changed = true;
+                fastForward = false;
             }
             subProgress.complete();
         }
-        String commitMessage = message;
-        if (commitMessage == null) {
-            commitMessage = "";
-            for (ObjectId commit : commits) {
-                commitMessage += "Merge commit '" + commit.toString() + "'. ";
-            }
+
+        if (!changed) {
+            throw new NothingToCommitException("Already up to date.");
         }
 
-        RevCommit mergeCommit = command(CommitOp.class).setMessage(commitMessage)
-                .addParents(commits).call();
+        RevCommit mergeCommit;
+        if (fastForward) {
+            mergeCommit = repository.getCommit(commits.get(0));
+        } else {
+            String commitMessage = message;
+            if (commitMessage == null) {
+                commitMessage = "";
+                for (ObjectId commit : commits) {
+                    commitMessage += "Merge commit '" + commit.toString() + "'. ";
+                }
+            }
+
+            mergeCommit = command(CommitOp.class).setMessage(commitMessage).addParents(commits)
+                    .call();
+        }
 
         getProgressListener().complete();
 

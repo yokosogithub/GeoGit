@@ -175,8 +175,15 @@ public class PullOpTest extends RemoteRepositoryTestCase {
 
         // Pull the commit
         PullOp pull = pull();
-        exception.expect(UnsupportedOperationException.class);
         pull.setRemote("origin").call();
+
+        Iterator<RevCommit> logs = localGeogit.geogit.command(LogOp.class).call();
+        List<RevCommit> logged = new ArrayList<RevCommit>();
+        for (; logs.hasNext();) {
+            logged.add(logs.next());
+        }
+
+        assertEquals(expectedMaster, logged);
     }
 
     @Test
