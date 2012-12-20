@@ -42,11 +42,7 @@ class HessianCommitWriter extends HessianRevWriter implements ObjectWriter<RevCo
         writePerson(hout, commit.getAuthor());
         writePerson(hout, commit.getCommitter());
         hout.writeString(commit.getMessage());
-        long timestamp = commit.getTimestamp();
-        if (timestamp <= 0) {
-            timestamp = System.currentTimeMillis();
-        }
-        hout.writeLong(timestamp);
+        hout.writeLong(commit.getTimestamp());
 
         hout.completeMessage();
 
