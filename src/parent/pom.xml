@@ -425,6 +425,7 @@
    <module>../cli</module>
    <module>../cli-app</module>
    <module>../geotools</module>
+   <module>../web</module>
    <!--module>../datastore</module-->
   </modules>
 </project>
