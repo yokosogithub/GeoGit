@@ -7,7 +7,6 @@ package org.geogit.geotools.porcelain;
 
 import java.io.IOException;
 import java.net.ConnectException;
-import java.sql.Connection;
 import java.util.Arrays;
 import java.util.List;
 
@@ -31,7 +30,6 @@ import org.geotools.data.simple.SimpleFeatureSource;
 import org.geotools.data.simple.SimpleFeatureStore;
 import org.geotools.feature.NameImpl;
 import org.geotools.feature.simple.SimpleFeatureTypeImpl;
-import org.geotools.jdbc.JDBCDataStore;
 import org.opengis.feature.simple.SimpleFeatureType;
 
 import com.beust.jcommander.Parameter;
@@ -82,17 +80,6 @@ public class PGExport extends AbstractPGCommand implements CLICommand {
             return;
         }
 
-        if (dataStore instanceof JDBCDataStore) {
-            Connection con = null;
-            try {
-                con = ((JDBCDataStore) dataStore).getDataSource().getConnection();
-            } catch (Exception e) {
-                throw new ConnectException();
-            }
-
-            ((JDBCDataStore) dataStore).closeSafe(con);
-        }
-
         if (!Arrays.asList(dataStore.getTypeNames()).contains(tableName)) {
             SimpleFeatureType featureType;
             try {
@@ -118,7 +105,8 @@ public class PGExport extends AbstractPGCommand implements CLICommand {
         if (featureSource instanceof SimpleFeatureStore) {
             SimpleFeatureStore featureStore = (SimpleFeatureStore) featureSource;
             cli.getGeogit().command(ExportOp.class).setFeatureTypeName(featureTypeName)
-                    .setFeatureStore(featureStore).call();
+                    .setFeatureStore(featureStore).setProgressListener(cli.getProgressListener())
+                    .call();
 
             cli.getConsole().println(featureTypeName + " exported successfully to " + tableName);
         } else {

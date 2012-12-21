@@ -14,7 +14,7 @@ geogit pg import [options] [--all|-t <table>]
 DESCRIPTION
 ***********
 
-This command imports one or more tables from a PostGIS database into the GeoGit working tree.  Either ``-t`` or ``--all`` must be set for the import process to commence.  To see a list of available tables, use ``geogit pg import``.
+This command imports one or more tables from a PostGIS database into the GeoGit working tree.  Either ``-t`` or ``--all`` must be set for the import process to commence.  To see a list of available tables, use ``geogit pg list``.
 
 OPTIONS
 *******    

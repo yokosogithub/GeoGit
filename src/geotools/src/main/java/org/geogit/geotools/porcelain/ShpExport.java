@@ -100,7 +100,8 @@ public class ShpExport extends AbstractShpCommand implements CLICommand {
         if (featureSource instanceof SimpleFeatureStore) {
             final SimpleFeatureStore featureStore = (SimpleFeatureStore) featureSource;
             cli.getGeogit().command(ExportOp.class).setFeatureStore(featureStore)
-                    .setFeatureTypeName(featureTypeName).call();
+                    .setFeatureTypeName(featureTypeName)
+                    .setProgressListener(cli.getProgressListener()).call();
             cli.getConsole().println(featureTypeName + " exported successfully to " + shapefile);
         } else {
             // do we need to check this?

@@ -119,6 +119,9 @@ public class ExportOp extends AbstractGeoGitOp<SimpleFeatureStore> {
                 (RevTree) revObject.get(), database, Strategy.FEATURES_ONLY);
 
         // Create a FeatureCollection
+
+        getProgressListener().started();
+        getProgressListener().setDescription("Exporting " + featureTypeName + "... ");
         DefaultFeatureCollection features = new DefaultFeatureCollection();
 
         FeatureBuilder featureBuilder = null;
@@ -138,6 +141,7 @@ public class ExportOp extends AbstractGeoGitOp<SimpleFeatureStore> {
                 Feature feature = featureBuilder.build(Integer.toString(i), revFeature);
                 Feature validFeature = function.apply(feature);
                 features.add((SimpleFeature) validFeature);
+                getProgressListener().progress((i * 100.f) / revTree.get().size());
                 i++;
             }
         }
@@ -163,6 +167,8 @@ public class ExportOp extends AbstractGeoGitOp<SimpleFeatureStore> {
         } catch (IOException e) {
             throw new GeoToolsOpException(StatusCode.UNABLE_TO_ADD);
         }
+
+        getProgressListener().complete();
 
         return fs;
 

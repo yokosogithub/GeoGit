@@ -54,5 +54,6 @@ SEE ALSO
 :ref:`geogit-pull`
 :ref:`geogit-push`
 :ref:`geogit-pg`
+:ref:`geogit-sl`
 :ref:`geogit-shp`
 

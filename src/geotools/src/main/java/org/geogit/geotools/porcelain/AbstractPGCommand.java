@@ -6,6 +6,7 @@ package org.geogit.geotools.porcelain;
 
 import java.io.Serializable;
 import java.net.ConnectException;
+import java.sql.Connection;
 import java.util.Map;
 
 import org.geogit.cli.CLICommand;
@@ -13,6 +14,7 @@ import org.geogit.cli.GeogitCLI;
 import org.geotools.data.AbstractDataStoreFactory;
 import org.geotools.data.DataStore;
 import org.geotools.data.postgis.PostgisNGDataStoreFactory;
+import org.geotools.jdbc.JDBCDataStore;
 
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
@@ -65,6 +67,9 @@ public abstract class AbstractPGCommand implements CLICommand {
         runInternal(cli);
     }
 
+    /**
+     * Prints the correct usage of the geogit pg command.
+     */
     protected void printUsage() {
         JCommander jc = new JCommander(this);
         String commandName = this.getClass().getAnnotation(Parameters.class).commandNames()[0];
@@ -99,6 +104,17 @@ public abstract class AbstractPGCommand implements CLICommand {
 
         if (dataStore == null) {
             throw new ConnectException();
+        }
+
+        if (dataStore instanceof JDBCDataStore) {
+            Connection con = null;
+            try {
+                con = ((JDBCDataStore) dataStore).getDataSource().getConnection();
+            } catch (Exception e) {
+                throw new ConnectException();
+            }
+
+            ((JDBCDataStore) dataStore).closeSafe(con);
         }
 
         return dataStore;

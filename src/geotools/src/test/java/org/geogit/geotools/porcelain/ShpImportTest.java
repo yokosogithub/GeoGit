@@ -17,6 +17,7 @@ import jline.console.ConsoleReader;
 
 import org.geogit.api.Platform;
 import org.geogit.cli.GeogitCLI;
+import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Rule;
@@ -45,6 +46,11 @@ public class ShpImportTest extends Assert {
         cli = new GeogitCLI(consoleReader);
 
         setUpGeogit(cli);
+    }
+
+    @After
+    public void tearDown() throws Exception {
+        cli.close();
     }
 
     @Test

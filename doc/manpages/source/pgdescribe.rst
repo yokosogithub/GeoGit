@@ -14,7 +14,7 @@ geogit pg describe [options] -t <table>
 DESCRIPTION
 ***********
 
-This command describes a single table in a PostGIS database.  It will print out each property name along with its type. To see a list of available tables, use ``geogit pg import``.
+This command describes a single table in a PostGIS database.  It will print out each property name along with its type. To see a list of available tables, use ``geogit pg list``.
 
 OPTIONS
 *******    

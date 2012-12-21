@@ -38,10 +38,17 @@ man_pages = [
     ('push', 'geogit-push', 'Update remote refs along with associated objects', ['OpenGeo <http://opengeo.org>'], '1'),
     ('pg', 'geogit-pg', 'PostGIS command extension', ['OpenGeo <http://opengeo.org>'], '2'),
     ('pgimport', 'geogit-pg-import', 'Import features from a PostGIS database', ['OpenGeo <http://opengeo.org>'], '2'),
+    ('pgexport', 'geogit-pg-export', 'Export features to a PostGIS database', ['OpenGeo <http://opengeo.org>'], '2'),
     ('pglist', 'geogit-pg-list', 'List tables in a PostGIS database', ['OpenGeo <http://opengeo.org>'], '2'),
     ('pgdescribe', 'geogit-pg-describe', 'Describe properties of a table in a PostGIS database', ['OpenGeo <http://opengeo.org>'], '2'),
-    ('shp', 'geogit-shp', 'Shapefile command extension', ['OpenGeo <http://opengeo.org>'], '3'),
-    ('shpimport', 'geogit-shp-import', 'Import features from shapefiles', ['OpenGeo <http://opengeo.org>'], '3')
+    ('sl', 'geogit-sl', 'SpatiaLite command extension', ['OpenGeo <http://opengeo.org>'], '3'),
+    ('slimport', 'geogit-sl-import', 'Import features from a SpatiaLite database', ['OpenGeo <http://opengeo.org>'], '3'),
+    ('slexport', 'geogit-sl-export', 'Export features to a SpatiaLite database', ['OpenGeo <http://opengeo.org>'], '3'),
+    ('sllist', 'geogit-sl-list', 'List tables in a SpatiaLite database', ['OpenGeo <http://opengeo.org>'], '3'),
+    ('sldescribe', 'geogit-sl-describe', 'Describe properties of a table in a SpatiaLite database', ['OpenGeo <http://opengeo.org>'], '3'),
+    ('shp', 'geogit-shp', 'Shapefile command extension', ['OpenGeo <http://opengeo.org>'], '4'),
+    ('shpimport', 'geogit-shp-import', 'Import features from shapefiles', ['OpenGeo <http://opengeo.org>'], '4'),
+    ('shpexport', 'geogit-shp-export', 'Import features to shapefiles', ['OpenGeo <http://opengeo.org>'], '4')
 ]
 
 # General configuration

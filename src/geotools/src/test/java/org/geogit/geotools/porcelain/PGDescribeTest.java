@@ -19,6 +19,7 @@ import jline.console.ConsoleReader;
 import org.geogit.api.Platform;
 import org.geogit.cli.GeogitCLI;
 import org.geotools.data.AbstractDataStoreFactory;
+import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -55,6 +56,11 @@ public class PGDescribeTest extends Assert {
         cli = new GeogitCLI(consoleReader);
 
         setUpGeogit(cli);
+    }
+
+    @After
+    public void tearDown() throws Exception {
+        cli.close();
     }
 
     @Test
