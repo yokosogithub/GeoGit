@@ -6,6 +6,8 @@ import com.google.inject.util.Modules;
 import java.io.File;
 import java.util.Arrays;
 import java.util.LinkedList;
+import java.util.concurrent.ConcurrentMap;
+import javax.servlet.ServletContext;
 import org.geogit.api.DefaultPlatform;
 import org.geogit.api.GeoGIT;
 import org.geogit.api.GlobalInjectorBuilder;
@@ -17,13 +19,45 @@ import org.geogit.storage.bdbje.JEStorageModule;
 import org.restlet.Application;
 import org.restlet.Component;
 import org.restlet.Context;
+import org.restlet.Restlet;
 import org.restlet.data.Protocol;
 import org.restlet.routing.Router;
 
 /**
- *
+ * Both an embedded jetty launcher
  */
-public class Main {
+public class Main extends Application {
+
+    static {
+        setup();
+    }
+
+    @Override
+    public void setContext(Context context) {
+        super.setContext(context);
+        assert context != null;
+
+        ConcurrentMap<String, Object> attributes = context.getAttributes();
+        if (!attributes.containsKey("geogit")) {
+            ServletContext sc = (ServletContext) context.getServerDispatcher()
+                    .getContext().getAttributes().get("org.restlet.ext.servlet.ServletContext");
+            String repo = sc.getInitParameter("repository");
+            if (repo == null) {
+                repo = System.getProperty("org.geogit.web.repository");
+            }
+            if (repo == null) {
+                throw new IllegalStateException("Cannot launch geogit servlet without `repository` parameter");
+            }
+            context.getAttributes().put("geogit", loadGeoGIT(repo));
+        }
+    }
+
+    @Override
+    public Restlet createInboundRoot() {
+        Router router = new Router();
+        router.attach("/{command}", CommandResource.class);
+        return router;
+    }
 
     static GeoGIT loadGeoGIT(String repo) {
         Platform platform = new DefaultPlatform();
@@ -43,13 +77,8 @@ public class Main {
         Context context = new Context();
         context.getAttributes().put("geogit", loadGeoGIT(repo));
 
-        Application application = new Application(context);
-
-        Router router = new Router();
-        router.attach("/{command}", CommandResource.class);
-
-        application.setInboundRoot(router);
-
+        Application application = new Main();
+        application.setContext(context);
         Component comp = new Component();
         comp.getDefaultHost().attach(application);
         comp.getServers().add(Protocol.HTTP, 8182);
@@ -73,7 +102,6 @@ public class Main {
             System.exit(1);
         }
         String repo = argList.pop();
-        setup();
         startServer(repo);
     }
 }
