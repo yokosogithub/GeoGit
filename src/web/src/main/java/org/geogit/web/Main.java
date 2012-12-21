@@ -14,6 +14,8 @@ import org.geogit.api.Platform;
 import org.geogit.api.plumbing.ResolveGeogitDir;
 import org.geogit.di.GeogitModule;
 import org.geogit.storage.bdbje.JEStorageModule;
+import org.geogit.web.api.repo.ManifestResource;
+import org.geogit.web.api.repo.ObjectResource;
 import org.restlet.Application;
 import org.restlet.Component;
 import org.restlet.Context;
@@ -46,6 +48,7 @@ public class Main {
         Application application = new Application(context);
 
         Router router = new Router();
+        router.attach("/repo", makeRepoRouter());
         router.attach("/{command}", CommandResource.class);
 
         application.setInboundRoot(router);
@@ -54,6 +57,13 @@ public class Main {
         comp.getDefaultHost().attach(application);
         comp.getServers().add(Protocol.HTTP, 8182);
         comp.start();
+    }
+
+    static Router makeRepoRouter() {
+        Router router = new Router();
+        router.attach("/manifest", ManifestResource.class);
+        router.attach("/objects/{id}", new ObjectResource());
+        return router;
     }
 
     static void setup() {
