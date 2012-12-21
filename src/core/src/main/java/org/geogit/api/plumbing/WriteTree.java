@@ -29,9 +29,12 @@ import com.google.common.collect.Maps;
 import com.google.inject.Inject;
 
 /**
- * Create a tree object from the current index and returns the new root tree id.
+ * Creates a new root tree in the {@link ObjectDatabase object database} from the current index,
+ * based on the current {@code HEAD} and returns the new root tree id.
  * <p>
- * Creates a tree object using the current index. The id of the new root tree object is returned.
+ * This command creates a tree object using the current index. The id of the new root tree object is
+ * returned. No {@link Ref ref} is updated as a result of this operation, so the resulting root tree
+ * is "orphan". It's up to the calling code to update any needed reference.
  * 
  * The index must be in a fully merged state.
  * 

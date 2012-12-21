@@ -26,11 +26,20 @@ import com.google.common.collect.Iterators;
 import com.google.inject.Inject;
 
 /**
- * List index contents
- * 
+ * List the contents of a {@link RevTree tree} object as an Iterator&lt;{@link NodeRef}&gt;, using
+ * the sepecified {@link Strategy strategy} to indicate what to return.
+ * <p>
+ * The tree to traverse is given as a {@link #setReference(String) ref spec}, as supported by
+ * {@link RevParse#setRefSpec(String) RevParse} and must resolve to a tree object. If no ref spec is
+ * specified, the root of the current working tree is assumed.
  */
 public class LsTreeOp extends AbstractGeoGitOp<Iterator<NodeRef>> {
 
+    /**
+     * Enumeration of the possible results of the {@link LsTreeOp} operation, indicating whether to
+     * return the recursive contents of a tree or not, and whether to return feature and/or tree
+     * child references.
+     */
     public enum Strategy {
         /**
          * Default ls strategy, list the all direct child entries of a tree
