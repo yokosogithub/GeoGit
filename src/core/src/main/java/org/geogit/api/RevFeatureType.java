@@ -96,4 +96,25 @@ public class RevFeatureType extends AbstractRevObject {
         Name name = type().getName();
         return name;
     }
+
+    @Override
+    public String toString() {
+        StringBuilder builder = new StringBuilder();
+        builder.append("FeatureType[");
+        builder.append(getId().toString());
+        builder.append("; ");
+        boolean first = true;
+        for (PropertyDescriptor desc : sortedDescriptors()) {
+            if (first) {
+                first = false;
+            } else {
+                builder.append(", ");
+            }
+            builder.append(desc.getName().getLocalPart());
+            builder.append(": ");
+            builder.append(desc.getType().getBinding().getSimpleName());
+        }
+        builder.append("]");
+        return builder.toString();
+    }
 }
