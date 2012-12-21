@@ -6,12 +6,15 @@
 package org.geogit.api.plumbing;
 
 import java.io.File;
+import java.util.Iterator;
 
 import org.geogit.api.GeoGIT;
 import org.geogit.api.MemoryModule;
+import org.geogit.api.ObjectId;
 import org.geogit.api.Platform;
 import org.geogit.api.Ref;
 import org.geogit.api.TestPlatform;
+import org.geogit.api.plumbing.diff.DiffEntry;
 import org.geogit.di.GeogitModule;
 import org.junit.Assert;
 import org.junit.Before;
@@ -76,6 +79,13 @@ public class DiffTreeTest extends Assert {
     public void testInvalidNewVersion() {
         exception.expect(IllegalArgumentException.class);
         command.setOldVersion(Ref.HEAD).setNewVersion("abcdef0123").call();
+    }
+
+    @Test
+    public void testNullTrees() {
+        Iterator<DiffEntry> diffs = command.setOldTree(ObjectId.NULL).setNewTree(ObjectId.NULL)
+                .call();
+        assertFalse(diffs.hasNext());
     }
 
     @Test

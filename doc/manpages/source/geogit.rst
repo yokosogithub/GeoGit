@@ -50,6 +50,7 @@ SEE ALSO
 :ref:`geogit-rebase`
 :ref:`geogit-reset`
 :ref:`geogit-clone`
+:ref:`geogit-cherrypick`
 :ref:`geogit-fetch`
 :ref:`geogit-pull`
 :ref:`geogit-push`
