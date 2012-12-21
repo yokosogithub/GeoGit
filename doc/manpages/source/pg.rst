@@ -31,6 +31,7 @@ SEE ALSO
 ********
 
 :ref:`geogit-pg-import`
+:ref:`geogit-pg-export`
 :ref:`geogit-pg-describe`
 :ref:`geogit-pg-list`
 

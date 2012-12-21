@@ -6,15 +6,14 @@
 package org.geogit.geotools.porcelain;
 
 import java.net.ConnectException;
-import java.sql.Connection;
 import java.util.Map;
 import java.util.Map.Entry;
 
 import org.geogit.cli.CLICommand;
 import org.geogit.cli.GeogitCLI;
 import org.geogit.geotools.plumbing.DescribeOp;
+import org.geogit.geotools.plumbing.GeoToolsOpException;
 import org.geotools.data.DataStore;
-import org.geotools.jdbc.JDBCDataStore;
 
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.Parameters;
@@ -48,10 +47,6 @@ public class PGDescribe extends AbstractPGCommand implements CLICommand {
             cli.getConsole().println("Not a geogit repository: " + cli.getPlatform().pwd());
             return;
         }
-        if (table.isEmpty()) {
-            cli.getConsole().println("No table supplied");
-            return;
-        }
 
         DataStore dataStore = null;
         try {
@@ -63,17 +58,6 @@ public class PGDescribe extends AbstractPGCommand implements CLICommand {
         }
 
         try {
-            if (dataStore instanceof JDBCDataStore) {
-                Connection con = null;
-                try {
-                    con = ((JDBCDataStore) dataStore).getDataSource().getConnection();
-                } catch (Exception e) {
-                    throw new ConnectException();
-                }
-
-                ((JDBCDataStore) dataStore).closeSafe(con);
-            }
-
             cli.getConsole().println("Fetching table...");
 
             Optional<Map<String, String>> propertyMap = cli.getGeogit().command(DescribeOp.class)
@@ -90,8 +74,21 @@ public class PGDescribe extends AbstractPGCommand implements CLICommand {
             } else {
                 cli.getConsole().println("Could not find the specified table.");
             }
-        } catch (ConnectException e) {
-            cli.getConsole().println("Unable to connect using the specified database parameters.");
+        } catch (GeoToolsOpException e) {
+            switch (e.statusCode) {
+            case TABLE_NOT_DEFINED:
+                cli.getConsole().println("No table supplied.");
+                break;
+            case UNABLE_TO_GET_FEATURES:
+                cli.getConsole().println("Unable to read the feature source.");
+                break;
+            case UNABLE_TO_GET_NAMES:
+                cli.getConsole().println("Unable to read feature types.");
+                break;
+            default:
+                cli.getConsole().println("Exception: " + e.statusCode.name());
+            }
+
         } finally {
             dataStore.dispose();
             cli.getConsole().flush();

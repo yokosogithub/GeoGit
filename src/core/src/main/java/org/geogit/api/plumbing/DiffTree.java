@@ -100,19 +100,28 @@ public class DiffTree extends AbstractGeoGitOp<Iterator<DiffEntry>> {
         checkNotNull(oldRefSpec, "old version not specified");
         checkNotNull(newRefSpec, "new version not specified");
 
-        final Optional<ObjectId> oldTreeId = command(ResolveTreeish.class).setTreeish(oldRefSpec)
-                .call();
-        final Optional<ObjectId> newTreeId = command(ResolveTreeish.class).setTreeish(newRefSpec)
-                .call();
-        checkArgument(oldTreeId.isPresent(), oldRefSpec + " did not resolve to a tree");
-        checkArgument(newTreeId.isPresent(), newRefSpec + " did not resolve to a tree");
-
         final RevTree oldTree;
         final RevTree newTree;
-        oldTree = command(RevObjectParse.class).setObjectId(oldTreeId.get()).call(RevTree.class)
-                .or(RevTree.EMPTY);
-        newTree = command(RevObjectParse.class).setObjectId(newTreeId.get()).call(RevTree.class)
-                .or(RevTree.EMPTY);
+
+        if (!oldRefSpec.equals(ObjectId.NULL.toString())) {
+            final Optional<ObjectId> oldTreeId = command(ResolveTreeish.class).setTreeish(
+                    oldRefSpec).call();
+            checkArgument(oldTreeId.isPresent(), oldRefSpec + " did not resolve to a tree");
+            oldTree = command(RevObjectParse.class).setObjectId(oldTreeId.get())
+                    .call(RevTree.class).or(RevTree.EMPTY);
+        } else {
+            oldTree = RevTree.EMPTY;
+        }
+
+        if (!newRefSpec.equals(ObjectId.NULL.toString())) {
+            final Optional<ObjectId> newTreeId = command(ResolveTreeish.class).setTreeish(
+                    newRefSpec).call();
+            checkArgument(newTreeId.isPresent(), newRefSpec + " did not resolve to a tree");
+            newTree = command(RevObjectParse.class).setObjectId(newTreeId.get())
+                    .call(RevTree.class).or(RevTree.EMPTY);
+        } else {
+            newTree = RevTree.EMPTY;
+        }
 
         DiffTreeWalk treeWalk = new DiffTreeWalk(objectDb, oldTree, newTree);
         treeWalk.setFilter(this.path);

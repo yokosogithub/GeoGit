@@ -25,7 +25,7 @@ If the output file already exists, it will not be overwritten, unless the ``-o``
 OPTIONS
 *******
 
--o 		Overwrite the output file in case it already exists
+-o 		Overwrite the output file in case it already exists.
 
 BUGS
 ****

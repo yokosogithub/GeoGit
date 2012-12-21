@@ -54,4 +54,24 @@ public class RevFeature extends AbstractRevObject {
     public TYPE getType() {
         return TYPE.FEATURE;
     }
+
+    @Override public String toString() {
+        StringBuilder builder = new StringBuilder();
+        builder.append("Feature[");
+        builder.append(getId().toString());
+        builder.append("; ");
+        boolean first = true;
+        for (Object value : getValues()) {
+            if (first) {
+                first = false;
+            } else {
+                builder.append(", ");
+            }
+
+            String valueString = value.toString();
+            builder.append(valueString.substring(0, Math.min(10, valueString.length())));
+        }
+        builder.append("]");
+        return builder.toString();
+    }
 }

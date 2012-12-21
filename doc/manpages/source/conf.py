@@ -28,20 +28,33 @@ man_pages = [
 	('add', 'geogit-add', 'Stage changes to the index to prepare for commit', ['OpenGeo <http://opengeo.org>'], '1'),
     ('commit', 'geogit-commit', 'Commits staged changes to the repository', ['OpenGeo <http://opengeo.org>'], '1'),
     ('config', 'geogit-config', 'Get and set repository or global options', ['OpenGeo <http://opengeo.org>'], '1'),
+    ('cherrypick', 'geogit-cherrypick', 'Apply the changes introduced by some existing commits', ['OpenGeo <http://opengeo.org>'], '1')
     ('log', 'geogit-log', 'Show commit logs', ['OpenGeo <http://opengeo.org>'], '1'),
     ('status', 'geogit-status', 'Show the working tree and index status', ['OpenGeo <http://opengeo.org>'], '1'),
+	('merge', 'geogit-merge', 'Merge two or more histories into one', ['OpenGeo <http://opengeo.org>'], '1'),
     ('rebase', 'geogit-rebase', 'Forward-port local commits to the updated upstream head', ['OpenGeo <http://opengeo.org>'], '1'),
     ('reset', 'geogit-reset', 'Reset current HEAD to the specified state', ['OpenGeo <http://opengeo.org>'], '1'),
+    ('remote', 'geogit-remote', 'Remote management command extension', ['OpenGeo <http://opengeo.org>'], '1'),
+    ('remoteadd', 'geogit-remote-add', 'Add a repository whose branches should be tracked', ['OpenGeo <http://opengeo.org>'], '1'),
+    ('remotelist', 'geogit-remote-list', 'List all repositories being tracked', ['OpenGeo <http://opengeo.org>'], '1'),
+    ('remoteremove', 'geogit-remote-remove', 'Remove a repository whose branches are being tracked', ['OpenGeo <http://opengeo.org>'], '1'),
     ('clone', 'geogit-clone', 'Clone a repository into a new directory', ['OpenGeo <http://opengeo.org>'], '1'),
     ('fetch', 'geogit-fetch', 'Download objects and refs from another repository', ['OpenGeo <http://opengeo.org>'], '1'),
     ('pull', 'geogit-pull', 'Fetch from and merge with another repository or a local branch', ['OpenGeo <http://opengeo.org>'], '1'),
     ('push', 'geogit-push', 'Update remote refs along with associated objects', ['OpenGeo <http://opengeo.org>'], '1'),
     ('pg', 'geogit-pg', 'PostGIS command extension', ['OpenGeo <http://opengeo.org>'], '2'),
     ('pgimport', 'geogit-pg-import', 'Import features from a PostGIS database', ['OpenGeo <http://opengeo.org>'], '2'),
+    ('pgexport', 'geogit-pg-export', 'Export features to a PostGIS database', ['OpenGeo <http://opengeo.org>'], '2'),
     ('pglist', 'geogit-pg-list', 'List tables in a PostGIS database', ['OpenGeo <http://opengeo.org>'], '2'),
     ('pgdescribe', 'geogit-pg-describe', 'Describe properties of a table in a PostGIS database', ['OpenGeo <http://opengeo.org>'], '2'),
-    ('shp', 'geogit-shp', 'Shapefile command extension', ['OpenGeo <http://opengeo.org>'], '3'),
-    ('shpimport', 'geogit-shp-import', 'Import features from shapefiles', ['OpenGeo <http://opengeo.org>'], '3')
+    ('sl', 'geogit-sl', 'SpatiaLite command extension', ['OpenGeo <http://opengeo.org>'], '3'),
+    ('slimport', 'geogit-sl-import', 'Import features from a SpatiaLite database', ['OpenGeo <http://opengeo.org>'], '3'),
+    ('slexport', 'geogit-sl-export', 'Export features to a SpatiaLite database', ['OpenGeo <http://opengeo.org>'], '3'),
+    ('sllist', 'geogit-sl-list', 'List tables in a SpatiaLite database', ['OpenGeo <http://opengeo.org>'], '3'),
+    ('sldescribe', 'geogit-sl-describe', 'Describe properties of a table in a SpatiaLite database', ['OpenGeo <http://opengeo.org>'], '3'),
+    ('shp', 'geogit-shp', 'Shapefile command extension', ['OpenGeo <http://opengeo.org>'], '4'),
+    ('shpimport', 'geogit-shp-import', 'Import features from shapefiles', ['OpenGeo <http://opengeo.org>'], '4'),
+    ('shpexport', 'geogit-shp-export', 'Import features to shapefiles', ['OpenGeo <http://opengeo.org>'], '4')
 ]
 
 # General configuration

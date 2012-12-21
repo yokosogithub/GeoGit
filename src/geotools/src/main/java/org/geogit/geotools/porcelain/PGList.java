@@ -6,7 +6,6 @@
 package org.geogit.geotools.porcelain;
 
 import java.net.ConnectException;
-import java.sql.Connection;
 import java.util.List;
 
 import org.geogit.cli.CLICommand;
@@ -14,7 +13,6 @@ import org.geogit.cli.GeogitCLI;
 import org.geogit.geotools.plumbing.GeoToolsOpException;
 import org.geogit.geotools.plumbing.ListOp;
 import org.geotools.data.DataStore;
-import org.geotools.jdbc.JDBCDataStore;
 
 import com.beust.jcommander.Parameters;
 import com.google.common.base.Optional;
@@ -52,17 +50,6 @@ public class PGList extends AbstractPGCommand implements CLICommand {
         }
 
         try {
-            if (dataStore instanceof JDBCDataStore) {
-                Connection con = null;
-                try {
-                    con = ((JDBCDataStore) dataStore).getDataSource().getConnection();
-                } catch (Exception e) {
-                    throw new ConnectException();
-                }
-
-                ((JDBCDataStore) dataStore).closeSafe(con);
-            }
-
             cli.getConsole().println("Fetching feature types...");
 
             Optional<List<String>> features = cli.getGeogit().command(ListOp.class)
@@ -78,8 +65,6 @@ public class PGList extends AbstractPGCommand implements CLICommand {
             }
         } catch (GeoToolsOpException e) {
             cli.getConsole().println("Unable to get feature types from the database.");
-        } catch (ConnectException e) {
-            cli.getConsole().println("Unable to connect using the specified database parameters.");
         } finally {
             dataStore.dispose();
             cli.getConsole().flush();

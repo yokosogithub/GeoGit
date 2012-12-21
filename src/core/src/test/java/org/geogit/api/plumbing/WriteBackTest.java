@@ -153,6 +153,27 @@ public class WriteBackTest extends Assert {
         assertTrue(depthSearch.find(newRootId2, "subtree2/level2/level3/blob").isPresent());
     }
 
+    @Test
+    public void testPreserveMetadataId() {
+
+        RevTreeBuilder oldRoot = new RevTreeBuilder(odb);
+
+        RevTree tree = new RevTreeBuilder(odb).put(blob("blob")).build();
+
+        final ObjectId treeMetadataId = ObjectId.forString("fakeMdId");
+
+        ObjectId newRootId = writeBack.setAncestor(oldRoot).setChildPath("level1/level2")
+                .setTree(tree).setMetadataId(treeMetadataId).call();
+
+        Optional<NodeRef> ref;
+        DepthSearch depthSearch = new DepthSearch(odb);
+        ref = depthSearch.find(newRootId, "level1/level2");
+        assertTrue(ref.isPresent());
+        assertTrue(ref.get().getNode().getMetadataId().isPresent());
+        assertFalse(ref.get().getNode().getMetadataId().get().isNull());
+        assertEquals(treeMetadataId, ref.get().getNode().getMetadataId().get());
+    }
+
     private Node blob(String path) {
         return new Node(path, ObjectId.forString(path), ObjectId.NULL, TYPE.FEATURE);
     }

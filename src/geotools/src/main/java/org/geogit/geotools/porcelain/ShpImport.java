@@ -87,7 +87,8 @@ public class ShpImport extends AbstractShpCommand implements CLICommand {
                     cli.getConsole().println("Unable to insert features into the working tree.");
                     break;
                 default:
-                    break;
+                    cli.getConsole()
+                            .println("Import failed with exception: " + e.statusCode.name());
                 }
             } finally {
                 dataStore.dispose();

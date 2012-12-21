@@ -31,5 +31,6 @@ SEE ALSO
 ********
 
 :ref:`geogit-shp-import`
+:ref:`geogit-shp-export`
 
 

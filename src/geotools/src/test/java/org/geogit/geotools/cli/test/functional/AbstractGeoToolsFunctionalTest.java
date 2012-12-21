@@ -6,9 +6,9 @@ package org.geogit.geotools.cli.test.functional;
 
 import org.geogit.cli.test.functional.AbstractGeogitFunctionalTest;
 
-public abstract class AbstractPGFunctionalTest extends AbstractGeogitFunctionalTest {
+public abstract class AbstractGeoToolsFunctionalTest extends AbstractGeogitFunctionalTest {
 
-    protected String getDatabaseParameters() throws Exception {
+    protected String getPGDatabaseParameters() throws Exception {
         IniPGProperties properties = new IniPGProperties();
         StringBuilder sb = new StringBuilder();
         sb.append(" --host ");

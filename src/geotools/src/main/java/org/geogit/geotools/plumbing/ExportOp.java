@@ -16,6 +16,8 @@ import org.geogit.api.RevFeatureType;
 import org.geogit.api.RevObject;
 import org.geogit.api.RevObject.TYPE;
 import org.geogit.api.RevTree;
+import org.geogit.api.plumbing.FindTreeChild;
+import org.geogit.api.plumbing.ResolveTreeish;
 import org.geogit.api.plumbing.RevObjectParse;
 import org.geogit.api.plumbing.diff.DepthTreeIterator;
 import org.geogit.api.plumbing.diff.DepthTreeIterator.Strategy;
@@ -87,6 +89,25 @@ public class ExportOp extends AbstractGeoGitOp<SimpleFeatureStore> {
         // final String spec = refspec.substring(0, refspec.indexOf(':'));
         final String treePath = refspec.substring(refspec.indexOf(':') + 1);
 
+        Optional<ObjectId> tree = command(ResolveTreeish.class).setTreeish(
+                refspec.substring(0, refspec.indexOf(':'))).call();
+
+        Preconditions.checkArgument(tree.isPresent(), "Invalid tree spec: %s",
+                refspec.substring(0, refspec.indexOf(':')));
+
+        Optional<RevTree> revTree = command(RevObjectParse.class).setObjectId(tree.get()).call(
+                RevTree.class);
+
+        Preconditions.checkArgument(revTree.isPresent(), "Tree ref spec could not be resolved.");
+
+        Optional<NodeRef> typeTreeRef = command(FindTreeChild.class).setIndex(true)
+                .setParent(revTree.get()).setChildPath(treePath).call();
+
+        ObjectId parentMetadataId = null;
+        if (typeTreeRef.isPresent()) {
+            parentMetadataId = typeTreeRef.get().getMetadataId();
+        }
+
         Optional<RevObject> revObject = command(RevObjectParse.class).setRefSpec(refspec).call(
                 RevObject.class);
 
@@ -94,10 +115,13 @@ public class ExportOp extends AbstractGeoGitOp<SimpleFeatureStore> {
         Preconditions.checkArgument(revObject.get().getType() == TYPE.TREE,
                 "%s did not resolve to a tree", refspec);
 
-        DepthTreeIterator iter = new DepthTreeIterator(treePath, ObjectId.NULL,
+        DepthTreeIterator iter = new DepthTreeIterator(treePath, parentMetadataId,
                 (RevTree) revObject.get(), database, Strategy.FEATURES_ONLY);
 
         // Create a FeatureCollection
+
+        getProgressListener().started();
+        getProgressListener().setDescription("Exporting " + featureTypeName + "... ");
         DefaultFeatureCollection features = new DefaultFeatureCollection();
 
         FeatureBuilder featureBuilder = null;
@@ -117,6 +141,7 @@ public class ExportOp extends AbstractGeoGitOp<SimpleFeatureStore> {
                 Feature feature = featureBuilder.build(Integer.toString(i), revFeature);
                 Feature validFeature = function.apply(feature);
                 features.add((SimpleFeature) validFeature);
+                getProgressListener().progress((i * 100.f) / revTree.get().size());
                 i++;
             }
         }
@@ -142,6 +167,8 @@ public class ExportOp extends AbstractGeoGitOp<SimpleFeatureStore> {
         } catch (IOException e) {
             throw new GeoToolsOpException(StatusCode.UNABLE_TO_ADD);
         }
+
+        getProgressListener().complete();
 
         return fs;
 

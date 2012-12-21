@@ -5,6 +5,7 @@
 
 package org.geogit.repository;
 
+import static org.geogit.api.ObjectId.NULL;
 import static org.geogit.api.RevObject.TYPE.FEATURE;
 import static org.geogit.api.RevObject.TYPE.TREE;
 import static org.junit.Assert.assertEquals;
@@ -53,6 +54,8 @@ public class DepthSearchTest {
 
     private ObjectId rootTreeId;
 
+    private ObjectId fakeTreeMetadataId = ObjectId.forString("fakeMdId");
+
     @Before
     public void setUp() throws IOException {
         File envHome = new File("target", "temprepo");
@@ -87,7 +90,7 @@ public class DepthSearchTest {
             for (String singleNodeName : singleNodeNames) {
                 String nodePath = NodeRef.appendChild(treePath, singleNodeName);
                 ObjectId fakeFeatureOId = ObjectId.forString(nodePath);
-                ObjectId fakeTypeOId = ObjectId.forString(treePath);
+                ObjectId fakeTypeOId = ObjectId.NULL;// forString(treePath);
                 subTreeBuilder.put(new Node(singleNodeName, fakeFeatureOId, fakeTypeOId,
                         TYPE.FEATURE));
             }
@@ -95,7 +98,7 @@ public class DepthSearchTest {
 
         RevTree subtree = subTreeBuilder.build();
         WriteBack writeBack = fakeGeogit.command(WriteBack.class).setAncestor(root)
-                .setChildPath(treePath).setTree(subtree);
+                .setChildPath(treePath).setTree(subtree).setMetadataId(fakeTreeMetadataId);
         ObjectId newRootId = writeBack.call();
 
         return fakeGeogit.command(RevObjectParse.class).setObjectId(newRootId).call(RevTree.class)
@@ -104,24 +107,29 @@ public class DepthSearchTest {
 
     @Test
     public void testFindFromRoot() {
-        assertNode(find(rootTreeId, "path"), TREE, "path");
-        assertNode(find(rootTreeId, "path/to"), TREE, "path/to");
-        assertNode(find(rootTreeId, "path/to/tree1"), TREE, "path/to/tree1");
-        assertNode(find(rootTreeId, "path/to/tree1/node11"), FEATURE, "path/to/tree1/node11");
-        assertNode(find(rootTreeId, "path/to/tree1/node12"), FEATURE, "path/to/tree1/node12");
-        assertNode(find(rootTreeId, "path/to/tree1/node13"), FEATURE, "path/to/tree1/node13");
+        final ObjectId mdId = fakeTreeMetadataId;
+
+        assertNode(find(rootTreeId, "path"), TREE, NULL, "path");
+        assertNode(find(rootTreeId, "path/to"), TREE, NULL, "path/to");
+        assertNode(find(rootTreeId, "path/to/tree1"), TREE, mdId, "path/to/tree1");
+        assertNode(find(rootTreeId, "path/to/tree1/node11"), FEATURE, fakeTreeMetadataId,
+                "path/to/tree1/node11");
+        assertNode(find(rootTreeId, "path/to/tree1/node12"), FEATURE, fakeTreeMetadataId,
+                "path/to/tree1/node12");
+        assertNode(find(rootTreeId, "path/to/tree1/node13"), FEATURE, fakeTreeMetadataId,
+                "path/to/tree1/node13");
         assertFalse(find(rootTreeId, "path/to/tree1/node14").isPresent());
 
-        assertNode(find(rootTreeId, "path/to/tree2"), TREE, "path/to/tree2");
-        assertNode(find(rootTreeId, "path/to/tree2/node21"), FEATURE, "path/to/tree2/node21");
-        assertNode(find(rootTreeId, "path/to/tree2/node22"), FEATURE, "path/to/tree2/node22");
-        assertNode(find(rootTreeId, "path/to/tree2/node23"), FEATURE, "path/to/tree2/node23");
+        assertNode(find(rootTreeId, "path/to/tree2"), TREE, mdId, "path/to/tree2");
+        assertNode(find(rootTreeId, "path/to/tree2/node21"), FEATURE, mdId, "path/to/tree2/node21");
+        assertNode(find(rootTreeId, "path/to/tree2/node22"), FEATURE, mdId, "path/to/tree2/node22");
+        assertNode(find(rootTreeId, "path/to/tree2/node23"), FEATURE, mdId, "path/to/tree2/node23");
         assertFalse(find(rootTreeId, "path/to/tree2/node24").isPresent());
 
-        assertNode(find(rootTreeId, "tree3"), TYPE.TREE, "tree3");
-        assertNode(find(rootTreeId, "tree3/node31"), FEATURE, "tree3/node31");
-        assertNode(find(rootTreeId, "tree3/node32"), FEATURE, "tree3/node32");
-        assertNode(find(rootTreeId, "tree3/node33"), FEATURE, "tree3/node33");
+        assertNode(find(rootTreeId, "tree3"), TYPE.TREE, mdId, "tree3");
+        assertNode(find(rootTreeId, "tree3/node31"), FEATURE, mdId, "tree3/node31");
+        assertNode(find(rootTreeId, "tree3/node32"), FEATURE, mdId, "tree3/node32");
+        assertNode(find(rootTreeId, "tree3/node33"), FEATURE, mdId, "tree3/node33");
         assertFalse(find(rootTreeId, "tree3/node34").isPresent());
 
         assertFalse(find(rootTreeId, "tree4").isPresent());
@@ -145,9 +153,10 @@ public class DepthSearchTest {
         return search.find(rootTreeId, rootChildPath);
     }
 
-    private void assertNode(Optional<NodeRef> ref, TYPE type, String path) {
+    private void assertNode(Optional<NodeRef> ref, TYPE type, ObjectId expectedMdId, String path) {
         assertTrue(ref.isPresent());
         assertEquals(type, ref.get().getType());
         assertEquals(path, ref.get().path());
+        assertEquals(expectedMdId, ref.get().getMetadataId());
     }
 }

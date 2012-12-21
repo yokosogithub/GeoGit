@@ -6,14 +6,12 @@
 package org.geogit.geotools.porcelain;
 
 import java.net.ConnectException;
-import java.sql.Connection;
 
 import org.geogit.cli.CLICommand;
 import org.geogit.cli.GeogitCLI;
 import org.geogit.geotools.plumbing.GeoToolsOpException;
 import org.geogit.geotools.plumbing.ImportOp;
 import org.geotools.data.DataStore;
-import org.geotools.jdbc.JDBCDataStore;
 import org.opengis.util.ProgressListener;
 
 import com.beust.jcommander.Parameter;
@@ -64,17 +62,6 @@ public class PGImport extends AbstractPGCommand implements CLICommand {
         }
 
         try {
-            if (dataStore instanceof JDBCDataStore) {
-                Connection con = null;
-                try {
-                    con = ((JDBCDataStore) dataStore).getDataSource().getConnection();
-                } catch (Exception e) {
-                    throw new ConnectException();
-                }
-
-                ((JDBCDataStore) dataStore).closeSafe(con);
-            }
-
             cli.getConsole().println("Importing from database " + commonArgs.database);
 
             ProgressListener progressListener = cli.getProgressListener();
@@ -86,10 +73,11 @@ public class PGImport extends AbstractPGCommand implements CLICommand {
         } catch (GeoToolsOpException e) {
             switch (e.statusCode) {
             case TABLE_NOT_DEFINED:
-                cli.getConsole().println("You need to specify a table or use the --all option.");
+                cli.getConsole().println(
+                        "No tables specified for import. Specify --all or --table <table>.");
                 break;
             case ALL_AND_TABLE_DEFINED:
-                cli.getConsole().println("Specify --all or --table, both cannot be set.");
+                cli.getConsole().println("Specify --all or --table <table>, both cannot be set.");
                 break;
             case NO_FEATURES_FOUND:
                 cli.getConsole().println("No features were found in the database.");
@@ -107,10 +95,8 @@ public class PGImport extends AbstractPGCommand implements CLICommand {
                 cli.getConsole().println("Unable to insert features into the working tree.");
                 break;
             default:
-                break;
+                cli.getConsole().println("Import failed with exception: " + e.statusCode.name());
             }
-        } catch (ConnectException e) {
-            cli.getConsole().println("Unable to connect using the specified database parameters.");
         } finally {
             dataStore.dispose();
             cli.getConsole().flush();

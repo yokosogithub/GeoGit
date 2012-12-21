@@ -147,23 +147,24 @@ public class PullOp extends AbstractGeoGitOp<Void> {
             }
 
             Optional<Ref> destRef = command(RefParse.class).setName(destinationref).call();
-            if (rebase) {
-                if (destRef.isPresent()) {
-                    if (destRef.get().getObjectId().equals(ObjectId.NULL)) {
-                        command(UpdateRef.class).setName(destRef.get().getName())
-                                .setNewValue(sourceRef.get().getObjectId()).call();
-                    } else {
-                        command(CheckoutOp.class).setSource(destinationref).call();
+            if (destRef.isPresent()) {
+                if (destRef.get().getObjectId().equals(ObjectId.NULL)) {
+                    command(UpdateRef.class).setName(destRef.get().getName())
+                            .setNewValue(sourceRef.get().getObjectId()).call();
+                } else {
+                    command(CheckoutOp.class).setSource(destinationref).call();
+                    if (rebase) {
                         command(RebaseOp.class).setUpstream(
                                 Suppliers.ofInstance(sourceRef.get().getObjectId())).call();
+                    } else {
+                        command(MergeOp.class).addCommit(
+                                Suppliers.ofInstance(sourceRef.get().getObjectId())).call();
                     }
-                } else {
-                    command(BranchCreateOp.class).setAutoCheckout(true).setName(destinationref)
-                            .setSource(sourceRef.get().getObjectId().toString()).call();
                 }
-
             } else {
-                throw new UnsupportedOperationException("Merge pull is current unsupported.");
+                // make a new branch
+                command(BranchCreateOp.class).setAutoCheckout(true).setName(destinationref)
+                        .setSource(sourceRef.get().getObjectId().toString()).call();
             }
 
         }

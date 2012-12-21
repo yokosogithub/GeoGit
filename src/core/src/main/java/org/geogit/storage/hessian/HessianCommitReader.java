@@ -59,10 +59,9 @@ class HessianCommitReader extends HessianRevReader<RevCommit> implements ObjectR
          * the read object's generated id (through HashObject) corresponds to the id the object is
          * being retrieved with.
          */
-        // RevCommit commit = builder.build();
-        // checkState(id.equals(commit.getId()));
+         RevCommit commit = builder.build();
+         Preconditions.checkState(id.equals(commit.getId()));
 
-        RevCommit commit = builder.build(id);
         return commit;
     }
 }

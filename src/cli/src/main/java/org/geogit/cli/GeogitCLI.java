@@ -381,6 +381,12 @@ public class GeogitCLI {
                 private volatile long lastRun = -(delayMillis + 1);
 
                 @Override
+                public void started() {
+                    super.started();
+                    lastRun = -(delayMillis + 1);
+                }
+
+                @Override
                 public void complete() {
                     // avoid double logging if caller missbehaves
                     if (super.isCompleted()) {
@@ -401,7 +407,7 @@ public class GeogitCLI {
                 public void progress(float percent) {
                     super.progress(percent);
                     long currentTimeMillis = platform.currentTimeMillis();
-                    if ((currentTimeMillis - lastRun) > delayMillis) {
+                    if (percent > 99f || (currentTimeMillis - lastRun) > delayMillis) {
                         lastRun = currentTimeMillis;
                         log(percent);
                     }
@@ -410,6 +416,10 @@ public class GeogitCLI {
                 private void log(float percent) {
                     CursorBuffer cursorBuffer = console.getCursorBuffer();
                     cursorBuffer.clear();
+                    String description = getDescription();
+                    if (description != null) {
+                        cursorBuffer.write(description);
+                    }
                     cursorBuffer.write(fmt.format(percent / 100f));
                     try {
                         console.redrawLine();

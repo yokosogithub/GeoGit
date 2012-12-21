@@ -26,11 +26,20 @@ import com.google.common.collect.Iterators;
 import com.google.inject.Inject;
 
 /**
- * List index contents
- * 
+ * List the contents of a {@link RevTree tree} object as an Iterator&lt;{@link NodeRef}&gt;, using
+ * the sepecified {@link Strategy strategy} to indicate what to return.
+ * <p>
+ * The tree to traverse is given as a {@link #setReference(String) ref spec}, as supported by
+ * {@link RevParse#setRefSpec(String) RevParse} and must resolve to a tree object. If no ref spec is
+ * specified, the root of the current working tree is assumed.
  */
 public class LsTreeOp extends AbstractGeoGitOp<Iterator<NodeRef>> {
 
+    /**
+     * Enumeration of the possible results of the {@link LsTreeOp} operation, indicating whether to
+     * return the recursive contents of a tree or not, and whether to return feature and/or tree
+     * child references.
+     */
     public enum Strategy {
         /**
          * Default ls strategy, list the all direct child entries of a tree
@@ -103,6 +112,8 @@ public class LsTreeOp extends AbstractGeoGitOp<Iterator<NodeRef>> {
         Optional<RevObject> revObject = command(RevObjectParse.class).setRefSpec(ref).call(
                 RevObject.class);
 
+        ObjectId parentObjectId = ObjectId.NULL;
+
         if (!revObject.isPresent()) { // let's try to see if it is a feature type or feature in the
                                       // working tree
             NodeRef.checkValidPath(ref);
@@ -110,6 +121,7 @@ public class LsTreeOp extends AbstractGeoGitOp<Iterator<NodeRef>> {
                     .setChildPath(ref).call();
             Preconditions.checkArgument(treeRef.isPresent(), "Invalid reference: %s", ref);
             ObjectId treeId = treeRef.get().objectId();
+            parentObjectId = treeRef.get().getMetadataId();
             revObject = command(RevObjectParse.class).setObjectId(treeId).call(RevObject.class);
         }
 
@@ -153,8 +165,8 @@ public class LsTreeOp extends AbstractGeoGitOp<Iterator<NodeRef>> {
 
             final String path = ref.lastIndexOf(':') != -1 ? ref
                     .substring(ref.lastIndexOf(':') + 1) : "";
-            // TODO: CHANGE METADATAID
-            DepthTreeIterator iter = new DepthTreeIterator(path, ObjectId.NULL,
+
+            DepthTreeIterator iter = new DepthTreeIterator(path, parentObjectId,
                     (RevTree) revObject.get(), index, iterStrategy);
             return iter;
         default:

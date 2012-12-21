@@ -186,4 +186,38 @@ public abstract class RevTreeImpl extends AbstractRevObject implements RevTree {
         final ImmutableList<Node> empty = ImmutableList.of();
         return Iterators.concat(trees().or(empty).iterator(), features().or(empty).iterator());
     }
+
+    @Override
+    public String toString() {
+        final int nSubtrees;
+        if (trees().isPresent()) {
+            nSubtrees = trees().get().size();
+        } else {
+            nSubtrees = 0;
+        }
+        final int nBuckets;
+        if (buckets().isPresent()) {
+            nBuckets = buckets().get().size();
+        } else {
+            nBuckets = 0;
+        }
+        final int nFeatures;
+        if (features().isPresent()) {
+            nFeatures = features().get().size();
+        } else {
+            nFeatures = 0;
+        }
+
+        StringBuilder builder = new StringBuilder();
+        builder.append("Tree[");
+        builder.append(getId().toString());
+        builder.append("; subtrees=");
+        builder.append(nSubtrees);
+        builder.append(", buckets=");
+        builder.append(nBuckets);
+        builder.append(", features=");
+        builder.append(nFeatures);
+        builder.append("]");
+        return builder.toString();
+    }
 }

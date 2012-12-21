@@ -22,6 +22,7 @@ import java.util.Random;
 import org.apache.commons.io.FileUtils;
 import org.geogit.cli.test.functional.GlobalState;
 
+import cucumber.annotation.After;
 import cucumber.annotation.en.Given;
 import cucumber.annotation.en.Then;
 import cucumber.annotation.en.When;
@@ -29,9 +30,9 @@ import cucumber.annotation.en.When;
 /**
  *
  */
-public class PGInitSteps extends AbstractPGFunctionalTest {
+public class GeoToolsInitSteps extends AbstractGeoToolsFunctionalTest {
 
-    @cucumber.annotation.After
+    @After
     public void after() {
         if (GlobalState.geogit != null) {
             GlobalState.geogit.close();
@@ -51,9 +52,17 @@ public class PGInitSteps extends AbstractPGFunctionalTest {
         runCommand(args);
     }
 
-    @When("^I run the command \"([^\"]*)\" on the database$")
-    public void I_run_the_command_X_on_the_database(String commandSpec) throws Throwable {
-        commandSpec += getDatabaseParameters();
+    @When("^I run the command \"([^\"]*)\" on the PostGIS database$")
+    public void I_run_the_command_X_on_the_postgis_database(String commandSpec) throws Throwable {
+        commandSpec += getPGDatabaseParameters();
+        String[] args = commandSpec.split(" ");
+        runCommand(args);
+    }
+
+    @When("^I run the command \"([^\"]*)\" on the SpatiaLite database$")
+    public void I_run_the_command_X_on_the_spatialite_database(String commandSpec) throws Throwable {
+        commandSpec += " --database ";
+        commandSpec += getClass().getResource("testdb.sqlite").getPath();
         String[] args = commandSpec.split(" ");
         runCommand(args);
     }

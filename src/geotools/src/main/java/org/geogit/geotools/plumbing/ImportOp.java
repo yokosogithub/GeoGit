@@ -56,6 +56,7 @@ public class ImportOp extends AbstractGeoGitOp<RevTree> {
      * 
      * @return RevTree the new working tree
      */
+    @SuppressWarnings("deprecation")
     @Override
     public RevTree call() {
         if (dataStore == null) {
@@ -79,11 +80,22 @@ public class ImportOp extends AbstractGeoGitOp<RevTree> {
             throw new GeoToolsOpException(StatusCode.UNABLE_TO_GET_NAMES);
         }
 
+        getProgressListener().started();
+        int tableCount = 0;
         for (Name typeName : typeNames) {
+            tableCount++;
             if (!all && !table.equals(typeName.toString()))
                 continue;
 
             foundTable = true;
+
+            String tableName = String.format("%-16s", typeName.getLocalPart());
+            if (typeName.getLocalPart().length() > 16) {
+                tableName = tableName.substring(0, 13) + "...";
+            }
+            getProgressListener().setDescription(
+                    "Importing " + tableName + " (" + (all ? tableCount : 1) + "/"
+                            + (all ? typeNames.size() : 1) + ")... ");
 
             SimpleFeatureSource featureSource;
             SimpleFeatureCollection features;
@@ -109,11 +121,12 @@ public class ImportOp extends AbstractGeoGitOp<RevTree> {
                     return featureIterator.next();
                 }
             };
-            ProgressListener progressListener = getProgressListener();
+
             try {
+                ProgressListener taskProgress = subProgress(100.f / (all ? typeNames.size() : 1f));
                 Integer collectionSize = features.size();
                 workTree.delete(revType.getName());
-                workTree.insert(treePath, iterator, true, progressListener, null, collectionSize);
+                workTree.insert(treePath, iterator, true, taskProgress, null, collectionSize);
             } catch (Exception e) {
                 throw new GeoToolsOpException(StatusCode.UNABLE_TO_INSERT);
             } finally {
@@ -127,6 +140,8 @@ public class ImportOp extends AbstractGeoGitOp<RevTree> {
                 throw new GeoToolsOpException(StatusCode.TABLE_NOT_FOUND);
             }
         }
+        getProgressListener().progress(100.f);
+        getProgressListener().complete();
         return workTree.getTree();
     }
 

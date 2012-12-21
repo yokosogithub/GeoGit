@@ -25,6 +25,7 @@ import com.beust.jcommander.Parameters;
  * @see PGImport
  * @see PGList
  * @see PGDescribe
+ * @see PGExport
  */
 @Parameters(commandNames = "pg", commandDescription = "GeoGit/PostGIS integration utilities")
 public class PGCommandProxy implements CLICommandExtension {
