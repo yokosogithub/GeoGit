@@ -44,6 +44,10 @@ import com.google.inject.Inject;
  * Given one or more existing commits, revert the changes that the related patches introduce, and
  * record some new commits that record them. This requires your working tree to be clean (no
  * modifications from the HEAD commit).
+ * 
+ * <b>NOTE:</b> so far we don't have the ability to merge non conflicting changes. Instead, the diff
+ * list we get acts on whole objects, so this operation will not revert feature changes if that
+ * feature has been modified on both branches.
  */
 public class RevertOp extends AbstractGeoGitOp<Boolean> {
 
