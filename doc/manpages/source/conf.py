@@ -41,6 +41,7 @@ man_pages = [
     ('remoteadd', 'geogit-remote-add', 'Add a repository whose branches should be tracked', ['OpenGeo <http://opengeo.org>'], '1'),
     ('remotelist', 'geogit-remote-list', 'List all repositories being tracked', ['OpenGeo <http://opengeo.org>'], '1'),
     ('remoteremove', 'geogit-remote-remove', 'Remove a repository whose branches are being tracked', ['OpenGeo <http://opengeo.org>'], '1'),
+    ('revert', 'geogit-revert', 'Revert changes that were committed', ['OpenGeo <http://opengeo.org>'], '1'),
     ('clone', 'geogit-clone', 'Clone a repository into a new directory', ['OpenGeo <http://opengeo.org>'], '1'),
     ('fetch', 'geogit-fetch', 'Download objects and refs from another repository', ['OpenGeo <http://opengeo.org>'], '1'),
     ('pull', 'geogit-pull', 'Fetch from and merge with another repository or a local branch', ['OpenGeo <http://opengeo.org>'], '1'),

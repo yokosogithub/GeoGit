@@ -139,7 +139,7 @@ public class RevertOp extends AbstractGeoGitOp<Boolean> {
 
             // get changes (in reverse)
             Iterator<DiffEntry> diff = command(DiffTree.class).setNewTree(parentTreeId)
-                    .setOldTree(commit.getTreeId()).call();
+                    .setOldTree(commit.getTreeId()).setReportTrees(true).call();
 
             final RevTree headTree = repository.getTree(headCommit.getTreeId());
 
@@ -179,7 +179,7 @@ public class RevertOp extends AbstractGeoGitOp<Boolean> {
             CommitBuilder builder = new CommitBuilder();
             builder.setParentIds(Arrays.asList(headCommit.getId()));
             builder.setTreeId(newTreeId);
-            builder.setTimestamp(timestamp);
+            builder.setCommitterTimestamp(timestamp);
             builder.setMessage("Revert of commit '" + commitId.toString() + "'");
             builder.setCommitter(committerName);
             builder.setCommitterEmail(committerEmail);

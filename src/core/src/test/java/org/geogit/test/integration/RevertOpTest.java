@@ -4,6 +4,7 @@
  */
 package org.geogit.test.integration;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
@@ -19,8 +20,8 @@ import org.geogit.api.plumbing.RefParse;
 import org.geogit.api.plumbing.ResolveTreeish;
 import org.geogit.api.porcelain.CommitOp;
 import org.geogit.api.porcelain.ConfigOp;
-import org.geogit.api.porcelain.LogOp;
 import org.geogit.api.porcelain.ConfigOp.ConfigAction;
+import org.geogit.api.porcelain.LogOp;
 import org.geogit.api.porcelain.RevertOp;
 import org.junit.Rule;
 import org.junit.Test;
@@ -79,7 +80,7 @@ public class RevertOpTest extends RepositoryTestCase {
                 .setChildPath(NodeRef.appendChild(pointsName, idP1)).setParent(headTree).call();
 
         assertTrue(points1Node.isPresent());
-        assertTrue(points1Node.get().getNode().getObjectId().equals(oId1));
+        assertEquals(oId1, points1Node.get().getNode().getObjectId());
 
         Optional<NodeRef> points2Node = geogit.command(FindTreeChild.class)
                 .setChildPath(NodeRef.appendChild(pointsName, idP2)).setParent(headTree).call();
@@ -90,7 +91,7 @@ public class RevertOpTest extends RepositoryTestCase {
                 .setChildPath(NodeRef.appendChild(pointsName, idP3)).setParent(headTree).call();
 
         assertTrue(points3Node.isPresent());
-        assertTrue(points3Node.get().getNode().getObjectId().equals(oId3));
+        assertEquals(oId3, points3Node.get().getNode().getObjectId());
 
         Iterator<RevCommit> log = geogit.command(LogOp.class).call();
 
@@ -99,10 +100,179 @@ public class RevertOpTest extends RepositoryTestCase {
         log.next();
         log.next();
 
-        assertTrue(log.next().getId().equals(c5.getId()));
-        assertTrue(log.next().getId().equals(c4.getId()));
-        assertTrue(log.next().getId().equals(c3.getId()));
-        assertTrue(log.next().getId().equals(c2.getId()));
-        assertTrue(log.next().getId().equals(c1.getId()));
+        assertEquals(c5.getId(), log.next().getId());
+        assertEquals(c4.getId(), log.next().getId());
+        assertEquals(c3.getId(), log.next().getId());
+        assertEquals(c2.getId(), log.next().getId());
+        assertEquals(c1.getId(), log.next().getId());
+    }
+
+    @Test
+    public void testHeadWithNoHistory() throws Exception {
+        exception.expect(IllegalStateException.class);
+        geogit.command(RevertOp.class).call();
+    }
+
+    @Test
+    public void testUncleanWorkingTree() throws Exception {
+        insertAndAdd(points1);
+        RevCommit c1 = geogit.command(CommitOp.class).setMessage("commit for " + idP1).call();
+
+        insert(points2);
+        exception.expect(IllegalStateException.class);
+        geogit.command(RevertOp.class).addCommit(Suppliers.ofInstance(c1.getId())).call();
+    }
+
+    @Test
+    public void testUncleanIndex() throws Exception {
+        insertAndAdd(points1);
+        RevCommit c1 = geogit.command(CommitOp.class).setMessage("commit for " + idP1).call();
+
+        insertAndAdd(points2);
+        exception.expect(IllegalStateException.class);
+        geogit.command(RevertOp.class).addCommit(Suppliers.ofInstance(c1.getId())).call();
+    }
+
+    @Test
+    public void testRevertOnlyCommit() throws Exception {
+        insertAndAdd(points1);
+        RevCommit c1 = geogit.command(CommitOp.class).setMessage("commit for " + idP1).call();
+
+        geogit.command(RevertOp.class).addCommit(Suppliers.ofInstance(c1.getId())).call();
+
+        final Optional<Ref> currHead = geogit.command(RefParse.class).setName(Ref.HEAD).call();
+
+        final Optional<ObjectId> headTreeId = geogit.command(ResolveTreeish.class)
+                .setTreeish(currHead.get().getObjectId()).call();
+
+        RevTree headTree = repo.getTree(headTreeId.get());
+
+        Optional<NodeRef> points1Node = geogit.command(FindTreeChild.class)
+                .setChildPath(NodeRef.appendChild(pointsName, idP1)).setParent(headTree).call();
+
+        assertFalse(points1Node.isPresent());
+    }
+
+    @Test
+    public void testNoUserNameForResolveCommiter() throws Exception {
+        insertAndAdd(points1);
+        RevCommit c1 = geogit.command(CommitOp.class).setMessage("commit for " + idP1).call();
+        repo.command(ConfigOp.class).setAction(ConfigAction.CONFIG_SET).setName("user.name")
+                .setValue(null).call();
+        exception.expect(IllegalStateException.class);
+        geogit.command(RevertOp.class).addCommit(Suppliers.ofInstance(c1.getId())).call();
+    }
+
+    @Test
+    public void testNoUserEmailForResolveCommiterEmail() throws Exception {
+        insertAndAdd(points1);
+        RevCommit c1 = geogit.command(CommitOp.class).setMessage("commit for " + idP1).call();
+        repo.command(ConfigOp.class).setAction(ConfigAction.CONFIG_SET).setName("user.email")
+                .setValue(null).call();
+        exception.expect(IllegalStateException.class);
+        geogit.command(RevertOp.class).addCommit(Suppliers.ofInstance(c1.getId())).call();
+    }
+
+    @Test
+    public void testStillDeletedMergeConflictResolution() throws Exception {
+        insertAndAdd(points1);
+        RevCommit c1 = geogit.command(CommitOp.class).setMessage("commit for " + idP1).call();
+        deleteAndAdd(points1);
+        RevCommit c2 = geogit.command(CommitOp.class).setMessage("commit for removing " + idP1)
+                .call();
+        ObjectId oId1 = insertAndAdd(points1);
+        RevCommit c3 = geogit.command(CommitOp.class).setMessage("commit for " + idP1 + " again")
+                .call();
+        geogit.command(RevertOp.class).addCommit(Suppliers.ofInstance(c2.getId())).call();
+        final Optional<Ref> currHead = geogit.command(RefParse.class).setName(Ref.HEAD).call();
+
+        final Optional<ObjectId> headTreeId = geogit.command(ResolveTreeish.class)
+                .setTreeish(currHead.get().getObjectId()).call();
+
+        RevTree headTree = repo.getTree(headTreeId.get());
+
+        Optional<NodeRef> points1Node = geogit.command(FindTreeChild.class)
+                .setChildPath(NodeRef.appendChild(pointsName, idP1)).setParent(headTree).call();
+
+        assertTrue(points1Node.isPresent());
+        assertEquals(oId1, points1Node.get().getNode().getObjectId());
+
+        Iterator<RevCommit> log = geogit.command(LogOp.class).call();
+        log.next();
+        assertEquals(c3.getId(), log.next().getId());
+        assertEquals(c2.getId(), log.next().getId());
+        assertEquals(c1.getId(), log.next().getId());
+        assertFalse(log.hasNext());
+    }
+
+    @Test
+    public void testRevertModifiedFeatureConflictResolution() throws Exception {
+        insertAndAdd(points1);
+        RevCommit c1 = geogit.command(CommitOp.class).setMessage("commit for " + idP1).call();
+        insertAndAdd(points1_modified);
+        RevCommit c2 = geogit.command(CommitOp.class).setMessage("commit for modified " + idP1)
+                .call();
+        ObjectId oId1 = insertAndAdd(points1);
+        RevCommit c3 = geogit.command(CommitOp.class)
+                .setMessage("commit for modified " + idP1 + " again").call();
+        geogit.command(RevertOp.class).addCommit(Suppliers.ofInstance(c2.getId())).call();
+        final Optional<Ref> currHead = geogit.command(RefParse.class).setName(Ref.HEAD).call();
+
+        final Optional<ObjectId> headTreeId = geogit.command(ResolveTreeish.class)
+                .setTreeish(currHead.get().getObjectId()).call();
+
+        RevTree headTree = repo.getTree(headTreeId.get());
+
+        Optional<NodeRef> points1Node = geogit.command(FindTreeChild.class)
+                .setChildPath(NodeRef.appendChild(pointsName, idP1)).setParent(headTree).call();
+
+        assertTrue(points1Node.isPresent());
+        assertEquals(oId1, points1Node.get().getNode().getObjectId());
+
+        Iterator<RevCommit> log = geogit.command(LogOp.class).call();
+        log.next();
+        assertEquals(c3.getId(), log.next().getId());
+        assertEquals(c2.getId(), log.next().getId());
+        assertEquals(c1.getId(), log.next().getId());
+        assertFalse(log.hasNext());
+    }
+
+    @Test
+    public void testRevertEntireFeatureTypeTree() throws Exception {
+        insertAndAdd(points1);
+        RevCommit c1 = geogit.command(CommitOp.class).setMessage("commit for " + idP1).call();
+        insertAndAdd(points2);
+        RevCommit c2 = geogit.command(CommitOp.class).setMessage("commit for " + idP2).call();
+        insertAndAdd(points3);
+        RevCommit c3 = geogit.command(CommitOp.class).setMessage("commit for " + idP3).call();
+        insertAndAdd(lines1);
+        RevCommit c4 = geogit.command(CommitOp.class).setMessage("commit for " + idL1).call();
+
+        geogit.command(RevertOp.class).addCommit(Suppliers.ofInstance(c4.getId())).call();
+
+        final Optional<Ref> currHead = geogit.command(RefParse.class).setName(Ref.HEAD).call();
+
+        final Optional<ObjectId> headTreeId = geogit.command(ResolveTreeish.class)
+                .setTreeish(currHead.get().getObjectId()).call();
+
+        RevTree headTree = repo.getTree(headTreeId.get());
+
+        Optional<NodeRef> lines1Node = geogit.command(FindTreeChild.class)
+                .setChildPath(NodeRef.appendChild(linesName, idL1)).setParent(headTree).call();
+
+        assertFalse(lines1Node.isPresent());
+
+        Optional<NodeRef> linesNode = geogit.command(FindTreeChild.class).setChildPath(linesName)
+                .setParent(headTree).call();
+
+        // assertFalse(linesNode.isPresent());
+
+        Iterator<RevCommit> log = geogit.command(LogOp.class).call();
+        log.next();
+        assertEquals(c4.getId(), log.next().getId());
+        assertEquals(c3.getId(), log.next().getId());
+        assertEquals(c2.getId(), log.next().getId());
+        assertEquals(c1.getId(), log.next().getId());
+        assertFalse(log.hasNext());
     }
 }
