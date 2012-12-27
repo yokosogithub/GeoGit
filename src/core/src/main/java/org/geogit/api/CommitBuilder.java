@@ -8,7 +8,6 @@ import java.util.List;
 
 import org.geogit.api.plumbing.HashObject;
 
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 
 public final class CommitBuilder {
@@ -188,29 +187,5 @@ public final class CommitBuilder {
 
         return new RevCommit(commitId, treeId, parentIds, author, committer, commitMessage,
                 timestamp);
-    }
-
-    /**
-     * This method is deprecated and should be removed as soon as possible. The only reason to
-     * preserve it is that it _seems_ the hessian commit reader/writers don't produce always the
-     * same contents, and worse, seems to be random. See comments in HessianCommitReader
-     * 
-     * @deprecated use {@link #build()}
-     */
-    @Deprecated
-    public RevCommit build(ObjectId id) {
-        Preconditions.checkNotNull(id);
-        if (treeId == null) {
-            throw new IllegalStateException("No tree id set");
-        }
-
-        final ObjectId treeId = this.treeId;
-        final List<ObjectId> parentIds = this.parentIds;
-        final RevPerson author = new RevPerson(this.author, authorEmail);
-        final RevPerson committer = new RevPerson(this.committer, committerEmail);
-        final long timestamp = getTimestamp();
-        final String commitMessage = this.message;
-
-        return new RevCommit(id, treeId, parentIds, author, committer, commitMessage, timestamp);
     }
 }

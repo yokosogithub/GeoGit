@@ -52,15 +52,8 @@ class HessianCommitReader extends HessianRevReader<RevCommit> implements ObjectR
         builder.setMessage(hin.readString());
         builder.setTimestamp(hin.readLong());
 
-        /*
-         * @TODO: revisit. It looks like hessian doesn't produce consistent blobs. If we used the
-         * two commented out lines bellow instead, IndexTest.testWriteTree2 fails unpredictable at
-         * the check for id equality. In principle, it would be a good thing for us to check that
-         * the read object's generated id (through HashObject) corresponds to the id the object is
-         * being retrieved with.
-         */
-         RevCommit commit = builder.build();
-         Preconditions.checkState(id.equals(commit.getId()));
+        RevCommit commit = builder.build();
+        Preconditions.checkState(id.equals(commit.getId()));
 
         return commit;
     }
