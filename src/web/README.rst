@@ -42,6 +42,23 @@ To run the jetty server via maven, in the web module directory, run:
 
   mvn -o exec:java -Dexec.mainClass=org.geogit.web.Main -Dexec.args=PATH_TO_YOUR_REPO
 
+In Servlet Container
+--------------------
+
+Build the geogit.war like this:
+
+  mvn package
+
+The output should tell you where the war is. Something like:
+
+  Building war: <project-home>/geogit/src/web/target/geogit-web-0.1-SNAPSHOT.war
+
+Deploy the war to your container and ensure one of the two points to the full
+path to your repository:
+
+* servlet parameter `repository`
+* java system property `org.geogit.web.repository`
+
 URLS
 ====
 
