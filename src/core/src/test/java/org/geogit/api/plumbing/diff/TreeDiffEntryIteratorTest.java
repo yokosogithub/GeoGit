@@ -242,7 +242,7 @@ public class TreeDiffEntryIteratorTest extends Assert {
 
         ObjectId id = ObjectId.forString("null");
         Map<Integer, ObjectId> bucketTrees = ImmutableMap.of();
-        RevTreeImpl tree = RevTreeImpl.createNodeTree(id, 0, bucketTrees);
+        RevTreeImpl tree = RevTreeImpl.createNodeTree(id, 0, 0, bucketTrees);
 
         when(mockDb.getTree(eq(id))).thenReturn(tree);
 
