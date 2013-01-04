@@ -49,6 +49,11 @@ public abstract class RevTreeImpl extends AbstractRevObject implements RevTree {
         }
 
         @Override
+        public int numTrees() {
+            return trees.isPresent() ? trees.get().size() : 0;
+        }
+
+        @Override
         public final boolean isEmpty() {
             return features.isPresent() ? features.get().isEmpty() : (trees.isPresent() ? trees
                     .get().isEmpty() : true);
@@ -59,9 +64,12 @@ public abstract class RevTreeImpl extends AbstractRevObject implements RevTree {
 
         private final Optional<ImmutableSortedMap<Integer, ObjectId>> buckets;
 
-        public NodeTree(final ObjectId id, final long size,
+        private final int childTreeCount;
+
+        public NodeTree(final ObjectId id, final long size, final int childTreeCount,
                 final ImmutableSortedMap<Integer, ObjectId> innerTrees) {
             super(id, size);
+            this.childTreeCount = childTreeCount;
             this.buckets = Optional.of(innerTrees);
         }
 
@@ -73,6 +81,11 @@ public abstract class RevTreeImpl extends AbstractRevObject implements RevTree {
         @Override
         public final boolean isEmpty() {
             return buckets().isPresent() ? buckets().get().isEmpty() : true;
+        }
+
+        @Override
+        public int numTrees() {
+            return childTreeCount;
         }
     }
 
@@ -142,18 +155,18 @@ public abstract class RevTreeImpl extends AbstractRevObject implements RevTree {
         return createLeafTree(id, size, featuresList, treesList);
     }
 
-    public static RevTreeImpl createNodeTree(ObjectId id, long size,
+    public static RevTreeImpl createNodeTree(ObjectId id, long size, int childTreeCount,
             Map<Integer, ObjectId> bucketTrees) {
         Preconditions.checkNotNull(id);
         Preconditions.checkNotNull(bucketTrees);
         ImmutableSortedMap<Integer, ObjectId> innerTrees = ImmutableSortedMap.copyOf(bucketTrees);
 
-        return new NodeTree(id, size, innerTrees);
+        return new NodeTree(id, size, childTreeCount, innerTrees);
     }
 
     static RevTreeImpl create(ObjectId id, long size, RevTree unidentified) {
         if (unidentified.buckets().isPresent()) {
-            return new NodeTree(id, size, unidentified.buckets().get());
+            return new NodeTree(id, size, unidentified.numTrees(), unidentified.buckets().get());
         }
         final Optional<ImmutableList<Node>> features;
         if (unidentified.features().isPresent()) {

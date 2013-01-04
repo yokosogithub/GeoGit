@@ -248,7 +248,7 @@ public class RevTreeBuilder {
         // update all inner trees
         final int childDepth = this.depth + 1;
         long accSize = 0;
-
+        int accChildTreeCount = 0;
         try {
             Multimap<Integer, Node> changesByBucket = ArrayListMultimap.create();
             for (Iterator<Node> it = featureChanges.values().iterator(); it.hasNext();) {
@@ -270,32 +270,33 @@ public class RevTreeBuilder {
                     bucketTreesByBucket.keySet()));
 
             for (Integer bucket : buckets) {
-                final RevTreeBuilder subtreeBuilder;
+                final RevTreeBuilder bucketTreeBuilder;
                 {
                     final Collection<Node> bucketEntries = changesByBucket.removeAll(bucket);
                     final ObjectId subtreeId = bucketTreesByBucket.get(bucket);
                     if (subtreeId == null) {
-                        subtreeBuilder = new RevTreeBuilder(db, null, childDepth);
+                        bucketTreeBuilder = new RevTreeBuilder(db, null, childDepth);
                     } else {
-                        subtreeBuilder = new RevTreeBuilder(db, loadTree(subtreeId), childDepth);
+                        bucketTreeBuilder = new RevTreeBuilder(db, loadTree(subtreeId), childDepth);
                     }
                     for (String deleted : deletes) {
                         Integer bucketOfDelete = computeBucket(deleted);
                         if (bucket.equals(bucketOfDelete)) {
-                            subtreeBuilder.remove(deleted);
+                            bucketTreeBuilder.remove(deleted);
                         }
                     }
                     for (Node node : bucketEntries) {
-                        subtreeBuilder.put(node);
+                        bucketTreeBuilder.put(node);
                     }
                 }
-                final RevTree subtree = subtreeBuilder.build();
-                accSize += subtree.size();
-                if (subtree.isEmpty()) {
+                final RevTree bucketTree = bucketTreeBuilder.build();
+                accSize += bucketTree.size();
+                accChildTreeCount += bucketTree.numTrees();
+                if (bucketTree.isEmpty()) {
                     bucketTreesByBucket.remove(bucket);
                 } else {
-                    db.put(subtree);
-                    bucketTreesByBucket.put(bucket, subtree.getId());
+                    db.put(bucketTree);
+                    bucketTreesByBucket.put(bucket, bucketTree.getId());
                 }
             }
         } catch (RuntimeException e) {
@@ -303,7 +304,8 @@ public class RevTreeBuilder {
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
-        return RevTreeImpl.createNodeTree(ObjectId.NULL, accSize, this.bucketTreesByBucket);
+        return RevTreeImpl.createNodeTree(ObjectId.NULL, accSize, accChildTreeCount,
+                this.bucketTreesByBucket);
     }
 
     protected final Integer computeBucket(final String path) {

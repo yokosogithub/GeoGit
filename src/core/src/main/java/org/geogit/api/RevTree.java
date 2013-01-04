@@ -86,6 +86,11 @@ public interface RevTree extends RevObject {
         }
 
         @Override
+        public int numTrees() {
+            return 0;
+        }
+
+        @Override
         public Iterator<Node> children() {
             return Iterators.emptyIterator();
         }
@@ -96,6 +101,11 @@ public interface RevTree extends RevObject {
      * @return total number of features, including size nested trees
      */
     public long size();
+
+    /**
+     * @return number of direct child trees
+     */
+    public int numTrees();
 
     public boolean isEmpty();
 
