@@ -87,7 +87,9 @@ abstract class HessianRevReader<T> implements ObjectReader<T> {
             hin.startMessage();
             RevObject.TYPE type = RevObject.TYPE.valueOf(hin.readInt());
             T object = read(id, hin, type);
-            hin.completeMessage();
+            // completeMessage is taking ~60% of the CPU time, yourkit java profiler says, which is
+            // just too odd specially since we're reading here
+            // hin.completeMessage();
             return object;
         } catch (IOException e) {
             throw Throwables.propagate(e);
