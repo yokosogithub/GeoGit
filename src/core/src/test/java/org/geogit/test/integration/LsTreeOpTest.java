@@ -11,7 +11,7 @@ import org.junit.rules.ExpectedException;
 
 import com.google.common.collect.Iterators;
 
-public class LsFeaturesOpTest extends RepositoryTestCase {
+public class LsTreeOpTest extends RepositoryTestCase {
 
     @Rule
     public ExpectedException exception = ExpectedException.none();
@@ -73,17 +73,6 @@ public class LsFeaturesOpTest extends RepositoryTestCase {
             assertTrue(true);
         }
     }
-
-    // @Test
-    // public void testHeadVsWorkHeadListing() throws Exception {
-    // geogit.command(RemoveOp.class).addPathToRemove(pointsName).call();
-    // Iterator<Node> iterHead = geogit.command(LsFeaturesOp.class).setOrigin("HEAD").call();
-    // Iterator<Node> iterWorkHead = geogit.command(LsFeaturesOp.class).setOrigin("WORK_HEAD")
-    // .call();
-    // ArrayList<Node> listHead = Lists.newArrayList(iterHead);
-    // ArrayList<Node> listWorkHead = Lists.newArrayList(iterWorkHead);
-    // assertFalse(listHead.size() == listWorkHead.size());
-    // }
 
     @Test
     public void testUnexistentOriginListing() {

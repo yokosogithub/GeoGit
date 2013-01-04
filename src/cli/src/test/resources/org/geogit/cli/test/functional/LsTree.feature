@@ -2,7 +2,7 @@ Feature: "ls-tree" command
     In order to know what is in a repository
     As a Geogit User
     I want to list the feature in the working tree 
-     
+
 Scenario: Show a list of features in the root tree recursively
     Given I have a repository
       And I stage 6 features
@@ -84,4 +84,9 @@ Scenario: Show a list from an empty directory
     Given I am in an empty directory
      When I run the command "ls-tree"
      Then the response should start with "Not a geogit repository"
+
+Scenario: Run ls-tree on an empty repository
+    Given I have a repository
+     When I run the command "ls-tree -r"
+     Then the response should contain "The working tree is empty"
          
