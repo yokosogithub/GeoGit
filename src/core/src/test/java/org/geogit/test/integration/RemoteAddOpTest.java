@@ -1,7 +1,5 @@
 package org.geogit.test.integration;
 
-import static org.junit.Assert.assertEquals;
-
 import org.geogit.api.Remote;
 import org.geogit.api.porcelain.RemoteAddOp;
 import org.geogit.api.porcelain.RemoteException;

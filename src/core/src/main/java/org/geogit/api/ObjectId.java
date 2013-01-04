@@ -57,7 +57,8 @@ public final class ObjectId implements Comparable<ObjectId> {
      */
     public ObjectId(byte[] raw) {
         Preconditions.checkNotNull(raw);
-        Preconditions.checkArgument(raw.length == NUM_BYTES);
+        Preconditions.checkArgument(raw.length == NUM_BYTES, "expected a byte[%s], got byte[%s]",
+                NUM_BYTES, raw.length);
         this.hashCode = raw.clone();
     }
 

@@ -34,7 +34,10 @@ import com.vividsolutions.jts.io.WKBReader;
  */
 class HessianFeatureReader extends HessianRevReader<RevFeature> implements ObjectReader<RevFeature> {
 
-    private static GeometryFactory geometryFactory = new GeometryFactory();
+    private static final GeometryFactory DEFAULT_GF_FACTORY = new GeometryFactory(
+            new PackedCoordinateSequenceFactory());
+
+    private final GeometryFactory geometryFactory;
 
     /**
      * Constructs a new {@code HessianFeatureReader} with the provided hints.
@@ -42,12 +45,15 @@ class HessianFeatureReader extends HessianRevReader<RevFeature> implements Objec
      * @param hints
      */
     public HessianFeatureReader(final Map<String, Serializable> hints) {
+        GeometryFactory gf = DEFAULT_GF_FACTORY;
         if (hints != null) {
-            GeometryFactory gf = (GeometryFactory) hints.get(ObjectReader.JTS_GEOMETRY_FACTORY);
-            if (gf != null) {
-                geometryFactory = gf;
+            GeometryFactory provided = (GeometryFactory) hints
+                    .get(ObjectReader.JTS_GEOMETRY_FACTORY);
+            if (provided != null) {
+                gf = provided;
             }
         }
+        this.geometryFactory = gf;
     }
 
     /**
@@ -82,7 +88,7 @@ class HessianFeatureReader extends HessianRevReader<RevFeature> implements Objec
      * @return the object that was read
      * @throws IOException
      */
-    static Object readValue(final Hessian2Input in) throws IOException {
+    private Object readValue(final Hessian2Input in) throws IOException {
         EntityType type = EntityType.fromValue(in.readInt());
         if (type == null)
             throw new IOException("Illegal format in data stream");
@@ -147,8 +153,6 @@ class HessianFeatureReader extends HessianRevReader<RevFeature> implements Objec
             return new UUID(most, least);
         case GEOMETRY:
             String srs = in.readString();
-            if (geometryFactory == null)
-                geometryFactory = new GeometryFactory(new PackedCoordinateSequenceFactory());
             WKBReader wkbReader = new WKBReader(geometryFactory);
             Geometry geom;
             try {

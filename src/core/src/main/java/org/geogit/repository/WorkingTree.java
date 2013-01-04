@@ -36,7 +36,6 @@ import org.geogit.api.plumbing.WriteBack;
 import org.geogit.api.plumbing.diff.DiffEntry;
 import org.geogit.storage.ObjectSerialisingFactory;
 import org.geogit.storage.StagingDatabase;
-import org.geotools.feature.NameImpl;
 import org.opengis.feature.Feature;
 import org.opengis.feature.type.FeatureType;
 import org.opengis.feature.type.Name;
@@ -44,9 +43,9 @@ import org.opengis.filter.Filter;
 import org.opengis.geometry.BoundingBox;
 import org.opengis.util.ProgressListener;
 
-import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Predicate;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
@@ -140,27 +139,24 @@ public class WorkingTree {
      * @return true if the object was found and deleted, false otherwise
      */
     public boolean delete(final String path, final String featureId) {
-        Optional<NodeRef> typeTreeRef = repository.command(FindTreeChild.class).setIndex(true)
-                .setParent(getTree()).setChildPath(path).call();
 
-        ObjectId metadataId = null;
-        if (typeTreeRef.isPresent()) {
-            metadataId = typeTreeRef.get().getMetadataId();
+        final String featurePath = NodeRef.appendChild(path, featureId);
+        final Optional<Node> node = findUnstaged(featurePath);
+        if (!node.isPresent()) {
+            return false;
         }
 
-        RevTreeBuilder parentTree = repository.command(FindOrCreateSubtree.class).setIndex(true)
-                .setParent(Suppliers.ofInstance(Optional.of(getTree()))).setChildPath(path).call()
-                .builder(indexDatabase);
+        Optional<NodeRef> treeRef = repository.command(FindTreeChild.class).setParent(getTree())
+                .setChildPath(path).call();
 
-        String featurePath = NodeRef.appendChild(path, featureId);
-        Optional<Node> node = findUnstaged(featurePath);
-        if (node.isPresent()) {
-            parentTree.remove(node.get().getName());
-        }
+        RevTree parentTree = repository.command(RevObjectParse.class)
+                .setObjectId(treeRef.get().objectId()).call(RevTree.class).get();
+        RevTreeBuilder parentTreeBuilder = parentTree.builder(indexDatabase);
+
+        parentTreeBuilder.remove(node.get().getName());
 
         ObjectId newTree = repository.command(WriteBack.class).setAncestor(getTreeSupplier())
-                .setChildPath(path).setToIndex(true).setMetadataId(metadataId)
-                .setTree(parentTree.build()).call();
+                .setChildPath(path).setToIndex(true).setTree(parentTreeBuilder.build()).call();
 
         updateWorkHead(newTree);
 
@@ -175,14 +171,13 @@ public class WorkingTree {
      * @throws Exception
      */
     public void delete(final String path) {
-        ObjectId parentMetadataId = null;
 
         final String parentPath = NodeRef.parentPath(path);
         final String childName = NodeRef.nodeFromPath(path);
 
         final RevTree workHead = getTree();
 
-        RevTree parent;
+        final RevTree parent;
         RevTreeBuilder parentBuilder;
         if (parentPath.isEmpty()) {
             parent = workHead;
@@ -193,17 +188,17 @@ public class WorkingTree {
             if (!parentRef.isPresent()) {
                 return;
             }
-
-            parentMetadataId = parentRef.get().getMetadataId();
             parent = repository.command(RevObjectParse.class)
                     .setObjectId(parentRef.get().objectId()).call(RevTree.class).get();
             parentBuilder = parent.builder(indexDatabase);
         }
+
         RevTree newParent = parentBuilder.remove(childName).build();
-        indexDatabase.put(newParent);
         if (parent.getId().equals(newParent.getId())) {
             return;// nothing changed
         }
+
+        indexDatabase.put(newParent);
 
         ObjectId newWorkHead;
         if (parentPath.isEmpty()) {
@@ -211,7 +206,7 @@ public class WorkingTree {
         } else {
             newWorkHead = repository.command(WriteBack.class).setToIndex(true)
                     .setAncestor(workHead.builder(indexDatabase)).setChildPath(parentPath)
-                    .setTree(newParent).setMetadataId(parentMetadataId).call();
+                    .setTree(newParent).call();
         }
         updateWorkHead(newWorkHead);
     }
@@ -369,7 +364,8 @@ public class WorkingTree {
             treeRef = createTypeTree(parentTreePath, featureType);
         }
 
-        final Node node = putInDatabase(feature, ObjectId.NULL);
+        ObjectId metadataId = treeRef.getMetadataId();
+        final Node node = putInDatabase(feature, metadataId);
 
         RevTreeBuilder parentTree = repository.command(FindOrCreateSubtree.class).setIndex(true)
                 .setParent(Suppliers.ofInstance(Optional.of(getTree())))
@@ -407,10 +403,9 @@ public class WorkingTree {
 
         checkArgument(collectionSize == null || collectionSize.intValue() > -1);
 
+        NodeRef treeRef;
         Optional<NodeRef> typeTreeRef = repository.command(FindTreeChild.class).setIndex(true)
                 .setParent(getTree()).setChildPath(treePath).call();
-
-        NodeRef treeRef;
 
         if (typeTreeRef.isPresent()) {
             treeRef = typeTreeRef.get();
@@ -432,11 +427,13 @@ public class WorkingTree {
                 .setParent(Suppliers.ofInstance(Optional.of(getTree()))).setChildPath(treePath)
                 .call().builder(indexDatabase);
 
-        putInDatabase(treePath, features, listener, size, insertedTarget, parentTree, ObjectId.NULL);
+        final ObjectId defaultMetadataId = treeRef.getMetadataId();
+        putInDatabase(treePath, features, listener, size, insertedTarget, parentTree,
+                defaultMetadataId);
 
         ObjectId newTree = repository.command(WriteBack.class).setAncestor(getTreeSupplier())
-                .setChildPath(treePath).setMetadataId(treeRef.getMetadataId()).setToIndex(true)
-                .setTree(parentTree.build()).call();
+                .setChildPath(treePath).setToIndex(true).setTree(parentTree.build())
+                .setMetadataId(defaultMetadataId).call();
 
         updateWorkHead(newTree);
     }
@@ -605,32 +602,23 @@ public class WorkingTree {
     /**
      * @return a list of all the feature type names in the working tree
      */
-    public List<Name> getFeatureTypeNames() {
-        // List<QName> names = new ArrayList<QName>();
-        // RevTree root = getTree();
+    public List<NodeRef> getFeatureTypeTrees() {
 
-        Iterator<NodeRef> allTrees = repository.command(LsTreeOp.class).setReference(Ref.WORK_HEAD)
-                .setStrategy(LsTreeOp.Strategy.DEPTHFIRST_ONLY_TREES).call();
+        Iterator<NodeRef> allTrees;
+        try {
+            allTrees = repository.command(LsTreeOp.class)
+                    .setStrategy(LsTreeOp.Strategy.DEPTHFIRST_ONLY_TREES).call();
+        } catch (IllegalArgumentException noWorkHead) {
+            return ImmutableList.of();
+        }
+        Iterator<NodeRef> typeTrees = Iterators.filter(allTrees, new Predicate<NodeRef>() {
+            @Override
+            public boolean apply(NodeRef input) {
+                ObjectId metadataId = input.getMetadataId();
+                return !metadataId.isNull();
+            }
+        });
 
-        ImmutableList<Name> treeNames = ImmutableList.copyOf(Iterators.transform(allTrees,
-                new Function<NodeRef, Name>() {
-
-                    @Override
-                    public Name apply(NodeRef treeRef) {
-                        Preconditions.checkArgument(TYPE.TREE.equals(treeRef.getType()));
-                        String localName = NodeRef.nodeFromPath(treeRef.path());
-                        return new NameImpl(localName);
-                    }
-                }));
-        return treeNames;
-
-        // final List<QName> typeNames = Lists.newLinkedList();
-        // if (root.features().isPresent()) {
-        // for (Node typeTreeRef : root.features().get()) {
-        // String localName = Node.nodeFromPath(typeTreeRef.getPath());
-        // typeNames.add(new QName(localName));
-        // }
-        // }
-        // return typeNames;
+        return ImmutableList.copyOf(typeTrees);
     }
 }

@@ -5,7 +5,6 @@
 package org.geogit.test.integration;
 
 import static org.geogit.api.NodeRef.appendChild;
-import static org.junit.Assert.assertTrue;
 
 import java.util.Iterator;
 

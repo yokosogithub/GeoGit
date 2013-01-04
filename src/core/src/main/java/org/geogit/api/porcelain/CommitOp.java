@@ -125,10 +125,11 @@ public class CommitOp extends AbstractGeoGitOp<RevCommit> {
      * @param committerName the committer's name
      * @param committerEmail the committer's email
      */
-    public void setCommitter(String committerName, @Nullable String committerEmail) {
+    public CommitOp setCommitter(String committerName, @Nullable String committerEmail) {
         Preconditions.checkNotNull(committerName);
         this.committerName = committerName;
         this.committerEmail = committerEmail;
+        return this;
     }
 
     /**

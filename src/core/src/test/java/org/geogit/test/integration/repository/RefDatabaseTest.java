@@ -4,8 +4,6 @@
  */
 package org.geogit.test.integration.repository;
 
-import static org.junit.Assert.assertEquals;
-
 import java.util.Arrays;
 
 import org.geogit.api.ObjectId;

@@ -4,9 +4,6 @@
  */
 package org.geogit.test.integration;
 
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
-
 import java.util.Iterator;
 
 import org.geogit.api.ObjectId;

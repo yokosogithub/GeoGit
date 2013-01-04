@@ -6,12 +6,6 @@
 package org.geogit.test.integration.repository;
 
 import static org.geogit.api.NodeRef.appendChild;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertSame;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
 
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -315,7 +309,7 @@ public class WorkingTreeTest extends RepositoryTestCase {
 
         ObjectId newTreeId = workTree.getTree().getId();
 
-        assertTrue(oldTreeId.equals(newTreeId));
+        assertEquals(oldTreeId, newTreeId);
 
     }
 
@@ -458,7 +452,13 @@ public class WorkingTreeTest extends RepositoryTestCase {
     }
 
     @Test
-    public void testGetFeatureTypeNames() throws Exception {
+    public void testGetFeatureTypeTreesEmptyRepo() throws Exception {
+        List<NodeRef> featureTypes = workTree.getFeatureTypeTrees();
+        assertTrue(featureTypes.isEmpty());
+    }
+
+    @Test
+    public void testGetFeatureTypeTrees() throws Exception {
         List<Feature> featureList = new LinkedList<Feature>();
         featureList.add(points1);
         featureList.add(points2);
@@ -475,13 +475,13 @@ public class WorkingTreeTest extends RepositoryTestCase {
         workTree.insert(linesName, featureList.iterator(), false, new NullProgressListener(), null,
                 3);
 
-        List<Name> featureTypes = workTree.getFeatureTypeNames();
+        List<NodeRef> featureTypes = workTree.getFeatureTypeTrees();
 
         assertEquals(2, featureTypes.size());
 
         List<String> featureTypeNames = new LinkedList<String>();
-        for (Name name : featureTypes) {
-            featureTypeNames.add(name.getLocalPart());
+        for (NodeRef treeRef : featureTypes) {
+            featureTypeNames.add(treeRef.name());
         }
 
         assertTrue(featureTypeNames.contains(pointsName));
