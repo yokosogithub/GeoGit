@@ -203,7 +203,7 @@ public class Log extends AbstractCommand implements CLICommand {
 
             private final long now = platform.currentTimeMillis();
 
-            private final DateFormat DATE_FORMAT = new SimpleDateFormat("YYYY-MM-dd HH:mm:ss Z");
+            private final DateFormat DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss Z");
 
             @Override
             public CharSequence apply(RevCommit commit) {
