@@ -70,6 +70,9 @@ public class RevParseIntegrationTest extends RepositoryTestCase {
         cb.setAuthor("groldan");
         cb.setCommitter("groldan");
         cb.setTreeId(masterCommit3.getTreeId());
+        long now = System.currentTimeMillis();
+        cb.setAuthorTimestamp(now);
+        cb.setCommitterTimestamp(now);
         mergeCommit = cb.build();
 
         getRepository().getObjectDatabase().put(mergeCommit);

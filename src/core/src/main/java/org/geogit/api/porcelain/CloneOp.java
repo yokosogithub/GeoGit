@@ -14,6 +14,7 @@ import org.geogit.api.plumbing.LsRemote;
 import org.geogit.api.plumbing.RefParse;
 import org.geogit.api.plumbing.UpdateRef;
 import org.geogit.api.porcelain.ConfigOp.ConfigAction;
+import org.geogit.api.porcelain.ConfigOp.ConfigScope;
 
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
@@ -94,11 +95,11 @@ public class CloneOp extends AbstractGeoGitOp<Void> {
                         .setNewValue(remoteRef.getObjectId()).call();
             }
 
-            command(ConfigOp.class).setAction(ConfigAction.CONFIG_SET).setGlobal(false)
+            command(ConfigOp.class).setAction(ConfigAction.CONFIG_SET).setScope(ConfigScope.LOCAL)
                     .setName("branches." + branchName + ".remote").setValue(remote.getName())
                     .call();
 
-            command(ConfigOp.class).setAction(ConfigAction.CONFIG_SET).setGlobal(false)
+            command(ConfigOp.class).setAction(ConfigAction.CONFIG_SET).setScope(ConfigScope.LOCAL)
                     .setName("branches." + branchName + ".merge").setValue(remoteRef.getName())
                     .call();
         }

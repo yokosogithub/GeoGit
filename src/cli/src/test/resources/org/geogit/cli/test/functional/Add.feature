@@ -5,19 +5,25 @@ Feature: "add" command
 
   Scenario: Try to add features to the index
     Given I have a repository
-      And I have 6 unstaged features
+      And I have unstaged "points1"
+      And I have unstaged "points2"
+      And I have unstaged "lines1"
      When I run the command "add"
-     Then the response should contain "6 features staged for commit"
+     Then the response should contain "3 features staged for commit"
      
   Scenario: Try to add a specific feature type to the index
     Given I have a repository
-      And I have 6 unstaged features
+      And I have unstaged "points1"
+      And I have unstaged "points2"
+      And I have unstaged "lines1"
      When I run the command "add Points"
-     Then the response should contain "3 features staged for commit"
+     Then the response should contain "2 features staged for commit"
      
   Scenario: Try to add a specific feature to the index
     Given I have a repository
-      And I have 6 unstaged features
+      And I have unstaged "points1"
+      And I have unstaged "points2"
+      And I have unstaged "lines1"
      When I run the command "add Points/Points.1"
      Then the response should contain "1 features staged for commit"
      
@@ -31,4 +37,16 @@ Feature: "add" command
      When I run the command "add"
      Then the response should contain "No unstaged features"
     
-     
+  Scenario: Try to just stage a modified feature with add update
+    Given I have a repository
+      And I have staged "points1"
+      And I have staged "points2"
+      And I have unstaged "points1_modified"
+      And I have unstaged "lines1"
+     When I run the command "add --update"
+     Then the response should contain "2 features staged for commit"
+     When I run the command "status"
+     Then the response should contain "Changes to be committed"
+      And the response should contain "2 total"
+      And the response should contain "Changes not staged for commit"
+      And the response should contain "1 total"   

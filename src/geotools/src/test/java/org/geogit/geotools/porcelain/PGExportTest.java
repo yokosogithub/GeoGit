@@ -1,8 +1,3 @@
-/* Copyright (c) 2011 TOPP - www.openplans.org. All rights reserved.
- * This code is licensed under the LGPL 2.1 license, available at the root
- * application directory.
- */
-
 package org.geogit.geotools.porcelain;
 
 import java.util.Arrays;
@@ -19,10 +14,7 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
-/**
- *
- */
-public class SLExportTest extends RepositoryTestCase {
+public class PGExportTest extends RepositoryTestCase {
 
     @Rule
     public ExpectedException exception = ExpectedException.none();
@@ -67,7 +59,7 @@ public class SLExportTest extends RepositoryTestCase {
     @Test
     public void testExport() throws Exception {
 
-        SLExport exportCommand = new SLExport();
+        PGExport exportCommand = new PGExport();
         exportCommand.args = Arrays.asList("Points", "Points");
         exportCommand.dataStoreFactory = factory;
         exportCommand.run(cli);
@@ -75,7 +67,7 @@ public class SLExportTest extends RepositoryTestCase {
 
     @Test
     public void testNullDataStore() throws Exception {
-        SLExport exportCommand = new SLExport();
+        PGExport exportCommand = new PGExport();
         exportCommand.args = Arrays.asList("Points", "Points");
         exportCommand.dataStoreFactory = TestHelper.createNullTestFactory();
         exportCommand.run(cli);
@@ -83,7 +75,7 @@ public class SLExportTest extends RepositoryTestCase {
 
     @Test
     public void testNoArgs() throws Exception {
-        SLExport exportCommand = new SLExport();
+        PGExport exportCommand = new PGExport();
         exportCommand.args = Arrays.asList();
         exportCommand.dataStoreFactory = TestHelper.createNullTestFactory();
         exportCommand.run(cli);
@@ -91,7 +83,7 @@ public class SLExportTest extends RepositoryTestCase {
 
     @Test
     public void testExportToTableThatExists() throws Exception {
-        SLExport exportCommand = new SLExport();
+        PGExport exportCommand = new PGExport();
         exportCommand.args = Arrays.asList("Points", "table1");
         exportCommand.dataStoreFactory = factory;
         exportCommand.run(cli);
@@ -99,7 +91,7 @@ public class SLExportTest extends RepositoryTestCase {
 
     @Test
     public void testExportToTableThatExistsWithOverwrite() throws Exception {
-        SLExport exportCommand = new SLExport();
+        PGExport exportCommand = new PGExport();
         exportCommand.args = Arrays.asList("WORK_HEAD:Points", "testTable");
         exportCommand.dataStoreFactory = factory;
         exportCommand.run(cli);
@@ -111,7 +103,7 @@ public class SLExportTest extends RepositoryTestCase {
 
     @Test
     public void testExportWithNonexistantFeatureTypeTree() throws Exception {
-        SLExport exportCommand = new SLExport();
+        PGExport exportCommand = new PGExport();
         exportCommand.args = Arrays.asList("invalidType", "invalidTable");
         exportCommand.dataStoreFactory = factory;
         exception.expect(IllegalArgumentException.class);
@@ -120,7 +112,7 @@ public class SLExportTest extends RepositoryTestCase {
 
     @Test
     public void testExportWithNullTable() throws Exception {
-        SLExport exportCommand = new SLExport();
+        PGExport exportCommand = new PGExport();
         exportCommand.args = Arrays.asList("Points", null);
         exportCommand.dataStoreFactory = factory;
         exception.expect(IllegalArgumentException.class);
@@ -129,7 +121,7 @@ public class SLExportTest extends RepositoryTestCase {
 
     @Test
     public void testExportWithNullFeatureType() throws Exception {
-        SLExport exportCommand = new SLExport();
+        PGExport exportCommand = new PGExport();
         exportCommand.args = Arrays.asList(null, "invalidTable");
         exportCommand.dataStoreFactory = factory;
         exception.expect(IllegalArgumentException.class);
@@ -138,7 +130,7 @@ public class SLExportTest extends RepositoryTestCase {
 
     @Test
     public void testExportWithEmptyStringForFeatureType() throws Exception {
-        SLExport exportCommand = new SLExport();
+        PGExport exportCommand = new PGExport();
         exportCommand.args = Arrays.asList("", "invalidTable");
         exportCommand.dataStoreFactory = factory;
         exception.expect(IllegalArgumentException.class);
@@ -147,7 +139,7 @@ public class SLExportTest extends RepositoryTestCase {
 
     @Test
     public void testExportWithEmptyStringForTable() throws Exception {
-        SLExport exportCommand = new SLExport();
+        PGExport exportCommand = new PGExport();
         exportCommand.args = Arrays.asList("Points", "");
         exportCommand.dataStoreFactory = factory;
         exception.expect(IllegalArgumentException.class);
@@ -156,7 +148,7 @@ public class SLExportTest extends RepositoryTestCase {
 
     @Test
     public void testExportWithFeatureNameInsteadOfType() throws Exception {
-        SLExport exportCommand = new SLExport();
+        PGExport exportCommand = new PGExport();
         exportCommand.args = Arrays.asList("Points/Points.1", "invalidTable");
         exportCommand.dataStoreFactory = factory;
         exception.expect(IllegalArgumentException.class);

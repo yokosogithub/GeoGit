@@ -36,4 +36,12 @@ public interface Platform {
      * @return the user's home directory
      */
     public File getUserHome();
+
+    /**
+     * Returns the offset of the platform's time zone from UTC at the specified timeStamp.
+     * 
+     * @param timeStamp the date represented in milliseconds since January 1, 1970 00:00:00 GMT
+     * @return the amount of time in milliseconds to add to UTC to get local time.
+     */
+    public int timeZoneOffset(long timeStamp);
 }

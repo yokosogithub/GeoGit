@@ -108,11 +108,11 @@ public class RefParse extends AbstractGeoGitOp<Optional<Ref>> {
 
         }
         Collection<String> heads = Collections2.filter(allRefs.keySet(), new PrePostfixPredicate(
-                "refs/heads", refSpec));
+                "refs/heads", "/" + refSpec));
         Collection<String> tags = Collections2.filter(allRefs.keySet(), new PrePostfixPredicate(
-                "refs/tags", refSpec));
+                "refs/tags", "/" + refSpec));
         Collection<String> remotes = Collections2.filter(allRefs.keySet(), new PrePostfixPredicate(
-                "refs/remotes", refSpec));
+                "refs/remotes", "/" + refSpec));
 
         String refName;
         refName = resolveSingle(heads);

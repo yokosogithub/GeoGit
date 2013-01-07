@@ -33,7 +33,9 @@ import org.geogit.api.plumbing.UpdateRef;
 import org.geogit.api.plumbing.UpdateSymRef;
 import org.geogit.repository.Repository;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 
 import com.google.common.base.Optional;
 import com.google.inject.Injector;
@@ -58,6 +60,9 @@ public class InitOpTest {
     private UpdateRef mockUpdateRef;
 
     private UpdateSymRef mockUpdateSymRef;
+
+    @Rule
+    public ExpectedException exception = ExpectedException.none();
 
     @Before
     public void setUp() throws IOException {
@@ -97,6 +102,14 @@ public class InitOpTest {
 
         when(platform.pwd()).thenReturn(workingDir);
 
+    }
+
+    @Test
+    public void testNullWorkingDir() {
+        when(platform.pwd()).thenReturn(null);
+        exception.expect(IllegalStateException.class);
+        init.call();
+        when(platform.pwd()).thenReturn(workingDir);
     }
 
     @Test

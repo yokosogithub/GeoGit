@@ -9,11 +9,19 @@ package org.geogit.api.porcelain;
 @SuppressWarnings("serial")
 public class CheckoutException extends RuntimeException {
 
-    public CheckoutException(String msg) {
-        this(msg, null);
+    public enum StatusCode {
+        LOCAL_CHANGES_NOT_COMMITTED
     }
 
-    public CheckoutException(String msg, Throwable cause) {
-        super(msg, cause);
+    public StatusCode statusCode;
+
+    public CheckoutException(StatusCode statusCode) {
+        this(null, statusCode);
+
+    }
+
+    public CheckoutException(Exception e, StatusCode statusCode) {
+        super(e);
+        this.statusCode = statusCode;
     }
 }

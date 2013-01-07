@@ -51,6 +51,9 @@ public class Add extends AbstractCommand implements CLICommand {
     @Parameter(names = { "--dry-run", "-n" }, description = "Maximum number of commits to log")
     private boolean dryRun;
 
+    @Parameter(names = { "--update", "-u" }, description = "Only add features that have already been tracked")
+    private boolean updateOnly;
+
     @Parameter(description = "<patterns>...")
     private List<String> patterns = new ArrayList<String>();
 
@@ -90,7 +93,9 @@ public class Add extends AbstractCommand implements CLICommand {
         } else if (patterns.size() > 1) {
             throw new UnsupportedOperationException("Only a single path is supported so far");
         }
-        WorkingTree workTree = op.setProgressListener(cli.getProgressListener()).call();
+
+        WorkingTree workTree = op.setUpdateOnly(updateOnly)
+                .setProgressListener(cli.getProgressListener()).call();
 
         long staged = cli.getGeogit().getRepository().getIndex().countStaged(null);
         unstaged = workTree.countUnstaged(null);

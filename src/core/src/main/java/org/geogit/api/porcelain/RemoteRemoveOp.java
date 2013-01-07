@@ -86,11 +86,4 @@ public class RemoteRemoveOp extends AbstractGeoGitOp<Remote> {
         return this;
     }
 
-    /**
-     * @return the name of the remote to remove
-     */
-    public String getName() {
-        return name;
-    }
-
 }

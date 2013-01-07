@@ -38,7 +38,10 @@ public class CommitBuilderTest extends TestCase {
         b.setCommitter("jdeolive");
         b.setCommitterEmail("jdeolive@opengeo.org");
         b.setMessage("cool this works");
-        b.setTimestamp(1000);
+        b.setCommitterTimestamp(1000);
+        b.setCommitterTimeZoneOffset(10);
+        b.setAuthorTimestamp(500);
+        b.setAuthorTimeZoneOffset(-5);
 
         ObjectId treeId = ObjectId.forString("fake tree content");
 
@@ -54,11 +57,14 @@ public class CommitBuilderTest extends TestCase {
         assertFalse(build.getId().isNull());
         assertEquals(treeId, build.getTreeId());
         assertEquals(parentIds, build.getParentIds());
-        assertEquals("groldan", build.getAuthor().getName());
-        assertEquals("groldan@opengeo.org", build.getAuthor().getEmail());
-        assertEquals("jdeolive", build.getCommitter().getName());
-        assertEquals("jdeolive@opengeo.org", build.getCommitter().getEmail());
+        assertEquals("groldan", build.getAuthor().getName().get());
+        assertEquals("groldan@opengeo.org", build.getAuthor().getEmail().get());
+        assertEquals("jdeolive", build.getCommitter().getName().get());
+        assertEquals("jdeolive@opengeo.org", build.getCommitter().getEmail().get());
         assertEquals("cool this works", build.getMessage());
-        assertEquals(1000L, build.getTimestamp());
+        assertEquals(1000L, build.getCommitter().getTimestamp());
+        assertEquals(10, build.getCommitter().getTimeZoneOffset());
+        assertEquals(500L, build.getAuthor().getTimestamp());
+        assertEquals(-5, build.getAuthor().getTimeZoneOffset());
     }
 }

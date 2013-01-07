@@ -94,13 +94,6 @@ public class DescribeOp extends AbstractGeoGitOp<Optional<Map<String, String>>> 
     }
 
     /**
-     * @return the table that is currently set
-     */
-    public String getTable() {
-        return table;
-    }
-
-    /**
      * @param dataStore the data store that contains the table to describe
      * @return {@code this}
      * @see DataStore
@@ -108,13 +101,5 @@ public class DescribeOp extends AbstractGeoGitOp<Optional<Map<String, String>>> 
     public DescribeOp setDataStore(DataStore dataStore) {
         this.dataStore = dataStore;
         return this;
-    }
-
-    /**
-     * @return the data store that is currently set
-     * @see DataStore
-     */
-    public DataStore getDataStore() {
-        return dataStore;
     }
 }

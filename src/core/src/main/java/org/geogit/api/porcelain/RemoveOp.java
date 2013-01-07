@@ -50,13 +50,8 @@ public class RemoveOp extends AbstractGeoGitOp<WorkingTree> {
         for (String pathToRemove : pathsToRemove) {
             NodeRef.checkValidPath(pathToRemove);
             Optional<NodeRef> node;
-            try {
-                node = command(FindTreeChild.class).setParent(workTree.getTree())
-                        .setChildPath(pathToRemove).call();
-            } catch (IllegalArgumentException e) {
-                throw new IllegalArgumentException(String.format(
-                        "pathspec '%s' did not match any feature or tree", pathToRemove));
-            }
+            node = command(FindTreeChild.class).setParent(workTree.getTree())
+                    .setChildPath(pathToRemove).call();
             Preconditions.checkArgument(node.isPresent(),
                     "pathspec '%s' did not match any feature or tree", pathToRemove);
         }

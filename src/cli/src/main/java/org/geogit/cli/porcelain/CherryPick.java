@@ -26,14 +26,14 @@ import com.google.common.base.Suppliers;
 import com.google.common.collect.Lists;
 
 /**
- * Given one or more existing commits, apply the change each one introduces, recording a new commit
- * for each. This requires your working tree to be clean (no modifications from the HEAD commit).
+ * Given an existing commit, apply the change it introduces, recording a new commit . This requires
+ * your working tree to be clean (no modifications from the HEAD commit).
  * <p>
  * CLI proxy for {@link CherryPickOp}
  * <p>
  * Usage:
  * <ul>
- * <li> {@code geogit cherry-pick <commitish>...}
+ * <li> {@code geogit cherry-pick <commitish>}
  * </ul>
  * 
  * @see CherryPickOp
@@ -49,18 +49,16 @@ public class CherryPick extends AbstractCommand implements CLICommand {
         final GeoGIT geogit = cli.getGeogit();
         checkState(geogit != null, "not in a geogit repository.");
         checkArgument(commits.size() > 0, "No commits specified.");
+        checkArgument(commits.size() < 2, "Too many commits specified.");
 
         CherryPickOp cherryPick = geogit.command(CherryPickOp.class);
 
-        for (String commit : commits) {
-            Optional<ObjectId> commitId;
-            commitId = geogit.command(RevParse.class).setRefSpec(commit).call();
-            Preconditions.checkArgument(commitId.isPresent(), "Commit not found '%s'", commit);
-            cherryPick.addCommit(Suppliers.ofInstance(commitId.get()));
-        }
+        Optional<ObjectId> commitId;
+        commitId = geogit.command(RevParse.class).setRefSpec(commits.get(0)).call();
+        Preconditions.checkArgument(commitId.isPresent(), "Commit not found '%s'", commits.get(0));
+        cherryPick.setCommit(Suppliers.ofInstance(commitId.get()));
 
         cherryPick.call();
 
     }
-
 }

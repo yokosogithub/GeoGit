@@ -47,10 +47,13 @@ class HessianCommitReader extends HessianRevReader<RevCommit> implements ObjectR
         builder.setParentIds(pIds);
         builder.setAuthor(hin.readString());
         builder.setAuthorEmail(hin.readString());
+        builder.setAuthorTimestamp(hin.readLong());
+        builder.setAuthorTimeZoneOffset(hin.readInt());
         builder.setCommitter(hin.readString());
         builder.setCommitterEmail(hin.readString());
+        builder.setCommitterTimestamp(hin.readLong());
+        builder.setCommitterTimeZoneOffset(hin.readInt());
         builder.setMessage(hin.readString());
-        builder.setTimestamp(hin.readLong());
 
         RevCommit commit = builder.build();
         Preconditions.checkState(id.equals(commit.getId()));

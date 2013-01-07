@@ -53,7 +53,7 @@ public interface ConfigDatabase {
     public <T> Optional<T> getGlobal(String key, Class<T> c);
 
     /**
-     * Builds and returns a map with all of the values from the global config file.
+     * Builds and returns a map with all of the values from the repository config file.
      * 
      * @return A map which contains all of the contents of the config file.
      * @throws ConfigException if an error is encountered

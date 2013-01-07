@@ -172,7 +172,7 @@ public class LogOp extends AbstractGeoGitOp<Iterator<RevCommit>> {
             if (this.since == null) {
                 oldestCommitId = ObjectId.NULL;
             } else {
-                if (!ObjectId.NULL.equals(this.since) && !repository.commitExists(this.since)) {
+                if (!repository.commitExists(this.since)) {
                     throw new IllegalStateException("Provided 'since' commit id does not exist: "
                             + since.toString());
                 }
@@ -277,7 +277,8 @@ public class LogOp extends AbstractGeoGitOp<Iterator<RevCommit>> {
                 toReached = true;
                 return false;
             }
-            boolean applies = timeRange.contains(Long.valueOf(commit.getTimestamp()));
+            boolean applies = timeRange
+                    .contains(Long.valueOf(commit.getCommitter().getTimestamp()));
             if (!applies) {
                 return false;
             }
@@ -290,7 +291,7 @@ public class LogOp extends AbstractGeoGitOp<Iterator<RevCommit>> {
                     try {
                         diff.setOldVersion(parentId).setNewVersion(commit.getId()).setFilter(path);
                         diffResult = diff.call();
-                        applies = applies && diffResult.hasNext();
+                        applies = diffResult.hasNext();
                         if (applies) {
                             break;
                         }

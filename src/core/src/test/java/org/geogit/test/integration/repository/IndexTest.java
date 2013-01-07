@@ -99,8 +99,8 @@ public class IndexTest extends RepositoryTestCase {
         ObjectInserter objectInserter = repo.newObjectInserter();
         List<ObjectId> parents = ImmutableList.of();
 
-        RevCommit commit = new CommitBuilder().setTreeId(newRootTreeId).setParentIds(parents)
-                .build();
+        RevCommit commit = new CommitBuilder(geogit.getPlatform()).setTreeId(newRootTreeId)
+                .setParentIds(parents).build();
         ObjectId commitId = commit.getId();
 
         objectInserter.insert(commit);

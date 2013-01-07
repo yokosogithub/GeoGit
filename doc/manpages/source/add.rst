@@ -8,7 +8,7 @@ geogit-add documentation
 
 SYNOPSIS
 ********
-geogit add [-n] [<pattern>...]
+geogit add [<options>] [<pattern>...]
 
 
 DESCRIPTION
@@ -26,6 +26,8 @@ OPTIONS
 *******    
 
 -n, --dry-run   Don't actually add the feature(s), just show what would happen if add were performed.
+
+-u --update 	Only add features that have already been tracked.
 
 SEE ALSO
 ********

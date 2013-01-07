@@ -81,7 +81,8 @@ public class HashObjectTest extends RepositoryTestCase {
         b.setCommitter("jdeolive");
         b.setCommitterEmail("jdeolive@opengeo.org");
         b.setMessage("cool this works");
-        b.setTimestamp(1000);
+        b.setCommitterTimestamp(1000);
+        b.setCommitterTimeZoneOffset(5);
 
         ObjectId treeId = ObjectId.forString("fake tree content");
 
@@ -98,7 +99,8 @@ public class HashObjectTest extends RepositoryTestCase {
         b.setMessage(null);
         b.setAuthor(null);
         b.setAuthorEmail(null);
-        b.setTimestamp(-1000);
+        b.setCommitterTimestamp(-1000);
+        b.setCommitterTimeZoneOffset(-5);
         b.setParentIds(ImmutableList.of(parentId1, ObjectId.NULL));
 
         commit2 = b.build();

@@ -30,7 +30,7 @@ public class CleanOpTest extends RepositoryTestCase {
         Iterator<DiffEntry> deleted = geogit.command(DiffWorkTree.class).call();
         ArrayList<DiffEntry> list = Lists.newArrayList(deleted);
         // Check that all the features have been deleted
-        assertEquals(list.size(), 0);
+        assertEquals(0, list.size());
     }
 
     @Test
@@ -42,7 +42,7 @@ public class CleanOpTest extends RepositoryTestCase {
         Iterator<DiffEntry> deleted = geogit.command(DiffWorkTree.class).call();
         ArrayList<DiffEntry> list = Lists.newArrayList(deleted);
         // Check that all the point features have been deleted but not the line one
-        assertEquals(list.size(), 1);
+        assertEquals(1, list.size());
 
     }
 

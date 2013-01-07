@@ -26,10 +26,13 @@ man_pages = [
 	('geogit', 'geogit', 'Runs a geogit command', ['OpenGeo <http://opengeo.org>'], '1'),
 	('init', 'geogit-init', 'Create and initialize a new geogit repository', ['OpenGeo <http://opengeo.org>'], '1'),
 	('add', 'geogit-add', 'Stage changes to the index to prepare for commit', ['OpenGeo <http://opengeo.org>'], '1'),
+    ('branch', 'geogit-branch', 'Create, delete, or list branches', ['OpenGeo <http://opengeo.org'], '1'),
+    ('checkout', 'geogit-checkout', 'Checkout a branch', ['OpenGeo <http://opengeo.org'], '1'),
     ('commit', 'geogit-commit', 'Commits staged changes to the repository', ['OpenGeo <http://opengeo.org>'], '1'),
     ('config', 'geogit-config', 'Get and set repository or global options', ['OpenGeo <http://opengeo.org>'], '1'),
     ('cherrypick', 'geogit-cherrypick', 'Apply the changes introduced by some existing commits', ['OpenGeo <http://opengeo.org>'], '1')
     ('log', 'geogit-log', 'Show commit logs', ['OpenGeo <http://opengeo.org>'], '1'),
+    ('help', 'geogit-log', 'Get help for a command', ['OpenGeo <http://opengeo.org', 1]),
     ('status', 'geogit-status', 'Show the working tree and index status', ['OpenGeo <http://opengeo.org>'], '1'),
 	('merge', 'geogit-merge', 'Merge two or more histories into one', ['OpenGeo <http://opengeo.org>'], '1'),
     ('rebase', 'geogit-rebase', 'Forward-port local commits to the updated upstream head', ['OpenGeo <http://opengeo.org>'], '1'),

@@ -78,53 +78,65 @@ public class CherryPickOpTest extends RepositoryTestCase {
         // switch back to master
         geogit.command(CheckoutOp.class).setSource("master").call();
         CherryPickOp cherryPick = geogit.command(CherryPickOp.class);
-        cherryPick.addCommit(Suppliers.ofInstance(c5.getId()));
-        cherryPick.addCommit(Suppliers.ofInstance(c3.getId()));
-        cherryPick.addCommit(Suppliers.ofInstance(c2.getId()));
-        cherryPick.addCommit(Suppliers.ofInstance(c4.getId()));
-        cherryPick.call();
+        cherryPick.setCommit(Suppliers.ofInstance(c5.getId()));
+        RevCommit commit2 = cherryPick.call();
+
+        assertEquals(c5.getAuthor(), commit2.getAuthor());
+        assertEquals(c5.getCommitter().getName(), commit2.getCommitter().getName());
+        assertEquals(c5.getMessage(), commit2.getMessage());
+        assertFalse(c5.getCommitter().getTimestamp() == commit2.getCommitter().getTimestamp());
+        assertFalse(c5.getTreeId().equals(commit2.getTreeId()));
+
+        cherryPick.setCommit(Suppliers.ofInstance(c3.getId()));
+        RevCommit commit3 = cherryPick.call();
+
+        assertEquals(c3.getAuthor(), commit3.getAuthor());
+        assertEquals(c3.getCommitter().getName(), commit3.getCommitter().getName());
+        assertEquals(c3.getMessage(), commit3.getMessage());
+        assertFalse(c3.getCommitter().getTimestamp() == commit3.getCommitter().getTimestamp());
+        assertFalse(c3.getTreeId().equals(commit3.getTreeId()));
+
+        cherryPick.setCommit(Suppliers.ofInstance(c2.getId()));
+        RevCommit commit4 = cherryPick.call();
+
+        assertEquals(c2.getAuthor(), commit4.getAuthor());
+        assertEquals(c2.getCommitter().getName(), commit4.getCommitter().getName());
+        assertEquals(c2.getCommitter().getEmail(), commit4.getCommitter().getEmail());
+        assertEquals(c2.getMessage(), commit4.getMessage());
+        assertFalse(c2.getCommitter().getTimestamp() == commit4.getCommitter().getTimestamp());
+        assertFalse(c2.getTreeId().equals(commit4.getTreeId()));
+
+        cherryPick.setCommit(Suppliers.ofInstance(c4.getId()));
+        RevCommit commit5 = cherryPick.call();
+
+        assertEquals(c4.getMessage(), commit5.getMessage());
+        assertEquals(c4.getAuthor().getName(), commit5.getAuthor().getName());
+        assertEquals(c4.getAuthor().getEmail(), commit5.getAuthor().getEmail());
+        assertEquals(c4.getCommitter().getName(), commit5.getCommitter().getName());
+        assertFalse(c4.getCommitter().getTimestamp() == commit5.getCommitter().getTimestamp());
+        assertFalse(c4.getTreeId().equals(commit5.getTreeId()));
 
         Iterator<RevCommit> log = geogit.command(LogOp.class).call();
 
         // Commit 5
         RevCommit logC5 = log.next();
-        assertTrue(logC5.getAuthor().equals(c4.getAuthor()));
-        assertTrue(logC5.getCommitter().equals(c4.getCommitter()));
-        assertTrue(logC5.getMessage().equals(c4.getMessage()));
-        assertFalse(logC5.getTimestamp() == c4.getTimestamp());
-        assertFalse(logC5.getTreeId().equals(c4.getTreeId()));
+        assertEquals(commit5, logC5);
 
         // Commit 4
         RevCommit logC4 = log.next();
-        assertTrue(logC4.getAuthor().equals(c2.getAuthor()));
-        assertTrue(logC4.getCommitter().equals(c2.getCommitter()));
-        assertTrue(logC4.getMessage().equals(c2.getMessage()));
-        assertFalse(logC4.getTimestamp() == c2.getTimestamp());
-        assertFalse(logC4.getTreeId().equals(c2.getTreeId()));
+        assertEquals(commit4, logC4);
 
         // Commit 3
         RevCommit logC3 = log.next();
-        assertTrue(logC3.getAuthor().equals(c3.getAuthor()));
-        assertTrue(logC3.getCommitter().equals(c3.getCommitter()));
-        assertTrue(logC3.getMessage().equals(c3.getMessage()));
-        assertFalse(logC3.getTimestamp() == c3.getTimestamp());
-        assertFalse(logC3.getTreeId().equals(c3.getTreeId()));
+        assertEquals(commit3, logC3);
 
         // Commit 2
         RevCommit logC2 = log.next();
-        assertTrue(logC2.getAuthor().equals(c5.getAuthor()));
-        assertTrue(logC2.getCommitter().equals(c5.getCommitter()));
-        assertTrue(logC2.getMessage().equals(c5.getMessage()));
-        assertFalse(logC2.getTimestamp() == c5.getTimestamp());
-        assertFalse(logC2.getTreeId().equals(c5.getTreeId()));
+        assertEquals(commit2, logC2);
 
         // Commit 1
         RevCommit logC1 = log.next();
-        assertTrue(logC1.getAuthor().equals(c1.getAuthor()));
-        assertTrue(logC1.getCommitter().equals(c1.getCommitter()));
-        assertTrue(logC1.getMessage().equals(c1.getMessage()));
-        assertTrue(logC1.getTimestamp() == c1.getTimestamp());
-        assertTrue(logC1.getTreeId().equals(c1.getTreeId()));
+        assertEquals(c1, logC1);
 
         assertFalse(log.hasNext());
 
@@ -133,7 +145,7 @@ public class CherryPickOpTest extends RepositoryTestCase {
     @Test
     public void testCherryPickInvalidCommit() throws Exception {
         CherryPickOp cherryPick = geogit.command(CherryPickOp.class);
-        cherryPick.addCommit(Suppliers.ofInstance(ObjectId.NULL));
+        cherryPick.setCommit(Suppliers.ofInstance(ObjectId.NULL));
         exception.expect(IllegalArgumentException.class);
         cherryPick.call();
     }
@@ -153,7 +165,7 @@ public class CherryPickOpTest extends RepositoryTestCase {
         insert(points3);
 
         CherryPickOp cherryPick = geogit.command(CherryPickOp.class);
-        cherryPick.addCommit(Suppliers.ofInstance(c1.getId()));
+        cherryPick.setCommit(Suppliers.ofInstance(c1.getId()));
         exception.expect(IllegalStateException.class);
         cherryPick.call();
     }
@@ -173,7 +185,7 @@ public class CherryPickOpTest extends RepositoryTestCase {
         insertAndAdd(points3);
 
         CherryPickOp cherryPick = geogit.command(CherryPickOp.class);
-        cherryPick.addCommit(Suppliers.ofInstance(c1.getId()));
+        cherryPick.setCommit(Suppliers.ofInstance(c1.getId()));
         exception.expect(IllegalStateException.class);
         cherryPick.call();
     }
@@ -184,29 +196,25 @@ public class CherryPickOpTest extends RepositoryTestCase {
         final RevCommit c1 = geogit.command(CommitOp.class).setMessage("commit for " + idP1).call();
 
         CherryPickOp cherryPick = geogit.command(CherryPickOp.class);
-        cherryPick.addCommit(Suppliers.ofInstance(c1.getId()));
+        cherryPick.setCommit(Suppliers.ofInstance(c1.getId()));
         cherryPick.call();
 
         Iterator<RevCommit> log = geogit.command(LogOp.class).call();
 
         // Commit 2
         RevCommit logC2 = log.next();
-        assertTrue(logC2.getAuthor().equals(c1.getAuthor()));
-        assertTrue(logC2.getCommitter().equals(c1.getCommitter()));
-        assertTrue(logC2.getMessage().equals(c1.getMessage()));
-        assertFalse(logC2.getTimestamp() == c1.getTimestamp());
-        assertTrue(logC2.getTreeId().equals(c1.getTreeId()));
+        assertEquals(c1.getMessage(), logC2.getMessage());
+        assertEquals(c1.getAuthor(), logC2.getAuthor());
+        assertEquals(c1.getCommitter().getName(), logC2.getCommitter().getName());
+        assertEquals(c1.getCommitter().getEmail(), logC2.getCommitter().getEmail());
+        assertFalse(c1.getCommitter().getTimestamp() == logC2.getCommitter().getTimestamp());
+        assertEquals(c1.getTreeId(), logC2.getTreeId());
 
         // Commit 1
         RevCommit logC1 = log.next();
-        assertTrue(logC1.getAuthor().equals(c1.getAuthor()));
-        assertTrue(logC1.getCommitter().equals(c1.getCommitter()));
-        assertTrue(logC1.getMessage().equals(c1.getMessage()));
-        assertTrue(logC1.getTimestamp() == c1.getTimestamp());
-        assertTrue(logC1.getTreeId().equals(c1.getTreeId()));
+        assertEquals(c1, logC1);
 
         assertFalse(log.hasNext());
 
     }
-
 }

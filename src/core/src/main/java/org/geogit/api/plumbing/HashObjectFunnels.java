@@ -156,7 +156,6 @@ class HashObjectFunnels {
                 ObjectIdFunnel.funnel(parentId, into);
             }
             NullableStringFunnel.funnel(from.getMessage(), into);
-            Funnels.longFunnel().funnel(from.getTimestamp(), into);
             PersonFunnel.funnel(from.getAuthor(), into);
             PersonFunnel.funnel(from.getCommitter(), into);
         }
@@ -253,8 +252,10 @@ class HashObjectFunnels {
 
                 @Override
                 public void funnel(RevPerson from, PrimitiveSink into) {
-                    NullableStringFunnel.funnel(from.getName(), into);
-                    NullableStringFunnel.funnel(from.getEmail(), into);
+                    NullableStringFunnel.funnel(from.getName().orNull(), into);
+                    NullableStringFunnel.funnel(from.getEmail().orNull(), into);
+                    Funnels.longFunnel().funnel(from.getTimestamp(), into);
+                    Funnels.integerFunnel().funnel(from.getTimeZoneOffset(), into);
                 }
             });
 

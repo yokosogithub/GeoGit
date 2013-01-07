@@ -67,6 +67,7 @@ public class ExportOp extends AbstractGeoGitOp<SimpleFeatureStore> {
      * 
      * @return a FeatureCollection with the specified features
      */
+    @SuppressWarnings("deprecation")
     @Override
     public SimpleFeatureStore call() {
 

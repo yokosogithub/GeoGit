@@ -18,6 +18,7 @@ import org.geogit.api.ObjectId;
 import org.geogit.api.Platform;
 import org.geogit.api.Ref;
 import org.geogit.api.RevCommit;
+import org.geogit.api.RevPerson;
 import org.geogit.api.RevTree;
 import org.geogit.api.SymRef;
 import org.geogit.api.plumbing.RefParse;
@@ -58,7 +59,13 @@ public class CommitOp extends AbstractGeoGitOp<RevCommit> {
 
     private String message;
 
-    private Long timeStamp;
+    private Long authorTimeStamp;
+
+    private Long committerTimeStamp;
+
+    private Integer committerTimeZoneOffset;
+
+    private Integer authorTimeZoneOffset;
 
     /**
      * This commit's parents. Will be the current HEAD, but when we support merges it should include
@@ -100,26 +107,6 @@ public class CommitOp extends AbstractGeoGitOp<RevCommit> {
     }
 
     /**
-     * @return the author name if set, Optional.absent() if not.
-     */
-    public Optional<String> getAuthorName() {
-        if (authorName == null) {
-            return Optional.absent();
-        }
-        return authorName;
-    }
-
-    /**
-     * @return the author email if set, Optional.absent() if not.
-     */
-    public Optional<String> getAuthorEmail() {
-        if (authorEmail == null) {
-            return Optional.absent();
-        }
-        return authorEmail;
-    }
-
-    /**
      * If set, overrides the committer's name from the configuration
      * 
      * @param committerName the committer's name
@@ -130,20 +117,6 @@ public class CommitOp extends AbstractGeoGitOp<RevCommit> {
         this.committerName = committerName;
         this.committerEmail = committerEmail;
         return this;
-    }
-
-    /**
-     * @return the committer's name.
-     */
-    public String getCommitterName() {
-        return committerName;
-    }
-
-    /**
-     * @return the committer's email.
-     */
-    public String getCommitterEmail() {
-        return committerEmail;
     }
 
     /**
@@ -158,14 +131,48 @@ public class CommitOp extends AbstractGeoGitOp<RevCommit> {
     }
 
     /**
-     * Sets the {@link RevCommit#getTimestamp() timestamp} the commit will be marked to, or if not
+     * Sets the {@link RevPerson#getTimestamp() timestamp} for the author of this commit, or if not
      * set defaults to the current system time at the time {@link #call()} is called.
      * 
      * @param timestamp commit timestamp, in milliseconds, as in {@link Date#getTime()}
      * @return {@code this}, to ease command chaining
      */
-    public CommitOp setTimestamp(@Nullable final Long timestamp) {
-        this.timeStamp = timestamp;
+    public CommitOp setAuthorTimestamp(@Nullable final Long timestamp) {
+        this.authorTimeStamp = timestamp;
+        return this;
+    }
+
+    /**
+     * Sets the {@link RevPerson#getTimestamp() timestamp} for the committer of this commit, or if
+     * not set defaults to the current system time at the time {@link #call()} is called.
+     * 
+     * @param timestamp commit timestamp, in milliseconds, as in {@link Date#getTime()}
+     * @return {@code this}, to ease command chaining
+     */
+    public CommitOp setCommitterTimestamp(@Nullable final Long timestamp) {
+        this.committerTimeStamp = timestamp;
+        return this;
+    }
+
+    /**
+     * Sets the time zone offset of the author.
+     * 
+     * @param timeZoneOffset time zone offset of the author
+     * @return {@code this}, to ease command chaining
+     */
+    public CommitOp setAuthorTimeZoneOffset(@Nullable final Integer timeZoneOffset) {
+        this.authorTimeZoneOffset = timeZoneOffset;
+        return this;
+    }
+
+    /**
+     * Sets the time zone offset of the committer.
+     * 
+     * @param timeZoneOffset time zone offset of the committer
+     * @return {@code this}, to ease command chaining
+     */
+    public CommitOp setCommitterTimeZoneOffset(@Nullable final Integer timeZoneOffset) {
+        this.committerTimeZoneOffset = timeZoneOffset;
         return this;
     }
 
@@ -180,13 +187,6 @@ public class CommitOp extends AbstractGeoGitOp<RevCommit> {
     public CommitOp setAll(boolean all) {
         this.all = all;
         return this;
-    }
-
-    /**
-     * @return true if the all option is set, false otherwise.
-     */
-    public boolean getAll() {
-        return all;
     }
 
     /**
@@ -212,6 +212,10 @@ public class CommitOp extends AbstractGeoGitOp<RevCommit> {
         final String committerEmail = resolveCommitterEmail();
         final String author = resolveAuthor();
         final String authorEmail = resolveAuthorEmail();
+        final Long authorTime = getAuthorTimeStamp();
+        final Long committerTime = getCommitterTimeStamp();
+        final Integer authorTimeZoneOffset = getAuthorTimeZoneOffset();
+        final Integer committerTimeZoneOffset = getCommitterTimeZoneOffset();
 
         getProgressListener().started();
         float writeTreeProgress = 99f;
@@ -260,10 +264,13 @@ public class CommitOp extends AbstractGeoGitOp<RevCommit> {
             cb.setAuthorEmail(authorEmail);
             cb.setCommitter(committer);
             cb.setCommitterEmail(committerEmail);
-            cb.setMessage(getMessage());
+            cb.setMessage(message);
             cb.setParentIds(parents);
             cb.setTreeId(newTreeId);
-            cb.setTimestamp(getTimeStamp());
+            cb.setCommitterTimestamp(committerTime);
+            cb.setAuthorTimestamp(authorTime);
+            cb.setCommitterTimeZoneOffset(committerTimeZoneOffset);
+            cb.setAuthorTimeZoneOffset(authorTimeZoneOffset);
             // cb.setBounds(bounds);
 
             if (getProgressListener().isCanceled()) {
@@ -310,17 +317,40 @@ public class CommitOp extends AbstractGeoGitOp<RevCommit> {
     }
 
     /**
-     * @return the timestamp to be used for the commit
+     * @return the timestamp to be used for the committer
      */
-    public long getTimeStamp() {
-        return timeStamp == null ? platform.currentTimeMillis() : timeStamp.longValue();
+    public long getCommitterTimeStamp() {
+        if (committerTimeStamp == null) {
+            committerTimeStamp = platform.currentTimeMillis();
+        }
+        return committerTimeStamp.longValue();
     }
 
     /**
-     * @return the message for the commit
+     * @return the time zone offset to be used for the committer
      */
-    public String getMessage() {
-        return message;
+    public int getCommitterTimeZoneOffset() {
+        if (committerTimeZoneOffset == null) {
+            committerTimeZoneOffset = platform.timeZoneOffset(getCommitterTimeStamp());
+        }
+        return committerTimeZoneOffset.intValue();
+    }
+
+    /**
+     * @return the timestamp to be used for the author
+     */
+    public long getAuthorTimeStamp() {
+        return authorTimeStamp == null ? getCommitterTimeStamp() : authorTimeStamp;
+    }
+
+    /**
+     * @return the time zone offset to be used for the committer
+     */
+    public int getAuthorTimeZoneOffset() {
+        if (authorTimeZoneOffset == null) {
+            authorTimeZoneOffset = getCommitterTimeZoneOffset();
+        }
+        return authorTimeZoneOffset.intValue();
     }
 
     private String resolveCommitter() {
@@ -371,12 +401,5 @@ public class CommitOp extends AbstractGeoGitOp<RevCommit> {
     public CommitOp setAllowEmpty(boolean allowEmptyCommit) {
         this.allowEmpty = allowEmptyCommit;
         return this;
-    }
-
-    /**
-     * @return true if a commit that represents no changes is allowed, false otherwise
-     */
-    public boolean isAllowEmpty() {
-        return allowEmpty;
     }
 }

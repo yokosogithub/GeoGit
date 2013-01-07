@@ -15,6 +15,7 @@ import org.geogit.api.porcelain.ConfigException;
 import org.geogit.api.porcelain.ConfigException.StatusCode;
 import org.geogit.api.porcelain.ConfigOp;
 import org.geogit.api.porcelain.ConfigOp.ConfigAction;
+import org.geogit.api.porcelain.ConfigOp.ConfigScope;
 import org.geogit.cli.AbstractCommand;
 import org.geogit.cli.CLICommand;
 import org.geogit.cli.GeogitCLI;
@@ -48,9 +49,11 @@ import com.google.common.base.Optional;
 @Parameters(commandNames = "config", commandDescription = "Get and set repository or global options")
 public class Config extends AbstractCommand implements CLICommand {
 
-    @Parameter(names = "--global", description = "For writing options: write to global ~/.geogitconfig file rather than the repository .geogit/config."
-            + "For reading options: read only from global ~/.geogitconfig rather than from all available files.")
+    @Parameter(names = "--global", description = "Use global config file.")
     private boolean global = false;
+
+    @Parameter(names = "--local", description = "Use repository config file.")
+    private boolean local = false;
 
     @Parameter(names = "--get", description = "Get the value for a given key.")
     private boolean get = false;
@@ -96,9 +99,20 @@ public class Config extends AbstractCommand implements CLICommand {
                 printUsage();
                 return;
             }
+            if (global && local) {
+                printUsage();
+                return;
+            }
+            ConfigScope scope = ConfigScope.DEFAULT;
+
+            if (global) {
+                scope = ConfigScope.GLOBAL;
+            } else if (local) {
+                scope = ConfigScope.LOCAL;
+            }
 
             final Optional<Map<String, String>> commandResult = geogit.command(ConfigOp.class)
-                    .setGlobal(global).setAction(action).setName(name).setValue(value).call();
+                    .setScope(scope).setAction(action).setName(name).setValue(value).call();
 
             if (commandResult.isPresent()) {
                 switch (action) {

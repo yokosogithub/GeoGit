@@ -25,5 +25,5 @@ Feature: "pg import" command
      
   Scenario: Try to import without specifying table or -all
     Given I have a repository
-     When I run the command "pg import" on the database
-     Then the response should contain "You need to specify a table or use the --all option"     
+     When I run the command "pg import" on the PostGIS database
+     Then the response should contain "No tables specified for import. Specify --all or --table <table>."     

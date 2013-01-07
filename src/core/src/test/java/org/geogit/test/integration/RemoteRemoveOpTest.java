@@ -59,10 +59,10 @@ public class RemoteRemoveOpTest extends RepositoryTestCase {
 
         Remote remote = remoteAdd.setName(remoteName).setURL(remoteURL).call();
 
-        assertEquals(remote.getName(), remoteName);
-        assertEquals(remote.getFetchURL(), remoteURL);
-        assertEquals(remote.getPushURL(), remoteURL);
-        assertEquals(remote.getFetch(), "+refs/heads/*:refs/remotes/" + remoteName + "/*");
+        assertEquals(remoteName, remote.getName());
+        assertEquals(remoteURL, remote.getFetchURL());
+        assertEquals(remoteURL, remote.getPushURL());
+        assertEquals("+refs/heads/*:refs/remotes/" + remoteName + "/*", remote.getFetch());
 
         final RemoteRemoveOp remoteRemove = geogit.command(RemoteRemoveOp.class);
 
@@ -79,19 +79,19 @@ public class RemoteRemoveOpTest extends RepositoryTestCase {
 
         Remote remote = remoteAdd.setName(remoteName).setURL(remoteURL).call();
 
-        assertEquals(remote.getName(), remoteName);
-        assertEquals(remote.getFetchURL(), remoteURL);
-        assertEquals(remote.getPushURL(), remoteURL);
-        assertEquals(remote.getFetch(), "+refs/heads/*:refs/remotes/" + remoteName + "/*");
+        assertEquals(remoteName, remote.getName());
+        assertEquals(remoteURL, remote.getFetchURL());
+        assertEquals(remoteURL, remote.getPushURL());
+        assertEquals("+refs/heads/*:refs/remotes/" + remoteName + "/*", remote.getFetch());
 
         final RemoteRemoveOp remoteRemove = geogit.command(RemoteRemoveOp.class);
 
         Remote deletedRemote = remoteRemove.setName(remoteName).call();
 
-        assertEquals(deletedRemote.getName(), remoteName);
-        assertEquals(deletedRemote.getFetchURL(), remoteURL);
-        assertEquals(deletedRemote.getPushURL(), remoteURL);
-        assertEquals(deletedRemote.getFetch(), "+refs/heads/*:refs/remotes/" + remoteName + "/*");
+        assertEquals(remoteName, deletedRemote.getName());
+        assertEquals(remoteURL, deletedRemote.getFetchURL());
+        assertEquals(remoteURL, deletedRemote.getPushURL());
+        assertEquals("+refs/heads/*:refs/remotes/" + remoteName + "/*", deletedRemote.getFetch());
     }
 
     @Test
@@ -103,10 +103,10 @@ public class RemoteRemoveOpTest extends RepositoryTestCase {
 
         Remote remote = remoteAdd.setName(remoteName).setURL(remoteURL).call();
 
-        assertEquals(remote.getName(), remoteName);
-        assertEquals(remote.getFetchURL(), remoteURL);
-        assertEquals(remote.getPushURL(), remoteURL);
-        assertEquals(remote.getFetch(), "+refs/heads/*:refs/remotes/" + remoteName + "/*");
+        assertEquals(remoteName, remote.getName());
+        assertEquals(remoteURL, remote.getFetchURL());
+        assertEquals(remoteURL, remote.getPushURL());
+        assertEquals("+refs/heads/*:refs/remotes/" + remoteName + "/*", remote.getFetch());
 
         String refName = Ref.REMOTES_PREFIX + remoteName + "/branch1";
         geogit.command(UpdateRef.class).setName(refName).setNewValue(ObjectId.NULL).call();
@@ -119,10 +119,10 @@ public class RemoteRemoveOpTest extends RepositoryTestCase {
 
         assertFalse(remoteRef.isPresent());
 
-        assertEquals(deletedRemote.getName(), remoteName);
-        assertEquals(deletedRemote.getFetchURL(), remoteURL);
-        assertEquals(deletedRemote.getPushURL(), remoteURL);
-        assertEquals(deletedRemote.getFetch(), "+refs/heads/*:refs/remotes/" + remoteName + "/*");
+        assertEquals(remoteName, deletedRemote.getName());
+        assertEquals(remoteURL, deletedRemote.getFetchURL());
+        assertEquals(remoteURL, deletedRemote.getPushURL());
+        assertEquals("+refs/heads/*:refs/remotes/" + remoteName + "/*", deletedRemote.getFetch());
     }
 
     @Test
@@ -134,10 +134,10 @@ public class RemoteRemoveOpTest extends RepositoryTestCase {
 
         Remote remote = remoteAdd.setName(remoteName).setURL(remoteURL).call();
 
-        assertEquals(remote.getName(), remoteName);
-        assertEquals(remote.getFetchURL(), remoteURL);
-        assertEquals(remote.getPushURL(), remoteURL);
-        assertEquals(remote.getFetch(), "+refs/heads/*:refs/remotes/" + remoteName + "/*");
+        assertEquals(remoteName, remote.getName());
+        assertEquals(remoteURL, remote.getFetchURL());
+        assertEquals(remoteURL, remote.getPushURL());
+        assertEquals("+refs/heads/*:refs/remotes/" + remoteName + "/*", remote.getFetch());
 
         final ConfigOp config = geogit.command(ConfigOp.class);
         config.setAction(ConfigAction.CONFIG_UNSET).setName("remote." + remoteName + ".url").call();
@@ -146,10 +146,10 @@ public class RemoteRemoveOpTest extends RepositoryTestCase {
 
         Remote deletedRemote = remoteRemove.setName(remoteName).call();
 
-        assertEquals(deletedRemote.getName(), remoteName);
-        assertEquals(deletedRemote.getFetchURL(), "");
-        assertEquals(deletedRemote.getPushURL(), "");
-        assertEquals(deletedRemote.getFetch(), "+refs/heads/*:refs/remotes/" + remoteName + "/*");
+        assertEquals(remoteName, deletedRemote.getName());
+        assertEquals("", deletedRemote.getFetchURL());
+        assertEquals("", deletedRemote.getPushURL());
+        assertEquals("+refs/heads/*:refs/remotes/" + remoteName + "/*", deletedRemote.getFetch());
     }
 
     @Test
@@ -161,10 +161,10 @@ public class RemoteRemoveOpTest extends RepositoryTestCase {
 
         Remote remote = remoteAdd.setName(remoteName).setURL(remoteURL).call();
 
-        assertEquals(remote.getName(), remoteName);
-        assertEquals(remote.getFetchURL(), remoteURL);
-        assertEquals(remote.getPushURL(), remoteURL);
-        assertEquals(remote.getFetch(), "+refs/heads/*:refs/remotes/" + remoteName + "/*");
+        assertEquals(remoteName, remote.getName());
+        assertEquals(remoteURL, remote.getFetchURL());
+        assertEquals(remoteURL, remote.getPushURL());
+        assertEquals("+refs/heads/*:refs/remotes/" + remoteName + "/*", remote.getFetch());
 
         final ConfigOp config = geogit.command(ConfigOp.class);
         config.setAction(ConfigAction.CONFIG_UNSET).setName("remote." + remoteName + ".fetch")
@@ -174,18 +174,9 @@ public class RemoteRemoveOpTest extends RepositoryTestCase {
 
         Remote deletedRemote = remoteRemove.setName(remoteName).call();
 
-        assertEquals(deletedRemote.getName(), remoteName);
-        assertEquals(deletedRemote.getFetchURL(), remoteURL);
-        assertEquals(deletedRemote.getPushURL(), remoteURL);
-        assertEquals(deletedRemote.getFetch(), "");
-    }
-
-    @Test
-    public void testAccessorsAndMutators() {
-        final RemoteRemoveOp remoteRemove = geogit.command(RemoteRemoveOp.class);
-
-        String remoteName = "myremote";
-        remoteRemove.setName(remoteName);
-        assertEquals(remoteName, remoteRemove.getName());
+        assertEquals(remoteName, deletedRemote.getName());
+        assertEquals(remoteURL, deletedRemote.getFetchURL());
+        assertEquals(remoteURL, deletedRemote.getPushURL());
+        assertEquals("", deletedRemote.getFetch());
     }
 }

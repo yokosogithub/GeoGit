@@ -9,6 +9,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
+import java.util.TimeZone;
 
 import org.geogit.api.CommitBuilder;
 import org.geogit.api.ObjectId;
@@ -31,8 +32,8 @@ public abstract class RevCommitSerializationTest extends Assert {
     public void before() {
         this.factory = getFactory();
         ObjectId treeId = ObjectId.forString("treeid");
-        testCommit = testCommit(treeId, "groldan", "groldan@opengeo.org", "jd",
-                "jd@lmnsolutions.com", "test message", 1000000, ObjectId.forString("first parent"));
+        testCommit = testCommit(treeId, "groldan", "groldan@opengeo.org", 5000L, "jd",
+                "jd@lmnsolutions.com", 10000L, "test message", ObjectId.forString("first parent"));
     }
 
     protected abstract ObjectSerialisingFactory getFactory();
@@ -103,8 +104,8 @@ public abstract class RevCommitSerializationTest extends Assert {
     }
 
     private CommitBuilder testCommit(ObjectId treeId, String author, String authorEmail,
-            String committer, String committerEmail, String message, long timestamp,
-            ObjectId... parentIds) {
+            long authorTimestamp, String committer, String committerEmail, long committerTimestamp,
+            String message, ObjectId... parentIds) {
         CommitBuilder b = new CommitBuilder();
         b.setTreeId(treeId);
         b.setAuthor(author);
@@ -112,7 +113,8 @@ public abstract class RevCommitSerializationTest extends Assert {
         b.setCommitter(committer);
         b.setCommitterEmail(committerEmail);
         b.setMessage(message);
-        b.setTimestamp(timestamp);
+        b.setAuthorTimestamp(authorTimestamp);
+        b.setCommitterTimestamp(committerTimestamp);
         if (parentIds != null) {
             b.setParentIds(Lists.newArrayList(parentIds));
         }
@@ -122,16 +124,20 @@ public abstract class RevCommitSerializationTest extends Assert {
     @Test
     public void testCommitRoundTrippin() throws Exception {
         long currentTime = System.currentTimeMillis();
+        int timeZoneOffset = TimeZone.getDefault().getOffset(currentTime);
         CommitBuilder builder = new CommitBuilder();
         String author = "groldan";
         builder.setAuthor(author);
         String authorEmail = "groldan@opengeo.org";
         builder.setAuthorEmail(authorEmail);
+        builder.setAuthorTimestamp(currentTime);
+        builder.setAuthorTimeZoneOffset(timeZoneOffset);
         String committer = "mleslie";
         builder.setCommitter(committer);
         String committerEmail = "mleslie@opengeo.org";
         builder.setCommitterEmail(committerEmail);
-        builder.setTimestamp(currentTime);
+        builder.setCommitterTimestamp(currentTime);
+        builder.setCommitterTimeZoneOffset(timeZoneOffset);
 
         ObjectId treeId = ObjectId.forString("Fake tree");
         builder.setTreeId(treeId);
@@ -159,12 +165,14 @@ public abstract class RevCommitSerializationTest extends Assert {
 
         assertEquals(treeId, cmtOut.getTreeId());
         assertEquals(parents, cmtOut.getParentIds());
-        assertEquals(author, cmtOut.getAuthor().getName());
-        assertEquals(authorEmail, cmtOut.getAuthor().getEmail());
-        assertEquals(committer, cmtOut.getCommitter().getName());
-        assertEquals(committerEmail, cmtOut.getCommitter().getEmail());
-        assertEquals(currentTime, cmtOut.getTimestamp());
+        assertEquals(author, cmtOut.getAuthor().getName().get());
+        assertEquals(authorEmail, cmtOut.getAuthor().getEmail().get());
+        assertEquals(committer, cmtOut.getCommitter().getName().get());
+        assertEquals(committerEmail, cmtOut.getCommitter().getEmail().get());
+        assertEquals(currentTime, cmtOut.getCommitter().getTimestamp());
+        assertEquals(timeZoneOffset, cmtOut.getCommitter().getTimeZoneOffset());
+        assertEquals(currentTime, cmtOut.getAuthor().getTimestamp());
+        assertEquals(timeZoneOffset, cmtOut.getAuthor().getTimeZoneOffset());
 
     }
-
 }

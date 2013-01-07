@@ -171,11 +171,13 @@ public class RebaseOp extends AbstractGeoGitOp<Boolean> {
             index.stage(getProgressListener(), diff, 0);
             // write new tree
             ObjectId newTreeId = command(WriteTree.class).call();
+            long timestamp = platform.currentTimeMillis();
             // Create new commit
             CommitBuilder builder = new CommitBuilder(oldCommit);
             builder.setParentIds(Arrays.asList(rebaseHead));
             builder.setTreeId(newTreeId);
-            builder.setTimestamp(platform.currentTimeMillis());
+            builder.setCommitterTimestamp(timestamp);
+            builder.setCommitterTimeZoneOffset(platform.timeZoneOffset(timestamp));
 
             RevCommit newCommit = builder.build();
             repository.getObjectDatabase().put(newCommit);

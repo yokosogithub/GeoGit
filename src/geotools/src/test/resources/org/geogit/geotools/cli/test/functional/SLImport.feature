@@ -22,3 +22,8 @@ Feature: "sl import" command
     Given I have a repository
      When I run the command "sl import --table nonexistant_table" on the SpatiaLite database
      Then the response should contain "Could not find the specified table."
+
+  Scenario: Try to import without specifying table or -all
+    Given I have a repository
+     When I run the command "sl import" on the SpatiaLite database
+     Then the response should contain "No tables specified for import. Specify --all or --table <table>."    

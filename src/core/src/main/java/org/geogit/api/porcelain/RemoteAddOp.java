@@ -78,13 +78,6 @@ public class RemoteAddOp extends AbstractGeoGitOp<Remote> {
     }
 
     /**
-     * @return the name of the remote
-     */
-    public String getName() {
-        return name;
-    }
-
-    /**
      * @param url the URL of the remote
      * @return {@code this}
      */
@@ -94,26 +87,12 @@ public class RemoteAddOp extends AbstractGeoGitOp<Remote> {
     }
 
     /**
-     * @return the URL of the remote
-     */
-    public String getURL() {
-        return url;
-    }
-
-    /**
      * @param branch a specific branch to track
      * @return {@code this}
      */
     public RemoteAddOp setBranch(String branch) {
         this.branch = branch;
         return this;
-    }
-
-    /**
-     * @return the branch being tracked, {@code null} if no specific branch is set
-     */
-    public String getBranch() {
-        return branch;
     }
 
 }

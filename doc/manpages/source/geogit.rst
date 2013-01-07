@@ -43,8 +43,11 @@ SEE ALSO
 
 :ref:`geogit-init`
 :ref:`geogit-add`
+:ref:`geogit-branch`
+:ref:`geogit-checkout`
 :ref:`geogit-commit`
 :ref:`geogit-log`
+:ref:`geogit-help`
 :ref:`geogit-status`
 :ref:`geogit-config`
 :ref:`geogit-merge`

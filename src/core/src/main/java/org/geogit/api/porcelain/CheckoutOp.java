@@ -12,15 +12,23 @@ import java.util.Collection;
 import java.util.Set;
 
 import org.geogit.api.AbstractGeoGitOp;
+import org.geogit.api.NodeRef;
 import org.geogit.api.ObjectId;
 import org.geogit.api.Ref;
 import org.geogit.api.RevCommit;
 import org.geogit.api.RevObject;
+import org.geogit.api.RevObject.TYPE;
+import org.geogit.api.RevTree;
+import org.geogit.api.RevTreeBuilder;
+import org.geogit.api.plumbing.FindTreeChild;
 import org.geogit.api.plumbing.RefParse;
+import org.geogit.api.plumbing.ResolveTreeish;
 import org.geogit.api.plumbing.RevObjectParse;
 import org.geogit.api.plumbing.RevParse;
 import org.geogit.api.plumbing.UpdateRef;
 import org.geogit.api.plumbing.UpdateSymRef;
+import org.geogit.api.plumbing.WriteBack;
+import org.geogit.api.porcelain.CheckoutException.StatusCode;
 import org.geogit.repository.StagingArea;
 import org.geogit.repository.WorkingTree;
 
@@ -55,7 +63,6 @@ public class CheckoutOp extends AbstractGeoGitOp<ObjectId> {
     }
 
     public CheckoutOp setSource(final String branchOrCommit) {
-        checkNotNull(branchOrCommit);
         this.branchOrCommit = branchOrCommit;
         return this;
     }
@@ -88,9 +95,57 @@ public class CheckoutOp extends AbstractGeoGitOp<ObjectId> {
         checkState(branchOrCommit != null || !paths.isEmpty(),
                 "No branch, tree, or path were specified");
 
-        Optional<Ref> targetRef = Optional.absent();
-        Optional<RevCommit> commit = Optional.absent();
-        if (branchOrCommit != null) {
+        if (!paths.isEmpty()) {
+            Optional<RevTree> tree = Optional.absent();
+            if (branchOrCommit != null) {
+                Optional<ObjectId> id = command(ResolveTreeish.class).setTreeish(branchOrCommit)
+                        .call();
+                checkState(id.isPresent(), "'" + branchOrCommit + "' not found in repository.");
+                tree = command(RevObjectParse.class).setObjectId(id.get()).call(RevTree.class);
+
+            } else {
+                tree = Optional.of(index.getTree());
+            }
+
+            for (String st : paths) {
+                Optional<NodeRef> node = command(FindTreeChild.class).setParent(tree.get())
+                        .setChildPath(st).call();
+
+                checkState(node.isPresent(), "pathspec '" + st
+                        + "' didn't match a feature in the tree");
+                if (node.get().getType() == TYPE.TREE) {
+                    RevTreeBuilder treeBuilder = new RevTreeBuilder(index.getDatabase(),
+                            workTree.getTree());
+                    treeBuilder.remove(st);
+                    treeBuilder.put(node.get().getNode());
+                    workTree.updateWorkHead(treeBuilder.build().getId());
+                } else {
+                    Optional<NodeRef> parentNode = command(FindTreeChild.class)
+                            .setParent(workTree.getTree()).setChildPath(node.get().getParentPath())
+                            .call();
+                    RevTreeBuilder treeBuilder = null;
+                    if (parentNode.isPresent()) {
+                        Optional<RevTree> parsed = command(RevObjectParse.class).setObjectId(
+                                parentNode.get().getNode().getObjectId()).call(RevTree.class);
+                        checkState(parsed.isPresent(),
+                                "Parent tree couldn't be found in the repository.");
+                        treeBuilder = new RevTreeBuilder(index.getDatabase(), parsed.get());
+                        treeBuilder.remove(node.get().getNode().getName());
+                    } else {
+                        treeBuilder = new RevTreeBuilder(index.getDatabase());
+                    }
+                    treeBuilder.put(node.get().getNode());
+                    ObjectId newTreeId = command(WriteBack.class)
+                            .setAncestor(workTree.getTree().builder(index.getDatabase()))
+                            .setChildPath(node.get().getParentPath()).setToIndex(true)
+                            .setTree(treeBuilder.build()).call();
+                    workTree.updateWorkHead(newTreeId);
+                }
+            }
+
+        } else {
+            Optional<Ref> targetRef = Optional.absent();
+            Optional<RevCommit> commit = Optional.absent();
             targetRef = command(RefParse.class).setName(branchOrCommit).call();
             if (targetRef.isPresent()) {
                 ObjectId commitId = Optional.of(targetRef.get().getObjectId()).get();
@@ -104,44 +159,41 @@ public class CheckoutOp extends AbstractGeoGitOp<ObjectId> {
                         branchOrCommit).call();
                 checkArgument(addressed.isPresent(), "source '" + branchOrCommit
                         + "' not found in repository");
-                if (addressed.isPresent()) {
-                    RevObject target;
-                    target = command(RevObjectParse.class).setObjectId(addressed.get()).call()
-                            .get();
-                    checkArgument(target instanceof RevCommit,
-                            "source did not resolve to a commit: " + target.getType());
-                    commit = Optional.of((RevCommit) target);
+
+                RevObject target;
+                target = command(RevObjectParse.class).setObjectId(addressed.get()).call().get();
+                checkArgument(target instanceof RevCommit, "source did not resolve to a commit: "
+                        + target.getType());
+                commit = Optional.of((RevCommit) target);
+            }
+            if (commit.isPresent()) {
+
+                if (!force) {
+                    // count staged and unstaged changes
+                    long staged = index.countStaged(null);
+                    long unstaged = workTree.countUnstaged(null);
+                    if (staged != 0 || unstaged != 0) {
+                        throw new CheckoutException(StatusCode.LOCAL_CHANGES_NOT_COMMITTED);
+                    }
                 }
+                // update work tree
+                RevCommit revCommit = commit.get();
+                ObjectId treeId = revCommit.getTreeId();
+                workTree.updateWorkHead(treeId);
+                index.updateStageHead(treeId);
+                if (targetRef.isPresent()) {
+                    // update HEAD
+                    String refName = targetRef.get().getName();
+                    command(UpdateSymRef.class).setName(Ref.HEAD).setNewValue(refName).call();
+                } else {
+                    // set HEAD to a dettached state
+                    ObjectId commitId = commit.get().getId();
+                    command(UpdateRef.class).setName(Ref.HEAD).setNewValue(commitId).call();
+                }
+                return treeId;
             }
         }
 
-        if (commit.isPresent()) {
-
-            if (!force) {
-                // count staged and unstaged changes
-                long staged = index.countStaged(null);
-                long unstaged = workTree.countUnstaged(null);
-                if (staged != 0 || unstaged != 0) {
-                    throw new UnsupportedOperationException(
-                            "Doing a checkout without a clean working tree and index is currently unsupported.");
-                }
-            }
-            // update work tree
-            RevCommit revCommit = commit.get();
-            ObjectId treeId = revCommit.getTreeId();
-            workTree.updateWorkHead(treeId);
-            index.updateStageHead(treeId);
-            if (targetRef.isPresent()) {
-                // update HEAD
-                String refName = targetRef.get().getName();
-                command(UpdateSymRef.class).setName(Ref.HEAD).setNewValue(refName).call();
-            } else {
-                // set HEAD to a dettached state
-                ObjectId commitId = commit.get().getId();
-                command(UpdateRef.class).setName(Ref.HEAD).setNewValue(commitId).call();
-            }
-            return treeId;
-        }
-        throw new UnsupportedOperationException("partial checkouts not yet supported");
+        return workTree.getTree().getId();
     }
 }

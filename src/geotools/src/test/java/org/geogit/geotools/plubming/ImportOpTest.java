@@ -13,7 +13,10 @@ import java.io.File;
 import jline.UnsupportedTerminal;
 import jline.console.ConsoleReader;
 
+import org.geogit.api.NodeRef;
 import org.geogit.api.Platform;
+import org.geogit.api.RevTree;
+import org.geogit.api.plumbing.FindTreeChild;
 import org.geogit.cli.GeogitCLI;
 import org.geogit.geotools.plumbing.GeoToolsOpException;
 import org.geogit.geotools.plumbing.ImportOp;
@@ -26,6 +29,10 @@ import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.junit.rules.TemporaryFolder;
 import org.opengis.feature.type.Name;
+
+import com.google.common.base.Optional;
+
+import cucumber.annotation.After;
 
 public class ImportOpTest {
 
@@ -46,23 +53,9 @@ public class ImportOpTest {
         setUpGeogit(cli);
     }
 
-    @Test
-    public void testAccessorsAndMutators() throws Exception {
-        ImportOp importOp = cli.getGeogit().command(ImportOp.class);
-
-        MemoryDataStore testDataStore = new MemoryDataStore();
-        importOp.setDataStore(testDataStore);
-        assertEquals(testDataStore, importOp.getDataStore());
-
-        importOp.setTable("table1");
-        assertEquals("table1", importOp.getTable());
-
-        importOp.setAll(true);
-        assertTrue(importOp.getAll());
-
-        importOp.setAll(false);
-        assertFalse(importOp.getAll());
-
+    @After
+    public void cleanup() throws Exception {
+        cli.close();
     }
 
     @Test
@@ -157,7 +150,15 @@ public class ImportOpTest {
         importOp.setDataStore(TestHelper.createTestFactory().createDataStore(null));
         importOp.setAll(false);
         importOp.setTable("table1");
-        importOp.call();
+
+        RevTree newWorkingTree = importOp.call();
+        Optional<NodeRef> ref = cli.getGeogit().command(FindTreeChild.class)
+                .setParent(newWorkingTree).setChildPath("table1/table1.1").call();
+        assertTrue(ref.isPresent());
+
+        ref = cli.getGeogit().command(FindTreeChild.class).setParent(newWorkingTree)
+                .setChildPath("table1/table1.2").call();
+        assertTrue(ref.isPresent());
     }
 
     @Test
@@ -165,7 +166,19 @@ public class ImportOpTest {
         ImportOp importOp = cli.getGeogit().command(ImportOp.class);
         importOp.setDataStore(TestHelper.createTestFactory().createDataStore(null));
         importOp.setAll(true);
-        importOp.call();
+
+        RevTree newWorkingTree = importOp.call();
+        Optional<NodeRef> ref = cli.getGeogit().command(FindTreeChild.class)
+                .setParent(newWorkingTree).setChildPath("table1/table1.1").call();
+        assertTrue(ref.isPresent());
+
+        ref = cli.getGeogit().command(FindTreeChild.class).setParent(newWorkingTree)
+                .setChildPath("table1/table1.2").call();
+        assertTrue(ref.isPresent());
+
+        ref = cli.getGeogit().command(FindTreeChild.class).setParent(newWorkingTree)
+                .setChildPath("table2/table2.1").call();
+        assertTrue(ref.isPresent());
     }
 
     @Test

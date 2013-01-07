@@ -5,6 +5,9 @@
 
 package org.geogit.geotools.porcelain;
 
+import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkState;
+
 import java.io.File;
 import java.io.Serializable;
 import java.util.HashMap;
@@ -38,7 +41,6 @@ import org.opengis.feature.simple.SimpleFeatureType;
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.Parameters;
 import com.google.common.base.Optional;
-import com.google.common.base.Preconditions;
 
 /**
  * Exports features from a feature type into a shapefile.
@@ -116,6 +118,8 @@ public class ShpExport extends AbstractShpCommand implements CLICommand {
 
     private SimpleFeatureType getFeatureType(String featureTypeName, GeogitCLI cli) {
 
+        checkArgument(featureTypeName != null, "No feature type name specified.");
+
         String refspec;
         if (featureTypeName.contains(":")) {
             refspec = featureTypeName;
@@ -123,19 +127,28 @@ public class ShpExport extends AbstractShpCommand implements CLICommand {
             refspec = "WORK_HEAD:" + featureTypeName;
         }
 
+        checkArgument(refspec.endsWith(":") != true, "No feature type name specified.");
+
         final GeoGIT geogit = cli.getGeogit();
 
         Optional<ObjectId> rootTreeId = geogit.command(ResolveTreeish.class)
                 .setTreeish(refspec.split(":")[0]).call();
+
+        checkState(rootTreeId.isPresent(), "Couldn't resolve '" + refspec + "' to a treeish object");
+
         RevTree rootTree = geogit.getRepository().getTree(rootTreeId.get());
         Optional<NodeRef> featureTypeTree = geogit.command(FindTreeChild.class)
-                .setChildPath(featureTypeName).setParent(rootTree).setIndex(true).call();
+                .setChildPath(refspec.split(":")[1]).setParent(rootTree).setIndex(true).call();
+
+        checkArgument(featureTypeTree.isPresent(), "pathspec '" + refspec.split(":")[1]
+                + "' did not match any valid path");
+
         Optional<RevObject> revObject = geogit.command(RevObjectParse.class).setRefSpec(refspec)
                 .call(RevObject.class);
 
-        Preconditions.checkArgument(revObject.isPresent(), "Invalid reference: %s", refspec);
-        Preconditions.checkArgument(revObject.get().getType() == TYPE.TREE,
-                "%s did not resolve to a tree", refspec);
+        checkArgument(revObject.isPresent(), "Invalid reference: %s", refspec);
+        checkArgument(revObject.get().getType() == TYPE.TREE, "%s did not resolve to a tree",
+                refspec);
 
         ObjectDatabase database = cli.getGeogit().getRepository().getObjectDatabase();
         DepthTreeIterator iter = new DepthTreeIterator("", featureTypeTree.get().getMetadataId(),
@@ -143,9 +156,14 @@ public class ShpExport extends AbstractShpCommand implements CLICommand {
 
         while (iter.hasNext()) {
             NodeRef nodeRef = iter.next();
-            RevFeatureType revFeatureType = cli.getGeogit().command(RevObjectParse.class)
-                    .setObjectId(nodeRef.getMetadataId()).call(RevFeatureType.class).get();
-            return (SimpleFeatureType) revFeatureType.type();
+            revObject = cli.getGeogit().command(RevObjectParse.class)
+                    .setObjectId(nodeRef.getMetadataId()).call();
+            if (revObject.isPresent() && revObject.get() instanceof RevFeatureType) {
+                RevFeatureType revFeatureType = (RevFeatureType) revObject.get();
+                if (revFeatureType.type() instanceof SimpleFeatureType) {
+                    return (SimpleFeatureType) revFeatureType.type();
+                }
+            }
         }
 
         throw new GeoToolsOpException(StatusCode.NO_FEATURES_FOUND);

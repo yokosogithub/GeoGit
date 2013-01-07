@@ -67,10 +67,4 @@ public class ListOp extends AbstractGeoGitOp<Optional<List<String>>> {
         return this;
     }
 
-    /**
-     * @return the data store that has been set
-     */
-    public DataStore getDataStore() {
-        return dataStore;
-    }
 }

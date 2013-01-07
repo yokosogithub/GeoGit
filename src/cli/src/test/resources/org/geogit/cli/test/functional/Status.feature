@@ -15,7 +15,12 @@ Feature: "status" command
      
   Scenario: Try to get the status of a repository with unstaged changes without using a limit
     Given I have a repository
-      And I have 6 unstaged features
+      And I have unstaged "points1"
+      And I have unstaged "points2"
+      And I have unstaged "points3"
+      And I have unstaged "lines1"
+      And I have unstaged "lines2"
+      And I have unstaged "lines3"
      When I run the command "status"
      Then the response should contain "Changes not staged for commit"
       And the response should contain "6 total."
@@ -24,7 +29,12 @@ Feature: "status" command
       
   Scenario: Try to get the status of a repository with staged changes without using a limit
     Given I have a repository
-      And I stage 6 features
+      And I have staged "points1"
+      And I have staged "points2"
+      And I have staged "points3"
+      And I have staged "lines1"
+      And I have staged "lines2"
+      And I have staged "lines3"
      When I run the command "status"
      Then the response should contain "Changes to be committed"
       And the response should contain "6 total."
@@ -33,7 +43,12 @@ Feature: "status" command
       
   Scenario: Try to get the status of a repository with staged and unstaged changes without using a limit
     Given I have a repository
-      And I stage 6 features
+      And I have staged "points1"
+      And I have staged "points2"
+      And I have staged "points3"
+      And I have staged "lines1"
+      And I have staged "lines2"
+      And I have staged "lines3"
       And I modify a feature
      When I run the command "status"
      Then the response should contain "Changes to be committed"
@@ -44,7 +59,12 @@ Feature: "status" command
       
   Scenario: Try to get the status of a repository with unstaged changes specifying all
     Given I have a repository
-      And I have 6 unstaged features
+      And I have unstaged "points1"
+      And I have unstaged "points2"
+      And I have unstaged "points3"
+      And I have unstaged "lines1"
+      And I have unstaged "lines2"
+      And I have unstaged "lines3"
      When I run the command "status --all"
      Then the response should contain "Changes not staged for commit"
       And the response should contain "6 total."
@@ -53,7 +73,12 @@ Feature: "status" command
       
   Scenario: Try to get the status of a repository with staged changes specifying all
     Given I have a repository
-      And I stage 6 features
+      And I have staged "points1"
+      And I have staged "points2"
+      And I have staged "points3"
+      And I have staged "lines1"
+      And I have staged "lines2"
+      And I have staged "lines3"
      When I run the command "status --all"
      Then the response should contain "Changes to be committed"
       And the response should contain "6 total."
@@ -62,7 +87,12 @@ Feature: "status" command
       
   Scenario: Try to get the status of a repository with staged and unstaged changes specifying all
     Given I have a repository
-      And I stage 6 features
+      And I have staged "points1"
+      And I have staged "points2"
+      And I have staged "points3"
+      And I have staged "lines1"
+      And I have staged "lines2"
+      And I have staged "lines3"
       And I modify a feature
      When I run the command "status --all"
      Then the response should contain "Changes to be committed"
@@ -73,7 +103,12 @@ Feature: "status" command
       
    Scenario: Try to get the status of a repository with unstaged changes using a limit
     Given I have a repository
-      And I have 6 unstaged features
+      And I have unstaged "points1"
+      And I have unstaged "points2"
+      And I have unstaged "points3"
+      And I have unstaged "lines1"
+      And I have unstaged "lines2"
+      And I have unstaged "lines3"
      When I run the command "status --limit 3"
      Then the response should contain "Changes not staged for commit"
       And the response should contain "6 total."
@@ -81,7 +116,12 @@ Feature: "status" command
 
    Scenario: Try to get the status of a repository with staged changes using a limit
     Given I have a repository
-      And I stage 6 features
+      And I have staged "points1"
+      And I have staged "points2"
+      And I have staged "points3"
+      And I have staged "lines1"
+      And I have staged "lines2"
+      And I have staged "lines3"
      When I run the command "status --limit 3"
      Then the response should contain "Changes to be committed"
       And the response should contain "6 total."
@@ -89,7 +129,12 @@ Feature: "status" command
       
   Scenario: Try to get the status of a repository with staged and unstaged changes using a limit
     Given I have a repository
-      And I stage 6 features
+      And I have staged "points1"
+      And I have staged "points2"
+      And I have staged "points3"
+      And I have staged "lines1"
+      And I have staged "lines2"
+      And I have staged "lines3"
       And I modify a feature
      When I run the command "status --limit 0"
      Then the response should contain "Changes to be committed"
