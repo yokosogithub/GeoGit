@@ -68,9 +68,11 @@ public class GeogitModule extends AbstractModule {
 
         bind(ObjectSerialisingFactory.class).to(HessianFactory.class).in(Scopes.SINGLETON);
 
-        final Method interceptedGettter;
+        final Method getObjectId;
+        final Method getObjectIdClass;
         try {
-            interceptedGettter = ObjectDatabase.class.getMethod("get", ObjectId.class, Class.class);
+            getObjectId = ObjectDatabase.class.getMethod("get", ObjectId.class);
+            getObjectIdClass = ObjectDatabase.class.getMethod("get", ObjectId.class, Class.class);
         } catch (Exception e) {
             throw Throwables.propagate(e);
         }
@@ -78,9 +80,10 @@ public class GeogitModule extends AbstractModule {
 
             @Override
             public boolean matches(Method t) {
-                if (interceptedGettter.getName().equals(t.getName())) {
-                    if (Arrays
-                            .equals(interceptedGettter.getParameterTypes(), t.getParameterTypes())) {
+                if ("get".equals(t.getName())) {
+                    if (Arrays.equals(getObjectId.getParameterTypes(), t.getParameterTypes())
+                            || Arrays.equals(getObjectIdClass.getParameterTypes(),
+                                    t.getParameterTypes())) {
                         return true;
                     }
                 }
