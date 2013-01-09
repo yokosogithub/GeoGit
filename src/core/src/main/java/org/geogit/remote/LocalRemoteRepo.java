@@ -150,6 +150,7 @@ public class LocalRemoteRepo implements IRemoteRepo {
      * @param ref the local ref that points to new commit data
      * @param refspec the refspec to push to
      */
+    @Override
     public void pushNewData(Repository localRepository, Ref ref, String refspec) {
         ObjectInserter objectInserter = remoteGeoGit.getRepository().newObjectInserter();
         walkCommit(ref.getObjectId(), localRepository, remoteGeoGit.getRepository(), objectInserter);
@@ -163,6 +164,7 @@ public class LocalRemoteRepo implements IRemoteRepo {
      * @param localRepository the repository to get new objects from
      * @param refspec the refspec to delete
      */
+    @Override
     public void deleteRef(Repository localRepository, String refspec) {
         remoteGeoGit.command(UpdateRef.class).setName(refspec).setDelete(true).call();
     }

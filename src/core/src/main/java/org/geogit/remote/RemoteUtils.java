@@ -36,9 +36,11 @@ public class RemoteUtils {
             IRemoteRepo remoteRepo = null;
             if (protocol == null || protocol.equals("file")) {
                 remoteRepo = new LocalRemoteRepo(injector, new File(remoteConfig.getFetchURL()));
+            } else if (protocol.equals("http")) {
+                remoteRepo = new HTTPRemoteRepo(fetchURI.toURL());
             } else {
                 throw new UnsupportedOperationException(
-                        "Non-local remotes are not currently supported.");
+                        "Only file and http remotes are currently supported.");
             }
             return Optional.fromNullable(remoteRepo);
         } catch (Exception e) {
