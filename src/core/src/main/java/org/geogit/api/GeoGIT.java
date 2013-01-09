@@ -34,7 +34,8 @@ public class GeoGIT {
      * Constructs a new instance of the GeoGit facade.
      */
     public GeoGIT() {
-        injector = GlobalInjectorBuilder.builder.get();// Guice.createInjector(new GeogitModule());
+        injector = GlobalInjectorBuilder.builder.build();// Guice.createInjector(new
+                                                         // GeogitModule());
     }
 
     /**

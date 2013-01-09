@@ -46,6 +46,7 @@ public class IndexTest extends RepositoryTestCase {
     @Override
     protected void setUpInternal() throws Exception {
         index = repo.getIndex();
+        transaction = Optional.absent();
     }
 
     // two features with the same content and different fid should point to the same object
@@ -215,23 +216,6 @@ public class IndexTest extends RepositoryTestCase {
         assertEquals(2, indexHead.size());// Points and Lines
         filtered = Collections2.filter(indexHead, new TreeNameFilter(linesName));
         assertEquals(1, filtered.size());
-    }
-
-    @Test
-    public void testReset() throws Exception {
-        ObjectId oId1 = insertAndAdd(points1);
-
-        ObjectId oId2 = insertAndAdd(points2);
-        assertNotNull(oId1);
-        assertNotNull(oId2);
-
-        assertEquals(oId1, index.findStaged(appendChild(pointsName, idP1)).get().getObjectId());
-        assertEquals(oId2, index.findStaged(appendChild(pointsName, idP2)).get().getObjectId());
-
-        index.reset();
-
-        assertFalse(index.findStaged(appendChild(pointsName, idP1)).isPresent());
-        assertFalse(index.findStaged(appendChild(pointsName, idP2)).isPresent());
     }
 
     @Test

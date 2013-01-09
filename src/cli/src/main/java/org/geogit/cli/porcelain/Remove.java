@@ -63,6 +63,7 @@ public class Remove extends AbstractCommand implements CLICommand {
         Repository repository = cli.getGeogit().getRepository();
         for (String pathToRemove : pathsToRemove) {
             NodeRef.checkValidPath(pathToRemove);
+
             Optional<NodeRef> node = repository.command(FindTreeChild.class)
                     .setParent(repository.getWorkingTree().getTree()).setIndex(true)
                     .setChildPath(pathToRemove).call();

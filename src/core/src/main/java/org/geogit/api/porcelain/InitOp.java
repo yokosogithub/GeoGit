@@ -119,7 +119,6 @@ public class InitOp extends AbstractGeoGitOp<Repository> {
     }
 
     /**
-     * @param refDatabase
      * 
      */
     private void createDefaultRefs() {

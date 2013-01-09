@@ -13,8 +13,9 @@ import java.util.List;
 
 import org.apache.commons.io.FileUtils;
 import org.geogit.api.GeoGIT;
-import org.geogit.api.MemoryModule;
-import org.geogit.api.NodeRef;
+import org.geogit.api.GeogitTransaction;
+import org.geogit.api.GlobalInjectorBuilder;
+import org.geogit.api.Node;
 import org.geogit.api.ObjectId;
 import org.geogit.api.Platform;
 import org.geogit.api.RevCommit;
@@ -23,7 +24,6 @@ import org.geogit.api.porcelain.AddOp;
 import org.geogit.api.porcelain.CommitOp;
 import org.geogit.api.porcelain.ConfigOp;
 import org.geogit.api.porcelain.ConfigOp.ConfigAction;
-import org.geogit.di.GeogitModule;
 import org.geogit.repository.Repository;
 import org.geogit.repository.WorkingTree;
 import org.geotools.data.DataUtilities;
@@ -44,11 +44,10 @@ import org.opengis.feature.type.Name;
 import org.opengis.geometry.BoundingBox;
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
 
+import com.google.common.base.Optional;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Iterators;
-import com.google.inject.Guice;
 import com.google.inject.Injector;
-import com.google.inject.util.Modules;
 import com.vividsolutions.jts.io.ParseException;
 
 public abstract class RepositoryTestCase extends Assert {
@@ -110,6 +109,8 @@ public abstract class RepositoryTestCase extends Assert {
 
     Injector injector;
 
+    protected Optional<GeogitTransaction> transaction = Optional.absent();
+
     @Before
     public final void setUp() throws Exception {
         if (setup) {
@@ -159,8 +160,8 @@ public abstract class RepositoryTestCase extends Assert {
 
     protected Injector createInjector() {
         Platform testPlatform = new TestPlatform(envHome);
-        return Guice.createInjector(Modules.override(new GeogitModule()).with(
-                new MemoryModule(testPlatform)));
+        GlobalInjectorBuilder.builder = new TestInjectorBuilder(testPlatform);
+        return GlobalInjectorBuilder.builder.build();
     }
 
     @After
@@ -238,9 +239,20 @@ public abstract class RepositoryTestCase extends Assert {
      * Inserts the Feature to the index and stages it to be committed.
      */
     protected ObjectId insertAndAdd(Feature f) throws Exception {
-        ObjectId objectId = insert(f);
+        return insertAndAdd(null, f);
+    }
 
-        geogit.command(AddOp.class).call();
+    /**
+     * Inserts the Feature to the index and stages it to be committed.
+     */
+    protected ObjectId insertAndAdd(GeogitTransaction transaction, Feature f) throws Exception {
+        ObjectId objectId = insert(transaction, f);
+
+        if (transaction != null) {
+            transaction.command(AddOp.class).call();
+        } else {
+            geogit.command(AddOp.class).call();
+        }
         return objectId;
     }
 
@@ -248,22 +260,39 @@ public abstract class RepositoryTestCase extends Assert {
      * Inserts the feature to the index but does not stages it to be committed
      */
     protected ObjectId insert(Feature f) throws Exception {
-        final WorkingTree workTree = getRepository().getWorkingTree();
+        return insert(null, f);
+    }
+
+    /**
+     * Inserts the feature to the index but does not stages it to be committed
+     */
+    protected ObjectId insert(GeogitTransaction transaction, Feature f) throws Exception {
+        final WorkingTree workTree = (transaction != null ? transaction.getWorkingTree() : repo
+                .getWorkingTree());
         Name name = f.getType().getName();
         String parentPath = name.getLocalPart();
-        NodeRef ref = workTree.insert(parentPath, f);
-        ObjectId objectId = ref.objectId();
+        Node ref = workTree.insert(parentPath, f);
+        ObjectId objectId = ref.getObjectId();
         return objectId;
     }
 
     protected void insertAndAdd(Feature... features) throws Exception {
-        insert(features);
+        insertAndAdd(null, features);
+    }
+
+    protected void insertAndAdd(GeogitTransaction transaction, Feature... features)
+            throws Exception {
+        insert(transaction, features);
         geogit.command(AddOp.class).call();
     }
 
     protected void insert(Feature... features) throws Exception {
+        insert(null, features);
+    }
+
+    protected void insert(GeogitTransaction transaction, Feature... features) throws Exception {
         for (Feature f : features) {
-            insert(f);
+            insert(transaction, f);
         }
     }
 
@@ -275,16 +304,36 @@ public abstract class RepositoryTestCase extends Assert {
      * @throws Exception
      */
     protected boolean deleteAndAdd(Feature f) throws Exception {
-        boolean existed = delete(f);
+        return deleteAndAdd(null, f);
+    }
+
+    /**
+     * Deletes a feature from the index
+     * 
+     * @param f
+     * @return
+     * @throws Exception
+     */
+    protected boolean deleteAndAdd(GeogitTransaction transaction, Feature f) throws Exception {
+        boolean existed = delete(transaction, f);
         if (existed) {
-            geogit.command(AddOp.class).call();
+            if (transaction != null) {
+                transaction.command(AddOp.class).call();
+            } else {
+                geogit.command(AddOp.class).call();
+            }
         }
 
         return existed;
     }
 
     protected boolean delete(Feature f) throws Exception {
-        final WorkingTree workTree = getRepository().getWorkingTree();
+        return delete(null, f);
+    }
+
+    protected boolean delete(GeogitTransaction transaction, Feature f) throws Exception {
+        final WorkingTree workTree = (transaction != null ? transaction.getWorkingTree() : repo
+                .getWorkingTree());
         Name name = f.getType().getName();
         String localPart = name.getLocalPart();
         String id = f.getIdentifier().getID();

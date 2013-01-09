@@ -116,8 +116,29 @@ public class GeoGitDataStore extends ContentDataStore implements DataStore {
         String treePath = featureType.getName().getLocalPart();
         try {
             workingTree.createTypeTree(treePath, featureType);
-        } catch (IllegalArgumentException alreadyExists) {
-            throw new IOException(alreadyExists.getMessage(), alreadyExists);
+        } catch (IllegalArgumentException e) {
+            throw new IOException(e.getMessage(), e);
         }
+        // TODO: the following should work once diff preserves empty trees
+        // Repository repository = geogit.getRepository();
+        // WorkingTree workingTree = repository.getWorkingTree();
+        // String treePath = featureType.getName().getLocalPart();
+        // GeogitTransaction tx = geogit.command(TransactionBegin.class).call();
+        // boolean abort = false;
+        // try {
+        // workingTree.createTypeTree(Optional.of(tx), treePath, featureType);
+        // geogit.command(AddOp.class).addPattern(treePath).call();
+        // geogit.command(CommitOp.class).setMessage("Created feature type tree " + treePath)
+        // .call();
+        // abort = false;
+        // } catch (IllegalArgumentException alreadyExists) {
+        // abort = true;
+        // throw new IOException(alreadyExists.getMessage(), alreadyExists);
+        // } catch (Exception e) {
+        // abort = true;
+        // throw Throwables.propagate(e);
+        // } finally {
+        // geogit.command(TransactionEnd.class).setTransaction(tx).setCancel(abort).call();
+        // }
     }
 }

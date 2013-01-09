@@ -39,20 +39,11 @@ public class AddOp extends AbstractGeoGitOp<WorkingTree> {
 
     private boolean updateOnly;
 
-    private WorkingTree workTree;
-
-    private StagingArea index;
-
     /**
      * Constructs a new {@code AddOp} with the given parameters.
-     * 
-     * @param workTree the working tree to add stages from
-     * @param index the staging area to stage changes to
      */
     @Inject
-    public AddOp(final WorkingTree workTree, final StagingArea index) {
-        this.index = index;
-        this.workTree = workTree;
+    public AddOp() {
         patterns = new HashSet<String>();
     }
 

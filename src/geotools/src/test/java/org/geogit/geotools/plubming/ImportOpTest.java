@@ -185,7 +185,8 @@ public class ImportOpTest {
     public void testDeleteException() throws Exception {
         WorkingTree workTree = mock(WorkingTree.class);
         doThrow(new Exception("Exception")).when(workTree).delete(any(Name.class));
-        ImportOp importOp = new ImportOp(workTree);
+        ImportOp importOp = new ImportOp();
+        importOp.setWorkTree(workTree);
         importOp.setDataStore(TestHelper.createTestFactory().createDataStore(null));
         importOp.setAll(true);
         exception.expect(GeoToolsOpException.class);

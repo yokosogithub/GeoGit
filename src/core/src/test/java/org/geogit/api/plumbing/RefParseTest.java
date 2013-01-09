@@ -60,7 +60,8 @@ public class RefParseTest {
                 .build();
 
         when(mockRefDb.getAll()).thenReturn(allRefs);
-        command = new RefParse(mockRefDb);
+        command = new RefParse();
+        command.setRefDatabase(mockRefDb);
         for (String name : allRefs.keySet()) {
             when(mockRefDb.getRef(eq(name))).thenReturn(allRefs.get(name));
         }

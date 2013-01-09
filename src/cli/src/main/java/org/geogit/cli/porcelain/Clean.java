@@ -59,9 +59,11 @@ public class Clean implements CLICommand {
                 // check that is a valid path
                 Repository repository = cli.getGeogit().getRepository();
                 NodeRef.checkValidPath(pathFilter);
+
                 Optional<NodeRef> ref = repository.command(FindTreeChild.class)
                         .setParent(repository.getWorkingTree().getTree()).setChildPath(pathFilter)
                         .call();
+
                 Preconditions.checkArgument(ref.isPresent(),
                         "pathspec '%s' did not match any tree", pathFilter);
                 Preconditions.checkArgument(ref.get().getType() == TYPE.TREE,

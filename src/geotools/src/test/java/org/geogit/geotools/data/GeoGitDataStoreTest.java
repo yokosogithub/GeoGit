@@ -18,17 +18,19 @@ package org.geogit.geotools.data;
 
 import java.io.IOException;
 import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
+import org.geogit.api.NodeRef;
 import org.geogit.test.integration.RepositoryTestCase;
 import org.geotools.data.simple.SimpleFeatureSource;
 import org.geotools.feature.NameImpl;
 import org.junit.Test;
 import org.opengis.feature.simple.SimpleFeatureType;
 import org.opengis.feature.type.Name;
+
+import com.google.common.base.Function;
+import com.google.common.collect.Iterators;
+import com.google.common.collect.Lists;
 
 public class GeoGitDataStoreTest extends RepositoryTestCase {
 
@@ -49,14 +51,26 @@ public class GeoGitDataStoreTest extends RepositoryTestCase {
 
         final SimpleFeatureType featureType = super.linesType;
         dataStore.createSchema(featureType);
-        assertTypeRefs(Collections.singleton(super.linesType));
+
+        List<NodeRef> typeTrees = geogit.getRepository().getWorkingTree().getFeatureTypeTrees();
+        assertEquals(1, typeTrees.size());
+        assertEquals(linesName, typeTrees.get(0).name());
 
         dataStore.createSchema(super.pointsType);
 
-        Set<SimpleFeatureType> expected = new HashSet<SimpleFeatureType>();
-        expected.add(super.linesType);
-        expected.add(super.pointsType);
-        assertTypeRefs(expected);
+        typeTrees = geogit.getRepository().getWorkingTree().getFeatureTypeTrees();
+        assertEquals(2, typeTrees.size());
+        List<String> typeNames = Lists.newArrayList(Iterators.transform(typeTrees.iterator(),
+                new Function<NodeRef, String>() {
+
+                    @Override
+                    public String apply(NodeRef input) {
+                        return input.name();
+                    }
+                }));
+
+        assertTrue(typeNames.toString(), typeNames.contains(linesName));
+        assertTrue(typeNames.toString(), typeNames.contains(pointsName));
 
         try {
             dataStore.createSchema(super.pointsType);
@@ -65,30 +79,6 @@ public class GeoGitDataStoreTest extends RepositoryTestCase {
             assertTrue(e.getMessage().contains("already exists"));
         }
 
-    }
-
-    private void assertTypeRefs(Set<SimpleFeatureType> expectedTypes) throws IOException {
-        //
-        // for (SimpleFeatureType featureType : expectedTypes) {
-        // final Name typeName = featureType.getName();
-        // final Ref typesTreeRef = geogit.command(RefParse.class)
-        // .setName(GeoGitDataStore.TYPE_NAMES_REF_TREE).call();
-        // assertNotNull(typesTreeRef);
-        //
-        // RevTree typesTree = repo.getTree(typesTreeRef.getObjectId());
-        // String path = typeName.getLocalPart();
-        // ObjectDatabase objectDatabase = repo.getObjectDatabase();
-        //
-        // NodeRef typeRef = objectDatabase.getTreeChild(typesTree, path);
-        // assertNotNull(typeRef);
-        // assertEquals(TYPE.FEATURE, typeRef.getType());
-        //
-        // SimpleFeatureType readType = (SimpleFeatureType) objectDatabase.get(
-        // typeRef.getObjectId(), getRepository().newFeatureTypeReader()).type();
-        //
-        // assertEquals(featureType, readType);
-        //
-        // }
     }
 
     @Test

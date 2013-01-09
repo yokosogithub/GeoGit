@@ -18,7 +18,6 @@ import org.geogit.api.RevTree;
 import org.geogit.api.RevTreeBuilder;
 import org.geogit.api.plumbing.diff.DiffEntry;
 import org.geogit.api.plumbing.diff.DiffEntry.ChangeType;
-import org.geogit.repository.StagingArea;
 import org.geogit.storage.ObjectDatabase;
 import org.opengis.util.ProgressListener;
 
@@ -53,20 +52,16 @@ public class WriteTree extends AbstractGeoGitOp<ObjectId> {
 
     private ObjectDatabase repositoryDatabase;
 
-    private StagingArea index;
-
     private Supplier<RevTree> oldRoot;
 
     /**
      * Creates a new {@code WriteTree} operation using the specified parameters.
      * 
      * @param repositoryDatabase the object database to use
-     * @param index the staging area
      */
     @Inject
-    public WriteTree(ObjectDatabase repositoryDatabase, StagingArea index) {
+    public WriteTree(ObjectDatabase repositoryDatabase) {
         this.repositoryDatabase = repositoryDatabase;
-        this.index = index;
     }
 
     /**

@@ -19,17 +19,12 @@ import org.geogit.repository.StagingArea;
 import org.geogit.repository.WorkingTree;
 
 import com.google.common.base.Optional;
-import com.google.inject.Inject;
 
 /**
  * Compares the features in the {@link WorkingTree working tree} and the {@link StagingArea index}
  * or a given root tree-ish.
  */
 public class DiffWorkTree extends AbstractGeoGitOp<Iterator<DiffEntry>> {
-
-    private StagingArea index;
-
-    private WorkingTree workTree;
 
     private String pathFilter;
 
@@ -39,14 +34,8 @@ public class DiffWorkTree extends AbstractGeoGitOp<Iterator<DiffEntry>> {
 
     /**
      * Constructs a new instance of the {@code DiffWorkTree} operation with the given parameters.
-     * 
-     * @param index the staging area
-     * @param workTree the working tree
      */
-    @Inject
-    public DiffWorkTree(StagingArea index, WorkingTree workTree) {
-        this.index = index;
-        this.workTree = workTree;
+    public DiffWorkTree() {
     }
 
     /**

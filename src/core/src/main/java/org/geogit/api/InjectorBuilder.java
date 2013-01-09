@@ -2,15 +2,18 @@ package org.geogit.api;
 
 import org.geogit.di.GeogitModule;
 
-import com.google.common.base.Supplier;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
+import com.google.inject.Module;
+import com.google.inject.util.Modules;
 
-public class InjectorBuilder implements Supplier<Injector> {
+public class InjectorBuilder {
 
-    @Override
-    public Injector get() {
+    public Injector build() {
         return Guice.createInjector(new GeogitModule());
     }
 
+    public Injector buildWithOverrides(Module... overrides) {
+        return Guice.createInjector(Modules.override(new GeogitModule()).with(overrides));
+    }
 }

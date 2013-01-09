@@ -137,7 +137,7 @@ public class InitSteps extends AbstractGeogitFunctionalTest {
         I_am_in_an_empty_directory();
         GeoGIT oldGeogit = geogit;
         Injector oldInjector = geogitCLI.getGeogitInjector();
-        geogitCLI.setGeogitInjector(GlobalInjectorBuilder.builder.get());
+        geogitCLI.setGeogitInjector(GlobalInjectorBuilder.builder.build());
         List<String> output = runAndParseCommand("init", "remoterepo");
         assertEquals(output.toString(), 1, output.size());
         assertNotNull(output.get(0));

@@ -8,7 +8,6 @@ package org.geogit.api.plumbing;
 import org.geogit.api.AbstractGeoGitOp;
 import org.geogit.api.ObjectId;
 import org.geogit.api.Ref;
-import org.geogit.storage.RefDatabase;
 
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
@@ -31,17 +30,11 @@ public class UpdateSymRef extends AbstractGeoGitOp<Optional<Ref>> {
 
     private String reason;
 
-    private RefDatabase refDb;
-
     /**
-     * Constructs a new {@code UpdateSymRef} operation with the given {@link RefDatabase reference
-     * database}.
-     * 
-     * @param refDb the reference database to use
+     * Constructs a new {@code UpdateSymRef} operation.
      */
     @Inject
-    public UpdateSymRef(RefDatabase refDb) {
-        this.refDb = refDb;
+    public UpdateSymRef() {
     }
 
     /**
@@ -104,10 +97,10 @@ public class UpdateSymRef extends AbstractGeoGitOp<Optional<Ref>> {
         if (oldValue != null) {
             String storedValue;
             try {
-                storedValue = refDb.getSymRef(name);
+                storedValue = refDatabase.getSymRef(name);
             } catch (IllegalArgumentException e) {
                 // may be updating what used to be a direct ref to be a symbolic ref
-                storedValue = refDb.getRef(name);
+                storedValue = refDatabase.getRef(name);
             }
             Preconditions.checkState(oldValue.equals(storedValue), "Old value (" + storedValue
                     + ") doesn't match expected value '" + oldValue + "'");
@@ -116,12 +109,12 @@ public class UpdateSymRef extends AbstractGeoGitOp<Optional<Ref>> {
         if (delete) {
             Optional<Ref> oldRef = command(RefParse.class).setName(name).call();
             if (oldRef.isPresent()) {
-                refDb.remove(name);
+                refDatabase.remove(name);
             }
             return oldRef;
         }
 
-        refDb.putSymRef(name, newValue);
+        refDatabase.putSymRef(name, newValue);
         Optional<Ref> ref = command(RefParse.class).setName(name).call();
         return ref;
     }

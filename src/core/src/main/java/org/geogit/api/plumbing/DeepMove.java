@@ -15,7 +15,6 @@ import org.geogit.api.Node;
 import org.geogit.api.ObjectId;
 import org.geogit.api.RevObject.TYPE;
 import org.geogit.api.RevTree;
-import org.geogit.repository.StagingArea;
 import org.geogit.storage.ObjectDatabase;
 import org.geogit.storage.StagingDatabase;
 

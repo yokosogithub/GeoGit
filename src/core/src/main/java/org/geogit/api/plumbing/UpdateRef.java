@@ -8,7 +8,6 @@ package org.geogit.api.plumbing;
 import org.geogit.api.AbstractGeoGitOp;
 import org.geogit.api.ObjectId;
 import org.geogit.api.Ref;
-import org.geogit.storage.RefDatabase;
 
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
@@ -31,17 +30,11 @@ public class UpdateRef extends AbstractGeoGitOp<Optional<Ref>> {
 
     private String reason;
 
-    private RefDatabase refDb;
-
     /**
-     * Constructs a new {@code UpdateRef} operation with the given {@link RefDatabase reference
-     * database}.
-     * 
-     * @param refDb the reference database to use.
+     * Constructs a new {@code UpdateRef} operation.
      */
     @Inject
-    public UpdateRef(RefDatabase refDb) {
-        this.refDb = refDb;
+    public UpdateRef() {
     }
 
     /**
@@ -106,10 +99,10 @@ public class UpdateRef extends AbstractGeoGitOp<Optional<Ref>> {
         if (oldValue != null) {
             String storedValue;
             try {
-                storedValue = refDb.getRef(name);
+                storedValue = refDatabase.getRef(name);
             } catch (IllegalArgumentException e) {
                 // may be updating what used to be a symred to be a direct ref
-                storedValue = refDb.getSymRef(name);
+                storedValue = refDatabase.getSymRef(name);
             }
             Preconditions.checkState(oldValue.toString().equals(storedValue), "Old value ("
                     + storedValue + ") doesn't match expected value '" + oldValue + "'");
@@ -118,12 +111,12 @@ public class UpdateRef extends AbstractGeoGitOp<Optional<Ref>> {
         if (delete) {
             Optional<Ref> oldRef = command(RefParse.class).setName(name).call();
             if (oldRef.isPresent()) {
-                refDb.remove(oldRef.get().getName());
+                refDatabase.remove(oldRef.get().getName());
             }
             return oldRef;
         }
 
-        refDb.putRef(name, newValue.toString());
+        refDatabase.putRef(name, newValue.toString());
         return command(RefParse.class).setName(name).call();
     }
 

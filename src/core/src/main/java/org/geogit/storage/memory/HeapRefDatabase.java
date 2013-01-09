@@ -9,7 +9,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import java.util.Map;
 
 import org.geogit.api.ObjectId;
-import org.geogit.storage.RefDatabase;
+import org.geogit.storage.AbstractRefDatabase;
 
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableMap;
@@ -19,7 +19,7 @@ import com.google.common.collect.Maps;
  * Provides an implementation of a GeoGit ref database that utilizes the heap for the storage of
  * refs.
  */
-public class HeapRefDatabase implements RefDatabase {
+public class HeapRefDatabase extends AbstractRefDatabase {
 
     private Map<String, String> refs;
 
@@ -132,6 +132,36 @@ public class HeapRefDatabase implements RefDatabase {
             }
         };
         return Maps.filterKeys(ImmutableMap.copyOf(this.refs), keyPredicate);
+    }
+
+    @Override
+    public Map<String, String> getAll(final String prefix) {
+
+        Predicate<String> keyPredicate = new Predicate<String>() {
+
+            @Override
+            public boolean apply(String refName) {
+                return refName.startsWith(prefix);
+            }
+        };
+        return Maps.filterKeys(ImmutableMap.copyOf(this.refs), keyPredicate);
+    }
+
+    @Override
+    public Map<String, String> removeAll(final String namespace) {
+
+        Predicate<String> keyPredicate = new Predicate<String>() {
+
+            @Override
+            public boolean apply(String refName) {
+                return refName.startsWith(namespace);
+            }
+        };
+        Map<String, String> removed = Maps.filterKeys(ImmutableMap.copyOf(this.refs), keyPredicate);
+        for (String key : removed.keySet()) {
+            refs.remove(key);
+        }
+        return null;
     }
 
 }

@@ -24,7 +24,6 @@ import org.geogit.api.plumbing.UpdateSymRef;
 import org.geogit.api.plumbing.WriteTree;
 import org.geogit.api.plumbing.diff.DiffEntry;
 import org.geogit.repository.Repository;
-import org.geogit.repository.StagingArea;
 import org.opengis.util.ProgressListener;
 
 import com.google.common.base.Optional;
@@ -46,21 +45,17 @@ public class RebaseOp extends AbstractGeoGitOp<Boolean> {
 
     private Repository repository;
 
-    private StagingArea index;
-
     private Platform platform;
 
     /**
      * Constructs a new {@code RebaseOp} using the specified parameters.
      * 
      * @param repository the repository to use
-     * @param index the staging area
      * @param platform the platform to use
      */
     @Inject
-    public RebaseOp(Repository repository, StagingArea index, Platform platform) {
+    public RebaseOp(Repository repository, Platform platform) {
         this.repository = repository;
-        this.index = index;
         this.platform = platform;
     }
 
@@ -113,8 +108,8 @@ public class RebaseOp extends AbstractGeoGitOp<Boolean> {
             command(UpdateRef.class).setName(currentBranch).setNewValue(upstream.get()).call();
             command(UpdateSymRef.class).setName(Ref.HEAD).setNewValue(currentBranch).call();
 
-            repository.getWorkingTree().updateWorkHead(upstream.get());
-            repository.getIndex().updateStageHead(upstream.get());
+            workTree.updateWorkHead(upstream.get());
+            index.updateStageHead(upstream.get());
             getProgressListener().complete();
             return true;
         }
@@ -132,8 +127,8 @@ public class RebaseOp extends AbstractGeoGitOp<Boolean> {
             command(UpdateRef.class).setName(currentBranch).setNewValue(upstream.get()).call();
             command(UpdateSymRef.class).setName(Ref.HEAD).setNewValue(currentBranch).call();
 
-            repository.getWorkingTree().updateWorkHead(upstream.get());
-            repository.getIndex().updateStageHead(upstream.get());
+            workTree.updateWorkHead(upstream.get());
+            index.updateStageHead(upstream.get());
             getProgressListener().complete();
             return true;
         }
@@ -187,8 +182,8 @@ public class RebaseOp extends AbstractGeoGitOp<Boolean> {
             command(UpdateRef.class).setName(currentBranch).setNewValue(rebaseHead).call();
             command(UpdateSymRef.class).setName(Ref.HEAD).setNewValue(currentBranch).call();
 
-            repository.getWorkingTree().updateWorkHead(newTreeId);
-            repository.getIndex().updateStageHead(newTreeId);
+            workTree.updateWorkHead(newTreeId);
+            index.updateStageHead(newTreeId);
 
             subProgress.progress((numCommits - i) * 100.f / numCommits);
 

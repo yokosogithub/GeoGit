@@ -15,8 +15,6 @@ import org.geogit.api.Ref;
 import org.geogit.api.RevTree;
 import org.geogit.api.plumbing.diff.DiffEntry;
 import org.geogit.api.plumbing.diff.DiffTreeWalk;
-import org.geogit.repository.StagingArea;
-import org.geogit.storage.ObjectSerialisingFactory;
 
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
@@ -27,8 +25,6 @@ import com.google.inject.Inject;
  */
 public class DiffIndex extends AbstractGeoGitOp<Iterator<DiffEntry>> {
 
-    private StagingArea index;
-
     private String refSpec;
 
     private String pathFilter;
@@ -36,14 +32,10 @@ public class DiffIndex extends AbstractGeoGitOp<Iterator<DiffEntry>> {
     private boolean reportTrees;
 
     /**
-     * Constructs a new {@code DiffIndex} with the given {@link StagingArea} and
-     * {@link ObjectSerialisingFactory}.
-     * 
-     * @param index the staging area
+     * Constructs a new {@code DiffIndex}.
      */
     @Inject
-    public DiffIndex(StagingArea index) {
-        this.index = index;
+    public DiffIndex() {
     }
 
     /**

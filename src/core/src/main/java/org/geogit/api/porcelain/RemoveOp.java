@@ -22,13 +22,10 @@ import com.google.inject.Inject;
  */
 public class RemoveOp extends AbstractGeoGitOp<WorkingTree> {
 
-    private WorkingTree workTree;
-
     private List<String> pathsToRemove;
 
     @Inject
-    public RemoveOp(final WorkingTree workTree) {
-        this.workTree = workTree;
+    public RemoveOp() {
         this.pathsToRemove = new ArrayList<String>();
     }
 

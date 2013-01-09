@@ -20,7 +20,6 @@ import org.geogit.api.plumbing.UpdateRef;
 import org.geogit.api.plumbing.UpdateSymRef;
 import org.geogit.api.plumbing.diff.DiffEntry;
 import org.geogit.repository.Repository;
-import org.geogit.repository.StagingArea;
 import org.geotools.util.SubProgressListener;
 import org.opengis.util.ProgressListener;
 
@@ -42,18 +41,14 @@ public class MergeOp extends AbstractGeoGitOp<RevCommit> {
 
     private Repository repository;
 
-    private StagingArea index;
-
     /**
      * Constructs a new {@code MergeOp} using the specified parameters.
      * 
      * @param repository the repository to use
-     * @param index the staging area
      */
     @Inject
-    public MergeOp(Repository repository, StagingArea index) {
+    public MergeOp(Repository repository) {
         this.repository = repository;
-        this.index = index;
     }
 
     /**
@@ -115,8 +110,8 @@ public class MergeOp extends AbstractGeoGitOp<RevCommit> {
                 headRef = (SymRef) command(UpdateSymRef.class).setName(Ref.HEAD)
                         .setNewValue(currentBranch).call().get();
 
-                repository.getWorkingTree().updateWorkHead(commitId);
-                repository.getIndex().updateStageHead(commitId);
+                workTree.updateWorkHead(commitId);
+                index.updateStageHead(commitId);
                 subProgress.complete();
                 changed = true;
                 continue;
@@ -138,8 +133,8 @@ public class MergeOp extends AbstractGeoGitOp<RevCommit> {
                 headRef = (SymRef) command(UpdateSymRef.class).setName(Ref.HEAD)
                         .setNewValue(currentBranch).call().get();
 
-                repository.getWorkingTree().updateWorkHead(commitId);
-                repository.getIndex().updateStageHead(commitId);
+                workTree.updateWorkHead(commitId);
+                index.updateStageHead(commitId);
                 subProgress.complete();
                 changed = true;
                 continue;

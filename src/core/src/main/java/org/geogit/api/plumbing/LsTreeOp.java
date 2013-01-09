@@ -17,8 +17,6 @@ import org.geogit.api.RevObject;
 import org.geogit.api.RevObject.TYPE;
 import org.geogit.api.RevTree;
 import org.geogit.api.plumbing.diff.DepthTreeIterator;
-import org.geogit.repository.WorkingTree;
-import org.geogit.storage.StagingDatabase;
 
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
@@ -70,18 +68,12 @@ public class LsTreeOp extends AbstractGeoGitOp<Iterator<NodeRef>> {
         DEPTHFIRST_ONLY_TREES
     }
 
-    private WorkingTree workTree;
-
-    private StagingDatabase index;
-
     private Strategy strategy;
 
     private String ref;
 
     @Inject
-    public LsTreeOp(WorkingTree workTree, StagingDatabase index) {
-        this.workTree = workTree;
-        this.index = index;
+    public LsTreeOp() {
         this.strategy = Strategy.CHILDREN;
     }
 
@@ -121,8 +113,10 @@ public class LsTreeOp extends AbstractGeoGitOp<Iterator<NodeRef>> {
             }
             // let's try to see if it is a feature type or feature in the working tree
             NodeRef.checkValidPath(ref);
+
             Optional<NodeRef> treeRef = command(FindTreeChild.class).setParent(workTree.getTree())
                     .setChildPath(ref).call();
+
             Preconditions.checkArgument(treeRef.isPresent(), "Invalid reference: %s", ref);
             ObjectId treeId = treeRef.get().objectId();
             parentObjectId = treeRef.get().getMetadataId();
@@ -171,7 +165,7 @@ public class LsTreeOp extends AbstractGeoGitOp<Iterator<NodeRef>> {
                     .substring(ref.lastIndexOf(':') + 1) : "";
 
             DepthTreeIterator iter = new DepthTreeIterator(path, parentObjectId,
-                    (RevTree) revObject.get(), index, iterStrategy);
+                    (RevTree) revObject.get(), index.getDatabase(), iterStrategy);
             return iter;
         default:
             throw new IllegalArgumentException(String.format("Invalid reference: %s", ref));

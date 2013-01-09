@@ -8,6 +8,7 @@ import java.io.IOException;
 import java.io.InputStream;
 
 import org.geogit.api.AbstractGeoGitOp;
+import org.geogit.api.CommandLocator;
 import org.geogit.api.Node;
 import org.geogit.api.NodeRef;
 import org.geogit.api.ObjectId;
@@ -40,7 +41,7 @@ import com.google.inject.Injector;
  * 
  * @see WorkingTree
  */
-public class Repository {
+public class Repository implements CommandLocator {
 
     @Inject
     private StagingArea index;

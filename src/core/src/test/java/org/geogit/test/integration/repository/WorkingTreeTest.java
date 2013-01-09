@@ -19,7 +19,6 @@ import org.geogit.api.plumbing.FindTreeChild;
 import org.geogit.api.plumbing.diff.DiffEntry;
 import org.geogit.repository.WorkingTree;
 import org.geogit.test.integration.RepositoryTestCase;
-import org.geotools.feature.NameImpl;
 import org.geotools.util.NullProgressListener;
 import org.junit.Rule;
 import org.junit.Test;
@@ -42,14 +41,15 @@ public class WorkingTreeTest extends RepositoryTestCase {
     @Override
     protected void setUpInternal() throws Exception {
         workTree = repo.getWorkingTree();
+        transaction = Optional.absent();
     }
 
     @Test
     public void testInsertSingle() throws Exception {
         Name name = points1.getType().getName();
         String parentPath = name.getLocalPart();
-        NodeRef ref = workTree.insert(parentPath, points1);
-        ObjectId objectId = ref.objectId();
+        Node ref = workTree.insert(parentPath, points1);
+        ObjectId objectId = ref.getObjectId();
 
         assertEquals(objectId, workTree.findUnstaged(appendChild(pointsName, idP1)).get()
                 .getObjectId());
@@ -309,7 +309,7 @@ public class WorkingTreeTest extends RepositoryTestCase {
 
         ObjectId newTreeId = workTree.getTree().getId();
 
-        assertEquals(oldTreeId, newTreeId);
+        assertTrue(oldTreeId.equals(newTreeId));
 
     }
 
@@ -390,7 +390,7 @@ public class WorkingTreeTest extends RepositoryTestCase {
         assertTrue(workTree.findUnstaged(appendChild(linesName, idL2)).isPresent());
         assertTrue(workTree.findUnstaged(appendChild(linesName, idL3)).isPresent());
 
-        workTree.delete(new NameImpl(pointsName));
+        workTree.delete(pointsName);
 
         assertFalse(workTree.findUnstaged(appendChild(pointsName, idP1)).isPresent());
         assertFalse(workTree.findUnstaged(appendChild(pointsName, idP2)).isPresent());
@@ -452,13 +452,7 @@ public class WorkingTreeTest extends RepositoryTestCase {
     }
 
     @Test
-    public void testGetFeatureTypeTreesEmptyRepo() throws Exception {
-        List<NodeRef> featureTypes = workTree.getFeatureTypeTrees();
-        assertTrue(featureTypes.isEmpty());
-    }
-
-    @Test
-    public void testGetFeatureTypeTrees() throws Exception {
+    public void testGetFeatureTypeNames() throws Exception {
         List<Feature> featureList = new LinkedList<Feature>();
         featureList.add(points1);
         featureList.add(points2);
@@ -480,8 +474,8 @@ public class WorkingTreeTest extends RepositoryTestCase {
         assertEquals(2, featureTypes.size());
 
         List<String> featureTypeNames = new LinkedList<String>();
-        for (NodeRef treeRef : featureTypes) {
-            featureTypeNames.add(treeRef.name());
+        for (NodeRef name : featureTypes) {
+            featureTypeNames.add(name.name());
         }
 
         assertTrue(featureTypeNames.contains(pointsName));

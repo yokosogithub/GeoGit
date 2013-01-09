@@ -21,8 +21,9 @@ import java.util.List;
 
 import org.apache.commons.io.FileUtils;
 import org.geogit.api.GeoGIT;
+import org.geogit.api.GlobalInjectorBuilder;
 import org.geogit.api.InjectorBuilder;
-import org.geogit.api.NodeRef;
+import org.geogit.api.Node;
 import org.geogit.api.ObjectId;
 import org.geogit.api.Platform;
 import org.geogit.api.Remote;
@@ -130,7 +131,8 @@ public abstract class RemoteRepositoryTestCase {
             assertTrue(envHome.mkdirs());
 
             InjectorBuilder injectorBuilder = createInjectorBuilder();
-            injector = injectorBuilder.get();
+            GlobalInjectorBuilder.builder = injectorBuilder;
+            injector = injectorBuilder.build();
 
             geogit = new GeoGIT(injector, envHome);
             repo = geogit.getOrCreateRepository();
@@ -182,7 +184,7 @@ public abstract class RemoteRepositoryTestCase {
         remoteGeogit = new GeogitContainer("remotetestrepository");
 
         LocalRemoteRepo remoteRepo = spy(new LocalRemoteRepo(remoteGeogit.createInjectorBuilder()
-                .get(), remoteGeogit.envHome.getCanonicalFile()));
+                .build(), remoteGeogit.envHome.getCanonicalFile()));
 
         doNothing().when(remoteRepo).close();
 
@@ -343,8 +345,8 @@ public abstract class RemoteRepositoryTestCase {
         final WorkingTree workTree = geogit.getRepository().getWorkingTree();
         Name name = f.getType().getName();
         String parentPath = name.getLocalPart();
-        NodeRef ref = workTree.insert(parentPath, f);
-        ObjectId objectId = ref.objectId();
+        Node ref = workTree.insert(parentPath, f);
+        ObjectId objectId = ref.getObjectId();
         return objectId;
     }
 

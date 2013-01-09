@@ -51,18 +51,13 @@ public class CheckoutOp extends AbstractGeoGitOp<ObjectId> {
 
     private boolean force = false;
 
-    private WorkingTree workTree;
-
-    private StagingArea index;
-
     @Inject
-    public CheckoutOp(final WorkingTree workTree, final StagingArea index) {
-        this.workTree = workTree;
-        this.index = index;
+    public CheckoutOp() {
         paths = Sets.newTreeSet();
     }
 
     public CheckoutOp setSource(final String branchOrCommit) {
+        checkNotNull(branchOrCommit);
         this.branchOrCommit = branchOrCommit;
         return this;
     }

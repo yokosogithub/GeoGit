@@ -7,7 +7,6 @@ package org.geogit.api.plumbing;
 
 import org.geogit.api.AbstractGeoGitOp;
 import org.geogit.api.Ref;
-import org.geogit.storage.RefDatabase;
 
 import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
@@ -22,13 +21,10 @@ import com.google.inject.Inject;
  */
 public class ForEachRef extends AbstractGeoGitOp<ImmutableSet<Ref>> {
 
-    private RefDatabase refDb;
-
     private Predicate<Ref> filter;
 
     @Inject
-    public ForEachRef(RefDatabase refDb) {
-        this.refDb = refDb;
+    public ForEachRef() {
     }
 
     public ForEachRef setFilter(Predicate<Ref> filter) {
@@ -57,7 +53,7 @@ public class ForEachRef extends AbstractGeoGitOp<ImmutableSet<Ref>> {
                 .alwaysTrue() : this.filter);
 
         ImmutableSet.Builder<Ref> refs = new ImmutableSet.Builder<Ref>();
-        for (String refName : refDb.getAll().keySet()) {
+        for (String refName : refDatabase.getAll().keySet()) {
             Optional<Ref> ref = command(RefParse.class).setName(refName).call();
             if (ref.isPresent() && filter.apply(ref.get())) {
                 Ref accepted = ref.get();

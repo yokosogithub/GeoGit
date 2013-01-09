@@ -14,7 +14,6 @@ import org.geogit.api.ObjectId;
 import org.geogit.api.Ref;
 import org.geogit.api.RevObject.TYPE;
 import org.geogit.api.SymRef;
-import org.geogit.storage.RefDatabase;
 
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
@@ -33,16 +32,11 @@ public class RefParse extends AbstractGeoGitOp<Optional<Ref>> {
 
     private String refSpec;
 
-    private RefDatabase refDb;
-
     /**
-     * Constructs a new {@code RefParse} operation with the given reference database.
-     * 
-     * @param refDb the reference database to use
+     * Constructs a new {@code RefParse} operation.
      */
     @Inject
-    public RefParse(RefDatabase refDb) {
-        this.refDb = refDb;
+    public RefParse() {
     }
 
     /**
@@ -87,7 +81,7 @@ public class RefParse extends AbstractGeoGitOp<Optional<Ref>> {
             }
         }
 
-        Map<String, String> allRefs = refDb.getAll();
+        Map<String, String> allRefs = refDatabase.getAll();
 
         class PrePostfixPredicate implements Predicate<String> {
 
@@ -142,16 +136,16 @@ public class RefParse extends AbstractGeoGitOp<Optional<Ref>> {
         String storedValue;
         boolean sym = false;
         try {
-            storedValue = refDb.getRef(name);
+            storedValue = refDatabase.getRef(name);
         } catch (IllegalArgumentException notARef) {
-            storedValue = refDb.getSymRef(name);
+            storedValue = refDatabase.getSymRef(name);
             if (null == storedValue) {
                 return Optional.absent();
             }
             sym = true;
         }
         if (null == storedValue) {
-            storedValue = refDb.getSymRef(name);
+            storedValue = refDatabase.getSymRef(name);
             if (null == storedValue) {
                 return Optional.absent();
             }

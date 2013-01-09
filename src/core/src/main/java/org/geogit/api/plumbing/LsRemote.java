@@ -129,7 +129,7 @@ public class LsRemote extends AbstractGeoGitOp<ImmutableSet<Ref>> {
      * @return an interface for the remote repository
      */
     public Optional<IRemoteRepo> getRemoteRepo(Remote remote) {
-        return RemoteUtils.newRemote(GlobalInjectorBuilder.builder.get(), remote);
+        return RemoteUtils.newRemote(GlobalInjectorBuilder.builder.build(), remote);
     }
 
     /**

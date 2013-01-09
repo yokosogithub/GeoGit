@@ -18,7 +18,7 @@ import java.util.Map;
 import org.geogit.api.ObjectId;
 import org.geogit.api.Platform;
 import org.geogit.api.plumbing.ResolveGeogitDir;
-import org.geogit.storage.RefDatabase;
+import org.geogit.storage.AbstractRefDatabase;
 
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableMap;
@@ -30,7 +30,7 @@ import com.google.inject.Inject;
  * Provides an implementation of a GeoGit ref database that utilizes the file system for the storage
  * of refs.
  */
-public class FileRefDatabase implements RefDatabase {
+public class FileRefDatabase extends AbstractRefDatabase {
 
     private static final Charset CHARSET = Charset.forName("UTF-8");
 
@@ -254,6 +254,38 @@ public class FileRefDatabase implements RefDatabase {
                 String refValue = readRef(f);
                 target.put(refName, refValue);
             }
+        }
+    }
+
+    @Override
+    public Map<String, String> removeAll(String namespace) {
+        final File file = toFile(namespace);
+        if (file.exists() && file.isDirectory()) {
+            deleteDir(file);
+        }
+        return null;
+    }
+
+    /**
+     * @param directory
+     */
+    private void deleteDir(final File directory) {
+        if (!directory.exists()) {
+            return;
+        }
+        File[] files = directory.listFiles();
+        if (files == null) {
+            throw new RuntimeException("Unable to list files of " + directory);
+        }
+        for (File f : files) {
+            if (f.isDirectory()) {
+                deleteDir(f);
+            } else if (!f.delete()) {
+                throw new RuntimeException("Unable to delete file " + f.getAbsolutePath());
+            }
+        }
+        if (directory.delete()) {
+            throw new RuntimeException("Unable to delete directory " + directory.getAbsolutePath());
         }
     }
 

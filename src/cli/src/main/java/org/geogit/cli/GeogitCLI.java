@@ -155,7 +155,7 @@ public class GeogitCLI {
      */
     public Injector getGeogitInjector() {
         if (geogitInjector == null) {
-            geogitInjector = GlobalInjectorBuilder.builder.get();
+            geogitInjector = GlobalInjectorBuilder.builder.build();
         }
         return geogitInjector;
     }

@@ -5,12 +5,23 @@
 package org.geogit.storage;
 
 import java.util.Map;
+import java.util.concurrent.TimeoutException;
 
 /**
  * Provides an interface for GeoGit reference databases.
  * 
  */
 public interface RefDatabase {
+
+    /**
+     * Locks access to the main repository refs.
+     */
+    public abstract void lock() throws TimeoutException;
+
+    /**
+     * Unlocks access to the main repository refs.
+     */
+    public abstract void unlock();
 
     /**
      * Creates the reference database.
@@ -41,6 +52,11 @@ public interface RefDatabase {
      */
     public abstract void putRef(String refName, String refValue);
 
+    /**
+     * @param name the name of the ref
+     * @param val the value of the ref
+     * @return {@code null} if the ref didn't exist already, its old value otherwise
+     */
     public abstract void putSymRef(String name, String val);
 
     /**
@@ -56,4 +72,13 @@ public interface RefDatabase {
      */
     public abstract Map<String, String> getAll();
 
+    public abstract Map<String, String> getAll(final String prefix);
+
+    /**
+     * Removes all references under the given {@code namespace} and the namespace itself
+     * 
+     * @param namespace the refs namespace to remote
+     * @return the references removed, may be empty.
+     */
+    public abstract Map<String, String> removeAll(String namespace);
 }

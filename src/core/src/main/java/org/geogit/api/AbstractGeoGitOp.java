@@ -7,6 +7,9 @@ package org.geogit.api;
 import java.util.concurrent.Callable;
 import java.util.logging.Logger;
 
+import org.geogit.repository.StagingArea;
+import org.geogit.repository.WorkingTree;
+import org.geogit.storage.RefDatabase;
 import org.geotools.util.NullProgressListener;
 import org.geotools.util.SubProgressListener;
 import org.geotools.util.logging.Logging;
@@ -27,13 +30,34 @@ public abstract class AbstractGeoGitOp<T> implements Callable<T> {
 
     private ProgressListener progressListener = NULL_PROGRESS_LISTENER;
 
-    private CommandLocator commandLocator;
+    protected CommandLocator commandLocator;
+
+    @Inject
+    protected WorkingTree workTree;
+
+    @Inject
+    protected StagingArea index;
+
+    @Inject
+    protected RefDatabase refDatabase;
 
     /**
      * Constructs a new abstract operation.
      */
     public AbstractGeoGitOp() {
         LOGGER = Logging.getLogger(getClass());
+    }
+
+    public void setWorkTree(WorkingTree workTree) {
+        this.workTree = workTree;
+    }
+
+    public void setIndex(StagingArea index) {
+        this.index = index;
+    }
+
+    public void setRefDatabase(RefDatabase refDatabase) {
+        this.refDatabase = refDatabase;
     }
 
     /**

@@ -45,21 +45,14 @@ public class CherryPickOp extends AbstractGeoGitOp<RevCommit> {
 
     private Repository repository;
 
-    private StagingArea index;
-
-    private WorkingTree workTree;
-
     private Platform platform;
 
     /**
      * Constructs a new {@code CherryPickOp}.
      */
     @Inject
-    public CherryPickOp(Repository repository, StagingArea index, WorkingTree workTree,
-            Platform platform) {
+    public CherryPickOp(Repository repository, Platform platform) {
         this.repository = repository;
-        this.index = index;
-        this.workTree = workTree;
         this.platform = platform;
     }
 

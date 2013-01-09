@@ -12,6 +12,7 @@ import java.util.Map;
 
 import javax.annotation.Nullable;
 
+import org.geogit.api.CommandLocator;
 import org.geogit.api.Node;
 import org.geogit.api.NodeRef;
 import org.geogit.api.ObjectId;
@@ -32,6 +33,7 @@ import org.geogit.storage.StagingDatabase;
 import org.opengis.util.ProgressListener;
 
 import com.google.common.base.Optional;
+import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.Maps;
@@ -57,14 +59,17 @@ import com.google.inject.Inject;
  */
 public class Index implements StagingArea {
 
-    @Inject
-    private Repository repository;
-
-    @Inject
     private StagingDatabase indexDatabase;
 
+    private CommandLocator commandLocator;
+
     @Inject
-    private ObjectSerialisingFactory serialFactory;
+    public Index(final StagingDatabase indexDb, final CommandLocator commandLocator) {
+        Preconditions.checkNotNull(indexDb);
+        Preconditions.checkNotNull(commandLocator);
+        this.indexDatabase = indexDb;
+        this.commandLocator = commandLocator;
+    }
 
     /**
      * @return the staging database.
@@ -81,7 +86,7 @@ public class Index implements StagingArea {
      */
     @Override
     public void updateStageHead(ObjectId newTree) {
-        repository.command(UpdateRef.class).setName(Ref.STAGE_HEAD).setNewValue(newTree).call();
+        commandLocator.command(UpdateRef.class).setName(Ref.STAGE_HEAD).setNewValue(newTree).call();
     }
 
     /**
@@ -90,17 +95,25 @@ public class Index implements StagingArea {
      */
     @Override
     public RevTree getTree() {
-        Optional<ObjectId> stageTreeId = repository.command(ResolveTreeish.class)
+        Optional<ObjectId> stageTreeId = commandLocator.command(ResolveTreeish.class)
                 .setTreeish(Ref.STAGE_HEAD).call();
         final RevTree stageTree;
         if (!stageTreeId.isPresent() || stageTreeId.get().isNull()) {
             // Work tree was not resolved, update it to the head.
-            RevTree headTree = repository.getOrCreateHeadTree();
+            Optional<ObjectId> headTreeId = commandLocator.command(ResolveTreeish.class)
+                    .setTreeish(Ref.HEAD).call();
+            final RevTree headTree;
+            if (!headTreeId.isPresent() || headTreeId.get().isNull()) {
+                headTree = RevTree.EMPTY;
+            } else {
+                headTree = commandLocator.command(RevObjectParse.class)
+                        .setObjectId(headTreeId.get()).call(RevTree.class).get();
+            }
             updateStageHead(headTree.getId());
             stageTree = headTree;
 
         } else {
-            stageTree = repository.command(RevObjectParse.class).setObjectId(stageTreeId.get())
+            stageTree = commandLocator.command(RevObjectParse.class).setObjectId(stageTreeId.get())
                     .call(RevTree.class).or(RevTree.EMPTY);
         }
         return stageTree;
@@ -126,7 +139,7 @@ public class Index implements StagingArea {
      */
     @Override
     public Optional<Node> findStaged(final String path) {
-        Optional<NodeRef> entry = repository.command(FindTreeChild.class).setIndex(true)
+        Optional<NodeRef> entry = commandLocator.command(FindTreeChild.class).setIndex(true)
                 .setParent(getTree()).setChildPath(path).call();
         if (entry.isPresent()) {
             return Optional.of(entry.get().getNode());
@@ -275,15 +288,15 @@ public class Index implements StagingArea {
         while (changes.hasNext()) {
             Map.Entry<String, List<DiffEntry>> pairs = changes.next();
 
-            Optional<NodeRef> typeTreeRef = repository.command(FindTreeChild.class).setIndex(true)
-                    .setParent(getTree()).setChildPath(pairs.getKey()).call();
+            Optional<NodeRef> typeTreeRef = commandLocator.command(FindTreeChild.class)
+                    .setIndex(true).setParent(getTree()).setChildPath(pairs.getKey()).call();
 
             ObjectId parentMetadataId = null;
             if (typeTreeRef.isPresent()) {
                 parentMetadataId = typeTreeRef.get().getMetadataId();
             }
 
-            RevTreeBuilder parentTree = repository.command(FindOrCreateSubtree.class)
+            RevTreeBuilder parentTree = commandLocator.command(FindOrCreateSubtree.class)
                     .setParent(Suppliers.ofInstance(Optional.of(getTree()))).setIndex(true)
                     .setChildPath(pairs.getKey()).call().builder(getDatabase());
 
@@ -308,9 +321,10 @@ public class Index implements StagingArea {
                 }
             }
 
-            ObjectId newTree = repository.command(WriteBack.class).setAncestor(getTreeSupplier())
-                    .setChildPath(pairs.getKey()).setMetadataId(parentMetadataId).setToIndex(true)
-                    .setTree(parentTree.build()).call();
+            ObjectId newTree = commandLocator.command(WriteBack.class)
+                    .setAncestor(getTreeSupplier()).setChildPath(pairs.getKey())
+                    .setMetadataId(parentMetadataId).setToIndex(true).setTree(parentTree.build())
+                    .call();
 
             updateStageHead(newTree);
         }
@@ -324,9 +338,9 @@ public class Index implements StagingArea {
      */
     @Override
     public Iterator<DiffEntry> getStaged(final @Nullable String pathFilter) {
-        Iterator<DiffEntry> staged = repository.command(DiffIndex.class).setFilter(pathFilter)
-                .setReportTrees(true).call();
-        return staged;
+        Iterator<DiffEntry> unstaged = commandLocator.command(DiffIndex.class)
+                .setFilter(pathFilter).call();
+        return unstaged;
     }
 
     /**
@@ -335,21 +349,8 @@ public class Index implements StagingArea {
      */
     @Override
     public long countStaged(final @Nullable String pathFilter) {
-        Long count = repository.command(DiffCount.class).setOldVersion(Ref.HEAD)
+        Long count = commandLocator.command(DiffCount.class).setOldVersion(Ref.HEAD)
                 .setNewVersion(Ref.STAGE_HEAD).setFilter(pathFilter).call();
         return count.longValue();
-    }
-
-    /**
-     * Discards any staged change.
-     */
-    // @REVISIT: should this be implemented through ResetOp (GeoGIT.reset()) instead?
-    // @TODO: When we implement transaction management will be the time to discard any needed object
-    // inserted to the database too
-    @Override
-    public void reset() {
-        // Reset STAGE_HEAD to the HEAD tree
-        RevTree headTree = repository.getOrCreateHeadTree();
-        updateStageHead(headTree.getId());
     }
 }

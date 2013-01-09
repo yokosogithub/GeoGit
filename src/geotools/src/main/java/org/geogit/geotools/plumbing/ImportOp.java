@@ -12,7 +12,6 @@ import org.geogit.api.AbstractGeoGitOp;
 import org.geogit.api.RevFeatureType;
 import org.geogit.api.RevTree;
 import org.geogit.geotools.plumbing.GeoToolsOpException.StatusCode;
-import org.geogit.repository.WorkingTree;
 import org.geotools.data.DataStore;
 import org.geotools.data.simple.SimpleFeatureCollection;
 import org.geotools.data.simple.SimpleFeatureIterator;
@@ -37,16 +36,11 @@ public class ImportOp extends AbstractGeoGitOp<RevTree> {
 
     private DataStore dataStore;
 
-    private WorkingTree workTree;
-
     /**
-     * Constructs a new import operation with the given working tree.
-     * 
-     * @param workTree the working tree where features will be imported to
+     * Constructs a new {@code ImportOp} operation.
      */
     @Inject
-    public ImportOp(final WorkingTree workTree) {
-        this.workTree = workTree;
+    public ImportOp() {
     }
 
     /**
