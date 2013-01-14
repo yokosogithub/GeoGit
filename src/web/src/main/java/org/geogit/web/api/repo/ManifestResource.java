@@ -8,6 +8,7 @@ import org.geogit.api.Ref;
 import org.geogit.api.SymRef;
 import org.geogit.api.plumbing.RefParse;
 import org.geogit.api.porcelain.BranchListOp;
+import org.restlet.data.Form;
 import org.restlet.data.MediaType;
 import org.restlet.representation.WriterRepresentation;
 import org.restlet.resource.ServerResource;
@@ -26,8 +27,12 @@ public class ManifestResource extends ServerResource {
 
         @Override
         public void write(Writer w) throws IOException {
+            Form options = getRequest().getResourceRef().getQueryAsForm();
+
+            boolean remotes = Boolean.valueOf(options.getFirstValue("remotes", "false"));
+
             GeoGIT ggit = (GeoGIT) getApplication().getContext().getAttributes().get("geogit");
-            ImmutableList<Ref> refs = ggit.command(BranchListOp.class).call();
+            ImmutableList<Ref> refs = ggit.command(BranchListOp.class).setRemotes(remotes).call();
 
             // Print out HEAD first
             final Ref currentHead = ggit.command(RefParse.class).setName(Ref.HEAD).call().get();
