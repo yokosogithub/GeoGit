@@ -1,12 +1,15 @@
 package org.geogit.web;
 
 import java.util.Arrays;
+
+import org.geogit.api.ObjectId;
 import org.geogit.web.api.CommandSpecException;
-import org.geogit.web.api.commands.Status;
 import org.geogit.web.api.WebAPICommand;
 import org.geogit.web.api.commands.Commit;
 import org.geogit.web.api.commands.Log;
 import org.geogit.web.api.commands.LsTree;
+import org.geogit.web.api.commands.Status;
+import org.geogit.web.api.commands.UpdateRefWeb;
 import org.restlet.data.Form;
 
 /**
@@ -24,6 +27,8 @@ public class CommandBuilder {
             command = buildCommit(options);
         } else if ("ls-tree".equalsIgnoreCase(commandName)) {
             command = buildLsTree(options);
+        } else if ("updateref".equalsIgnoreCase(commandName)) {
+            command = buildUpdateRef(options);
         } else {
             throw new CommandSpecException("'" + commandName + "' is not a geogit command");
         }
@@ -37,7 +42,8 @@ public class CommandBuilder {
             try {
                 retval = new Integer(val);
             } catch (NumberFormatException nfe) {
-                throw new CommandSpecException("Invalid value '" + val + "' specified for option: " + key);
+                throw new CommandSpecException("Invalid value '" + val + "' specified for option: "
+                        + key);
             }
         }
         return retval;
@@ -75,5 +81,14 @@ public class CommandBuilder {
         lsTree.setVerbose(Boolean.valueOf(options.getFirstValue("verbose", "false")));
         lsTree.setRefList(Arrays.asList(options.getValuesArray("path")));
         return lsTree;
+    }
+
+    static UpdateRefWeb buildUpdateRef(Form options) {
+        UpdateRefWeb command = new UpdateRefWeb();
+        command.setName(options.getFirstValue("name", null));
+        command.setDelete(Boolean.valueOf(options.getFirstValue("delete", false)));
+        command.setNewValue(ObjectId.valueOf(options.getFirstValue("newValue",
+                ObjectId.NULL.toString())));
+        return command;
     }
 }

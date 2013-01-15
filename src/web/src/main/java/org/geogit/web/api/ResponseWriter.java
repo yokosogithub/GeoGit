@@ -1,10 +1,13 @@
 package org.geogit.web.api;
 
 import java.util.Iterator;
+
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamWriter;
+
 import org.codehaus.jettison.AbstractXMLStreamWriter;
 import org.geogit.api.NodeRef;
+import org.geogit.api.ObjectId;
 import org.geogit.api.RevCommit;
 import org.geogit.api.plumbing.DiffIndex;
 import org.geogit.api.plumbing.DiffWorkTree;
@@ -14,13 +17,13 @@ import org.geogit.api.plumbing.diff.DiffEntry;
  *
  */
 public class ResponseWriter {
-    
+
     protected final XMLStreamWriter out;
 
     public ResponseWriter(XMLStreamWriter out) {
         this.out = out;
         if (out instanceof AbstractXMLStreamWriter) {
-            configureJSONOutput( (AbstractXMLStreamWriter) out);
+            configureJSONOutput((AbstractXMLStreamWriter) out);
         }
     }
 
@@ -41,19 +44,19 @@ public class ResponseWriter {
         out.writeStartElement("response");
         writeElement("success", Boolean.toString(success));
     }
-    
+
     public void writeHeaderElements(String... els) throws XMLStreamException {
         out.writeStartElement("header");
-        for (int i = 0; i < els.length; i+=2) {
-            writeElement(els[i], els[i+1]);
+        for (int i = 0; i < els.length; i += 2) {
+            writeElement(els[i], els[i + 1]);
         }
         out.writeEndElement();
     }
 
     public void writeErrors(String... errors) throws XMLStreamException {
         out.writeStartElement("errors");
-        for (int i = 0; i < errors.length; i+=2) {
-            writeElement(errors[i], errors[i+1]);
+        for (int i = 0; i < errors.length; i += 2) {
+            writeElement(errors[i], errors[i + 1]);
         }
         out.writeEndElement();
     }
@@ -72,7 +75,8 @@ public class ResponseWriter {
         writeDiffEntries("staged", start, length, setFilter.call());
     }
 
-    public void writeUnstaged(DiffWorkTree setFilter, int start, int length) throws XMLStreamException {
+    public void writeUnstaged(DiffWorkTree setFilter, int start, int length)
+            throws XMLStreamException {
         writeDiffEntries("unstaged", start, length, setFilter.call());
     }
 
@@ -82,7 +86,8 @@ public class ResponseWriter {
         }
     }
 
-    private void writeDiffEntries(String name, int start, int length, Iterator<DiffEntry> entries) throws XMLStreamException {
+    private void writeDiffEntries(String name, int start, int length, Iterator<DiffEntry> entries)
+            throws XMLStreamException {
         advance(entries, start);
         if (length < 0) {
             length = Integer.MAX_VALUE;
@@ -124,15 +129,15 @@ public class ResponseWriter {
         while (diff.hasNext()) {
             diffEntry = diff.next();
             switch (diffEntry.changeType()) {
-                case ADDED:
-                    ++adds;
-                    break;
-                case REMOVED:
-                    ++deletes;
-                    break;
-                case MODIFIED:
-                    ++changes;
-                    break;
+            case ADDED:
+                ++adds;
+                break;
+            case REMOVED:
+                ++deletes;
+                break;
+            case MODIFIED:
+                ++changes;
+                break;
             }
         }
         writeElement("added", Integer.toString(adds));
@@ -140,7 +145,8 @@ public class ResponseWriter {
         writeElement("deleted", Integer.toString(deletes));
     }
 
-    public void writeLsTreeResponse(Iterator<NodeRef> iter, boolean verbose) throws XMLStreamException {
+    public void writeLsTreeResponse(Iterator<NodeRef> iter, boolean verbose)
+            throws XMLStreamException {
 
         while (iter.hasNext()) {
             NodeRef node = iter.next();
@@ -156,4 +162,12 @@ public class ResponseWriter {
 
     }
 
+    public void writeUpdateRefResponse(String name, ObjectId newValue, ObjectId oldValue)
+            throws XMLStreamException {
+        out.writeStartElement("ChangedRef");
+        writeElement("name", name);
+        writeElement("oldValue", oldValue.toString());
+        writeElement("newValue", newValue.toString());
+        out.writeEndElement();
+    }
 }
