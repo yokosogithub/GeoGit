@@ -26,11 +26,12 @@ import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableSet;
 
 /**
- * An implementation of a remote repository that exists on a remote machine.
+ * An implementation of a remote repository that exists on a remote machine and made public via an
+ * http interface.
  * 
  * @see IRemoteRepo
  */
-public class HTTPRemoteRepo implements IRemoteRepo {
+public class HttpRemoteRepo implements IRemoteRepo {
 
     private URL repositoryURL;
 
@@ -39,7 +40,7 @@ public class HTTPRemoteRepo implements IRemoteRepo {
      * 
      * @param repositoryURL the url of the remote repository
      */
-    public HTTPRemoteRepo(URL repositoryURL) {
+    public HttpRemoteRepo(URL repositoryURL) {
         String url = repositoryURL.toString();
         if (url.endsWith("/")) {
             url = url.substring(0, url.lastIndexOf('/'));
@@ -52,7 +53,7 @@ public class HTTPRemoteRepo implements IRemoteRepo {
     }
 
     /**
-     * Opens the remote repository.
+     * Currently does nothing for HTTP Remote.
      * 
      * @throws IOException
      */
@@ -62,7 +63,7 @@ public class HTTPRemoteRepo implements IRemoteRepo {
     }
 
     /**
-     * Closes the remote repository.
+     * Currently does nothing for HTTP Remote.
      * 
      * @throws IOException
      */
@@ -125,24 +126,12 @@ public class HTTPRemoteRepo implements IRemoteRepo {
         ImmutableSet.Builder<Ref> builder = new ImmutableSet.Builder<Ref>();
         try {
             String expanded = repositoryURL.toString() + "/repo/manifest";
-            // Create connection
-            // String urlParameters = "repo/manifest";
+
             connection = (HttpURLConnection) new URL(expanded).openConnection();
             connection.setRequestMethod("GET");
-            // connection.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
-
-            // connection.setRequestProperty("Content-Length",
-            // "" + Integer.toString(urlParameters.getBytes().length));
-            // connection.setRequestProperty("Content-Language", "en-US");
 
             connection.setUseCaches(false);
             connection.setDoOutput(true);
-
-            // Send request
-            // DataOutputStream wr = new DataOutputStream(connection.getOutputStream());
-            // wr.writeBytes(urlParameters);
-            // wr.flush();
-            // wr.close();
 
             // Get Response
             InputStream is = connection.getInputStream();
@@ -210,12 +199,24 @@ public class HTTPRemoteRepo implements IRemoteRepo {
         updateRemoteRef(ref.getName(), ref.getObjectId(), false);
     }
 
+    /**
+     * Push all new objects from the specified {@link Ref} to the remote.
+     * 
+     * @param localRepository the repository to get new objects from
+     * @param ref the local ref that points to new commit data
+     * @param refspec the remote branch to push to
+     */
     @Override
     public void pushNewData(Repository localRepository, Ref ref, String refspec) {
         walkCommit(ref.getObjectId(), localRepository, true);
         updateRemoteRef(refspec, ref.getObjectId(), false);
     }
 
+    /**
+     * Delete a {@link Ref} from the remote repository.
+     * 
+     * @param localRepository unused for http remote
+     */
     @Override
     public void deleteRef(Repository localRepository, String refspec) {
         updateRemoteRef(refspec, null, true);
