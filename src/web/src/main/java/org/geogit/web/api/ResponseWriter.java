@@ -114,10 +114,10 @@ public class ResponseWriter {
         while (entries.hasNext()) {
             RevCommit entry = entries.next();
             out.writeStartElement("commit");
-            writeElement("author", entry.getAuthor().getName());
-            writeElement("email", entry.getAuthor().getEmail());
+            writeElement("author", entry.getAuthor().getName().get());
+            writeElement("email", entry.getAuthor().getEmail().get());
             writeElement("commit", entry.getTreeId().toString());
-            writeElement("date", Long.toString(entry.getTimestamp()));
+            writeElement("date", Long.toString(entry.getCommitter().getTimestamp()));
             writeElement("message", entry.getMessage());
             out.writeEndElement();
         }

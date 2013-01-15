@@ -18,6 +18,7 @@ import org.geogit.di.GeogitModule;
 import org.geogit.storage.bdbje.JEStorageModule;
 import org.geogit.web.api.repo.ManifestResource;
 import org.geogit.web.api.repo.ObjectResource;
+import org.geogit.web.api.repo.SendObjectResource;
 import org.restlet.Application;
 import org.restlet.Component;
 import org.restlet.Context;
@@ -41,14 +42,15 @@ public class Main extends Application {
 
         ConcurrentMap<String, Object> attributes = context.getAttributes();
         if (!attributes.containsKey("geogit")) {
-            ServletContext sc = (ServletContext) context.getServerDispatcher()
-                    .getContext().getAttributes().get("org.restlet.ext.servlet.ServletContext");
+            ServletContext sc = (ServletContext) context.getServerDispatcher().getContext()
+                    .getAttributes().get("org.restlet.ext.servlet.ServletContext");
             String repo = sc.getInitParameter("repository");
             if (repo == null) {
                 repo = System.getProperty("org.geogit.web.repository");
             }
             if (repo == null) {
-                throw new IllegalStateException("Cannot launch geogit servlet without `repository` parameter");
+                throw new IllegalStateException(
+                        "Cannot launch geogit servlet without `repository` parameter");
             }
             context.getAttributes().put("geogit", loadGeoGIT(repo));
         }
@@ -92,6 +94,7 @@ public class Main extends Application {
         Router router = new Router();
         router.attach("/manifest", ManifestResource.class);
         router.attach("/objects/{id}", new ObjectResource());
+        router.attach("/sendobject", SendObjectResource.class);
         return router;
     }
 
@@ -99,8 +102,8 @@ public class Main extends Application {
         GlobalInjectorBuilder.builder = new InjectorBuilder() {
             @Override
             public Injector get() {
-                return Guice.createInjector(Modules.override(new GeogitModule())
-                        .with(new JEStorageModule()));
+                return Guice.createInjector(Modules.override(new GeogitModule()).with(
+                        new JEStorageModule()));
             }
         };
     }

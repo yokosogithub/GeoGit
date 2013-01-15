@@ -21,6 +21,7 @@ import java.util.List;
 
 import org.apache.commons.io.FileUtils;
 import org.geogit.api.GeoGIT;
+import org.geogit.api.GlobalInjectorBuilder;
 import org.geogit.api.InjectorBuilder;
 import org.geogit.api.NodeRef;
 import org.geogit.api.ObjectId;
@@ -130,6 +131,7 @@ public abstract class RemoteRepositoryTestCase {
             assertTrue(envHome.mkdirs());
 
             InjectorBuilder injectorBuilder = createInjectorBuilder();
+            GlobalInjectorBuilder.builder = injectorBuilder;
             injector = injectorBuilder.get();
 
             geogit = new GeoGIT(injector, envHome);
