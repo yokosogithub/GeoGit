@@ -79,13 +79,14 @@ public class ResponseWriter {
         writeDiffEntries("unstaged", start, length, setFilter.call());
     }
 
+    @SuppressWarnings("rawtypes")
     private void advance(Iterator it, int cnt) {
         for (int i = 0; i < cnt && it.hasNext(); i++) {
             it.next();
         }
     }
 
-    private void writeDiffEntries(String name, int start, int length, Iterator<DiffEntry> entries)
+    public void writeDiffEntries(String name, int start, int length, Iterator<DiffEntry> entries)
             throws XMLStreamException {
         advance(entries, start);
         if (length < 0) {
@@ -98,12 +99,21 @@ public class ResponseWriter {
             NodeRef oldObject = entry.getOldObject();
             NodeRef newObject = entry.getNewObject();
             if (oldObject == null) {
-                writeElement("path", newObject.path());
-            } else if (newObject == null) {
-                writeElement("path", oldObject.path());
-            } else {
-                writeElement("path", oldObject.path());
                 writeElement("newPath", newObject.path());
+                writeElement("newObjectId", newObject.objectId().toString());
+                writeElement("path", "");
+                writeElement("oldObjectId", ObjectId.NULL.toString());
+            } else if (newObject == null) {
+                writeElement("newPath", "");
+                writeElement("newObjectId", ObjectId.NULL.toString());
+                writeElement("path", oldObject.path());
+                writeElement("oldObjectId", oldObject.objectId().toString());
+            } else {
+                writeElement("newPath", newObject.path());
+                writeElement("newObjectId", newObject.objectId().toString());
+                writeElement("path", oldObject.path());
+                writeElement("oldObjectId", oldObject.objectId().toString());
+
             }
             out.writeEndElement();
         }

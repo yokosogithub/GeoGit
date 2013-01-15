@@ -6,6 +6,7 @@ import org.geogit.api.ObjectId;
 import org.geogit.web.api.CommandSpecException;
 import org.geogit.web.api.WebAPICommand;
 import org.geogit.web.api.commands.Commit;
+import org.geogit.web.api.commands.Diff;
 import org.geogit.web.api.commands.Log;
 import org.geogit.web.api.commands.LsTree;
 import org.geogit.web.api.commands.Status;
@@ -29,6 +30,8 @@ public class CommandBuilder {
             command = buildLsTree(options);
         } else if ("updateref".equalsIgnoreCase(commandName)) {
             command = buildUpdateRef(options);
+        } else if ("diff".equalsIgnoreCase(commandName)) {
+            command = buildDiff(options);
         } else {
             throw new CommandSpecException("'" + commandName + "' is not a geogit command");
         }
@@ -88,6 +91,14 @@ public class CommandBuilder {
         command.setName(options.getFirstValue("name", null));
         command.setDelete(Boolean.valueOf(options.getFirstValue("delete", false)));
         command.setNewValue(options.getFirstValue("newValue", ObjectId.NULL.toString()));
+        return command;
+    }
+
+    static Diff buildDiff(Form options) {
+        Diff command = new Diff();
+        command.setOldRefSpec(options.getFirstValue("oldRefSpec", null));
+        command.setNewRefSpec(options.getFirstValue("newRefSpec", null));
+        command.setPathFilter(options.getFirstValue("pathFilter", null));
         return command;
     }
 }
