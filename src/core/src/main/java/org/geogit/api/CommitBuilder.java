@@ -27,24 +27,44 @@ public final class CommitBuilder {
 
     private String message;
 
-    private long timestamp;
+    private long authorTimestamp;
+
+    private long committerTimestamp;
+
+    private int authorTimeZoneOffset;
+
+    private int committerTimeZoneOffset;
+
+    private Platform platform;
 
     public CommitBuilder() {
-        parentIds = ImmutableList.of();
+        this(new DefaultPlatform());
+    }
+
+    /**
+     * @param platform
+     */
+    public CommitBuilder(Platform platform) {
+        Preconditions.checkNotNull(platform);
+        this.platform = platform;
+        this.parentIds = ImmutableList.of();
     }
 
     /**
      * @param copy the commit to initialize this builder properties with
      */
     public CommitBuilder(RevCommit copy) {
-        setAuthor(copy.getAuthor().getName());
-        setAuthorEmail(copy.getAuthor().getEmail());
-        setCommitter(copy.getCommitter().getName());
-        setCommitterEmail(copy.getCommitter().getEmail());
+        setAuthor(copy.getAuthor().getName().orNull());
+        setAuthorEmail(copy.getAuthor().getEmail().orNull());
+        setCommitter(copy.getCommitter().getName().orNull());
+        setCommitterEmail(copy.getCommitter().getEmail().orNull());
         setMessage(copy.getMessage());
         setParentIds(copy.getParentIds());
         setTreeId(copy.getTreeId());
-        setTimestamp(copy.getTimestamp());
+        setAuthorTimestamp(copy.getAuthor().getTimestamp());
+        setCommitterTimestamp(copy.getCommitter().getTimestamp());
+        setAuthorTimeZoneOffset(copy.getAuthor().getTimeZoneOffset());
+        setCommitterTimeZoneOffset(copy.getCommitter().getTimeZoneOffset());
     }
 
     /**
@@ -155,18 +175,64 @@ public final class CommitBuilder {
     }
 
     /**
-     * @return the timestamp
+     * @return the author's time stamp
      */
-    public long getTimestamp() {
-        return timestamp;
+    public long getAuthorTimestamp() {
+        return authorTimestamp == 0L ? getCommitterTimestamp() : authorTimestamp;
     }
 
     /**
-     * @param timestamp timestamp, in UTC, of the commit. Let it blank for the builder to auto-set
-     *        it at {@link #build()} time
+     * @return the author's time zone offset
      */
-    public CommitBuilder setTimestamp(long timestamp) {
-        this.timestamp = timestamp;
+    public int getAuthorTimeZoneOffset() {
+        return authorTimeZoneOffset;
+    }
+
+    /**
+     * @return the committer's time stamp
+     */
+    public long getCommitterTimestamp() {
+        return committerTimestamp == 0L ? platform.currentTimeMillis() : committerTimestamp;
+    }
+
+    /**
+     * @return the committer's time zone offset
+     */
+    public int getCommitterTimeZoneOffset() {
+        return committerTimeZoneOffset;
+    }
+
+    /**
+     * @param timestamp timestamp, in UTC, of when the author made the change. Let it blank for the
+     *        builder to auto-set it at {@link #build()} time
+     */
+    public CommitBuilder setAuthorTimestamp(long timestamp) {
+        this.authorTimestamp = timestamp;
+        return this;
+    }
+
+    /**
+     * @param timeZoneOffset Sets the time zone offset of the author
+     */
+    public CommitBuilder setAuthorTimeZoneOffset(int timeZoneOffset) {
+        this.authorTimeZoneOffset = timeZoneOffset;
+        return this;
+    }
+
+    /**
+     * @param timestamp timestamp, in UTC, of the change was committed. Let it blank for the builder
+     *        to auto-set it at {@link #build()} time
+     */
+    public CommitBuilder setCommitterTimestamp(long timestamp) {
+        this.committerTimestamp = timestamp;
+        return this;
+    }
+
+    /**
+     * @param timeZoneOffset Sets the time zone offset of the committer
+     */
+    public CommitBuilder setCommitterTimeZoneOffset(int timeZoneOffset) {
+        this.committerTimeZoneOffset = timeZoneOffset;
         return this;
     }
 
@@ -177,40 +243,18 @@ public final class CommitBuilder {
 
         final ObjectId treeId = this.treeId;
         final List<ObjectId> parentIds = this.parentIds;
-        final RevPerson author = new RevPerson(this.author, authorEmail);
-        final RevPerson committer = new RevPerson(this.committer, committerEmail);
-        final long timestamp = getTimestamp();
+
+        final RevPerson author = new RevPerson(this.author, authorEmail, getAuthorTimestamp(),
+                getAuthorTimeZoneOffset());
+        final RevPerson committer = new RevPerson(this.committer, committerEmail,
+                getCommitterTimestamp(), getCommitterTimeZoneOffset());
+
         final String commitMessage = this.message == null ? "" : this.message;
 
         RevCommit unnnamedCommit = new RevCommit(ObjectId.NULL, treeId, parentIds, author,
-                committer, commitMessage, timestamp);
+                committer, commitMessage);
         ObjectId commitId = new HashObject().setObject(unnnamedCommit).call();
 
-        return new RevCommit(commitId, treeId, parentIds, author, committer, commitMessage,
-                timestamp);
-    }
-
-    /**
-     * This method is deprecated and should be removed as soon as possible. The only reason to
-     * preserve it is that it _seems_ the hessian commit reader/writers don't produce always the
-     * same contents, and worse, seems to be random. See comments in HessianCommitReader
-     * 
-     * @deprecated use {@link #build()}
-     */
-    @Deprecated
-    public RevCommit build(ObjectId id) {
-        Preconditions.checkNotNull(id);
-        if (treeId == null) {
-            throw new IllegalStateException("No tree id set");
-        }
-
-        final ObjectId treeId = this.treeId;
-        final List<ObjectId> parentIds = this.parentIds;
-        final RevPerson author = new RevPerson(this.author, authorEmail);
-        final RevPerson committer = new RevPerson(this.committer, committerEmail);
-        final long timestamp = getTimestamp();
-        final String commitMessage = this.message;
-
-        return new RevCommit(id, treeId, parentIds, author, committer, commitMessage, timestamp);
+        return new RevCommit(commitId, treeId, parentIds, author, committer, commitMessage);
     }
 }

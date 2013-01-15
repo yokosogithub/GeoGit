@@ -118,10 +118,6 @@ public class DepthTreeIterator extends AbstractIterator<NodeRef> {
         }
     }
 
-    public Strategy getStrategy() {
-        return this.strategy;
-    }
-
     @Override
     protected NodeRef computeNext() {
         if (iterator.hasNext()) {
@@ -239,7 +235,9 @@ public class DepthTreeIterator extends AbstractIterator<NodeRef> {
         private Iterator<Node> trees;
 
         public Trees(RevTree tree) {
-            if (tree.trees().isPresent()) {
+            if (tree.numTrees() == 0) {
+                this.trees = Iterators.emptyIterator();
+            } else if (tree.trees().isPresent()) {
                 this.trees = tree.trees().get().iterator();
             } else if (tree.buckets().isPresent()) {
                 this.trees = new TreeBuckets(tree);
@@ -308,10 +306,13 @@ public class DepthTreeIterator extends AbstractIterator<NodeRef> {
         @Override
         protected Iterator<Node> resolveBucketEntries(ObjectId bucketId) {
             RevTree bucketTree = source.getTree(bucketId);
-            if (bucketTree.buckets().isPresent()) {
-                return new Buckets(bucketTree);
+            if (bucketTree.numTrees() == 0) {
+                return Iterators.emptyIterator();
             }
             if (bucketTree.trees().isPresent()) {
+                return new Trees(bucketTree);
+            }
+            if (bucketTree.buckets().isPresent()) {
                 return new TreeBuckets(bucketTree);
             }
             return Iterators.emptyIterator();

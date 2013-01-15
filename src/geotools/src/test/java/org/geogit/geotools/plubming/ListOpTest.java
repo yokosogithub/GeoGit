@@ -1,6 +1,5 @@
 package org.geogit.geotools.plubming;
 
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
@@ -9,7 +8,6 @@ import java.util.List;
 import org.geogit.geotools.plumbing.GeoToolsOpException;
 import org.geogit.geotools.plumbing.ListOp;
 import org.geogit.geotools.porcelain.TestHelper;
-import org.geotools.data.memory.MemoryDataStore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -20,16 +18,6 @@ public class ListOpTest {
 
     @Rule
     public ExpectedException exception = ExpectedException.none();
-
-    @Test
-    public void testAccessorsAndMutators() throws Exception {
-        ListOp list = new ListOp();
-
-        MemoryDataStore testDataStore = new MemoryDataStore();
-        list.setDataStore(testDataStore);
-        assertEquals(testDataStore, list.getDataStore());
-
-    }
 
     @Test
     public void testNullDataStore() throws Exception {

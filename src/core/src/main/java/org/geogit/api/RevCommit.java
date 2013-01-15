@@ -29,8 +29,6 @@ public class RevCommit extends AbstractRevObject {
 
     private String message;
 
-    private long timestamp;
-
     /**
      * Constructs a new {@code RevCommit} with the given {@link ObjectId}.
      * 
@@ -54,10 +52,9 @@ public class RevCommit extends AbstractRevObject {
      * @param author the author of this commit
      * @param committer the committer of this commit
      * @param message the message for this commit
-     * @param timestamp the timestamp of this commit
      */
     public RevCommit(final ObjectId id, ObjectId treeId, List<ObjectId> parentIds,
-            RevPerson author, RevPerson committer, String message, long timestamp) {
+            RevPerson author, RevPerson committer, String message) {
         this(id);
         checkNotNull(treeId);
         checkNotNull(parentIds);
@@ -69,7 +66,6 @@ public class RevCommit extends AbstractRevObject {
         this.author = author;
         this.committer = committer;
         this.message = message;
-        this.timestamp = timestamp;
     }
 
     /**
@@ -127,15 +123,6 @@ public class RevCommit extends AbstractRevObject {
     }
 
     /**
-     * Returns the commit time stamp in UTC milliseconds
-     * 
-     * @return the commit's time stamp
-     */
-    public long getTimestamp() {
-        return timestamp;
-    }
-
-    /**
      * @return the {@code RevCommit} as a readable string
      */
     @Override
@@ -144,7 +131,7 @@ public class RevCommit extends AbstractRevObject {
     }
 
     /**
-     * Equality is based on author, committer, message, parent ids, timestamp, and tree id.
+     * Equality is based on author, committer, message, parent ids, and tree id.
      * 
      * @see AbstractRevObject#equals(java.lang.Object)
      */
@@ -156,12 +143,12 @@ public class RevCommit extends AbstractRevObject {
         RevCommit c = (RevCommit) o;
         return equal(getAuthor(), c.getAuthor()) && equal(getCommitter(), c.getCommitter())
                 && equal(getMessage(), c.getMessage()) && equal(getParentIds(), c.getParentIds())
-                && equal(getTimestamp(), c.getTimestamp()) && equal(getTreeId(), c.getTreeId());
+                && equal(getTreeId(), c.getTreeId());
     }
 
     @Override
     public int hashCode() {
         return Objects.hashCode(getId(), getTreeId(), getParentIds(), getAuthor(), getCommitter(),
-                getMessage(), getTimestamp());
+                getMessage());
     }
 }

@@ -35,6 +35,7 @@ class HessianRevTreeReader extends HessianRevReader<RevTree> implements ObjectRe
         Preconditions.checkArgument(RevObject.TYPE.TREE.equals(blobType));
 
         final long size = hin.readLong();
+        final int numTrees = hin.readInt();
 
         Builder<org.geogit.api.Node> features = ImmutableList.builder();
         Builder<org.geogit.api.Node> trees = ImmutableList.builder();
@@ -61,7 +62,7 @@ class HessianRevTreeReader extends HessianRevReader<RevTree> implements ObjectRe
         if (subtrees.isEmpty()) {
             tree = RevTreeImpl.createLeafTree(id, size, features.build(), trees.build());
         } else {
-            tree = RevTreeImpl.createNodeTree(id, size, subtrees);
+            tree = RevTreeImpl.createNodeTree(id, size, numTrees, subtrees);
         }
         return tree;
     }

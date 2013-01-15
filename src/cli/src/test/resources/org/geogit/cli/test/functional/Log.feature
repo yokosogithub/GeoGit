@@ -5,9 +5,11 @@ Feature: "log" command
 
   Scenario: Try to show a log of a repository with a single commit.
     Given I have a repository
-      And I stage 6 features
+      And I have staged "points1"
+      And I have staged "points2"
+      And I have staged "lines1"
      When I run the command "commit -m TestCommit"
-     Then the response should contain "6 features added"
+     Then the response should contain "3 features added"
      When I run the command "log"
      Then the response should contain "Subject: TestCommit"
      
@@ -15,6 +17,30 @@ Feature: "log" command
     Given I have a repository
       And I have several commits
       And I run the command "log"
+     Then the response should contain "Subject: Commit1"
+      And the response should contain "Subject: Commit2"
+      And the response should contain "Subject: Commit3"
+      And the response should contain "Subject: Commit4"
+      
+  Scenario: Try to show a log of the commits that have changed the points feature
+  	Given I have a repository
+  	  And I have several commits
+  	  And I run the command "log --path Points"
+  	 Then the response should contain "Subject: Commit1"
+  	  And the response should contain "Subject: Commit2"
+  	  And the response should contain "Subject: Commit4"
+  	  
+  Scenario: Try to show a log of the commits that have changed the lines feature
+    Given I have a repository
+      And I have several commits
+      And I run the command "log --path Lines"
+     Then the response should contain "Subject: Commit2"
+      And the response should contain "Subject: Commit3"
+      
+  Scenario: Try to show a log of the commits that have changed the points and lines features
+    Given I have a repository
+      And I have several commits
+      And I run the command "log --path Points Lines"
      Then the response should contain "Subject: Commit1"
       And the response should contain "Subject: Commit2"
       And the response should contain "Subject: Commit3"

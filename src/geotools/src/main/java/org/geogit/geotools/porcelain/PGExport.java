@@ -5,17 +5,23 @@
 
 package org.geogit.geotools.porcelain;
 
+import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkState;
+
 import java.io.IOException;
 import java.net.ConnectException;
 import java.util.Arrays;
 import java.util.List;
 
+import org.geogit.api.GeoGIT;
 import org.geogit.api.NodeRef;
 import org.geogit.api.ObjectId;
 import org.geogit.api.RevFeatureType;
 import org.geogit.api.RevObject;
 import org.geogit.api.RevObject.TYPE;
 import org.geogit.api.RevTree;
+import org.geogit.api.plumbing.FindTreeChild;
+import org.geogit.api.plumbing.ResolveTreeish;
 import org.geogit.api.plumbing.RevObjectParse;
 import org.geogit.api.plumbing.diff.DepthTreeIterator;
 import org.geogit.api.plumbing.diff.DepthTreeIterator.Strategy;
@@ -35,7 +41,6 @@ import org.opengis.feature.simple.SimpleFeatureType;
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.Parameters;
 import com.google.common.base.Optional;
-import com.google.common.base.Preconditions;
 
 /**
  * Exports features from a feature type into a PostGIS database.
@@ -118,6 +123,9 @@ public class PGExport extends AbstractPGCommand implements CLICommand {
 
     private SimpleFeatureType getFeatureType(String featureTypeName, String tableName, GeogitCLI cli) {
 
+        checkArgument(featureTypeName != null, "No feature type name specified.");
+        checkArgument(tableName != null && !tableName.isEmpty(), "No table name specified");
+
         final String refspec;
         if (featureTypeName.contains(":")) {
             refspec = featureTypeName;
@@ -125,28 +133,49 @@ public class PGExport extends AbstractPGCommand implements CLICommand {
             refspec = "WORK_HEAD:" + featureTypeName;
         }
 
-        Optional<RevObject> revObject = cli.getGeogit().command(RevObjectParse.class)
-                .setRefSpec(refspec).call(RevObject.class);
+        checkArgument(refspec.endsWith(":") != true, "No feature type name specified.");
 
-        Preconditions.checkArgument(revObject.isPresent(), "Invalid reference: %s", refspec);
-        Preconditions.checkArgument(revObject.get().getType() == TYPE.TREE,
-                "%s did not resolve to a tree", refspec);
+        final GeoGIT geogit = cli.getGeogit();
 
-        ObjectDatabase database = cli.getGeogit().getRepository().getObjectDatabase();
+        Optional<ObjectId> rootTreeId = geogit.command(ResolveTreeish.class)
+                .setTreeish(refspec.split(":")[0]).call();
 
-        DepthTreeIterator iter = new DepthTreeIterator("", ObjectId.NULL,
+        checkState(rootTreeId.isPresent(), "Couldn't resolve '" + refspec + "' to a treeish object");
+
+        RevTree rootTree = geogit.getRepository().getTree(rootTreeId.get());
+        Optional<NodeRef> featureTypeTree = geogit.command(FindTreeChild.class)
+                .setChildPath(refspec.split(":")[1]).setParent(rootTree).setIndex(true).call();
+
+        checkArgument(featureTypeTree.isPresent(), "pathspec '" + refspec.split(":")[1]
+                + "' did not match any valid path");
+
+        Optional<RevObject> revObject = geogit.command(RevObjectParse.class).setRefSpec(refspec)
+                .call(RevObject.class);
+
+        checkArgument(revObject.isPresent(), "Invalid reference: %s", refspec);
+        checkArgument(revObject.get().getType() == TYPE.TREE, "%s did not resolve to a tree",
+                refspec);
+
+        ObjectDatabase database = geogit.getRepository().getObjectDatabase();
+
+        DepthTreeIterator iter = new DepthTreeIterator("", featureTypeTree.get().getMetadataId(),
                 (RevTree) revObject.get(), database, Strategy.FEATURES_ONLY);
 
         while (iter.hasNext()) {
             NodeRef nodeRef = iter.next();
-            RevFeatureType revFeatureType = cli.getGeogit().command(RevObjectParse.class)
-                    .setObjectId(nodeRef.getMetadataId()).call(RevFeatureType.class).get();
-            SimpleFeatureType sft = (SimpleFeatureType) revFeatureType.type();
-            SimpleFeatureTypeImpl newSFT = new SimpleFeatureTypeImpl(new NameImpl(tableName),
-                    sft.getAttributeDescriptors(), sft.getGeometryDescriptor(), sft.isAbstract(),
-                    sft.getRestrictions(), sft.getSuper(), sft.getDescription());
-            return newSFT;
-
+            ObjectId metadataId = nodeRef.getMetadataId();
+            revObject = geogit.command(RevObjectParse.class).setObjectId(metadataId).call();
+            if (revObject.isPresent() && revObject.get() instanceof RevFeatureType) {
+                RevFeatureType revFeatureType = (RevFeatureType) revObject.get();
+                if (revFeatureType.type() instanceof SimpleFeatureType) {
+                    SimpleFeatureType sft = (SimpleFeatureType) revFeatureType.type();
+                    SimpleFeatureTypeImpl newSFT = new SimpleFeatureTypeImpl(
+                            new NameImpl(tableName), sft.getAttributeDescriptors(),
+                            sft.getGeometryDescriptor(), sft.isAbstract(), sft.getRestrictions(),
+                            sft.getSuper(), sft.getDescription());
+                    return newSFT;
+                }
+            }
         }
 
         throw new GeoToolsOpException(StatusCode.NO_FEATURES_FOUND);

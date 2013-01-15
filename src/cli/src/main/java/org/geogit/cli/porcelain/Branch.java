@@ -25,6 +25,7 @@ import org.geogit.api.plumbing.RefParse;
 import org.geogit.api.porcelain.BranchCreateOp;
 import org.geogit.api.porcelain.BranchDeleteOp;
 import org.geogit.api.porcelain.BranchListOp;
+import org.geogit.api.porcelain.BranchRenameOp;
 import org.geogit.cli.AbstractCommand;
 import org.geogit.cli.AnsiDecorator;
 import org.geogit.cli.CLICommand;
@@ -39,7 +40,46 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 
 /**
- *
+ * With no arguments the command will display all existing branches with the current branch
+ * highlighted with the asterisk. The {@code -r} option will list only remote branches and the
+ * {@code -a} option will list both local and remote branches. Adding the {@code --color} option
+ * with the value of auto, always, or never will add or remove color from the listing. With the
+ * {@code -v} option it will list the branches along with the commit id and commit message that the
+ * branch is currently on.
+ * <p>
+ * With a branch name specified it will create a branch of off the current branch. If a start point
+ * is specified as well then it will be created off of the given start point. If the -c option is
+ * given it will automatically checkout the branch once it is created.
+ * <p>
+ * With the -d option with a branch name specified will delete that branch. You cannot delete the
+ * branch that you are currently on, checkout a different branch to delete it. Also with the -d
+ * option you can list multiple branches for deletion.
+ * <p>
+ * With the -m option you can specify an oldBranchName to rename with the given newBranchName or you
+ * can rename the current branch by not specifying oldBranchName. With the --force option you can
+ * rename a branch to a name that already exists as a branch, however this will delete the other
+ * branch.
+ * <p>
+ * CLI proxy {@link BranchListOp}, {@link BranchCreateOp}, {@link BranchDeleteOp},
+ * {@link BranchRenameOp}
+ * <p>
+ * Usage:
+ * <ul>
+ * <li> {@code geogit branch [-c] <branchname>[<startpoint>]}: Creates a new branch with the given
+ * branchname at the specified startpoint and checks it out immediately
+ * <li> {@code geogit branch [--color=always] [-v] [-a]}: Lists all branches (Local and Remote) in
+ * color with commit id and commit message
+ * <li> {@code geogit branch [-r]}: List only remote branches
+ * <li> {@code geogit branch [--delete] <branchname>...}: Deletes all the branches listed unless HEAD
+ * is pointing to it
+ * <li> {@code geogit branch [--force] [--rename] [<oldBranchName>] <newBranchName>}: Renames a
+ * branch specified by oldBranchName or current branch if no oldBranchName is given to newBranchName
+ * </ul>
+ * 
+ * @see BranchListOp
+ * @see BranchCreateOp
+ * @see BranchDeleteOp
+ * @see BranchRenameOp
  */
 @Parameters(commandNames = "branch", commandDescription = "List, create, or delete branches")
 public class Branch extends AbstractCommand implements CLICommand {
@@ -53,10 +93,10 @@ public class Branch extends AbstractCommand implements CLICommand {
     @Parameter(names = { "--checkout", "-c" }, description = "automatically checkout the new branch when the command is used to create a branch")
     private boolean checkout;
 
-    @Parameter(names = { "--delete", "-D" })
+    @Parameter(names = { "--delete", "-d" })
     private boolean delete = false;
 
-    @Parameter(names = "--force", description = "Force deleting a branch")
+    @Parameter(names = { "--force", "-f" }, description = "Force renaming of a branch")
     private boolean force = false;
 
     @Parameter(names = { "--verbose", "-v",
@@ -69,23 +109,58 @@ public class Branch extends AbstractCommand implements CLICommand {
     @Parameter(names = { "--all", "-a" }, description = "List all branches, both local and remote")
     private boolean all = false;
 
+    @Parameter(names = { "--rename", "-m" }, description = "Rename branch ")
+    private boolean rename = false;
+
     @Override
-    public void runInternal(final GeogitCLI cli) {
+    public void runInternal(final GeogitCLI cli) throws Exception {
         final GeoGIT geogit = cli.getGeogit();
         checkState(geogit != null, "not in a geogit repository.");
 
         final ConsoleReader console = cli.getConsole();
 
-        if (branchName.isEmpty()) {
-            listBranches(cli);
+        if (delete) {
+            if (branchName.isEmpty()) {
+                console.println("no name specified for deletion");
+            }
+            for (String br : branchName) {
+                Optional<? extends Ref> deletedBranch = geogit.command(BranchDeleteOp.class)
+                        .setName(br).call();
+                if (deletedBranch.isPresent()) {
+                    console.println("Deleted branch '" + br + "'.");
+                } else {
+                    console.println("No branch called '" + br + "'.");
+                }
+            }
             return;
         }
 
-        if (delete) {
-            for (String br : branchName) {
-                geogit.command(BranchDeleteOp.class).setName(br).setForce(force).call();
+        checkArgument(branchName.size() < 3, "too many arguments: " + branchName.toString());
+
+        if (rename) {
+            if (branchName.isEmpty()) {
+                console.println("You must specify a branch to rename.");
+            } else if (branchName.size() == 1) {
+                Optional<Ref> headRef = geogit.command(RefParse.class).setName(Ref.HEAD).call();
+                geogit.command(BranchRenameOp.class).setNewName(branchName.get(0)).setForce(force)
+                        .call();
                 try {
-                    console.println("deleted branch " + br);
+                    if (headRef.isPresent()) {
+                        console.println("renamed branch '"
+                                + ((SymRef) (headRef.get())).getTarget().substring(
+                                        Ref.HEADS_PREFIX.length()) + "' to '" + branchName.get(0)
+                                + "'");
+                    }
+
+                } catch (IOException e) {
+                    throw Throwables.propagate(e);
+                }
+            } else {
+                geogit.command(BranchRenameOp.class).setOldName(branchName.get(0))
+                        .setNewName(branchName.get(1)).setForce(force).call();
+                try {
+                    console.println("renamed branch '" + branchName.get(0) + "' to '"
+                            + branchName.get(1) + "'");
                 } catch (IOException e) {
                     throw Throwables.propagate(e);
                 }
@@ -93,7 +168,10 @@ public class Branch extends AbstractCommand implements CLICommand {
             return;
         }
 
-        checkArgument(branchName.size() < 3, "too many arguments: " + branchName.toString());
+        if (branchName.isEmpty()) {
+            listBranches(cli);
+            return;
+        }
 
         final String branch = branchName.get(0);
         final String origin = branchName.size() > 1 ? branchName.get(1) : Ref.HEAD;

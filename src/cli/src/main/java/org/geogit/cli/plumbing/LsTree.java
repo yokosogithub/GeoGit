@@ -77,6 +77,16 @@ public class LsTree extends AbstractCommand implements CLICommand {
         Iterator<NodeRef> iter = cli.getGeogit().command(LsTreeOp.class).setReference(ref)
                 .setStrategy(lsStrategy).call();
 
+        final ConsoleReader console = cli.getConsole();
+        if (!iter.hasNext()) {
+            if (ref == null) {
+                console.println("The working tree is empty");
+            } else {
+                console.println("The specified path is empty");
+            }
+            return;
+        }
+
         Function<NodeRef, CharSequence> printFunctor = new Function<NodeRef, CharSequence>() {
 
             @Override
@@ -98,7 +108,6 @@ public class LsTree extends AbstractCommand implements CLICommand {
         };
 
         Iterator<CharSequence> lines = Iterators.transform(iter, printFunctor);
-        final ConsoleReader console = cli.getConsole();
 
         while (lines.hasNext()) {
             console.println(lines.next());

@@ -8,10 +8,10 @@ package org.geogit.api.plumbing;
 import org.geogit.api.AbstractGeoGitOp;
 import org.geogit.api.ObjectId;
 import org.geogit.api.RevObject;
-import org.geogit.api.RevObject.TYPE;
 import org.geogit.storage.StagingDatabase;
 
 import com.google.common.base.Optional;
+import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 
 /**
@@ -90,8 +90,9 @@ public class RevObjectParse extends AbstractGeoGitOp<Optional<RevObject>> {
             return Optional.absent();
         }
 
-        final TYPE type = command(ResolveObjectType.class).setObjectId(resolvedObjectId).call();
-        RevObject revObject = indexDb.get(resolvedObjectId, type.binding());
+        RevObject revObject = indexDb.get(resolvedObjectId);
+        Preconditions.checkArgument(clazz.isAssignableFrom(revObject.getClass()));
+
         return Optional.of(clazz.cast(revObject));
     }
 }

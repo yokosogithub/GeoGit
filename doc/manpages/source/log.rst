@@ -8,7 +8,7 @@ geogit-log documentation
 
 SYNOPSIS
 ********
-geogit log [<options>]
+geogit log [-p <path>...] [<options>]
 
 
 DESCRIPTION
@@ -24,6 +24,9 @@ OPTIONS
 --skip <count>              		Skip <count> commits before starting to show the commit output.
 
 --color <auto|never|always>			Specifies whether or not to apply colored output.
+
+-p <path>, --path <path>							Prints only commits that have modified the given
+							 		path(s)
 
 SEE ALSO
 ********

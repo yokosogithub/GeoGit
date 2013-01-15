@@ -1,8 +1,5 @@
 package org.geogit.test.integration;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-
 import org.geogit.api.Remote;
 import org.geogit.api.porcelain.ConfigOp;
 import org.geogit.api.porcelain.ConfigOp.ConfigAction;
@@ -45,18 +42,18 @@ public class RemoteListOpTest extends RepositoryTestCase {
 
         Remote remote = remoteAdd.setName(remoteName1).setURL(remoteURL1).call();
 
-        assertEquals(remote.getName(), remoteName1);
-        assertEquals(remote.getFetchURL(), remoteURL1);
-        assertEquals(remote.getPushURL(), remoteURL1);
-        assertEquals(remote.getFetch(), "+refs/heads/*:refs/remotes/" + remoteName1 + "/*");
+        assertEquals(remoteName1, remote.getName());
+        assertEquals(remoteURL1, remote.getFetchURL());
+        assertEquals(remoteURL1, remote.getPushURL());
+        assertEquals("+refs/heads/*:refs/remotes/" + remoteName1 + "/*", remote.getFetch());
 
         remote = remoteAdd.setName(remoteName2).setURL(remoteURL2).setBranch(branch).call();
 
-        assertEquals(remote.getName(), remoteName2);
-        assertEquals(remote.getFetchURL(), remoteURL2);
-        assertEquals(remote.getPushURL(), remoteURL2);
-        assertEquals(remote.getFetch(), "+refs/heads/" + branch + ":refs/remotes/" + remoteName2
-                + "/" + branch);
+        assertEquals(remoteName2, remote.getName());
+        assertEquals(remoteURL2, remote.getFetchURL());
+        assertEquals(remoteURL2, remote.getPushURL());
+        assertEquals("+refs/heads/" + branch + ":refs/remotes/" + remoteName2 + "/" + branch,
+                remote.getFetch());
 
         final RemoteListOp remoteList = geogit.command(RemoteListOp.class);
 
@@ -74,16 +71,16 @@ public class RemoteListOpTest extends RepositoryTestCase {
             secondRemote = tempRemote;
         }
 
-        assertEquals(firstRemote.getName(), remoteName1);
-        assertEquals(firstRemote.getFetchURL(), remoteURL1);
-        assertEquals(firstRemote.getPushURL(), remoteURL1);
-        assertEquals(firstRemote.getFetch(), "+refs/heads/*:refs/remotes/" + remoteName1 + "/*");
+        assertEquals(remoteName1, firstRemote.getName());
+        assertEquals(remoteURL1, firstRemote.getFetchURL());
+        assertEquals(remoteURL1, firstRemote.getPushURL());
+        assertEquals("+refs/heads/*:refs/remotes/" + remoteName1 + "/*", firstRemote.getFetch());
 
-        assertEquals(secondRemote.getName(), remoteName2);
-        assertEquals(secondRemote.getFetchURL(), remoteURL2);
-        assertEquals(secondRemote.getPushURL(), remoteURL2);
-        assertEquals(secondRemote.getFetch(), "+refs/heads/" + branch + ":refs/remotes/"
-                + remoteName2 + "/" + branch);
+        assertEquals(remoteName2, secondRemote.getName());
+        assertEquals(remoteURL2, secondRemote.getFetchURL());
+        assertEquals(remoteURL2, secondRemote.getPushURL());
+        assertEquals("+refs/heads/" + branch + ":refs/remotes/" + remoteName2 + "/" + branch,
+                secondRemote.getFetch());
     }
 
     @Test
@@ -95,10 +92,10 @@ public class RemoteListOpTest extends RepositoryTestCase {
 
         Remote remote = remoteAdd.setName(remoteName).setURL(remoteURL).call();
 
-        assertEquals(remote.getName(), remoteName);
-        assertEquals(remote.getFetchURL(), remoteURL);
-        assertEquals(remote.getPushURL(), remoteURL);
-        assertEquals(remote.getFetch(), "+refs/heads/*:refs/remotes/" + remoteName + "/*");
+        assertEquals(remoteName, remote.getName());
+        assertEquals(remoteURL, remote.getFetchURL());
+        assertEquals(remoteURL, remote.getPushURL());
+        assertEquals("+refs/heads/*:refs/remotes/" + remoteName + "/*", remote.getFetch());
 
         final ConfigOp config = geogit.command(ConfigOp.class);
         config.setAction(ConfigAction.CONFIG_UNSET).setName("remote." + remoteName + ".url").call();
@@ -119,10 +116,10 @@ public class RemoteListOpTest extends RepositoryTestCase {
 
         Remote remote = remoteAdd.setName(remoteName).setURL(remoteURL).call();
 
-        assertEquals(remote.getName(), remoteName);
-        assertEquals(remote.getFetchURL(), remoteURL);
-        assertEquals(remote.getPushURL(), remoteURL);
-        assertEquals(remote.getFetch(), "+refs/heads/*:refs/remotes/" + remoteName + "/*");
+        assertEquals(remoteName, remote.getName());
+        assertEquals(remoteURL, remote.getFetchURL());
+        assertEquals(remoteURL, remote.getPushURL());
+        assertEquals("+refs/heads/*:refs/remotes/" + remoteName + "/*", remote.getFetch());
 
         final ConfigOp config = geogit.command(ConfigOp.class);
         config.setAction(ConfigAction.CONFIG_UNSET).setName("remote." + remoteName + ".fetch")

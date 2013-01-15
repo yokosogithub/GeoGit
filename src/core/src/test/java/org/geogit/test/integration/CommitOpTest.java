@@ -5,12 +5,6 @@
 package org.geogit.test.integration;
 
 import static org.geogit.api.NodeRef.appendChild;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -69,8 +63,8 @@ public class CommitOpTest extends RepositoryTestCase {
         assertEquals(0, commit.getParentIds().size());
         assertFalse(commit.parentN(0).isPresent());
         assertNotNull(commit.getId());
-        assertEquals("groldan", commit.getAuthor().getName());
-        assertEquals("groldan@opengeo.org", commit.getAuthor().getEmail());
+        assertEquals("groldan", commit.getAuthor().getName().get());
+        assertEquals("groldan@opengeo.org", commit.getAuthor().getEmail().get());
 
         ObjectId treeId = commit.getTreeId();
         // BLOBS.print(repo.getRawObject(treeId), System.err);
@@ -202,10 +196,10 @@ public class CommitOpTest extends RepositoryTestCase {
         assertEquals(0, commit.getParentIds().size());
         assertFalse(commit.parentN(0).isPresent());
         assertNotNull(commit.getId());
-        assertEquals("John Doe", commit.getAuthor().getName());
-        assertEquals("John@Doe.com", commit.getAuthor().getEmail());
-        assertEquals("Jane Doe", commit.getCommitter().getName());
-        assertEquals("Jane@Doe.com", commit.getCommitter().getEmail());
+        assertEquals("John Doe", commit.getAuthor().getName().get());
+        assertEquals("John@Doe.com", commit.getAuthor().getEmail().get());
+        assertEquals("Jane Doe", commit.getCommitter().getName().get());
+        assertEquals("Jane@Doe.com", commit.getCommitter().getEmail().get());
 
         ObjectId treeId = commit.getTreeId();
         // BLOBS.print(repo.getRawObject(treeId), System.err);
@@ -372,36 +366,6 @@ public class CommitOpTest extends RepositoryTestCase {
         assertNull(commitCommand3.setAllowEmpty(true).call());
     }
 
-    @Test
-    public void testAccessorsAndMutators() throws Exception {
-
-        CommitOp commit = geogit.command(CommitOp.class);
-
-        commit.setAll(true);
-        assertTrue(commit.getAll());
-        commit.setAll(false);
-        assertFalse(commit.getAll());
-
-        assertFalse(commit.getAuthorName().isPresent());
-        assertFalse(commit.getAuthorEmail().isPresent());
-
-        commit.setAuthor("John Doe", "John@Doe.com");
-        assertEquals("John Doe", commit.getAuthorName().get());
-        assertEquals("John@Doe.com", commit.getAuthorEmail().get());
-
-        commit.setCommitter("Jane Doe", "Jane@Doe.com");
-        assertEquals("Jane Doe", commit.getCommitterName());
-        assertEquals("Jane@Doe.com", commit.getCommitterEmail());
-
-        commit.setTimestamp(new Long(10000));
-        assertEquals(10000L, commit.getTimeStamp());
-
-        commit.setAllowEmpty(true);
-        assertTrue(commit.isAllowEmpty());
-        commit.setAllowEmpty(false);
-        assertFalse(commit.isAllowEmpty());
-    }
-
     private void assertCommit(RevCommit commit, @Nullable ObjectId parentId, String author,
             String message) {
 
@@ -411,7 +375,7 @@ public class CommitOpTest extends RepositoryTestCase {
         assertNotNull(commit.getTreeId());
         assertNotNull(commit.getId());
         if (author != null) {
-            assertEquals(author, commit.getAuthor().getName());
+            assertEquals(author, commit.getAuthor().getName().get());
         }
         if (message != null) {
             assertEquals(message, commit.getMessage());

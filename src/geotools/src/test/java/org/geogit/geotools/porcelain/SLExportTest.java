@@ -77,7 +77,7 @@ public class SLExportTest extends RepositoryTestCase {
     public void testNullDataStore() throws Exception {
         SLExport exportCommand = new SLExport();
         exportCommand.args = Arrays.asList("Points", "Points");
-        exportCommand.dataStoreFactory = factory;
+        exportCommand.dataStoreFactory = TestHelper.createNullTestFactory();
         exportCommand.run(cli);
     }
 
@@ -94,6 +94,72 @@ public class SLExportTest extends RepositoryTestCase {
         SLExport exportCommand = new SLExport();
         exportCommand.args = Arrays.asList("Points", "table1");
         exportCommand.dataStoreFactory = factory;
+        exportCommand.run(cli);
+    }
+
+    @Test
+    public void testExportToTableThatExistsWithOverwrite() throws Exception {
+        SLExport exportCommand = new SLExport();
+        exportCommand.args = Arrays.asList("WORK_HEAD:Points", "testTable");
+        exportCommand.dataStoreFactory = factory;
+        exportCommand.run(cli);
+
+        exportCommand.args = Arrays.asList("Lines", "testTable");
+        exportCommand.overwrite = true;
+        exportCommand.run(cli);
+    }
+
+    @Test
+    public void testExportWithNonexistantFeatureTypeTree() throws Exception {
+        SLExport exportCommand = new SLExport();
+        exportCommand.args = Arrays.asList("invalidType", "invalidTable");
+        exportCommand.dataStoreFactory = factory;
+        exception.expect(IllegalArgumentException.class);
+        exportCommand.run(cli);
+    }
+
+    @Test
+    public void testExportWithNullTable() throws Exception {
+        SLExport exportCommand = new SLExport();
+        exportCommand.args = Arrays.asList("Points", null);
+        exportCommand.dataStoreFactory = factory;
+        exception.expect(IllegalArgumentException.class);
+        exportCommand.run(cli);
+    }
+
+    @Test
+    public void testExportWithNullFeatureType() throws Exception {
+        SLExport exportCommand = new SLExport();
+        exportCommand.args = Arrays.asList(null, "invalidTable");
+        exportCommand.dataStoreFactory = factory;
+        exception.expect(IllegalArgumentException.class);
+        exportCommand.run(cli);
+    }
+
+    @Test
+    public void testExportWithEmptyStringForFeatureType() throws Exception {
+        SLExport exportCommand = new SLExport();
+        exportCommand.args = Arrays.asList("", "invalidTable");
+        exportCommand.dataStoreFactory = factory;
+        exception.expect(IllegalArgumentException.class);
+        exportCommand.run(cli);
+    }
+
+    @Test
+    public void testExportWithEmptyStringForTable() throws Exception {
+        SLExport exportCommand = new SLExport();
+        exportCommand.args = Arrays.asList("Points", "");
+        exportCommand.dataStoreFactory = factory;
+        exception.expect(IllegalArgumentException.class);
+        exportCommand.run(cli);
+    }
+
+    @Test
+    public void testExportWithFeatureNameInsteadOfType() throws Exception {
+        SLExport exportCommand = new SLExport();
+        exportCommand.args = Arrays.asList("Points/Points.1", "invalidTable");
+        exportCommand.dataStoreFactory = factory;
+        exception.expect(IllegalArgumentException.class);
         exportCommand.run(cli);
     }
 }

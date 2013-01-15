@@ -4,10 +4,6 @@
  */
 package org.geogit.test.integration;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
-
 import java.util.Iterator;
 
 import org.geogit.api.ObjectId;
@@ -90,7 +86,7 @@ public class RebaseOpTest extends RepositoryTestCase {
 
         ObjectId workTreeId;
         workTreeId = geogit.command(CheckoutOp.class).setSource("branch1").call();
-        assertTrue(c2.getTreeId().equals(workTreeId));
+        assertEquals(c2.getTreeId(), workTreeId);
         assertTrue(geogit.command(RefParse.class).setName(Ref.HEAD).call().get() instanceof SymRef);
         assertEquals(branch1.getName(), ((SymRef) geogit.command(RefParse.class).setName(Ref.HEAD)
                 .call().get()).getTarget());
@@ -105,35 +101,53 @@ public class RebaseOpTest extends RepositoryTestCase {
 
         // Commit 4
         RevCommit logC4 = log.next();
-        assertTrue(logC4.getAuthor().equals(c4.getAuthor()));
-        assertTrue(logC4.getCommitter().equals(c4.getCommitter()));
-        assertTrue(logC4.getMessage().equals(c4.getMessage()));
-        assertFalse(logC4.getTimestamp() == c4.getTimestamp());
-        assertFalse(logC4.getTreeId().equals(c4.getTreeId()));
+        assertEquals(c4.getAuthor(), logC4.getAuthor());
+        assertEquals(c4.getCommitter().getName(), logC4.getCommitter().getName());
+        assertEquals(c4.getCommitter().getEmail(), logC4.getCommitter().getEmail());
+        assertEquals(c4.getMessage(), logC4.getMessage());
+        assertEquals(c4.getAuthor().getTimeZoneOffset(), logC4.getAuthor().getTimeZoneOffset());
+        assertEquals(c4.getAuthor().getTimestamp(), logC4.getAuthor().getTimestamp());
+        assertEquals(c4.getCommitter().getTimeZoneOffset(), logC4.getCommitter()
+                .getTimeZoneOffset());
+        assertFalse(c4.getCommitter().getTimestamp() == logC4.getCommitter().getTimestamp());
+        assertFalse(c4.getTreeId().equals(logC4.getTreeId()));
 
         // Commit 3
         RevCommit logC3 = log.next();
-        assertTrue(logC3.getAuthor().equals(c3.getAuthor()));
-        assertTrue(logC3.getCommitter().equals(c3.getCommitter()));
-        assertTrue(logC3.getMessage().equals(c3.getMessage()));
-        assertFalse(logC3.getTimestamp() == c3.getTimestamp());
-        assertFalse(logC3.getTreeId().equals(c3.getTreeId()));
+        assertEquals(c3.getAuthor(), logC3.getAuthor());
+        assertEquals(c3.getCommitter().getName(), logC3.getCommitter().getName());
+        assertEquals(c3.getCommitter().getEmail(), logC3.getCommitter().getEmail());
+        assertEquals(c3.getMessage(), logC3.getMessage());
+        assertEquals(c3.getAuthor().getTimeZoneOffset(), logC3.getAuthor().getTimeZoneOffset());
+        assertEquals(c3.getAuthor().getTimestamp(), logC3.getAuthor().getTimestamp());
+        assertEquals(c3.getCommitter().getTimeZoneOffset(), logC3.getCommitter()
+                .getTimeZoneOffset());
+        assertFalse(c3.getCommitter().getTimestamp() == logC3.getCommitter().getTimestamp());
+        assertFalse(c3.getTreeId().equals(logC3.getTreeId()));
 
         // Commit 2
         RevCommit logC2 = log.next();
-        assertTrue(logC2.getAuthor().equals(c2.getAuthor()));
-        assertTrue(logC2.getCommitter().equals(c2.getCommitter()));
-        assertTrue(logC2.getMessage().equals(c2.getMessage()));
-        assertTrue(logC2.getTimestamp() == c2.getTimestamp());
-        assertTrue(logC2.getTreeId().equals(c2.getTreeId()));
+        assertEquals(c2.getAuthor(), logC2.getAuthor());
+        assertEquals(c2.getCommitter().getName(), logC2.getCommitter().getName());
+        assertEquals(c2.getMessage(), logC2.getMessage());
+        assertEquals(c2.getAuthor().getTimeZoneOffset(), logC2.getAuthor().getTimeZoneOffset());
+        assertEquals(c2.getAuthor().getTimestamp(), logC2.getAuthor().getTimestamp());
+        assertEquals(c2.getCommitter().getTimeZoneOffset(), logC2.getCommitter()
+                .getTimeZoneOffset());
+        assertEquals(c2.getCommitter().getTimestamp(), logC2.getCommitter().getTimestamp());
+        assertEquals(c2.getTreeId(), logC2.getTreeId());
 
         // Commit 1
         RevCommit logC1 = log.next();
-        assertTrue(logC1.getAuthor().equals(c1.getAuthor()));
-        assertTrue(logC1.getCommitter().equals(c1.getCommitter()));
-        assertTrue(logC1.getMessage().equals(c1.getMessage()));
-        assertTrue(logC1.getTimestamp() == c1.getTimestamp());
-        assertTrue(logC1.getTreeId().equals(c1.getTreeId()));
+        assertEquals(c1.getAuthor(), logC1.getAuthor());
+        assertEquals(c1.getCommitter().getName(), logC1.getCommitter().getName());
+        assertEquals(c1.getMessage(), logC1.getMessage());
+        assertEquals(c1.getAuthor().getTimeZoneOffset(), logC1.getAuthor().getTimeZoneOffset());
+        assertEquals(c1.getAuthor().getTimestamp(), logC1.getAuthor().getTimestamp());
+        assertEquals(c1.getCommitter().getTimeZoneOffset(), logC1.getCommitter()
+                .getTimeZoneOffset());
+        assertEquals(c1.getCommitter().getTimestamp(), logC1.getCommitter().getTimestamp());
+        assertEquals(c1.getTreeId(), logC1.getTreeId());
 
     }
 
@@ -197,7 +211,7 @@ public class RebaseOpTest extends RepositoryTestCase {
 
         ObjectId workTreeId;
         workTreeId = geogit.command(CheckoutOp.class).setSource("branch1").call();
-        assertTrue(c3.getTreeId().equals(workTreeId));
+        assertEquals(c3.getTreeId(), workTreeId);
         assertTrue(geogit.command(RefParse.class).setName(Ref.HEAD).call().get() instanceof SymRef);
         assertEquals(branch1.getName(), ((SymRef) geogit.command(RefParse.class).setName(Ref.HEAD)
                 .call().get()).getTarget());
@@ -212,27 +226,23 @@ public class RebaseOpTest extends RepositoryTestCase {
 
         // Commit 3 -- Lines 1
         RevCommit logC3 = log.next();
-        assertTrue(logC3.getAuthor().equals(c4.getAuthor()));
-        assertTrue(logC3.getCommitter().equals(c4.getCommitter()));
-        assertTrue(logC3.getMessage().equals(c4.getMessage()));
-        assertFalse(logC3.getTimestamp() == c4.getTimestamp());
-        assertFalse(logC3.getTreeId().equals(c4.getTreeId()));
+        assertEquals(c4.getAuthor(), logC3.getAuthor());
+        assertEquals(c4.getCommitter().getName(), logC3.getCommitter().getName());
+        assertEquals(c4.getMessage(), logC3.getMessage());
+        assertEquals(c4.getAuthor().getTimeZoneOffset(), logC3.getAuthor().getTimeZoneOffset());
+        assertEquals(c4.getAuthor().getTimestamp(), logC3.getAuthor().getTimestamp());
+        assertEquals(c4.getCommitter().getTimeZoneOffset(), logC3.getCommitter()
+                .getTimeZoneOffset());
+        assertFalse(c4.getCommitter().getTimestamp() == logC3.getCommitter().getTimestamp());
+        assertFalse(c4.getTreeId().equals(logC3.getTreeId()));
 
         // Commit 2 -- Lines 2
         RevCommit logC2 = log.next();
-        assertTrue(logC2.getAuthor().equals(c5.getAuthor()));
-        assertTrue(logC2.getCommitter().equals(c5.getCommitter()));
-        assertTrue(logC2.getMessage().equals(c5.getMessage()));
-        assertTrue(logC2.getTimestamp() == c5.getTimestamp());
-        assertTrue(logC2.getTreeId().equals(c5.getTreeId()));
+        assertEquals(c5, logC2);
 
         // Commit 1 -- Points 1
         RevCommit logC1 = log.next();
-        assertTrue(logC1.getAuthor().equals(c1.getAuthor()));
-        assertTrue(logC1.getCommitter().equals(c1.getCommitter()));
-        assertTrue(logC1.getMessage().equals(c1.getMessage()));
-        assertTrue(logC1.getTimestamp() == c1.getTimestamp());
-        assertTrue(logC1.getTreeId().equals(c1.getTreeId()));
+        assertEquals(c1, logC1);
     }
 
     @Test

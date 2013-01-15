@@ -6,7 +6,8 @@
 package org.geogit.cli.porcelain;
 
 import java.io.IOException;
-import java.util.Date;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.Iterator;
 import java.util.List;
 
@@ -68,8 +69,11 @@ public class Log extends AbstractCommand implements CLICommand {
     @Parameter(names = "--oneline", description = "Print only commit id and message on a sinlge line per commit")
     private boolean oneline;
 
-    @Parameter(description = "[[<until>]|[<since>..<until>]] [<path>]...]")
+    @Parameter(description = "[[<until>]|[<since>..<until>]], arity = 1")
     private List<String> sinceUntilPaths = Lists.newArrayList();
+
+    @Parameter(names = { "--path", "-p" }, description = "Print only commits that have modified the given path(s)", variableArity = true)
+    private List<String> pathNames = Lists.newArrayList();
 
     @Parameter(names = "--color", description = "Whether to apply colored output. Possible values are auto|never|always.", converter = ColorArg.Converter.class)
     private ColorArg color = ColorArg.auto;
@@ -127,6 +131,11 @@ public class Log extends AbstractCommand implements CLICommand {
                 Preconditions.checkArgument(until.isPresent(), "Object not found '%s'",
                         sinceRefSpec);
                 op.setUntil(until.get());
+            }
+        }
+        if (!pathNames.isEmpty()) {
+            for (String s : pathNames) {
+                op.addPath(s);
             }
         }
         Iterator<RevCommit> log = op.call();
@@ -192,6 +201,10 @@ public class Log extends AbstractCommand implements CLICommand {
             final Platform platform) {
         return new Function<RevCommit, CharSequence>() {
 
+            private final long now = platform.currentTimeMillis();
+
+            private final DateFormat DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss Z");
+
             @Override
             public CharSequence apply(RevCommit commit) {
                 Ansi ansi = AnsiDecorator.newAnsi(useColor);
@@ -199,9 +212,16 @@ public class Log extends AbstractCommand implements CLICommand {
                 ansi.a("Commit:  ").fg(Color.YELLOW).a(commit.getId().toString()).reset().newline();
                 ansi.a("Author:  ").fg(Color.GREEN).a(formatPerson(commit.getAuthor())).reset()
                         .newline();
-                ansi.a("Date:    (").fg(Color.RED)
-                        .a(estimateSince(platform, commit.getTimestamp())).reset().a(") ")
-                        .a(new Date(commit.getTimestamp())).newline();
+
+                final long timestamp = commit.getAuthor().getTimestamp();
+                final int timeZoneOffset = commit.getAuthor().getTimeZoneOffset();
+
+                String friendlyString = estimateSince(now, timestamp);
+                DATE_FORMAT.getCalendar().getTimeZone().setRawOffset(timeZoneOffset);
+                String formattedDate = DATE_FORMAT.format(timestamp);
+
+                ansi.a("Date:    (").fg(Color.RED).a(friendlyString).reset().a(") ")
+                        .a(formattedDate).newline();
                 ansi.a("Subject: ").a(commit.getMessage()).newline();
                 return ansi.toString();
             }
@@ -217,13 +237,10 @@ public class Log extends AbstractCommand implements CLICommand {
      */
     private String formatPerson(RevPerson person) {
         StringBuilder sb = new StringBuilder();
-        if (person.getName() == null) {
-            sb.append("<name not set>");
-        } else {
-            sb.append(person.getName());
-        }
-        if (person.getEmail() != null) {
-            sb.append(" <").append(person.getEmail()).append(">");
+        sb.append(person.getName().or("<name not set>"));
+
+        if (person.getEmail().isPresent()) {
+            sb.append(" <").append(person.getEmail().get()).append(">");
         }
         return sb.toString();
     }
@@ -232,12 +249,11 @@ public class Log extends AbstractCommand implements CLICommand {
      * Converts a timestamp into a readable string that represents the rough time since that
      * timestamp.
      * 
-     * @param platform
+     * @param now
      * @param timestamp
      * @return
      */
-    private String estimateSince(Platform platform, long timestamp) {
-        long now = platform.currentTimeMillis();
+    private String estimateSince(final long now, long timestamp) {
         long diff = now - timestamp;
         final long seconds = 1000;
         final long minutes = seconds * 60;

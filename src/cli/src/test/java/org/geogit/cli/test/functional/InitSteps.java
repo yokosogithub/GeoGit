@@ -207,9 +207,51 @@ public class InitSteps extends AbstractGeogitFunctionalTest {
         }
     }
 
+    @Given("^I have staged \"([^\"]*)\"$")
+    public void I_have_staged(String feature) throws Throwable {
+        if (feature.equals("points1")) {
+            insertAndAdd(points1);
+        } else if (feature.equals("points2")) {
+            insertAndAdd(points2);
+        } else if (feature.equals("points3")) {
+            insertAndAdd(points3);
+        } else if (feature.equals("points1_modified")) {
+            insertAndAdd(points1_modified);
+        } else if (feature.equals("lines1")) {
+            insertAndAdd(lines1);
+        } else if (feature.equals("lines2")) {
+            insertAndAdd(lines2);
+        } else if (feature.equals("lines3")) {
+            insertAndAdd(lines3);
+        } else {
+            throw new Exception("Unknown Feature");
+        }
+    }
+
     @Given("^I have 6 unstaged features$")
     public void I_have_6_unstaged_features() throws Throwable {
         insertFeatures();
+    }
+
+    @Given("^I have unstaged \"([^\"]*)\"$")
+    public void I_have_unstaged(String feature) throws Throwable {
+        if (feature.equals("points1")) {
+            insert(points1);
+        } else if (feature.equals("points2")) {
+            insert(points2);
+        } else if (feature.equals("points3")) {
+            insert(points3);
+        } else if (feature.equals("points1_modified")) {
+            insert(points1_modified);
+        } else if (feature.equals("lines1")) {
+            insert(lines1);
+        } else if (feature.equals("lines2")) {
+            insert(lines2);
+        } else if (feature.equals("lines3")) {
+            insert(lines3);
+        } else {
+            throw new Exception("Unknown Feature");
+        }
     }
 
     @Given("^I stage 6 features$")
@@ -217,7 +259,7 @@ public class InitSteps extends AbstractGeogitFunctionalTest {
         insertAndAddFeatures();
     }
 
-    @Given("^I have several commits")
+    @Given("^I have several commits$")
     public void I_have_several_commits() throws Throwable {
         insertAndAdd(points1);
         insertAndAdd(points2);

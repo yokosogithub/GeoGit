@@ -5,9 +5,11 @@ Feature: "reset" command
 
   Scenario: Try to do a mixed reset of all local changes
     Given I have a repository
-      And I stage 6 features
+      And I have staged "points1"
+      And I have staged "points2"
+      And I have staged "lines1"
      When I run the command "commit -m Test"
-     Then the response should contain "6 features added"
+     Then the response should contain "3 features added"
      When I modify and add a feature
       And I run the command "reset"
      Then the response should contain "Unstaged changes after reset:"
@@ -18,9 +20,11 @@ Feature: "reset" command
       
   Scenario: Try to do a hard reset of all local changes
     Given I have a repository
-      And I stage 6 features
+      And I have staged "points1"
+      And I have staged "points2"
+      And I have staged "lines1"
      When I run the command "commit -m Test"
-     Then the response should contain "6 features added"
+     Then the response should contain "3 features added"
      When I modify and add a feature
       And I run the command "reset --hard"
      Then it should answer ""
@@ -29,9 +33,11 @@ Feature: "reset" command
      
   Scenario: Try to do a soft reset of all local changes
     Given I have a repository
-      And I stage 6 features
+      And I have staged "points1"
+      And I have staged "points2"
+      And I have staged "lines1"
      When I run the command "commit -m Test"
-     Then the response should contain "6 features added"
+     Then the response should contain "3 features added"
      When I modify and add a feature
       And I run the command "reset --soft"
      Then it should answer ""
@@ -51,18 +57,22 @@ Feature: "reset" command
      
   Scenario: Try to reset to a nonexistant commit
     Given I have a repository
-      And I stage 6 features
+      And I have staged "points1"
+      And I have staged "points2"
+      And I have staged "lines1"
      When I run the command "commit -m Test"
-     Then the response should contain "6 features added"
+     Then the response should contain "3 features added"
      When I modify and add a feature
       And I run the command "reset nonexistant"
      Then it should answer "Commit could not be resolved."
      
   Scenario: Try to do a reset of a specific path
     Given I have a repository
-      And I stage 6 features
+      And I have staged "points1"
+      And I have staged "points2"
+      And I have staged "lines1"
      When I run the command "commit -m Test"
-     Then the response should contain "6 features added"
+     Then the response should contain "3 features added"
      When I modify and add a feature
       And I run the command "reset --path Points"
      Then the response should contain "Unstaged changes after reset:"
@@ -73,9 +83,11 @@ Feature: "reset" command
       
   Scenario: Try to do a reset of a non-used path
     Given I have a repository
-      And I stage 6 features
+      And I have staged "points1"
+      And I have staged "points2"
+      And I have staged "lines1"
      When I run the command "commit -m Test"
-     Then the response should contain "6 features added"
+     Then the response should contain "3 features added"
      When I modify and add a feature
       And I run the command "reset --path Lines"
      Then it should answer ""
@@ -85,9 +97,11 @@ Feature: "reset" command
       
   Scenario: Try to do a reset of multiple paths
     Given I have a repository
-      And I stage 6 features
+      And I have staged "points1"
+      And I have staged "points2"
+      And I have staged "lines1"
      When I run the command "commit -m Test"
-     Then the response should contain "6 features added"
+     Then the response should contain "3 features added"
      When I modify and add a feature
       And I run the command "reset --path Lines Points"
      Then the response should contain "Unstaged changes after reset:"
@@ -112,9 +126,11 @@ Feature: "reset" command
       
   Scenario: Try to do a reset with a mode and paths
     Given I have a repository
-      And I stage 6 features
+      And I have staged "points1"
+      And I have staged "points2"
+      And I have staged "lines1"
      When I run the command "commit -m Test"
-     Then the response should contain "6 features added"
+     Then the response should contain "3 features added"
      When I modify and add a feature
       And I run the command "reset --hard --path Lines"
      Then it should answer "Ambiguous call, cannot specify paths and reset mode."

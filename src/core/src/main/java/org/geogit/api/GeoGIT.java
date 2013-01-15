@@ -11,11 +11,9 @@ import java.net.URL;
 
 import org.geogit.api.plumbing.ResolveGeogitDir;
 import org.geogit.api.porcelain.InitOp;
-import org.geogit.di.GeogitModule;
 import org.geogit.repository.Repository;
 
 import com.google.common.base.Throwables;
-import com.google.inject.Guice;
 import com.google.inject.Injector;
 
 /**
@@ -36,7 +34,7 @@ public class GeoGIT {
      * Constructs a new instance of the GeoGit facade.
      */
     public GeoGIT() {
-        injector = Guice.createInjector(new GeogitModule());
+        injector = GlobalInjectorBuilder.builder.get();// Guice.createInjector(new GeogitModule());
     }
 
     /**

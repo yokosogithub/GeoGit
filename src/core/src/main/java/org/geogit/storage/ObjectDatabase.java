@@ -68,27 +68,27 @@ public interface ObjectDatabase {
     public <T extends RevObject> T get(ObjectId id, Class<T> type);
 
     /**
-     * Shortcut for {@link #get(ObjectId, Class)) get(id, RevTree.class)}
+     * Shortcut for {@link #get(ObjectId, Class) get(id, RevTree.class)}
      */
     public RevTree getTree(ObjectId id);
 
     /**
-     * Shortcut for {@link #get(ObjectId, Class)) get(id, RevFeature.class)}
+     * Shortcut for {@link #get(ObjectId, Class) get(id, RevFeature.class)}
      */
     public RevFeature getFeature(ObjectId id);
 
     /**
-     * Shortcut for {@link #get(ObjectId, Class)) get(id, RevFeatureType.class)}
+     * Shortcut for {@link #get(ObjectId, Class) get(id, RevFeatureType.class)}
      */
     public RevFeatureType getFeatureType(ObjectId id);
 
     /**
-     * Shortcut for {@link #get(ObjectId, Class)) get(id, RevCommit.class)}
+     * Shortcut for {@link #get(ObjectId, Class) get(id, RevCommit.class)}
      */
     public RevCommit getCommit(ObjectId id);
 
     /**
-     * Shortcut for {@link #get(ObjectId, Class)) get(id, RevTag.class)}
+     * Shortcut for {@link #get(ObjectId, Class) get(id, RevTag.class)}
      */
     public RevTag getTag(ObjectId id);
 

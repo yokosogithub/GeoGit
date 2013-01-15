@@ -7,12 +7,7 @@ Feature: "cherry-pick" command
     Given I have a repository
       And I have several branches
      When I run the command "cherry-pick branch1 branch2"
-      And I run the command "log"
-     Then the response should contain "Commit4"
-      And the response should contain "Commit3"
-      And the response should contain "Commit5"
-      And the response should not contain "Commit2"
-      And the response should contain "Commit1"
+	 Then the response should contain "Too many commits specified."
       
   Scenario: Try to cherry pick a single commit
     Given I have a repository

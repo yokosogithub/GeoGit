@@ -5,10 +5,6 @@
 package org.geogit.test.integration.repository;
 
 import static org.geogit.api.NodeRef.appendChild;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
 
 import java.util.List;
 
@@ -103,8 +99,8 @@ public class IndexTest extends RepositoryTestCase {
         ObjectInserter objectInserter = repo.newObjectInserter();
         List<ObjectId> parents = ImmutableList.of();
 
-        RevCommit commit = new CommitBuilder().setTreeId(newRootTreeId).setParentIds(parents)
-                .build();
+        RevCommit commit = new CommitBuilder(geogit.getPlatform()).setTreeId(newRootTreeId)
+                .setParentIds(parents).build();
         ObjectId commitId = commit.getId();
 
         objectInserter.insert(commit);

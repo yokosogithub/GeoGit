@@ -37,11 +37,11 @@ public class TestHelper {
 
         GeometryFactory gf = new GeometryFactory();
         SimpleFeature f1 = SimpleFeatureBuilder.build(type,
-                new Object[] { gf.createPoint(new Coordinate(5, 8)), "feature1" }, null);
+                new Object[] { gf.createPoint(new Coordinate(5, 8)), "feature1" }, "table1.1");
         SimpleFeature f2 = SimpleFeatureBuilder.build(type,
-                new Object[] { gf.createPoint(new Coordinate(5, 4)), "feature2" }, null);
+                new Object[] { gf.createPoint(new Coordinate(5, 4)), "feature2" }, "table1.2");
         SimpleFeature f3 = SimpleFeatureBuilder.build(type2,
-                new Object[] { gf.createPoint(new Coordinate(3, 2)), "feature3" }, null);
+                new Object[] { gf.createPoint(new Coordinate(3, 2)), "feature3" }, "table2.1");
 
         MemoryDataStore testDataStore = new MemoryDataStore();
         testDataStore.addFeature(f1);

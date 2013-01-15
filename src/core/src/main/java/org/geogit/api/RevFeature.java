@@ -55,7 +55,8 @@ public class RevFeature extends AbstractRevObject {
         return TYPE.FEATURE;
     }
 
-    @Override public String toString() {
+    @Override
+    public String toString() {
         StringBuilder builder = new StringBuilder();
         builder.append("Feature[");
         builder.append(getId().toString());

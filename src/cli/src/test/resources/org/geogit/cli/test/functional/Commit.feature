@@ -5,22 +5,28 @@ Feature: "commit" command
 
   Scenario: Try to commit current staged features
     Given I have a repository
-      And I stage 6 features
+      And I have staged "points1"
+      And I have staged "points2"
+      And I have staged "lines1"
      When I run the command "commit -m Test"
-     Then the response should contain "6 features added"
+     Then the response should contain "3 features added"
      
   Scenario: Try to perform multiple commits
     Given I have a repository
-      And I stage 6 features
+      And I have staged "points1"
+      And I have staged "points2"
+      And I have staged "lines1"
      When I run the command "commit -m Test"
-     Then the response should contain "6 features added"
+     Then the response should contain "3 features added"
      When I modify and add a feature
       And I run the command "commit -m Test2"
      Then the response should contain "1 changed"
      
   Scenario: Try to commit without providing a message
     Given I have a repository
-      And I stage 6 features
+      And I have staged "points1"
+      And I have staged "points2"
+      And I have staged "lines1"
      When I run the command "commit"
      Then it should answer "No commit message provided"
      

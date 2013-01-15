@@ -8,6 +8,7 @@ package org.geogit.api;
 import static com.google.common.base.Preconditions.checkArgument;
 
 import java.io.File;
+import java.util.TimeZone;
 
 /**
  * Standard platform for GeoGit.
@@ -60,6 +61,11 @@ public class DefaultPlatform implements Platform {
     @Override
     public File getUserHome() {
         return new File(System.getProperty("user.home"));
+    }
+
+    @Override
+    public int timeZoneOffset(long timeStamp) {
+        return TimeZone.getDefault().getOffset(timeStamp);
     }
 
 }

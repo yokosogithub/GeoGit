@@ -41,9 +41,6 @@ public class Node implements Comparable<Node> {
 
     public Node(final String name, final ObjectId oid, final ObjectId metadataId,
             final RevObject.TYPE type) {
-        if (name.contains(".") && type.equals(TYPE.TREE)) {
-            throw new IllegalArgumentException("Gabriel says 'fuck you!'");
-        }
         checkNotNull(name);
         checkNotNull(oid);
         checkNotNull(type);

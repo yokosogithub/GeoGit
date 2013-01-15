@@ -37,7 +37,9 @@ class HessianRevTreeWriter extends HessianRevWriter implements ObjectWriter<RevT
             hout.writeInt(RevObject.TYPE.TREE.value());
 
             final long size = revTree.size();
+            final int trees = revTree.numTrees();
             hout.writeLong(size);
+            hout.writeInt(trees);
 
             if (revTree.trees().isPresent()) {
                 writeChildren(hout, revTree.trees().get());

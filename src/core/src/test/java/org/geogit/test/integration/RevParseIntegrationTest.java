@@ -5,11 +5,6 @@
 
 package org.geogit.test.integration;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
-
 import org.geogit.api.CommitBuilder;
 import org.geogit.api.ObjectId;
 import org.geogit.api.Ref;
@@ -75,6 +70,9 @@ public class RevParseIntegrationTest extends RepositoryTestCase {
         cb.setAuthor("groldan");
         cb.setCommitter("groldan");
         cb.setTreeId(masterCommit3.getTreeId());
+        long now = System.currentTimeMillis();
+        cb.setAuthorTimestamp(now);
+        cb.setCommitterTimestamp(now);
         mergeCommit = cb.build();
 
         getRepository().getObjectDatabase().put(mergeCommit);

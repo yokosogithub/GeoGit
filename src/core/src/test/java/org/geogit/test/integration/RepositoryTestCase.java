@@ -4,9 +4,6 @@
  */
 package org.geogit.test.integration;
 
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
-
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -38,6 +35,7 @@ import org.geotools.geometry.jts.WKTReader2;
 import org.geotools.referencing.CRS;
 import org.geotools.util.logging.Logging;
 import org.junit.After;
+import org.junit.Assert;
 import org.junit.Before;
 import org.opengis.feature.Feature;
 import org.opengis.feature.simple.SimpleFeatureType;
@@ -53,7 +51,7 @@ import com.google.inject.Injector;
 import com.google.inject.util.Modules;
 import com.vividsolutions.jts.io.ParseException;
 
-public abstract class RepositoryTestCase {
+public abstract class RepositoryTestCase extends Assert {
 
     protected static final String idL1 = "Lines.1";
 

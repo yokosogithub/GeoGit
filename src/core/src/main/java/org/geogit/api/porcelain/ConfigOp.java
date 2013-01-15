@@ -30,7 +30,15 @@ public class ConfigOp extends AbstractGeoGitOp<Optional<Map<String, String>>> {
         CONFIG_NO_ACTION, CONFIG_GET, CONFIG_SET, CONFIG_UNSET, CONFIG_REMOVE_SECTION, CONFIG_LIST
     };
 
-    private boolean global;
+    /**
+     * Enumeration of the possible options to pass to config --list command
+     * 
+     */
+    public enum ConfigScope {
+        LOCAL, GLOBAL, DEFAULT
+    };
+
+    private ConfigScope scope;
 
     private ConfigAction action;
 
@@ -67,12 +75,15 @@ public class ConfigOp extends AbstractGeoGitOp<Optional<Map<String, String>>> {
 
             if (value == null || value.isEmpty()) {
                 Optional<String> val = Optional.absent();
-                if (global) {
+                if (scope == ConfigScope.GLOBAL) {
                     val = config.getGlobal(name);
                 } else {
                     try {
                         val = config.get(name);
-                    } catch (Exception e) {
+                    } catch (ConfigException e) {
+                        if (scope == ConfigScope.LOCAL) {
+                            throw new ConfigException(e.statusCode);
+                        }
                     }
 
                     // Fallback on global config file if name wasn't found locally
@@ -95,7 +106,7 @@ public class ConfigOp extends AbstractGeoGitOp<Optional<Map<String, String>>> {
             if (name == null || name.isEmpty())
                 throw new ConfigException(StatusCode.SECTION_OR_NAME_NOT_PROVIDED);
 
-            if (global) {
+            if (scope == ConfigScope.GLOBAL) {
                 config.putGlobal(name, value);
             } else {
                 config.put(name, value);
@@ -106,7 +117,7 @@ public class ConfigOp extends AbstractGeoGitOp<Optional<Map<String, String>>> {
             if (name == null || name.isEmpty())
                 throw new ConfigException(StatusCode.SECTION_OR_NAME_NOT_PROVIDED);
 
-            if (global) {
+            if (scope == ConfigScope.GLOBAL) {
                 config.removeGlobal(name);
             } else {
                 config.remove(name);
@@ -117,7 +128,7 @@ public class ConfigOp extends AbstractGeoGitOp<Optional<Map<String, String>>> {
             if (name == null || name.isEmpty())
                 throw new ConfigException(StatusCode.SECTION_OR_NAME_NOT_PROVIDED);
 
-            if (global) {
+            if (scope == ConfigScope.GLOBAL) {
                 config.removeSectionGlobal(name);
             } else {
                 config.removeSection(name);
@@ -125,11 +136,21 @@ public class ConfigOp extends AbstractGeoGitOp<Optional<Map<String, String>>> {
             break;
         }
         case CONFIG_LIST: {
-            Map<String, String> results;
-            if (global) {
-                results = config.getAllGlobal();
-            } else {
+            Map<String, String> results = null;
+            if (scope == ConfigScope.LOCAL) {
                 results = config.getAll();
+            } else {
+                results = config.getAllGlobal();
+                if (scope == ConfigScope.DEFAULT) {
+                    try {
+                        Map<String, String> localresults = config.getAll();
+
+                        results.putAll(localresults);
+
+                    } catch (ConfigException e) {
+
+                    }
+                }
             }
 
             return Optional.of(results);
@@ -142,27 +163,14 @@ public class ConfigOp extends AbstractGeoGitOp<Optional<Map<String, String>>> {
     }
 
     /**
-     * @return true if the global option is set, false otherwise
-     */
-    public boolean getGlobal() {
-        return global;
-    }
-
-    /**
-     * @param global if true, config actions will be executed on the global configuration file. If
-     *        false, then all actions will be done on the config file in the local repository.
+     * @param scope if ConfigScope.CONFIG_GLOBAL, config actions will be executed on the global
+     *        configuration file. If ConfigScope.CONFIG_LOCAL or ConfigScope.CONFIG_DEFAULT, then
+     *        all actions will be done on the config file in the local repository.
      * @return {@code this}
      */
-    public ConfigOp setGlobal(boolean global) {
-        this.global = global;
+    public ConfigOp setScope(ConfigScope scope) {
+        this.scope = scope;
         return this;
-    }
-
-    /**
-     * @return the currently set {@link ConfigAction action}.
-     */
-    public ConfigAction getAction() {
-        return action;
     }
 
     /**
@@ -184,26 +192,12 @@ public class ConfigOp extends AbstractGeoGitOp<Optional<Map<String, String>>> {
     }
 
     /**
-     * @return the name of the variable that is being acted on
-     */
-    public String getName() {
-        return name;
-    }
-
-    /**
      * @param value the value to set
      * @return {@code this}
      */
     public ConfigOp setValue(String value) {
         this.value = value;
         return this;
-    }
-
-    /**
-     * @return the currently set value
-     */
-    public String getValue() {
-        return value;
     }
 
 }

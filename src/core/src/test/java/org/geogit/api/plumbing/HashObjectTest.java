@@ -4,10 +4,6 @@
  */
 package org.geogit.api.plumbing;
 
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -85,7 +81,8 @@ public class HashObjectTest extends RepositoryTestCase {
         b.setCommitter("jdeolive");
         b.setCommitterEmail("jdeolive@opengeo.org");
         b.setMessage("cool this works");
-        b.setTimestamp(1000);
+        b.setCommitterTimestamp(1000);
+        b.setCommitterTimeZoneOffset(5);
 
         ObjectId treeId = ObjectId.forString("fake tree content");
 
@@ -102,7 +99,8 @@ public class HashObjectTest extends RepositoryTestCase {
         b.setMessage(null);
         b.setAuthor(null);
         b.setAuthorEmail(null);
-        b.setTimestamp(-1000);
+        b.setCommitterTimestamp(-1000);
+        b.setCommitterTimeZoneOffset(-5);
         b.setParentIds(ImmutableList.of(parentId1, ObjectId.NULL));
 
         commit2 = b.build();

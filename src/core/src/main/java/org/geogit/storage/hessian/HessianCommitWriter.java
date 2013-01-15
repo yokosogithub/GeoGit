@@ -42,7 +42,6 @@ class HessianCommitWriter extends HessianRevWriter implements ObjectWriter<RevCo
         writePerson(hout, commit.getAuthor());
         writePerson(hout, commit.getCommitter());
         hout.writeString(commit.getMessage());
-        hout.writeLong(commit.getTimestamp());
 
         hout.completeMessage();
 
@@ -51,11 +50,26 @@ class HessianCommitWriter extends HessianRevWriter implements ObjectWriter<RevCo
 
     private void writePerson(Hessian2Output hout, RevPerson person) throws IOException {
         if (person != null) {
-            hout.writeString(person.getName());
-            hout.writeString(person.getEmail());
+            if (person.getName().isPresent()) {
+                hout.writeString(person.getName().get());
+            } else {
+                hout.writeNull();
+            }
+
+            if (person.getEmail().isPresent()) {
+                hout.writeString(person.getEmail().get());
+            } else {
+                hout.writeNull();
+            }
+
+            hout.writeLong(person.getTimestamp());
+            hout.writeInt(person.getTimeZoneOffset());
+
         } else {
             hout.writeNull();
             hout.writeNull();
+            hout.writeLong(0L);
+            hout.writeInt(0);
         }
     }
 

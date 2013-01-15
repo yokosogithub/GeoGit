@@ -22,6 +22,8 @@ import org.geogit.repository.WorkingTree;
 import org.opengis.util.ProgressListener;
 
 import com.google.common.base.Optional;
+import com.google.common.base.Predicate;
+import com.google.common.collect.Iterators;
 import com.google.inject.Inject;
 
 /**
@@ -87,7 +89,8 @@ public class AddOp extends AbstractGeoGitOp<WorkingTree> {
 
         // short cut for the case where the index is empty and we're staging all changes in the
         // working tree, so it's just a matter of updating the index ref to working tree RevTree id
-        if (null == pathFilter && !index.getStaged(null).hasNext()) {
+        if (null == pathFilter && !index.getStaged(null).hasNext() && !updateOnly) {
+
             progress.started();
             Optional<ObjectId> workHead = command(RevParse.class).setRefSpec(Ref.WORK_HEAD).call();
             if (workHead.isPresent()) {
@@ -101,6 +104,15 @@ public class AddOp extends AbstractGeoGitOp<WorkingTree> {
         final long numChanges = workTree.countUnstaged(pathFilter);
 
         Iterator<DiffEntry> unstaged = workTree.getUnstaged(pathFilter);
+
+        if (updateOnly) {
+            unstaged = Iterators.filter(unstaged, new Predicate<DiffEntry>() {
+                @Override
+                public boolean apply(@Nullable DiffEntry input) {
+                    return input.getOldObject() != null;
+                }
+            });
+        }
 
         index.stage(progress, unstaged, numChanges);
     }

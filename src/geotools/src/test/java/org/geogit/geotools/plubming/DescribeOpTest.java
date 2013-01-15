@@ -22,19 +22,6 @@ public class DescribeOpTest {
     public ExpectedException exception = ExpectedException.none();
 
     @Test
-    public void testAccessorsAndMutators() throws Exception {
-        DescribeOp describe = new DescribeOp();
-
-        MemoryDataStore testDataStore = new MemoryDataStore();
-        describe.setDataStore(testDataStore);
-        assertEquals(testDataStore, describe.getDataStore());
-
-        describe.setTable("table1");
-        assertEquals("table1", describe.getTable());
-
-    }
-
-    @Test
     public void testNullDataStore() throws Exception {
         DescribeOp describe = new DescribeOp();
         describe.setTable("table1");

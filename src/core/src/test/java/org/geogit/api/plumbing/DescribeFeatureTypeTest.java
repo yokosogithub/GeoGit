@@ -4,9 +4,6 @@
  */
 package org.geogit.api.plumbing;
 
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
-
 import org.geogit.api.RevFeatureType;
 import org.geogit.test.integration.RepositoryTestCase;
 import org.junit.Test;

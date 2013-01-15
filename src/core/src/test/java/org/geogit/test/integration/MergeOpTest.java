@@ -5,7 +5,6 @@
 package org.geogit.test.integration;
 
 import static org.geogit.api.NodeRef.appendChild;
-import static org.junit.Assert.assertTrue;
 
 import java.util.Iterator;
 
@@ -113,31 +112,31 @@ public class MergeOpTest extends RepositoryTestCase {
 
         // Commit 4
         RevCommit logC4 = log.next();
-        assertTrue(logC4.getMessage().equals("My merge message."));
-        assertTrue(logC4.getParentIds().size() == 2);
-        assertTrue(logC4.getParentIds().get(0).equals(c4.getId()));
-        assertTrue(logC4.getParentIds().get(1).equals(c2.getId()));
+        assertEquals("My merge message.", logC4.getMessage());
+        assertEquals(2, logC4.getParentIds().size());
+        assertEquals(c4.getId(), logC4.getParentIds().get(0));
+        assertEquals(c2.getId(), logC4.getParentIds().get(1));
 
         // Commit 3
         RevCommit logC3 = log.next();
-        assertTrue(logC3.getAuthor().equals(c4.getAuthor()));
-        assertTrue(logC3.getCommitter().equals(c4.getCommitter()));
-        assertTrue(logC3.getMessage().equals(c4.getMessage()));
-        assertTrue(logC3.getTreeId().equals(c4.getTreeId()));
+        assertEquals(c4.getAuthor(), logC3.getAuthor());
+        assertEquals(c4.getCommitter(), logC3.getCommitter());
+        assertEquals(c4.getMessage(), logC3.getMessage());
+        assertEquals(c4.getTreeId(), logC3.getTreeId());
 
         // Commit 2
         RevCommit logC2 = log.next();
-        assertTrue(logC2.getAuthor().equals(c3.getAuthor()));
-        assertTrue(logC2.getCommitter().equals(c3.getCommitter()));
-        assertTrue(logC2.getMessage().equals(c3.getMessage()));
-        assertTrue(logC2.getTreeId().equals(c3.getTreeId()));
+        assertEquals(c3.getAuthor(), logC2.getAuthor());
+        assertEquals(c3.getCommitter(), logC2.getCommitter());
+        assertEquals(c3.getMessage(), logC2.getMessage());
+        assertEquals(c3.getTreeId(), logC2.getTreeId());
 
         // Commit 1
         RevCommit logC1 = log.next();
-        assertTrue(logC1.getAuthor().equals(c1.getAuthor()));
-        assertTrue(logC1.getCommitter().equals(c1.getCommitter()));
-        assertTrue(logC1.getMessage().equals(c1.getMessage()));
-        assertTrue(logC1.getTreeId().equals(c1.getTreeId()));
+        assertEquals(c1.getAuthor(), logC1.getAuthor());
+        assertEquals(c1.getCommitter(), logC1.getCommitter());
+        assertEquals(c1.getMessage(), logC1.getMessage());
+        assertEquals(c1.getTreeId(), logC1.getTreeId());
 
     }
 
@@ -223,32 +222,32 @@ public class MergeOpTest extends RepositoryTestCase {
 
         // Commit 4
         RevCommit logC4 = log.next();
-        assertTrue(logC4.getMessage().equals("My merge message."));
-        assertTrue(logC4.getParentIds().size() == 3);
-        assertTrue(logC4.getParentIds().get(0).equals(c5.getId()));
-        assertTrue(logC4.getParentIds().get(1).equals(c2.getId()));
-        assertTrue(logC4.getParentIds().get(2).equals(c4.getId()));
+        assertEquals("My merge message.", logC4.getMessage());
+        assertEquals(3, logC4.getParentIds().size());
+        assertEquals(c5.getId(), logC4.getParentIds().get(0));
+        assertEquals(c2.getId(), logC4.getParentIds().get(1));
+        assertEquals(c4.getId(), logC4.getParentIds().get(2));
 
         // Commit 3
         RevCommit logC3 = log.next();
-        assertTrue(logC3.getAuthor().equals(c5.getAuthor()));
-        assertTrue(logC3.getCommitter().equals(c5.getCommitter()));
-        assertTrue(logC3.getMessage().equals(c5.getMessage()));
-        assertTrue(logC3.getTreeId().equals(c5.getTreeId()));
+        assertEquals(c5.getAuthor(), logC3.getAuthor());
+        assertEquals(c5.getCommitter(), logC3.getCommitter());
+        assertEquals(c5.getMessage(), logC3.getMessage());
+        assertEquals(c5.getTreeId(), logC3.getTreeId());
 
         // Commit 2
         RevCommit logC2 = log.next();
-        assertTrue(logC2.getAuthor().equals(c3.getAuthor()));
-        assertTrue(logC2.getCommitter().equals(c3.getCommitter()));
-        assertTrue(logC2.getMessage().equals(c3.getMessage()));
-        assertTrue(logC2.getTreeId().equals(c3.getTreeId()));
+        assertEquals(c3.getAuthor(), logC2.getAuthor());
+        assertEquals(c3.getCommitter(), logC2.getCommitter());
+        assertEquals(c3.getMessage(), logC2.getMessage());
+        assertEquals(c3.getTreeId(), logC2.getTreeId());
 
         // Commit 1
         RevCommit logC1 = log.next();
-        assertTrue(logC1.getAuthor().equals(c1.getAuthor()));
-        assertTrue(logC1.getCommitter().equals(c1.getCommitter()));
-        assertTrue(logC1.getMessage().equals(c1.getMessage()));
-        assertTrue(logC1.getTreeId().equals(c1.getTreeId()));
+        assertEquals(c1.getAuthor(), logC1.getAuthor());
+        assertEquals(c1.getCommitter(), logC1.getCommitter());
+        assertEquals(c1.getMessage(), logC1.getMessage());
+        assertEquals(c1.getTreeId(), logC1.getTreeId());
 
     }
 
@@ -319,30 +318,30 @@ public class MergeOpTest extends RepositoryTestCase {
         // Commit 4
         RevCommit logC4 = log.next();
         assertTrue(logC4.getMessage().contains(c2.getId().toString()));
-        assertTrue(logC4.getParentIds().size() == 2);
-        assertTrue(logC4.getParentIds().get(0).equals(c4.getId()));
-        assertTrue(logC4.getParentIds().get(1).equals(c2.getId()));
+        assertEquals(2, logC4.getParentIds().size());
+        assertEquals(c4.getId(), logC4.getParentIds().get(0));
+        assertEquals(c2.getId(), logC4.getParentIds().get(1));
 
         // Commit 3
         RevCommit logC3 = log.next();
-        assertTrue(logC3.getAuthor().equals(c4.getAuthor()));
-        assertTrue(logC3.getCommitter().equals(c4.getCommitter()));
-        assertTrue(logC3.getMessage().equals(c4.getMessage()));
-        assertTrue(logC3.getTreeId().equals(c4.getTreeId()));
+        assertEquals(c4.getAuthor(), logC3.getAuthor());
+        assertEquals(c4.getCommitter(), logC3.getCommitter());
+        assertEquals(c4.getMessage(), logC3.getMessage());
+        assertEquals(c4.getTreeId(), logC3.getTreeId());
 
         // Commit 2
         RevCommit logC2 = log.next();
-        assertTrue(logC2.getAuthor().equals(c3.getAuthor()));
-        assertTrue(logC2.getCommitter().equals(c3.getCommitter()));
-        assertTrue(logC2.getMessage().equals(c3.getMessage()));
-        assertTrue(logC2.getTreeId().equals(c3.getTreeId()));
+        assertEquals(c3.getAuthor(), logC2.getAuthor());
+        assertEquals(c3.getCommitter(), logC2.getCommitter());
+        assertEquals(c3.getMessage(), logC2.getMessage());
+        assertEquals(c3.getTreeId(), logC2.getTreeId());
 
         // Commit 1
         RevCommit logC1 = log.next();
-        assertTrue(logC1.getAuthor().equals(c1.getAuthor()));
-        assertTrue(logC1.getCommitter().equals(c1.getCommitter()));
-        assertTrue(logC1.getMessage().equals(c1.getMessage()));
-        assertTrue(logC1.getTreeId().equals(c1.getTreeId()));
+        assertEquals(c1.getAuthor(), logC1.getAuthor());
+        assertEquals(c1.getCommitter(), logC1.getCommitter());
+        assertEquals(c1.getMessage(), logC1.getMessage());
+        assertEquals(c1.getTreeId(), logC1.getTreeId());
 
     }
 
@@ -431,17 +430,17 @@ public class MergeOpTest extends RepositoryTestCase {
 
         // Commit 2
         RevCommit logC2 = log.next();
-        assertTrue(logC2.getAuthor().equals(c2.getAuthor()));
-        assertTrue(logC2.getCommitter().equals(c2.getCommitter()));
-        assertTrue(logC2.getMessage().equals(c2.getMessage()));
-        assertTrue(logC2.getTreeId().equals(c2.getTreeId()));
+        assertEquals(c2.getAuthor(), logC2.getAuthor());
+        assertEquals(c2.getCommitter(), logC2.getCommitter());
+        assertEquals(c2.getMessage(), logC2.getMessage());
+        assertEquals(c2.getTreeId(), logC2.getTreeId());
 
         // Commit 1
         RevCommit logC1 = log.next();
-        assertTrue(logC1.getAuthor().equals(c1.getAuthor()));
-        assertTrue(logC1.getCommitter().equals(c1.getCommitter()));
-        assertTrue(logC1.getMessage().equals(c1.getMessage()));
-        assertTrue(logC1.getTreeId().equals(c1.getTreeId()));
+        assertEquals(c1.getAuthor(), logC1.getAuthor());
+        assertEquals(c1.getCommitter(), logC1.getCommitter());
+        assertEquals(c1.getMessage(), logC1.getMessage());
+        assertEquals(c1.getTreeId(), logC1.getTreeId());
 
     }
 
@@ -483,10 +482,10 @@ public class MergeOpTest extends RepositoryTestCase {
 
         // Commit 1
         RevCommit logC1 = log.next();
-        assertTrue(logC1.getAuthor().equals(c1.getAuthor()));
-        assertTrue(logC1.getCommitter().equals(c1.getCommitter()));
-        assertTrue(logC1.getMessage().equals(c1.getMessage()));
-        assertTrue(logC1.getTreeId().equals(c1.getTreeId()));
+        assertEquals(c1.getAuthor(), logC1.getAuthor());
+        assertEquals(c1.getCommitter(), logC1.getCommitter());
+        assertEquals(c1.getMessage(), logC1.getMessage());
+        assertEquals(c1.getTreeId(), logC1.getTreeId());
 
     }
 

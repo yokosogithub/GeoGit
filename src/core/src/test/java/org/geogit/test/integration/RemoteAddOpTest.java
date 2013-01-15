@@ -1,7 +1,5 @@
 package org.geogit.test.integration;
 
-import static org.junit.Assert.assertEquals;
-
 import org.geogit.api.Remote;
 import org.geogit.api.porcelain.RemoteAddOp;
 import org.geogit.api.porcelain.RemoteException;
@@ -60,10 +58,10 @@ public class RemoteAddOpTest extends RepositoryTestCase {
 
         Remote remote = remoteAdd.setName(remoteName).setURL(remoteURL).setBranch(null).call();
 
-        assertEquals(remote.getName(), remoteName);
-        assertEquals(remote.getFetchURL(), remoteURL);
-        assertEquals(remote.getPushURL(), remoteURL);
-        assertEquals(remote.getFetch(), "+refs/heads/*:refs/remotes/" + remoteName + "/*");
+        assertEquals(remoteName, remote.getName());
+        assertEquals(remoteURL, remote.getFetchURL());
+        assertEquals(remoteURL, remote.getPushURL());
+        assertEquals("+refs/heads/*:refs/remotes/" + remoteName + "/*", remote.getFetch());
     }
 
     @Test
@@ -75,10 +73,10 @@ public class RemoteAddOpTest extends RepositoryTestCase {
 
         Remote remote = remoteAdd.setName(remoteName).setURL(remoteURL).setBranch("").call();
 
-        assertEquals(remote.getName(), remoteName);
-        assertEquals(remote.getFetchURL(), remoteURL);
-        assertEquals(remote.getPushURL(), remoteURL);
-        assertEquals(remote.getFetch(), "+refs/heads/*:refs/remotes/" + remoteName + "/*");
+        assertEquals(remoteName, remote.getName());
+        assertEquals(remoteURL, remote.getFetchURL());
+        assertEquals(remoteURL, remote.getPushURL());
+        assertEquals("+refs/heads/*:refs/remotes/" + remoteName + "/*", remote.getFetch());
     }
 
     @Test
@@ -91,11 +89,11 @@ public class RemoteAddOpTest extends RepositoryTestCase {
 
         Remote remote = remoteAdd.setName(remoteName).setURL(remoteURL).setBranch(branch).call();
 
-        assertEquals(remote.getName(), remoteName);
-        assertEquals(remote.getFetchURL(), remoteURL);
-        assertEquals(remote.getPushURL(), remoteURL);
-        assertEquals(remote.getFetch(), "+refs/heads/" + branch + ":refs/remotes/" + remoteName
-                + "/" + branch);
+        assertEquals(remoteName, remote.getName());
+        assertEquals(remoteURL, remote.getFetchURL());
+        assertEquals(remoteURL, remote.getPushURL());
+        assertEquals("+refs/heads/" + branch + ":refs/remotes/" + remoteName + "/" + branch,
+                remote.getFetch());
     }
 
     @Test
@@ -107,10 +105,10 @@ public class RemoteAddOpTest extends RepositoryTestCase {
 
         Remote remote = remoteAdd.setName(remoteName).setURL(remoteURL).call();
 
-        assertEquals(remote.getName(), remoteName);
-        assertEquals(remote.getFetchURL(), remoteURL);
-        assertEquals(remote.getPushURL(), remoteURL);
-        assertEquals(remote.getFetch(), "+refs/heads/*:refs/remotes/" + remoteName + "/*");
+        assertEquals(remoteName, remote.getName());
+        assertEquals(remoteURL, remote.getFetchURL());
+        assertEquals(remoteURL, remote.getPushURL());
+        assertEquals("+refs/heads/*:refs/remotes/" + remoteName + "/*", remote.getFetch());
 
         exception.expect(RemoteException.class);
         remoteAdd.setName(remoteName).setURL("someotherurl.com").call();
@@ -128,35 +126,17 @@ public class RemoteAddOpTest extends RepositoryTestCase {
 
         Remote remote = remoteAdd.setName(remoteName1).setURL(remoteURL1).call();
 
-        assertEquals(remote.getName(), remoteName1);
-        assertEquals(remote.getFetchURL(), remoteURL1);
-        assertEquals(remote.getPushURL(), remoteURL1);
-        assertEquals(remote.getFetch(), "+refs/heads/*:refs/remotes/" + remoteName1 + "/*");
+        assertEquals(remoteName1, remote.getName());
+        assertEquals(remoteURL1, remote.getFetchURL());
+        assertEquals(remoteURL1, remote.getPushURL());
+        assertEquals("+refs/heads/*:refs/remotes/" + remoteName1 + "/*", remote.getFetch());
 
         remote = remoteAdd.setName(remoteName2).setURL(remoteURL2).call();
 
-        assertEquals(remote.getName(), remoteName2);
-        assertEquals(remote.getFetchURL(), remoteURL2);
-        assertEquals(remote.getPushURL(), remoteURL2);
-        assertEquals(remote.getFetch(), "+refs/heads/*:refs/remotes/" + remoteName2 + "/*");
-    }
-
-    @Test
-    public void testAccessorsAndMutators() {
-        final RemoteAddOp remoteAdd = geogit.command(RemoteAddOp.class);
-
-        String remoteName = "myremote";
-        String remoteURL = "http://test.com";
-        String branch = "mybranch";
-
-        remoteAdd.setBranch(branch);
-        assertEquals(branch, remoteAdd.getBranch());
-
-        remoteAdd.setName(remoteName);
-        assertEquals(remoteName, remoteAdd.getName());
-
-        remoteAdd.setURL(remoteURL);
-        assertEquals(remoteURL, remoteAdd.getURL());
+        assertEquals(remoteName2, remote.getName());
+        assertEquals(remoteURL2, remote.getFetchURL());
+        assertEquals(remoteURL2, remote.getPushURL());
+        assertEquals("+refs/heads/*:refs/remotes/" + remoteName2 + "/*", remote.getFetch());
     }
 
 }

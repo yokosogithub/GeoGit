@@ -60,6 +60,11 @@ public class FindOrCreateSubtree extends AbstractGeoGitOp<RevTree> {
         return this;
     }
 
+    public FindOrCreateSubtree setParent(RevTree parent) {
+        this.parentSupplier = Suppliers.ofInstance(Optional.of(parent));
+        return this;
+    }
+
     /**
      * @param parentPath the parent's path. If not given parent is assumed to be a root tree.
      * @return {@code this}
