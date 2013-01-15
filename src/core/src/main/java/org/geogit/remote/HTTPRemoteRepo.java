@@ -295,7 +295,7 @@ public class HTTPRemoteRepo implements IRemoteRepo {
                     moveObject(ref.getObjectId(), localRepo, sendObject);
                     ObjectId metadataId = ref.getMetadataId().or(ObjectId.NULL);
                     if (!metadataId.isNull()) {
-                        // moveObject(metadataId, localRepo, sendObject);
+                        moveObject(metadataId, localRepo, sendObject);
                     }
                 }
             }
