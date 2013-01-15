@@ -116,7 +116,7 @@ public class ResponseWriter {
             out.writeStartElement("commit");
             writeElement("author", entry.getAuthor().getName().get());
             writeElement("email", entry.getAuthor().getEmail().get());
-            writeElement("commit", entry.getTreeId().toString());
+            writeElement("commit", entry.getId().toString());
             writeElement("date", Long.toString(entry.getCommitter().getTimestamp()));
             writeElement("message", entry.getMessage());
             out.writeEndElement();

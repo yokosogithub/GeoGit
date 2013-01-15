@@ -226,7 +226,7 @@ public class HTTPRemoteRepo implements IRemoteRepo {
         try {
             String expanded;
             if (!delete) {
-                expanded = repositoryURL.toString() + "/updateref?name=" + refspec + "&newvalue="
+                expanded = repositoryURL.toString() + "/updateref?name=" + refspec + "&newValue="
                         + newValue.toString();
             } else {
                 expanded = repositoryURL.toString() + "/updateref?name=" + refspec + "&delete=true";
@@ -237,6 +237,8 @@ public class HTTPRemoteRepo implements IRemoteRepo {
 
             connection.setUseCaches(false);
             connection.setDoOutput(true);
+
+            connection.getInputStream();
 
         } catch (Exception e) {
 
@@ -283,20 +285,24 @@ public class HTTPRemoteRepo implements IRemoteRepo {
         if (object.isPresent() && object.get().getType().equals(TYPE.TREE)) {
             RevTree tree = (RevTree) object.get();
 
-            // walk subtrees
-            if (tree.buckets().isPresent()) {
-                for (ObjectId bucketId : tree.buckets().get().values()) {
-                    walkTree(bucketId, localRepo, sendObject);
-                }
-            } else {
-                // get new objects
-                for (Iterator<Node> children = tree.children(); children.hasNext();) {
-                    Node ref = children.next();
-                    moveObject(ref.getObjectId(), localRepo, sendObject);
-                    ObjectId metadataId = ref.getMetadataId().or(ObjectId.NULL);
-                    if (!metadataId.isNull()) {
-                        moveObject(metadataId, localRepo, sendObject);
-                    }
+            walkLocalTree(tree, localRepo, sendObject);
+        }
+    }
+
+    private void walkLocalTree(RevTree tree, Repository localRepo, boolean sendObject) {
+        // walk subtrees
+        if (tree.buckets().isPresent()) {
+            for (ObjectId bucketId : tree.buckets().get().values()) {
+                walkTree(bucketId, localRepo, sendObject);
+            }
+        } else {
+            // get new objects
+            for (Iterator<Node> children = tree.children(); children.hasNext();) {
+                Node ref = children.next();
+                moveObject(ref.getObjectId(), localRepo, sendObject);
+                ObjectId metadataId = ref.getMetadataId().or(ObjectId.NULL);
+                if (!metadataId.isNull()) {
+                    moveObject(metadataId, localRepo, sendObject);
                 }
             }
         }
@@ -315,7 +321,7 @@ public class HTTPRemoteRepo implements IRemoteRepo {
         if (childObject.isPresent()) {
             RevObject revObject = childObject.get();
             if (TYPE.TREE.equals(revObject.getType())) {
-                walkTree(objectId, localRepo, sendObject);
+                walkLocalTree((RevTree) revObject, localRepo, sendObject);
             }
         }
     }
