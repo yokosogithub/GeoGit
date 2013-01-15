@@ -87,8 +87,7 @@ public class CommandBuilder {
         UpdateRefWeb command = new UpdateRefWeb();
         command.setName(options.getFirstValue("name", null));
         command.setDelete(Boolean.valueOf(options.getFirstValue("delete", false)));
-        command.setNewValue(ObjectId.valueOf(options.getFirstValue("newValue",
-                ObjectId.NULL.toString())));
+        command.setNewValue(options.getFirstValue("newValue", ObjectId.NULL.toString()));
         return command;
     }
 }

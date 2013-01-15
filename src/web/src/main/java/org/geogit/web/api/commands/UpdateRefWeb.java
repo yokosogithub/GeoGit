@@ -3,8 +3,11 @@ package org.geogit.web.api.commands;
 import org.geogit.api.GeoGIT;
 import org.geogit.api.ObjectId;
 import org.geogit.api.Ref;
+import org.geogit.api.SymRef;
+import org.geogit.api.plumbing.RefParse;
 import org.geogit.api.plumbing.RevParse;
 import org.geogit.api.plumbing.UpdateRef;
+import org.geogit.api.plumbing.UpdateSymRef;
 import org.geogit.web.api.CommandContext;
 import org.geogit.web.api.CommandResponse;
 import org.geogit.web.api.CommandSpecException;
@@ -17,7 +20,7 @@ public class UpdateRefWeb implements WebAPICommand {
 
     private String name;
 
-    private ObjectId newValue;
+    private String newValue;
 
     private boolean delete;
 
@@ -25,7 +28,7 @@ public class UpdateRefWeb implements WebAPICommand {
         this.name = name;
     }
 
-    public void setNewValue(ObjectId newValue) {
+    public void setNewValue(String newValue) {
         this.newValue = newValue;
     }
 
@@ -40,20 +43,42 @@ public class UpdateRefWeb implements WebAPICommand {
         } else if (delete == false && newValue.equals(ObjectId.NULL)) {
             throw new CommandSpecException(
                     "Nothing specified to update with, must specify either deletion or new value to update to.");
-        } else if (!name.contains(Ref.HEADS_PREFIX) && !name.contains(Ref.REMOTES_PREFIX)
-                && !name.contains(Ref.TAGS_PREFIX)) {
-            throw new CommandSpecException(
-                    "Name must have full path, these prefixes are supported: " + Ref.HEADS_PREFIX
-                            + ", " + Ref.REMOTES_PREFIX + ", " + Ref.TAGS_PREFIX);
         }
 
         final GeoGIT geogit = context.getGeoGIT();
         Optional<Ref> ref;
-        final Optional<ObjectId> oldValue;
+        final String oldValue;
+        final String newValueName;
         try {
-            oldValue = geogit.command(RevParse.class).setRefSpec(name).call();
-            ref = geogit.command(UpdateRef.class).setDelete(delete).setName(name)
-                    .setNewValue(newValue).call();
+            ref = geogit.command(RefParse.class).setName(name).call();
+
+            if (!ref.isPresent()) {
+                throw new CommandSpecException("Invalid name: " + name);
+            }
+
+            if (ref.get() instanceof SymRef) {
+                oldValue = ((SymRef) ref.get()).getTarget();
+                Optional<Ref> target = geogit.command(RefParse.class).setName(newValue).call();
+                if (target.isPresent() && target.get() instanceof Ref) {
+                    newValueName = target.get().getName();
+                    ref = geogit.command(UpdateSymRef.class).setDelete(delete).setName(name)
+                            .setNewValue(target.get().getName()).call();
+                } else {
+                    throw new CommandSpecException("Invalid new target: " + newValue);
+                }
+
+            } else {
+                oldValue = ref.get().getObjectId().toString();
+                Optional<ObjectId> target = geogit.command(RevParse.class)
+                        .setRefSpec(newValue + "^0").call();
+                if (target.isPresent()) {
+                    newValueName = target.get().toString();
+                    ref = geogit.command(UpdateRef.class).setDelete(delete)
+                            .setName(ref.get().getName()).setNewValue(target.get()).call();
+                } else {
+                    throw new CommandSpecException("Invalid new value: " + newValue);
+                }
+            }
         } catch (Exception e) {
             context.setResponseContent(CommandResponse.error("Aborting UpdateRef: "
                     + e.getMessage()));
@@ -62,14 +87,16 @@ public class UpdateRefWeb implements WebAPICommand {
 
         if (ref.isPresent()) {
             context.setResponseContent(new CommandResponse() {
+
                 @Override
                 public void write(ResponseWriter out) throws Exception {
                     out.start();
-                    out.writeUpdateRefResponse(name, newValue, oldValue.get());
+                    out.writeUpdateRefResponse(name, newValueName, oldValue);
                     out.finish();
                 }
             });
         }
+
     }
 
 }

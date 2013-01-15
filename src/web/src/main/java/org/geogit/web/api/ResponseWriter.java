@@ -7,7 +7,6 @@ import javax.xml.stream.XMLStreamWriter;
 
 import org.codehaus.jettison.AbstractXMLStreamWriter;
 import org.geogit.api.NodeRef;
-import org.geogit.api.ObjectId;
 import org.geogit.api.RevCommit;
 import org.geogit.api.plumbing.DiffIndex;
 import org.geogit.api.plumbing.DiffWorkTree;
@@ -162,7 +161,7 @@ public class ResponseWriter {
 
     }
 
-    public void writeUpdateRefResponse(String name, ObjectId newValue, ObjectId oldValue)
+    public void writeUpdateRefResponse(String name, String newValue, String oldValue)
             throws XMLStreamException {
         out.writeStartElement("ChangedRef");
         writeElement("name", name);
