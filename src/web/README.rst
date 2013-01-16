@@ -68,6 +68,11 @@ All endpoints respond to GET or POST operations:
 |  /log
 |  /commit
 |  /ls-tree
+|  /updateref
+|  /diff
+|  /repo/manifest
+|  /repo/objects/{id}
+|  /repo/sendobject
 
 Note: Unless `commit` is run with the `all` option or changes are staged using the command line,
 nothing will happen. In other words, one cannot specify paths at the moment.
@@ -85,6 +90,12 @@ Parameters may be provided as URL query items or as form-encoded POST body.
 
 `ls-tree` accepts an optional `ref` parameter (? tree-ish, not clear) and has
 optional parameters for `showTree`, `onlyTree`, `recursive`, `verbose`
+
+`updateref` requires a `name` and `newValue` parameter that specify the name of the ref to set and the value to set it to.
+
+`diff` requires an `oldRefSpec` and `newRefSpec` parameter and will find the differences between the two commits.  It also takes an optional `pathFilter` parameter to only find differences that match the filter.
+
+`repo/manifest` takes an optional `remotes` parameter that will also list remote branches if set to true.
 
 An optional `callback` parameter in JSON requests will result in a JSONP response.
 

@@ -9,6 +9,8 @@ import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.Queue;
 
 import org.geogit.api.Node;
 import org.geogit.api.ObjectId;
@@ -35,8 +37,10 @@ public class HttpRemoteRepo implements IRemoteRepo {
 
     private URL repositoryURL;
 
+    private Queue<ObjectId> commitQueue;
+
     /**
-     * Constructs a new {@code HTTPRemoteRepo} with the given parameters.
+     * Constructs a new {@code HttpRemoteRepo} with the given parameters.
      * 
      * @param repositoryURL the url of the remote repository
      */
@@ -50,6 +54,7 @@ public class HttpRemoteRepo implements IRemoteRepo {
         } catch (MalformedURLException e) {
             this.repositoryURL = repositoryURL;
         }
+        commitQueue = new LinkedList<ObjectId>();
     }
 
     /**
@@ -184,7 +189,11 @@ public class HttpRemoteRepo implements IRemoteRepo {
      */
     @Override
     public void fetchNewData(Repository localRepository, Ref ref) {
-        walkCommit(ref.getObjectId(), localRepository, false);
+        commitQueue.clear();
+        commitQueue.add(ref.getObjectId());
+        while (!commitQueue.isEmpty()) {
+            walkCommit(commitQueue.remove(), localRepository, false);
+        }
     }
 
     /**
@@ -195,7 +204,11 @@ public class HttpRemoteRepo implements IRemoteRepo {
      */
     @Override
     public void pushNewData(Repository localRepository, Ref ref) {
-        walkCommit(ref.getObjectId(), localRepository, true);
+        commitQueue.clear();
+        commitQueue.add(ref.getObjectId());
+        while (!commitQueue.isEmpty()) {
+            walkCommit(commitQueue.remove(), localRepository, true);
+        }
         updateRemoteRef(ref.getName(), ref.getObjectId(), false);
     }
 
@@ -208,17 +221,21 @@ public class HttpRemoteRepo implements IRemoteRepo {
      */
     @Override
     public void pushNewData(Repository localRepository, Ref ref, String refspec) {
-        walkCommit(ref.getObjectId(), localRepository, true);
+        commitQueue.clear();
+        commitQueue.add(ref.getObjectId());
+        while (!commitQueue.isEmpty()) {
+            walkCommit(commitQueue.remove(), localRepository, true);
+        }
         updateRemoteRef(refspec, ref.getObjectId(), false);
     }
 
     /**
      * Delete a {@link Ref} from the remote repository.
      * 
-     * @param localRepository unused for http remote
+     * @param refspec the ref to delete
      */
     @Override
-    public void deleteRef(Repository localRepository, String refspec) {
+    public void deleteRef(String refspec) {
         updateRemoteRef(refspec, null, true);
     }
 
@@ -268,7 +285,7 @@ public class HttpRemoteRepo implements IRemoteRepo {
             walkTree(commit.getTreeId(), localRepo, sendObject);
 
             for (ObjectId parentCommit : commit.getParentIds()) {
-                walkCommit(parentCommit, localRepo, sendObject);
+                commitQueue.add(parentCommit);
             }
         }
     }
