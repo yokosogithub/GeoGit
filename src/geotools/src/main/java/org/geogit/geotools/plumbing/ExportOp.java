@@ -27,6 +27,7 @@ import org.geogit.storage.StagingDatabase;
 import org.geotools.data.DefaultTransaction;
 import org.geotools.data.Transaction;
 import org.geotools.data.simple.SimpleFeatureStore;
+import org.geotools.factory.Hints;
 import org.geotools.feature.DefaultFeatureCollection;
 import org.opengis.feature.Feature;
 import org.opengis.feature.simple.SimpleFeature;
@@ -139,7 +140,8 @@ public class ExportOp extends AbstractGeoGitOp<SimpleFeatureStore> {
                 }
                 RevFeature revFeature = command(RevObjectParse.class)
                         .setObjectId(nodeRef.objectId()).call(RevFeature.class).get();
-                Feature feature = featureBuilder.build(Integer.toString(i), revFeature);
+                Feature feature = featureBuilder.build(nodeRef.getNode().getName(), revFeature);
+                feature.getUserData().put(Hints.USE_PROVIDED_FID, true);
                 Feature validFeature = function.apply(feature);
                 features.add((SimpleFeature) validFeature);
                 getProgressListener().progress((i * 100.f) / revTree.get().size());

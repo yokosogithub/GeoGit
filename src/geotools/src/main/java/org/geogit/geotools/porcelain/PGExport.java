@@ -36,6 +36,7 @@ import org.geotools.data.simple.SimpleFeatureSource;
 import org.geotools.data.simple.SimpleFeatureStore;
 import org.geotools.feature.NameImpl;
 import org.geotools.feature.simple.SimpleFeatureTypeImpl;
+import org.opengis.filter.Filter;
 import org.opengis.feature.simple.SimpleFeatureType;
 
 import com.beust.jcommander.Parameter;
@@ -109,6 +110,9 @@ public class PGExport extends AbstractPGCommand implements CLICommand {
         SimpleFeatureSource featureSource = dataStore.getFeatureSource(tableName);
         if (featureSource instanceof SimpleFeatureStore) {
             SimpleFeatureStore featureStore = (SimpleFeatureStore) featureSource;
+            if (overwrite) {
+                featureStore.removeFeatures(Filter.INCLUDE);
+            }
             cli.getGeogit().command(ExportOp.class).setFeatureTypeName(featureTypeName)
                     .setFeatureStore(featureStore).setProgressListener(cli.getProgressListener())
                     .call();
