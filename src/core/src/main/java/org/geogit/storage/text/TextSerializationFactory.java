@@ -14,6 +14,8 @@ import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.io.Serializable;
 import java.io.Writer;
+import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -22,8 +24,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.TreeMap;
+import java.util.UUID;
 
 import org.apache.commons.collections.map.LRUMap;
+import org.geogit.api.Bucket;
 import org.geogit.api.CommitBuilder;
 import org.geogit.api.Node;
 import org.geogit.api.ObjectId;
@@ -35,14 +39,13 @@ import org.geogit.api.RevObject.TYPE;
 import org.geogit.api.RevPerson;
 import org.geogit.api.RevTree;
 import org.geogit.api.RevTreeImpl;
-import org.geogit.api.SpatialNode;
+import org.geogit.storage.EntityType;
 import org.geogit.storage.GtEntityType;
 import org.geogit.storage.ObjectReader;
 import org.geogit.storage.ObjectSerialisingFactory;
 import org.geogit.storage.ObjectWriter;
 import org.geotools.feature.NameImpl;
 import org.geotools.feature.simple.SimpleFeatureTypeBuilder;
-import org.geotools.geometry.jts.ReferencedEnvelope;
 import org.geotools.referencing.CRS;
 import org.geotools.referencing.CRS.AxisOrder;
 import org.geotools.referencing.wkt.Formattable;
@@ -54,7 +57,6 @@ import org.opengis.feature.type.GeometryType;
 import org.opengis.feature.type.PropertyDescriptor;
 import org.opengis.feature.type.PropertyType;
 import org.opengis.filter.Filter;
-import org.opengis.geometry.BoundingBox;
 import org.opengis.referencing.FactoryException;
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
 import org.opengis.util.InternationalString;
@@ -71,7 +73,14 @@ import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.Iterators;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.common.primitives.Bytes;
+import com.google.common.primitives.Doubles;
+import com.google.common.primitives.Floats;
+import com.google.common.primitives.Ints;
+import com.google.common.primitives.Longs;
+import com.vividsolutions.jts.geom.Envelope;
 import com.vividsolutions.jts.geom.Geometry;
+import com.vividsolutions.jts.io.WKTReader;
 
 /**
  * An {@link ObjectSerialisingFactory} for the {@link RevObject}s text format.
@@ -232,10 +241,6 @@ public class TextSerializationFactory implements ObjectSerialisingFactory {
         }
 
         protected void writeNode(Writer w, Node node) throws IOException {
-            BoundingBox bounds = null;
-            if (node instanceof SpatialNode) {
-                bounds = ((SpatialNode) node).getBounds();
-            }
             print(w, TreeNode.REF.name());
             print(w, "\t");
             print(w, node.getType().name());
@@ -246,51 +251,29 @@ public class TextSerializationFactory implements ObjectSerialisingFactory {
             print(w, "\t");
             print(w, node.getMetadataId().or(ObjectId.NULL).toString());
             print(w, "\t");
-            writeBBox(w, bounds);
+            Envelope envHelper = new Envelope();
+            writeBBox(w, node, envHelper);
             println(w, "");
         }
 
-        private void writeBBox(Writer w, BoundingBox bbox) throws IOException {
-            if (bbox == null) {
-                print(w, "null");
+        private void writeBBox(Writer w, Node node, Envelope envHelper) throws IOException {
+            envHelper.setToNull();
+            node.expand(envHelper);
+            if (envHelper.isNull()) {
+                print(w, TextWriter.NULL_BOUNDING_BOX);
                 return;
             }
-            CoordinateReferenceSystem crs = bbox.getCoordinateReferenceSystem();
-            String epsgCode;
-            if (crs == null) {
-                epsgCode = "";
-            } else {
-                epsgCode = lookupIdentifier(crs);
-            }
 
-            print(w, Double.toString(bbox.getMinX()));
+            print(w, Double.toString(envHelper.getMinX()));
             print(w, ";");
-            print(w, Double.toString(bbox.getMaxX()));
+            print(w, Double.toString(envHelper.getMaxX()));
             print(w, ";");
-            print(w, Double.toString(bbox.getMinY()));
+            print(w, Double.toString(envHelper.getMinY()));
             print(w, ";");
-            print(w, Double.toString(bbox.getMaxY()));
-            print(w, ";");
-            print(w, epsgCode);
+            print(w, Double.toString(envHelper.getMaxY()));
 
         }
 
-        private String lookupIdentifier(CoordinateReferenceSystem crs) {
-            String epsgCode = crsIdCache.get(crs);
-            if (epsgCode == null) {
-                try {
-                    epsgCode = CRS.toSRS(crs);
-                } catch (Exception e) {
-                    Throwables.propagate(e);
-                }
-                if (epsgCode == null) {
-                    throw new IllegalArgumentException("Can't find EPSG code for CRS "
-                            + crs.toWKT());
-                }
-                crsIdCache.put(crs, epsgCode);
-            }
-            return epsgCode;
-        }
     }
 
     /**
@@ -302,9 +285,8 @@ public class TextSerializationFactory implements ObjectSerialisingFactory {
      * {@code "id" + "\t" +  <id> + "\n"}
      * {@code "tree" + "\t" +  <tree id> + "\n"}
      * {@code "parents" + "\t" +  <parent id> [+ " " + <parent id>...]  + "\n"}
-     * {@code "author" + "\t" +  <<author name> | ""> + " " + "<" + <<author email> | ""> + ">\n"}
-     * {@code "committer" + "\t" +  <<committer name> | ""> + " " + "<" + <<committer email> | ""> + ">\n"}
-     * {@code "timestamp" + "\t" +  <timestamp> + "\n"}
+     * {@code "author" + "\t" +  <author name>  + " " + <author email>  + "\t" + <author_timestamp> + "\t" + <author_timezone_offset> + "\n"}
+     * {@code "committer" + "\t" +  <committer name>  + " " + <committer email>  + "\t" + <committer_timestamp> + "\t" + <committer_timezone_offset> + "\n"}     * 
      * {@code "message" + "\t" +  <message> + "\n"}
      * </pre>
      * 
@@ -325,7 +307,6 @@ public class TextSerializationFactory implements ObjectSerialisingFactory {
             println(w);
             printPerson(w, "author", commit.getAuthor());
             printPerson(w, "committer", commit.getCommitter());
-            println(w, "timestamp\t", String.valueOf(commit.getTimestamp()));
             println(w, "message\t", Optional.fromNullable(commit.getMessage()).or(""));
             w.flush();
         }
@@ -333,10 +314,13 @@ public class TextSerializationFactory implements ObjectSerialisingFactory {
         private void printPerson(Writer w, String name, RevPerson person) throws IOException {
             print(w, name);
             print(w, "\t");
-            print(w, Optional.fromNullable(person.getName()).or(""));
-            print(w, " <");
-            print(w, Optional.fromNullable(person.getEmail()).or(""));
-            print(w, ">");
+            print(w, person.getName().or(" "));
+            print(w, "\t");
+            print(w, person.getEmail().or(" "));
+            print(w, "\t");
+            print(w, Long.toString(person.getTimestamp()));
+            print(w, "\t");
+            print(w, Long.toString(person.getTimeZoneOffset()));
             println(w);
         }
     };
@@ -366,13 +350,64 @@ public class TextSerializationFactory implements ObjectSerialisingFactory {
             for (Optional<Object> opt : values) {
                 if (opt.isPresent()) {
                     Object value = opt.get();
-                    println(w, value.getClass().getName() + "\t",
-                            AttributeValueSerializer.asText(value));
+                    println(w, value.getClass().getName() + "\t", getValueAsString(value));
                 } else {
                     println(w, NULL);
                 }
             }
             w.flush();
+        }
+
+        private CharSequence getValueAsString(Object value) {
+            final EntityType type = EntityType.determineType(value);
+            switch (type) {
+            case CHAR_ARRAY:
+                String chars = new String((char[]) value);
+                return chars;
+            case DOUBLE_ARRAY:
+            case FLOAT_ARRAY:
+            case INT_ARRAY:
+            case LONG_ARRAY:
+            case BYTE_ARRAY:
+            case BOOLEAN_ARRAY:
+                return arrayAsString((Object[]) value);
+            case GEOMETRY:
+                Geometry geom = (Geometry) value;
+                return geom.toText();
+            case NULL:
+                return "";
+            case STRING:
+                return escapeNewLines(value.toString());
+            case BOOLEAN:
+            case BYTE:
+            case DOUBLE:
+            case FLOAT:
+            case INT:
+            case LONG:
+            case BIGDECIMAL:
+            case BIGINT:
+            case UNKNOWN_SERIALISABLE:
+            case UNKNOWN:
+            case UUID:
+            default:
+                return value.toString();
+            }
+
+        }
+
+        private CharSequence escapeNewLines(String string) {
+            return string.replace("\\n", "\\\\n").replace("\n", "\\n");
+        }
+
+        private CharSequence arrayAsString(Object[] array) {
+            StringBuilder sb = new StringBuilder("[");
+            for (Object element : array) {
+                sb.append(element.toString());
+                sb.append(" ");
+            }
+            sb.deleteCharAt(sb.length() - 1);
+            sb.append("]");
+            return sb.toString();
         }
 
     };
@@ -468,8 +503,10 @@ public class TextSerializationFactory implements ObjectSerialisingFactory {
      * 
      * <pre>
      * {@code "id" + "\t" +  <id> + "\n"}
+     * {@code "size" + "\t" +  <size> + "\n"}
+     * {@code "numtrees" + "\t" +  <numtrees> + "\n"}
      * 
-     * {@code "BUCKET" + "\t" +  <bucket_idx> + "\t" + <ObjectId> + "\n"}
+     * {@code "BUCKET" + "\t" +  <bucket_idx> + "\t" + <ObjectId> + "\t" + <bounds> + "\n"}
      * or 
      * {@code "REF" + "\t" +  <ref_type> + "\t" + <ref_name> + "\t" + <ObjectId> + "\t" + <MetadataId> + "\t" + <bounds>"\n"}
      * .
@@ -483,6 +520,7 @@ public class TextSerializationFactory implements ObjectSerialisingFactory {
         protected void print(RevTree revTree, Writer w) throws IOException {
             println(w, "id\t", revTree.getId().toString());
             println(w, "size\t", Long.toString(revTree.size()));
+            println(w, "numtrees\t", Integer.toString(revTree.numTrees()));
             if (revTree.trees().isPresent()) {
                 writeChildren(w, revTree.trees().get());
             }
@@ -500,15 +538,28 @@ public class TextSerializationFactory implements ObjectSerialisingFactory {
             }
         }
 
-        private void writeBuckets(Writer w, ImmutableSortedMap<Integer, ObjectId> buckets)
+        private void writeBuckets(Writer w, ImmutableSortedMap<Integer, Bucket> buckets)
                 throws IOException {
 
-            for (Entry<Integer, ObjectId> entry : buckets.entrySet()) {
+            for (Entry<Integer, Bucket> entry : buckets.entrySet()) {
+                Integer bucketIndex = entry.getKey();
+                Bucket bucket = entry.getValue();
                 print(w, TreeNode.BUCKET.name());
                 print(w, "\t");
-                print(w, Integer.toString(entry.getKey().intValue()));
+                print(w, bucketIndex.toString());
                 print(w, "\t");
-                println(w, entry.getValue().toString());
+                print(w, bucket.id().toString());
+                print(w, "\t");
+                Envelope env = new Envelope();
+                env.setToNull();
+                bucket.expand(env);
+                print(w, Double.toString(env.getMinX()));
+                print(w, ";");
+                print(w, Double.toString(env.getMaxX()));
+                print(w, ";");
+                print(w, Double.toString(env.getMinY()));
+                print(w, ";");
+                println(w, Double.toString(env.getMaxY()));
             }
         }
 
@@ -556,52 +607,30 @@ public class TextSerializationFactory implements ObjectSerialisingFactory {
             String name = tokens.get(2);
             ObjectId id = ObjectId.valueOf(tokens.get(3));
             ObjectId metadataId = ObjectId.valueOf(tokens.get(4));
-            BoundingBox bbox = parseBBox(tokens.get(5));
+            Envelope bbox = parseBBox(tokens.get(5));
 
-            org.geogit.api.Node ref;
-            if (bbox == null) {
-                ref = new org.geogit.api.Node(name, id, metadataId, type);
-            } else {
-                ref = new SpatialNode(name, id, metadataId, type, bbox);
-            }
+            org.geogit.api.Node ref = org.geogit.api.Node.create(name, id, metadataId, type, bbox);
 
             return ref;
 
         }
 
-        private BoundingBox parseBBox(String s) {
+        private Envelope parseBBox(String s) {
             if (s.equals(TextWriter.NULL_BOUNDING_BOX)) {
                 return null;
             }
             List<String> tokens = Lists.newArrayList(Splitter.on(';').split(s));
-            Preconditions.checkArgument(tokens.size() == 5, "Wrong bounding box definition: %s", s);
+            Preconditions.checkArgument(tokens.size() == 4, "Wrong bounding box definition: %s", s);
 
             double minx = Double.parseDouble(tokens.get(0));
             double maxx = Double.parseDouble(tokens.get(1));
             double miny = Double.parseDouble(tokens.get(2));
             double maxy = Double.parseDouble(tokens.get(3));
 
-            String epsgCode = tokens.get(4);
-            CoordinateReferenceSystem crs = null;
-            if (epsgCode != null && epsgCode.length() > 0)
-                crs = lookupCrs(epsgCode);
-
-            BoundingBox bbox = new ReferencedEnvelope(minx, maxx, miny, maxy, crs);
+            Envelope bbox = new Envelope(minx, maxx, miny, maxy);
             return bbox;
         }
 
-        private static CoordinateReferenceSystem lookupCrs(final String epsgCode) {
-            CoordinateReferenceSystem crs = crsCache.get(epsgCode);
-            if (crs == null) {
-                try {
-                    crs = CRS.decode(epsgCode, false);
-                    crsCache.put(epsgCode, crs);
-                } catch (Exception e) {
-                    Throwables.propagate(e);
-                }
-            }
-            return crs;
-        }
     }
 
     private static final TextReader<RevObject> OBJECT_READER = new TextReader<RevObject>() {
@@ -651,14 +680,17 @@ public class TextSerializationFactory implements ObjectSerialisingFactory {
                     .split(parseLine(reader.readLine(), "parents")));
             RevPerson author = parsePerson(reader.readLine(), "author");
             RevPerson committer = parsePerson(reader.readLine(), "committer");
-            String timeStamp = parseLine(reader.readLine(), "timestamp");
             String message = parseMessage(reader);
 
             CommitBuilder builder = new CommitBuilder();
-            builder.setAuthor(author.getName());
-            builder.setAuthorEmail(author.getEmail());
-            builder.setCommitter(committer.getName());
-            builder.setCommitterEmail(committer.getEmail());
+            builder.setAuthor(author.getName().orNull());
+            builder.setAuthorEmail(author.getEmail().orNull());
+            builder.setAuthorTimestamp(author.getTimestamp());
+            builder.setAuthorTimeZoneOffset(author.getTimeZoneOffset());
+            builder.setCommitter(committer.getName().orNull());
+            builder.setCommitterEmail(committer.getEmail().orNull());
+            builder.setCommitterTimestamp(committer.getTimestamp());
+            builder.setCommitterTimeZoneOffset(committer.getTimeZoneOffset());
             builder.setMessage(message);
             List<ObjectId> parentIds = Lists.newArrayList(Iterators.transform(parents.iterator(),
                     new Function<String, ObjectId>() {
@@ -671,25 +703,21 @@ public class TextSerializationFactory implements ObjectSerialisingFactory {
                     }));
             builder.setParentIds(parentIds);
             builder.setTreeId(ObjectId.valueOf(tree));
-            builder.setTimestamp(Long.parseLong(timeStamp));
             RevCommit commit = builder.build();
             ObjectId oid = ObjectId.valueOf(id);
             // Preconditions.checkArgument(oid.equals(commit.getId()));
             return commit;
         }
 
-        private RevPerson parsePerson(String line, String expectedHeaderName) throws IOException {
-            String value = parseLine(line, expectedHeaderName);
-            int emailStart = value.indexOf('<');
-            String name = value.substring(0, emailStart).trim();
-            String email = value.substring(emailStart + 1, value.length() - 1).trim();
-            if (name.isEmpty()) {
-                name = null;
-            }
-            if (email.isEmpty()) {
-                email = null;
-            }
-            return new RevPerson(name, email);
+        private RevPerson parsePerson(String line, String expectedHeader) throws IOException {
+            String[] tokens = line.split("\t");
+            Preconditions.checkArgument(expectedHeader.equals(tokens[0]),
+                    "Expected field %s, got '%s'", expectedHeader, tokens[0]);
+            String name = tokens[1].trim().isEmpty() ? null : tokens[1];
+            String email = tokens[2].trim().isEmpty() ? null : tokens[2];
+            long timestamp = Long.parseLong(tokens[3]);
+            int offset = Integer.parseInt(tokens[4]);
+            return new RevPerson(name, email, timestamp, offset);
         }
 
         private String parseMessage(BufferedReader reader) throws IOException {
@@ -729,14 +757,7 @@ public class TextSerializationFactory implements ObjectSerialisingFactory {
             List<Object> values = Lists.newArrayList();
             String line;
             while ((line = reader.readLine()) != null) {
-                List<String> tokens = Lists.newArrayList(Splitter.on('\t').split(line));
-                if (tokens.size() == 2) {
-                    values.add(AttributeValueSerializer.fromText(tokens.get(0), tokens.get(1)));
-                } else if (tokens.size() == 1 && tokens.get(0).trim().equals(NULL)) {
-                    values.add(null);
-                } else {
-                    throw new IllegalArgumentException("Wrong attribute definition: " + line);
-                }
+                values.add(parseAttribute(line));
             }
 
             ImmutableList.Builder<Optional<Object>> valuesBuilder = new ImmutableList.Builder<Optional<Object>>();
@@ -744,6 +765,103 @@ public class TextSerializationFactory implements ObjectSerialisingFactory {
                 valuesBuilder.add(Optional.fromNullable(value));
             }
             return new RevFeature(ObjectId.valueOf(id), valuesBuilder.build());
+        }
+
+        private Object parseAttribute(String line) {
+            if (line.trim().equals(NULL)) {
+                return null;
+            }
+            List<String> tokens = Lists.newArrayList(Splitter.on('\t').split(line));
+            Preconditions.checkArgument(tokens.size() == 2, "Wrong attribute definition: %s", line);
+            String value = tokens.get(1);
+            try {
+                Class<?> clazz = Class.forName(tokens.get(0));
+                if (clazz.equals(Double.class)) {
+                    return Double.parseDouble(value);
+                } else if (clazz.equals(Integer.class)) {
+                    return Integer.parseInt(value);
+                } else if (clazz.equals(Float.class)) {
+                    return Float.parseFloat(value);
+                } else if (clazz.equals(Long.class)) {
+                    return Long.parseLong(value);
+                } else if (clazz.equals(Boolean.class)) {
+                    return Boolean.parseBoolean(value);
+                } else if (clazz.equals(Byte.class)) {
+                    return Byte.parseByte(value);
+                } else if (clazz.equals(String.class)) {
+                    return unescapeNewLines(value);
+                } else if (clazz.equals(BigInteger.class)) {
+                    return new BigInteger(value);
+                } else if (clazz.equals(BigDecimal.class)) {
+                    return new BigDecimal(value);
+                } else if (clazz.equals(UUID.class)) {
+                    return UUID.fromString(value);
+                } else if (Geometry.class.isAssignableFrom(clazz)) {
+                    return new WKTReader().read(value);
+                } else if (clazz.equals(float[].class) || clazz.equals(double[].class)
+                        || clazz.equals(int[].class) || clazz.equals(byte[].class)
+                        || clazz.equals(long[].class)) {
+                    return stringAsArray(value, clazz);
+                } else if (clazz.equals(char[].class)) {
+                    return value.toCharArray();
+                } else {
+                    // TODO: try to somehow create instance of class from text value?
+                    throw new IllegalArgumentException(
+                            "Cannot deserialize attribute. Unknown type: " + tokens.get(0));
+                }
+
+            } catch (NumberFormatException e) {
+                throw new IllegalArgumentException("Wrong attribute value: " + value);
+            } catch (IllegalArgumentException e) {
+                throw e;
+            } catch (ClassNotFoundException e) {
+                throw new IllegalArgumentException("Cannot deserialize attribute. Unknown type: "
+                        + tokens.get(0));
+            } catch (Exception e) { // TODO: maybe add more detailed exception handling here
+                throw new IllegalArgumentException("Cannot deserialize attribute: " + line);
+            }
+        }
+
+        private CharSequence unescapeNewLines(String string) {
+            // TODO:
+            return string;
+        }
+
+        private Object stringAsArray(String value, Class<?> clazz) {
+            String[] s = value.replace("[", "").replace("]", "").split(" ");
+            List<Number> list = Lists.newArrayList();
+
+            for (String token : s) {
+                try {
+                    if (clazz.equals(double[].class)) {
+                        list.add(Double.parseDouble(token));
+                    } else if (clazz.equals(float[].class)) {
+                        list.add(Float.parseFloat(token));
+                    } else if (clazz.equals(long[].class)) {
+                        list.add(Long.parseLong(token));
+                    } else if (clazz.equals(int[].class)) {
+                        list.add(Integer.parseInt(token));
+                    } else if (clazz.equals(byte[].class)) {
+                        list.add(Byte.parseByte(token));
+                    }
+                } catch (NumberFormatException e) {
+                    throw new IllegalArgumentException("Cannot parse number array: " + value);
+                }
+            }
+            if (clazz.equals(double[].class)) {
+                return Doubles.toArray(list);
+            } else if (clazz.equals(float[].class)) {
+                return Floats.toArray(list);
+            } else if (clazz.equals(long[].class)) {
+                return Longs.toArray(list);
+            } else if (clazz.equals(int[].class)) {
+                return Ints.toArray(list);
+            } else if (clazz.equals(byte[].class)) {
+                return Bytes.toArray(list);
+            }
+
+            throw new IllegalArgumentException("Wrong class: " + clazz.getName());
+
         }
 
     };
@@ -860,9 +978,9 @@ public class TextSerializationFactory implements ObjectSerialisingFactory {
      * <pre>
      * {@code "id" + "\t" +  <id> + "\n"}
      * 
-     * {@code "BUCKET" + "\t" +  <bucket_idx> + "\t" + <ObjectId> + "\n"}
+     * {@code "BUCKET" + "\t" +  <bucket_idx> + "\t" + <ObjectId> +"\t" + <bounds> "\n"}
      * or 
-     * {@code "REF" + "\t" +  <ref_type> + "\t" + <ref_name> + "\t" + <ObjectId> + "\t" + <MetadataId> + "\t" + <bounds>"\n"}
+     * {@code "REF" + "\t" +  <ref_type> + "\t" + <ref_name> + "\t" + <ObjectId> + "\t" + <MetadataId> + "\t" + <bounds> + "\n"}
      * .
      * .
      * .
@@ -876,9 +994,10 @@ public class TextSerializationFactory implements ObjectSerialisingFactory {
             Preconditions.checkArgument(TYPE.TREE.equals(type), "Wrong type: %s", type.name());
             Builder<Node> features = ImmutableList.builder();
             Builder<Node> trees = ImmutableList.builder();
-            TreeMap<Integer, ObjectId> subtrees = Maps.newTreeMap();
+            TreeMap<Integer, Bucket> subtrees = Maps.newTreeMap();
             ObjectId id = ObjectId.valueOf(parseLine(reader.readLine(), "id"));
             long size = Long.parseLong(parseLine(reader.readLine(), "size"));
+            int numTrees = Integer.parseInt(parseLine(reader.readLine(), "numtrees"));
             String line;
             while ((line = reader.readLine()) != null) {
                 Preconditions.checkArgument(!line.isEmpty(), "Empty tree element definition");
@@ -892,11 +1011,13 @@ public class TextSerializationFactory implements ObjectSerialisingFactory {
                         features.add(entryRef);
                     }
                 } else if (nodeType.equals(TextWriter.TreeNode.BUCKET.name())) {
-                    Preconditions.checkArgument(tokens.size() == 3, "Wrong bucket definition: %s",
+                    Preconditions.checkArgument(tokens.size() == 4, "Wrong bucket definition: %s",
                             line);
                     Integer idx = Integer.parseInt(tokens.get(1));
-                    ObjectId oid = ObjectId.valueOf(tokens.get(2));
-                    subtrees.put(idx, oid);
+                    ObjectId bucketId = ObjectId.valueOf(tokens.get(2));
+                    Envelope bounds = parseEnvelope(tokens.get(3));
+                    Bucket bucket = Bucket.create(bucketId, bounds);
+                    subtrees.put(idx, bucket);
                 } else {
                     throw new IllegalArgumentException("Wrong tree element definition: " + line);
                 }
@@ -907,9 +1028,24 @@ public class TextSerializationFactory implements ObjectSerialisingFactory {
             if (subtrees.isEmpty()) {
                 tree = RevTreeImpl.createLeafTree(id, size, features.build(), trees.build());
             } else {
-                tree = RevTreeImpl.createNodeTree(id, size, subtrees);
+                tree = RevTreeImpl.createNodeTree(id, size, numTrees, subtrees);
             }
             return tree;
+        }
+
+        private Envelope parseEnvelope(String s) {
+            ArrayList<String> tokens = Lists.newArrayList(Splitter.on(";").split(s));
+            Preconditions.checkArgument(tokens.size() == 4, "Wrong bbox definition: %s", s);
+            try {
+                double xmin = Double.parseDouble(tokens.get(0));
+                double xmax = Double.parseDouble(tokens.get(1));
+                double ymin = Double.parseDouble(tokens.get(2));
+                double ymax = Double.parseDouble(tokens.get(3));
+                return new Envelope(xmin, xmax, ymin, ymax);
+            } catch (NumberFormatException e) {
+                throw new IllegalArgumentException("Wrong bbox definition: " + s);
+            }
+
         }
 
     };

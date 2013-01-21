@@ -69,13 +69,21 @@ public abstract class RepositoryTestCase extends Assert {
 
     public static final String pointsTypeSpec = "sp:String,ip:Integer,pp:Point:srid=4326";
 
+    protected static final String modifiedPointsTypeSpec = "sp:String,ip:Integer,pp:Point:srid=4326,extra:String";
+
     public static final Name pointsTypeName = new NameImpl("http://geogit.points", pointsName);
 
     protected SimpleFeatureType pointsType;
 
+    protected SimpleFeatureType modifiedPointsType;
+
     protected Feature points1;
 
     protected Feature points1_modified;
+
+    protected Feature points1B;
+
+    protected Feature points1B_modified;
 
     protected Feature points2;
 
@@ -136,10 +144,17 @@ public abstract class RepositoryTestCase extends Assert {
                 .setValue("groldan@opengeo.org").call();
 
         pointsType = DataUtilities.createType(pointsNs, pointsName, pointsTypeSpec);
+        modifiedPointsType = DataUtilities.createType(pointsNs, pointsName, modifiedPointsTypeSpec);
 
         points1 = feature(pointsType, idP1, "StringProp1_1", new Integer(1000), "POINT(1 1)");
         points1_modified = feature(pointsType, idP1, "StringProp1_1a", new Integer(1001),
                 "POINT(1 2)");
+        points1B = feature(modifiedPointsType, idP1, "StringProp1_1", new Integer(1000),
+                "POINT(1 1)", "ExtraString");
+
+        points1B_modified = feature(modifiedPointsType, idP1, "StringProp1_1a", new Integer(1001),
+                "POINT(1 2)", "ExtraStringB");
+
         points2 = feature(pointsType, idP2, "StringProp1_2", new Integer(2000), "POINT(2 2)");
         points3 = feature(pointsType, idP3, "StringProp1_3", new Integer(3000), "POINT(3 3)");
 

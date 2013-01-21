@@ -480,6 +480,30 @@ public class DiffOpTest extends RepositoryTestCase {
     }
 
     @Test
+    public void testReportTreesEmptyTreeFromFeatureDeletion() throws Exception {
+        insert(lines1);
+        delete(lines1);
+
+        List<DiffEntry> difflist = toList(diffOp.setReportTrees(true).setOldVersion(ObjectId.NULL)
+                .setNewVersion(Ref.WORK_HEAD).call());
+
+        assertNotNull(difflist);
+        assertEquals(2, difflist.size());
+        assertEquals(NodeRef.ROOT, difflist.get(0).newName());
+
+        DiffEntry de = difflist.get(1);
+
+        assertNull(de.getOldObject());
+        assertNotNull(de.getNewObject());
+
+        assertEquals(linesName, de.newPath());
+
+        assertEquals(DiffEntry.ChangeType.ADDED, de.changeType());
+        assertEquals(ObjectId.NULL, de.oldObjectId());
+        assertFalse(de.getNewObject().getMetadataId().isNull());
+    }
+
+    @Test
     public void testReportTrees() throws Exception {
 
         insert(points1);
@@ -502,4 +526,28 @@ public class DiffOpTest extends RepositoryTestCase {
                 }));
         assertEquals(expected, actual);
     }
+
+    @Test
+    public void testChangedFeatureType() throws Exception {
+
+        insertAndAdd(points1, points2);
+        geogit.getRepository().getWorkingTree().updateTypeTree(pointsName, modifiedPointsType);
+        List<DiffEntry> difflist = toList(diffOp.setReportTrees(true).call());
+
+        assertNotNull(difflist);
+        assertEquals(1, difflist.size());
+
+    }
+
+    @Test
+    public void testTreeModifiedByAddingExtraFeature() throws Exception {
+
+        insertAndAdd(points1, points2);
+        insert(points3);
+        List<DiffEntry> difflist = toList(diffOp.setReportTrees(true).call());
+        assertNotNull(difflist);
+        assertEquals(1, difflist.size());
+
+    }
+
 }

@@ -190,6 +190,7 @@ public class Index implements StagingArea {
                 // Add
                 Node node = newObject.getNode();
                 parentTree.put(node);
+                parentMetadataIds.put(newObject.path(), newObject.getMetadataId());
             } else {
                 // Modify
                 Node node = newObject.getNode();
@@ -209,6 +210,7 @@ public class Index implements StagingArea {
                 indexDatabase.put(changedTree);
                 newRootTree = changedTree.getId();
             } else {
+                // parentMetadataId = parentMetadataId == null ?
                 Supplier<RevTreeBuilder> rootTreeSupplier = getTreeSupplier();
                 newRootTree = commandLocator.command(WriteBack.class).setAncestor(rootTreeSupplier)
                         .setChildPath(changedTreePath).setMetadataId(parentMetadataId)
@@ -248,7 +250,9 @@ public class Index implements StagingArea {
                         .setChildPath(parentPath).call().builder(getDatabase());
             }
             parentTress.put(parentPath, parentBuilder);
-            parentMetadataIds.put(parentPath, parentMetadataId);
+            if (parentMetadataId != null) {
+                parentMetadataIds.put(parentPath, parentMetadataId);
+            }
         }
         return parentBuilder;
     }

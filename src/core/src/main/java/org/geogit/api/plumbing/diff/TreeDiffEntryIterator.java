@@ -38,6 +38,7 @@ import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Ordering;
 import com.google.common.collect.PeekingIterator;
 import com.google.common.collect.Sets;
+import com.google.common.collect.UnmodifiableIterator;
 
 /**
  * Traverses the direct children iterators of both trees (fromTree and toTree) simultaneously. If
@@ -98,7 +99,6 @@ class TreeDiffEntryIterator extends AbstractIterator<DiffEntry> {
         } else if (oldTree.buckets().isPresent() && newTree.buckets().isPresent()) {
             delegate = new BucketBucketDiff(oldTreeRef, newTreeRef, oldTree.buckets().get(),
                     newTree.buckets().get());
-
         } else if (newTree.buckets().isPresent()) {
             checkState(!oldTree.buckets().isPresent());
             DepthTreeIterator left = new DepthTreeIterator(oldTreeRef.path(),
@@ -108,7 +108,6 @@ class TreeDiffEntryIterator extends AbstractIterator<DiffEntry> {
             rightIterator = new DepthTreeIterator(newTreeRef.path(), newTreeRef.getMetadataId(),
                     newTree, objectDb, strategy);
             delegate = new ChildrenChildrenDiff(left, rightIterator);
-
         } else {
             checkState(oldTree.buckets().isPresent());
 
@@ -120,6 +119,17 @@ class TreeDiffEntryIterator extends AbstractIterator<DiffEntry> {
                     oldTree, objectDb, strategy);
             delegate = new ChildrenChildrenDiff(leftIterator, right);
             // delegate = new BucketsChildrenDiff(left, right);
+        }
+
+        // If the tree has changed its metadata Id, it will not be reported as a diff
+        // up to this point.
+        // We check here that both metadata Id's are identical, and if not, we add the DiffEntry
+        // corresponding to the tree.
+        if (reportTrees && oldTreeRef != null && newTreeRef != null
+                && !oldTreeRef.getMetadataId().equals(newTreeRef.getMetadataId())) {
+            DiffEntry diffEntry = new DiffEntry(oldTreeRef, newTreeRef);
+            UnmodifiableIterator<DiffEntry> iter = Iterators.singletonIterator(diffEntry);
+            delegate = Iterators.concat(delegate, iter);
         }
     }
 

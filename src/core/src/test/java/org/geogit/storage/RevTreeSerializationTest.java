@@ -9,15 +9,13 @@ import java.io.ByteArrayOutputStream;
 import java.util.Map.Entry;
 import java.util.TreeSet;
 
+import org.geogit.api.Bucket;
 import org.geogit.api.Node;
 import org.geogit.api.ObjectId;
 import org.geogit.api.RevObject;
 import org.geogit.api.RevObject.TYPE;
 import org.geogit.api.RevTree;
 import org.geogit.api.RevTreeImpl;
-import org.geogit.api.SpatialNode;
-import org.geotools.geometry.jts.ReferencedEnvelope;
-import org.geotools.referencing.crs.DefaultGeographicCRS;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -28,6 +26,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.Sets;
 import com.google.common.collect.UnmodifiableIterator;
+import com.vividsolutions.jts.geom.Envelope;
 
 public abstract class RevTreeSerializationTest extends Assert {
 
@@ -48,7 +47,7 @@ public abstract class RevTreeSerializationTest extends Assert {
         TreeSet<Node> trees = Sets.newTreeSet(new NodeStorageOrder());
         for (int i = 0; i < numChildren; i++) {
             String path = "path/feature." + Integer.toString(i);
-            features.add(new Node(path, ObjectId.forString(path), ObjectId.NULL, TYPE.FEATURE));
+            features.add(Node.create(path, ObjectId.forString(path), ObjectId.NULL, TYPE.FEATURE));
         }
         RevTree revTree = createTree(features, trees);
         testTreeSerialization(revTree);
@@ -61,7 +60,7 @@ public abstract class RevTreeSerializationTest extends Assert {
         TreeSet<Node> trees = Sets.newTreeSet(new NodeStorageOrder());
         for (int i = 0; i < numChildren; i++) {
             String path = "path/feature." + Integer.toString(i);
-            features.add(new Node(path, ObjectId.forString(path), ObjectId.NULL, TYPE.FEATURE));
+            features.add(Node.create(path, ObjectId.forString(path), ObjectId.NULL, TYPE.FEATURE));
         }
         RevTree revTree = createTree(features, trees);
         testTreeSerialization(revTree);
@@ -74,7 +73,7 @@ public abstract class RevTreeSerializationTest extends Assert {
         TreeSet<Node> trees = Sets.newTreeSet(new NodeStorageOrder());
         for (int i = 0; i < numChildren; i++) {
             String path = "path" + Integer.toString(i);
-            features.add(new Node(path, ObjectId.forString(path), ObjectId.NULL, TYPE.TREE));
+            features.add(Node.create(path, ObjectId.forString(path), ObjectId.NULL, TYPE.TREE));
         }
         RevTree revTree = createTree(features, trees);
         testTreeSerialization(revTree);
@@ -87,8 +86,8 @@ public abstract class RevTreeSerializationTest extends Assert {
         TreeSet<Node> trees = Sets.newTreeSet(new NodeStorageOrder());
         for (int i = 0; i < numChildren; i++) {
             String path = "path/feature." + Integer.toString(i);
-            features.add(new SpatialNode(path, ObjectId.forString(path), ObjectId.NULL,
-                    TYPE.FEATURE, new ReferencedEnvelope(0, 1, 0, 1, DefaultGeographicCRS.WGS84)));
+            features.add(Node.create(path, ObjectId.forString(path), ObjectId.NULL, TYPE.FEATURE,
+                    new Envelope(0, 1, 0, 1)));
         }
         RevTree revTree = createTree(features, trees);
         testTreeSerialization(revTree);
@@ -125,17 +124,17 @@ public abstract class RevTreeSerializationTest extends Assert {
         assertNotNull(serializedTree);
         assertEquals(revTree.size(), serializedTree.size());
 
-        Optional<ImmutableSortedMap<Integer, ObjectId>> optBuckets = revTree.buckets();
-        Optional<ImmutableSortedMap<Integer, ObjectId>> optSerializedBuckets = serializedTree
+        Optional<ImmutableSortedMap<Integer, Bucket>> optBuckets = revTree.buckets();
+        Optional<ImmutableSortedMap<Integer, Bucket>> optSerializedBuckets = serializedTree
                 .buckets();
         assertEquals(optBuckets.isPresent(), optSerializedBuckets.isPresent());
         if (optBuckets.isPresent()) {
-            ImmutableSortedMap<Integer, ObjectId> buckets = optBuckets.get();
-            ImmutableSortedMap<Integer, ObjectId> serializedBuckets = optSerializedBuckets.get();
-            ImmutableSet<Entry<Integer, ObjectId>> entries = buckets.entrySet();
-            UnmodifiableIterator<Entry<Integer, ObjectId>> iter = entries.iterator();
+            ImmutableSortedMap<Integer, Bucket> buckets = optBuckets.get();
+            ImmutableSortedMap<Integer, Bucket> serializedBuckets = optSerializedBuckets.get();
+            ImmutableSet<Entry<Integer, Bucket>> entries = buckets.entrySet();
+            UnmodifiableIterator<Entry<Integer, Bucket>> iter = entries.iterator();
             while (iter.hasNext()) {
-                Entry<Integer, ObjectId> bucket = iter.next();
+                Entry<Integer, Bucket> bucket = iter.next();
                 assertTrue(serializedBuckets.containsKey(bucket.getKey()));
                 assertEquals(bucket.getValue(), serializedBuckets.get(bucket.getKey()));
             }
