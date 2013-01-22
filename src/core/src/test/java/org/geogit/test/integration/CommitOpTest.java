@@ -8,6 +8,8 @@ import static org.geogit.api.NodeRef.appendChild;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import java.util.List;
+
 import javax.annotation.Nullable;
 
 import org.geogit.api.Node;
@@ -16,10 +18,15 @@ import org.geogit.api.ObjectId;
 import org.geogit.api.Ref;
 import org.geogit.api.RevCommit;
 import org.geogit.api.RevTree;
+import org.geogit.api.plumbing.FindTreeChild;
+import org.geogit.api.plumbing.RevObjectParse;
 import org.geogit.api.plumbing.RevParse;
+import org.geogit.api.plumbing.diff.DiffEntry;
 import org.geogit.api.porcelain.AddOp;
 import org.geogit.api.porcelain.CommitOp;
 import org.geogit.api.porcelain.NothingToCommitException;
+import org.geogit.repository.StagingArea;
+import org.geogit.repository.WorkingTree;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -364,6 +371,61 @@ public class CommitOpTest extends RepositoryTestCase {
         CommitOp commitCommand3 = geogit.command(CommitOp.class);
         commitCommand3.setProgressListener(listener3);
         assertNull(commitCommand3.setAllowEmpty(true).call());
+    }
+
+    @Test
+    public void testCommitEmptyTreeOnEmptyRepo() throws Exception {
+        WorkingTree workingTree = geogit.getRepository().getWorkingTree();
+        final String emptyTreeName = "emptyTree";
+
+        workingTree.createTypeTree(emptyTreeName, pointsType);
+        geogit.command(AddOp.class).addPattern(emptyTreeName).call();
+
+        CommitOp commitCommand = geogit.command(CommitOp.class);
+        RevCommit commit = commitCommand.call();
+        assertNotNull(commit);
+
+        RevTree head = geogit.command(RevObjectParse.class).setObjectId(commit.getTreeId())
+                .call(RevTree.class).get();
+        Optional<NodeRef> ref = geogit.command(FindTreeChild.class).setChildPath(emptyTreeName)
+                .setParent(head).call();
+        assertTrue(ref.isPresent());
+    }
+
+    @Test
+    public void testCommitEmptyTreeOnNonEmptyRepo() throws Exception {
+        insertAndAdd(points1, points2);
+        geogit.command(CommitOp.class).call();
+
+        // insertAndAdd(lines1, lines2);
+
+        WorkingTree workingTree = geogit.getRepository().getWorkingTree();
+        final String emptyTreeName = "emptyTree";
+
+        workingTree.createTypeTree(emptyTreeName, pointsType);
+        {
+            List<DiffEntry> unstaged = toList(workingTree.getUnstaged(null));
+            assertEquals(unstaged.toString(), 1, unstaged.size());
+            // assertEquals(NodeRef.ROOT, unstaged.get(0).newName());
+            assertEquals(emptyTreeName, unstaged.get(0).newName());
+        }
+        geogit.command(AddOp.class).call();
+        {
+            StagingArea index = geogit.getRepository().getIndex();
+            List<DiffEntry> staged = toList(index.getStaged(null));
+            assertEquals(staged.toString(), 1, staged.size());
+            // assertEquals(NodeRef.ROOT, staged.get(0).newName());
+            assertEquals(emptyTreeName, staged.get(0).newName());
+        }
+        CommitOp commitCommand = geogit.command(CommitOp.class);
+        RevCommit commit = commitCommand.call();
+        assertNotNull(commit);
+
+        RevTree head = geogit.command(RevObjectParse.class).setObjectId(commit.getTreeId())
+                .call(RevTree.class).get();
+        Optional<NodeRef> ref = geogit.command(FindTreeChild.class).setChildPath(emptyTreeName)
+                .setParent(head).call();
+        assertTrue(ref.isPresent());
     }
 
     private void assertCommit(RevCommit commit, @Nullable ObjectId parentId, String author,

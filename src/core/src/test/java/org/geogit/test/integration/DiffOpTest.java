@@ -4,28 +4,39 @@
  */
 package org.geogit.test.integration;
 
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
+
+import javax.annotation.Nullable;
 
 import org.geogit.api.NodeRef;
 import org.geogit.api.ObjectId;
 import org.geogit.api.Ref;
 import org.geogit.api.RevCommit;
+import org.geogit.api.plumbing.DiffIndex;
+import org.geogit.api.plumbing.DiffTree;
+import org.geogit.api.plumbing.DiffWorkTree;
 import org.geogit.api.plumbing.diff.DiffEntry;
 import org.geogit.api.plumbing.diff.DiffEntry.ChangeType;
 import org.geogit.api.plumbing.diff.DiffTreeWalk;
 import org.geogit.api.porcelain.CommitOp;
 import org.geogit.api.porcelain.DiffOp;
+import org.geogit.repository.WorkingTree;
 import org.junit.Test;
 import org.opengis.feature.Feature;
 import org.opengis.feature.simple.SimpleFeature;
 import org.opengis.feature.simple.SimpleFeatureType;
 
+import com.google.common.base.Function;
+import com.google.common.collect.Collections2;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 
 /**
- * Unit test suite for {@link DiffOp}, must cover {@link DiffTreeWalk} too.
+ * Unit test suite for {@link DiffOp}, must cover {@link DiffTreeWalk} too as well as
+ * {@link DiffIndex}, {@link DiffWorkTree}, and {@link DiffTree}
  * 
  */
 public class DiffOpTest extends RepositoryTestCase {
@@ -446,5 +457,54 @@ public class DiffOpTest extends RepositoryTestCase {
 
         diffs = toList(diffOp.call());
         assertEquals(3, diffs.size());
+    }
+
+    @Test
+    public void testReportTreesEmptyTree() throws Exception {
+
+        WorkingTree workingTree = geogit.getRepository().getWorkingTree();
+        workingTree.createTypeTree(linesName, linesType);
+
+        List<DiffEntry> difflist = toList(diffOp.setReportTrees(true).setOldVersion(ObjectId.NULL)
+                .setNewVersion(Ref.WORK_HEAD).call());
+
+        assertNotNull(difflist);
+        assertEquals(2, difflist.size());
+        assertEquals(NodeRef.ROOT, difflist.get(0).newName());
+
+        DiffEntry de = difflist.get(1);
+
+        assertNull(de.getOldObject());
+        assertNotNull(de.getNewObject());
+
+        assertEquals(linesName, de.newPath());
+
+        assertEquals(DiffEntry.ChangeType.ADDED, de.changeType());
+        assertEquals(ObjectId.NULL, de.oldObjectId());
+        assertFalse(de.getNewObject().getMetadataId().isNull());
+    }
+
+    @Test
+    public void testReportTrees() throws Exception {
+
+        insert(points1);
+        insert(lines1);
+
+        List<DiffEntry> difflist = toList(diffOp.setReportTrees(true).setOldVersion(ObjectId.NULL)
+                .setNewVersion(Ref.WORK_HEAD).call());
+
+        assertNotNull(difflist);
+        assertEquals(5, difflist.size());
+        Set<String> expected = ImmutableSet.of(NodeRef.ROOT, linesName, pointsName,
+                NodeRef.appendChild(linesName, idL1), NodeRef.appendChild(pointsName, idP1));
+        Set<String> actual = Sets.newHashSet(Collections2.transform(difflist,
+                new Function<DiffEntry, String>() {
+
+                    @Override
+                    public String apply(DiffEntry input) {
+                        return input.newPath();
+                    }
+                }));
+        assertEquals(expected, actual);
     }
 }

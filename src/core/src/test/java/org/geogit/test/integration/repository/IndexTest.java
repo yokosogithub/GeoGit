@@ -6,15 +6,20 @@ package org.geogit.test.integration.repository;
 
 import static org.geogit.api.NodeRef.appendChild;
 
+import java.util.Collection;
 import java.util.List;
 
 import org.geogit.api.CommitBuilder;
 import org.geogit.api.Node;
+import org.geogit.api.NodeRef;
 import org.geogit.api.ObjectId;
 import org.geogit.api.Ref;
 import org.geogit.api.RevCommit;
+import org.geogit.api.RevObject.TYPE;
 import org.geogit.api.RevTree;
 import org.geogit.api.plumbing.FindTreeChild;
+import org.geogit.api.plumbing.LsTreeOp;
+import org.geogit.api.plumbing.LsTreeOp.Strategy;
 import org.geogit.api.plumbing.RevObjectParse;
 import org.geogit.api.plumbing.UpdateRef;
 import org.geogit.api.plumbing.WriteTree;
@@ -28,8 +33,10 @@ import org.opengis.feature.Feature;
 import org.opengis.feature.simple.SimpleFeature;
 
 import com.google.common.base.Optional;
+import com.google.common.base.Predicate;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
+import com.google.common.collect.Collections2;
 import com.google.common.collect.ImmutableList;
 
 public class IndexTest extends RepositoryTestCase {
@@ -131,6 +138,83 @@ public class IndexTest extends RepositoryTestCase {
         assertFalse(repo.command(FindTreeChild.class).setParent(tree).setChildPath(path).call()
                 .isPresent());
 
+    }
+
+    private static class TreeNameFilter implements Predicate<NodeRef> {
+
+        private String treePath;
+
+        public TreeNameFilter(String treePath) {
+            this.treePath = treePath;
+        }
+
+        @Override
+        public boolean apply(NodeRef ref) {
+            TYPE type = ref.getType();
+            String path = ref.path();
+            return TYPE.TREE.equals(type) && treePath.equals(path);
+        }
+    }
+
+    @Test
+    public void testWriteEmptyPathAddAll() throws Exception {
+        insert(lines1);
+        WorkingTree workingTree = geogit.getRepository().getWorkingTree();
+        workingTree.createTypeTree(pointsName, pointsType);
+
+        List<NodeRef> workHead = toList(geogit.command(LsTreeOp.class).setReference(Ref.WORK_HEAD)
+                .setStrategy(Strategy.DEPTHFIRST).call());
+
+        assertEquals(3, workHead.size());
+        Collection<NodeRef> filtered = Collections2
+                .filter(workHead, new TreeNameFilter(pointsName));
+        assertEquals(1, filtered.size());
+
+        geogit.command(AddOp.class).call();
+
+        List<NodeRef> indexHead = toList(geogit.command(LsTreeOp.class)
+                .setReference(Ref.STAGE_HEAD).setStrategy(Strategy.DEPTHFIRST).call());
+
+        assertEquals(3, indexHead.size());
+        filtered = Collections2.filter(indexHead, new TreeNameFilter(pointsName));
+        assertEquals(1, filtered.size());
+    }
+
+    @Test
+    public void testWriteEmptyPath() throws Exception {
+        WorkingTree workingTree = geogit.getRepository().getWorkingTree();
+        workingTree.createTypeTree(pointsName, pointsType);
+        workingTree.createTypeTree(linesName, linesType);
+
+        List<NodeRef> workHead = toList(geogit.command(LsTreeOp.class).setReference(Ref.WORK_HEAD)
+                .setStrategy(Strategy.DEPTHFIRST).call());
+
+        assertEquals(2, workHead.size());
+
+        Collection<NodeRef> filtered;
+        filtered = Collections2.filter(workHead, new TreeNameFilter(pointsName));
+        assertEquals(1, filtered.size());
+
+        filtered = Collections2.filter(workHead, new TreeNameFilter(linesName));
+        assertEquals(1, filtered.size());
+
+        geogit.command(AddOp.class).addPattern(pointsName).call();
+
+        List<NodeRef> indexHead;
+        indexHead = toList(geogit.command(LsTreeOp.class).setReference(Ref.STAGE_HEAD)
+                .setStrategy(Strategy.DEPTHFIRST).call());
+
+        assertEquals(1, indexHead.size());
+        filtered = Collections2.filter(indexHead, new TreeNameFilter(pointsName));
+        assertEquals(1, filtered.size());
+
+        geogit.command(AddOp.class).addPattern(linesName).call();
+        indexHead = toList(geogit.command(LsTreeOp.class).setReference(Ref.STAGE_HEAD)
+                .setStrategy(Strategy.DEPTHFIRST).call());
+
+        assertEquals(2, indexHead.size());// Points and Lines
+        filtered = Collections2.filter(indexHead, new TreeNameFilter(linesName));
+        assertEquals(1, filtered.size());
     }
 
     @Test

@@ -307,8 +307,9 @@ public class TreeDiffEntryIteratorTest extends Assert {
                 "", ObjectId.NULL);
         NodeRef rightNodeRef = new NodeRef(
                 new Node("", leftTree.getId(), ObjectId.NULL, TYPE.TREE), "", ObjectId.NULL);
+        boolean reportTrees = false;
         ImmutableSet<DiffEntry> diffset = ImmutableSet.copyOf(new TreeDiffEntryIterator(
-                leftNodeRef, rightNodeRef, leftTree, rightTree, mockDb));
+                leftNodeRef, rightNodeRef, leftTree, rightTree, reportTrees, mockDb));
         return diffset;
     }
 }
