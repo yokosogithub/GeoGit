@@ -114,10 +114,14 @@ public class HeapObjectDatabse extends AbstractObjectDatabase implements ObjectD
     }
 
     @Override
-    protected InputStream getRawInternal(ObjectId id) throws IllegalArgumentException {
+    protected InputStream getRawInternal(ObjectId id, boolean failIfNotFound)
+            throws IllegalArgumentException {
         byte[] data = objects.get(id);
         if (data == null) {
-            throw new IllegalArgumentException(id + " does not exist");
+            if (failIfNotFound) {
+                throw new IllegalArgumentException(id + " does not exist");
+            }
+            return null;
         }
         return new ByteArrayInputStream(data);
     }

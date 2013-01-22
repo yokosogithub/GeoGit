@@ -91,7 +91,7 @@ public class DepthSearchTest {
                 String nodePath = NodeRef.appendChild(treePath, singleNodeName);
                 ObjectId fakeFeatureOId = ObjectId.forString(nodePath);
                 ObjectId fakeTypeOId = ObjectId.NULL;// forString(treePath);
-                subTreeBuilder.put(new Node(singleNodeName, fakeFeatureOId, fakeTypeOId,
+                subTreeBuilder.put(Node.create(singleNodeName, fakeFeatureOId, fakeTypeOId,
                         TYPE.FEATURE));
             }
         }

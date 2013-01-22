@@ -11,10 +11,12 @@ import java.io.InputStream;
 import java.util.Iterator;
 
 import org.geogit.api.AbstractGeoGitOp;
+import org.geogit.api.Bucket;
 import org.geogit.api.Node;
 import org.geogit.api.ObjectId;
 import org.geogit.api.RevObject.TYPE;
 import org.geogit.api.RevTree;
+import org.geogit.repository.StagingArea;
 import org.geogit.storage.ObjectDatabase;
 import org.geogit.storage.StagingDatabase;
 
@@ -118,8 +120,8 @@ public class DeepMove extends AbstractGeoGitOp<ObjectId> {
             deepMove(ref, from, to);
         }
         if (tree.buckets().isPresent()) {
-            for (ObjectId bucketId : tree.buckets().get().values()) {
-                RevTree bucketTree = from.getTree(bucketId);
+            for (Bucket bucket : tree.buckets().get().values()) {
+                RevTree bucketTree = from.getTree(bucket.id());
                 moveTree(bucketTree, from, to);
             }
         }

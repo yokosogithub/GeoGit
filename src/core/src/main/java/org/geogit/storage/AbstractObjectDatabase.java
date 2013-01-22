@@ -9,6 +9,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
 
+import javax.annotation.Nullable;
+
 import org.geogit.api.ObjectId;
 import org.geogit.api.RevCommit;
 import org.geogit.api.RevFeature;
@@ -63,6 +65,23 @@ public abstract class AbstractObjectDatabase implements ObjectDatabase {
      */
     protected abstract List<ObjectId> lookUpInternal(byte[] raw);
 
+    @Override
+    public RevObject get(ObjectId id) {
+        Preconditions.checkNotNull(id, "id");
+
+        final ObjectReader<RevObject> reader = serializationFactory.createObjectReader();
+        return get(id, reader, true);
+    }
+
+    @Override
+    public @Nullable
+    RevObject getIfPresent(ObjectId id) {
+        Preconditions.checkNotNull(id, "id");
+
+        final ObjectReader<RevObject> reader = serializationFactory.createObjectReader();
+        return get(id, reader, false);
+    }
+
     /**
      * Reads an object with the given {@link ObjectId id} out of the database.
      * 
@@ -79,19 +98,27 @@ public abstract class AbstractObjectDatabase implements ObjectDatabase {
 
         final ObjectReader<T> reader = serializationFactory.createObjectReader(getType(clazz));
 
-        return get(id, reader);
+        return get(id, reader, true);
     }
 
     @Override
-    public RevObject get(ObjectId id) {
+    public @Nullable
+    <T extends RevObject> T getIfPresent(ObjectId id, Class<T> clazz)
+            throws IllegalArgumentException {
         Preconditions.checkNotNull(id, "id");
+        Preconditions.checkNotNull(clazz, "class");
 
-        final ObjectReader<RevObject> reader = serializationFactory.createObjectReader();
-        return get(id, reader);
+        final ObjectReader<T> reader = serializationFactory.createObjectReader(getType(clazz));
+
+        return get(id, reader, false);
     }
 
-    private <T extends RevObject> T get(final ObjectId id, final ObjectReader<T> reader) {
-        InputStream raw = getRaw(id);
+    private <T extends RevObject> T get(final ObjectId id, final ObjectReader<T> reader,
+            boolean failIfNotFound) {
+        InputStream raw = getRaw(id, failIfNotFound);
+        if (null == raw) {
+            return null;
+        }
         T object;
         try {
             object = reader.read(id, raw);
@@ -142,7 +169,16 @@ public abstract class AbstractObjectDatabase implements ObjectDatabase {
      */
     @Override
     public InputStream getRaw(final ObjectId id) throws IllegalArgumentException {
-        InputStream in = getRawInternal(id);
+        return getRaw(id, true);
+    }
+
+    @Nullable
+    private InputStream getRaw(final ObjectId id, boolean failIfNotFound)
+            throws IllegalArgumentException {
+        InputStream in = getRawInternal(id, failIfNotFound);
+        if (null == in) {
+            return null;
+        }
         try {
             return new LZFInputStream(in);
         } catch (IOException e) {
@@ -150,7 +186,8 @@ public abstract class AbstractObjectDatabase implements ObjectDatabase {
         }
     }
 
-    protected abstract InputStream getRawInternal(ObjectId id) throws IllegalArgumentException;
+    protected abstract InputStream getRawInternal(ObjectId id, boolean failIfNotFound)
+            throws IllegalArgumentException;
 
     @Override
     public boolean put(ObjectId objectId, InputStream raw) {

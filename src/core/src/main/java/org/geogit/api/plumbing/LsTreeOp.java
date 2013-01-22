@@ -9,6 +9,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 import java.util.Iterator;
 
 import org.geogit.api.AbstractGeoGitOp;
+import org.geogit.api.Bounded;
 import org.geogit.api.NodeRef;
 import org.geogit.api.ObjectId;
 import org.geogit.api.Ref;
@@ -20,6 +21,7 @@ import org.geogit.api.plumbing.diff.DepthTreeIterator;
 
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Predicate;
 import com.google.common.collect.Iterators;
 import com.google.inject.Inject;
 
@@ -72,6 +74,8 @@ public class LsTreeOp extends AbstractGeoGitOp<Iterator<NodeRef>> {
 
     private String ref;
 
+    private Predicate<Bounded> refBoundsFilter;
+
     @Inject
     public LsTreeOp() {
         this.strategy = Strategy.CHILDREN;
@@ -89,6 +93,15 @@ public class LsTreeOp extends AbstractGeoGitOp<Iterator<NodeRef>> {
     public LsTreeOp setStrategy(final Strategy strategy) {
         Preconditions.checkNotNull(strategy);
         this.strategy = strategy;
+        return this;
+    }
+
+    /**
+     * @param refBoundsFilter
+     * @return
+     */
+    public LsTreeOp setBoundsFilter(Predicate<Bounded> refBoundsFilter) {
+        this.refBoundsFilter = refBoundsFilter;
         return this;
     }
 
@@ -166,6 +179,7 @@ public class LsTreeOp extends AbstractGeoGitOp<Iterator<NodeRef>> {
 
             DepthTreeIterator iter = new DepthTreeIterator(path, parentObjectId,
                     (RevTree) revObject.get(), index.getDatabase(), iterStrategy);
+            iter.setBoundsFilter(refBoundsFilter);
             return iter;
         default:
             throw new IllegalArgumentException(String.format("Invalid reference: %s", ref));

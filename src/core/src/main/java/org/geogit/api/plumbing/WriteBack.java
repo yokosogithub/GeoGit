@@ -18,6 +18,7 @@ import org.geogit.api.ObjectId;
 import org.geogit.api.RevObject.TYPE;
 import org.geogit.api.RevTree;
 import org.geogit.api.RevTreeBuilder;
+import org.geogit.repository.SpatialOps;
 import org.geogit.storage.ObjectDatabase;
 import org.geogit.storage.StagingDatabase;
 
@@ -25,6 +26,7 @@ import com.google.common.base.Optional;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
 import com.google.inject.Inject;
+import com.vividsolutions.jts.geom.Envelope;
 
 /**
  * Writes the contents of a given tree as a child of a given ancestor tree, creating any
@@ -188,14 +190,20 @@ public class WriteBack extends AbstractGeoGitOp<ObjectId> {
 
     private ObjectId writeBack(RevTreeBuilder ancestor, final String ancestorPath,
             final RevTree childTree, final String childPath, final ObjectDatabase targetDatabase,
-            ObjectId metadataId) {
+            final ObjectId metadataId) {
 
         final ObjectId treeId = childTree.getId();
         targetDatabase.put(childTree);
 
         final boolean isDirectChild = NodeRef.isDirectChild(ancestorPath, childPath);
         if (isDirectChild) {
-            ancestor.put(new Node(childPath, treeId, metadataId, TYPE.TREE));
+            Envelope treeBounds = null;
+            if (!metadataId.isNull()) {// only include bounds for trees with a default feature type
+                treeBounds = SpatialOps.boundsOf(childTree);
+            }
+            String childName = childPath;
+            Node treeNode = Node.create(childName, treeId, metadataId, TYPE.TREE, treeBounds);
+            ancestor.put(treeNode);
             RevTree newAncestor = ancestor.build();
             targetDatabase.put(newAncestor);
             return newAncestor.getId();
@@ -213,7 +221,13 @@ public class WriteBack extends AbstractGeoGitOp<ObjectId> {
             parentBuilder = RevTree.EMPTY.builder(targetDatabase);
         }
 
-        parentBuilder.put(new Node(NodeRef.nodeFromPath(childPath), treeId, metadataId, TYPE.TREE));
+        String childName = NodeRef.nodeFromPath(childPath);
+        Envelope treeBounds = null;
+        if (!metadataId.isNull()) {// only include bounds for trees with a default feature type
+            treeBounds = SpatialOps.boundsOf(childTree);
+        }
+        Node treeNode = Node.create(childName, treeId, metadataId, TYPE.TREE, treeBounds);
+        parentBuilder.put(treeNode);
         RevTree parent = parentBuilder.build();
 
         return writeBack(ancestor, ancestorPath, parent, parentPath, targetDatabase,

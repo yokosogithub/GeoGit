@@ -21,8 +21,6 @@ import org.geogit.api.plumbing.UpdateSymRef;
 import org.geogit.api.plumbing.WriteTree;
 import org.geogit.api.plumbing.diff.DiffEntry;
 import org.geogit.repository.Repository;
-import org.geogit.repository.StagingArea;
-import org.geogit.repository.WorkingTree;
 
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;

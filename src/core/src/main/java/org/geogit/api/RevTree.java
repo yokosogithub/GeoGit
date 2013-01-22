@@ -76,7 +76,7 @@ public interface RevTree extends RevObject {
         }
 
         @Override
-        public Optional<ImmutableSortedMap<Integer, ObjectId>> buckets() {
+        public Optional<ImmutableSortedMap<Integer, Bucket>> buckets() {
             return Optional.absent();
         }
 
@@ -113,7 +113,7 @@ public interface RevTree extends RevObject {
 
     public Optional<ImmutableList<Node>> features();
 
-    public Optional<ImmutableSortedMap<Integer, ObjectId>> buckets();
+    public Optional<ImmutableSortedMap<Integer, Bucket>> buckets();
 
     public RevTreeBuilder builder(ObjectDatabase target);
 

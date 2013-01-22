@@ -9,6 +9,10 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.util.Iterator;
 
+import javax.annotation.Nullable;
+
+import org.geogit.api.Bounded;
+import org.geogit.api.Bucket;
 import org.geogit.api.Node;
 import org.geogit.api.NodeRef;
 import org.geogit.api.ObjectId;
@@ -18,6 +22,8 @@ import org.geogit.storage.ObjectDatabase;
 
 import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Predicate;
+import com.google.common.base.Predicates;
 import com.google.common.collect.AbstractIterator;
 import com.google.common.collect.Iterators;
 
@@ -62,6 +68,16 @@ public class DepthTreeIterator extends AbstractIterator<NodeRef> {
 
     private Strategy strategy;
 
+    private Predicate<Bounded> boundsFilter;
+
+    private NodeToRef functor;
+
+    private RevTree tree;
+
+    private String treePath;
+
+    private ObjectId metadataId;
+
     private static class NodeToRef implements Function<Node, NodeRef> {
 
         private final String treePath;
@@ -79,10 +95,6 @@ public class DepthTreeIterator extends AbstractIterator<NodeRef> {
         }
     };
 
-    // public DepthTreeIterator(RevTree tree, ObjectDatabase source, Strategy strategy) {
-    // this("", ObjectId.NULL, tree, source, strategy);
-    // }
-
     public DepthTreeIterator(final String treePath, final ObjectId metadataId, RevTree tree,
             ObjectDatabase source, Strategy strategy) {
         checkNotNull(treePath);
@@ -91,35 +103,47 @@ public class DepthTreeIterator extends AbstractIterator<NodeRef> {
         checkNotNull(source);
         checkNotNull(strategy);
 
-        NodeToRef functor = new NodeToRef(treePath, metadataId);
+        this.tree = tree;
+        this.treePath = treePath;
+        this.metadataId = metadataId;
         this.source = source;
         this.strategy = strategy;
-        switch (strategy) {
-        case CHILDREN:
-            iterator = Iterators.transform(new Children(tree), functor);
-            break;
-        case FEATURES_ONLY:
-            iterator = Iterators.transform(new Features(tree), functor);
-            break;
-        case TREES_ONLY:
-            iterator = Iterators.transform(new Trees(tree), functor);
-            break;
-        case RECURSIVE:
-            iterator = new Recursive(treePath, metadataId, tree, true, true);
-            break;
-        case RECURSIVE_FEATURES_ONLY:
-            iterator = new Recursive(treePath, metadataId, tree, true, false);
-            break;
-        case RECURSIVE_TREES_ONLY:
-            iterator = new Recursive(treePath, metadataId, tree, false, true);
-            break;
-        default:
-            throw new IllegalArgumentException("Unrecognized strategy: " + strategy);
-        }
+        this.functor = new NodeToRef(treePath, metadataId);
+        this.boundsFilter = Predicates.alwaysTrue();
+    }
+
+    public void setBoundsFilter(@Nullable Predicate<Bounded> boundsFilter) {
+        Predicate<Bounded> alwaysTrue = Predicates.alwaysTrue();
+        this.boundsFilter = boundsFilter == null ? alwaysTrue : boundsFilter;
     }
 
     @Override
     protected NodeRef computeNext() {
+        if (iterator == null) {
+            switch (strategy) {
+            case CHILDREN:
+                iterator = Iterators.transform(new Children(tree), functor);
+                break;
+            case FEATURES_ONLY:
+                iterator = Iterators.transform(new Features(tree), functor);
+                break;
+            case TREES_ONLY:
+                iterator = Iterators.transform(new Trees(tree), functor);
+                break;
+            case RECURSIVE:
+                iterator = new Recursive(treePath, metadataId, tree, true, true);
+                break;
+            case RECURSIVE_FEATURES_ONLY:
+                iterator = new Recursive(treePath, metadataId, tree, true, false);
+                break;
+            case RECURSIVE_TREES_ONLY:
+                iterator = new Recursive(treePath, metadataId, tree, false, true);
+                break;
+            default:
+                throw new IllegalArgumentException("Unrecognized strategy: " + strategy);
+            }
+
+        }
         if (iterator.hasNext()) {
             return iterator.next();
         }
@@ -149,11 +173,12 @@ public class DepthTreeIterator extends AbstractIterator<NodeRef> {
             } else {
                 this.myEntries = new Children(tree);
             }
+            currEntryIterator = Iterators.emptyIterator();
         }
 
         @Override
         protected NodeRef computeNext() {
-            while (currEntryIterator == null || !currEntryIterator.hasNext()) {
+            while (!currEntryIterator.hasNext()) {
                 if (myEntries.hasNext()) {
                     currEntryIterator = resolveEntryIterator(myEntries.next());
                 } else {
@@ -194,7 +219,7 @@ public class DepthTreeIterator extends AbstractIterator<NodeRef> {
             if (tree.buckets().isPresent()) {
                 this.children = new Buckets(tree);
             } else {
-                this.children = tree.children();
+                this.children = Iterators.filter(tree.children(), boundsFilter);
             }
         }
 
@@ -213,7 +238,7 @@ public class DepthTreeIterator extends AbstractIterator<NodeRef> {
 
         public Features(RevTree tree) {
             if (tree.features().isPresent()) {
-                this.features = tree.features().get().iterator();
+                this.features = Iterators.filter(tree.features().get().iterator(), boundsFilter);
             } else if (tree.buckets().isPresent()) {
                 this.features = new FeatureBuckets(tree);
             } else {
@@ -238,7 +263,7 @@ public class DepthTreeIterator extends AbstractIterator<NodeRef> {
             if (tree.numTrees() == 0) {
                 this.trees = Iterators.emptyIterator();
             } else if (tree.trees().isPresent()) {
-                this.trees = tree.trees().get().iterator();
+                this.trees = Iterators.filter(tree.trees().get().iterator(), boundsFilter);
             } else if (tree.buckets().isPresent()) {
                 this.trees = new TreeBuckets(tree);
             } else {
@@ -260,20 +285,22 @@ public class DepthTreeIterator extends AbstractIterator<NodeRef> {
      */
     private class Buckets extends AbstractIterator<Node> {
 
-        private Iterator<ObjectId> buckets;
+        private Iterator<Bucket> buckets;
 
         private Iterator<Node> bucketEntries;
 
         public Buckets(RevTree tree) {
             Preconditions.checkArgument(tree.buckets().isPresent());
-            buckets = tree.buckets().get().values().iterator();
+            buckets = Iterators.filter(tree.buckets().get().values().iterator(), boundsFilter);
+            bucketEntries = Iterators.emptyIterator();
         }
 
         @Override
         protected Node computeNext() {
-            while (bucketEntries == null || !bucketEntries.hasNext()) {
+            while (!bucketEntries.hasNext()) {
                 if (buckets.hasNext()) {
-                    bucketEntries = resolveBucketEntries(buckets.next());
+                    Bucket nextBucket = buckets.next();
+                    bucketEntries = resolveBucketEntries(nextBucket.id());
                 } else {
                     return endOfData();
                 }

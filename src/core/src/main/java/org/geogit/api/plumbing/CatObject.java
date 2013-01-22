@@ -9,6 +9,7 @@ import java.util.Iterator;
 import java.util.Map.Entry;
 
 import org.geogit.api.AbstractGeoGitOp;
+import org.geogit.api.Bucket;
 import org.geogit.api.Node;
 import org.geogit.api.ObjectId;
 import org.geogit.api.RevObject;
@@ -65,12 +66,12 @@ public class CatObject extends AbstractGeoGitOp<CharSequence> {
             }
         }
 
-        private void printBuckets(final ImmutableSortedMap<Integer, ObjectId> buckets,
+        private void printBuckets(final ImmutableSortedMap<Integer, Bucket> immutableSortedMap,
                 final int indent) {
 
-            for (Entry<Integer, ObjectId> entry : buckets.entrySet()) {
+            for (Entry<Integer, Bucket> entry : immutableSortedMap.entrySet()) {
                 Integer bucketId = entry.getKey();
-                ObjectId treeId = entry.getValue();
+                ObjectId treeId = entry.getValue().id();
                 indent(indent + 1);
                 print(Strings.padStart(bucketId.toString(), 3, ' '));
                 print("-->");

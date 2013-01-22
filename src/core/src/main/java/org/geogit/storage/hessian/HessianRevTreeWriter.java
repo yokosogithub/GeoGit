@@ -8,8 +8,8 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.util.Map.Entry;
 
+import org.geogit.api.Bucket;
 import org.geogit.api.Node;
-import org.geogit.api.ObjectId;
 import org.geogit.api.RevObject;
 import org.geogit.api.RevTree;
 import org.geogit.storage.ObjectWriter;
@@ -17,6 +17,7 @@ import org.geogit.storage.ObjectWriter;
 import com.caucho.hessian.io.Hessian2Output;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableSortedMap;
+import com.vividsolutions.jts.geom.Envelope;
 
 /**
  * Writes a {@link RevTree tree} to a binary encoded stream.
@@ -60,18 +61,28 @@ class HessianRevTreeWriter extends HessianRevWriter implements ObjectWriter<RevT
 
     private void writeChildren(Hessian2Output hout, ImmutableCollection<Node> children)
             throws IOException {
+        Envelope envHelper = new Envelope();
         for (Node ref : children) {
-            HessianRevTreeWriter.this.writeNode(hout, ref);
+            HessianRevTreeWriter.this.writeNode(hout, ref, envHelper);
         }
     }
 
-    private void writeBuckets(Hessian2Output hout, ImmutableSortedMap<Integer, ObjectId> buckets)
-            throws IOException {
+    private void writeBuckets(Hessian2Output hout,
+            ImmutableSortedMap<Integer, Bucket> immutableSortedMap) throws IOException {
 
-        for (Entry<Integer, ObjectId> entry : buckets.entrySet()) {
+        Envelope env = new Envelope();
+        for (Entry<Integer, Bucket> entry : immutableSortedMap.entrySet()) {
             hout.writeInt(HessianRevReader.Node.BUCKET.getValue());
-            hout.writeInt(entry.getKey().intValue());
-            HessianRevTreeWriter.this.writeObjectId(hout, entry.getValue());
+            Integer bucketIndex = entry.getKey();
+            Bucket bucket = entry.getValue();
+            hout.writeInt(bucketIndex.intValue());
+            HessianRevTreeWriter.this.writeObjectId(hout, bucket.id());
+            env.setToNull();
+            bucket.expand(env);
+            hout.writeDouble(env.getMinX());
+            hout.writeDouble(env.getMinY());
+            hout.writeDouble(env.getMaxX());
+            hout.writeDouble(env.getMaxY());
         }
     }
 }

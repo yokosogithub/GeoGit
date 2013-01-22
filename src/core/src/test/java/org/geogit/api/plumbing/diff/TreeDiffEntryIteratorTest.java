@@ -14,6 +14,7 @@ import java.util.TreeSet;
 
 import javax.annotation.Nullable;
 
+import org.geogit.api.Bucket;
 import org.geogit.api.Node;
 import org.geogit.api.NodeRef;
 import org.geogit.api.ObjectId;
@@ -241,7 +242,7 @@ public class TreeDiffEntryIteratorTest extends Assert {
     private RevTree bucketTree() {
 
         ObjectId id = ObjectId.forString("null");
-        Map<Integer, ObjectId> bucketTrees = ImmutableMap.of();
+        Map<Integer, Bucket> bucketTrees = ImmutableMap.of();
         RevTreeImpl tree = RevTreeImpl.createNodeTree(id, 0, 0, bucketTrees);
 
         when(mockDb.getTree(eq(id))).thenReturn(tree);
@@ -297,17 +298,16 @@ public class TreeDiffEntryIteratorTest extends Assert {
         String path = NodeRef.nodeFromPath(fullPath);
         String parentPath = NodeRef.parentPath(fullPath);
         TYPE type = path.startsWith("tree") ? TYPE.TREE : TYPE.FEATURE;
-        NodeRef ref = new NodeRef(new Node(path, objectId, ObjectId.NULL, type), parentPath,
+        NodeRef ref = new NodeRef(Node.create(path, objectId, ObjectId.NULL, type), parentPath,
                 ObjectId.NULL);
         return ref;
     }
 
     private ImmutableSet<DiffEntry> diffSet(RevTree leftTree, RevTree rightTree) {
-        NodeRef leftNodeRef = new NodeRef(new Node("", leftTree.getId(), ObjectId.NULL, TYPE.TREE),
-                "", ObjectId.NULL);
-        NodeRef rightNodeRef = new NodeRef(
-                new Node("", leftTree.getId(), ObjectId.NULL, TYPE.TREE), "", ObjectId.NULL);
-        boolean reportTrees = false;
+        NodeRef leftNodeRef = new NodeRef(Node.create("", leftTree.getId(), ObjectId.NULL,
+                TYPE.TREE), "", ObjectId.NULL);
+        NodeRef rightNodeRef = new NodeRef(Node.create("", leftTree.getId(), ObjectId.NULL,
+                TYPE.TREE), "", ObjectId.NULL);
         ImmutableSet<DiffEntry> diffset = ImmutableSet.copyOf(new TreeDiffEntryIterator(
                 leftNodeRef, rightNodeRef, leftTree, rightTree, reportTrees, mockDb));
         return diffset;

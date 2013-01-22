@@ -116,9 +116,9 @@ public class RevTreeBuilderTest extends RepositoryTestCase {
                 while (randomEdits.containsKey(random = randGen.nextInt(numEntries))) {
                     ;
                 }
-                String path = "Feature." + random;
-                ObjectId newid = ObjectId.forString(path + "changed");
-                Node ref = new Node(path, newid, ObjectId.NULL, TYPE.FEATURE);
+                String name = "Feature." + random;
+                ObjectId newid = ObjectId.forString(name + "changed");
+                Node ref = Node.create(name, newid, ObjectId.NULL, TYPE.FEATURE);
                 randomEdits.put(random, ref);
             }
             RevTreeBuilder mutable = tree.builder(odb);
@@ -290,7 +290,8 @@ public class RevTreeBuilderTest extends RepositoryTestCase {
         // ObjectId oid = ObjectId.forString(key);
         // ObjectId metadataId = ObjectId.forString("FeatureType");
         // Node ref = new Node(key, oid, metadataId, TYPE.FEATURE);
-        Node ref = new Node(key, FAKE_ID, FAKE_ID, TYPE.FEATURE);
+
+        Node ref = Node.create(key, FAKE_ID, FAKE_ID, TYPE.FEATURE, boundsOf(points1));
         tree.put(ref);
     }
 }

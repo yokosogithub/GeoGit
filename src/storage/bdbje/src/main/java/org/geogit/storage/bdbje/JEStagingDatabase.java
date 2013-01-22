@@ -10,6 +10,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import javax.annotation.Nullable;
+
 import org.geogit.api.ObjectId;
 import org.geogit.api.RevCommit;
 import org.geogit.api.RevFeature;
@@ -140,18 +142,41 @@ public class JEStagingDatabase implements ObjectDatabase, StagingDatabase {
 
     @Override
     public <T extends RevObject> T get(ObjectId id, Class<T> type) {
-        if (stagingDb.exists(id)) {
-            return stagingDb.get(id, type);
+        T obj = getIfPresent(id, type);
+        if (obj == null) {
+            obj = repositoryDb.get(id, type);
         }
-        return repositoryDb.get(id, type);
+        return obj;
     }
 
     @Override
     public RevObject get(ObjectId id) {
-        if (stagingDb.exists(id)) {
-            return stagingDb.get(id);
+        RevObject obj = stagingDb.getIfPresent(id);
+        if (obj == null) {
+            obj = repositoryDb.get(id);
         }
-        return repositoryDb.get(id);
+        return obj;
+    }
+
+    @Override
+    @Nullable
+    public RevObject getIfPresent(ObjectId id) {
+        RevObject obj = stagingDb.getIfPresent(id);
+        if (obj == null) {
+            obj = repositoryDb.getIfPresent(id);
+        }
+        return obj;
+    }
+
+    @Override
+    @Nullable
+    public <T extends RevObject> T getIfPresent(ObjectId id, Class<T> type)
+            throws IllegalArgumentException {
+        T obj = stagingDb.getIfPresent(id, type);
+        if (obj == null) {
+            obj = repositoryDb.getIfPresent(id, type);
+        }
+        return obj;
     }
 
     @Override

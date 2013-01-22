@@ -1,7 +1,5 @@
 package org.geogit.geotools.plubming;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.doThrow;
@@ -22,7 +20,6 @@ import org.geogit.geotools.plumbing.GeoToolsOpException;
 import org.geogit.geotools.plumbing.ImportOp;
 import org.geogit.geotools.porcelain.TestHelper;
 import org.geogit.repository.WorkingTree;
-import org.geotools.data.memory.MemoryDataStore;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;

@@ -136,12 +136,15 @@ public class FileObjectDatabase extends AbstractObjectDatabase implements Object
     }
 
     @Override
-    protected InputStream getRawInternal(ObjectId id) {
+    protected InputStream getRawInternal(ObjectId id, boolean failIfNotFound) {
         File f = filePath(id);
         try {
             return new FileInputStream(f);
         } catch (FileNotFoundException e) {
-            throw Throwables.propagate(e);
+            if (failIfNotFound) {
+                throw Throwables.propagate(e);
+            }
+            return null;
         }
     }
 

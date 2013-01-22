@@ -6,6 +6,7 @@
 package org.geogit.geotools.data;
 
 import java.io.IOException;
+import java.util.Set;
 
 import javax.annotation.Nullable;
 
@@ -17,17 +18,18 @@ import org.geogit.api.RevTree;
 import org.geogit.api.plumbing.RevObjectParse;
 import org.geotools.data.FeatureReader;
 import org.geotools.data.FeatureSource;
-import org.geotools.data.FilteringFeatureReader;
 import org.geotools.data.Query;
 import org.geotools.data.store.ContentEntry;
 import org.geotools.data.store.ContentFeatureSource;
 import org.geotools.factory.CommonFactoryFinder;
+import org.geotools.factory.Hints;
 import org.geotools.filter.spatial.ReprojectingFilterVisitor;
+import org.geotools.filter.visitor.SimplifyingFilterVisitor;
+import org.geotools.filter.visitor.SpatialFilterVisitor;
 import org.geotools.geometry.jts.ReferencedEnvelope;
 import org.opengis.feature.FeatureVisitor;
 import org.opengis.feature.simple.SimpleFeature;
 import org.opengis.feature.simple.SimpleFeatureType;
-import org.opengis.feature.type.FeatureType;
 import org.opengis.feature.type.Name;
 import org.opengis.filter.Filter;
 import org.opengis.filter.FilterFactory2;
@@ -35,6 +37,7 @@ import org.opengis.referencing.crs.CoordinateReferenceSystem;
 
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
+import com.vividsolutions.jts.geom.Envelope;
 
 /**
  *
@@ -60,6 +63,15 @@ public class GeogitFeatureSource extends ContentFeatureSource {
     public GeogitFeatureSource(ContentEntry entry, @Nullable Query query) {
         super(entry, query);
         Preconditions.checkArgument(entry.getDataStore() instanceof GeoGitDataStore);
+    }
+
+    /**
+     * Adds the {@link Hints#FEATURE_DETACHED} hint to the supported hints so the renderer doesn't
+     * clone the geometries
+     */
+    @Override
+    protected void addHints(Set<Hints.Key> hints) {
+        hints.add(Hints.FEATURE_DETACHED);
     }
 
     @Override
@@ -126,8 +138,14 @@ public class GeogitFeatureSource extends ContentFeatureSource {
     @Override
     protected ReferencedEnvelope getBoundsInternal(Query query) throws IOException {
         // TODO optimize, please
+        final CoordinateReferenceSystem crs = getSchema().getCoordinateReferenceSystem();
+        if (Filter.INCLUDE.equals(query.getFilter())) {
+            NodeRef typeRef = getDataStore().findTypeRef(getName());
+            ReferencedEnvelope bounds = new ReferencedEnvelope(crs);
+            typeRef.getNode().expand(bounds);
+            return bounds;
+        }
         FeatureReader<SimpleFeatureType, SimpleFeature> features = getReader(query);
-        CoordinateReferenceSystem crs = features.getFeatureType().getCoordinateReferenceSystem();
         ReferencedEnvelope bounds = new ReferencedEnvelope(crs);
         try {
             while (features.hasNext()) {
@@ -181,20 +199,34 @@ public class GeogitFeatureSource extends ContentFeatureSource {
     protected FeatureReader<SimpleFeatureType, SimpleFeature> getReaderInternal(Query query)
             throws IOException {
 
-        Filter filter = query.getFilter();
+        final Filter queryFilter = (Filter) query.getFilter().accept(
+                new SimplifyingFilterVisitor(), null);
+        Filter filter = queryFilter;
+        GeogitFeatureReader<SimpleFeatureType, SimpleFeature> nativeReader;
 
-        FilterFactory2 factory = CommonFactoryFinder.getFilterFactory2();
-        FeatureType featureType = getSchema();
-        ReprojectingFilterVisitor reprojectingFilterVisitor = new ReprojectingFilterVisitor(
-                factory, featureType);
+        final GeoGIT geogit = getGeogit();
+        final SimpleFeatureType schema = getSchema();
+        final NodeRef typeRef = getTypeRef();
 
-        Filter nativeCrsFilter = (Filter) filter.accept(reprojectingFilterVisitor, null);
+        Envelope queryBounds = null;
 
-        GeogitFeatureReader<SimpleFeatureType, SimpleFeature> nativeReader = new GeogitFeatureReader<SimpleFeatureType, SimpleFeature>(
-                getGeogit(), getSchema(), getTypeRef(), nativeCrsFilter);
+        if (hasSpatialFilter(queryFilter)) {
+            FilterFactory2 factory = CommonFactoryFinder.getFilterFactory2();
+            filter = (Filter) queryFilter.accept(new ReprojectingFilterVisitor(factory, schema),
+                    null);
+            queryBounds = (Envelope) filter.accept(new ExtractBounds(), queryBounds);
+        }
 
-        return new FilteringFeatureReader<SimpleFeatureType, SimpleFeature>(nativeReader,
-                nativeCrsFilter);
+        nativeReader = new GeogitFeatureReader<SimpleFeatureType, SimpleFeature>(geogit, schema,
+                typeRef, filter, queryBounds);
+
+        return nativeReader;
+    }
+
+    private boolean hasSpatialFilter(Filter filter) {
+        SpatialFilterVisitor spatialFilterVisitor = new SpatialFilterVisitor();
+        filter.accept(spatialFilterVisitor, null);
+        return spatialFilterVisitor.hasSpatialFilter();
     }
 
     @Override

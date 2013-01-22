@@ -15,6 +15,7 @@ import java.util.Set;
 
 import javax.annotation.Nullable;
 
+import org.geogit.api.Bucket;
 import org.geogit.api.Node;
 import org.geogit.api.NodeRef;
 import org.geogit.api.ObjectId;
@@ -284,7 +285,7 @@ class TreeDiffEntryIterator extends AbstractIterator<DiffEntry> {
          * A multi-map of bucket/objectId where key is guaranteed to have two entries, the first one
          * for the left tree id and the second one for he right tree id
          */
-        private final ListMultimap<Integer, Optional<ObjectId>> leftRightBuckets;
+        private final ListMultimap<Integer, Optional<Bucket>> leftRightBuckets;
 
         private final Iterator<Integer> combinedBuckets;
 
@@ -295,8 +296,8 @@ class TreeDiffEntryIterator extends AbstractIterator<DiffEntry> {
         private NodeRef rightRef;
 
         public BucketBucketDiff(final NodeRef leftRef, final NodeRef rightRef,
-                final ImmutableSortedMap<Integer, ObjectId> left,
-                final ImmutableSortedMap<Integer, ObjectId> right) {
+                final ImmutableSortedMap<Integer, Bucket> left,
+                final ImmutableSortedMap<Integer, Bucket> right) {
 
             this.leftRef = leftRef;
             this.rightRef = rightRef;
@@ -322,10 +323,10 @@ class TreeDiffEntryIterator extends AbstractIterator<DiffEntry> {
             }
 
             final Integer bucket = combinedBuckets.next();
-            final ObjectId leftTreeId = leftRightBuckets.get(bucket).get(0).orNull();
-            final ObjectId rightTreeId = leftRightBuckets.get(bucket).get(1).orNull();
-            final RevTree left = resolveTree(leftTreeId);
-            final RevTree right = resolveTree(rightTreeId);
+            final Bucket leftBucket = leftRightBuckets.get(bucket).get(0).orNull();
+            final Bucket rightBucket = leftRightBuckets.get(bucket).get(1).orNull();
+            final RevTree left = resolveTree(leftBucket);
+            final RevTree right = resolveTree(rightBucket);
 
             // TODO******
             this.currentBucketIterator = new TreeDiffEntryIterator(leftRef, rightRef, left, right,
@@ -333,11 +334,11 @@ class TreeDiffEntryIterator extends AbstractIterator<DiffEntry> {
             return computeNext();
         }
 
-        private RevTree resolveTree(@Nullable ObjectId treeId) {
-            if (treeId == null) {
+        private RevTree resolveTree(@Nullable Bucket bucket) {
+            if (bucket == null) {
                 return null;
             }
-            return objectDb.getTree(treeId);
+            return objectDb.getTree(bucket.id());
         }
     }
 }

@@ -5,6 +5,7 @@
 
 package org.geogit.api.plumbing.diff;
 
+import org.geogit.api.Bucket;
 import org.geogit.api.Node;
 import org.geogit.api.NodeRef;
 import org.geogit.api.ObjectId;
@@ -76,7 +77,7 @@ public class DiffCounterTest extends Assert {
             RevTreeBuilder childBuilder) {
         RevTree childTree = childBuilder.build();
         odb.put(childTree);
-        Node childRef = new Node(treePath, childTree.getId(), ObjectId.NULL, TYPE.TREE);
+        Node childRef = Node.create(treePath, childTree.getId(), ObjectId.NULL, TYPE.TREE);
         rootBuilder.put(childRef);
     }
 
@@ -105,13 +106,13 @@ public class DiffCounterTest extends Assert {
         assertEquals(1, count(childrenFeatureTree, changed));
         assertEquals(1, count(changed, childrenFeatureTree));
 
-        changed = builder.put(new Node("new", FAKE_FEATURE_ID, ObjectId.NULL, TYPE.FEATURE))
+        changed = builder.put(Node.create("new", FAKE_FEATURE_ID, ObjectId.NULL, TYPE.FEATURE))
                 .build();
         assertEquals(2, count(childrenFeatureTree, changed));
         assertEquals(2, count(changed, childrenFeatureTree));
 
-        changed = builder.put(new Node("1", FAKE_FEATURE_ID_CHANGED, ObjectId.NULL, TYPE.FEATURE))
-                .build();
+        changed = builder.put(
+                Node.create("1", FAKE_FEATURE_ID_CHANGED, ObjectId.NULL, TYPE.FEATURE)).build();
         assertEquals(3, count(childrenFeatureTree, changed));
         assertEquals(3, count(changed, childrenFeatureTree));
     }
@@ -130,7 +131,8 @@ public class DiffCounterTest extends Assert {
         newRoot = rootBuilder.build();
         assertEquals(2, count(childrenFeatureTypesTree, newRoot));
 
-        childTree2.put(new Node("tree2/1", FAKE_FEATURE_ID_CHANGED, ObjectId.NULL, TYPE.FEATURE));
+        childTree2
+                .put(Node.create("tree2/1", FAKE_FEATURE_ID_CHANGED, ObjectId.NULL, TYPE.FEATURE));
         createFeatureTypesTree(rootBuilder, "tree2", childTree2);
         newRoot = rootBuilder.build();
         assertEquals(3, count(childrenFeatureTypesTree, newRoot));
@@ -187,7 +189,7 @@ public class DiffCounterTest extends Assert {
         builder = new RevTreeBuilder(odb, bucketsFeatureTree);
 
         changed = builder.put(
-                new Node("1023", FAKE_FEATURE_ID_CHANGED, ObjectId.NULL, TYPE.FEATURE)).build();
+                Node.create("1023", FAKE_FEATURE_ID_CHANGED, ObjectId.NULL, TYPE.FEATURE)).build();
         assertEquals(1, count(bucketsFeatureTree, changed));
         assertEquals(1, count(changed, bucketsFeatureTree));
 
@@ -195,7 +197,7 @@ public class DiffCounterTest extends Assert {
         int expected = 0;
         for (int i = 0; i < bucketsFeatureTree.size(); i += 2) {
             changed = builder.put(
-                    new Node(String.valueOf(i), FAKE_FEATURE_ID_CHANGED, ObjectId.NULL,
+                    Node.create(String.valueOf(i), FAKE_FEATURE_ID_CHANGED, ObjectId.NULL,
                             TYPE.FEATURE)).build();
             expected++;
         }
@@ -258,8 +260,8 @@ public class DiffCounterTest extends Assert {
             return currDepth;
         }
         int depth = currDepth;
-        for (ObjectId bucketId : deepTree.buckets().get().values()) {
-            RevTree bucketTree = odb.get(bucketId, RevTree.class);
+        for (Bucket bucket : deepTree.buckets().get().values()) {
+            RevTree bucketTree = odb.get(bucket.id(), RevTree.class);
             int d = depth(bucketTree, currDepth + 1);
             depth = Math.max(depth, d);
         }
@@ -277,7 +279,7 @@ public class DiffCounterTest extends Assert {
 
     private Node featureRef(String parentPath, int i) {
         String path = NodeRef.appendChild(parentPath, String.valueOf(i));
-        Node ref = new Node(path, FAKE_FEATURE_ID, ObjectId.NULL, TYPE.FEATURE);
+        Node ref = Node.create(path, FAKE_FEATURE_ID, ObjectId.NULL, TYPE.FEATURE);
         return ref;
     }
 

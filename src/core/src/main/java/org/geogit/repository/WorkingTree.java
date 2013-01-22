@@ -24,7 +24,6 @@ import org.geogit.api.RevFeatureType;
 import org.geogit.api.RevObject.TYPE;
 import org.geogit.api.RevTree;
 import org.geogit.api.RevTreeBuilder;
-import org.geogit.api.SpatialNode;
 import org.geogit.api.plumbing.DiffCount;
 import org.geogit.api.plumbing.DiffWorkTree;
 import org.geogit.api.plumbing.FindOrCreateSubtree;
@@ -36,11 +35,11 @@ import org.geogit.api.plumbing.UpdateRef;
 import org.geogit.api.plumbing.WriteBack;
 import org.geogit.api.plumbing.diff.DiffEntry;
 import org.geogit.storage.StagingDatabase;
+import org.geotools.geometry.jts.ReferencedEnvelope;
 import org.opengis.feature.Feature;
 import org.opengis.feature.type.FeatureType;
 import org.opengis.feature.type.Name;
 import org.opengis.filter.Filter;
-import org.opengis.geometry.BoundingBox;
 import org.opengis.util.ProgressListener;
 
 import com.google.common.base.Optional;
@@ -53,6 +52,7 @@ import com.google.common.collect.Iterators;
 import com.google.common.collect.Maps;
 import com.google.common.collect.PeekingIterator;
 import com.google.inject.Inject;
+import com.vividsolutions.jts.geom.Envelope;
 
 /**
  * A working tree is the collection of Features for a single FeatureType in GeoServer that has a
@@ -536,18 +536,12 @@ public class WorkingTree {
 
         final RevFeature newFeature = new RevFeatureBuilder().build(feature);
         final ObjectId objectId = newFeature.getId();
-        final BoundingBox bounds = feature.getBounds();
+        final Envelope bounds = (ReferencedEnvelope) feature.getBounds();
         final String nodeName = feature.getIdentifier().getID();
 
         indexDatabase.put(newFeature);
 
-        Node newObject;
-        if (bounds == null) {
-            newObject = new Node(nodeName, objectId, metadataId, TYPE.FEATURE);
-        } else {
-            newObject = new SpatialNode(nodeName, objectId, metadataId, TYPE.FEATURE, bounds);
-        }
-
+        Node newObject = Node.create(nodeName, objectId, metadataId, TYPE.FEATURE, bounds);
         return newObject;
     }
 

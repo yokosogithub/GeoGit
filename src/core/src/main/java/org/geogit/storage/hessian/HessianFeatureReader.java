@@ -16,6 +16,7 @@ import org.geogit.api.RevFeature;
 import org.geogit.api.RevObject;
 import org.geogit.storage.EntityType;
 import org.geogit.storage.ObjectReader;
+import org.geotools.geometry.jts.LiteCoordinateSequenceFactory;
 
 import com.caucho.hessian.io.Hessian2Input;
 import com.google.common.base.Optional;
@@ -23,7 +24,6 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.geom.GeometryFactory;
-import com.vividsolutions.jts.geom.impl.PackedCoordinateSequenceFactory;
 import com.vividsolutions.jts.io.InStream;
 import com.vividsolutions.jts.io.ParseException;
 import com.vividsolutions.jts.io.WKBReader;
@@ -35,7 +35,7 @@ import com.vividsolutions.jts.io.WKBReader;
 class HessianFeatureReader extends HessianRevReader<RevFeature> implements ObjectReader<RevFeature> {
 
     private static final GeometryFactory DEFAULT_GF_FACTORY = new GeometryFactory(
-            new PackedCoordinateSequenceFactory());
+            new LiteCoordinateSequenceFactory());
 
     private final GeometryFactory geometryFactory;
 

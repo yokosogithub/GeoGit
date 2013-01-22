@@ -181,7 +181,7 @@ public class JEObjectDatabase extends AbstractObjectDatabase implements ObjectDa
     }
 
     @Override
-    protected InputStream getRawInternal(final ObjectId id) {
+    protected InputStream getRawInternal(final ObjectId id, final boolean failIfNotFound) {
         Preconditions.checkNotNull(id, "id");
         DatabaseEntry key = new DatabaseEntry(id.getRawValue());
         DatabaseEntry data = new DatabaseEntry();
@@ -190,7 +190,10 @@ public class JEObjectDatabase extends AbstractObjectDatabase implements ObjectDa
         Transaction transaction = txn == null ? null : txn.getTransaction();
         OperationStatus operationStatus = objectDb.get(transaction, key, data, lockMode);
         if (NOTFOUND.equals(operationStatus)) {
-            throw new IllegalArgumentException("Object does not exist: " + id.toString());
+            if (failIfNotFound) {
+                throw new IllegalArgumentException("Object does not exist: " + id.toString());
+            }
+            return null;
         }
         final byte[] cData = data.getData();
 

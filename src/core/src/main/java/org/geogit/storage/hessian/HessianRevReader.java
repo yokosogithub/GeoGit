@@ -6,23 +6,18 @@ package org.geogit.storage.hessian;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.Collections;
-import java.util.Map;
 
-import org.apache.commons.collections.map.LRUMap;
+import javax.annotation.Nullable;
+
 import org.geogit.api.ObjectId;
 import org.geogit.api.Ref;
 import org.geogit.api.RevObject;
 import org.geogit.api.RevObject.TYPE;
-import org.geogit.api.SpatialNode;
 import org.geogit.storage.ObjectReader;
-import org.geotools.geometry.jts.ReferencedEnvelope;
-import org.geotools.referencing.CRS;
-import org.opengis.geometry.BoundingBox;
-import org.opengis.referencing.crs.CoordinateReferenceSystem;
 
 import com.caucho.hessian.io.Hessian2Input;
 import com.google.common.base.Throwables;
+import com.vividsolutions.jts.geom.Envelope;
 
 /**
  * Abstract parent class to readers of Rev's. This class provides some common functions used by
@@ -68,10 +63,6 @@ abstract class HessianRevReader<T> implements ObjectReader<T> {
             return null;
         }
     }
-
-    @SuppressWarnings("unchecked")
-    private static Map<String, CoordinateReferenceSystem> crsCache = Collections
-            .synchronizedMap(new LRUMap(3));
 
     /**
      * Constructs a new {@code HessianRevReader}.
@@ -136,14 +127,9 @@ abstract class HessianRevReader<T> implements ObjectReader<T> {
         String name = hin.readString();
         ObjectId id = readObjectId(hin);
         ObjectId metadataId = readObjectId(hin);
-        BoundingBox bbox = readBBox(hin);
+        Envelope bbox = readBBox(hin);
 
-        org.geogit.api.Node ref;
-        if (bbox == null) {
-            ref = new org.geogit.api.Node(name, id, metadataId, type);
-        } else {
-            ref = new SpatialNode(name, id, metadataId, type, bbox);
-        }
+        org.geogit.api.Node ref = org.geogit.api.Node.create(name, id, metadataId, type, bbox);
 
         return ref;
     }
@@ -158,7 +144,8 @@ abstract class HessianRevReader<T> implements ObjectReader<T> {
      * @return The BoundingBox described in the stream, or null if none found.
      * @throws IOException
      */
-    protected BoundingBox readBBox(Hessian2Input hin) throws IOException {
+    protected @Nullable
+    Envelope readBBox(Hessian2Input hin) throws IOException {
         double minx = hin.readDouble();
         if (Double.isNaN(minx))
             return null;
@@ -167,25 +154,8 @@ abstract class HessianRevReader<T> implements ObjectReader<T> {
         double miny = hin.readDouble();
         double maxy = hin.readDouble();
 
-        String epsgCode = hin.readString();
-        CoordinateReferenceSystem crs = null;
-        if (epsgCode != null && epsgCode.length() > 0)
-            crs = lookupCrs(epsgCode);
-
-        BoundingBox bbox = new ReferencedEnvelope(minx, maxx, miny, maxy, crs);
+        Envelope bbox = new Envelope(minx, maxx, miny, maxy);
         return bbox;
     }
 
-    private static CoordinateReferenceSystem lookupCrs(final String epsgCode) {
-        CoordinateReferenceSystem crs = crsCache.get(epsgCode);
-        if (crs == null) {
-            try {
-                crs = CRS.decode(epsgCode, false);
-                crsCache.put(epsgCode, crs);
-            } catch (Exception e) {
-                Throwables.propagate(e);
-            }
-        }
-        return crs;
-    }
 }

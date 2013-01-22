@@ -5,8 +5,9 @@
 package org.geogit.storage.hessian;
 
 import java.io.IOException;
-import java.util.TreeMap;
+import java.util.Map;
 
+import org.geogit.api.Bucket;
 import org.geogit.api.ObjectId;
 import org.geogit.api.RevObject;
 import org.geogit.api.RevObject.TYPE;
@@ -19,6 +20,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableList.Builder;
 import com.google.common.collect.Maps;
+import com.vividsolutions.jts.geom.Envelope;
 
 /**
  * Reads {@link RevTree trees} from a binary encoded stream.
@@ -39,7 +41,7 @@ class HessianRevTreeReader extends HessianRevReader<RevTree> implements ObjectRe
 
         Builder<org.geogit.api.Node> features = ImmutableList.builder();
         Builder<org.geogit.api.Node> trees = ImmutableList.builder();
-        TreeMap<Integer, ObjectId> subtrees = Maps.newTreeMap();
+        Map<Integer, Bucket> subtrees = Maps.newTreeMap();
 
         while (true) {
             Node type = Node.fromValue(hin.readInt());
@@ -67,10 +69,16 @@ class HessianRevTreeReader extends HessianRevReader<RevTree> implements ObjectRe
         return tree;
     }
 
-    private void parseAndSetSubTree(Hessian2Input hin, TreeMap<Integer, ObjectId> subtrees)
+    private void parseAndSetSubTree(Hessian2Input hin, Map<Integer, Bucket> subtrees)
             throws IOException {
-        int bucket = hin.readInt();
+        int bucketIndex = hin.readInt();
         ObjectId id = readObjectId(hin);
-        subtrees.put(Integer.valueOf(bucket), id);
+        double x1 = hin.readDouble();
+        double y1 = hin.readDouble();
+        double x2 = hin.readDouble();
+        double y2 = hin.readDouble();
+        Envelope bounds = new Envelope(x1, x2, y1, y2);
+        Bucket bucket = Bucket.create(id, bounds);
+        subtrees.put(Integer.valueOf(bucketIndex), bucket);
     }
 }

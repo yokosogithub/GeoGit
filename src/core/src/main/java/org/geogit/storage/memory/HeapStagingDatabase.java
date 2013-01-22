@@ -11,6 +11,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import javax.annotation.Nullable;
+
 import org.geogit.api.ObjectId;
 import org.geogit.api.RevObject;
 import org.geogit.storage.AbstractObjectDatabase;
@@ -80,7 +82,7 @@ public class HeapStagingDatabase extends HeapObjectDatabse implements StagingDat
      */
     @Override
     public final InputStream getRaw(final ObjectId id) throws IllegalArgumentException {
-        InputStream in = getRawInternal(id);
+        InputStream in = getRawInternal(id, false);
         if (in != null) {
             try {
                 return new LZFInputStream(in);
@@ -92,11 +94,10 @@ public class HeapStagingDatabase extends HeapObjectDatabse implements StagingDat
     }
 
     @Override
-    protected InputStream getRawInternal(ObjectId id) throws IllegalArgumentException {
-        if (super.exists(id)) {
-            return super.getRawInternal(id);
-        }
-        return null;
+    protected InputStream getRawInternal(final ObjectId id, final boolean failIfNotFound)
+            throws IllegalArgumentException {
+
+        return super.getRawInternal(id, failIfNotFound);
     }
 
     /**
@@ -121,18 +122,41 @@ public class HeapStagingDatabase extends HeapObjectDatabse implements StagingDat
      */
     @Override
     public <T extends RevObject> T get(ObjectId id, Class<T> type) {
-        if (super.exists(id)) {
-            return super.get(id, type);
+        T obj = super.getIfPresent(id, type);
+        if (null == obj) {
+            obj = repositoryDb.get(id, type);
         }
-        return repositoryDb.get(id, type);
+        return obj;
+    }
+
+    @Override
+    @Nullable
+    public <T extends RevObject> T getIfPresent(ObjectId id, Class<T> clazz)
+            throws IllegalArgumentException {
+        T obj = super.getIfPresent(id, clazz);
+        if (null == obj) {
+            obj = repositoryDb.getIfPresent(id, clazz);
+        }
+        return obj;
     }
 
     @Override
     public RevObject get(ObjectId id) {
-        if (super.exists(id)) {
-            return super.get(id);
+        RevObject obj = super.getIfPresent(id);
+        if (null == obj) {
+            obj = repositoryDb.get(id);
         }
-        return repositoryDb.get(id);
+        return obj;
+    }
+
+    @Override
+    public @Nullable
+    RevObject getIfPresent(ObjectId id) {
+        RevObject obj = super.getIfPresent(id);
+        if (null == obj) {
+            obj = repositoryDb.getIfPresent(id);
+        }
+        return obj;
     }
 
     /**

@@ -5,21 +5,14 @@
 package org.geogit.storage.hessian;
 
 import java.io.IOException;
-import java.util.Collections;
-import java.util.Map;
 
-import org.apache.commons.collections.map.LRUMap;
 import org.geogit.api.Node;
 import org.geogit.api.ObjectId;
 import org.geogit.api.Ref;
-import org.geogit.api.SpatialNode;
-import org.geotools.referencing.CRS;
-import org.opengis.geometry.BoundingBox;
-import org.opengis.referencing.crs.CoordinateReferenceSystem;
 
 import com.caucho.hessian.io.Hessian2Output;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Throwables;
+import com.vividsolutions.jts.geom.Envelope;
 
 /**
  * Abstract parent class to writers of Rev's. This class provides some common functions used by
@@ -27,10 +20,6 @@ import com.google.common.base.Throwables;
  * 
  */
 class HessianRevWriter {
-
-    @SuppressWarnings("unchecked")
-    private static Map<CoordinateReferenceSystem, String> crsIdCache = Collections
-            .synchronizedMap(new LRUMap(3));
 
     /**
      * Constructs a new {@code HessianRevWriter}.
@@ -62,17 +51,13 @@ class HessianRevWriter {
         writeObjectId(hout, ref.getObjectId());
     }
 
-    protected void writeNode(Hessian2Output hout, Node node) throws IOException {
-        BoundingBox bounds = null;
-        if (node instanceof SpatialNode) {
-            bounds = ((SpatialNode) node).getBounds();
-        }
+    protected void writeNode(Hessian2Output hout, Node node, Envelope envHelper) throws IOException {
         hout.writeInt(HessianRevReader.Node.REF.getValue());
         hout.writeInt(node.getType().value());
         hout.writeString(node.getName());
         writeObjectId(hout, node.getObjectId());
         writeObjectId(hout, node.getMetadataId().or(ObjectId.NULL));
-        writeBBox(hout, bounds);
+        writeBBox(hout, node, envHelper);
     }
 
     /**
@@ -82,45 +67,20 @@ class HessianRevWriter {
      * 
      * A null bounding box is written as a single double NaN value.
      * 
-     * @param hout
-     * @param bbox
      * @throws IOException
      */
-    private void writeBBox(Hessian2Output hout, BoundingBox bbox) throws IOException {
-        if (bbox == null) {
+    private void writeBBox(Hessian2Output hout, Node node, Envelope envHelper) throws IOException {
+        envHelper.setToNull();
+        node.expand(envHelper);
+        if (envHelper.isNull()) {
             hout.writeDouble(Double.NaN);
             return;
         }
-        CoordinateReferenceSystem crs = bbox.getCoordinateReferenceSystem();
-        String epsgCode;
-        if (crs == null) {
-            epsgCode = "";
-        } else {
-            epsgCode = lookupIdentifier(crs);
-        }
 
-        hout.writeDouble(bbox.getMinX());
-        hout.writeDouble(bbox.getMaxX());
-        hout.writeDouble(bbox.getMinY());
-        hout.writeDouble(bbox.getMaxY());
+        hout.writeDouble(envHelper.getMinX());
+        hout.writeDouble(envHelper.getMaxX());
+        hout.writeDouble(envHelper.getMinY());
+        hout.writeDouble(envHelper.getMaxY());
 
-        hout.writeString(epsgCode);
     }
-
-    private String lookupIdentifier(CoordinateReferenceSystem crs) {
-        String epsgCode = crsIdCache.get(crs);
-        if (epsgCode == null) {
-            try {
-                epsgCode = CRS.toSRS(crs);
-            } catch (Exception e) {
-                Throwables.propagate(e);
-            }
-            if (epsgCode == null) {
-                throw new IllegalArgumentException("Can't find EPSG code for CRS " + crs.toWKT());
-            }
-            crsIdCache.put(crs, epsgCode);
-        }
-        return epsgCode;
-    }
-
 }

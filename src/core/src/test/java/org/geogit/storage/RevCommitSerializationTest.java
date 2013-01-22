@@ -96,7 +96,7 @@ public abstract class RevCommitSerializationTest extends Assert {
         ObjectWriter<RevCommit> writer = factory.createObjectWriter(TYPE.COMMIT);
         writer.write(commit, out);
 
-        System.err.println(out);
+        // System.err.println(out);
 
         ObjectReader<RevCommit> reader = factory.createCommitReader();
         RevCommit read = reader.read(commit.getId(), new ByteArrayInputStream(out.toByteArray()));
@@ -154,7 +154,7 @@ public abstract class RevCommitSerializationTest extends Assert {
         ObjectWriter<RevCommit> write = factory.createObjectWriter(TYPE.COMMIT);
         write.write(cmtIn, bout);
 
-        System.err.println(bout);
+        // System.err.println(bout);
         byte[] bytes = bout.toByteArray();
         assertTrue(bytes.length > 0);
 

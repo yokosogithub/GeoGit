@@ -10,6 +10,7 @@ import static org.geogit.api.NodeRef.PATH_SEPARATOR;
 
 import java.util.List;
 
+import org.geogit.api.Bucket;
 import org.geogit.api.Node;
 import org.geogit.api.NodeRef;
 import org.geogit.api.ObjectId;
@@ -153,12 +154,12 @@ public class DepthSearch {
         }
 
         Integer bucket = refOrder.bucket(directChildName, subtreesDepth);
-        ImmutableSortedMap<Integer, ObjectId> buckets = parent.buckets().get();
-        ObjectId subtreeId = buckets.get(bucket);
-        if (subtreeId == null) {
+        ImmutableSortedMap<Integer, Bucket> buckets = parent.buckets().get();
+        Bucket subtreeBucket = buckets.get(bucket);
+        if (subtreeBucket == null) {
             return Optional.absent();
         }
-        RevTree subtree = objectDb.get(subtreeId, RevTree.class);
+        RevTree subtree = objectDb.get(subtreeBucket.id(), RevTree.class);
         return getDirectChild(subtree, directChildName, subtreesDepth + 1);
     }
 }

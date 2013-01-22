@@ -22,6 +22,7 @@ import org.geogit.api.plumbing.HashObject;
 import org.geogit.api.plumbing.diff.DepthTreeIterator;
 import org.geogit.api.plumbing.diff.DepthTreeIterator.Strategy;
 import org.geogit.repository.DepthSearch;
+import org.geogit.repository.SpatialOps;
 import org.geogit.storage.NodePathStorageOrder;
 import org.geogit.storage.ObjectDatabase;
 
@@ -32,6 +33,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
+import com.vividsolutions.jts.geom.Envelope;
 
 public class RevTreeBuilder {
 
@@ -51,7 +53,7 @@ public class RevTreeBuilder {
 
     private final Map<String, Node> featureChanges;
 
-    protected final TreeMap<Integer, ObjectId> bucketTreesByBucket;
+    protected final TreeMap<Integer, Bucket> bucketTreesByBucket;
 
     private int depth;
 
@@ -148,13 +150,13 @@ public class RevTreeBuilder {
             return Optional.absent();
         }
 
-        final Integer bucket = computeBucket(key);
-        final ObjectId subtreeId = bucketTreesByBucket.get(bucket);
-        if (subtreeId == null) {
+        final Integer bucketIndex = computeBucket(key);
+        final Bucket bucket = bucketTreesByBucket.get(bucketIndex);
+        if (bucket == null) {
             return Optional.absent();
         }
 
-        RevTree subtree = loadTree(subtreeId);
+        RevTree subtree = loadTree(bucket.id());
 
         DepthSearch depthSearch = new DepthSearch(db);
         Optional<Node> node = depthSearch.getDirectChild(subtree, key, depth + 1);
@@ -254,34 +256,36 @@ public class RevTreeBuilder {
             for (Iterator<Node> it = featureChanges.values().iterator(); it.hasNext();) {
                 Node change = it.next();
                 it.remove();
-                Integer bucket = computeBucket(change.getName());
-                changesByBucket.put(bucket, change);
+                Integer bucketIndex = computeBucket(change.getName());
+                changesByBucket.put(bucketIndex, change);
             }
             Preconditions.checkState(featureChanges.isEmpty());
             for (Iterator<Node> it = treeChanges.values().iterator(); it.hasNext();) {
                 Node change = it.next();
                 it.remove();
-                Integer bucket = computeBucket(change.getName());
-                changesByBucket.put(bucket, change);
+                Integer bucketIndex = computeBucket(change.getName());
+                changesByBucket.put(bucketIndex, change);
             }
             Preconditions.checkState(featureChanges.isEmpty());
+            Preconditions.checkState(treeChanges.isEmpty());
 
             final Set<Integer> buckets = ImmutableSet.copyOf(Sets.union(changesByBucket.keySet(),
                     bucketTreesByBucket.keySet()));
 
-            for (Integer bucket : buckets) {
+            for (Integer bucketIndex : buckets) {
                 final RevTreeBuilder bucketTreeBuilder;
                 {
-                    final Collection<Node> bucketEntries = changesByBucket.removeAll(bucket);
-                    final ObjectId subtreeId = bucketTreesByBucket.get(bucket);
-                    if (subtreeId == null) {
+                    final Collection<Node> bucketEntries = changesByBucket.removeAll(bucketIndex);
+                    final Bucket bucket = bucketTreesByBucket.get(bucketIndex);
+                    if (bucket == null) {
                         bucketTreeBuilder = new RevTreeBuilder(db, null, childDepth);
                     } else {
-                        bucketTreeBuilder = new RevTreeBuilder(db, loadTree(subtreeId), childDepth);
+                        bucketTreeBuilder = new RevTreeBuilder(db, loadTree(bucket.id()),
+                                childDepth);
                     }
                     for (String deleted : deletes) {
                         Integer bucketOfDelete = computeBucket(deleted);
-                        if (bucket.equals(bucketOfDelete)) {
+                        if (bucketIndex.equals(bucketOfDelete)) {
                             bucketTreeBuilder.remove(deleted);
                         }
                     }
@@ -293,10 +297,12 @@ public class RevTreeBuilder {
                 accSize += bucketTree.size();
                 accChildTreeCount += bucketTree.numTrees();
                 if (bucketTree.isEmpty()) {
-                    bucketTreesByBucket.remove(bucket);
+                    bucketTreesByBucket.remove(bucketIndex);
                 } else {
                     db.put(bucketTree);
-                    bucketTreesByBucket.put(bucket, bucketTree.getId());
+                    Envelope bucketBounds = SpatialOps.boundsOf(bucketTree);
+                    Bucket bucket = Bucket.create(bucketTree.getId(), bucketBounds);
+                    bucketTreesByBucket.put(bucketIndex, bucket);
                 }
             }
         } catch (RuntimeException e) {

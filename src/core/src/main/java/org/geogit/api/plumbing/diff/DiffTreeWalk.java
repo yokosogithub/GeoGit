@@ -148,7 +148,7 @@ public class DiffTreeWalk {
 
     private Optional<NodeRef> getFilteredObjectRef(RevTree tree) {
         if (pathFilter.isEmpty()) {
-            Node node = new Node("", tree.getId(), ObjectId.NULL, TYPE.TREE);
+            Node node = Node.create("", tree.getId(), ObjectId.NULL, TYPE.TREE);
             String parentPath = "";
             ObjectId metadataId = ObjectId.NULL;
             NodeRef rootRef = new NodeRef(node, parentPath, metadataId);

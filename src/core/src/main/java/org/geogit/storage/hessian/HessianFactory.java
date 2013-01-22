@@ -5,6 +5,7 @@
 package org.geogit.storage.hessian;
 
 import java.io.IOException;
+import java.io.OutputStream;
 import java.io.Serializable;
 import java.util.Map;
 import java.util.TreeMap;
@@ -15,6 +16,7 @@ import org.geogit.api.RevFeature;
 import org.geogit.api.RevFeatureType;
 import org.geogit.api.RevObject;
 import org.geogit.api.RevObject.TYPE;
+import org.geogit.api.RevTag;
 import org.geogit.api.RevTree;
 import org.geogit.storage.ObjectReader;
 import org.geogit.storage.ObjectSerialisingFactory;
@@ -52,7 +54,13 @@ public class HessianFactory implements ObjectSerialisingFactory {
 
     private static final HessianRevTagReader TAG_READER = new HessianRevTagReader();
 
-    private static final HessianRevTagWriter TAG_WRITER = new HessianRevTagWriter();
+    private static final ObjectWriter<RevTag> TAG_WRITER = new ObjectWriter<RevTag>() {
+
+        @Override
+        public void write(RevTag object, OutputStream out) throws IOException {
+            throw new UnsupportedOperationException();
+        }
+    };
 
     /**
      * Creates an instance of a commit reader.

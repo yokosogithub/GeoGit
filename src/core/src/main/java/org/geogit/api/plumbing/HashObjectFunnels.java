@@ -13,9 +13,10 @@ import java.io.Serializable;
 import java.lang.reflect.Array;
 import java.math.BigDecimal;
 import java.math.BigInteger;
-import java.util.Map;
+import java.util.Map.Entry;
 import java.util.UUID;
 
+import org.geogit.api.Bucket;
 import org.geogit.api.Node;
 import org.geogit.api.ObjectId;
 import org.geogit.api.RevCommit;
@@ -26,14 +27,12 @@ import org.geogit.api.RevObject.TYPE;
 import org.geogit.api.RevPerson;
 import org.geogit.api.RevTag;
 import org.geogit.api.RevTree;
-import org.geogit.api.SpatialNode;
 import org.geogit.storage.GtEntityType;
 import org.geotools.referencing.CRS;
 import org.opengis.feature.type.GeometryDescriptor;
 import org.opengis.feature.type.Name;
 import org.opengis.feature.type.PropertyDescriptor;
 import org.opengis.feature.type.PropertyType;
-import org.opengis.geometry.BoundingBox;
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
 
 import com.google.common.base.Optional;
@@ -187,10 +186,10 @@ class HashObjectFunnels {
                 }
             }
             if (from.buckets().isPresent()) {
-                ImmutableSortedMap<Integer, ObjectId> buckets = from.buckets().get();
-                for (Map.Entry<Integer, ObjectId> entry : buckets.entrySet()) {
+                ImmutableSortedMap<Integer, Bucket> buckets = from.buckets().get();
+                for (Entry<Integer, Bucket> entry : buckets.entrySet()) {
                     Funnels.integerFunnel().funnel(entry.getKey(), into);
-                    ObjectIdFunnel.funnel(entry.getValue(), into);
+                    ObjectIdFunnel.funnel(entry.getValue().id(), into);
                 }
             }
         }
@@ -268,27 +267,8 @@ class HashObjectFunnels {
             Funnels.stringFunnel().funnel(ref.getName(), into);
             ObjectIdFunnel.funnel(ref.getObjectId(), into);
             ObjectIdFunnel.funnel(ref.getMetadataId().or(ObjectId.NULL), into);
-            BoundingBox bounds = null;
-            if (ref instanceof SpatialNode) {
-                bounds = ((SpatialNode) ref).getBounds();
-            }
-            BoundingBoxFunnel.funnel(bounds, into);
         }
     };
-
-    private static final Funnel<BoundingBox> BoundingBoxFunnel = NullableFunnel
-            .of(new Funnel<BoundingBox>() {
-                private static final long serialVersionUID = 1L;
-
-                @Override
-                public void funnel(BoundingBox bbox, PrimitiveSink into) {
-                    int dimension = bbox.getDimension();
-                    for (int d = 0; d < dimension; d++) {
-                        into.putDouble(bbox.getMinimum(d));
-                        into.putDouble(bbox.getMaximum(d));
-                    }
-                }
-            });
 
     private static final Funnel<Object> PropertyValueFunnel = new Funnel<Object>() {
         private static final long serialVersionUID = 1L;

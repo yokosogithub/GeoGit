@@ -11,6 +11,7 @@ import org.aopalliance.intercept.MethodInterceptor;
 import org.aopalliance.intercept.MethodInvocation;
 import org.geogit.api.ObjectId;
 import org.geogit.api.RevObject;
+import org.geogit.api.RevTree;
 
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
@@ -23,8 +24,8 @@ import com.google.common.cache.CacheBuilder;
  */
 public class CachingObjectDatabaseGetInterceptor implements MethodInterceptor {
 
-    private Cache<ObjectId, RevObject> cache = CacheBuilder.newBuilder().maximumSize(10 * 1000)
-            .expireAfterAccess(30, TimeUnit.SECONDS).build();
+    private Cache<ObjectId, RevObject> cache = CacheBuilder.newBuilder().maximumSize(50 * 1000)
+            .expireAfterAccess(30, TimeUnit.SECONDS).concurrencyLevel(4).build();
 
     @Override
     public Object invoke(MethodInvocation invocation) throws Throwable {
@@ -33,7 +34,7 @@ public class CachingObjectDatabaseGetInterceptor implements MethodInterceptor {
         Object object = cache.getIfPresent(oid);
         if (object == null) {
             object = invocation.proceed();
-            if (object instanceof RevObject) {
+            if (object instanceof RevTree) {
                 cache.put(oid, (RevObject) object);
             }
         }

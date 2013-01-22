@@ -14,10 +14,10 @@ import org.geogit.api.Node;
 import org.geogit.api.NodeRef;
 import org.geogit.api.ObjectId;
 import org.geogit.repository.SpatialOps;
-import org.opengis.geometry.BoundingBox;
 
 import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
+import com.vividsolutions.jts.geom.Envelope;
 
 /**
  * Provides a way of describing the between two different {@link Node}s.
@@ -147,8 +147,8 @@ public class DiffEntry {
     /**
      * @return the affected geographic region of the change, may be {@code null}
      */
-    public BoundingBox where() {
-        BoundingBox bounds = SpatialOps.aggregatedBounds(oldObject.getNode(), newObject.getNode());
+    public Envelope where() {
+        Envelope bounds = SpatialOps.aggregatedBounds(oldObject.getNode(), newObject.getNode());
         return bounds;
     }
 

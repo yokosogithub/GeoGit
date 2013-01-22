@@ -11,6 +11,8 @@ import static com.google.common.base.Preconditions.checkState;
 import java.util.Collection;
 import java.util.Set;
 
+import javax.annotation.Nullable;
+
 import org.geogit.api.AbstractGeoGitOp;
 import org.geogit.api.NodeRef;
 import org.geogit.api.ObjectId;
@@ -29,8 +31,6 @@ import org.geogit.api.plumbing.UpdateRef;
 import org.geogit.api.plumbing.UpdateSymRef;
 import org.geogit.api.plumbing.WriteBack;
 import org.geogit.api.porcelain.CheckoutException.StatusCode;
-import org.geogit.repository.StagingArea;
-import org.geogit.repository.WorkingTree;
 
 import com.google.common.base.Optional;
 import com.google.common.collect.Sets;
@@ -56,14 +56,12 @@ public class CheckoutOp extends AbstractGeoGitOp<ObjectId> {
         paths = Sets.newTreeSet();
     }
 
-    public CheckoutOp setSource(final String branchOrCommit) {
-        checkNotNull(branchOrCommit);
+    public CheckoutOp setSource(@Nullable final String branchOrCommit) {
         this.branchOrCommit = branchOrCommit;
         return this;
     }
 
     public CheckoutOp setForce(final boolean force) {
-        checkNotNull(force);
         this.force = force;
         return this;
     }

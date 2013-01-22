@@ -62,19 +62,19 @@ public abstract class RevTreeImpl extends AbstractRevObject implements RevTree {
 
     private static final class NodeTree extends RevTreeImpl {
 
-        private final Optional<ImmutableSortedMap<Integer, ObjectId>> buckets;
+        private final Optional<ImmutableSortedMap<Integer, Bucket>> buckets;
 
         private final int childTreeCount;
 
         public NodeTree(final ObjectId id, final long size, final int childTreeCount,
-                final ImmutableSortedMap<Integer, ObjectId> innerTrees) {
+                final ImmutableSortedMap<Integer, Bucket> innerTrees) {
             super(id, size);
             this.childTreeCount = childTreeCount;
             this.buckets = Optional.of(innerTrees);
         }
 
         @Override
-        public Optional<ImmutableSortedMap<Integer, ObjectId>> buckets() {
+        public Optional<ImmutableSortedMap<Integer, Bucket>> buckets() {
             return buckets;
         }
 
@@ -112,7 +112,7 @@ public abstract class RevTreeImpl extends AbstractRevObject implements RevTree {
     }
 
     @Override
-    public Optional<ImmutableSortedMap<Integer, ObjectId>> buckets() {
+    public Optional<ImmutableSortedMap<Integer, Bucket>> buckets() {
         return Optional.absent();
     }
 
@@ -156,10 +156,10 @@ public abstract class RevTreeImpl extends AbstractRevObject implements RevTree {
     }
 
     public static RevTreeImpl createNodeTree(ObjectId id, long size, int childTreeCount,
-            Map<Integer, ObjectId> bucketTrees) {
+            Map<Integer, Bucket> bucketTrees) {
         Preconditions.checkNotNull(id);
         Preconditions.checkNotNull(bucketTrees);
-        ImmutableSortedMap<Integer, ObjectId> innerTrees = ImmutableSortedMap.copyOf(bucketTrees);
+        ImmutableSortedMap<Integer, Bucket> innerTrees = ImmutableSortedMap.copyOf(bucketTrees);
 
         return new NodeTree(id, size, childTreeCount, innerTrees);
     }

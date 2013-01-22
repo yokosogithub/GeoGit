@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Iterator;
 
+import org.geogit.api.Bucket;
 import org.geogit.api.GeoGIT;
 import org.geogit.api.Node;
 import org.geogit.api.ObjectId;
@@ -201,8 +202,8 @@ public class LocalRemoteRepo implements IRemoteRepo {
             objectInserter.insert(tree);
             // walk subtrees
             if (tree.buckets().isPresent()) {
-                for (ObjectId bucketId : tree.buckets().get().values()) {
-                    walkTree(bucketId, from, to, objectInserter);
+                for (Bucket bucket : tree.buckets().get().values()) {
+                    walkTree(bucket.id(), from, to, objectInserter);
                 }
             } else {
                 // get new objects

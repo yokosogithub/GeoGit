@@ -9,7 +9,6 @@ import java.util.Map;
 import org.geogit.geotools.plumbing.DescribeOp;
 import org.geogit.geotools.plumbing.GeoToolsOpException;
 import org.geogit.geotools.porcelain.TestHelper;
-import org.geotools.data.memory.MemoryDataStore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;

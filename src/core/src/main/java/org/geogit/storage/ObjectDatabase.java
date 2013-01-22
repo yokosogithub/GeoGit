@@ -7,6 +7,8 @@ package org.geogit.storage;
 import java.io.InputStream;
 import java.util.List;
 
+import javax.annotation.Nullable;
+
 import org.geogit.api.ObjectId;
 import org.geogit.api.RevCommit;
 import org.geogit.api.RevFeature;
@@ -62,10 +64,37 @@ public interface ObjectDatabase {
 
     /**
      * Reads an object with the given {@link ObjectId id} out of the database.
+     * 
+     * @throws IllegalArgumentException if no blob exists for the given {@code id}
      */
-    public RevObject get(ObjectId id);
+    public RevObject get(ObjectId id) throws IllegalArgumentException;
 
-    public <T extends RevObject> T get(ObjectId id, Class<T> type);
+    /**
+     * Reads an object with the given {@link ObjectId id} out of the database.
+     * 
+     * @throws IllegalArgumentException if no blob exists for the given {@code id}, or the object
+     *         found is not of the required {@code type}
+     */
+    public <T extends RevObject> T get(ObjectId id, Class<T> type) throws IllegalArgumentException;
+
+    /**
+     * Reads an object with the given {@link ObjectId id} out of the database.
+     * 
+     * @return the object found, or {@code null} if no object is found
+     */
+    public @Nullable
+    RevObject getIfPresent(ObjectId id);
+
+    /**
+     * Reads an object with the given {@link ObjectId id} out of the database.
+     * 
+     * @return the object found, or {@code null} if no object is found
+     * @throws IllegalArgumentException if the object is found but is not of the required
+     *         {@code type}
+     */
+    public @Nullable
+    <T extends RevObject> T getIfPresent(ObjectId id, Class<T> type)
+            throws IllegalArgumentException;
 
     /**
      * Shortcut for {@link #get(ObjectId, Class) get(id, RevTree.class)}

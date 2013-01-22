@@ -141,7 +141,10 @@ public class GeogitTransactionTest extends RepositoryTestCase {
         assertFalse(lastCommit.equals(transaction2Commit));
         assertEquals(lastCommit.getMessage(), transaction2Commit.getMessage());
         assertEquals(lastCommit.getAuthor(), transaction2Commit.getAuthor());
-        assertEquals(lastCommit.getCommitter(), transaction2Commit.getCommitter());
+        assertEquals(lastCommit.getCommitter().getName(), transaction2Commit.getCommitter()
+                .getName());
+        assertFalse(lastCommit.getCommitter().getTimestamp() == transaction2Commit.getCommitter()
+                .getTimestamp());
         assertEquals(logs.next(), transaction1Commit);
         assertEquals(logs.next(), mainCommit);
         assertFalse(logs.hasNext());
@@ -222,7 +225,10 @@ public class GeogitTransactionTest extends RepositoryTestCase {
         assertFalse(lastCommit.equals(transaction2Commit));
         assertEquals(lastCommit.getMessage(), transaction2Commit.getMessage());
         assertEquals(lastCommit.getAuthor(), transaction2Commit.getAuthor());
-        assertEquals(lastCommit.getCommitter(), transaction2Commit.getCommitter());
+        assertEquals(lastCommit.getCommitter().getName(), transaction2Commit.getCommitter()
+                .getName());
+        assertFalse(lastCommit.getCommitter().getTimestamp() == transaction2Commit.getCommitter()
+                .getTimestamp());
         assertEquals(logs.next(), transaction1Commit);
         assertEquals(logs.next(), mainCommit);
         assertFalse(logs.hasNext());

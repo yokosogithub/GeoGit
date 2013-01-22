@@ -13,11 +13,12 @@ import javax.annotation.Nullable;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
+import com.vividsolutions.jts.geom.Envelope;
 
 /**
  * The basic leaf element of a revision tree.
  */
-public class NodeRef implements Comparable<NodeRef> {
+public class NodeRef implements Bounded, Comparable<NodeRef> {
 
     public static final String ROOT = "";
 
@@ -300,6 +301,16 @@ public class NodeRef implements Comparable<NodeRef> {
         checkNotNull(childName);
         return ROOT.equals(parentTreePath) ? childName : new StringBuilder(parentTreePath)
                 .append(PATH_SEPARATOR).append(childName).toString();
+    }
+
+    @Override
+    public boolean intersects(Envelope env) {
+        return node.intersects(env);
+    }
+
+    @Override
+    public void expand(Envelope env) {
+        node.expand(env);
     }
 
 }

@@ -17,7 +17,6 @@
 package org.geogit.geotools.data;
 
 import java.io.IOException;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -40,7 +39,6 @@ import org.geotools.geometry.jts.ReferencedEnvelope;
 import org.geotools.referencing.CRS;
 import org.junit.Test;
 import org.opengis.feature.Feature;
-import org.opengis.feature.Property;
 import org.opengis.feature.simple.SimpleFeature;
 import org.opengis.filter.Filter;
 import org.opengis.filter.FilterFactory2;
@@ -224,19 +222,21 @@ public class GeoGitFeatureSourceTest extends RepositoryTestCase {
     @Test
     public void testGetFeatures() throws Exception {
         SimpleFeatureCollection collection;
-        Set<Collection<Property>> actual;
-        Set<Collection<Property>> expected;
+        Set<List<Object>> actual;
+        Set<List<Object>> expected;
 
         collection = pointsSource.getFeatures();
         assertEquals(pointsType, collection.getSchema());
 
         actual = Sets.newHashSet();
         for (Feature f : toList(collection)) {
-            actual.add(f.getProperties());
+            SimpleFeature sf = (SimpleFeature) f;
+            actual.add(sf.getAttributes());
         }
 
-        expected = ImmutableSet.of(points1.getProperties(), points2.getProperties(),
-                points3.getProperties());
+        expected = ImmutableSet.of(((SimpleFeature) points1).getAttributes(),
+                ((SimpleFeature) points2).getAttributes(),
+                ((SimpleFeature) points3).getAttributes());
 
         assertEquals(expected, actual);
 
@@ -245,10 +245,11 @@ public class GeoGitFeatureSourceTest extends RepositoryTestCase {
 
         actual = Sets.newHashSet();
         for (Feature f : toList(collection)) {
-            actual.add(f.getProperties());
+            actual.add(((SimpleFeature) f).getAttributes());
         }
-        expected = ImmutableSet.of(lines1.getProperties(), lines2.getProperties(),
-                lines3.getProperties());
+
+        expected = ImmutableSet.of(((SimpleFeature) lines1).getAttributes(),
+                ((SimpleFeature) lines2).getAttributes(), ((SimpleFeature) lines3).getAttributes());
 
         assertEquals(expected, actual);
     }
@@ -256,18 +257,18 @@ public class GeoGitFeatureSourceTest extends RepositoryTestCase {
     @Test
     public void testGetFeaturesFilter() throws Exception {
         SimpleFeatureCollection collection;
-        Set<Collection<Property>> actual;
-        Set<Collection<Property>> expected;
+        Set<List<Object>> actual;
+        Set<List<Object>> expected;
 
         Filter filter;
 
         filter = ff.id(Collections.singleton(ff.featureId(RepositoryTestCase.idP2)));
         collection = pointsSource.getFeatures(new Query(pointsName, filter));
         actual = Sets.newHashSet();
-        for (Feature f : toList(collection)) {
-            actual.add(f.getProperties());
+        for (SimpleFeature f : toList(collection)) {
+            actual.add(f.getAttributes());
         }
-        expected = Collections.singleton(points2.getProperties());
+        expected = Collections.singleton(((SimpleFeature) points2).getAttributes());
 
         assertEquals(expected, actual);
 
@@ -279,10 +280,11 @@ public class GeoGitFeatureSourceTest extends RepositoryTestCase {
 
         collection = pointsSource.getFeatures(new Query(pointsName, filter));
         actual = Sets.newHashSet();
-        for (Feature f : toList(collection)) {
-            actual.add(f.getProperties());
+        for (SimpleFeature f : toList(collection)) {
+            actual.add(f.getAttributes());
         }
-        expected = ImmutableSet.of(points1.getProperties(), points2.getProperties());
+        expected = ImmutableSet.of(((SimpleFeature) points1).getAttributes(),
+                ((SimpleFeature) points2).getAttributes());
 
         assertEquals(expected, actual);
 
@@ -298,10 +300,11 @@ public class GeoGitFeatureSourceTest extends RepositoryTestCase {
 
         collection = pointsSource.getFeatures(new Query(pointsName, filter));
         actual = Sets.newHashSet();
-        for (Feature f : toList(collection)) {
-            actual.add(f.getProperties());
+        for (SimpleFeature f : toList(collection)) {
+            actual.add(f.getAttributes());
         }
-        expected = ImmutableSet.of(points1.getProperties(), points2.getProperties());
+        expected = ImmutableSet.of(((SimpleFeature) points1).getAttributes(),
+                ((SimpleFeature) points2).getAttributes());
 
         assertEquals(expected.size(), actual.size());
         assertEquals(expected, actual);
@@ -309,10 +312,11 @@ public class GeoGitFeatureSourceTest extends RepositoryTestCase {
         filter = ECQL.toFilter("sp = 'StringProp2_3' OR ip = 2000");
         collection = linesSource.getFeatures(new Query(linesName, filter));
         actual = Sets.newHashSet();
-        for (Feature f : toList(collection)) {
-            actual.add(f.getProperties());
+        for (SimpleFeature f : toList(collection)) {
+            actual.add(f.getAttributes());
         }
-        expected = ImmutableSet.of(lines2.getProperties(), lines3.getProperties());
+        expected = ImmutableSet.of(((SimpleFeature) lines2).getAttributes(),
+                ((SimpleFeature) lines3).getAttributes());
 
         assertEquals(expected, actual);
 

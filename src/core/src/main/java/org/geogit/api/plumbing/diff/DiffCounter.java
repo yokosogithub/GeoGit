@@ -13,6 +13,7 @@ import java.util.SortedSet;
 
 import javax.annotation.Nonnull;
 
+import org.geogit.api.Bucket;
 import org.geogit.api.Node;
 import org.geogit.api.ObjectId;
 import org.geogit.api.RevObject;
@@ -94,13 +95,13 @@ public class DiffCounter implements Supplier<Long> {
         if (childrenVsChildren) {
             count = countChildrenDiffs(oldTree, newTree);
         } else if (bucketsVsBuckets) {
-            ImmutableSortedMap<Integer, ObjectId> leftBuckets = oldTree.buckets().get();
-            ImmutableSortedMap<Integer, ObjectId> rightBuckets = newTree.buckets().get();
+            ImmutableSortedMap<Integer, Bucket> leftBuckets = oldTree.buckets().get();
+            ImmutableSortedMap<Integer, Bucket> rightBuckets = newTree.buckets().get();
             count = countBucketDiffs(leftBuckets, rightBuckets);
         } else {
             // get the children and buckets from the respective trees, order doesn't matter as we're
             // counting diffs
-            ImmutableSortedMap<Integer, ObjectId> buckets;
+            ImmutableSortedMap<Integer, Bucket> buckets;
             Iterator<Node> children;
 
             buckets = oldTree.buckets().isPresent() ? oldTree.buckets().get() : newTree.buckets()
@@ -118,7 +119,7 @@ public class DiffCounter implements Supplier<Long> {
      * {@link RevTree#children() children}, but the other version of the tree has more nodes so its
      * split into {@link RevTree#buckets()}.
      */
-    private long countBucketsChildren(ImmutableSortedMap<Integer, ObjectId> buckets,
+    private long countBucketsChildren(ImmutableSortedMap<Integer, Bucket> buckets,
             Iterator<Node> children) {
 
         final NodeStorageOrder refOrder = new NodeStorageOrder();
@@ -126,7 +127,7 @@ public class DiffCounter implements Supplier<Long> {
         return countBucketsChildren(buckets, children, refOrder, bucketDepth);
     }
 
-    private long countBucketsChildren(ImmutableSortedMap<Integer, ObjectId> buckets,
+    private long countBucketsChildren(ImmutableSortedMap<Integer, Bucket> buckets,
             Iterator<Node> children, final NodeStorageOrder refOrder, final int depth) {
 
         final SortedSetMultimap<Integer, Node> treesByBucket;
@@ -158,7 +159,7 @@ public class DiffCounter implements Supplier<Long> {
                     Sets.union(featuresByBucket.keySet(), treesByBucket.keySet()));
 
             for (Integer bucket : loneleyBuckets) {
-                ObjectId bucketId = buckets.get(bucket);
+                ObjectId bucketId = buckets.get(bucket).id();
                 count += sizeOfTree(bucketId);
             }
         }
@@ -182,7 +183,7 @@ public class DiffCounter implements Supplier<Long> {
             Iterator<Node> refs = Iterators.concat(treesByBucket.get(bucket).iterator(),
                     featuresByBucket.get(bucket).iterator());
 
-            final ObjectId bucketId = buckets.get(bucket);
+            final ObjectId bucketId = buckets.get(bucket).id();
             final RevTree bucketTree = getTree(bucketId);
 
             if (bucketTree.isEmpty()) {
@@ -192,7 +193,7 @@ public class DiffCounter implements Supplier<Long> {
                 count += countChildrenDiffs(bucketTree.children(), refs);
             } else {
                 final int deeperBucketsDepth = depth + 1;
-                final ImmutableSortedMap<Integer, ObjectId> deeperBuckets;
+                final ImmutableSortedMap<Integer, Bucket> deeperBuckets;
                 deeperBuckets = bucketTree.buckets().get();
                 count += countBucketsChildren(deeperBuckets, refs, refOrder, deeperBucketsDepth);
             }
@@ -205,8 +206,8 @@ public class DiffCounter implements Supplier<Long> {
      * Counts the number of differences between two trees that contain {@link RevTree#buckets()
      * buckets} instead of direct {@link RevTree#children() children}
      */
-    private long countBucketDiffs(ImmutableSortedMap<Integer, ObjectId> leftBuckets,
-            ImmutableSortedMap<Integer, ObjectId> rightBuckets) {
+    private long countBucketDiffs(ImmutableSortedMap<Integer, Bucket> leftBuckets,
+            ImmutableSortedMap<Integer, Bucket> rightBuckets) {
 
         long count = 0;
         final Set<Integer> bucketIds = Sets.union(leftBuckets.keySet(), rightBuckets.keySet());
@@ -215,8 +216,8 @@ public class DiffCounter implements Supplier<Long> {
         ObjectId rightTreeId;
 
         for (Integer bucketId : bucketIds) {
-            leftTreeId = leftBuckets.get(bucketId);
-            rightTreeId = rightBuckets.get(bucketId);
+            leftTreeId = leftBuckets.get(bucketId).id();
+            rightTreeId = rightBuckets.get(bucketId).id();
 
             if (leftTreeId == null || rightTreeId == null) {
                 count += sizeOfTree(leftTreeId == null ? rightTreeId : leftTreeId);

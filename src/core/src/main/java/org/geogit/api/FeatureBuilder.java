@@ -5,18 +5,18 @@
 
 package org.geogit.api;
 
-import org.geotools.feature.simple.SimpleFeatureImpl;
+import java.util.List;
+import java.util.Map;
+
 import org.geotools.filter.identity.FeatureIdVersionedImpl;
 import org.opengis.feature.Feature;
-import org.opengis.feature.simple.SimpleFeature;
 import org.opengis.feature.simple.SimpleFeatureType;
 import org.opengis.feature.type.FeatureType;
-import org.opengis.feature.type.PropertyDescriptor;
 import org.opengis.filter.identity.FeatureId;
 
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableList;
+import com.google.common.collect.BiMap;
 
 /**
  * Provides a method of building features from {@link RevFeature} objects that have the type
@@ -32,6 +32,10 @@ public class FeatureBuilder {
 
     private FeatureType featureType;
 
+    private Map<String, Integer> attNameToRevTypeIndex;
+
+    private BiMap<Integer, Integer> typeToRevTypeIndex;
+
     /**
      * Constructs a new {@code FeatureBuilder} with the given {@link RevFeatureType feature type}.
      * 
@@ -40,6 +44,8 @@ public class FeatureBuilder {
     public FeatureBuilder(RevFeatureType type) {
         this.type = type;
         this.featureType = type.type();
+        this.attNameToRevTypeIndex = GeogitSimpleFeature.buildAttNameToRevTypeIndex(type);
+        this.typeToRevTypeIndex = GeogitSimpleFeature.buildTypeToRevTypeIndex(type);
     }
 
     /**
@@ -65,22 +71,11 @@ public class FeatureBuilder {
 
         final String version = revFeature.getId().toString();
         final FeatureId fid = new FeatureIdVersionedImpl(id, version);
-        final int attCount = featureType.getDescriptors().size();
-        Object[] rawValues = new Object[attCount];
 
-        SimpleFeature feature = new SimpleFeatureImpl(rawValues, (SimpleFeatureType) featureType,
-                fid, false);
-
-        ImmutableList<PropertyDescriptor> descriptors = type.sortedDescriptors();
-        ImmutableList<Optional<Object>> values = revFeature.getValues();
-        Preconditions.checkState(descriptors.size() == values.size());
-
-        for (int i = 0; i < descriptors.size(); i++) {
-            PropertyDescriptor descriptor = descriptors.get(i);
-            Object value = values.get(i).orNull();
-            feature.setAttribute(descriptor.getName(), value);
-        }
-
+        List<Optional<Object>> values = revFeature.getValues();// Lists.newArrayList(revFeature.getValues());
+        GeogitSimpleFeature feature = new GeogitSimpleFeature(values,
+                (SimpleFeatureType) featureType, fid, attNameToRevTypeIndex, typeToRevTypeIndex);
         return feature;
     }
+
 }
