@@ -28,6 +28,7 @@ import com.google.common.base.Preconditions;
 /**
  *
  */
+@SuppressWarnings("unchecked")
 public class GeogitFeatureStore extends ContentFeatureStore {
 
     /**
@@ -40,8 +41,8 @@ public class GeogitFeatureStore extends ContentFeatureStore {
      * @param entry
      * @param query
      */
-    public GeogitFeatureStore(ContentEntry entry, Query query) {
-        super(entry, query);
+    public GeogitFeatureStore(ContentEntry entry) {
+        super(entry, (Query) null);
         delegate = new GeogitFeatureSource(entry, query) {
             @Override
             public void setTransaction(Transaction transaction) {
@@ -100,10 +101,10 @@ public class GeogitFeatureStore extends ContentFeatureStore {
 
     @Override
     public void setTransaction(Transaction transaction) {
-        // JD: note, we need to set both super and delegate transactions.
+        // we need to set both super and delegate transactions.
         super.setTransaction(transaction);
 
-        // JD: this guard ensures that a recursive loop will not form
+        // this guard ensures that a recursive loop will not form
         if (delegate.getTransaction() != transaction) {
             delegate.setTransaction(transaction);
         }

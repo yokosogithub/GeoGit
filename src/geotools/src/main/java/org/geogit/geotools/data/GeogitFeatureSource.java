@@ -99,9 +99,12 @@ public class GeogitFeatureSource extends ContentFeatureSource {
         return false;
     }
 
+    /**
+     * @return {@code true}
+     */
     @Override
     protected boolean canTransact() {
-        return false;
+        return true;
     }
 
     @Override

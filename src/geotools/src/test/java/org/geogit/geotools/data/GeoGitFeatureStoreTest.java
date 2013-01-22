@@ -30,7 +30,6 @@ import org.geotools.data.Transaction;
 import org.geotools.factory.CommonFactoryFinder;
 import org.geotools.factory.Hints;
 import org.geotools.feature.FeatureCollection;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.opengis.feature.Feature;
 import org.opengis.feature.simple.SimpleFeature;
@@ -40,7 +39,6 @@ import org.opengis.filter.Id;
 import org.opengis.filter.identity.FeatureId;
 import org.opengis.filter.identity.ResourceId;
 
-@Ignore
 public class GeoGitFeatureStoreTest extends RepositoryTestCase {
 
     private static final FilterFactory2 ff = CommonFactoryFinder.getFilterFactory2(null);

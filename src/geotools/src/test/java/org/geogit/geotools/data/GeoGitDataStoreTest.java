@@ -180,7 +180,7 @@ public class GeoGitDataStoreTest extends RepositoryTestCase {
 
         insert(lines1);
         source = dataStore.getFeatureSource(RepositoryTestCase.linesTypeName);
-        assertTrue(source instanceof GeogitFeatureSource);
+        assertTrue(source instanceof GeogitFeatureStore);
 
         try {
             dataStore.getFeatureSource(RepositoryTestCase.pointsTypeName);
@@ -191,7 +191,7 @@ public class GeoGitDataStoreTest extends RepositoryTestCase {
 
         insert(points1);
         source = dataStore.getFeatureSource(RepositoryTestCase.pointsTypeName);
-        assertTrue(source instanceof GeogitFeatureSource);
+        assertTrue(source instanceof GeogitFeatureStore);
     }
 
     @Test
@@ -207,7 +207,7 @@ public class GeoGitDataStoreTest extends RepositoryTestCase {
 
         insert(lines1);
         source = dataStore.getFeatureSource(RepositoryTestCase.linesName);
-        assertTrue(source instanceof GeogitFeatureSource);
+        assertTrue(source instanceof GeogitFeatureStore);
 
         try {
             dataStore.getFeatureSource(RepositoryTestCase.pointsName);
@@ -218,7 +218,7 @@ public class GeoGitDataStoreTest extends RepositoryTestCase {
 
         insert(points1);
         source = dataStore.getFeatureSource(RepositoryTestCase.pointsName);
-        assertTrue(source instanceof GeogitFeatureSource);
+        assertTrue(source instanceof GeogitFeatureStore);
     }
 
 }
