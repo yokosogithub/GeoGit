@@ -34,6 +34,7 @@ import org.opengis.util.ProgressListener;
 import com.google.common.base.Optional;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
+import com.google.common.collect.Maps;
 import com.google.inject.Inject;
 
 /**
@@ -146,6 +147,107 @@ public class Index implements StagingArea {
             final long numChanges) {
         int i = 0;
         progress.started();
+
+        final RevTree currentIndexHead = getTree();
+
+        Map<String, RevTreeBuilder> parentTress = Maps.newHashMap();
+        Map<String, ObjectId> parentMetadataIds = Maps.newHashMap();
+
+        while (unstaged.hasNext()) {
+            final DiffEntry diff = unstaged.next();
+            final String fullPath = diff.oldPath() == null ? diff.newPath() : diff.oldPath();
+            final String parentPath = NodeRef.parentPath(fullPath);
+
+            if (null == parentPath) {
+                // it is the root tree that's been changed, update head and ignore anything else
+                ObjectId newRoot = diff.newObjectId();
+                updateStageHead(newRoot);
+                progress.progress(100f);
+                progress.complete();
+                return;
+            }
+            RevTreeBuilder parentTree = getParentTree(currentIndexHead, parentPath, parentTress,
+                    parentMetadataIds);
+
+            i++;
+            progress.progress((float) (i * 100) / numChanges);
+
+            NodeRef oldObject = diff.getOldObject();
+            NodeRef newObject = diff.getNewObject();
+            if (newObject == null) {
+                // Delete
+                parentTree.remove(oldObject.name());
+            } else if (oldObject == null) {
+                // Add
+                Node node = newObject.getNode();
+                parentTree.put(node);
+            } else {
+                // Modify
+                Node node = newObject.getNode();
+                parentTree.put(node);
+            }
+        }
+
+        ObjectId newRootTree = currentIndexHead.getId();
+
+        for (Map.Entry<String, RevTreeBuilder> entry : parentTress.entrySet()) {
+            String changedTreePath = entry.getKey();
+            RevTreeBuilder changedTreeBuilder = entry.getValue();
+            RevTree changedTree = changedTreeBuilder.build();
+            ObjectId parentMetadataId = parentMetadataIds.get(changedTreePath);
+            if (NodeRef.ROOT.equals(changedTreePath)) {
+                // root
+                indexDatabase.put(changedTree);
+                newRootTree = changedTree.getId();
+            } else {
+                Supplier<RevTreeBuilder> rootTreeSupplier = getTreeSupplier();
+                newRootTree = repository.command(WriteBack.class).setAncestor(rootTreeSupplier)
+                        .setChildPath(changedTreePath).setMetadataId(parentMetadataId)
+                        .setToIndex(true).setTree(changedTree).call();
+            }
+            updateStageHead(newRootTree);
+        }
+
+        progress.complete();
+    }
+
+    /**
+     * @param currentIndexHead
+     * @param diffEntry
+     * @param parentTress
+     * @param parentMetadataIds
+     * @return
+     */
+    private RevTreeBuilder getParentTree(RevTree currentIndexHead, String parentPath,
+            Map<String, RevTreeBuilder> parentTress, Map<String, ObjectId> parentMetadataIds) {
+
+        RevTreeBuilder parentBuilder = parentTress.get(parentPath);
+        if (parentBuilder == null) {
+            ObjectId parentMetadataId = null;
+            if (NodeRef.ROOT.equals(parentPath)) {
+                parentBuilder = currentIndexHead.builder(indexDatabase);
+            } else {
+                Optional<NodeRef> parentRef = repository.command(FindTreeChild.class)
+                        .setIndex(true).setParent(currentIndexHead).setChildPath(parentPath).call();
+
+                if (parentRef.isPresent()) {
+                    parentMetadataId = parentRef.get().getMetadataId();
+                }
+
+                parentBuilder = repository.command(FindOrCreateSubtree.class)
+                        .setParent(Suppliers.ofInstance(Optional.of(getTree()))).setIndex(true)
+                        .setChildPath(parentPath).call().builder(getDatabase());
+            }
+            parentTress.put(parentPath, parentBuilder);
+            parentMetadataIds.put(parentPath, parentMetadataId);
+        }
+        return parentBuilder;
+    }
+
+    public void stageOld(final ProgressListener progress, final Iterator<DiffEntry> unstaged,
+            final long numChanges) {
+        int i = 0;
+        progress.started();
         // System.err.println("staging with path: " + path2 + ". Matches: " + numChanges);
         Map<String, List<DiffEntry>> changeMap = new HashMap<String, List<DiffEntry>>();
         while (unstaged.hasNext()) {
@@ -222,9 +324,9 @@ public class Index implements StagingArea {
      */
     @Override
     public Iterator<DiffEntry> getStaged(final @Nullable String pathFilter) {
-        Iterator<DiffEntry> unstaged = repository.command(DiffIndex.class).setFilter(pathFilter)
-                .call();
-        return unstaged;
+        Iterator<DiffEntry> staged = repository.command(DiffIndex.class).setFilter(pathFilter)
+                .setReportTrees(true).call();
+        return staged;
     }
 
     /**

@@ -42,6 +42,8 @@ public class DiffTreeWalk {
     @Nullable
     private String pathFilter;
 
+    private boolean reportTrees;
+
     public DiffTreeWalk(final ObjectDatabase db, final RevTree fromRootTree,
             final RevTree toRootTree) {
         Preconditions.checkNotNull(db);
@@ -61,12 +63,19 @@ public class DiffTreeWalk {
         }
     }
 
+    /**
+     * @param reportTrees tells the diff tree walk whether to report a {@link DiffEntry} for each
+     *        changed tree or not, defaults to {@code false}
+     */
+    public void setReportTrees(boolean reportTrees) {
+        this.reportTrees = reportTrees;
+    }
+
     public Iterator<DiffEntry> get() {
 
         RevTree oldTree = this.fromRootTree;
         RevTree newTree = this.toRootTree;
 
-        NodeRef oldRef, newRef;
         Optional<NodeRef> oldObjectRef = getFilteredObjectRef(fromRootTree);
         Optional<NodeRef> newObjectRef = getFilteredObjectRef(toRootTree);
         boolean pathFiltering = !pathFilter.isEmpty();
@@ -105,15 +114,22 @@ public class DiffTreeWalk {
             }
 
         }
-        oldRef = oldObjectRef.or(new NodeRef(
-                new Node("", oldTree.getId(), ObjectId.NULL, TYPE.TREE), "", ObjectId.NULL));
-        newRef = newObjectRef.or(new NodeRef(
-                new Node("", oldTree.getId(), ObjectId.NULL, TYPE.TREE), "", ObjectId.NULL));
+
+        NodeRef oldRef, newRef;
+
+        oldRef = oldObjectRef.orNull();
+        newRef = newObjectRef.orNull();
 
         // TODO: pass pathFilter to TreeDiffEntryIterator so it ignores inner trees where the path
         // is guaranteed not to be present
         Iterator<DiffEntry> iterator = new TreeDiffEntryIterator(oldRef, newRef, oldTree, newTree,
-                objectDb);
+                reportTrees, objectDb);
+
+        // boolean comparingTree = (oldRef == null ? newRef : oldRef).getType().equals(TYPE.TREE);
+        // if (reportTrees && comparingTree && !Objects.equal(oldRef, newRef)) {
+        // DiffEntry self = new DiffEntry(oldRef, newRef);
+        // iterator = Iterators.concat(Iterators.singletonIterator(self), iterator);
+        // }
 
         if (pathFiltering) {
             iterator = Iterators.filter(iterator, new Predicate<DiffEntry>() {

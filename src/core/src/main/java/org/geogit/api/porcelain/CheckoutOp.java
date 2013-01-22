@@ -118,7 +118,9 @@ public class CheckoutOp extends AbstractGeoGitOp<ObjectId> {
                             workTree.getTree());
                     treeBuilder.remove(st);
                     treeBuilder.put(node.get().getNode());
-                    workTree.updateWorkHead(treeBuilder.build().getId());
+                    RevTree newRoot = treeBuilder.build();
+                    index.getDatabase().put(newRoot);
+                    workTree.updateWorkHead(newRoot.getId());
                 } else {
                     Optional<NodeRef> parentNode = command(FindTreeChild.class)
                             .setParent(workTree.getTree()).setChildPath(node.get().getParentPath())

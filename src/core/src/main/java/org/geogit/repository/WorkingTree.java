@@ -479,7 +479,7 @@ public class WorkingTree {
      */
     public Iterator<DiffEntry> getUnstaged(final @Nullable String pathFilter) {
         Iterator<DiffEntry> unstaged = repository.command(DiffWorkTree.class).setFilter(pathFilter)
-                .call();
+                .setReportTrees(true).call();
         return unstaged;
     }
 

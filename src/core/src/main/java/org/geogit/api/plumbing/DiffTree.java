@@ -34,6 +34,8 @@ public class DiffTree extends AbstractGeoGitOp<Iterator<DiffEntry>> {
 
     private String newRefSpec;
 
+    private boolean reportTrees;
+
     /**
      * Constructs a new instance of the {@code DiffTree} operation with the given parameters.
      * 
@@ -125,6 +127,16 @@ public class DiffTree extends AbstractGeoGitOp<Iterator<DiffEntry>> {
 
         DiffTreeWalk treeWalk = new DiffTreeWalk(objectDb, oldTree, newTree);
         treeWalk.setFilter(this.path);
+        treeWalk.setReportTrees(reportTrees);
         return treeWalk.get();
+    }
+
+    /**
+     * @param reportTrees
+     * @return
+     */
+    public DiffTree setReportTrees(boolean reportTrees) {
+        this.reportTrees = reportTrees;
+        return this;
     }
 }

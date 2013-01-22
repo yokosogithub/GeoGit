@@ -33,6 +33,8 @@ public class DiffIndex extends AbstractGeoGitOp<Iterator<DiffEntry>> {
 
     private String pathFilter;
 
+    private boolean reportTrees;
+
     /**
      * Constructs a new {@code DiffIndex} with the given {@link StagingArea} and
      * {@link ObjectSerialisingFactory}.
@@ -89,6 +91,16 @@ public class DiffIndex extends AbstractGeoGitOp<Iterator<DiffEntry>> {
 
         DiffTreeWalk treeWalk = new DiffTreeWalk(index.getDatabase(), rootTree, newTree);
         treeWalk.setFilter(pathFilter);
+        treeWalk.setReportTrees(reportTrees);
         return treeWalk.get();
+    }
+
+    /**
+     * @param reportTrees
+     * @return
+     */
+    public DiffIndex setReportTrees(boolean reportTrees) {
+        this.reportTrees = reportTrees;
+        return this;
     }
 }

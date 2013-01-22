@@ -19,6 +19,8 @@ import com.google.common.collect.Lists;
  */
 public class NodeRef implements Comparable<NodeRef> {
 
+    public static final String ROOT = "";
+
     /**
      * The character '/' used to separate paths (e.g. {@code path/to/node})
      */
@@ -181,7 +183,7 @@ public class NodeRef implements Comparable<NodeRef> {
         }
         int idx = fullPath.lastIndexOf(PATH_SEPARATOR);
         if (idx == -1) {
-            return "";
+            return ROOT;
         }
         return fullPath.substring(0, idx);
     }
@@ -296,7 +298,7 @@ public class NodeRef implements Comparable<NodeRef> {
     public static String appendChild(String parentTreePath, String childName) {
         checkNotNull(parentTreePath);
         checkNotNull(childName);
-        return "".equals(parentTreePath) ? childName : new StringBuilder(parentTreePath)
+        return ROOT.equals(parentTreePath) ? childName : new StringBuilder(parentTreePath)
                 .append(PATH_SEPARATOR).append(childName).toString();
     }
 

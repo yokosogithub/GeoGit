@@ -54,6 +54,8 @@ public class DiffOp extends AbstractGeoGitOp<Iterator<DiffEntry>> {
 
     private boolean cached;
 
+    private boolean reportTrees;
+
     /**
      * @param compareIndex if true, the index will be used in the comparison
      */
@@ -121,14 +123,16 @@ public class DiffOp extends AbstractGeoGitOp<Iterator<DiffEntry>> {
         Iterator<DiffEntry> iterator;
         if (cached) {
             // compare the tree-ish (default to HEAD) and the index
-            DiffIndex diffIndex = command(DiffIndex.class).setFilter(this.pathFilter);
+            DiffIndex diffIndex = command(DiffIndex.class).setFilter(this.pathFilter)
+                    .setReportTrees(reportTrees);
             if (oldRefSpec != null) {
                 diffIndex.setOldVersion(oldRefSpec);
             }
             iterator = diffIndex.call();
         } else if (newRefSpec == null) {
 
-            DiffWorkTree workTreeIndexDiff = command(DiffWorkTree.class).setFilter(pathFilter);
+            DiffWorkTree workTreeIndexDiff = command(DiffWorkTree.class).setFilter(pathFilter)
+                    .setReportTrees(reportTrees);
             if (oldRefSpec != null) {
                 workTreeIndexDiff.setOldVersion(oldRefSpec);
             }
@@ -136,10 +140,19 @@ public class DiffOp extends AbstractGeoGitOp<Iterator<DiffEntry>> {
         } else {
 
             iterator = command(DiffTree.class).setOldVersion(oldRefSpec).setNewVersion(newRefSpec)
-                    .setFilterPath(pathFilter).call();
+                    .setFilterPath(pathFilter).setReportTrees(reportTrees).call();
         }
 
         return iterator;
+    }
+
+    /**
+     * @param b
+     * @return
+     */
+    public DiffOp setReportTrees(boolean reportTrees) {
+        this.reportTrees = reportTrees;
+        return this;
     }
 
 }

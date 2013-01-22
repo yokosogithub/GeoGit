@@ -13,6 +13,7 @@ import org.geogit.api.Node;
 import org.geogit.api.NodeRef;
 import org.geogit.api.ObjectId;
 import org.geogit.api.Ref;
+import org.geogit.api.RevObject.TYPE;
 import org.geogit.api.RevTree;
 import org.geogit.api.RevTreeBuilder;
 import org.geogit.api.plumbing.diff.DiffEntry;
@@ -110,6 +111,10 @@ public class WriteTree extends AbstractGeoGitOp<ObjectId> {
             }
 
             DiffEntry diff = staged.next();
+            // ignore the root entry
+            if (NodeRef.ROOT.equals(diff.newName()) || NodeRef.ROOT.equals(diff.oldName())) {
+                continue;
+            }
             ref = diff.getNewObject();
 
             if (ref == null) {
@@ -131,7 +136,16 @@ public class WriteTree extends AbstractGeoGitOp<ObjectId> {
             if (isDelete) {
                 parentTree.remove(diff.getOldObject().getNode().getName());
             } else {
-                deepMove(ref.getNode());
+                if (ref.getType().equals(TYPE.TREE)) {
+                    RevTree tree = index.getDatabase().getTree(ref.objectId());
+                    if (tree.isEmpty()) {
+                        repositoryDatabase.put(tree);
+                    } else {
+                        continue;
+                    }
+                } else {
+                    deepMove(ref.getNode());
+                }
                 parentTree.put(ref.getNode());
             }
         }
@@ -142,6 +156,12 @@ public class WriteTree extends AbstractGeoGitOp<ObjectId> {
 
         // now write back all changed trees
         ObjectId newTargetRootId = oldRootTree.getId();
+        RevTreeBuilder directRootEntries = repositoryChangedTrees.remove(NodeRef.ROOT);
+        if (directRootEntries != null) {
+            RevTree newRoot = directRootEntries.build();
+            repositoryDatabase.put(newRoot);
+            newTargetRootId = newRoot.getId();
+        }
         for (Map.Entry<String, RevTreeBuilder> e : repositoryChangedTrees.entrySet()) {
             String treePath = e.getKey();
             ObjectId metadataId = changedTreesMetadataId.get(treePath);
@@ -166,6 +186,9 @@ public class WriteTree extends AbstractGeoGitOp<ObjectId> {
     private void resolveSourceTreeRef(String parentPath, Map<String, NodeRef> indexChangedTrees,
             Map<String, ObjectId> metadataCache) {
 
+        if (NodeRef.ROOT.equals(parentPath)) {
+            return;
+        }
         NodeRef indexTreeRef = indexChangedTrees.get(parentPath);
 
         if (indexTreeRef == null) {
@@ -193,18 +216,22 @@ public class WriteTree extends AbstractGeoGitOp<ObjectId> {
 
         RevTreeBuilder treeBuilder = treeCache.get(treePath);
         if (treeBuilder == null) {
-            Optional<NodeRef> treeRef = command(FindTreeChild.class).setIndex(false)
-                    .setParent(root).setChildPath(treePath).call();
-            if (treeRef.isPresent()) {
-                metadataCache.put(treePath, treeRef.get().getMetadataId());
-                treeBuilder = command(RevObjectParse.class).setObjectId(treeRef.get().objectId())
-                        .call(RevTree.class).get().builder(repositoryDatabase);
-                treeCache.put(treePath, treeBuilder);
+            if (NodeRef.ROOT.equals(treePath)) {
+                treeBuilder = root.builder(repositoryDatabase);
             } else {
-                metadataCache.put(treePath, ObjectId.NULL);
-                treeBuilder = new RevTreeBuilder(repositoryDatabase);
-                treeCache.put(treePath, treeBuilder);
+                Optional<NodeRef> treeRef = command(FindTreeChild.class).setIndex(false)
+                        .setParent(root).setChildPath(treePath).call();
+                if (treeRef.isPresent()) {
+                    metadataCache.put(treePath, treeRef.get().getMetadataId());
+                    treeBuilder = command(RevObjectParse.class)
+                            .setObjectId(treeRef.get().objectId()).call(RevTree.class).get()
+                            .builder(repositoryDatabase);
+                } else {
+                    metadataCache.put(treePath, ObjectId.NULL);
+                    treeBuilder = new RevTreeBuilder(repositoryDatabase);
+                }
             }
+            treeCache.put(treePath, treeBuilder);
         }
         return treeBuilder;
     }

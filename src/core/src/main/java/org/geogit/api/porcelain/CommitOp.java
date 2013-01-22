@@ -221,8 +221,7 @@ public class CommitOp extends AbstractGeoGitOp<RevCommit> {
         float writeTreeProgress = 99f;
         if (all) {
             writeTreeProgress = 50f;
-            command(AddOp.class).addPattern(".").setUpdateOnly(true)
-                    .setProgressListener(subProgress(49f)).call();
+            command(AddOp.class).setUpdateOnly(true).setProgressListener(subProgress(49f)).call();
         }
         if (getProgressListener().isCanceled()) {
             return null;
