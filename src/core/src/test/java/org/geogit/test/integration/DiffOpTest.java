@@ -4,12 +4,9 @@
  */
 package org.geogit.test.integration;
 
-import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
-
-import javax.annotation.Nullable;
 
 import org.geogit.api.NodeRef;
 import org.geogit.api.ObjectId;

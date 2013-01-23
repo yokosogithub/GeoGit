@@ -141,4 +141,11 @@ public class GeoGIT {
         return injector.getInstance(Platform.class);
     }
 
+    /**
+     * @return
+     */
+    public CommandLocator getCommandLocator() {
+        return injector.getInstance(CommandLocator.class);
+    }
+
 }

@@ -42,6 +42,7 @@ import com.google.common.base.Optional;
 import com.google.common.collect.BiMap;
 import com.google.common.collect.ImmutableBiMap;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.vividsolutions.jts.geom.Envelope;
 import com.vividsolutions.jts.geom.Geometry;
@@ -89,14 +90,21 @@ class GeogitSimpleFeature implements SimpleFeature {
      * @param validating
      * @param nameToRevTypeInded - attribute name to value index mapping
      */
-    public GeogitSimpleFeature(List<Optional<Object>> values, SimpleFeatureType featureType,
-            FeatureId id, Map<String, Integer> nameToRevTypeInded,
+    public GeogitSimpleFeature(ImmutableList<Optional<Object>> values,
+            SimpleFeatureType featureType, FeatureId id, Map<String, Integer> nameToRevTypeInded,
             BiMap<Integer, Integer> typeToRevTypeIndex) {
         this.id = id;
         this.featureType = featureType;
         this.revFeatureValues = values;
         this.nameToRevTypeIndex = nameToRevTypeInded;
         this.typeToRevTypeIndex = typeToRevTypeIndex;
+    }
+
+    private List<Optional<Object>> mutableValues() {
+        if (revFeatureValues instanceof ImmutableList) {
+            revFeatureValues = Lists.newArrayList(revFeatureValues);
+        }
+        return revFeatureValues;
     }
 
     @Override
@@ -189,8 +197,8 @@ class GeogitSimpleFeature implements SimpleFeature {
         Object converted = Converters.convert(value, binding);
 
         // finally set the value into the feature
-        Integer revFeatureIndex = typeToRevTypeIndex.inverse().get(index);
-        revFeatureValues.set(revFeatureIndex.intValue(), Optional.fromNullable(converted));
+        Integer revFeatureIndex = typeToRevTypeIndex.get(index);
+        mutableValues().set(revFeatureIndex.intValue(), Optional.fromNullable(converted));
     }
 
     @Override
@@ -199,7 +207,8 @@ class GeogitSimpleFeature implements SimpleFeature {
         if (revTypeIndex == null) {
             throw new IllegalAttributeException(null, "Unknown attribute " + name);
         }
-        setAttribute(typeToRevTypeIndex.inverse().get(revTypeIndex), value);
+        Integer schemaIndex = typeToRevTypeIndex.inverse().get(revTypeIndex);
+        setAttribute(schemaIndex, value);
     }
 
     @Override
@@ -209,7 +218,8 @@ class GeogitSimpleFeature implements SimpleFeature {
 
     @Override
     public void setAttributes(List<Object> values) {
-        for (int i = 0; i < this.revFeatureValues.size(); i++) {
+        List<Optional<Object>> revFeatureValues = mutableValues();
+        for (int i = 0; i < revFeatureValues.size(); i++) {
             setAttribute(i, values.get(i));
         }
     }
@@ -223,7 +233,7 @@ class GeogitSimpleFeature implements SimpleFeature {
     public void setDefaultGeometry(Object geometry) {
         Integer geometryIndex = nameToRevTypeIndex.get(null);
         if (geometryIndex != null) {
-            revFeatureValues.set(geometryIndex.intValue(), Optional.fromNullable(geometry));
+            mutableValues().set(geometryIndex.intValue(), Optional.fromNullable(geometry));
         }
     }
 
@@ -323,12 +333,12 @@ class GeogitSimpleFeature implements SimpleFeature {
     public void setValue(Collection<Property> values) {
         int index = 0;
         for (Property p : values) {
-            this.revFeatureValues.set(typeToRevTypeIndex(index),
-                    Optional.fromNullable(p.getValue()));
+            mutableValues().set(typeToRevTypeIndex(index), Optional.fromNullable(p.getValue()));
             index++;
         }
     }
 
+    @SuppressWarnings("unchecked")
     @Override
     public void setValue(Object newValue) {
         setValue((Collection<Property>) newValue);
@@ -441,7 +451,7 @@ class GeogitSimpleFeature implements SimpleFeature {
         @Override
         public Attribute set(int index, Property element) {
             Integer revFeatureIdx = typeToRevTypeIndex.get(Integer.valueOf(index));
-            revFeatureValues.set(revFeatureIdx, Optional.fromNullable(element.getValue()));
+            mutableValues().set(revFeatureIdx, Optional.fromNullable(element.getValue()));
             return null;
         }
 
@@ -490,6 +500,7 @@ class GeogitSimpleFeature implements SimpleFeature {
             return getDescriptor().getName();
         }
 
+        @SuppressWarnings("unchecked")
         @Override
         public Map<Object, Object> getUserData() {
             // lazily create the user data holder
@@ -513,7 +524,7 @@ class GeogitSimpleFeature implements SimpleFeature {
 
         @Override
         public void setValue(Object newValue) {
-            revFeatureValues.set(typeToRevTypeIndex(index), Optional.fromNullable(newValue));
+            mutableValues().set(typeToRevTypeIndex(index), Optional.fromNullable(newValue));
         }
 
         /**

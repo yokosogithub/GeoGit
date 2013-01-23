@@ -296,6 +296,8 @@ public class WorkingTree {
      */
     public void delete(Iterator<String> features) {
         Map<String, RevTreeBuilder> parents = Maps.newHashMap();
+
+        final RevTree currentWorkHead = getTree();
         while (features.hasNext()) {
             String featurePath = features.next();
             // System.err.println("removing " + feature);
@@ -305,7 +307,7 @@ public class WorkingTree {
                 parentTree = parents.get(parentPath);
             } else {
                 parentTree = commandLocator.command(FindOrCreateSubtree.class).setIndex(true)
-                        .setParent(Suppliers.ofInstance(Optional.of(getTree())))
+                        .setParent(Suppliers.ofInstance(Optional.of(currentWorkHead)))
                         .setChildPath(parentPath).call().builder(indexDatabase);
                 parents.put(parentPath, parentTree);
             }
@@ -315,23 +317,21 @@ public class WorkingTree {
         ObjectId newTree = null;
         for (Map.Entry<String, RevTreeBuilder> entry : parents.entrySet()) {
             String path = entry.getKey();
-            Optional<NodeRef> typeTreeRef = commandLocator.command(FindTreeChild.class)
-                    .setIndex(true).setParent(getTree()).setChildPath(path).call();
-
-            ObjectId parentMetadataId = null;
-            if (typeTreeRef.isPresent()) {
-                parentMetadataId = typeTreeRef.get().getMetadataId();
-            }
 
             RevTreeBuilder parentTree = entry.getValue();
+            RevTree newTypeTree = parentTree.build();
+
+            ObjectId metadataId = null;
+            Optional<NodeRef> currentTreeRef = commandLocator.command(FindTreeChild.class)
+                    .setParent(currentWorkHead).setChildPath(path).call();
+            if (currentTreeRef.isPresent()) {
+                metadataId = currentTreeRef.get().getMetadataId();
+            }
             newTree = commandLocator.command(WriteBack.class).setAncestor(getTreeSupplier())
-                    .setChildPath(path).setToIndex(true).setTree(parentTree.build()).call();
+                    .setChildPath(path).setToIndex(true).setTree(newTypeTree)
+                    .setMetadataId(metadataId).call();
             updateWorkHead(newTree);
         }
-        /*
-         * if (newTree != null) { updateWorkHead(newTree); }
-         */
-
     }
 
     public NodeRef createTypeTree(final String treePath, final FeatureType featureType) {
@@ -409,7 +409,7 @@ public class WorkingTree {
      * @param collectionSize number of features to add
      * @throws Exception
      */
-    public void insert(final String treePath, Iterator<Feature> features,
+    public void insert(final String treePath, Iterator<? extends Feature> features,
             boolean forceUseProvidedFID, ProgressListener listener,
             @Nullable List<Node> insertedTarget, @Nullable Integer collectionSize) throws Exception {
 
@@ -443,9 +443,10 @@ public class WorkingTree {
         putInDatabase(treePath, features, listener, size, insertedTarget, parentTree,
                 treeRef.getMetadataId());
 
+        RevTree newTypeTree = parentTree.build();
         ObjectId newTree = commandLocator.command(WriteBack.class).setAncestor(getTreeSupplier())
                 .setChildPath(treePath).setMetadataId(treeRef.getMetadataId()).setToIndex(true)
-                .setTree(parentTree.build()).call();
+                .setTree(newTypeTree).call();
 
         updateWorkHead(newTree);
     }
@@ -556,10 +557,10 @@ public class WorkingTree {
      * @param defaultMetadataId
      * @throws Exception
      */
-    private void putInDatabase(final String parentTreePath, final Iterator<Feature> objects,
-            final ProgressListener progress, final @Nullable Integer size,
-            @Nullable final List<Node> target, final RevTreeBuilder parentTree,
-            ObjectId defaultMetadataId) throws Exception {
+    private void putInDatabase(final String parentTreePath,
+            final Iterator<? extends Feature> objects, final ProgressListener progress,
+            final @Nullable Integer size, @Nullable final List<Node> target,
+            final RevTreeBuilder parentTree, ObjectId defaultMetadataId) throws Exception {
 
         checkNotNull(objects);
         checkNotNull(progress);

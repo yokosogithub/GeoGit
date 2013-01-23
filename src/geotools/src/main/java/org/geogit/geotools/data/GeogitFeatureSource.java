@@ -10,34 +10,33 @@ import java.util.Set;
 
 import javax.annotation.Nullable;
 
-import org.geogit.api.GeoGIT;
+import org.geogit.api.CommandLocator;
 import org.geogit.api.NodeRef;
 import org.geogit.api.ObjectId;
+import org.geogit.api.Ref;
 import org.geogit.api.RevFeatureType;
 import org.geogit.api.RevTree;
 import org.geogit.api.plumbing.RevObjectParse;
+import org.geogit.repository.WorkingTree;
 import org.geotools.data.FeatureReader;
 import org.geotools.data.FeatureSource;
 import org.geotools.data.Query;
+import org.geotools.data.Transaction;
 import org.geotools.data.store.ContentEntry;
 import org.geotools.data.store.ContentFeatureSource;
-import org.geotools.factory.CommonFactoryFinder;
+import org.geotools.data.store.ContentState;
 import org.geotools.factory.Hints;
-import org.geotools.filter.spatial.ReprojectingFilterVisitor;
 import org.geotools.filter.visitor.SimplifyingFilterVisitor;
-import org.geotools.filter.visitor.SpatialFilterVisitor;
 import org.geotools.geometry.jts.ReferencedEnvelope;
 import org.opengis.feature.FeatureVisitor;
 import org.opengis.feature.simple.SimpleFeature;
 import org.opengis.feature.simple.SimpleFeatureType;
 import org.opengis.feature.type.Name;
 import org.opengis.filter.Filter;
-import org.opengis.filter.FilterFactory2;
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
 
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
-import com.vividsolutions.jts.geom.Envelope;
 
 /**
  *
@@ -112,21 +111,14 @@ public class GeogitFeatureSource extends ContentFeatureSource {
         return false;
     }
 
-    /**
-     * shortcut for {@code getDataStore().getGeogit()}
-     */
-    GeoGIT getGeogit() {
-        return getDataStore().getGeogit();
-    }
-
     @Override
     public GeoGitDataStore getDataStore() {
         return (GeoGitDataStore) super.getDataStore();
     }
 
     @Override
-    public GeogitTransactionState getState() {
-        return (GeogitTransactionState) super.getState();
+    public ContentState getState() {
+        return super.getState();
     }
 
     /**
@@ -140,14 +132,16 @@ public class GeogitFeatureSource extends ContentFeatureSource {
 
     @Override
     protected ReferencedEnvelope getBoundsInternal(Query query) throws IOException {
-        // TODO optimize, please
+        final Filter filter = (Filter) query.getFilter().accept(new SimplifyingFilterVisitor(),
+                null);
         final CoordinateReferenceSystem crs = getSchema().getCoordinateReferenceSystem();
-        if (Filter.INCLUDE.equals(query.getFilter())) {
-            NodeRef typeRef = getDataStore().findTypeRef(getName());
+        if (Filter.INCLUDE.equals(filter)) {
+            NodeRef typeRef = getDataStore().findTypeRef(getName(), getTransaction());
             ReferencedEnvelope bounds = new ReferencedEnvelope(crs);
             typeRef.getNode().expand(bounds);
             return bounds;
         }
+        // TODO optimize, please
         FeatureReader<SimpleFeatureType, SimpleFeature> features = getReader(query);
         ReferencedEnvelope bounds = new ReferencedEnvelope(crs);
         try {
@@ -162,7 +156,8 @@ public class GeogitFeatureSource extends ContentFeatureSource {
 
     @Override
     protected int getCountInternal(Query query) throws IOException {
-        final Filter filter = query.getFilter();
+        final Filter filter = (Filter) query.getFilter().accept(new SimplifyingFilterVisitor(),
+                null);
         if (Filter.EXCLUDE.equals(filter)) {
             return 0;
         }
@@ -189,47 +184,24 @@ public class GeogitFeatureSource extends ContentFeatureSource {
         return count;
     }
 
-    /**
-     * @return
-     */
-    private RevTree getTypeTree() {
-        NodeRef typeRef = getDataStore().findTypeRef(getName());
-        return getGeogit().command(RevObjectParse.class).setObjectId(typeRef.objectId())
-                .call(RevTree.class).get();
-    }
-
     @Override
     protected FeatureReader<SimpleFeatureType, SimpleFeature> getReaderInternal(Query query)
             throws IOException {
 
-        final Filter queryFilter = (Filter) query.getFilter().accept(
-                new SimplifyingFilterVisitor(), null);
-        Filter filter = queryFilter;
+        final Filter filter = (Filter) query.getFilter().accept(new SimplifyingFilterVisitor(),
+                null);
+
         GeogitFeatureReader<SimpleFeatureType, SimpleFeature> nativeReader;
 
-        final GeoGIT geogit = getGeogit();
         final SimpleFeatureType schema = getSchema();
         final NodeRef typeRef = getTypeRef();
+        final String configuredBranch = getDataStore().getConfiguredBranch();
 
-        Envelope queryBounds = null;
-
-        if (hasSpatialFilter(queryFilter)) {
-            FilterFactory2 factory = CommonFactoryFinder.getFilterFactory2();
-            filter = (Filter) queryFilter.accept(new ReprojectingFilterVisitor(factory, schema),
-                    null);
-            queryBounds = (Envelope) filter.accept(new ExtractBounds(), queryBounds);
-        }
-
-        nativeReader = new GeogitFeatureReader<SimpleFeatureType, SimpleFeature>(geogit, schema,
-                typeRef, filter, queryBounds);
+        final CommandLocator commandLocator = getCommandLocator();
+        nativeReader = new GeogitFeatureReader<SimpleFeatureType, SimpleFeature>(commandLocator,
+                schema, typeRef, filter, configuredBranch);
 
         return nativeReader;
-    }
-
-    private boolean hasSpatialFilter(Filter filter) {
-        SpatialFilterVisitor spatialFilterVisitor = new SpatialFilterVisitor();
-        filter.accept(spatialFilterVisitor, null);
-        return spatialFilterVisitor.hasSpatialFilter();
     }
 
     @Override
@@ -239,9 +211,8 @@ public class GeogitFeatureSource extends ContentFeatureSource {
         final String treePath = typeRef.path();
         final ObjectId metadataId = typeRef.getMetadataId();
 
-        final GeoGIT geogit = getGeogit();
-
-        Optional<RevFeatureType> revType = geogit.command(RevObjectParse.class)
+        CommandLocator commandLocator = getCommandLocator();
+        Optional<RevFeatureType> revType = commandLocator.command(RevObjectParse.class)
                 .setObjectId(metadataId).call(RevFeatureType.class);
         if (revType.isPresent()) {
             SimpleFeatureType featureType = (SimpleFeatureType) revType.get().type();
@@ -252,10 +223,45 @@ public class GeogitFeatureSource extends ContentFeatureSource {
                 treePath));
     }
 
+    CommandLocator getCommandLocator() {
+        CommandLocator commandLocator = getDataStore().getCommandLocator(getTransaction());
+        return commandLocator;
+    }
+
+    String getTypeTreePath() {
+        NodeRef typeRef = getTypeRef();
+        String path = typeRef.path();
+        return path;
+    }
+
     /**
      * @return
      */
-    private NodeRef getTypeRef() {
-        return getDataStore().findTypeRef(getName());
+    NodeRef getTypeRef() {
+        GeoGitDataStore dataStore = getDataStore();
+        Name name = getName();
+        Transaction transaction = getTransaction();
+        return dataStore.findTypeRef(name, transaction);
+    }
+
+    /**
+     * @return
+     */
+    RevTree getTypeTree() {
+        String refSpec = Ref.WORK_HEAD + ":" + getTypeTreePath();
+        CommandLocator commandLocator = getCommandLocator();
+        Optional<RevTree> ref = commandLocator.command(RevObjectParse.class).setRefSpec(refSpec)
+                .call(RevTree.class);
+        Preconditions.checkState(ref.isPresent(), "Ref %s not found on working tree", refSpec);
+        return ref.get();
+    }
+
+    /**
+     * @return
+     */
+    WorkingTree getWorkingTree() {
+        Transaction transaction = getTransaction();
+        GeoGitDataStore dataStore = getDataStore();
+        return dataStore.getWorkingTree(transaction);
     }
 }

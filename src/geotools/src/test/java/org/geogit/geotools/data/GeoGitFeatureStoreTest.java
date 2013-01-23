@@ -18,9 +18,7 @@ package org.geogit.geotools.data;
 
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 import org.geogit.api.porcelain.CommitOp;
 import org.geogit.test.integration.RepositoryTestCase;
@@ -79,8 +77,6 @@ public class GeoGitFeatureStoreTest extends RepositoryTestCase {
         } catch (UnsupportedOperationException e) {
             assertTrue(e.getMessage().contains("AUTO_COMMIT"));
         }
-
-        final Set<String> insertedFids = new HashSet<String>(Arrays.asList(idP1, idP2, idP3));
 
         Transaction tx = new DefaultTransaction();
         points.setTransaction(tx);
@@ -172,12 +168,10 @@ public class GeoGitFeatureStoreTest extends RepositoryTestCase {
         }
     }
 
-    @SuppressWarnings("deprecation")
     @Test
     public void testModifyFeatures() throws Exception {
-        // add features circunventing FeatureStore.addFeatures to keep the test
-        // independent of the
-        // addFeatures functionality
+        // add features circumventing FeatureStore.addFeatures to keep the test
+        // independent of the addFeatures functionality
         insertAndAdd(lines1, lines2, lines3, points1, points2, points3);
         geogit.command(CommitOp.class).call();
 
@@ -186,15 +180,17 @@ public class GeoGitFeatureStoreTest extends RepositoryTestCase {
         points.setTransaction(tx);
         try {
             // initial value
-            assertEquals("StringProp1_1", points.getFeatures(filter).features().next()
-                    .getAttribute("sp"));
+            SimpleFeature initial = points.getFeatures(filter).features().next();
+            assertEquals("StringProp1_1", initial.getAttribute("sp"));
+
             // modify
             points.modifyFeatures("sp", "modified", filter);
+
             // modified value before commit
-            assertEquals("modified", points.getFeatures(filter).features().next()
-                    .getAttribute("sp"));
-            // unmodified value before commit on another store instance (tx
-            // isolation)
+            SimpleFeature modified = points.getFeatures(filter).features().next();
+            assertEquals("modified", modified.getAttribute("sp"));
+
+            // unmodified value before commit on another store instance (tx isolation)
             assertEquals("StringProp1_1",
                     dataStore.getFeatureSource(pointsTypeName).getFeatures(filter).features()
                             .next().getAttribute("sp"));
@@ -210,6 +206,7 @@ public class GeoGitFeatureStoreTest extends RepositoryTestCase {
         } finally {
             tx.close();
         }
+        points.setTransaction(Transaction.AUTO_COMMIT);
         SimpleFeature modified = points.getFeatures(filter).features().next();
         assertEquals("modified", modified.getAttribute("sp"));
     }
@@ -222,10 +219,11 @@ public class GeoGitFeatureStoreTest extends RepositoryTestCase {
 
     @Test
     public void testRemoveFeatures() throws Exception {
-        // add features circunventing FeatureStore.addFeatures to keep the test
+        // add features circunmventing FeatureStore.addFeatures to keep the test
         // independent of the
         // addFeatures functionality
-        insertAndAdd(lines1, lines2, lines3, points1, points2, points3);
+        insertAndAdd(lines1, lines2, lines3);
+        insertAndAdd(points1, points2, points3);
         geogit.command(CommitOp.class).call();
 
         Id filter = ff.id(Collections.singleton(ff.featureId(idP1)));
@@ -253,7 +251,7 @@ public class GeoGitFeatureStoreTest extends RepositoryTestCase {
         } finally {
             tx.close();
         }
-
+        points.setTransaction(Transaction.AUTO_COMMIT);
         assertEquals(2, points.getFeatures().size());
         assertEquals(0, points.getFeatures(filter).size());
     }

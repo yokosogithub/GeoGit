@@ -13,8 +13,8 @@ import javax.annotation.Nullable;
 
 import org.geogit.api.Bounded;
 import org.geogit.api.Bucket;
+import org.geogit.api.CommandLocator;
 import org.geogit.api.FeatureBuilder;
-import org.geogit.api.GeoGIT;
 import org.geogit.api.Node;
 import org.geogit.api.NodeRef;
 import org.geogit.api.Ref;
@@ -24,11 +24,15 @@ import org.geogit.api.plumbing.LsTreeOp;
 import org.geogit.api.plumbing.LsTreeOp.Strategy;
 import org.geogit.api.plumbing.RevObjectParse;
 import org.geotools.data.FeatureReader;
+import org.geotools.factory.CommonFactoryFinder;
+import org.geotools.filter.spatial.ReprojectingFilterVisitor;
+import org.geotools.filter.visitor.SpatialFilterVisitor;
 import org.opengis.feature.Feature;
 import org.opengis.feature.simple.SimpleFeature;
 import org.opengis.feature.simple.SimpleFeatureType;
 import org.opengis.feature.type.FeatureType;
 import org.opengis.filter.Filter;
+import org.opengis.filter.FilterFactory2;
 
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
@@ -70,22 +74,26 @@ public class GeogitFeatureReader<T extends FeatureType, F extends Feature> imple
     }
 
     /**
-     * @param geogit
+     * @param commandLocator
      * @param schema
      * @param typeTree
      * @param filter
      * @param queryBounds
      */
-    public GeogitFeatureReader(final GeoGIT geogit, final SimpleFeatureType schema,
-            final NodeRef treeRef, final Filter filter, @Nullable final Envelope queryBounds) {
+    public GeogitFeatureReader(final CommandLocator commandLocator, final SimpleFeatureType schema,
+            final NodeRef treeRef, final Filter origFilter, @Nullable final String branch) {
 
         this.schema = schema;
         this.stats = new Stats();
 
-        String refSpec = Ref.WORK_HEAD + ":" + treeRef.path();
+        final String branchRef = branch == null ? Ref.WORK_HEAD : branch;
+        String refSpec = branchRef + ":" + treeRef.path();
+
+        final Filter filter = reprojectFilter(origFilter);
+        final Envelope queryBounds = getQueryBounds(filter);
 
         Predicate<Bounded> refBoundsFilter = Predicates.alwaysTrue();
-        if (queryBounds != null) {
+        if (!queryBounds.isNull()) {
             refBoundsFilter = new Predicate<Bounded>() {
                 private final Envelope env = queryBounds;
 
@@ -125,13 +133,15 @@ public class GeogitFeatureReader<T extends FeatureType, F extends Feature> imple
                 }
             };
         }
-        Iterator<NodeRef> refs = geogit.command(LsTreeOp.class).setStrategy(Strategy.FEATURES_ONLY)
-                .setReference(refSpec).setBoundsFilter(refBoundsFilter).call();
+
+        final Iterator<NodeRef> featureRefs = commandLocator.command(LsTreeOp.class)
+                .setStrategy(Strategy.FEATURES_ONLY).setReference(refSpec)
+                .setBoundsFilter(refBoundsFilter).call();
 
         this.featureBuilder = new FeatureBuilder(schema);
-        this.parseRevFeatureCommand = geogit.command(RevObjectParse.class);
+        this.parseRevFeatureCommand = commandLocator.command(RevObjectParse.class);
 
-        Iterator<SimpleFeature> featuresUnfiltered = Iterators.transform(refs,
+        final Iterator<SimpleFeature> featuresUnfiltered = Iterators.transform(featureRefs,
                 new Function<NodeRef, SimpleFeature>() {
 
                     @Override
@@ -152,6 +162,34 @@ public class GeogitFeatureReader<T extends FeatureType, F extends Feature> imple
                 return filter.evaluate(feature);
             }
         });
+    }
+
+    private Envelope getQueryBounds(Filter filter) {
+
+        final Envelope queryBounds = new Envelope();
+        Envelope bounds = (Envelope) filter.accept(new ExtractBounds(), queryBounds);
+        if (bounds != null) {
+            queryBounds.expandToInclude(bounds);
+        }
+        return queryBounds;
+    }
+
+    /**
+     * @param filter
+     * @return
+     */
+    private Filter reprojectFilter(Filter filter) {
+        if (hasSpatialFilter(filter)) {
+            FilterFactory2 factory = CommonFactoryFinder.getFilterFactory2();
+            filter = (Filter) filter.accept(new ReprojectingFilterVisitor(factory, schema), null);
+        }
+        return filter;
+    }
+
+    private boolean hasSpatialFilter(Filter filter) {
+        SpatialFilterVisitor spatialFilterVisitor = new SpatialFilterVisitor();
+        filter.accept(spatialFilterVisitor, null);
+        return spatialFilterVisitor.hasSpatialFilter();
     }
 
     @SuppressWarnings("unchecked")

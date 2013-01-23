@@ -23,6 +23,8 @@ import java.io.Serializable;
 import java.util.Collections;
 import java.util.Map;
 
+import javax.annotation.Nullable;
+
 import org.geogit.api.GeoGIT;
 import org.geogit.api.GlobalInjectorBuilder;
 import org.geogit.api.InjectorBuilder;
@@ -43,6 +45,12 @@ public class GeoGitDataStoreFactory implements DataStoreFactorySpi {
 
     public static final Param REPOSITORY = new Param("geogit_repository", File.class,
             "Root directory for the geogit repository", true, "/path/to/repository");
+
+    public static final Param BRANCH = new Param(
+            "branch",
+            String.class,
+            "Optional branch name the DataStore operates against, defaults to the currently checked out branch",
+            false);
 
     public static final Param DEFAULT_NAMESPACE = new Param("namespace", String.class,
             "Optional namespace for feature types that do not declare a Namespace themselves",
@@ -90,9 +98,13 @@ public class GeoGitDataStoreFactory implements DataStoreFactorySpi {
     @Override
     public GeoGitDataStore createDataStore(Map<String, Serializable> params) throws IOException {
 
-        String defaultNamespace = (String) DEFAULT_NAMESPACE.lookUp(params);
+        final File repositoryRoot = (File) REPOSITORY.lookUp(params);
 
-        File repositoryRoot = (File) REPOSITORY.lookUp(params);
+        @Nullable
+        final String defaultNamespace = (String) DEFAULT_NAMESPACE.lookUp(params);
+
+        @Nullable
+        final String branch = (String) BRANCH.lookUp(params);
 
         GlobalInjectorBuilder.builder = new CLIInjectorBuilder();
         GeoGIT geogit;
@@ -110,6 +122,9 @@ public class GeoGitDataStoreFactory implements DataStoreFactorySpi {
         GeoGitDataStore store = new GeoGitDataStore(geogit);
         if (defaultNamespace != null) {
             store.setNamespaceURI(defaultNamespace);
+        }
+        if (branch != null) {
+            store.setBranch(branch);
         }
         return store;
     }

@@ -6,7 +6,13 @@
 package org.geogit.geotools.data;
 
 import java.io.IOException;
+import java.util.AbstractList;
+import java.util.Iterator;
+import java.util.List;
 
+import org.geogit.api.Node;
+import org.geogit.api.NodeRef;
+import org.geogit.repository.WorkingTree;
 import org.geotools.data.EmptyFeatureReader;
 import org.geotools.data.FeatureReader;
 import org.geotools.data.FeatureWriter;
@@ -16,14 +22,27 @@ import org.geotools.data.ResourceInfo;
 import org.geotools.data.Transaction;
 import org.geotools.data.store.ContentEntry;
 import org.geotools.data.store.ContentFeatureStore;
+import org.geotools.data.store.ContentState;
+import org.geotools.data.store.FeatureIteratorIterator;
+import org.geotools.feature.FeatureCollection;
+import org.geotools.feature.FeatureIterator;
+import org.geotools.feature.FeatureReaderIterator;
+import org.geotools.filter.identity.FeatureIdVersionedImpl;
+import org.geotools.filter.visitor.SimplifyingFilterVisitor;
 import org.geotools.geometry.jts.ReferencedEnvelope;
+import org.geotools.util.NullProgressListener;
+import org.opengis.feature.Feature;
 import org.opengis.feature.FeatureVisitor;
 import org.opengis.feature.simple.SimpleFeature;
 import org.opengis.feature.simple.SimpleFeatureType;
 import org.opengis.feature.type.Name;
 import org.opengis.filter.Filter;
+import org.opengis.filter.identity.FeatureId;
 
+import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.Iterators;
+import com.google.common.collect.Lists;
 
 /**
  *
@@ -90,7 +109,7 @@ public class GeogitFeatureStore extends ContentFeatureStore {
     }
 
     @Override
-    public GeogitTransactionState getState() {
+    public ContentState getState() {
         return delegate.getState();
     }
 
@@ -100,13 +119,21 @@ public class GeogitFeatureStore extends ContentFeatureStore {
     }
 
     @Override
-    public void setTransaction(Transaction transaction) {
+    public synchronized void setTransaction(Transaction transaction) {
         // we need to set both super and delegate transactions.
         super.setTransaction(transaction);
 
         // this guard ensures that a recursive loop will not form
         if (delegate.getTransaction() != transaction) {
             delegate.setTransaction(transaction);
+        }
+        if (!Transaction.AUTO_COMMIT.equals(transaction)) {
+            GeogitTransactionState geogitTx;
+            geogitTx = (GeogitTransactionState) transaction.getState(GeogitTransactionState.class);
+            if (geogitTx == null) {
+                geogitTx = new GeogitTransactionState(getEntry());
+                transaction.putState(GeogitTransactionState.class, geogitTx);
+            }
         }
     }
 
@@ -179,18 +206,164 @@ public class GeogitFeatureStore extends ContentFeatureStore {
             features = new EmptyFeatureReader<SimpleFeatureType, SimpleFeature>(getSchema());
         }
 
+        String path = delegate.getTypeTreePath();
+        GeoGitFeatureWriter writer;
         if ((flags | WRITER_ADD) == WRITER_ADD) {
+            writer = GeoGitFeatureWriter.createAppendable(features, path);
+        } else {
+            writer = GeoGitFeatureWriter.create(features, path);
         }
-        throw new UnsupportedOperationException("not yet");
+        return writer;
+    }
+
+    @Override
+    public final List<FeatureId> addFeatures(
+            FeatureCollection<SimpleFeatureType, SimpleFeature> featureCollection)
+            throws IOException {
+
+        if (Transaction.AUTO_COMMIT.equals(getTransaction())) {
+            throw new UnsupportedOperationException("GeoGIT does not support AUTO_COMMIT");
+        }
+        final WorkingTree workingTree = delegate.getWorkingTree();
+        final String path = delegate.getTypeTreePath();
+
+        boolean forceUseProvidedFID = true;
+        NullProgressListener listener = new NullProgressListener();
+
+        final List<FeatureId> insertedFids = Lists.newArrayList();
+        List<Node> deferringTarget = new AbstractList<Node>() {
+
+            @Override
+            public boolean add(Node node) {
+                String fid = node.getName();
+                String version = node.getObjectId().toString();
+                insertedFids.add(new FeatureIdVersionedImpl(fid, version));
+                return true;
+            }
+
+            @Override
+            public Node get(int index) {
+                throw new UnsupportedOperationException();
+            }
+
+            @Override
+            public int size() {
+                return 0;
+            }
+        };
+        Integer count = (Integer) null;
+
+        FeatureIterator<SimpleFeature> featureIterator = featureCollection.features();
+        try {
+            Iterator<SimpleFeature> features;
+            features = new FeatureIteratorIterator<SimpleFeature>(featureIterator);
+            workingTree.insert(path, features, forceUseProvidedFID, listener, deferringTarget,
+                    count);
+        } catch (Exception e) {
+            throw new IOException(e);
+        } finally {
+            featureIterator.close();
+        }
+
+        return insertedFids;
     }
 
     @Override
     public void modifyFeatures(Name[] names, Object[] values, Filter filter) throws IOException {
-        throw new UnsupportedOperationException("not yet");
+
+        final WorkingTree workingTree = delegate.getWorkingTree();
+        final String path = delegate.getTypeTreePath();
+        final Iterator<? extends Feature> features = modifyingFeatureIterator(names, values, filter);
+        try {
+            boolean forceUseProvidedFID = true;
+            NullProgressListener listener = new NullProgressListener();
+            List<Node> target = (List<Node>) null;
+            Integer count = (Integer) null;
+            workingTree.insert(path, features, forceUseProvidedFID, listener, target, count);
+        } catch (Exception e) {
+            throw new IOException(e);
+        }
+    }
+
+    /**
+     * @param names
+     * @param values
+     * @param filter
+     * @return
+     * @throws IOException
+     */
+    private Iterator<SimpleFeature> modifyingFeatureIterator(final Name[] names,
+            final Object[] values, final Filter filter) throws IOException {
+
+        Iterator<SimpleFeature> iterator = featureIterator(filter);
+
+        Function<SimpleFeature, SimpleFeature> modifyingFunction = new ModifyingFunction(names,
+                values);
+
+        Iterator<SimpleFeature> modifyingIterator = Iterators
+                .transform(iterator, modifyingFunction);
+        return modifyingIterator;
+    }
+
+    private Iterator<SimpleFeature> featureIterator(final Filter filter) throws IOException {
+        FeatureReader<SimpleFeatureType, SimpleFeature> unchanged = getReader(filter);
+        Iterator<SimpleFeature> iterator = new FeatureReaderIterator<SimpleFeature>(unchanged);
+        return iterator;
     }
 
     @Override
     public void removeFeatures(Filter filter) throws IOException {
-        throw new UnsupportedOperationException("not yet");
+        final WorkingTree workingTree = delegate.getWorkingTree();
+        final String typeTreePath = delegate.getTypeTreePath();
+        filter = (Filter) filter.accept(new SimplifyingFilterVisitor(), null);
+        if (Filter.INCLUDE.equals(filter)) {
+            workingTree.delete(typeTreePath);
+            return;
+        }
+        if (Filter.EXCLUDE.equals(filter)) {
+            return;
+        }
+
+        Iterator<SimpleFeature> featureIterator = featureIterator(filter);
+        Iterator<String> affectedFeaturePaths = Iterators.transform(featureIterator,
+                new Function<SimpleFeature, String>() {
+
+                    @Override
+                    public String apply(SimpleFeature input) {
+                        String fid = input.getID();
+                        return NodeRef.appendChild(typeTreePath, fid);
+                    }
+                });
+        workingTree.delete(affectedFeaturePaths);
+    }
+
+    /**
+    *
+    */
+    private static final class ModifyingFunction implements Function<SimpleFeature, SimpleFeature> {
+
+        private Name[] names;
+
+        private Object[] values;
+
+        /**
+         * @param names
+         * @param values
+         */
+        public ModifyingFunction(Name[] names, Object[] values) {
+            this.names = names;
+            this.values = values;
+        }
+
+        @Override
+        public SimpleFeature apply(SimpleFeature input) {
+            for (int i = 0; i < names.length; i++) {
+                Name attName = names[i];
+                Object attValue = values[i];
+                input.setAttribute(attName, attValue);
+            }
+            return input;
+        }
+
     }
 }
