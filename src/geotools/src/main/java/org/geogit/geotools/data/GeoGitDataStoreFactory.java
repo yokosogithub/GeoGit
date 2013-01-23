@@ -68,7 +68,7 @@ public class GeoGitDataStoreFactory implements DataStoreFactorySpi {
 
     @Override
     public Param[] getParametersInfo() {
-        return new Param[] { REPOSITORY, DEFAULT_NAMESPACE };
+        return new Param[] { REPOSITORY, BRANCH, DEFAULT_NAMESPACE };
     }
 
     @Override
