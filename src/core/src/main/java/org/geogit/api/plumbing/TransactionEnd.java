@@ -10,6 +10,7 @@ import java.util.concurrent.TimeoutException;
 import org.geogit.api.AbstractGeoGitOp;
 import org.geogit.api.GeogitTransaction;
 import org.geogit.api.Ref;
+import org.geogit.api.SymRef;
 import org.geogit.api.porcelain.CheckoutOp;
 import org.geogit.api.porcelain.RebaseOp;
 
@@ -71,6 +72,14 @@ public class TransactionEnd extends AbstractGeoGitOp<Boolean> {
                 "Cannot end a transaction within a transaction!");
         Preconditions.checkArgument(transaction != null, "No transaction was specified!");
 
+        final Optional<Ref> currHead = command(RefParse.class).setName(Ref.HEAD).call();
+        final String currentBranch;
+        if (currHead.isPresent() && currHead.get() instanceof SymRef) {
+            currentBranch = ((SymRef) currHead.get()).getTarget();
+        } else {
+            currentBranch = "";
+        }
+
         if (!cancel) {
             ImmutableSet<Ref> changedRefs = getChangedRefs();
             // Lock the repository
@@ -98,11 +107,20 @@ public class TransactionEnd extends AbstractGeoGitOp<Boolean> {
                     }
                     command(UpdateRef.class).setName(ref.getName())
                             .setNewValue(updatedRef.getObjectId()).call();
+
+                    if (currentBranch.equals(ref.getName())) {
+                        // Update HEAD, WORK_HEAD and STAGE_HEAD
+                        command(UpdateSymRef.class).setName(Ref.HEAD).setNewValue(ref.getName())
+                                .call();
+                        command(UpdateRef.class).setName(Ref.WORK_HEAD)
+                                .setNewValue(updatedRef.getObjectId()).call();
+                        command(UpdateRef.class).setName(Ref.STAGE_HEAD)
+                                .setNewValue(updatedRef.getObjectId()).call();
+                    }
                 }
 
-                // TODO: What should be done about HEAD, WORK_HEAD, and STAGE_HEAD?
-                // What happens if there are unstaged or staged changes in the repository when a
-                // transaction is committed?
+                // TODO: What happens if there are unstaged or staged changes in the repository when
+                // a transaction is committed?
             } finally {
                 // Unlock the repository
                 refDatabase.unlock();
