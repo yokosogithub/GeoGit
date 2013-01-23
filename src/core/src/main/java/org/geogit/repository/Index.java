@@ -4,10 +4,7 @@
  */
 package org.geogit.repository;
 
-import java.util.HashMap;
 import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.List;
 import java.util.Map;
 
 import javax.annotation.Nullable;
@@ -28,7 +25,6 @@ import org.geogit.api.plumbing.RevObjectParse;
 import org.geogit.api.plumbing.UpdateRef;
 import org.geogit.api.plumbing.WriteBack;
 import org.geogit.api.plumbing.diff.DiffEntry;
-import org.geogit.storage.ObjectSerialisingFactory;
 import org.geogit.storage.StagingDatabase;
 import org.opengis.util.ProgressListener;
 
@@ -214,7 +210,7 @@ public class Index implements StagingArea {
                 newRootTree = changedTree.getId();
             } else {
                 Supplier<RevTreeBuilder> rootTreeSupplier = getTreeSupplier();
-                newRootTree = repository.command(WriteBack.class).setAncestor(rootTreeSupplier)
+                newRootTree = commandLocator.command(WriteBack.class).setAncestor(rootTreeSupplier)
                         .setChildPath(changedTreePath).setMetadataId(parentMetadataId)
                         .setToIndex(true).setTree(changedTree).call();
             }
@@ -240,14 +236,14 @@ public class Index implements StagingArea {
             if (NodeRef.ROOT.equals(parentPath)) {
                 parentBuilder = currentIndexHead.builder(indexDatabase);
             } else {
-                Optional<NodeRef> parentRef = repository.command(FindTreeChild.class)
+                Optional<NodeRef> parentRef = commandLocator.command(FindTreeChild.class)
                         .setIndex(true).setParent(currentIndexHead).setChildPath(parentPath).call();
 
                 if (parentRef.isPresent()) {
                     parentMetadataId = parentRef.get().getMetadataId();
                 }
 
-                parentBuilder = repository.command(FindOrCreateSubtree.class)
+                parentBuilder = commandLocator.command(FindOrCreateSubtree.class)
                         .setParent(Suppliers.ofInstance(Optional.of(getTree()))).setIndex(true)
                         .setChildPath(parentPath).call().builder(getDatabase());
             }
@@ -255,80 +251,6 @@ public class Index implements StagingArea {
             parentMetadataIds.put(parentPath, parentMetadataId);
         }
         return parentBuilder;
-    }
-
-    public void stageOld(final ProgressListener progress, final Iterator<DiffEntry> unstaged,
-            final long numChanges) {
-        int i = 0;
-        progress.started();
-        // System.err.println("staging with path: " + path2 + ". Matches: " + numChanges);
-        Map<String, List<DiffEntry>> changeMap = new HashMap<String, List<DiffEntry>>();
-        while (unstaged.hasNext()) {
-            DiffEntry diff = unstaged.next();
-            NodeRef oldObject = diff.getOldObject();
-            NodeRef newObject = diff.getNewObject();
-            String path;
-            if (newObject == null) {
-                // Delete
-                path = oldObject.getParentPath();
-            } else {
-                path = newObject.getParentPath();
-            }
-            List<DiffEntry> changeList = changeMap.get(path);
-            if (changeList == null) {
-                changeList = new LinkedList<DiffEntry>();
-            }
-
-            changeList.add(diff);
-            changeMap.put(path, changeList);
-
-        }
-
-        Iterator<Map.Entry<String, List<DiffEntry>>> changes = changeMap.entrySet().iterator();
-        while (changes.hasNext()) {
-            Map.Entry<String, List<DiffEntry>> pairs = changes.next();
-
-            Optional<NodeRef> typeTreeRef = commandLocator.command(FindTreeChild.class)
-                    .setIndex(true).setParent(getTree()).setChildPath(pairs.getKey()).call();
-
-            ObjectId parentMetadataId = null;
-            if (typeTreeRef.isPresent()) {
-                parentMetadataId = typeTreeRef.get().getMetadataId();
-            }
-
-            RevTreeBuilder parentTree = commandLocator.command(FindOrCreateSubtree.class)
-                    .setParent(Suppliers.ofInstance(Optional.of(getTree()))).setIndex(true)
-                    .setChildPath(pairs.getKey()).call().builder(getDatabase());
-
-            for (DiffEntry diff : pairs.getValue()) {
-                i++;
-                progress.progress((float) (i * 100) / numChanges);
-
-                NodeRef oldObject = diff.getOldObject();
-                NodeRef newObject = diff.getNewObject();
-                if (newObject == null) {
-                    // Delete
-                    parentTree.remove(oldObject.name());
-                } else if (oldObject == null) {
-                    // Add
-                    parentTree.put(newObject.getNode());
-                    if (parentMetadataId == null) {
-                        parentMetadataId = newObject.getMetadataId();
-                    }
-                } else {
-                    // Modify
-                    parentTree.put(newObject.getNode());
-                }
-            }
-
-            ObjectId newTree = commandLocator.command(WriteBack.class)
-                    .setAncestor(getTreeSupplier()).setChildPath(pairs.getKey())
-                    .setMetadataId(parentMetadataId).setToIndex(true).setTree(parentTree.build())
-                    .call();
-
-            updateStageHead(newTree);
-        }
-        progress.complete();
     }
 
     /**
@@ -339,7 +261,7 @@ public class Index implements StagingArea {
     @Override
     public Iterator<DiffEntry> getStaged(final @Nullable String pathFilter) {
         Iterator<DiffEntry> unstaged = commandLocator.command(DiffIndex.class)
-                .setFilter(pathFilter).call();
+                .setFilter(pathFilter).setReportTrees(true).call();
         return unstaged;
     }
 

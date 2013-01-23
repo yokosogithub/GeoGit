@@ -21,6 +21,8 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.geogit.api.NodeRef;
+import org.geogit.api.Ref;
+import org.geogit.api.plumbing.LsTreeOp;
 import org.geogit.test.integration.RepositoryTestCase;
 import org.geotools.data.simple.SimpleFeatureSource;
 import org.geotools.feature.NameImpl;
@@ -29,6 +31,7 @@ import org.opengis.feature.simple.SimpleFeatureType;
 import org.opengis.feature.type.Name;
 
 import com.google.common.base.Function;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterators;
 import com.google.common.collect.Lists;
 
@@ -52,7 +55,10 @@ public class GeoGitDataStoreTest extends RepositoryTestCase {
         final SimpleFeatureType featureType = super.linesType;
         dataStore.createSchema(featureType);
 
-        List<NodeRef> typeTrees = geogit.getRepository().getWorkingTree().getFeatureTypeTrees();
+        List<NodeRef> typeTrees;
+        // typeTrees = geogit.getRepository().getWorkingTree().getFeatureTypeTrees();
+        typeTrees = ImmutableList.copyOf(geogit.command(LsTreeOp.class).setReference(Ref.HEAD)
+                .call());
         assertEquals(1, typeTrees.size());
         assertEquals(linesName, typeTrees.get(0).name());
 

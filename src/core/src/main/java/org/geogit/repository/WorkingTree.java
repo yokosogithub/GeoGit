@@ -493,7 +493,7 @@ public class WorkingTree {
      */
     public Iterator<DiffEntry> getUnstaged(final @Nullable String pathFilter) {
         Iterator<DiffEntry> unstaged = commandLocator.command(DiffWorkTree.class)
-                .setFilter(pathFilter).call();
+                .setFilter(pathFilter).setReportTrees(true).call();
         return unstaged;
     }
 

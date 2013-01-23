@@ -15,7 +15,6 @@ import org.geogit.api.GeogitTransaction;
 import org.geogit.api.NodeRef;
 import org.geogit.api.RevObject.TYPE;
 import org.geogit.api.plumbing.TransactionBegin;
-import org.geogit.api.plumbing.TransactionEnd;
 import org.geogit.api.porcelain.AddOp;
 import org.geogit.api.porcelain.CommitOp;
 import org.geogit.repository.Repository;
@@ -29,7 +28,6 @@ import org.opengis.feature.simple.SimpleFeatureType;
 import org.opengis.feature.type.Name;
 
 import com.google.common.base.Function;
-import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.base.Throwables;
@@ -118,25 +116,15 @@ public class GeoGitDataStore extends ContentDataStore implements DataStore {
 
     @Override
     public void createSchema(SimpleFeatureType featureType) throws IOException {
-        // Repository repository = geogit.getRepository();
-        // WorkingTree workingTree = repository.getWorkingTree();
-        // String treePath = featureType.getName().getLocalPart();
-        // try {
-        // workingTree.createTypeTree(treePath, featureType);
-        // } catch (IllegalArgumentException e) {
-        // throw new IOException(e.getMessage(), e);
-        // }
-        // TODO: the following should work once diff preserves empty trees
         GeogitTransaction tx = geogit.command(TransactionBegin.class).call();
         boolean abort = false;
         try {
             String treePath = featureType.getName().getLocalPart();
             WorkingTree workingTree = tx.getWorkingTree();
             workingTree.createTypeTree(treePath, featureType);
-            geogit.command(AddOp.class).addPattern(treePath).call();
-            geogit.command(CommitOp.class).setMessage("Created feature type tree " + treePath)
-                    .call();
-            abort = false;
+            tx.command(AddOp.class).addPattern(treePath).call();
+            tx.command(CommitOp.class).setMessage("Created feature type tree " + treePath).call();
+            tx.commit();
         } catch (IllegalArgumentException alreadyExists) {
             abort = true;
             throw new IOException(alreadyExists.getMessage(), alreadyExists);
@@ -144,7 +132,9 @@ public class GeoGitDataStore extends ContentDataStore implements DataStore {
             abort = true;
             throw Throwables.propagate(e);
         } finally {
-            geogit.command(TransactionEnd.class).setTransaction(tx).setCancel(abort).call();
+            if (abort) {
+                tx.abort();
+            }
         }
     }
 }

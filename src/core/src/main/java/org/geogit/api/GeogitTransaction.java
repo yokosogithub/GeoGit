@@ -2,6 +2,7 @@ package org.geogit.api;
 
 import java.util.UUID;
 
+import org.geogit.api.plumbing.TransactionEnd;
 import org.geogit.repository.Index;
 import org.geogit.repository.Repository;
 import org.geogit.repository.StagingArea;
@@ -96,4 +97,13 @@ public class GeogitTransaction implements CommandLocator {
         return new StringBuilder(getClass().getSimpleName()).append('[').append(transactionId)
                 .append(']').toString();
     }
+
+    public void commit() {
+        locator.command(TransactionEnd.class).setTransaction(this).setCancel(false).call();
+    }
+
+    public void abort() {
+        locator.command(TransactionEnd.class).setTransaction(this).setCancel(true).call();
+    }
+
 }
