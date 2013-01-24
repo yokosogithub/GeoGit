@@ -27,6 +27,7 @@ import org.geogit.storage.NodeStorageOrder;
 import org.geogit.storage.ObjectDatabase;
 
 import com.google.common.base.Function;
+import com.google.common.base.Objects;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.AbstractIterator;
@@ -60,13 +61,18 @@ class TreeDiffEntryIterator extends AbstractIterator<DiffEntry> {
     private final Strategy strategy;
 
     public TreeDiffEntryIterator(@Nullable NodeRef oldTreeRef, @Nullable NodeRef newTreeRef,
-            @Nullable final RevTree oldTree, @Nullable final RevTree newTree,
-            final boolean reportTrees, final ObjectDatabase db) {
+            @Nullable RevTree oldTree, @Nullable RevTree newTree, final boolean reportTrees,
+            final ObjectDatabase db) {
 
         checkArgument(oldTree != null || newTree != null);
-
         this.reportTrees = reportTrees;
         this.objectDb = db;
+        if (oldTree == null) {
+            oldTree = RevTree.EMPTY;
+        }
+        if (newTree == null) {
+            newTree = RevTree.EMPTY;
+        }
 
         if (reportTrees) {
             strategy = DepthTreeIterator.Strategy.RECURSIVE;
@@ -74,9 +80,11 @@ class TreeDiffEntryIterator extends AbstractIterator<DiffEntry> {
             strategy = DepthTreeIterator.Strategy.RECURSIVE_FEATURES_ONLY;
         }
 
-        if (oldTree == null || oldTree.isEmpty()) {
+        if (oldTree.getId().equals(newTree.getId())) {
+            delegate = Iterators.emptyIterator();
+        } else if (oldTree.isEmpty()) {
             delegate = addRemoveAll(newTreeRef, newTree, ADDED);
-        } else if (newTree == null || newTree.isEmpty()) {
+        } else if (newTree.isEmpty()) {
             delegate = addRemoveAll(oldTreeRef, oldTree, REMOVED);
         } else if (!oldTree.buckets().isPresent() && !newTree.buckets().isPresent()) {
 
@@ -113,12 +121,6 @@ class TreeDiffEntryIterator extends AbstractIterator<DiffEntry> {
             delegate = new ChildrenChildrenDiff(leftIterator, right);
             // delegate = new BucketsChildrenDiff(left, right);
         }
-
-        // if (reportTrees && !Objects.equal(oldTreeRef, newTreeRef)) {
-        // DiffEntry treeEntry = new DiffEntry(oldTreeRef, newTreeRef);
-        // delegate = Iterators.concat(Iterators.singletonIterator(treeEntry), delegate);
-        // }
-
     }
 
     @Override
@@ -282,7 +284,7 @@ class TreeDiffEntryIterator extends AbstractIterator<DiffEntry> {
 
         /**
          * A multi-map of bucket/objectId where key is guaranteed to have two entries, the first one
-         * for the left tree id and the second one for he right tree id
+         * for the left tree id and the second one for he right tree id.
          */
         private final ListMultimap<Integer, Optional<Bucket>> leftRightBuckets;
 
@@ -321,23 +323,31 @@ class TreeDiffEntryIterator extends AbstractIterator<DiffEntry> {
                 return endOfData();
             }
 
-            final Integer bucket = combinedBuckets.next();
-            final Bucket leftBucket = leftRightBuckets.get(bucket).get(0).orNull();
-            final Bucket rightBucket = leftRightBuckets.get(bucket).get(1).orNull();
-            final RevTree left = resolveTree(leftBucket);
-            final RevTree right = resolveTree(rightBucket);
+            while (combinedBuckets.hasNext()) {
+                final Integer bucket = combinedBuckets.next();
+                final Optional<Bucket> leftBucket = leftRightBuckets.get(bucket).get(0);
+                final Optional<Bucket> rightBucket = leftRightBuckets.get(bucket).get(1);
 
-            // TODO******
-            this.currentBucketIterator = new TreeDiffEntryIterator(leftRef, rightRef, left, right,
-                    reportTrees, objectDb);
+                if (Objects.equal(leftBucket, rightBucket)) {
+                    continue;
+                }
+
+                final RevTree left = resolveTree(leftBucket);
+                final RevTree right = resolveTree(rightBucket);
+
+                this.currentBucketIterator = new TreeDiffEntryIterator(leftRef, rightRef, left,
+                        right, reportTrees, objectDb);
+                break;
+            }
             return computeNext();
         }
 
-        private RevTree resolveTree(@Nullable Bucket bucket) {
-            if (bucket == null) {
-                return null;
+        private RevTree resolveTree(Optional<Bucket> bucket) {
+            RevTree bucketTree = RevTree.EMPTY;
+            if (bucket.isPresent()) {
+                bucketTree = objectDb.getTree(bucket.get().id());
             }
-            return objectDb.getTree(bucket.id());
+            return bucketTree;
         }
     }
 }

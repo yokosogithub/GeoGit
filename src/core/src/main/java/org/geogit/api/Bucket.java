@@ -24,6 +24,17 @@ public abstract class Bucket implements Bounded {
         return bucketTree;
     }
 
+    /**
+     * Equality check based purely on {@link #id() ObjectId}
+     */
+    @Override
+    public boolean equals(Object o) {
+        if (!(o instanceof Bucket)) {
+            return false;
+        }
+        return id().equals(((Bucket) o).id());
+    }
+
     private static class PointBucket extends Bucket {
 
         private final double x;
