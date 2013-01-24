@@ -7,6 +7,7 @@ package org.geogit.storage.fs;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
+import static org.geogit.api.Ref.append;
 
 import java.io.File;
 import java.io.IOException;
@@ -231,26 +232,50 @@ public class FileRefDatabase extends AbstractRefDatabase {
      */
     @Override
     public Map<String, String> getAll() {
+        return getAll("refs");
+    }
+
+    /**
+     * @return all references under the specified namespace
+     */
+    @Override
+    public Map<String, String> getAll(String namespace) {
         File refsRoot;
         try {
             URL envHome = new ResolveGeogitDir(platform).call();
-            refsRoot = new File(new File(envHome.toURI()), "refs");
+            refsRoot = new File(envHome.toURI());
         } catch (Exception e) {
             throw Throwables.propagate(e);
         }
+        if (namespace.endsWith("/")) {
+            namespace = namespace.substring(0, namespace.length() - 1);
+        }
         Map<String, String> refs = Maps.newTreeMap();
-        findRefs(refsRoot, "refs/", refs);
+        findRefs(refsRoot, namespace, refs);
         return ImmutableMap.copyOf(refs);
     }
 
-    private void findRefs(File refsDir, String prefix, Map<String, String> target) {
+    private void findRefs(final File refsRoot, final String namespace,
+            final Map<String, String> target) {
+        String[] subdirs = namespace.split("/");
+        File nsDir = refsRoot;
+        for (String subdir : subdirs) {
+            nsDir = new File(nsDir, subdir);
+            if (!nsDir.exists() || !nsDir.isDirectory()) {
+                return;
+            }
+        }
+        addAll(nsDir, namespace, target);
+    }
 
-        File[] children = refsDir.listFiles();
+    private void addAll(File nsDir, String prefix, Map<String, String> target) {
+        File[] children = nsDir.listFiles();
         for (File f : children) {
             if (f.isDirectory()) {
-                findRefs(f, prefix + f.getName() + "/", target);
+                String namespace = append(prefix, f.getName());
+                addAll(f, namespace, target);
             } else if (!f.getName().startsWith(".")) {
-                String refName = prefix + f.getName();
+                String refName = append(prefix, f.getName());
                 String refValue = readRef(f);
                 target.put(refName, refValue);
             }
@@ -284,7 +309,7 @@ public class FileRefDatabase extends AbstractRefDatabase {
                 throw new RuntimeException("Unable to delete file " + f.getAbsolutePath());
             }
         }
-        if (directory.delete()) {
+        if (!directory.delete()) {
             throw new RuntimeException("Unable to delete directory " + directory.getAbsolutePath());
         }
     }

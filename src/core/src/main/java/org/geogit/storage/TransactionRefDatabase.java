@@ -5,6 +5,8 @@
 
 package org.geogit.storage;
 
+import static org.geogit.api.Ref.append;
+
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.UUID;
@@ -44,18 +46,19 @@ import com.google.common.collect.Maps;
  */
 public class TransactionRefDatabase implements RefDatabase {
 
-    private static final String TRANSACTIONS_PREFIX = "transactions/";
+    private static final String TRANSACTIONS_NAMESPACE = "transactions";
 
     private RefDatabase refDb;
 
-    private final String txPrefix;
+    private final String txNamespace;
 
-    private final String txOrigPrefix;
+    private final String txOrigNamespace;
 
     public TransactionRefDatabase(final RefDatabase refDb, final UUID transactionId) {
         this.refDb = refDb;
-        this.txPrefix = TRANSACTIONS_PREFIX + transactionId.toString() + "/";
-        this.txOrigPrefix = txPrefix + "orig/";
+        final String txRootNamespace = append(TRANSACTIONS_NAMESPACE, transactionId.toString());
+        this.txNamespace = append(txRootNamespace, "changed");
+        this.txOrigNamespace = append(txRootNamespace, "orig");
     }
 
     @Override
@@ -120,7 +123,7 @@ public class TransactionRefDatabase implements RefDatabase {
      */
     @Override
     public void close() {
-        refDb.removeAll(this.txPrefix);
+        refDb.removeAll(this.txNamespace);
     }
 
     /**
@@ -172,19 +175,15 @@ public class TransactionRefDatabase implements RefDatabase {
 
     @Override
     public Map<String, String> getAll(final String prefix) {
-        String transactionPrefix = this.txOrigPrefix + prefix;
-        Map<String, String> originals = refDb.getAll(transactionPrefix);
-        Map<String, String> composite = Maps.newHashMap(toExternal(originals));
+        Map<String, String> originals = refDb.getAll(append(this.txOrigNamespace, prefix));
+        Map<String, String> changed = refDb.getAll(append(this.txNamespace, prefix));
 
-        transactionPrefix = this.txPrefix + prefix;
-        Map<String, String> changed = refDb.getAll(transactionPrefix);
-        changed = toExternal(changed);
+        Map<String, String> externalOriginals = toExternal(originals);
+        Map<String, String> externalChanged = toExternal(changed);
 
+        Map<String, String> composite = Maps.newHashMap(externalOriginals);
         // Overwrite originals
-        for (Entry<String, String> entry : changed.entrySet()) {
-            composite.put(entry.getKey(), entry.getValue());
-        }
-
+        composite.putAll(externalChanged);
         return composite;
 
     }
@@ -213,20 +212,20 @@ public class TransactionRefDatabase implements RefDatabase {
     }
 
     private String toInternal(String name) {
-        return txPrefix + name;
+        return append(txNamespace, name);
     }
 
     private String toExternal(String name) {
-        if (name.startsWith(this.txPrefix)) {
-            return name.substring(this.txPrefix.length());
-        } else if (name.startsWith(this.txOrigPrefix)) {
-            return name.substring(this.txOrigPrefix.length());
+        if (name.startsWith(this.txNamespace)) {
+            return Ref.child(this.txNamespace, name);
+        } else if (name.startsWith(this.txOrigNamespace)) {
+            return Ref.child(this.txOrigNamespace, name);
         }
         return name;
     }
 
     private String toOrigInternal(String name) {
-        return txOrigPrefix + name;
+        return append(txOrigNamespace, name);
     }
 
     private Map<String, String> toOrigInternal(final Map<String, String> orig) {
@@ -249,8 +248,11 @@ public class TransactionRefDatabase implements RefDatabase {
         boolean isSymRef = origValue.startsWith("ref: ");
         if (isSymRef) {
             String val = origValue.substring("ref: ".length());
-            if (val.startsWith(this.txPrefix)) {
-                val = val.substring(this.txPrefix.length());
+            if (val.startsWith(this.txNamespace)) {
+                val = val.substring(this.txNamespace.length());
+                if (val.startsWith("/")) {
+                    val = val.substring(1);
+                }
             }
             txValue = "ref: " + val;
         }

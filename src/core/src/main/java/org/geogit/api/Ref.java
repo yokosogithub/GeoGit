@@ -200,4 +200,38 @@ public class Ref implements Comparable<Ref> {
         return new StringBuilder("Ref").append('[').append(name).append(" -> ").append(objectId)
                 .append(']').toString();
     }
+
+    public static String append(String namespace, String child) {
+        StringBuilder sb = new StringBuilder();
+        if (namespace.endsWith("/")) {
+            namespace = namespace.substring(0, namespace.length() - 1);
+        }
+        sb.append(namespace);
+
+        if (child.startsWith("/")) {
+            child = child.substring(1);
+        }
+        if (child.endsWith("/")) {
+            child = child.substring(0, child.length() - 1);
+        }
+        if (!child.isEmpty()) {
+            if (!namespace.isEmpty()) {
+                sb.append("/");
+            }
+            sb.append(child);
+        }
+        return sb.toString();
+    }
+
+    /**
+     * @return the relative name of the ref given by its full name and the namespace to truncate
+     */
+    public static String child(String namespace, String ref) {
+        Preconditions.checkState(ref.startsWith(namespace));
+        String relative = ref.substring(namespace.length());
+        if (relative.startsWith("/")) {
+            relative = relative.substring(1);
+        }
+        return relative;
+    }
 }
