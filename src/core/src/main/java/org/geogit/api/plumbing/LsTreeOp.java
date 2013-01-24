@@ -120,8 +120,8 @@ public class LsTreeOp extends AbstractGeoGitOp<Iterator<NodeRef>> {
                 RevObject.class);
 
         if (!revObject.isPresent()) {
-            if (ref == Ref.WORK_HEAD) { // we are requesting a listing of the whole working tree but
-                                        // it is empty
+            if (Ref.WORK_HEAD.equals(ref)) { // we are requesting a listing of the whole working
+                                             // tree but it is empty
                 return Iterators.emptyIterator();
             }
             // let's try to see if it is a feature type or feature in the working tree
