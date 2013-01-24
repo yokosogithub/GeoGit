@@ -14,6 +14,7 @@ import org.geogit.api.GeogitTransaction;
 import org.geogit.api.plumbing.TransactionBegin;
 import org.geogit.api.porcelain.AddOp;
 import org.geogit.api.porcelain.CommitOp;
+import org.geogit.api.porcelain.NothingToCommitException;
 import org.geotools.data.Transaction;
 import org.geotools.data.Transaction.State;
 import org.geotools.data.store.ContentEntry;
@@ -77,7 +78,11 @@ public class GeogitTransactionState implements State {
     public void commit() throws IOException {
         Preconditions.checkState(this.geogitTx != null);
         this.geogitTx.command(AddOp.class).call();
-        this.geogitTx.command(CommitOp.class).call();
+        try {
+            this.geogitTx.command(CommitOp.class).call();
+        } catch (NothingToCommitException nochanges) {
+            // ok
+        }
         this.geogitTx.commit();
         this.geogitTx = null;
     }

@@ -26,6 +26,7 @@ import org.geotools.data.store.ContentEntry;
 import org.geotools.data.store.ContentFeatureSource;
 import org.geotools.data.store.ContentState;
 import org.geotools.factory.Hints;
+import org.geotools.feature.simple.SimpleFeatureTypeBuilder;
 import org.geotools.filter.visitor.SimplifyingFilterVisitor;
 import org.geotools.geometry.jts.ReferencedEnvelope;
 import org.opengis.feature.FeatureVisitor;
@@ -216,6 +217,14 @@ public class GeogitFeatureSource extends ContentFeatureSource {
                 .setObjectId(metadataId).call(RevFeatureType.class);
         if (revType.isPresent()) {
             SimpleFeatureType featureType = (SimpleFeatureType) revType.get().type();
+            Name name = featureType.getName();
+            Name assignedName = getEntry().getName();
+            if (!assignedName.equals(name)) {
+                SimpleFeatureTypeBuilder builder = new SimpleFeatureTypeBuilder();
+                builder.init(featureType);
+                builder.setName(assignedName);
+                featureType = builder.buildFeatureType();
+            }
             return featureType;
         }
 
