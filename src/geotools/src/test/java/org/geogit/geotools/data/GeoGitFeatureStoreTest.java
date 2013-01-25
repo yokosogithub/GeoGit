@@ -20,7 +20,9 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
+import org.geogit.api.RevCommit;
 import org.geogit.api.porcelain.CommitOp;
+import org.geogit.api.porcelain.LogOp;
 import org.geogit.test.integration.RepositoryTestCase;
 import org.geotools.data.DataUtilities;
 import org.geotools.data.DefaultTransaction;
@@ -29,7 +31,6 @@ import org.geotools.factory.CommonFactoryFinder;
 import org.geotools.factory.Hints;
 import org.geotools.feature.FeatureCollection;
 import org.junit.Test;
-import org.opengis.feature.Feature;
 import org.opengis.feature.simple.SimpleFeature;
 import org.opengis.feature.simple.SimpleFeatureType;
 import org.opengis.filter.FilterFactory2;
@@ -207,15 +208,9 @@ public class GeoGitFeatureStoreTest extends RepositoryTestCase {
         assertEquals("modified", modified.getAttribute("sp"));
     }
 
-    private void setUseProvidedFidHint(boolean useProvidedFid, Feature... features) {
-        for (Feature f : features) {
-            f.getUserData().put(Hints.USE_PROVIDED_FID, Boolean.valueOf(useProvidedFid));
-        }
-    }
-
     @Test
     public void testRemoveFeatures() throws Exception {
-        // add features circunmventing FeatureStore.addFeatures to keep the test
+        // add features circumventing FeatureStore.addFeatures to keep the test
         // independent of the
         // addFeatures functionality
         insertAndAdd(lines1, lines2, lines3);
@@ -252,4 +247,34 @@ public class GeoGitFeatureStoreTest extends RepositoryTestCase {
         assertEquals(0, points.getFeatures(filter).size());
     }
 
+    @Test
+    public void testTransactionCommitMessage() throws Exception {
+
+        FeatureCollection<SimpleFeatureType, SimpleFeature> collection;
+        collection = DataUtilities.collection(Arrays.asList((SimpleFeature) points1,
+                (SimpleFeature) points2, (SimpleFeature) points3));
+
+        DefaultTransaction tx = new DefaultTransaction();
+        points.setTransaction(tx);
+        assertSame(tx, points.getTransaction());
+        try {
+            points.addFeatures(collection);
+
+            tx.putProperty(GeogitTransactionState.VERSIONING_COMMIT_AUTHOR, "John Doe");
+            tx.putProperty(GeogitTransactionState.VERSIONING_COMMIT_MESSAGE, "test message");
+            tx.commit();
+            assertEquals(3, dataStore.getFeatureSource(pointsTypeName).getFeatures().size());
+        } catch (Exception e) {
+            tx.rollback();
+            throw e;
+        } finally {
+            tx.close();
+        }
+
+        List<RevCommit> commits = toList(geogit.command(LogOp.class).call());
+        assertFalse(commits.isEmpty());
+        assertTrue(commits.get(0).getAuthor().getName().isPresent());
+        assertEquals("John Doe", commits.get(0).getAuthor().getName().get());
+        assertEquals("test message", commits.get(0).getMessage());
+    }
 }

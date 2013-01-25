@@ -61,8 +61,8 @@ import com.vividsolutions.jts.geom.Envelope;
 /**
  *
  */
-public class GeogitFeatureReader<T extends FeatureType, F extends Feature> implements
-        FeatureReader<T, F>, Iterator<F> {
+class GeogitFeatureReader<T extends FeatureType, F extends Feature> implements FeatureReader<T, F>,
+        Iterator<F> {
 
     private SimpleFeatureType schema;
 

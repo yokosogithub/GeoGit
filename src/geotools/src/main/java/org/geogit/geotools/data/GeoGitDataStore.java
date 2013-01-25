@@ -49,7 +49,7 @@ import com.google.common.collect.Lists;
 /**
  *
  */
-public class GeoGitDataStore extends ContentDataStore implements DataStore {
+class GeoGitDataStore extends ContentDataStore implements DataStore {
 
     private final GeoGIT geogit;
 

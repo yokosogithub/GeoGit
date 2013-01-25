@@ -50,7 +50,7 @@ import com.google.common.collect.Lists;
  *
  */
 @SuppressWarnings("unchecked")
-public class GeogitFeatureStore extends ContentFeatureStore {
+class GeogitFeatureStore extends ContentFeatureStore {
 
     /**
      * geogit feature source to delegate to, we do this b/c we can't inherit from both

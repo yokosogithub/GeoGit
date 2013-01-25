@@ -25,7 +25,13 @@ import com.google.common.base.Preconditions;
 /**
  *
  */
-public class GeogitTransactionState implements State {
+class GeogitTransactionState implements State {
+
+    /** VERSIONING_COMMIT_AUTHOR */
+    static final String VERSIONING_COMMIT_AUTHOR = "VersioningCommitAuthor";
+
+    /** VERSIONING_COMMIT_MESSAGE */
+    static final String VERSIONING_COMMIT_MESSAGE = "VersioningCommitMessage";
 
     private ContentEntry entry;
 
@@ -77,9 +83,22 @@ public class GeogitTransactionState implements State {
     @Override
     public void commit() throws IOException {
         Preconditions.checkState(this.geogitTx != null);
+        /*
+         * This follows suite with the hack set on GeoSever's
+         * org.geoserver.wfs.Transaction.getDatastoreTransaction()
+         */
+        final String author = (String) this.tx.getProperty(VERSIONING_COMMIT_AUTHOR);
+        final String commitMessage = (String) this.tx.getProperty(VERSIONING_COMMIT_MESSAGE);
         this.geogitTx.command(AddOp.class).call();
         try {
-            this.geogitTx.command(CommitOp.class).call();
+            CommitOp commitOp = this.geogitTx.command(CommitOp.class);
+            if (author != null) {
+                commitOp.setAuthor(author, null);
+            }
+            if (commitMessage != null) {
+                commitOp.setMessage(commitMessage);
+            }
+            commitOp.call();
         } catch (NothingToCommitException nochanges) {
             // ok
         }

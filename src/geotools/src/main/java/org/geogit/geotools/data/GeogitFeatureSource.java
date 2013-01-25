@@ -49,7 +49,7 @@ import com.google.common.base.Preconditions;
  *
  */
 @SuppressWarnings("unchecked")
-public class GeogitFeatureSource extends ContentFeatureSource {
+class GeogitFeatureSource extends ContentFeatureSource {
 
     /**
      * <b>Precondition</b>: {@code entry.getDataStore() instanceof GeoGitDataStore}
