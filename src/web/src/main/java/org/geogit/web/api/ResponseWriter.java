@@ -2,6 +2,7 @@ package org.geogit.web.api;
 
 import java.util.Iterator;
 
+import javax.annotation.Nullable;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamWriter;
 
@@ -9,6 +10,7 @@ import org.codehaus.jettison.AbstractXMLStreamWriter;
 import org.geogit.api.NodeRef;
 import org.geogit.api.ObjectId;
 import org.geogit.api.RevCommit;
+import org.geogit.api.RevPerson;
 import org.geogit.api.plumbing.DiffIndex;
 import org.geogit.api.plumbing.DiffWorkTree;
 import org.geogit.api.plumbing.diff.DiffEntry;
@@ -65,9 +67,11 @@ public class ResponseWriter {
         return out;
     }
 
-    public void writeElement(String element, String content) throws XMLStreamException {
+    public void writeElement(String element, @Nullable String content) throws XMLStreamException {
         out.writeStartElement(element);
-        out.writeCharacters(content);
+        if (content != null) {
+            out.writeCharacters(content);
+        }
         out.writeEndElement();
     }
 
@@ -124,13 +128,22 @@ public class ResponseWriter {
         while (entries.hasNext()) {
             RevCommit entry = entries.next();
             out.writeStartElement("commit");
-            writeElement("author", entry.getAuthor().getName().get());
-            writeElement("email", entry.getAuthor().getEmail().get());
-            writeElement("commit", entry.getId().toString());
-            writeElement("date", Long.toString(entry.getCommitter().getTimestamp()));
+            writeElement("id", entry.getId().toString());
+            writeElement("tree", entry.getTreeId().toString());
+            writePerson("author", entry.getAuthor());
+            writePerson("committer", entry.getCommitter());
             writeElement("message", entry.getMessage());
             out.writeEndElement();
         }
+    }
+
+    public void writePerson(String enclosingElement, RevPerson p) throws XMLStreamException {
+        out.writeStartElement(enclosingElement);
+        writeElement("name", p.getName().orNull());
+        writeElement("email", p.getEmail().orNull());
+        writeElement("timestamp", Long.toString(p.getTimestamp()));
+        writeElement("timeZoneOffset", Long.toString(p.getTimeZoneOffset()));
+        out.writeEndElement();
     }
 
     public void writeCommitResponse(Iterator<DiffEntry> diff) throws XMLStreamException {
