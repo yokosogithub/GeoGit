@@ -33,6 +33,8 @@ import com.google.common.base.Optional;
  */
 public class WorkingTreeTest extends RepositoryTestCase {
 
+    private static final NullProgressListener LISTENER = new NullProgressListener();
+
     private WorkingTree workTree;
 
     @Rule
@@ -63,8 +65,7 @@ public class WorkingTreeTest extends RepositoryTestCase {
         featureList.add(points3);
 
         List<Node> targetList = new LinkedList<Node>();
-        workTree.insert(pointsName, featureList.iterator(), false, new NullProgressListener(),
-                targetList, 3);
+        workTree.insert(pointsName, featureList.iterator(), LISTENER, targetList, 3);
 
         assertEquals(3, targetList.size());
 
@@ -88,8 +89,7 @@ public class WorkingTreeTest extends RepositoryTestCase {
         featureList.add(points3);
 
         List<Node> targetList = new LinkedList<Node>();
-        workTree.insert(pointsName, featureList.iterator(), false, new NullProgressListener(),
-                targetList, null);
+        workTree.insert(pointsName, featureList.iterator(), LISTENER, targetList, null);
 
         assertEquals(3, targetList.size());
 
@@ -113,8 +113,7 @@ public class WorkingTreeTest extends RepositoryTestCase {
         featureList.add(points3);
 
         List<Node> targetList = new LinkedList<Node>();
-        workTree.insert(pointsName, featureList.iterator(), false, new NullProgressListener(),
-                targetList, 0);
+        workTree.insert(pointsName, featureList.iterator(), LISTENER, targetList, 0);
 
         assertEquals(3, targetList.size());
 
@@ -140,8 +139,7 @@ public class WorkingTreeTest extends RepositoryTestCase {
         List<Node> targetList = new LinkedList<Node>();
 
         exception.expect(IllegalArgumentException.class);
-        workTree.insert(pointsName, featureList.iterator(), false, new NullProgressListener(),
-                targetList, -5);
+        workTree.insert(pointsName, featureList.iterator(), LISTENER, targetList, -5);
     }
 
     @Test
@@ -151,8 +149,7 @@ public class WorkingTreeTest extends RepositoryTestCase {
         featureList.add(points2);
         featureList.add(points3);
 
-        workTree.insert(pointsName, featureList.iterator(), false, new NullProgressListener(),
-                null, null);
+        workTree.insert(pointsName, featureList.iterator(), LISTENER, null, null);
 
         assertTrue(workTree.findUnstaged(appendChild(pointsName, idP1)).isPresent());
         assertTrue(workTree.findUnstaged(appendChild(pointsName, idP2)).isPresent());
@@ -166,16 +163,14 @@ public class WorkingTreeTest extends RepositoryTestCase {
         featureList.add(points2);
         featureList.add(points3);
 
-        workTree.insert(pointsName, featureList.iterator(), false, new NullProgressListener(),
-                null, 3);
+        workTree.insert(pointsName, featureList.iterator(), LISTENER, null, 3);
 
         ObjectId oID1 = workTree.findUnstaged(appendChild(pointsName, idP1)).get().getObjectId();
 
         List<Feature> modifiedFeatures = new LinkedList<Feature>();
         modifiedFeatures.add(points1_modified);
 
-        workTree.insert(pointsName, modifiedFeatures.iterator(), false, new NullProgressListener(),
-                null, 1);
+        workTree.insert(pointsName, modifiedFeatures.iterator(), LISTENER, null, 1);
         assertFalse(workTree.findUnstaged(appendChild(pointsName, idP1)).get().getObjectId()
                 .equals(oID1));
 
@@ -188,15 +183,14 @@ public class WorkingTreeTest extends RepositoryTestCase {
         featureList.add(points2);
         featureList.add(points3);
 
-        workTree.insert(pointsName, featureList.iterator(), false, new NullProgressListener(),
-                null, 3);
+        workTree.insert(pointsName, featureList.iterator(), LISTENER, null, 3);
 
         ObjectId oID1 = workTree.findUnstaged(appendChild(pointsName, idP1)).get().getObjectId();
 
         List<Feature> modifiedFeatures = new LinkedList<Feature>();
         modifiedFeatures.add(points1_modified);
 
-        workTree.update(pointsName, modifiedFeatures.iterator(), new NullProgressListener(), 1);
+        workTree.update(pointsName, modifiedFeatures.iterator(), LISTENER, 1);
         assertFalse(workTree.findUnstaged(appendChild(pointsName, idP1)).get().getObjectId()
                 .equals(oID1));
 
@@ -209,15 +203,14 @@ public class WorkingTreeTest extends RepositoryTestCase {
         featureList.add(points2);
         featureList.add(points3);
 
-        workTree.insert(pointsName, featureList.iterator(), false, new NullProgressListener(),
-                null, 3);
+        workTree.insert(pointsName, featureList.iterator(), LISTENER, null, 3);
 
         ObjectId oID1 = workTree.findUnstaged(appendChild(pointsName, idP1)).get().getObjectId();
 
         List<Feature> modifiedFeatures = new LinkedList<Feature>();
         modifiedFeatures.add(points1_modified);
 
-        workTree.update(pointsName, modifiedFeatures.iterator(), new NullProgressListener(), null);
+        workTree.update(pointsName, modifiedFeatures.iterator(), LISTENER, null);
         assertFalse(workTree.findUnstaged(appendChild(pointsName, idP1)).get().getObjectId()
                 .equals(oID1));
     }
@@ -229,15 +222,14 @@ public class WorkingTreeTest extends RepositoryTestCase {
         featureList.add(points2);
         featureList.add(points3);
 
-        workTree.insert(pointsName, featureList.iterator(), false, new NullProgressListener(),
-                null, 3);
+        workTree.insert(pointsName, featureList.iterator(), LISTENER, null, 3);
 
         ObjectId oID1 = workTree.findUnstaged(appendChild(pointsName, idP1)).get().getObjectId();
 
         List<Feature> modifiedFeatures = new LinkedList<Feature>();
         modifiedFeatures.add(points1_modified);
 
-        workTree.update(pointsName, modifiedFeatures.iterator(), new NullProgressListener(), 0);
+        workTree.update(pointsName, modifiedFeatures.iterator(), LISTENER, 0);
         assertFalse(workTree.findUnstaged(appendChild(pointsName, idP1)).get().getObjectId()
                 .equals(oID1));
     }
@@ -249,14 +241,13 @@ public class WorkingTreeTest extends RepositoryTestCase {
         featureList.add(points2);
         featureList.add(points3);
 
-        workTree.insert(pointsName, featureList.iterator(), false, new NullProgressListener(),
-                null, 3);
+        workTree.insert(pointsName, featureList.iterator(), LISTENER, null, 3);
 
         List<Feature> modifiedFeatures = new LinkedList<Feature>();
         modifiedFeatures.add(points1_modified);
 
         exception.expect(IllegalArgumentException.class);
-        workTree.update(pointsName, modifiedFeatures.iterator(), new NullProgressListener(), -5);
+        workTree.update(pointsName, modifiedFeatures.iterator(), LISTENER, -5);
     }
 
     @Test
@@ -266,8 +257,7 @@ public class WorkingTreeTest extends RepositoryTestCase {
         featureList.add(points2);
         featureList.add(points3);
 
-        workTree.insert(pointsName, featureList.iterator(), false, new NullProgressListener(),
-                null, 3);
+        workTree.insert(pointsName, featureList.iterator(), LISTENER, null, 3);
 
         assertTrue(workTree.findUnstaged(appendChild(pointsName, idP1)).isPresent());
         assertTrue(workTree.findUnstaged(appendChild(pointsName, idP2)).isPresent());
@@ -292,8 +282,7 @@ public class WorkingTreeTest extends RepositoryTestCase {
         featureList.add(points1);
         featureList.add(points2);
 
-        workTree.insert(pointsName, featureList.iterator(), false, new NullProgressListener(),
-                null, 2);
+        workTree.insert(pointsName, featureList.iterator(), LISTENER, null, 2);
 
         assertTrue(workTree.findUnstaged(appendChild(pointsName, idP1)).isPresent());
         assertTrue(workTree.findUnstaged(appendChild(pointsName, idP2)).isPresent());
@@ -320,8 +309,7 @@ public class WorkingTreeTest extends RepositoryTestCase {
         featureList.add(points2);
         featureList.add(points3);
 
-        workTree.insert(pointsName, featureList.iterator(), false, new NullProgressListener(),
-                null, 3);
+        workTree.insert(pointsName, featureList.iterator(), LISTENER, null, 3);
 
         assertTrue(workTree.findUnstaged(appendChild(pointsName, idP1)).isPresent());
         assertTrue(workTree.findUnstaged(appendChild(pointsName, idP2)).isPresent());
@@ -346,8 +334,7 @@ public class WorkingTreeTest extends RepositoryTestCase {
         featureList.add(points1);
         featureList.add(points2);
 
-        workTree.insert(pointsName, featureList.iterator(), false, new NullProgressListener(),
-                null, 3);
+        workTree.insert(pointsName, featureList.iterator(), LISTENER, null, 3);
 
         assertTrue(workTree.findUnstaged(appendChild(pointsName, idP1)).isPresent());
         assertTrue(workTree.findUnstaged(appendChild(pointsName, idP2)).isPresent());
@@ -372,16 +359,14 @@ public class WorkingTreeTest extends RepositoryTestCase {
         featureList.add(points2);
         featureList.add(points3);
 
-        workTree.insert(pointsName, featureList.iterator(), false, new NullProgressListener(),
-                null, 3);
+        workTree.insert(pointsName, featureList.iterator(), LISTENER, null, 3);
 
         featureList = new LinkedList<Feature>();
         featureList.add(lines1);
         featureList.add(lines2);
         featureList.add(lines3);
 
-        workTree.insert(linesName, featureList.iterator(), false, new NullProgressListener(), null,
-                3);
+        workTree.insert(linesName, featureList.iterator(), LISTENER, null, 3);
 
         assertTrue(workTree.findUnstaged(appendChild(pointsName, idP1)).isPresent());
         assertTrue(workTree.findUnstaged(appendChild(pointsName, idP2)).isPresent());
@@ -414,8 +399,7 @@ public class WorkingTreeTest extends RepositoryTestCase {
         featureList.add(points2);
         featureList.add(points3);
 
-        workTree.insert(pointsName, featureList.iterator(), false, new NullProgressListener(),
-                null, 3);
+        workTree.insert(pointsName, featureList.iterator(), LISTENER, null, 3);
 
         assertEquals(3, workTree.countUnstaged(null));
 
@@ -431,16 +415,14 @@ public class WorkingTreeTest extends RepositoryTestCase {
         featureList.add(points2);
         featureList.add(points3);
 
-        workTree.insert(pointsName, featureList.iterator(), false, new NullProgressListener(),
-                null, 3);
+        workTree.insert(pointsName, featureList.iterator(), LISTENER, null, 3);
 
         featureList = new LinkedList<Feature>();
         featureList.add(lines1);
         featureList.add(lines2);
         featureList.add(lines3);
 
-        workTree.insert(linesName, featureList.iterator(), false, new NullProgressListener(), null,
-                3);
+        workTree.insert(linesName, featureList.iterator(), LISTENER, null, 3);
 
         assertTrue(workTree.findUnstaged(appendChild(pointsName, idP1)).isPresent());
         assertTrue(workTree.findUnstaged(appendChild(pointsName, idP2)).isPresent());
@@ -458,16 +440,14 @@ public class WorkingTreeTest extends RepositoryTestCase {
         featureList.add(points2);
         featureList.add(points3);
 
-        workTree.insert(pointsName, featureList.iterator(), false, new NullProgressListener(),
-                null, 3);
+        workTree.insert(pointsName, featureList.iterator(), LISTENER, null, 3);
 
         featureList = new LinkedList<Feature>();
         featureList.add(lines1);
         featureList.add(lines2);
         featureList.add(lines3);
 
-        workTree.insert(linesName, featureList.iterator(), false, new NullProgressListener(), null,
-                3);
+        workTree.insert(linesName, featureList.iterator(), LISTENER, null, 3);
 
         List<NodeRef> featureTypes = workTree.getFeatureTypeTrees();
 

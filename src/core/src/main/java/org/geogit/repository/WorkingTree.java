@@ -403,15 +403,14 @@ public class WorkingTree {
      * 
      * @param treePath the path of the tree to insert the features into
      * @param features the features to insert
-     * @param forceUseProvidedFID - currently unused
      * @param listener a {@link ProgressListener} for the current process
      * @param insertedTarget if provided, inserted features will be added to this list
      * @param collectionSize number of features to add
      * @throws Exception
      */
     public void insert(final String treePath, Iterator<? extends Feature> features,
-            boolean forceUseProvidedFID, ProgressListener listener,
-            @Nullable List<Node> insertedTarget, @Nullable Integer collectionSize) throws Exception {
+            ProgressListener listener, @Nullable List<Node> insertedTarget,
+            @Nullable Integer collectionSize) throws Exception {
 
         checkArgument(collectionSize == null || collectionSize.intValue() > -1);
 
@@ -469,7 +468,7 @@ public class WorkingTree {
         final Integer size = collectionSize == null || collectionSize.intValue() < 1 ? null
                 : collectionSize.intValue();
 
-        insert(treePath, features, false, listener, null, size);
+        insert(treePath, features, listener, null, size);
     }
 
     /**
