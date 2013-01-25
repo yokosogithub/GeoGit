@@ -45,8 +45,6 @@ public class GeoGitFeatureStoreTest extends RepositoryTestCase {
 
     private GeogitFeatureStore points;
 
-    private GeogitFeatureStore lines;
-
     @Override
     protected void setUpInternal() throws Exception {
         dataStore = new GeoGitDataStore(geogit);
@@ -54,14 +52,12 @@ public class GeoGitFeatureStoreTest extends RepositoryTestCase {
         dataStore.createSchema(super.linesType);
 
         points = (GeogitFeatureStore) dataStore.getFeatureSource(pointsTypeName);
-        lines = (GeogitFeatureStore) dataStore.getFeatureSource(linesTypeName);
     }
 
     @Override
     protected void tearDownInternal() throws Exception {
         dataStore = null;
         points = null;
-        lines = null;
     }
 
     @Test

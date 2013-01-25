@@ -120,7 +120,7 @@ public class ImportOp extends AbstractGeoGitOp<RevTree> {
                 ProgressListener taskProgress = subProgress(100.f / (all ? typeNames.size() : 1f));
                 Integer collectionSize = features.size();
                 workTree.delete(revType.getName());
-                workTree.insert(treePath, iterator, true, taskProgress, null, collectionSize);
+                workTree.insert(treePath, iterator, taskProgress, null, collectionSize);
             } catch (Exception e) {
                 throw new GeoToolsOpException(StatusCode.UNABLE_TO_INSERT);
             } finally {

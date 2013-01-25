@@ -24,9 +24,11 @@ import org.geotools.data.store.ContentEntry;
 import org.geotools.data.store.ContentFeatureStore;
 import org.geotools.data.store.ContentState;
 import org.geotools.data.store.FeatureIteratorIterator;
+import org.geotools.factory.Hints;
 import org.geotools.feature.FeatureCollection;
 import org.geotools.feature.FeatureIterator;
 import org.geotools.feature.FeatureReaderIterator;
+import org.geotools.feature.simple.SimpleFeatureBuilder;
 import org.geotools.filter.identity.FeatureIdVersionedImpl;
 import org.geotools.filter.visitor.SimplifyingFilterVisitor;
 import org.geotools.geometry.jts.ReferencedEnvelope;
@@ -227,7 +229,6 @@ public class GeogitFeatureStore extends ContentFeatureStore {
         final WorkingTree workingTree = delegate.getWorkingTree();
         final String path = delegate.getTypeTreePath();
 
-        boolean forceUseProvidedFID = true;
         NullProgressListener listener = new NullProgressListener();
 
         final List<FeatureId> insertedFids = Lists.newArrayList();
@@ -257,8 +258,8 @@ public class GeogitFeatureStore extends ContentFeatureStore {
         try {
             Iterator<SimpleFeature> features;
             features = new FeatureIteratorIterator<SimpleFeature>(featureIterator);
-            workingTree.insert(path, features, forceUseProvidedFID, listener, deferringTarget,
-                    count);
+            features = Iterators.transform(features, FORCE_USE_PROVIDED_FID);
+            workingTree.insert(path, features, listener, deferringTarget, count);
         } catch (Exception e) {
             throw new IOException(e);
         } finally {
@@ -268,6 +269,26 @@ public class GeogitFeatureStore extends ContentFeatureStore {
         return insertedFids;
     }
 
+    /**
+     * Function used when inserted to check whether the {@link Hints#USE_PROVIDED_FID} in a Feature
+     * {@link Feature#getUserData() user data} map is set to {@code Boolean.TRUE}, and only if so
+     * let the feature unchanged, otherwise return a feature with the exact same contents but a
+     * newly generaged feature id.
+     */
+    private static Function<SimpleFeature, SimpleFeature> FORCE_USE_PROVIDED_FID = new Function<SimpleFeature, SimpleFeature>() {
+
+        @Override
+        public SimpleFeature apply(SimpleFeature input) {
+            if (Boolean.TRUE.equals(input.getUserData().get(Hints.USE_PROVIDED_FID))) {
+                return input;
+            }
+            SimpleFeatureBuilder builder = new SimpleFeatureBuilder(input.getFeatureType());
+            builder.init(input);
+            SimpleFeature newFeature = builder.buildFeature(null);
+            return newFeature;
+        }
+    };
+
     @Override
     public void modifyFeatures(Name[] names, Object[] values, Filter filter) throws IOException {
 
@@ -275,11 +296,10 @@ public class GeogitFeatureStore extends ContentFeatureStore {
         final String path = delegate.getTypeTreePath();
         final Iterator<? extends Feature> features = modifyingFeatureIterator(names, values, filter);
         try {
-            boolean forceUseProvidedFID = true;
             NullProgressListener listener = new NullProgressListener();
             List<Node> target = (List<Node>) null;
             Integer count = (Integer) null;
-            workingTree.insert(path, features, forceUseProvidedFID, listener, target, count);
+            workingTree.insert(path, features, listener, target, count);
         } catch (Exception e) {
             throw new IOException(e);
         }

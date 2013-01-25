@@ -23,6 +23,7 @@ import org.geotools.data.FeatureReader;
 import org.geotools.data.FeatureSource;
 import org.geotools.data.MaxFeatureReader;
 import org.geotools.data.Query;
+import org.geotools.data.QueryCapabilities;
 import org.geotools.data.Transaction;
 import org.geotools.data.sort.SortedFeatureReader;
 import org.geotools.data.store.ContentEntry;
@@ -32,6 +33,7 @@ import org.geotools.factory.Hints;
 import org.geotools.feature.simple.SimpleFeatureTypeBuilder;
 import org.geotools.filter.visitor.SimplifyingFilterVisitor;
 import org.geotools.geometry.jts.ReferencedEnvelope;
+import org.opengis.feature.Feature;
 import org.opengis.feature.FeatureVisitor;
 import org.opengis.feature.simple.SimpleFeature;
 import org.opengis.feature.simple.SimpleFeatureType;
@@ -133,6 +135,39 @@ public class GeogitFeatureSource extends ContentFeatureSource {
     @Override
     public Name getName() {
         return getEntry().getName();
+    }
+
+    /**
+     * Creates a {@link QueryCapabilities} that declares support for
+     * {@link QueryCapabilities#isUseProvidedFIDSupported() isUseProvidedFIDSupported}, the
+     * datastore supports using the provided feature id in the data insertion workflow as opposed to
+     * generating a new id, by looking into the user data map ( {@link Feature#getUserData()}) for a
+     * {@link Hints#USE_PROVIDED_FID} key associated to a {@link Boolean#TRUE} value, if the
+     * key/value pair is there an attempt to use the provided id will be made, and the operation
+     * will fail if the key cannot be parsed into a valid storage identifier.
+     */
+    @Override
+    protected QueryCapabilities buildQueryCapabilities() {
+        return new QueryCapabilities() {
+            /**
+             * @return {@code true}
+             */
+            @Override
+            public boolean isUseProvidedFIDSupported() {
+                return true;
+            }
+
+            /**
+             * 
+             * @return {@code false} by now, will see how/whether we'll support
+             *         {@link Query#getVersion()} later
+             */
+            @Override
+            public boolean isVersionSupported() {
+                return false;
+            }
+
+        };
     }
 
     @Override
@@ -288,7 +323,7 @@ public class GeogitFeatureSource extends ContentFeatureSource {
             SimpleFeatureType featureType = (SimpleFeatureType) revType.get().type();
             Name name = featureType.getName();
             Name assignedName = getEntry().getName();
-            if (!assignedName.equals(name)) {
+            if (assignedName.getNamespaceURI() != null && !assignedName.equals(name)) {
                 SimpleFeatureTypeBuilder builder = new SimpleFeatureTypeBuilder();
                 builder.init(featureType);
                 builder.setName(assignedName);

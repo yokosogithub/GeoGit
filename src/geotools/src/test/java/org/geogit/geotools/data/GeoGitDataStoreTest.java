@@ -149,6 +149,22 @@ public class GeoGitDataStoreTest extends RepositoryTestCase {
     }
 
     @Test
+    public void testGetSchemaProvidedNamespace() throws Exception {
+        String namespace = "http://www.geogit.org/test";
+        dataStore.setNamespaceURI(namespace);
+        insert(lines1);
+        SimpleFeatureType lines = dataStore.getSchema(RepositoryTestCase.linesTypeName);
+        Name expectedName = new NameImpl(namespace, linesName);
+        assertEquals(expectedName, lines.getName());
+        assertEquals(super.linesType.getAttributeDescriptors(), lines.getAttributeDescriptors());
+
+        insert(points1);
+        SimpleFeatureType points = dataStore.getSchema(RepositoryTestCase.pointsTypeName);
+        assertEquals(new NameImpl(namespace, pointsName), points.getName());
+        assertEquals(super.pointsType.getAttributeDescriptors(), points.getAttributeDescriptors());
+    }
+
+    @Test
     public void testGetSchemaString() throws Exception {
         try {
             dataStore.getSchema(RepositoryTestCase.linesName);
@@ -159,7 +175,7 @@ public class GeoGitDataStoreTest extends RepositoryTestCase {
 
         insert(lines1);
         SimpleFeatureType lines = dataStore.getSchema(RepositoryTestCase.linesName);
-        assertEquals(super.linesType, lines);
+        assertEquals(super.linesType.getAttributeDescriptors(), lines.getAttributeDescriptors());
 
         try {
             dataStore.getSchema(RepositoryTestCase.pointsName);
