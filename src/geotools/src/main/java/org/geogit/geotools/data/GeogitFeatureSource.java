@@ -199,8 +199,10 @@ public class GeogitFeatureSource extends ContentFeatureSource {
         final String configuredBranch = getDataStore().getConfiguredBranch();
 
         final CommandLocator commandLocator = getCommandLocator();
+        final String featureTypeTreePath = typeRef.path();
+        
         nativeReader = new GeogitFeatureReader<SimpleFeatureType, SimpleFeature>(commandLocator,
-                schema, typeRef, filter, configuredBranch);
+                schema, filter, featureTypeTreePath, configuredBranch);
 
         return nativeReader;
     }

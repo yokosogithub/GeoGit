@@ -5,9 +5,18 @@
 
 package org.geogit.geotools.data;
 
+import static com.google.common.base.Predicates.alwaysTrue;
+import static com.google.common.base.Predicates.and;
+import static com.google.common.base.Predicates.notNull;
+import static com.google.common.collect.Iterators.filter;
+import static com.google.common.collect.Iterators.transform;
+
 import java.io.IOException;
+import java.util.Comparator;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
+import java.util.Set;
+import java.util.TreeSet;
 
 import javax.annotation.Nullable;
 
@@ -20,9 +29,12 @@ import org.geogit.api.NodeRef;
 import org.geogit.api.Ref;
 import org.geogit.api.RevFeature;
 import org.geogit.api.RevObject;
+import org.geogit.api.RevTree;
+import org.geogit.api.plumbing.FindTreeChild;
 import org.geogit.api.plumbing.LsTreeOp;
 import org.geogit.api.plumbing.LsTreeOp.Strategy;
 import org.geogit.api.plumbing.RevObjectParse;
+import org.geogit.storage.NodePathStorageOrder;
 import org.geotools.data.FeatureReader;
 import org.geotools.factory.CommonFactoryFinder;
 import org.geotools.filter.spatial.ReprojectingFilterVisitor;
@@ -33,13 +45,16 @@ import org.opengis.feature.simple.SimpleFeatureType;
 import org.opengis.feature.type.FeatureType;
 import org.opengis.filter.Filter;
 import org.opengis.filter.FilterFactory2;
+import org.opengis.filter.Id;
+import org.opengis.filter.identity.FeatureId;
+import org.opengis.filter.identity.Identifier;
 
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
-import com.google.common.base.Predicates;
-import com.google.common.collect.Iterators;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Sets;
 import com.google.common.collect.UnmodifiableIterator;
 import com.vividsolutions.jts.geom.Envelope;
 
@@ -51,16 +66,18 @@ public class GeogitFeatureReader<T extends FeatureType, F extends Feature> imple
 
     private SimpleFeatureType schema;
 
-    private FeatureBuilder featureBuilder;
-
     private Stats stats;
-
-    private RevObjectParse parseRevFeatureCommand;
 
     private UnmodifiableIterator<SimpleFeature> features;
 
-    private static class Stats {
+    private static class Stats implements Predicate<Bounded> {
         public int featureHits, featureMisses, treeHits, treeMisses, bucketHits, bucketMisses;
+
+        private Envelope bounds;
+
+        public Stats(Envelope bounds) {
+            this.bounds = bounds;
+        }
 
         @Override
         public String toString() {
@@ -70,6 +87,42 @@ public class GeogitFeatureReader<T extends FeatureType, F extends Feature> imple
                     .append("\n");
             sb.append("Buckets: ").append(bucketHits).append("/").append(bucketMisses).append("\n");
             return sb.toString();
+        }
+
+        @Override
+        public boolean apply(Bounded bounded) {
+            boolean intersects = bounds.isNull() ? true : bounded.intersects(bounds);
+            if (bounded instanceof Bucket) {
+                // {
+                // Envelope e = new Envelope();
+                // bounded.expand(e);
+                // stats.geoms.add(JTS.toGeometry(e));
+                // }
+                if (intersects)
+                    bucketHits++;
+                else
+                    bucketMisses++;
+            } else {
+                Node node;
+                if (bounded instanceof NodeRef) {
+                    node = ((NodeRef) bounded).getNode();
+                } else {
+                    node = (Node) bounded;
+                }
+                if (node.getType().equals(RevObject.TYPE.TREE)) {
+                    if (intersects)
+                        treeHits++;
+                    else
+                        treeMisses++;
+                } else {
+                    if (intersects)
+                        featureHits++;
+                    else
+                        featureMisses++;
+                }
+            }
+
+            return true;
         }
     }
 
@@ -81,18 +134,22 @@ public class GeogitFeatureReader<T extends FeatureType, F extends Feature> imple
      * @param queryBounds
      */
     public GeogitFeatureReader(final CommandLocator commandLocator, final SimpleFeatureType schema,
-            final NodeRef treeRef, final Filter origFilter, @Nullable final String branch) {
+            final Filter origFilter, final String typeTreePath, @Nullable final String branch) {
 
         this.schema = schema;
-        this.stats = new Stats();
 
         final String branchRef = branch == null ? Ref.WORK_HEAD : branch;
-        String refSpec = branchRef + ":" + treeRef.path();
+        final String typeTreeRefSpec = branchRef + ":" + typeTreePath;
+        final Optional<RevTree> parentTree = commandLocator.command(RevObjectParse.class)
+                .setRefSpec(typeTreeRefSpec).call(RevTree.class);
+
+        Preconditions.checkArgument(parentTree.isPresent(), "Feature type tree not found: %s",
+                typeTreeRefSpec);
 
         final Filter filter = reprojectFilter(origFilter);
         final Envelope queryBounds = getQueryBounds(filter);
 
-        Predicate<Bounded> refBoundsFilter = Predicates.alwaysTrue();
+        Predicate<Bounded> refBoundsFilter = alwaysTrue();
         if (!queryBounds.isNull()) {
             refBoundsFilter = new Predicate<Bounded>() {
                 private final Envelope env = queryBounds;
@@ -100,68 +157,110 @@ public class GeogitFeatureReader<T extends FeatureType, F extends Feature> imple
                 @Override
                 public boolean apply(final Bounded bounded) {
                     boolean intersects = bounded.intersects(env);
-                    if (bounded instanceof Bucket) {
-                        // {
-                        // Envelope e = new Envelope();
-                        // bounded.expand(e);
-                        // stats.geoms.add(JTS.toGeometry(e));
-                        // }
-                        if (intersects)
-                            stats.bucketHits++;
-                        else
-                            stats.bucketMisses++;
-                    } else {
-                        Node node;
-                        if (bounded instanceof NodeRef) {
-                            node = ((NodeRef) bounded).getNode();
-                        } else {
-                            node = (Node) bounded;
-                        }
-                        if (node.getType().equals(RevObject.TYPE.TREE)) {
-                            if (intersects)
-                                stats.treeHits++;
-                            else
-                                stats.treeMisses++;
-                        } else {
-                            if (intersects)
-                                stats.featureHits++;
-                            else
-                                stats.featureMisses++;
-                        }
-                    }
                     return intersects;
                 }
             };
+
+            this.stats = new Stats(queryBounds);
+            refBoundsFilter = and(stats, refBoundsFilter);
         }
 
-        final Iterator<NodeRef> featureRefs = commandLocator.command(LsTreeOp.class)
-                .setStrategy(Strategy.FEATURES_ONLY).setReference(refSpec)
-                .setBoundsFilter(refBoundsFilter).call();
+        final Iterator<NodeRef> featureRefs;
 
-        this.featureBuilder = new FeatureBuilder(schema);
-        this.parseRevFeatureCommand = commandLocator.command(RevObjectParse.class);
+        if (filter instanceof Id) {
+            final Function<FeatureId, NodeRef> idToRef;
+            idToRef = new FindFeatureRefFunction(commandLocator, parentTree.get());
+            Iterator<FeatureId> featureIds = getSortedFidsInNaturalOrder((Id) filter);
+            featureRefs = filter(transform(featureIds, idToRef), notNull());
+        } else {
+            featureRefs = commandLocator.command(LsTreeOp.class)
+                    .setStrategy(Strategy.FEATURES_ONLY).setReference(typeTreeRefSpec)
+                    .setBoundsFilter(refBoundsFilter).call();
+        }
 
-        final Iterator<SimpleFeature> featuresUnfiltered = Iterators.transform(featureRefs,
-                new Function<NodeRef, SimpleFeature>() {
+        NodeRefToFeature refToFeature = new NodeRefToFeature(commandLocator, schema);
+        final Iterator<SimpleFeature> featuresUnfiltered = transform(featureRefs, refToFeature);
 
-                    @Override
-                    public SimpleFeature apply(final NodeRef featureRef) {
-                        Optional<RevFeature> revFeature = parseRevFeatureCommand.setObjectId(
-                                featureRef.objectId()).call(RevFeature.class);
-                        Preconditions.checkState(revFeature.isPresent());
+        FilterPredicate filterPredicate = new FilterPredicate(filter);
+        this.features = filter(featuresUnfiltered, filterPredicate);
+    }
 
-                        String id = featureRef.name();
-                        Feature feature = featureBuilder.build(id, revFeature.get());
-                        return (SimpleFeature) feature;
-                    }
-                });
-        this.features = Iterators.filter(featuresUnfiltered, new Predicate<SimpleFeature>() {
+    private Iterator<FeatureId> getSortedFidsInNaturalOrder(Id filter) {
 
+        final Set<Identifier> identifiers = ((Id) filter).getIdentifiers();
+
+        Iterator<FeatureId> featureIds = filter(filter(identifiers.iterator(), FeatureId.class),
+                notNull());
+
+        // used for the returned featrures to be in "natural" order
+        final Comparator<String> requestOrderMatchingStorageOrder = new NodePathStorageOrder();
+        Comparator<FeatureId> requestOrder = new Comparator<FeatureId>() {
             @Override
-            public boolean apply(SimpleFeature feature) {
-                return filter.evaluate(feature);
+            public int compare(FeatureId o1, FeatureId o2) {
+                return requestOrderMatchingStorageOrder.compare(o1.getID(), o2.getID());
             }
-        });
+        };
+        TreeSet<FeatureId> sortedFids = Sets.newTreeSet(requestOrder);
+        sortedFids.addAll(ImmutableList.copyOf(featureIds));
+        return sortedFids.iterator();
+    }
+
+    private static class FindFeatureRefFunction implements Function<FeatureId, NodeRef> {
+
+        private FindTreeChild command;
+
+        private RevTree parentTree;
+
+        public FindFeatureRefFunction(CommandLocator commandLocator, RevTree featureTypeTree) {
+            this.parentTree = featureTypeTree;
+            this.command = commandLocator.command(FindTreeChild.class);
+        }
+
+        @Override
+        @Nullable
+        public NodeRef apply(final FeatureId fid) {
+            final String featureName = fid.getID();
+
+            Optional<NodeRef> featureRef = command.setParent(parentTree).setChildPath(featureName)
+                    .setIndex(true).call();
+            return featureRef.orNull();
+        }
+    };
+
+    private static class NodeRefToFeature implements Function<NodeRef, SimpleFeature> {
+
+        private RevObjectParse parseRevFeatureCommand;
+
+        private FeatureBuilder featureBuilder;
+
+        public NodeRefToFeature(CommandLocator commandLocator, SimpleFeatureType schema) {
+            this.featureBuilder = new FeatureBuilder(schema);
+            this.parseRevFeatureCommand = commandLocator.command(RevObjectParse.class);
+        }
+
+        @Override
+        public SimpleFeature apply(final NodeRef featureRef) {
+            Optional<RevFeature> revFeature = parseRevFeatureCommand.setObjectId(
+                    featureRef.objectId()).call(RevFeature.class);
+            Preconditions.checkState(revFeature.isPresent());
+
+            String id = featureRef.name();
+            Feature feature = featureBuilder.build(id, revFeature.get());
+            return (SimpleFeature) feature;
+        }
+    };
+
+    private static final class FilterPredicate implements Predicate<SimpleFeature> {
+        private Filter filter;
+
+        public FilterPredicate(final Filter filter) {
+            this.filter = filter;
+        }
+
+        @Override
+        public boolean apply(SimpleFeature feature) {
+            return filter.evaluate(feature);
+        }
     }
 
     private Envelope getQueryBounds(Filter filter) {
@@ -200,8 +299,9 @@ public class GeogitFeatureReader<T extends FeatureType, F extends Feature> imple
 
     @Override
     public void close() throws IOException {
-        //
-        System.err.println(stats.toString());
+        if (stats != null) {
+            System.err.println(stats.toString());
+        }
         // GeometryCollection collection = new
         // GeometryFactory().createGeometryCollection(stats.geoms
         // .toArray(new Geometry[stats.geoms.size()]));
