@@ -58,6 +58,9 @@ public class Commit extends AbstractCommand implements CLICommand {
     @Parameter(names = "-c", description = "Commit to reuse")
     private String commitToReuse;
 
+    @Parameter(names = "--amend", description = "Amends last commit")
+    private boolean amend;
+
     @Parameter(description = "<pathFilter>  [<paths_to_commit]...")
     private List<String> pathFilters = Lists.newLinkedList();
 
@@ -76,7 +79,7 @@ public class Commit extends AbstractCommand implements CLICommand {
         if (message == null || Strings.isNullOrEmpty(message)) {
             message = geogit.command(ReadMergeCommitMessageOp.class).call();
         }
-        checkState(!Strings.isNullOrEmpty(message) || commitToReuse != null,
+        checkState(!Strings.isNullOrEmpty(message) || commitToReuse != null || amend,
                 "No commit message provided");
 
         ConsoleReader console = cli.getConsole();
@@ -85,7 +88,7 @@ public class Commit extends AbstractCommand implements CLICommand {
 
         RevCommit commit;
         try {
-            CommitOp commitOp = geogit.command(CommitOp.class).setMessage(message);
+            CommitOp commitOp = geogit.command(CommitOp.class).setMessage(message).setAmend(amend);
             if (commitToReuse != null) {
                 Optional<ObjectId> commitId = geogit.command(RevParse.class)
                         .setRefSpec(commitToReuse).call();

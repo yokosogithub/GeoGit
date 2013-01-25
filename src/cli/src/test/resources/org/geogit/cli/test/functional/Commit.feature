@@ -53,6 +53,20 @@ Feature: "commit" command
      When I run the command "commit -m Message"
      Then the response should contain "Cannot run operation while merge conflicts exist"
      
+  Scenario: Try to amend last commit
+    Given I have a repository
+      And I have staged "points1"
+      And I run the command "commit -m Test"
+      And I have staged "points2"
+     When I run the command "commit --amend"
+     Then the response should contain "2 features added"     
+     
+  Scenario: Try to amend last commit, when no previous commit has been made
+    Given I have a repository
+      And I have staged "points1"
+     When I run the command "commit --amend"
+     Then the response should contain "Cannot amend"        
+     
   Scenario: Try to commit without message while solving a merge conflict
     Given I have a repository
       And I have a merge conflict state

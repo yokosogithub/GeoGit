@@ -36,6 +36,7 @@ import org.geogit.di.CanRunDuringConflict;
 import org.geogit.storage.ObjectDatabase;
 
 import com.google.common.base.Optional;
+import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.Lists;
@@ -85,6 +86,8 @@ public class CommitOp extends AbstractGeoGitOp<RevCommit> {
     private String committerEmail;
 
     private RevCommit commit;
+
+    private boolean amend;
 
     private final List<String> pathFilters = Lists.newLinkedList();
 
@@ -225,6 +228,17 @@ public class CommitOp extends AbstractGeoGitOp<RevCommit> {
     }
 
     /**
+     * Sets whether the operation should ammend the last commit instead of creating a new one
+     * 
+     * @param amend
+     * @return
+     */
+    public CommitOp setAmend(boolean amend) {
+        this.amend = amend;
+        return this;
+    }
+
+    /**
      * Executes the commit operation.
      * 
      * @return the commit just applied, or {@code null} if
@@ -266,8 +280,25 @@ public class CommitOp extends AbstractGeoGitOp<RevCommit> {
 
         final String currentBranch = ((SymRef) headRef).getTarget();
         final ObjectId currHeadCommitId = headRef.getObjectId();
+
+        Supplier<RevTree> oldRoot = resolveOldRoot();
         if (!currHeadCommitId.isNull()) {
-            parents.add(0, currHeadCommitId);
+            if (amend) {
+                RevCommit commit = command(RevObjectParse.class).setObjectId(currHeadCommitId)
+                        .call(RevCommit.class).get();
+                parents.addAll(commit.getParentIds());
+                if (message == null || message.isEmpty()) {
+                    message = commit.getMessage();
+                }
+                RevTree commitTree = command(RevObjectParse.class).setObjectId(commit.getTreeId())
+                        .call(RevTree.class).get();
+                oldRoot = Suppliers.ofInstance(commitTree);
+            } else {
+                parents.add(0, currHeadCommitId);
+            }
+        } else {
+            Preconditions.checkArgument(!amend,
+                    "Cannot amend. There is no previous commit to amend");
         }
 
         // additional operations in case we are committing after a conflicted merge
@@ -285,7 +316,7 @@ public class CommitOp extends AbstractGeoGitOp<RevCommit> {
         for (String st : pathFilters) {
             command(AddOp.class).addPattern(st).call();
         }
-        ObjectId newTreeId = command(WriteTree.class).setOldRoot(resolveOldRoot())
+        ObjectId newTreeId = command(WriteTree.class).setOldRoot(oldRoot)
                 .setPathFilter(pathFilters).setProgressListener(subProgress(writeTreeProgress))
                 .call();
 
@@ -467,4 +498,5 @@ public class CommitOp extends AbstractGeoGitOp<RevCommit> {
         this.allowEmpty = allowEmptyCommit;
         return this;
     }
+
 }
