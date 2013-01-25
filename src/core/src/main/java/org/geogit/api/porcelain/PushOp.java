@@ -133,7 +133,7 @@ public class PushOp extends AbstractGeoGitOp<Void> {
                     if (localrefspec.equals("")) {
                         if (!remoterefspec.equals("")) {
                             // delete the remote branch matching remoteref
-                            remoteRepo.get().deleteRef(localRepository, remoterefspec);
+                            remoteRepo.get().deleteRef(remoterefspec);
                         } else {
                             // push current branch
                             final Optional<Ref> currHead = command(RefParse.class)

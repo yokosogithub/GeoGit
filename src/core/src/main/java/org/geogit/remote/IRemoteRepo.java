@@ -73,8 +73,7 @@ public interface IRemoteRepo {
     /**
      * Delete the given refspec from the remote repository.
      * 
-     * @param localRepository the repository to get new objects from
      * @param refspec the refspec to delete
      */
-    public void deleteRef(Repository localRepository, String refspec);
+    public void deleteRef(String refspec);
 }

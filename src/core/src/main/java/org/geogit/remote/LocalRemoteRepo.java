@@ -3,6 +3,8 @@ package org.geogit.remote;
 import java.io.File;
 import java.io.IOException;
 import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.Queue;
 
 import org.geogit.api.Bucket;
 import org.geogit.api.GeoGIT;
@@ -39,6 +41,8 @@ public class LocalRemoteRepo implements IRemoteRepo {
 
     private File workingDirectory;
 
+    private Queue<ObjectId> commitQueue;
+
     /**
      * Constructs a new {@code LocalRemoteRepo} with the given parameters.
      * 
@@ -48,6 +52,7 @@ public class LocalRemoteRepo implements IRemoteRepo {
     public LocalRemoteRepo(Injector injector, File workingDirectory) {
         this.injector = injector;
         this.workingDirectory = workingDirectory;
+        this.commitQueue = new LinkedList<ObjectId>();
     }
 
     /**
@@ -127,7 +132,12 @@ public class LocalRemoteRepo implements IRemoteRepo {
     @Override
     public void fetchNewData(Repository localRepository, Ref ref) {
         ObjectInserter objectInserter = localRepository.newObjectInserter();
-        walkCommit(ref.getObjectId(), remoteGeoGit.getRepository(), localRepository, objectInserter);
+        commitQueue.clear();
+        commitQueue.add(ref.getObjectId());
+        while (!commitQueue.isEmpty()) {
+            walkCommit(commitQueue.remove(), remoteGeoGit.getRepository(), localRepository,
+                    objectInserter);
+        }
     }
 
     /**
@@ -139,7 +149,12 @@ public class LocalRemoteRepo implements IRemoteRepo {
     @Override
     public void pushNewData(Repository localRepository, Ref ref) {
         ObjectInserter objectInserter = remoteGeoGit.getRepository().newObjectInserter();
-        walkCommit(ref.getObjectId(), localRepository, remoteGeoGit.getRepository(), objectInserter);
+        commitQueue.clear();
+        commitQueue.add(ref.getObjectId());
+        while (!commitQueue.isEmpty()) {
+            walkCommit(commitQueue.remove(), localRepository, remoteGeoGit.getRepository(),
+                    objectInserter);
+        }
         remoteGeoGit.command(UpdateRef.class).setName(ref.getName()).setNewValue(ref.getObjectId())
                 .call();
     }
@@ -151,9 +166,15 @@ public class LocalRemoteRepo implements IRemoteRepo {
      * @param ref the local ref that points to new commit data
      * @param refspec the refspec to push to
      */
+    @Override
     public void pushNewData(Repository localRepository, Ref ref, String refspec) {
         ObjectInserter objectInserter = remoteGeoGit.getRepository().newObjectInserter();
-        walkCommit(ref.getObjectId(), localRepository, remoteGeoGit.getRepository(), objectInserter);
+        commitQueue.clear();
+        commitQueue.add(ref.getObjectId());
+        while (!commitQueue.isEmpty()) {
+            walkCommit(commitQueue.remove(), localRepository, remoteGeoGit.getRepository(),
+                    objectInserter);
+        }
         remoteGeoGit.command(UpdateRef.class).setName(refspec).setNewValue(ref.getObjectId())
                 .call();
     }
@@ -161,10 +182,10 @@ public class LocalRemoteRepo implements IRemoteRepo {
     /**
      * Delete the given refspec from the remote repository.
      * 
-     * @param localRepository the repository to get new objects from
      * @param refspec the refspec to delete
      */
-    public void deleteRef(Repository localRepository, String refspec) {
+    @Override
+    public void deleteRef(String refspec) {
         remoteGeoGit.command(UpdateRef.class).setName(refspec).setDelete(true).call();
     }
 
@@ -183,7 +204,7 @@ public class LocalRemoteRepo implements IRemoteRepo {
 
             objectInserter.insert(commit);
             for (ObjectId parentCommit : commit.getParentIds()) {
-                walkCommit(parentCommit, from, to, objectInserter);
+                commitQueue.add(parentCommit);
             }
         }
     }
