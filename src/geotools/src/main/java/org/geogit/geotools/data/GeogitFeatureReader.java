@@ -14,7 +14,6 @@ import static com.google.common.collect.Iterators.transform;
 import java.io.IOException;
 import java.util.Comparator;
 import java.util.Iterator;
-import java.util.NoSuchElementException;
 import java.util.Set;
 import java.util.TreeSet;
 
@@ -48,27 +47,34 @@ import org.opengis.filter.FilterFactory2;
 import org.opengis.filter.Id;
 import org.opengis.filter.identity.FeatureId;
 import org.opengis.filter.identity.Identifier;
+import org.opengis.filter.spatial.BBOX;
 
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Iterators;
 import com.google.common.collect.Sets;
-import com.google.common.collect.UnmodifiableIterator;
 import com.vividsolutions.jts.geom.Envelope;
 
 /**
  *
  */
 public class GeogitFeatureReader<T extends FeatureType, F extends Feature> implements
-        FeatureReader<T, F> {
+        FeatureReader<T, F>, Iterator<F> {
 
     private SimpleFeatureType schema;
 
     private Stats stats;
 
-    private UnmodifiableIterator<SimpleFeature> features;
+    private Iterator<SimpleFeature> features;
+
+    @Nullable
+    private Integer offset;
+
+    @Nullable
+    private Integer maxFeatures;
 
     private static class Stats implements Predicate<Bounded> {
         public int featureHits, featureMisses, treeHits, treeMisses, bucketHits, bucketMisses;
@@ -129,14 +135,19 @@ public class GeogitFeatureReader<T extends FeatureType, F extends Feature> imple
     /**
      * @param commandLocator
      * @param schema
+     * @param maxFeatures
+     * @param offset
      * @param typeTree
      * @param filter
      * @param queryBounds
      */
     public GeogitFeatureReader(final CommandLocator commandLocator, final SimpleFeatureType schema,
-            final Filter origFilter, final String typeTreePath, @Nullable final String branch) {
+            final Filter origFilter, final String typeTreePath, @Nullable final String branch,
+            @Nullable Integer offset, @Nullable Integer maxFeatures) {
 
         this.schema = schema;
+        this.offset = offset;
+        this.maxFeatures = maxFeatures;
 
         final String branchRef = branch == null ? Ref.WORK_HEAD : branch;
         final String typeTreeRefSpec = branchRef + ":" + typeTreePath;
@@ -165,7 +176,7 @@ public class GeogitFeatureReader<T extends FeatureType, F extends Feature> imple
             refBoundsFilter = and(stats, refBoundsFilter);
         }
 
-        final Iterator<NodeRef> featureRefs;
+        Iterator<NodeRef> featureRefs;
 
         if (filter instanceof Id) {
             final Function<FeatureId, NodeRef> idToRef;
@@ -178,16 +189,80 @@ public class GeogitFeatureReader<T extends FeatureType, F extends Feature> imple
                     .setBoundsFilter(refBoundsFilter).call();
         }
 
+        final boolean filterSupportedByRefs = Filter.INCLUDE.equals(filter)
+                || filter instanceof BBOX;
+
+        if (filterSupportedByRefs) {
+            featureRefs = applyRefsOffsetLimit(featureRefs);
+        }
+
         NodeRefToFeature refToFeature = new NodeRefToFeature(commandLocator, schema);
         final Iterator<SimpleFeature> featuresUnfiltered = transform(featureRefs, refToFeature);
 
         FilterPredicate filterPredicate = new FilterPredicate(filter);
-        this.features = filter(featuresUnfiltered, filterPredicate);
+        Iterator<SimpleFeature> featuresFiltered = filter(featuresUnfiltered, filterPredicate);
+        if (!filterSupportedByRefs) {
+            featuresFiltered = applyFeaturesOffsetLimit(featuresFiltered);
+        }
+        this.features = featuresFiltered;
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    public T getFeatureType() {
+        return (T) schema;
+    }
+
+    @Override
+    public void close() throws IOException {
+        if (stats != null) {
+            System.err.println(stats.toString());
+        }
+        // GeometryCollection collection = new
+        // GeometryFactory().createGeometryCollection(stats.geoms
+        // .toArray(new Geometry[stats.geoms.size()]));
+        // System.err.println(collection);
+    }
+
+    @Override
+    public boolean hasNext() {
+        return features.hasNext();
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    public F next() {
+        return (F) features.next();
+    }
+
+    @Override
+    public void remove() {
+        throw new UnsupportedOperationException();
+    }
+
+    private Iterator<SimpleFeature> applyFeaturesOffsetLimit(Iterator<SimpleFeature> features) {
+        if (offset != null) {
+            Iterators.advance(features, offset.intValue());
+        }
+        if (maxFeatures != null) {
+            features = Iterators.limit(features, maxFeatures.intValue());
+        }
+        return features;
+    }
+
+    private Iterator<NodeRef> applyRefsOffsetLimit(Iterator<NodeRef> featureRefs) {
+        if (offset != null) {
+            Iterators.advance(featureRefs, offset.intValue());
+        }
+        if (maxFeatures != null) {
+            featureRefs = Iterators.limit(featureRefs, maxFeatures.intValue());
+        }
+        return featureRefs;
     }
 
     private Iterator<FeatureId> getSortedFidsInNaturalOrder(Id filter) {
 
-        final Set<Identifier> identifiers = ((Id) filter).getIdentifiers();
+        final Set<Identifier> identifiers = filter.getIdentifiers();
 
         Iterator<FeatureId> featureIds = filter(filter(identifiers.iterator(), FeatureId.class),
                 notNull());
@@ -290,33 +365,4 @@ public class GeogitFeatureReader<T extends FeatureType, F extends Feature> imple
         filter.accept(spatialFilterVisitor, null);
         return spatialFilterVisitor.hasSpatialFilter();
     }
-
-    @SuppressWarnings("unchecked")
-    @Override
-    public T getFeatureType() {
-        return (T) schema;
-    }
-
-    @Override
-    public void close() throws IOException {
-        if (stats != null) {
-            System.err.println(stats.toString());
-        }
-        // GeometryCollection collection = new
-        // GeometryFactory().createGeometryCollection(stats.geoms
-        // .toArray(new Geometry[stats.geoms.size()]));
-        // System.err.println(collection);
-    }
-
-    @Override
-    public boolean hasNext() throws IOException {
-        return features.hasNext();
-    }
-
-    @SuppressWarnings("unchecked")
-    @Override
-    public F next() throws IOException, IllegalArgumentException, NoSuchElementException {
-        return (F) features.next();
-    }
-
 }

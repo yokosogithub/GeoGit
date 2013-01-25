@@ -18,10 +18,13 @@ import org.geogit.api.RevFeatureType;
 import org.geogit.api.RevTree;
 import org.geogit.api.plumbing.RevObjectParse;
 import org.geogit.repository.WorkingTree;
+import org.geotools.data.DataUtilities;
 import org.geotools.data.FeatureReader;
 import org.geotools.data.FeatureSource;
+import org.geotools.data.MaxFeatureReader;
 import org.geotools.data.Query;
 import org.geotools.data.Transaction;
+import org.geotools.data.sort.SortedFeatureReader;
 import org.geotools.data.store.ContentEntry;
 import org.geotools.data.store.ContentFeatureSource;
 import org.geotools.data.store.ContentState;
@@ -34,6 +37,7 @@ import org.opengis.feature.simple.SimpleFeature;
 import org.opengis.feature.simple.SimpleFeatureType;
 import org.opengis.feature.type.Name;
 import org.opengis.filter.Filter;
+import org.opengis.filter.sort.SortBy;
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
 
 import com.google.common.base.Optional;
@@ -81,7 +85,7 @@ public class GeogitFeatureSource extends ContentFeatureSource {
 
     @Override
     protected boolean canSort() {
-        return false;
+        return true;
     }
 
     @Override
@@ -91,12 +95,12 @@ public class GeogitFeatureSource extends ContentFeatureSource {
 
     @Override
     protected boolean canLimit() {
-        return false;
+        return true;
     }
 
     @Override
     protected boolean canOffset() {
-        return false;
+        return true;
     }
 
     /**
@@ -137,13 +141,24 @@ public class GeogitFeatureSource extends ContentFeatureSource {
                 null);
         final CoordinateReferenceSystem crs = getSchema().getCoordinateReferenceSystem();
         if (Filter.INCLUDE.equals(filter)) {
-            NodeRef typeRef = getDataStore().findTypeRef(getName(), getTransaction());
+            NodeRef typeRef = getTypeRef();
             ReferencedEnvelope bounds = new ReferencedEnvelope(crs);
             typeRef.getNode().expand(bounds);
             return bounds;
         }
-        // TODO optimize, please
-        FeatureReader<SimpleFeatureType, SimpleFeature> features = getReader(query);
+        if (Filter.EXCLUDE.equals(filter)) {
+            return ReferencedEnvelope.create(crs);
+        }
+
+        FeatureReader<SimpleFeatureType, SimpleFeature> features;
+        if (isNaturalOrder(query.getSortBy())) {
+            Integer offset = query.getStartIndex();
+            Integer maxFeatures = query.getMaxFeatures() == Integer.MAX_VALUE ? null : query
+                    .getMaxFeatures();
+            features = getNativeReader(filter, offset, maxFeatures);
+        } else {
+            features = getReader(query);
+        }
         ReferencedEnvelope bounds = new ReferencedEnvelope(crs);
         try {
             while (features.hasNext()) {
@@ -163,15 +178,29 @@ public class GeogitFeatureSource extends ContentFeatureSource {
             return 0;
         }
 
+        final Integer offset = query.getStartIndex();
+        final Integer maxFeatures = query.getMaxFeatures() == Integer.MAX_VALUE ? null : query
+                .getMaxFeatures();
+
         int size;
         if (Filter.INCLUDE.equals(filter)) {
             RevTree tree = getTypeTree();
             size = (int) tree.size();
+            if (offset != null) {
+                size = size - offset.intValue();
+            }
+            if (maxFeatures != null) {
+                size = Math.min(size, maxFeatures.intValue());
+            }
             return size;
         }
 
-        // TODO optimize, please
-        FeatureReader<SimpleFeatureType, SimpleFeature> features = getReader(query);
+        FeatureReader<SimpleFeatureType, SimpleFeature> features;
+        if (isNaturalOrder(query.getSortBy())) {
+            features = getNativeReader(filter, offset, maxFeatures);
+        } else {
+            features = getReader(query);
+        }
         int count = 0;
         try {
             while (features.hasNext()) {
@@ -189,8 +218,46 @@ public class GeogitFeatureSource extends ContentFeatureSource {
     protected FeatureReader<SimpleFeatureType, SimpleFeature> getReaderInternal(Query query)
             throws IOException {
 
-        final Filter filter = (Filter) query.getFilter().accept(new SimplifyingFilterVisitor(),
-                null);
+        FeatureReader<SimpleFeatureType, SimpleFeature> reader;
+
+        final boolean naturalOrder = isNaturalOrder(query.getSortBy());
+        final int startIndex = Optional.fromNullable(query.getStartIndex()).or(Integer.valueOf(0));
+        final Integer maxFeatures = query.getMaxFeatures() == Integer.MAX_VALUE ? null : query
+                .getMaxFeatures();
+        final Filter filter = query.getFilter();
+
+        if (naturalOrder) {
+            reader = getNativeReader(filter, startIndex, maxFeatures);
+        } else {
+            reader = getNativeReader(filter, null, null);
+            // sorting
+            reader = new SortedFeatureReader(DataUtilities.simple(reader), query);
+            if (startIndex > 0) {
+                // skip the first n records
+                for (int i = 0; i < startIndex && reader.hasNext(); i++) {
+                    reader.next();
+                }
+            }
+            if (maxFeatures != null && maxFeatures > 0) {
+                reader = new MaxFeatureReader<SimpleFeatureType, SimpleFeature>(reader, maxFeatures);
+            }
+        }
+
+        return reader;
+    }
+
+    private boolean isNaturalOrder(@Nullable SortBy[] sortBy) {
+        if (sortBy == null || sortBy.length == 0
+                || (sortBy.length == 1 && SortBy.NATURAL_ORDER.equals(sortBy[0]))) {
+            return true;
+        }
+        return false;
+    }
+
+    private GeogitFeatureReader<SimpleFeatureType, SimpleFeature> getNativeReader(Filter filter,
+            @Nullable Integer offset, @Nullable Integer maxFeatures) {
+
+        filter = (Filter) filter.accept(new SimplifyingFilterVisitor(), null);
 
         GeogitFeatureReader<SimpleFeatureType, SimpleFeature> nativeReader;
 
@@ -200,9 +267,9 @@ public class GeogitFeatureSource extends ContentFeatureSource {
 
         final CommandLocator commandLocator = getCommandLocator();
         final String featureTypeTreePath = typeRef.path();
-        
+
         nativeReader = new GeogitFeatureReader<SimpleFeatureType, SimpleFeature>(commandLocator,
-                schema, filter, featureTypeTreePath, configuredBranch);
+                schema, filter, featureTypeTreePath, configuredBranch, offset, maxFeatures);
 
         return nativeReader;
     }
