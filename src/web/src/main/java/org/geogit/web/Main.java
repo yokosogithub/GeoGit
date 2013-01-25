@@ -67,7 +67,7 @@ public class Main extends Application {
     static GeoGIT loadGeoGIT(String repo) {
         Platform platform = new DefaultPlatform();
         platform.setWorkingDir(new File(repo));
-        Injector inj = GlobalInjectorBuilder.builder.get();
+        Injector inj = GlobalInjectorBuilder.builder.build();
         GeoGIT geogit = new GeoGIT(inj, platform.pwd());
 
         if (null != geogit.command(ResolveGeogitDir.class).call()) {
@@ -101,7 +101,7 @@ public class Main extends Application {
     static void setup() {
         GlobalInjectorBuilder.builder = new InjectorBuilder() {
             @Override
-            public Injector get() {
+            public Injector build() {
                 return Guice.createInjector(Modules.override(new GeogitModule()).with(
                         new JEStorageModule()));
             }
