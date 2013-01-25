@@ -33,6 +33,7 @@ import org.geogit.cli.porcelain.Reset;
 import org.geogit.cli.porcelain.Revert;
 import org.geogit.cli.porcelain.Show;
 import org.geogit.cli.porcelain.Status;
+import org.geogit.cli.porcelain.Tag;
 
 import com.google.inject.AbstractModule;
 
@@ -98,6 +99,7 @@ public class BuiltinCommandsModule extends AbstractModule implements CLIModule {
         bind(Push.class);
         bind(Pull.class);
         bind(LsTree.class);
+        bind(Tag.class);
     }
 
 }
