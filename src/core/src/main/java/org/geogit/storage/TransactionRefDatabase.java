@@ -50,13 +50,15 @@ public class TransactionRefDatabase implements RefDatabase {
 
     private RefDatabase refDb;
 
+    private final String txRootNamespace;
+
     private final String txNamespace;
 
     private final String txOrigNamespace;
 
     public TransactionRefDatabase(final RefDatabase refDb, final UUID transactionId) {
         this.refDb = refDb;
-        final String txRootNamespace = append(TRANSACTIONS_NAMESPACE, transactionId.toString());
+        this.txRootNamespace = append(TRANSACTIONS_NAMESPACE, transactionId.toString());
         this.txNamespace = append(txRootNamespace, "changed");
         this.txOrigNamespace = append(txRootNamespace, "orig");
     }
@@ -131,22 +133,36 @@ public class TransactionRefDatabase implements RefDatabase {
      */
     @Override
     public String getRef(final String name) {
-        String internalName = toInternal(name);
-        String value = refDb.getRef(internalName);
-        if (value == null) {
-            internalName = toOrigInternal(name);
+        String internalName;
+        String value;
+        if (name.startsWith("changed") || name.startsWith("orig")) {
+            internalName = append(txRootNamespace, name);
             value = refDb.getRef(internalName);
+        } else {
+            internalName = toInternal(name);
+            value = refDb.getRef(internalName);
+            if (value == null) {
+                internalName = toOrigInternal(name);
+                value = refDb.getRef(internalName);
+            }
         }
         return value;
     }
 
     @Override
     public String getSymRef(final String name) {
-        String internalName = toInternal(name);
-        String value = refDb.getSymRef(internalName);
-        if (value == null) {
-            internalName = toOrigInternal(name);
+        String internalName;
+        String value;
+        if (name.startsWith("changed") || name.startsWith("orig")) {
+            internalName = append(txRootNamespace, name);
+            value = refDb.getRef(internalName);
+        } else {
+            internalName = toInternal(name);
             value = refDb.getSymRef(internalName);
+            if (value == null) {
+                internalName = toOrigInternal(name);
+                value = refDb.getSymRef(internalName);
+            }
         }
         return value;
     }
