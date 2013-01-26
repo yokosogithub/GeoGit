@@ -18,7 +18,6 @@ import org.geogit.api.NodeRef;
 import org.geogit.api.ObjectId;
 import org.geogit.api.Ref;
 import org.geogit.api.RevCommit;
-import org.geogit.api.RevObject;
 import org.geogit.api.RevObject.TYPE;
 import org.geogit.api.RevTree;
 import org.geogit.api.RevTreeBuilder;
@@ -140,29 +139,36 @@ public class CheckoutOp extends AbstractGeoGitOp<ObjectId> {
 
         } else {
             Optional<Ref> targetRef = Optional.absent();
-            Optional<RevCommit> commit = Optional.absent();
+            Optional<ObjectId> targetCommitId = Optional.absent();
+            Optional<ObjectId> targetTreeId = Optional.absent();
             targetRef = command(RefParse.class).setName(branchOrCommit).call();
             if (targetRef.isPresent()) {
-                ObjectId commitId = Optional.of(targetRef.get().getObjectId()).get();
-                Optional<RevObject> parsed = command(RevObjectParse.class).setObjectId(commitId)
-                        .call();
-                checkState(parsed.isPresent());
-                checkState(parsed.get() instanceof RevCommit);
-                commit = Optional.of((RevCommit) parsed.get());
+                ObjectId commitId = targetRef.get().getObjectId();
+                if (commitId.isNull()) {
+                    targetTreeId = Optional.of(ObjectId.NULL);
+                    targetCommitId = Optional.of(ObjectId.NULL);
+                } else {
+                    Optional<RevCommit> parsed = command(RevObjectParse.class)
+                            .setObjectId(commitId).call(RevCommit.class);
+                    checkState(parsed.isPresent());
+                    checkState(parsed.get() instanceof RevCommit);
+                    RevCommit commit = parsed.get();
+                    targetCommitId = Optional.of(commit.getId());
+                    targetTreeId = Optional.of(commit.getTreeId());
+                }
             } else {
                 final Optional<ObjectId> addressed = command(RevParse.class).setRefSpec(
                         branchOrCommit).call();
                 checkArgument(addressed.isPresent(), "source '" + branchOrCommit
                         + "' not found in repository");
 
-                RevObject target;
-                target = command(RevObjectParse.class).setObjectId(addressed.get()).call().get();
-                checkArgument(target instanceof RevCommit, "source did not resolve to a commit: "
-                        + target.getType());
-                commit = Optional.of((RevCommit) target);
-            }
-            if (commit.isPresent()) {
+                RevCommit commit = command(RevObjectParse.class).setObjectId(addressed.get())
+                        .call(RevCommit.class).get();
 
+                targetTreeId = Optional.of(commit.getTreeId());
+                targetCommitId = Optional.of(commit.getId());
+            }
+            if (targetTreeId.isPresent()) {
                 if (!force) {
                     // count staged and unstaged changes
                     long staged = index.countStaged(null);
@@ -172,8 +178,7 @@ public class CheckoutOp extends AbstractGeoGitOp<ObjectId> {
                     }
                 }
                 // update work tree
-                RevCommit revCommit = commit.get();
-                ObjectId treeId = revCommit.getTreeId();
+                ObjectId treeId = targetTreeId.get();
                 workTree.updateWorkHead(treeId);
                 index.updateStageHead(treeId);
                 if (targetRef.isPresent()) {
@@ -182,7 +187,7 @@ public class CheckoutOp extends AbstractGeoGitOp<ObjectId> {
                     command(UpdateSymRef.class).setName(Ref.HEAD).setNewValue(refName).call();
                 } else {
                     // set HEAD to a dettached state
-                    ObjectId commitId = commit.get().getId();
+                    ObjectId commitId = targetCommitId.get();
                     command(UpdateRef.class).setName(Ref.HEAD).setNewValue(commitId).call();
                 }
                 return treeId;
