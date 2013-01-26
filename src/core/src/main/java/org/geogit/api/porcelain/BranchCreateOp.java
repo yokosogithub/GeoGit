@@ -37,6 +37,8 @@ public class BranchCreateOp extends AbstractGeoGitOp<Ref> {
 
     private boolean checkout;
 
+    private boolean orphan;
+
     @Inject
     public BranchCreateOp() {
     }
@@ -59,6 +61,15 @@ public class BranchCreateOp extends AbstractGeoGitOp<Ref> {
     }
 
     /**
+     * @param orphan {@code true} if the new branch shares no history with the current one, defaults
+     *        to {@code false}
+     */
+    public BranchCreateOp setOrphan(boolean orphan) {
+        this.orphan = orphan;
+        return this;
+    }
+
+    /**
      * @param checkout if {@code true}, in addition to creating the new branch, a {@link CheckoutOp
      *        checkout} operation will be performed against the newly created branch. If the check
      *        out failed for any reason the {@link CheckoutException} will be propagated back to the
@@ -76,13 +87,19 @@ public class BranchCreateOp extends AbstractGeoGitOp<Ref> {
         checkArgument(!command(RefParse.class).setName(branchRefPath).call().isPresent(),
                 "A branch named '" + branchName + "' already exists.");
 
-        final String branchOrigin = Optional.fromNullable(commit_ish).or(Ref.HEAD);
+        Optional<Ref> branchRef;
+        if (orphan) {
+            branchRef = command(UpdateRef.class).setName(branchRefPath).setNewValue(ObjectId.NULL)
+                    .call();
+        } else {
+            final String branchOrigin = Optional.fromNullable(commit_ish).or(Ref.HEAD);
 
-        final ObjectId branchOriginCommitId = resolveOriginCommitId(branchOrigin);
+            final ObjectId branchOriginCommitId = resolveOriginCommitId(branchOrigin);
 
-        Optional<Ref> branchRef = command(UpdateRef.class).setName(branchRefPath)
-                .setNewValue(branchOriginCommitId).call();
-        checkState(branchRef.isPresent());
+            branchRef = command(UpdateRef.class).setName(branchRefPath)
+                    .setNewValue(branchOriginCommitId).call();
+            checkState(branchRef.isPresent());
+        }
 
         if (checkout) {
             command(CheckoutOp.class).setSource(branchRefPath).call();
