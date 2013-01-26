@@ -116,6 +116,13 @@ public class LsTreeOp extends AbstractGeoGitOp<Iterator<NodeRef>> {
 
         ObjectId parentObjectId = ObjectId.NULL;
 
+        // is it just a ref name?
+        Optional<Ref> reference = command(RefParse.class).setName(ref).call();
+        if (reference.isPresent()) {
+            if (reference.get().getObjectId().isNull()) {
+                return Iterators.emptyIterator();
+            }
+        }
         Optional<RevObject> revObject = command(RevObjectParse.class).setRefSpec(ref).call(
                 RevObject.class);
 
