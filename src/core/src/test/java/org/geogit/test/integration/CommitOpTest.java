@@ -58,10 +58,8 @@ public class CommitOpTest extends RepositoryTestCase {
         }
 
         ObjectId oid1 = insertAndAdd(points1);
-        // BLOBS.print(repo.getRawObject(insertedId1), System.err);
 
         ObjectId oid2 = insertAndAdd(points2);
-        // BLOBS.print(repo.getRawObject(insertedId2), System.err);
 
         geogit.command(AddOp.class).addPattern(".").call();
         RevCommit commit = geogit.command(CommitOp.class).call();
@@ -74,7 +72,6 @@ public class CommitOpTest extends RepositoryTestCase {
         assertEquals("groldan@opengeo.org", commit.getAuthor().getEmail().get());
 
         ObjectId treeId = commit.getTreeId();
-        // BLOBS.print(repo.getRawObject(treeId), System.err);
 
         assertNotNull(treeId);
         RevTree root = repo.getTree(treeId);
@@ -82,7 +79,7 @@ public class CommitOpTest extends RepositoryTestCase {
 
         Optional<Node> typeTreeId = repo.getTreeChild(root, pointsName);
         assertTrue(typeTreeId.isPresent());
-        // BLOBS.print(repo.getRawObject(typeTreeId), System.err);
+
         RevTree typeTree = repo.getTree(typeTreeId.get().getObjectId());
         assertNotNull(typeTree);
 
@@ -188,10 +185,8 @@ public class CommitOpTest extends RepositoryTestCase {
         }
 
         ObjectId oid1 = insertAndAdd(points1);
-        // BLOBS.print(repo.getRawObject(insertedId1), System.err);
 
         ObjectId oid2 = insertAndAdd(points2);
-        // BLOBS.print(repo.getRawObject(insertedId2), System.err);
 
         geogit.command(AddOp.class).addPattern(".").call();
         CommitOp commitCommand = geogit.command(CommitOp.class);
@@ -209,7 +204,6 @@ public class CommitOpTest extends RepositoryTestCase {
         assertEquals("Jane@Doe.com", commit.getCommitter().getEmail().get());
 
         ObjectId treeId = commit.getTreeId();
-        // BLOBS.print(repo.getRawObject(treeId), System.err);
 
         assertNotNull(treeId);
         RevTree root = repo.getTree(treeId);
@@ -217,7 +211,7 @@ public class CommitOpTest extends RepositoryTestCase {
 
         Optional<Node> typeTreeId = repo.getTreeChild(root, pointsName);
         assertTrue(typeTreeId.isPresent());
-        // BLOBS.print(repo.getRawObject(typeTreeId), System.err);
+
         RevTree typeTree = repo.getTree(typeTreeId.get().getObjectId());
         assertNotNull(typeTree);
 
@@ -250,10 +244,8 @@ public class CommitOpTest extends RepositoryTestCase {
 
         geogit.command(AddOp.class).addPattern(".").call();
         RevCommit commit = geogit.command(CommitOp.class).call();
-        // BLOBS.print(repo.getRawObject(insertedId1), System.err);
 
         ObjectId oid = insertAndAdd(points1_modified);
-        // BLOBS.print(repo.getRawObject(insertedId2), System.err);
 
         CommitOp commitCommand = geogit.command(CommitOp.class);
         commit = commitCommand.setAll(true).call();
@@ -263,7 +255,6 @@ public class CommitOpTest extends RepositoryTestCase {
         assertNotNull(commit.getId());
 
         ObjectId treeId = commit.getTreeId();
-        // BLOBS.print(repo.getRawObject(treeId), System.err);
 
         assertNotNull(treeId);
         RevTree root = repo.getTree(treeId);
@@ -271,7 +262,7 @@ public class CommitOpTest extends RepositoryTestCase {
 
         Optional<Node> typeTreeId = repo.getTreeChild(root, pointsName);
         assertTrue(typeTreeId.isPresent());
-        // BLOBS.print(repo.getRawObject(typeTreeId), System.err);
+
         RevTree typeTree = repo.getTree(typeTreeId.get().getObjectId());
         assertNotNull(typeTree);
 
