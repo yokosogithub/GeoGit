@@ -7,6 +7,7 @@ package org.geogit.api.plumbing;
 
 import java.util.Iterator;
 import java.util.Map;
+import java.util.Set;
 
 import org.geogit.api.AbstractGeoGitOp;
 import org.geogit.api.Node;
@@ -26,6 +27,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 
 /**
@@ -95,7 +97,7 @@ public class WriteTree extends AbstractGeoGitOp<ObjectId> {
         Map<String, RevTreeBuilder> repositoryChangedTrees = Maps.newHashMap();
         Map<String, NodeRef> indexChangedTrees = Maps.newHashMap();
         Map<String, ObjectId> changedTreesMetadataId = Maps.newHashMap();
-
+        Set<String> deletedTrees = Sets.newHashSet();
         NodeRef ref;
         int i = 0;
         final long numChanges = index.countStaged(null);
@@ -113,13 +115,17 @@ public class WriteTree extends AbstractGeoGitOp<ObjectId> {
             ref = diff.getNewObject();
 
             if (ref == null) {
-                ObjectId metadataId = diff.getOldObject().getMetadataId();
-                ref = new NodeRef(diff.getOldObject().getNode(), diff.getOldObject()
-                        .getParentPath(), metadataId);
+                ref = diff.getOldObject();
             }
 
             final String parentPath = ref.getParentPath();
-
+            final boolean isDelete = ChangeType.REMOVED.equals(diff.changeType());
+            final TYPE type = ref.getType();
+            if (isDelete && deletedTrees.contains(parentPath)) {
+                // this is to avoid re-creating the parentTree for a feature delete after its parent
+                // tree delete entry was processed
+                continue;
+            }
             RevTreeBuilder parentTree = resolveTargetTree(oldRootTree, parentPath,
                     repositoryChangedTrees, changedTreesMetadataId);
 
@@ -127,9 +133,12 @@ public class WriteTree extends AbstractGeoGitOp<ObjectId> {
 
             Preconditions.checkState(parentTree != null);
 
-            final boolean isDelete = ChangeType.REMOVED.equals(diff.changeType());
             if (isDelete) {
-                parentTree.remove(diff.getOldObject().getNode().getName());
+                String oldName = diff.getOldObject().getNode().getName();
+                parentTree.remove(oldName);
+                if (TYPE.TREE.equals(type)) {
+                    deletedTrees.add(ref.path());
+                }
             } else {
                 if (ref.getType().equals(TYPE.TREE)) {
                     RevTree tree = index.getDatabase().getTree(ref.objectId());

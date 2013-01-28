@@ -466,10 +466,8 @@ public class DiffOpTest extends RepositoryTestCase {
                 .setNewVersion(Ref.WORK_HEAD).call());
 
         assertNotNull(difflist);
-        assertEquals(2, difflist.size());
-        assertEquals(NodeRef.ROOT, difflist.get(0).newName());
-
-        DiffEntry de = difflist.get(1);
+        assertEquals(1, difflist.size());
+        DiffEntry de = difflist.get(0);
 
         assertNull(de.getOldObject());
         assertNotNull(de.getNewObject());
@@ -491,8 +489,8 @@ public class DiffOpTest extends RepositoryTestCase {
                 .setNewVersion(Ref.WORK_HEAD).call());
 
         assertNotNull(difflist);
-        assertEquals(5, difflist.size());
-        Set<String> expected = ImmutableSet.of(NodeRef.ROOT, linesName, pointsName,
+        assertEquals(4, difflist.size());
+        Set<String> expected = ImmutableSet.of(linesName, pointsName,
                 NodeRef.appendChild(linesName, idL1), NodeRef.appendChild(pointsName, idP1));
         Set<String> actual = Sets.newHashSet(Collections2.transform(difflist,
                 new Function<DiffEntry, String>() {

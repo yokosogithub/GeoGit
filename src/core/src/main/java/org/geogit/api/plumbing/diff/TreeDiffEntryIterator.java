@@ -140,10 +140,11 @@ class TreeDiffEntryIterator extends AbstractIterator<DiffEntry> {
         treeIterator = new DepthTreeIterator(path, treeRef.getMetadataId(), tree, objectDb,
                 strategy);
 
-        Iterator<DiffEntry> iterator = Iterators.transform(treeIterator, new RefToDiffEntry(
-                changeType));
+        Iterator<DiffEntry> iterator;
 
-        if (reportTrees) {
+        iterator = Iterators.transform(treeIterator, new RefToDiffEntry(changeType));
+
+        if (reportTrees && !NodeRef.ROOT.equals(path)) {
             NodeRef oldTreeRef = ChangeType.ADDED.equals(changeType) ? null : treeRef;
             NodeRef newTreeRef = ChangeType.ADDED.equals(changeType) ? treeRef : null;
             DiffEntry treeEntry = new DiffEntry(oldTreeRef, newTreeRef);
@@ -234,16 +235,9 @@ class TreeDiffEntryIterator extends AbstractIterator<DiffEntry> {
 
             Iterator<DiffEntry> it;
 
-            if (fromTree == null || fromTree.isEmpty()) {
-                checkState(toTree != null);
-                it = addRemoveAll(nextRight, toTree, ADDED);
-            } else if (toTree == null || toTree.isEmpty()) {
-                checkState(fromTree != null);
-                it = addRemoveAll(nextLeft, fromTree, REMOVED);
-            } else {
-                it = new TreeDiffEntryIterator(nextLeft, nextRight, fromTree, toTree, reportTrees,
-                        objectDb);
-            }
+            it = new TreeDiffEntryIterator(nextLeft, nextRight, fromTree, toTree, reportTrees,
+                    objectDb);
+
             return it;
         }
 

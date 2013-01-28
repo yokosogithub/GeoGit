@@ -4,7 +4,9 @@ import java.util.Iterator;
 import java.util.List;
 
 import org.geogit.api.NodeRef;
+import org.geogit.api.RevObject.TYPE;
 import org.geogit.api.plumbing.diff.DiffEntry;
+import org.geogit.api.plumbing.diff.DiffEntry.ChangeType;
 import org.geogit.api.porcelain.AddOp;
 import org.geogit.api.porcelain.CommitOp;
 import org.junit.Test;
@@ -23,14 +25,13 @@ public class AddOpTest extends RepositoryTestCase {
     public void testAddSingleFile() throws Exception {
         insert(points1);
         List<DiffEntry> diffs = toList(repo.getWorkingTree().getUnstaged(null));
-        assertEquals(3, diffs.size());
-        assertEquals(NodeRef.ROOT, diffs.get(0).newPath());
-        assertEquals(pointsName, diffs.get(1).newPath());
-        assertEquals(NodeRef.appendChild(pointsName, idP1), diffs.get(2).newPath());
+        assertEquals(2, diffs.size());
+        assertEquals(pointsName, diffs.get(0).newPath());
+        assertEquals(NodeRef.appendChild(pointsName, idP1), diffs.get(1).newPath());
     }
 
     @Test
-    public void testAddMultipleFiles() throws Exception {
+    public void testAddMultipleFeatures() throws Exception {
         insert(points1);
         insert(points2);
         insert(points3);
@@ -55,7 +56,7 @@ public class AddOpTest extends RepositoryTestCase {
     }
 
     @Test
-    public void testAddMultipleFilesWithPathFilter() throws Exception {
+    public void testAddMultipleFeaturesWithPathFilter() throws Exception {
         insert(points1);
         insert(points2);
         insert(lines1);
@@ -63,7 +64,8 @@ public class AddOpTest extends RepositoryTestCase {
         List<DiffEntry> unstaged = toList(repo.getWorkingTree().getUnstaged(null));
         assertEquals(2, unstaged.size());
         assertEquals(linesName, unstaged.get(0).newName());
-        assertEquals(lines1.getIdentifier().getID(), unstaged.get(1).newName());
+        assertEquals(ChangeType.ADDED, unstaged.get(0).changeType());
+        assertEquals(TYPE.TREE, unstaged.get(0).getNewObject().getType());
     }
 
     @Test

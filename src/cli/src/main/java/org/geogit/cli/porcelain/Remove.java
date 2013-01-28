@@ -69,8 +69,10 @@ public class Remove extends AbstractCommand implements CLICommand {
                     .setChildPath(pathToRemove).call();
             Preconditions.checkState(node.isPresent(),
                     "pathspec '%s' did not match any feature or tree", pathToRemove);
-            if (node.get().getType() == TYPE.TREE) {
-                checkState(recursive, "Cannot remove tree if -r is not specified");
+            NodeRef nodeRef = node.get();
+            if (nodeRef.getType() == TYPE.TREE) {
+                checkState(recursive, "Cannot remove tree %s if -r is not specified",
+                        nodeRef.path());
                 trees.add(pathToRemove);
             }
         }

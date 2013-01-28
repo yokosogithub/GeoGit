@@ -419,6 +419,30 @@ public class CommitOpTest extends RepositoryTestCase {
         assertTrue(ref.isPresent());
     }
 
+    @Test
+    public void testCommitWithDeletedTree() throws Exception {
+        insertAndAdd(points1, points2);
+        insertAndAdd(lines1, lines2);
+        final RevCommit commit1 = geogit.command(CommitOp.class).call();
+
+        final RevTree tree1 = geogit.command(RevObjectParse.class).setObjectId(commit1.getTreeId())
+                .call(RevTree.class).get();
+        assertTrue(tree1.trees().isPresent());
+        assertEquals(2, tree1.trees().get().size());
+
+        WorkingTree workingTree = geogit.getRepository().getWorkingTree();
+        workingTree.delete(pointsName);
+        geogit.command(AddOp.class).call();
+
+        final RevCommit commit2 = geogit.command(CommitOp.class).call();
+
+        RevTree tree2 = geogit.command(RevObjectParse.class).setObjectId(commit2.getTreeId())
+                .call(RevTree.class).get();
+
+        assertTrue(tree2.trees().isPresent());
+        assertEquals(1, tree2.trees().get().size());
+    }
+
     private void assertCommit(RevCommit commit, @Nullable ObjectId parentId, String author,
             String message) {
 

@@ -10,8 +10,6 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
-import com.google.common.collect.Lists;
-
 public class RemoveOpTest extends RepositoryTestCase {
 
     @Rule
@@ -30,7 +28,7 @@ public class RemoveOpTest extends RepositoryTestCase {
         String path = NodeRef.appendChild(pointsName, featureId);
         geogit.command(RemoveOp.class).addPathToRemove(path).call();
 
-        List<DiffEntry> deleted = Lists.newArrayList(geogit.command(DiffWorkTree.class).call());
+        List<DiffEntry> deleted = toList(geogit.command(DiffWorkTree.class).call());
 
         // Check something has been deleted
         assertEquals(1, deleted.size());
@@ -53,7 +51,7 @@ public class RemoveOpTest extends RepositoryTestCase {
 
         geogit.command(RemoveOp.class).addPathToRemove(path).addPathToRemove(path2).call();
 
-        List<DiffEntry> deleted = Lists.newArrayList(geogit.command(DiffWorkTree.class).call());
+        List<DiffEntry> deleted = toList(geogit.command(DiffWorkTree.class).call());
         assertEquals(2, deleted.size());
     }
 
@@ -64,7 +62,7 @@ public class RemoveOpTest extends RepositoryTestCase {
 
         geogit.command(RemoveOp.class).addPathToRemove(pointsName).call();
 
-        List<DiffEntry> deleted = Lists.newArrayList(geogit.command(DiffWorkTree.class).call());
+        List<DiffEntry> deleted = toList(geogit.command(DiffWorkTree.class).call());
 
         // Check that something has been deleted
         assertEquals(3, deleted.size());

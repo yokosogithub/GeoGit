@@ -37,7 +37,7 @@ Feature: "rm" command
       And I have staged "lines1"
       And I run the command "commit -m Test"
      When I run the command "rm Points"
-     Then the response should contain "Cannot remove tree if -r is not specified"   
+     Then the response should contain "Cannot remove tree Points if -r is not specified"
      
   Scenario: Try to delete an inexistent feature
     Given I have a repository
