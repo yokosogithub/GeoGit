@@ -110,8 +110,8 @@ public class MergeOp extends AbstractGeoGitOp<RevCommit> {
                 headRef = (SymRef) command(UpdateSymRef.class).setName(Ref.HEAD)
                         .setNewValue(currentBranch).call().get();
 
-                workTree.updateWorkHead(commitId);
-                index.updateStageHead(commitId);
+                getWorkTree().updateWorkHead(commitId);
+                getIndex().updateStageHead(commitId);
                 subProgress.complete();
                 changed = true;
                 continue;
@@ -133,8 +133,8 @@ public class MergeOp extends AbstractGeoGitOp<RevCommit> {
                 headRef = (SymRef) command(UpdateSymRef.class).setName(Ref.HEAD)
                         .setNewValue(currentBranch).call().get();
 
-                workTree.updateWorkHead(commitId);
-                index.updateStageHead(commitId);
+                getWorkTree().updateWorkHead(commitId);
+                getIndex().updateStageHead(commitId);
                 subProgress.complete();
                 changed = true;
                 continue;
@@ -164,7 +164,8 @@ public class MergeOp extends AbstractGeoGitOp<RevCommit> {
                         .setOldTree(commitsToMerge.get(i + 1).getId())
                         .setNewTree(oldCommit.getId()).call();
                 // stage changes
-                index.stage(new SubProgressListener(subProgress, commitCount * 100.f / numCommits),
+                getIndex().stage(
+                        new SubProgressListener(subProgress, commitCount * 100.f / numCommits),
                         diff, 0);
                 changed = true;
                 fastForward = false;

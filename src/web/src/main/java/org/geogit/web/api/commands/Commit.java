@@ -1,6 +1,7 @@
 package org.geogit.web.api.commands;
 
 import java.util.Iterator;
+
 import org.geogit.api.GeoGIT;
 import org.geogit.api.ObjectId;
 import org.geogit.api.RevCommit;
@@ -20,6 +21,7 @@ import org.geogit.web.api.WebAPICommand;
 public class Commit implements WebAPICommand {
 
     String message;
+
     boolean all;
 
     public void setMessage(String message) {
@@ -38,8 +40,7 @@ public class Commit implements WebAPICommand {
         final GeoGIT geogit = context.getGeoGIT();
         RevCommit commit;
         try {
-            commit = geogit.command(CommitOp.class).setMessage(message)
-                    .setAll(all).call();
+            commit = geogit.command(CommitOp.class).setMessage(message).setAll(all).call();
             assert commit != null;
         } catch (NothingToCommitException noChanges) {
             context.setResponseContent(CommandResponse.warning("Nothing to commit"));

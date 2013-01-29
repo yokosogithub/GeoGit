@@ -1,13 +1,12 @@
 package org.geogit.web;
 
-import com.google.inject.Guice;
-import com.google.inject.Injector;
-import com.google.inject.util.Modules;
 import java.io.File;
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.concurrent.ConcurrentMap;
+
 import javax.servlet.ServletContext;
+
 import org.geogit.api.DefaultPlatform;
 import org.geogit.api.GeoGIT;
 import org.geogit.api.GlobalInjectorBuilder;
@@ -25,6 +24,10 @@ import org.restlet.Context;
 import org.restlet.Restlet;
 import org.restlet.data.Protocol;
 import org.restlet.routing.Router;
+
+import com.google.inject.Guice;
+import com.google.inject.Injector;
+import com.google.inject.util.Modules;
 
 /**
  * Both an embedded jetty launcher

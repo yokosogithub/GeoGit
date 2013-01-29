@@ -61,12 +61,12 @@ public class RefParseTest {
 
         when(mockRefDb.getAll()).thenReturn(allRefs);
         command = new RefParse();
-        command.setRefDatabase(mockRefDb);
         for (String name : allRefs.keySet()) {
             when(mockRefDb.getRef(eq(name))).thenReturn(allRefs.get(name));
         }
 
         CommandLocator mockCommandLocator = mock(CommandLocator.class);
+        when(mockCommandLocator.getRefDatabase()).thenReturn(mockRefDb);
         command.setCommandLocator(mockCommandLocator);
         ResolveObjectType mockResolveObjectType = mock(ResolveObjectType.class);
         when(mockCommandLocator.command(eq(ResolveObjectType.class))).thenReturn(

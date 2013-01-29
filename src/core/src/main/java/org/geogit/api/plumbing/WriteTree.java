@@ -86,7 +86,7 @@ public class WriteTree extends AbstractGeoGitOp<ObjectId> {
 
         final RevTree oldRootTree = resolveRootTree();
 
-        Iterator<DiffEntry> staged = index.getStaged(null);
+        Iterator<DiffEntry> staged = getIndex().getStaged(null);
         if (!staged.hasNext()) {
             return oldRootTree.getId();
         }
@@ -100,7 +100,7 @@ public class WriteTree extends AbstractGeoGitOp<ObjectId> {
         Set<String> deletedTrees = Sets.newHashSet();
         NodeRef ref;
         int i = 0;
-        final long numChanges = index.countStaged(null);
+        final long numChanges = getIndex().countStaged(null);
         while (staged.hasNext()) {
             progress.progress((float) (++i * 100) / numChanges);
             if (progress.isCanceled()) {
@@ -141,7 +141,7 @@ public class WriteTree extends AbstractGeoGitOp<ObjectId> {
                 }
             } else {
                 if (ref.getType().equals(TYPE.TREE)) {
-                    RevTree tree = index.getDatabase().getTree(ref.objectId());
+                    RevTree tree = getIndex().getDatabase().getTree(ref.objectId());
                     if (tree.isEmpty()) {
                         repositoryDatabase.put(tree);
                     } else {
@@ -196,7 +196,7 @@ public class WriteTree extends AbstractGeoGitOp<ObjectId> {
         NodeRef indexTreeRef = indexChangedTrees.get(parentPath);
 
         if (indexTreeRef == null) {
-            RevTree stageHead = index.getTree();
+            RevTree stageHead = getIndex().getTree();
             Optional<NodeRef> treeRef = command(FindTreeChild.class).setIndex(true)
                     .setParent(stageHead).setChildPath(parentPath).call();
             if (treeRef.isPresent()) {// may not be in case of a delete

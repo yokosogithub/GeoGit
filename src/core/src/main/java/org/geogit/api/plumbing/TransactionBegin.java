@@ -50,7 +50,7 @@ public class TransactionBegin extends AbstractGeoGitOp<GeogitTransaction> {
 
         // Lock the repository
         try {
-            refDatabase.lock();
+            getRefDatabase().lock();
         } catch (TimeoutException e) {
             Throwables.propagate(e);
         }
@@ -59,7 +59,7 @@ public class TransactionBegin extends AbstractGeoGitOp<GeogitTransaction> {
             t.create();
         } finally {
             // Unlock the repository
-            refDatabase.unlock();
+            getRefDatabase().unlock();
         }
         // Return the transaction
         return t;

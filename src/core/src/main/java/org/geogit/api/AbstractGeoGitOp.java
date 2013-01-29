@@ -32,32 +32,11 @@ public abstract class AbstractGeoGitOp<T> implements Callable<T> {
 
     protected CommandLocator commandLocator;
 
-    @Inject
-    protected WorkingTree workTree;
-
-    @Inject
-    protected StagingArea index;
-
-    @Inject
-    protected RefDatabase refDatabase;
-
     /**
      * Constructs a new abstract operation.
      */
     public AbstractGeoGitOp() {
         LOGGER = Logging.getLogger(getClass());
-    }
-
-    public void setWorkTree(WorkingTree workTree) {
-        this.workTree = workTree;
-    }
-
-    public void setIndex(StagingArea index) {
-        this.index = index;
-    }
-
-    public void setRefDatabase(RefDatabase refDatabase) {
-        this.refDatabase = refDatabase;
     }
 
     /**
@@ -110,5 +89,30 @@ public abstract class AbstractGeoGitOp<T> implements Callable<T> {
      * @see java.util.concurrent.Callable#call()
      */
     public abstract T call();
+
+    protected CommandLocator getCommandLocator() {
+        return commandLocator;
+    }
+
+    /**
+     * Shortcut for {@link CommandLocator#getWorkingTree() getCommandLocator().getWorkingTree()}
+     */
+    protected WorkingTree getWorkTree() {
+        return getCommandLocator().getWorkingTree();
+    }
+
+    /**
+     * Shortcut for {@link CommandLocator#getIndex() getCommandLocator().getIndex()}
+     */
+    protected StagingArea getIndex() {
+        return getCommandLocator().getIndex();
+    }
+
+    /**
+     * Shortcut for {@link CommandLocator#getRefDatabase() getCommandLocator().getRefDatabase()}
+     */
+    protected RefDatabase getRefDatabase() {
+        return getCommandLocator().getRefDatabase();
+    }
 
 }

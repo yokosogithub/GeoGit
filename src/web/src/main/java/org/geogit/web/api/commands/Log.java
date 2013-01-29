@@ -1,9 +1,8 @@
 package org.geogit.web.api.commands;
 
-import com.google.common.base.Optional;
-import com.google.common.base.Preconditions;
 import java.util.Iterator;
 import java.util.List;
+
 import org.geogit.api.GeoGIT;
 import org.geogit.api.ObjectId;
 import org.geogit.api.RevCommit;
@@ -14,15 +13,22 @@ import org.geogit.web.api.CommandResponse;
 import org.geogit.web.api.ResponseWriter;
 import org.geogit.web.api.WebAPICommand;
 
+import com.google.common.base.Optional;
+import com.google.common.base.Preconditions;
+
 /**
  *
  */
 public class Log implements WebAPICommand {
 
     Integer skip;
+
     Integer limit;
+
     String since;
+
     String until;
+
     List<String> paths;
 
     public void setLimit(Integer limit) {
@@ -61,15 +67,13 @@ public class Log implements WebAPICommand {
         if (this.since != null) {
             Optional<ObjectId> since;
             since = geogit.command(RevParse.class).setRefSpec(this.since).call();
-            Preconditions.checkArgument(since.isPresent(), "Object not found '%s'",
-                    this.since);
+            Preconditions.checkArgument(since.isPresent(), "Object not found '%s'", this.since);
             op.setSince(since.get());
         }
         if (this.until != null) {
             Optional<ObjectId> until;
             until = geogit.command(RevParse.class).setRefSpec(this.until).call();
-            Preconditions.checkArgument(until.isPresent(), "Object not found '%s'",
-                    this.until);
+            Preconditions.checkArgument(until.isPresent(), "Object not found '%s'", this.until);
             op.setUntil(until.get());
         }
         if (paths != null && !paths.isEmpty()) {

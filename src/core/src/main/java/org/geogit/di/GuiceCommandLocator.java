@@ -7,6 +7,9 @@ package org.geogit.di;
 
 import org.geogit.api.AbstractGeoGitOp;
 import org.geogit.api.CommandLocator;
+import org.geogit.repository.StagingArea;
+import org.geogit.repository.WorkingTree;
+import org.geogit.storage.RefDatabase;
 
 import com.google.inject.Inject;
 import com.google.inject.Injector;
@@ -41,5 +44,20 @@ public class GuiceCommandLocator implements CommandLocator {
     public <T extends AbstractGeoGitOp<?>> T command(Class<T> commandClass) {
         T instance = injector.getInstance(commandClass);
         return instance;
+    }
+
+    @Override
+    public WorkingTree getWorkingTree() {
+        return injector.getInstance(WorkingTree.class);
+    }
+
+    @Override
+    public StagingArea getIndex() {
+        return injector.getInstance(StagingArea.class);
+    }
+
+    @Override
+    public RefDatabase getRefDatabase() {
+        return injector.getInstance(RefDatabase.class);
     }
 }

@@ -84,7 +84,7 @@ public class TransactionEnd extends AbstractGeoGitOp<Boolean> {
             ImmutableSet<Ref> changedRefs = getChangedRefs();
             // Lock the repository
             try {
-                refDatabase.lock();
+                getRefDatabase().lock();
             } catch (TimeoutException e) {
                 Throwables.propagate(e);
             }
@@ -123,7 +123,7 @@ public class TransactionEnd extends AbstractGeoGitOp<Boolean> {
                 // a transaction is committed?
             } finally {
                 // Unlock the repository
-                refDatabase.unlock();
+                getRefDatabase().unlock();
             }
 
         }

@@ -81,7 +81,7 @@ public class RefParse extends AbstractGeoGitOp<Optional<Ref>> {
             }
         }
 
-        Map<String, String> allRefs = refDatabase.getAll();
+        Map<String, String> allRefs = getRefDatabase().getAll();
 
         class PrePostfixPredicate implements Predicate<String> {
 
@@ -136,16 +136,16 @@ public class RefParse extends AbstractGeoGitOp<Optional<Ref>> {
         String storedValue;
         boolean sym = false;
         try {
-            storedValue = refDatabase.getRef(name);
+            storedValue = getRefDatabase().getRef(name);
         } catch (IllegalArgumentException notARef) {
-            storedValue = refDatabase.getSymRef(name);
+            storedValue = getRefDatabase().getSymRef(name);
             if (null == storedValue) {
                 return Optional.absent();
             }
             sym = true;
         }
         if (null == storedValue) {
-            storedValue = refDatabase.getSymRef(name);
+            storedValue = getRefDatabase().getSymRef(name);
             if (null == storedValue) {
                 return Optional.absent();
             }

@@ -53,7 +53,7 @@ public class ForEachRef extends AbstractGeoGitOp<ImmutableSet<Ref>> {
                 .alwaysTrue() : this.filter);
 
         ImmutableSet.Builder<Ref> refs = new ImmutableSet.Builder<Ref>();
-        for (String refName : refDatabase.getAll().keySet()) {
+        for (String refName : getRefDatabase().getAll().keySet()) {
             Optional<Ref> ref = command(RefParse.class).setName(refName).call();
             if (ref.isPresent() && filter.apply(ref.get())) {
                 Ref accepted = ref.get();

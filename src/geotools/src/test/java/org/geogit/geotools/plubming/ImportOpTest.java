@@ -11,6 +11,7 @@ import java.io.File;
 import jline.UnsupportedTerminal;
 import jline.console.ConsoleReader;
 
+import org.geogit.api.CommandLocator;
 import org.geogit.api.NodeRef;
 import org.geogit.api.Platform;
 import org.geogit.api.RevTree;
@@ -181,9 +182,11 @@ public class ImportOpTest {
     @Test
     public void testDeleteException() throws Exception {
         WorkingTree workTree = mock(WorkingTree.class);
+        CommandLocator cmdl = mock(CommandLocator.class);
+        when(cmdl.getWorkingTree()).thenReturn(workTree);
         doThrow(new Exception("Exception")).when(workTree).delete(any(Name.class));
         ImportOp importOp = new ImportOp();
-        importOp.setWorkTree(workTree);
+        importOp.setCommandLocator(cmdl);
         importOp.setDataStore(TestHelper.createTestFactory().createDataStore(null));
         importOp.setAll(true);
         exception.expect(GeoToolsOpException.class);

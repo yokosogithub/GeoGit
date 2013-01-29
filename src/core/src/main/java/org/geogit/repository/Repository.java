@@ -83,6 +83,7 @@ public class Repository implements CommandLocator {
     /**
      * @return the {@link RefDatabase} for this repository
      */
+    @Override
     public RefDatabase getRefDatabase() {
         return refDatabase;
     }
@@ -97,6 +98,7 @@ public class Repository implements CommandLocator {
     /**
      * @return the {@link StagingArea} for this repository
      */
+    @Override
     public StagingArea getIndex() {
         return index;
     }
@@ -123,6 +125,7 @@ public class Repository implements CommandLocator {
     /**
      * @return the {@link WorkingTree} for this repository
      */
+    @Override
     public WorkingTree getWorkingTree() {
         return workingTree;
     }

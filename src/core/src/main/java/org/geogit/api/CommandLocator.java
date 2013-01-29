@@ -5,6 +5,10 @@
 
 package org.geogit.api;
 
+import org.geogit.repository.StagingArea;
+import org.geogit.repository.WorkingTree;
+import org.geogit.storage.RefDatabase;
+
 /**
  * Service locator interface for acquiring command instances
  */
@@ -17,4 +21,16 @@ public interface CommandLocator {
      * @return a new instance of the requested command class, with its dependencies resolved
      */
     public <T extends AbstractGeoGitOp<?>> T command(Class<T> commandClass);
+
+    public WorkingTree getWorkingTree();
+
+    /**
+     * @return
+     */
+    public StagingArea getIndex();
+
+    /**
+     * @return
+     */
+    public RefDatabase getRefDatabase();
 }

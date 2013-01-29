@@ -1,19 +1,21 @@
 package org.geogit.web;
 
-import org.geogit.web.api.CommandSpecException;
 import java.io.IOException;
 import java.io.Writer;
 import java.util.UUID;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
 import javax.xml.stream.XMLOutputFactory;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamWriter;
+
 import org.codehaus.jettison.mapped.MappedNamespaceConvention;
 import org.codehaus.jettison.mapped.MappedXMLStreamWriter;
 import org.geogit.api.GeoGIT;
 import org.geogit.web.api.CommandContext;
 import org.geogit.web.api.CommandResponse;
+import org.geogit.web.api.CommandSpecException;
 import org.geogit.web.api.ResponseWriter;
 import org.geogit.web.api.WebAPICommand;
 import org.restlet.data.Form;
@@ -56,7 +58,8 @@ public class CommandResource extends ServerResource {
         }
         try {
             if (command != null) {
-                GeoGIT geogit = (GeoGIT) getApplication().getContext().getAttributes().get("geogit");
+                GeoGIT geogit = (GeoGIT) getApplication().getContext().getAttributes()
+                        .get("geogit");
                 RestletContext ctx = new RestletContext(geogit);
                 command.run(ctx);
                 rep = ctx.getRepresentation(format, getJSONPCallback());
@@ -74,16 +77,16 @@ public class CommandResource extends ServerResource {
         if (logger.isLoggable(Level.FINE)) {
             logger.log(Level.FINE, "CommandSpecException", ex);
         }
-        return new JettisonRepresentation(format,
-                CommandResponse.error(ex.getMessage()), getJSONPCallback());
+        return new JettisonRepresentation(format, CommandResponse.error(ex.getMessage()),
+                getJSONPCallback());
     }
 
     private Representation formatUnexpectedException(Exception ex, MediaType format) {
         Logger logger = getLogger();
         UUID uuid = UUID.randomUUID();
         logger.log(Level.SEVERE, "Unexpected exception : " + uuid, ex);
-        return new JettisonRepresentation(format,
-                CommandResponse.error("Unexpected exception : " + uuid), getJSONPCallback());
+        return new JettisonRepresentation(format, CommandResponse.error("Unexpected exception : "
+                + uuid), getJSONPCallback());
     }
 
     private String getJSONPCallback() {
@@ -100,7 +103,8 @@ public class CommandResource extends ServerResource {
             } else if (requested.equalsIgnoreCase("json")) {
                 retval = MediaType.APPLICATION_JSON;
             } else {
-                throw new ResourceException(Status.CLIENT_ERROR_BAD_REQUEST, "Invalid output_format '" + requested + "'");
+                throw new ResourceException(Status.CLIENT_ERROR_BAD_REQUEST,
+                        "Invalid output_format '" + requested + "'");
             }
         }
         return retval;
@@ -109,6 +113,7 @@ public class CommandResource extends ServerResource {
     static class RestletContext implements CommandContext {
 
         CommandResponse responseContent;
+
         final GeoGIT geogit;
 
         RestletContext(GeoGIT geogit) {
@@ -133,6 +138,7 @@ public class CommandResource extends ServerResource {
     static class JettisonRepresentation extends WriterRepresentation {
 
         final CommandResponse impl;
+
         String callback;
 
         public JettisonRepresentation(MediaType mediaType, CommandResponse impl, String callback) {

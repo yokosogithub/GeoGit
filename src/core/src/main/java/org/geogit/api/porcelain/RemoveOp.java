@@ -47,7 +47,7 @@ public class RemoveOp extends AbstractGeoGitOp<WorkingTree> {
         for (String pathToRemove : pathsToRemove) {
             NodeRef.checkValidPath(pathToRemove);
             Optional<NodeRef> node;
-            node = command(FindTreeChild.class).setParent(workTree.getTree())
+            node = command(FindTreeChild.class).setParent(getWorkTree().getTree())
                     .setChildPath(pathToRemove).call();
             Preconditions.checkArgument(node.isPresent(),
                     "pathspec '%s' did not match any feature or tree", pathToRemove);
@@ -55,23 +55,23 @@ public class RemoveOp extends AbstractGeoGitOp<WorkingTree> {
 
         // separate trees from features an delete accordingly
         for (String pathToRemove : pathsToRemove) {
-            Optional<NodeRef> node = command(FindTreeChild.class).setParent(workTree.getTree())
-                    .setChildPath(pathToRemove).call();
+            Optional<NodeRef> node = command(FindTreeChild.class)
+                    .setParent(getWorkTree().getTree()).setChildPath(pathToRemove).call();
             switch (node.get().getType()) {
             case TREE:
-                workTree.delete(pathToRemove);
+                getWorkTree().delete(pathToRemove);
                 break;
             case FEATURE:
                 String parentPath = NodeRef.parentPath(pathToRemove);
                 String name = node.get().name();
-                workTree.delete(parentPath, name);
+                getWorkTree().delete(parentPath, name);
                 break;
             default:
                 break;
             }
         }
 
-        return workTree;
+        return getWorkTree();
     }
 
 }

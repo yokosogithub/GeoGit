@@ -25,8 +25,8 @@ public abstract class CommandResponse {
         @Override
         public void write(ResponseWriter out) throws Exception {
             out.start(false);
-            for (int i = 0; i < items.length; i+=2) {
-                out.writeElement(items[i], items[i+1]);
+            for (int i = 0; i < items.length; i += 2) {
+                out.writeElement(items[i], items[i + 1]);
             }
             out.finish();
         }

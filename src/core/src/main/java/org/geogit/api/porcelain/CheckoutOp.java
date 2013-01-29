@@ -96,7 +96,7 @@ public class CheckoutOp extends AbstractGeoGitOp<ObjectId> {
                 tree = command(RevObjectParse.class).setObjectId(id.get()).call(RevTree.class);
 
             } else {
-                tree = Optional.of(index.getTree());
+                tree = Optional.of(getIndex().getTree());
             }
 
             for (String st : paths) {
@@ -106,34 +106,34 @@ public class CheckoutOp extends AbstractGeoGitOp<ObjectId> {
                 checkState(node.isPresent(), "pathspec '" + st
                         + "' didn't match a feature in the tree");
                 if (node.get().getType() == TYPE.TREE) {
-                    RevTreeBuilder treeBuilder = new RevTreeBuilder(index.getDatabase(),
-                            workTree.getTree());
+                    RevTreeBuilder treeBuilder = new RevTreeBuilder(getIndex().getDatabase(),
+                            getWorkTree().getTree());
                     treeBuilder.remove(st);
                     treeBuilder.put(node.get().getNode());
                     RevTree newRoot = treeBuilder.build();
-                    index.getDatabase().put(newRoot);
-                    workTree.updateWorkHead(newRoot.getId());
+                    getIndex().getDatabase().put(newRoot);
+                    getWorkTree().updateWorkHead(newRoot.getId());
                 } else {
                     Optional<NodeRef> parentNode = command(FindTreeChild.class)
-                            .setParent(workTree.getTree()).setChildPath(node.get().getParentPath())
-                            .call();
+                            .setParent(getWorkTree().getTree())
+                            .setChildPath(node.get().getParentPath()).call();
                     RevTreeBuilder treeBuilder = null;
                     if (parentNode.isPresent()) {
                         Optional<RevTree> parsed = command(RevObjectParse.class).setObjectId(
                                 parentNode.get().getNode().getObjectId()).call(RevTree.class);
                         checkState(parsed.isPresent(),
                                 "Parent tree couldn't be found in the repository.");
-                        treeBuilder = new RevTreeBuilder(index.getDatabase(), parsed.get());
+                        treeBuilder = new RevTreeBuilder(getIndex().getDatabase(), parsed.get());
                         treeBuilder.remove(node.get().getNode().getName());
                     } else {
-                        treeBuilder = new RevTreeBuilder(index.getDatabase());
+                        treeBuilder = new RevTreeBuilder(getIndex().getDatabase());
                     }
                     treeBuilder.put(node.get().getNode());
                     ObjectId newTreeId = command(WriteBack.class)
-                            .setAncestor(workTree.getTree().builder(index.getDatabase()))
+                            .setAncestor(getWorkTree().getTree().builder(getIndex().getDatabase()))
                             .setChildPath(node.get().getParentPath()).setToIndex(true)
                             .setTree(treeBuilder.build()).call();
-                    workTree.updateWorkHead(newTreeId);
+                    getWorkTree().updateWorkHead(newTreeId);
                 }
             }
 
@@ -171,16 +171,16 @@ public class CheckoutOp extends AbstractGeoGitOp<ObjectId> {
             if (targetTreeId.isPresent()) {
                 if (!force) {
                     // count staged and unstaged changes
-                    long staged = index.countStaged(null);
-                    long unstaged = workTree.countUnstaged(null);
+                    long staged = getIndex().countStaged(null);
+                    long unstaged = getWorkTree().countUnstaged(null);
                     if (staged != 0 || unstaged != 0) {
                         throw new CheckoutException(StatusCode.LOCAL_CHANGES_NOT_COMMITTED);
                     }
                 }
                 // update work tree
                 ObjectId treeId = targetTreeId.get();
-                workTree.updateWorkHead(treeId);
-                index.updateStageHead(treeId);
+                getWorkTree().updateWorkHead(treeId);
+                getIndex().updateStageHead(treeId);
                 if (targetRef.isPresent()) {
                     // update HEAD
                     String refName = targetRef.get().getName();
@@ -194,6 +194,6 @@ public class CheckoutOp extends AbstractGeoGitOp<ObjectId> {
             }
         }
 
-        return workTree.getTree().getId();
+        return getWorkTree().getTree().getId();
     }
 }

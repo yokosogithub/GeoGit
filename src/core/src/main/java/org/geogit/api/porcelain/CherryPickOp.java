@@ -83,8 +83,8 @@ public class CherryPickOp extends AbstractGeoGitOp<RevCommit> {
         final String currentBranch = headRef.getTarget();
 
         // count staged and unstaged changes
-        long staged = index.countStaged(null);
-        long unstaged = workTree.countUnstaged(null);
+        long staged = getIndex().countStaged(null);
+        long unstaged = getWorkTree().countUnstaged(null);
         Preconditions.checkState((staged == 0 && unstaged == 0),
                 "You must have a clean working tree and index to perform a cherry pick.");
 
@@ -108,7 +108,7 @@ public class CherryPickOp extends AbstractGeoGitOp<RevCommit> {
         Iterator<DiffEntry> diff = command(DiffTree.class).setOldTree(parentTreeId)
                 .setNewTree(commitToApply.getTreeId()).call();
         // stage changes
-        index.stage(getProgressListener(), diff, 0);
+        getIndex().stage(getProgressListener(), diff, 0);
         // write new tree
         ObjectId newTreeId = command(WriteTree.class).call();
         long timestamp = platform.currentTimeMillis();

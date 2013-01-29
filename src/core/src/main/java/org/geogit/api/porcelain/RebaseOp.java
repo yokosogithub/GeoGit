@@ -108,8 +108,8 @@ public class RebaseOp extends AbstractGeoGitOp<Boolean> {
             command(UpdateRef.class).setName(currentBranch).setNewValue(upstream.get()).call();
             command(UpdateSymRef.class).setName(Ref.HEAD).setNewValue(currentBranch).call();
 
-            workTree.updateWorkHead(upstream.get());
-            index.updateStageHead(upstream.get());
+            getWorkTree().updateWorkHead(upstream.get());
+            getIndex().updateStageHead(upstream.get());
             getProgressListener().complete();
             return true;
         }
@@ -127,8 +127,8 @@ public class RebaseOp extends AbstractGeoGitOp<Boolean> {
             command(UpdateRef.class).setName(currentBranch).setNewValue(upstream.get()).call();
             command(UpdateSymRef.class).setName(Ref.HEAD).setNewValue(currentBranch).call();
 
-            workTree.updateWorkHead(upstream.get());
-            index.updateStageHead(upstream.get());
+            getWorkTree().updateWorkHead(upstream.get());
+            getIndex().updateStageHead(upstream.get());
             getProgressListener().complete();
             return true;
         }
@@ -163,7 +163,7 @@ public class RebaseOp extends AbstractGeoGitOp<Boolean> {
                     .setOldTree(commitsToRebase.get(i + 1).getId()).setNewTree(oldCommit.getId())
                     .call();
             // stage changes
-            index.stage(getProgressListener(), diff, 0);
+            getIndex().stage(getProgressListener(), diff, 0);
             // write new tree
             ObjectId newTreeId = command(WriteTree.class).call();
             long timestamp = platform.currentTimeMillis();
@@ -182,8 +182,8 @@ public class RebaseOp extends AbstractGeoGitOp<Boolean> {
             command(UpdateRef.class).setName(currentBranch).setNewValue(rebaseHead).call();
             command(UpdateSymRef.class).setName(Ref.HEAD).setNewValue(currentBranch).call();
 
-            workTree.updateWorkHead(newTreeId);
-            index.updateStageHead(newTreeId);
+            getWorkTree().updateWorkHead(newTreeId);
+            getIndex().updateStageHead(newTreeId);
 
             subProgress.progress((numCommits - i) * 100.f / numCommits);
 

@@ -64,15 +64,18 @@ public class GeogitTransaction implements CommandLocator {
         return transactionId;
     }
 
+    @Override
     public WorkingTree getWorkingTree() {
         return transactionWorkTree;
     }
 
+    @Override
     public StagingArea getIndex() {
         return transactionIndex;
     }
 
-    public RefDatabase getDatabase() {
+    @Override
+    public RefDatabase getRefDatabase() {
         return transactionRefDatabase;
     }
 
@@ -86,9 +89,6 @@ public class GeogitTransaction implements CommandLocator {
     public <T extends AbstractGeoGitOp<?>> T command(Class<T> commandClass) {
         T instance = locator.command(commandClass);
         instance.setCommandLocator(this);
-        instance.setWorkTree(transactionWorkTree);
-        instance.setIndex(transactionIndex);
-        instance.setRefDatabase(transactionRefDatabase);
         return instance;
     }
 

@@ -97,10 +97,10 @@ public class UpdateSymRef extends AbstractGeoGitOp<Optional<Ref>> {
         if (oldValue != null) {
             String storedValue;
             try {
-                storedValue = refDatabase.getSymRef(name);
+                storedValue = getRefDatabase().getSymRef(name);
             } catch (IllegalArgumentException e) {
                 // may be updating what used to be a direct ref to be a symbolic ref
-                storedValue = refDatabase.getRef(name);
+                storedValue = getRefDatabase().getRef(name);
             }
             Preconditions.checkState(oldValue.equals(storedValue), "Old value (" + storedValue
                     + ") doesn't match expected value '" + oldValue + "'");
@@ -109,12 +109,12 @@ public class UpdateSymRef extends AbstractGeoGitOp<Optional<Ref>> {
         if (delete) {
             Optional<Ref> oldRef = command(RefParse.class).setName(name).call();
             if (oldRef.isPresent()) {
-                refDatabase.remove(name);
+                getRefDatabase().remove(name);
             }
             return oldRef;
         }
 
-        refDatabase.putSymRef(name, newValue);
+        getRefDatabase().putSymRef(name, newValue);
         Optional<Ref> ref = command(RefParse.class).setName(name).call();
         return ref;
     }

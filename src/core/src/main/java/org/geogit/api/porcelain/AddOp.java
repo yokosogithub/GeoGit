@@ -59,7 +59,7 @@ public class AddOp extends AbstractGeoGitOp<WorkingTree> {
             path = patterns.iterator().next();
         }
         stage(getProgressListener(), path);
-        return workTree;
+        return getWorkTree();
     }
 
     /**
@@ -80,7 +80,7 @@ public class AddOp extends AbstractGeoGitOp<WorkingTree> {
 
         // short cut for the case where the index is empty and we're staging all changes in the
         // working tree, so it's just a matter of updating the index ref to working tree RevTree id
-        if (null == pathFilter && !index.getStaged(null).hasNext() && !updateOnly) {
+        if (null == pathFilter && !getIndex().getStaged(null).hasNext() && !updateOnly) {
 
             progress.started();
             Optional<ObjectId> workHead = command(RevParse.class).setRefSpec(Ref.WORK_HEAD).call();
@@ -92,9 +92,9 @@ public class AddOp extends AbstractGeoGitOp<WorkingTree> {
             return;
         }
 
-        final long numChanges = workTree.countUnstaged(pathFilter);
+        final long numChanges = getWorkTree().countUnstaged(pathFilter);
 
-        Iterator<DiffEntry> unstaged = workTree.getUnstaged(pathFilter);
+        Iterator<DiffEntry> unstaged = getWorkTree().getUnstaged(pathFilter);
 
         if (updateOnly) {
             unstaged = Iterators.filter(unstaged, new Predicate<DiffEntry>() {
@@ -105,7 +105,7 @@ public class AddOp extends AbstractGeoGitOp<WorkingTree> {
             });
         }
 
-        index.stage(progress, unstaged, numChanges);
+        getIndex().stage(progress, unstaged, numChanges);
     }
 
     /**

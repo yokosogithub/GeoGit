@@ -17,7 +17,8 @@ public class ObjectResource extends Finder {
     @Override
     public ServerResource find(Request request, Response response) {
         if (request.getAttributes().containsKey("id")) {
-            final GeoGIT ggit = (GeoGIT) getApplication().getContext().getAttributes().get("geogit");
+            final GeoGIT ggit = (GeoGIT) getApplication().getContext().getAttributes()
+                    .get("geogit");
             final String id = (String) request.getAttributes().get("id");
             final ObjectId oid = ObjectId.valueOf(id);
             if (ggit.getRepository().blobExists(oid)) {
@@ -30,11 +31,12 @@ public class ObjectResource extends Finder {
         }
         return super.find(request, response);
     }
-    
+
     private class ObjectRepresentation extends OutputRepresentation {
         private final ObjectId oid;
+
         private final GeoGIT ggit;
-        
+
         public ObjectRepresentation(ObjectId oid, GeoGIT ggit) {
             super(MediaType.APPLICATION_OCTET_STREAM);
             this.oid = oid;
