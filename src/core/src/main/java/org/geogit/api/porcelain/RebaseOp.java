@@ -19,6 +19,7 @@ import org.geogit.api.SymRef;
 import org.geogit.api.plumbing.DiffTree;
 import org.geogit.api.plumbing.FindCommonAncestor;
 import org.geogit.api.plumbing.RefParse;
+import org.geogit.api.plumbing.ResolveTreeish;
 import org.geogit.api.plumbing.UpdateRef;
 import org.geogit.api.plumbing.UpdateSymRef;
 import org.geogit.api.plumbing.WriteTree;
@@ -165,7 +166,12 @@ public class RebaseOp extends AbstractGeoGitOp<Boolean> {
             // stage changes
             getIndex().stage(getProgressListener(), diff, 0);
             // write new tree
+            ObjectId oldTreeId = command(ResolveTreeish.class).setTreeish(rebaseHead).call().get();
             ObjectId newTreeId = command(WriteTree.class).call();
+            if (newTreeId.equals(oldTreeId)) {
+                // No changes, skip this commit
+                continue;
+            }
             long timestamp = platform.currentTimeMillis();
             // Create new commit
             CommitBuilder builder = new CommitBuilder(oldCommit);
