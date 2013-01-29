@@ -20,7 +20,9 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
+import org.geogit.api.Ref;
 import org.geogit.api.RevCommit;
+import org.geogit.api.porcelain.BranchCreateOp;
 import org.geogit.api.porcelain.CommitOp;
 import org.geogit.api.porcelain.LogOp;
 import org.geogit.test.integration.RepositoryTestCase;
@@ -90,6 +92,38 @@ public class GeoGitFeatureStoreTest extends RepositoryTestCase {
 
             // assert transaction isolation
 
+            assertEquals(3, points.getFeatures().size());
+            assertEquals(0, dataStore.getFeatureSource(pointsTypeName).getFeatures().size());
+
+            tx.commit();
+
+            assertEquals(3, dataStore.getFeatureSource(pointsTypeName).getFeatures().size());
+        } catch (Exception e) {
+            tx.rollback();
+            throw e;
+        } finally {
+            tx.close();
+        }
+    }
+
+    @Test
+    public void testAddFeaturesOnASeparateBranch() throws Exception {
+        final String branchName = "addtest";
+        final Ref branchRef = geogit.command(BranchCreateOp.class).setName(branchName).call();
+        dataStore.setBranch(branchName);
+
+        FeatureCollection<SimpleFeatureType, SimpleFeature> collection;
+        collection = DataUtilities.collection(Arrays.asList((SimpleFeature) points1,
+                (SimpleFeature) points2, (SimpleFeature) points3));
+
+        Transaction tx = new DefaultTransaction();
+        points.setTransaction(tx);
+        assertSame(tx, points.getTransaction());
+        try {
+            List<FeatureId> addedFeatures = points.addFeatures(collection);
+            assertNotNull(addedFeatures);
+            assertEquals(3, addedFeatures.size());
+            // assert transaction isolation
             assertEquals(3, points.getFeatures().size());
             assertEquals(0, dataStore.getFeatureSource(pointsTypeName).getFeatures().size());
 

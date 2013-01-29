@@ -13,7 +13,6 @@ import javax.annotation.Nullable;
 import org.geogit.api.CommandLocator;
 import org.geogit.api.NodeRef;
 import org.geogit.api.ObjectId;
-import org.geogit.api.Ref;
 import org.geogit.api.RevFeatureType;
 import org.geogit.api.RevTree;
 import org.geogit.api.plumbing.RevObjectParse;
@@ -250,7 +249,7 @@ class GeogitFeatureSource extends ContentFeatureSource {
     }
 
     @Override
-    protected FeatureReader<SimpleFeatureType, SimpleFeature> getReaderInternal(Query query)
+    protected FeatureReader<SimpleFeatureType, SimpleFeature> getReaderInternal(final Query query)
             throws IOException {
 
         FeatureReader<SimpleFeatureType, SimpleFeature> reader;
@@ -296,15 +295,15 @@ class GeogitFeatureSource extends ContentFeatureSource {
 
         GeogitFeatureReader<SimpleFeatureType, SimpleFeature> nativeReader;
 
+        final String rootRef = getRootRef();
+        final String featureTypeTreePath = getTypeTreePath();
+
         final SimpleFeatureType schema = getSchema();
-        final NodeRef typeRef = getTypeRef();
-        final String configuredBranch = getDataStore().getConfiguredBranch();
 
         final CommandLocator commandLocator = getCommandLocator();
-        final String featureTypeTreePath = typeRef.path();
 
         nativeReader = new GeogitFeatureReader<SimpleFeatureType, SimpleFeature>(commandLocator,
-                schema, filter, featureTypeTreePath, configuredBranch, offset, maxFeatures);
+                schema, filter, featureTypeTreePath, rootRef, offset, maxFeatures);
 
         return nativeReader;
     }
@@ -361,7 +360,7 @@ class GeogitFeatureSource extends ContentFeatureSource {
      * @return
      */
     RevTree getTypeTree() {
-        String refSpec = Ref.WORK_HEAD + ":" + getTypeTreePath();
+        String refSpec = getRootRef() + ":" + getTypeTreePath();
         CommandLocator commandLocator = getCommandLocator();
         Optional<RevTree> ref = commandLocator.command(RevObjectParse.class).setRefSpec(refSpec)
                 .call(RevTree.class);
@@ -369,12 +368,18 @@ class GeogitFeatureSource extends ContentFeatureSource {
         return ref.get();
     }
 
+    private String getRootRef() {
+        GeoGitDataStore dataStore = getDataStore();
+        Transaction transaction = getTransaction();
+        return dataStore.getRootRef(transaction);
+    }
+
     /**
      * @return
      */
     WorkingTree getWorkingTree() {
-        Transaction transaction = getTransaction();
-        GeoGitDataStore dataStore = getDataStore();
-        return dataStore.getWorkingTree(transaction);
+        CommandLocator commandLocator = getCommandLocator();
+        WorkingTree workingTree = commandLocator.getWorkingTree();
+        return workingTree;
     }
 }

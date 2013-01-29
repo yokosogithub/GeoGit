@@ -20,10 +20,12 @@ import org.geogit.api.NodeRef;
 import org.geogit.api.Ref;
 import org.geogit.api.RevObject.TYPE;
 import org.geogit.api.SymRef;
+import org.geogit.api.data.FindFeatureTypeTrees;
 import org.geogit.api.plumbing.ForEachRef;
 import org.geogit.api.plumbing.RefParse;
 import org.geogit.api.plumbing.TransactionBegin;
 import org.geogit.api.porcelain.AddOp;
+import org.geogit.api.porcelain.CheckoutOp;
 import org.geogit.api.porcelain.CommitOp;
 import org.geogit.repository.WorkingTree;
 import org.geotools.data.DataStore;
@@ -33,6 +35,7 @@ import org.geotools.data.store.ContentEntry;
 import org.geotools.data.store.ContentFeatureSource;
 import org.geotools.data.store.ContentState;
 import org.geotools.feature.NameImpl;
+import org.opengis.feature.simple.SimpleFeature;
 import org.opengis.feature.simple.SimpleFeatureType;
 import org.opengis.feature.type.Name;
 
@@ -47,7 +50,27 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 
 /**
- *
+ * A GeoTools {@link DataStore} that serves and edits {@link SimpleFeature}s in a geogit repository.
+ * <p>
+ * Multiple instances of this kind of data store may be created against the same repository,
+ * possibly working against different {@link #setBranch(String) branches}.
+ * <p>
+ * A branch in Geogit is a separate line of history that may or may not share a common ancestor with
+ * another branch. In the later case the branch is called "orphan" and by convention the default
+ * branch is called "master", which is created when the geogit repo is first initialized, but does
+ * not necessarily exist.
+ * <p>
+ * Every read operation (like in {@link #getFeatureSource(Name)}) reads committed features out of
+ * the configured "head" branch. Write operations are only supported if a {@link Transaction} is
+ * set, in which case a {@link GeogitTransaction} is tied to the geotools transaction by means of a
+ * {@link GeogitTransactionState}. During the transaction, read operations will read from the
+ * transaction's {@link WorkingTree} in order to "see" features that haven't been committed yet.
+ * <p>
+ * When the transaction is committed, the changes made inside that transaction are merged onto the
+ * actual repository. If any other change was made to the repository meanwhile, a rebase will be
+ * attempted, and the transaction commit will fail if the rebase operation finds any conflict. This
+ * provides for optimistic locking and reduces thread contention.
+ * 
  */
 class GeoGitDataStore extends ContentDataStore implements DataStore {
 
@@ -71,6 +94,8 @@ class GeoGitDataStore extends ContentDataStore implements DataStore {
      * 
      * @param branch the name of the branch to work against, or {@code null} to default to the
      *        currently checked out branch
+     * @see #getConfiguredBranch()
+     * @see #getOrFigureOutBranch()
      * @throws IllegalArgumentException if {@code branchName} is not null and no such branch exists
      *         in the repository
      */
@@ -88,6 +113,14 @@ class GeoGitDataStore extends ContentDataStore implements DataStore {
                     "%s is not a local branch: %s", branchName, refName);
         }
         this.branch = branchName;
+    }
+
+    public String getOrFigureOutBranch() {
+        String branch = getConfiguredBranch();
+        if (branch != null) {
+            return branch;
+        }
+        return getCheckedOutBranch();
     }
 
     /**
@@ -138,14 +171,6 @@ class GeoGitDataStore extends ContentDataStore implements DataStore {
         return ImmutableList.copyOf(list);
     }
 
-    public WorkingTree getWorkingTree(@Nullable Transaction transaction) {
-        CommandLocator commandLocator = getCommandLocator(transaction);
-        if (commandLocator instanceof GeogitTransaction) {
-            return ((GeogitTransaction) commandLocator).getWorkingTree();
-        }
-        return geogit.getRepository().getWorkingTree();
-    }
-
     public CommandLocator getCommandLocator(@Nullable Transaction transaction) {
         CommandLocator commandLocator = null;
 
@@ -177,8 +202,7 @@ class GeoGitDataStore extends ContentDataStore implements DataStore {
         Preconditions.checkNotNull(typeName);
 
         final String localName = typeName.getLocalPart();
-        final WorkingTree workingTree = getWorkingTree(tx);
-        List<NodeRef> typeRefs = workingTree.getFeatureTypeTrees();
+        final List<NodeRef> typeRefs = findTypeRefs(tx);
         Collection<NodeRef> matches = Collections2.filter(typeRefs, new Predicate<NodeRef>() {
             @Override
             public boolean apply(NodeRef input) {
@@ -208,8 +232,7 @@ class GeoGitDataStore extends ContentDataStore implements DataStore {
 
     @Override
     protected ImmutableList<Name> createTypeNames() throws IOException {
-        WorkingTree workingTree = getWorkingTree(null);
-        List<NodeRef> typeTrees = workingTree.getFeatureTypeTrees();
+        List<NodeRef> typeTrees = findTypeRefs(Transaction.AUTO_COMMIT);
         Function<NodeRef, Name> function = new Function<NodeRef, Name>() {
             @Override
             public Name apply(NodeRef treeRef) {
@@ -219,17 +242,48 @@ class GeoGitDataStore extends ContentDataStore implements DataStore {
         return ImmutableList.copyOf(Collections2.transform(typeTrees, function));
     }
 
+    private List<NodeRef> findTypeRefs(@Nullable Transaction tx) {
+
+        final String rootRef = getRootRef(tx);
+        CommandLocator commandLocator = getCommandLocator(tx);
+        List<NodeRef> typeTrees = commandLocator.command(FindFeatureTypeTrees.class)
+                .setRootTreeRef(rootRef).call();
+        return typeTrees;
+    }
+
+    String getRootRef(@Nullable Transaction tx) {
+        final String rootRef;
+        if (null == tx || Transaction.AUTO_COMMIT.equals(tx)) {
+            rootRef = getOrFigureOutBranch();
+        } else {
+            rootRef = Ref.WORK_HEAD;
+        }
+        return rootRef;
+    }
+
     @Override
     protected ContentFeatureSource createFeatureSource(ContentEntry entry) throws IOException {
         return new GeogitFeatureStore(entry);
     }
 
+    /**
+     * Creates a new feature type tree on the {@link #getOrFigureOutBranch() current branch}.
+     * <p>
+     * Implementation detail: the operation is the homologous to starting a transaction, checking
+     * out the current/configured branch, creating the type tree inside the transaction, issueing a
+     * geogit commit, and committing the transaction for the created tree to be merged onto the
+     * configured branch.
+     */
     @Override
     public void createSchema(SimpleFeatureType featureType) throws IOException {
         GeogitTransaction tx = getCommandLocator(null).command(TransactionBegin.class).call();
         boolean abort = false;
         try {
             String treePath = featureType.getName().getLocalPart();
+            // check out the datastore branch on the transaction space
+            final String branch = getOrFigureOutBranch();
+            tx.command(CheckoutOp.class).setForce(true).setSource(branch).call();
+            // now we can use the transaction working tree with the correct branch checked out
             WorkingTree workingTree = tx.getWorkingTree();
             workingTree.createTypeTree(treePath, featureType);
             tx.command(AddOp.class).addPattern(treePath).call();

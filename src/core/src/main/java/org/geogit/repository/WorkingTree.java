@@ -24,11 +24,11 @@ import org.geogit.api.RevFeatureType;
 import org.geogit.api.RevObject.TYPE;
 import org.geogit.api.RevTree;
 import org.geogit.api.RevTreeBuilder;
+import org.geogit.api.data.FindFeatureTypeTrees;
 import org.geogit.api.plumbing.DiffCount;
 import org.geogit.api.plumbing.DiffWorkTree;
 import org.geogit.api.plumbing.FindOrCreateSubtree;
 import org.geogit.api.plumbing.FindTreeChild;
-import org.geogit.api.plumbing.LsTreeOp;
 import org.geogit.api.plumbing.ResolveTreeish;
 import org.geogit.api.plumbing.RevObjectParse;
 import org.geogit.api.plumbing.UpdateRef;
@@ -44,10 +44,8 @@ import org.opengis.util.ProgressListener;
 
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Predicate;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterators;
 import com.google.common.collect.Maps;
 import com.google.common.collect.PeekingIterator;
@@ -609,24 +607,12 @@ public class WorkingTree {
 
     /**
      * @return a list of all the feature type names in the working tree
+     * @see FindFeatureTypeTrees
      */
     public List<NodeRef> getFeatureTypeTrees() {
 
-        Iterator<NodeRef> allTrees;
-        try {
-            allTrees = commandLocator.command(LsTreeOp.class)
-                    .setStrategy(LsTreeOp.Strategy.DEPTHFIRST_ONLY_TREES).call();
-        } catch (IllegalArgumentException noWorkHead) {
-            return ImmutableList.of();
-        }
-        Iterator<NodeRef> typeTrees = Iterators.filter(allTrees, new Predicate<NodeRef>() {
-            @Override
-            public boolean apply(NodeRef input) {
-                ObjectId metadataId = input.getMetadataId();
-                return !metadataId.isNull();
-            }
-        });
-
-        return ImmutableList.copyOf(typeTrees);
+        List<NodeRef> typeTrees = commandLocator.command(FindFeatureTypeTrees.class)
+                .setRootTreeRef(Ref.WORK_HEAD).call();
+        return typeTrees;
     }
 }

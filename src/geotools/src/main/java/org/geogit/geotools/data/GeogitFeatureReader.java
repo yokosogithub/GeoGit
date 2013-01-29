@@ -16,6 +16,7 @@ import java.util.Comparator;
 import java.util.Iterator;
 import java.util.Set;
 import java.util.TreeSet;
+import java.util.logging.Logger;
 
 import javax.annotation.Nullable;
 
@@ -38,6 +39,7 @@ import org.geotools.data.FeatureReader;
 import org.geotools.factory.CommonFactoryFinder;
 import org.geotools.filter.spatial.ReprojectingFilterVisitor;
 import org.geotools.filter.visitor.SpatialFilterVisitor;
+import org.geotools.util.logging.Logging;
 import org.opengis.feature.Feature;
 import org.opengis.feature.simple.SimpleFeature;
 import org.opengis.feature.simple.SimpleFeatureType;
@@ -63,6 +65,8 @@ import com.vividsolutions.jts.geom.Envelope;
  */
 class GeogitFeatureReader<T extends FeatureType, F extends Feature> implements FeatureReader<T, F>,
         Iterator<F> {
+
+    private static final Logger LOGGER = Logging.getLogger(GeogitFeatureReader.class);
 
     private SimpleFeatureType schema;
 
@@ -142,14 +146,14 @@ class GeogitFeatureReader<T extends FeatureType, F extends Feature> implements F
      * @param queryBounds
      */
     public GeogitFeatureReader(final CommandLocator commandLocator, final SimpleFeatureType schema,
-            final Filter origFilter, final String typeTreePath, @Nullable final String branch,
+            final Filter origFilter, final String typeTreePath, @Nullable final String headRef,
             @Nullable Integer offset, @Nullable Integer maxFeatures) {
 
         this.schema = schema;
         this.offset = offset;
         this.maxFeatures = maxFeatures;
 
-        final String branchRef = branch == null ? Ref.WORK_HEAD : branch;
+        final String branchRef = headRef == null ? Ref.WORK_HEAD : headRef;
         final String typeTreeRefSpec = branchRef + ":" + typeTreePath;
         final Optional<RevTree> parentTree = commandLocator.command(RevObjectParse.class)
                 .setRefSpec(typeTreeRefSpec).call(RevTree.class);
@@ -216,12 +220,8 @@ class GeogitFeatureReader<T extends FeatureType, F extends Feature> implements F
     @Override
     public void close() throws IOException {
         if (stats != null) {
-            System.err.println(stats.toString());
+            LOGGER.info("geogit reader stats: " + stats.toString());
         }
-        // GeometryCollection collection = new
-        // GeometryFactory().createGeometryCollection(stats.geoms
-        // .toArray(new Geometry[stats.geoms.size()]));
-        // System.err.println(collection);
     }
 
     @Override

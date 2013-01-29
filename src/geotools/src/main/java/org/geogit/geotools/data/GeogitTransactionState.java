@@ -13,6 +13,7 @@ import org.geogit.api.CommandLocator;
 import org.geogit.api.GeogitTransaction;
 import org.geogit.api.plumbing.TransactionBegin;
 import org.geogit.api.porcelain.AddOp;
+import org.geogit.api.porcelain.CheckoutOp;
 import org.geogit.api.porcelain.CommitOp;
 import org.geogit.api.porcelain.NothingToCommitException;
 import org.geotools.data.Transaction;
@@ -72,6 +73,9 @@ class GeogitTransactionState implements State {
             GeoGitDataStore dataStore = (GeoGitDataStore) entry.getDataStore();
             CommandLocator commandLocator = dataStore.getCommandLocator(this.tx);
             this.geogitTx = commandLocator.command(TransactionBegin.class).call();
+            // checkout the working branch
+            final String workingBranch = dataStore.getOrFigureOutBranch();
+            this.geogitTx.command(CheckoutOp.class).setForce(true).setSource(workingBranch).call();
         }
     }
 
