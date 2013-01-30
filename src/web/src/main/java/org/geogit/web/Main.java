@@ -16,6 +16,7 @@ import org.geogit.api.plumbing.ResolveGeogitDir;
 import org.geogit.di.GeogitModule;
 import org.geogit.storage.bdbje.JEStorageModule;
 import org.geogit.web.api.repo.ManifestResource;
+import org.geogit.web.api.repo.ObjectExistsResource;
 import org.geogit.web.api.repo.ObjectResource;
 import org.geogit.web.api.repo.SendObjectResource;
 import org.restlet.Application;
@@ -98,6 +99,7 @@ public class Main extends Application {
         router.attach("/manifest", ManifestResource.class);
         router.attach("/objects/{id}", new ObjectResource());
         router.attach("/sendobject", SendObjectResource.class);
+        router.attach("/exists", ObjectExistsResource.class);
         return router;
     }
 
