@@ -9,12 +9,14 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import javax.annotation.Nullable;
 
 import org.geogit.api.ObjectId;
 import org.geogit.api.RevObject;
+import org.geogit.api.plumbing.merge.Conflict;
 import org.geogit.storage.AbstractObjectDatabase;
 import org.geogit.storage.ObjectDatabase;
 import org.geogit.storage.ObjectInserter;
@@ -22,7 +24,13 @@ import org.geogit.storage.ObjectReader;
 import org.geogit.storage.ObjectSerialisingFactory;
 import org.geogit.storage.StagingDatabase;
 
+import com.google.common.base.Optional;
+import com.google.common.base.Predicate;
 import com.google.common.base.Throwables;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Iterators;
+import com.google.common.collect.Maps;
+import com.google.common.collect.UnmodifiableIterator;
 import com.google.inject.Inject;
 import com.ning.compress.lzf.LZFInputStream;
 
@@ -176,6 +184,44 @@ public class HeapStagingDatabase extends HeapObjectDatabse implements StagingDat
     @Override
     public boolean delete(ObjectId objectId) {
         return super.delete(objectId);
+    }
+
+    private Map<String, Conflict> conflicts = Maps.newHashMap();
+
+    @Override
+    public List<Conflict> getConflicts(@Nullable final String pathFilter) {
+        if (pathFilter == null) {
+            return ImmutableList.copyOf(conflicts.values());
+        }
+        UnmodifiableIterator<Conflict> filtered = Iterators.filter(conflicts.values().iterator(),
+                new Predicate<Conflict>() {
+                    @Override
+                    public boolean apply(@Nullable Conflict c) {
+                        return (c.getPath().startsWith(pathFilter));
+                    }
+
+                });
+        return ImmutableList.copyOf(filtered);
+    }
+
+    @Override
+    public void addConflict(Conflict conflict) {
+        conflicts.put(conflict.getPath(), conflict);
+    }
+
+    @Override
+    public void removeConflict(String path) {
+        conflicts.remove(path);
+    }
+
+    @Override
+    public Optional<Conflict> getConflict(String path) {
+        return Optional.fromNullable(conflicts.get(path));
+    }
+
+    @Override
+    public void removeConflicts() {
+        conflicts.clear();
     }
 
 }

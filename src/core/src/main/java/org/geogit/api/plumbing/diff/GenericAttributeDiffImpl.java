@@ -79,4 +79,14 @@ public class GenericAttributeDiffImpl implements AttributeDiff {
         return d.oldValue.equals(oldValue) && d.newValue.equals(newValue);
     }
 
+    @Override
+    public boolean conflicts(AttributeDiff ad) {
+        if (ad instanceof GenericAttributeDiffImpl) {
+            GenericAttributeDiffImpl gad = (GenericAttributeDiffImpl) ad;
+            return !gad.newValue.equals(newValue);
+        } else {
+            return true;
+        }
+    }
+
 }

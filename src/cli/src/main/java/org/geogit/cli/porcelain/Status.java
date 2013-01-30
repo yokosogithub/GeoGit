@@ -6,6 +6,7 @@ package org.geogit.cli.porcelain;
 
 import java.io.IOException;
 import java.util.Iterator;
+import java.util.List;
 
 import jline.console.ConsoleReader;
 
@@ -20,6 +21,8 @@ import org.geogit.api.plumbing.DiffWorkTree;
 import org.geogit.api.plumbing.RefParse;
 import org.geogit.api.plumbing.diff.DiffEntry;
 import org.geogit.api.plumbing.diff.DiffEntry.ChangeType;
+import org.geogit.api.plumbing.merge.Conflict;
+import org.geogit.api.plumbing.merge.ConflictsReadOp;
 import org.geogit.cli.AnsiDecorator;
 import org.geogit.cli.CLICommand;
 import org.geogit.cli.GeogitCLI;
@@ -84,6 +87,7 @@ public class Status implements CLICommand {
 
         String pathFilter = null;
         final long countStaged = index.countStaged(pathFilter);
+        final int countConflicted = index.countConflicted(pathFilter);
         final long countUnstaged = workTree.countUnstaged(pathFilter);
 
         final Optional<Ref> currHead = geogit.command(RefParse.class).setName(Ref.HEAD).call();
@@ -95,7 +99,7 @@ public class Status implements CLICommand {
             console.println("# Not currently on any branch.");
         }
 
-        if (countStaged == 0 && countUnstaged == 0) {
+        if (countStaged + countUnstaged + countConflicted == 0) {
             console.println("nothing to commit (working directory clean)");
             return;
         }
@@ -106,12 +110,18 @@ public class Status implements CLICommand {
 
             console.println("# Changes to be committed:");
             console.println("#   (use \"geogit reset HEAD <path/to/fid>...\" to unstage)");
-
             console.println("#");
-
             print(console, staged, Color.GREEN, countStaged);
 
             console.println("#");
+        }
+
+        if (countConflicted > 0) {
+            List<Conflict> conflicts = geogit.command(ConflictsReadOp.class).call();
+            console.println("# Unmerged paths:");
+            console.println("#   (use \"geogit add/rm <path/to/fid>...\" as appropriate to mark resolution");
+            console.println("#");
+            printUnmerged(console, conflicts, Color.RED, countConflicted);
         }
 
         if (countUnstaged > 0) {
@@ -123,6 +133,7 @@ public class Status implements CLICommand {
             console.println("#");
             print(console, unstaged, Color.RED, countUnstaged);
         }
+
     }
 
     /**
@@ -169,6 +180,40 @@ public class Status implements CLICommand {
 
             sb.setLength(0);
             ansi.a("#      ").fg(color).a(type.toString().toLowerCase()).a("  ").a(path).reset();
+            console.println(ansi.toString());
+        }
+
+        sb.setLength(0);
+        ansi.a("# ").a(total).reset().a(" total.");
+        console.println(ansi.toString());
+    }
+
+    private void printUnmerged(final ConsoleReader console, final List<Conflict> conflicts,
+            final Color color, final int total) throws IOException {
+
+        final int limit = all || this.limit == null ? Integer.MAX_VALUE : this.limit.intValue();
+
+        StringBuilder sb = new StringBuilder();
+
+        boolean useColor;
+        switch (this.coloredOutput) {
+        case never:
+            useColor = false;
+            break;
+        case always:
+            useColor = true;
+            break;
+        default:
+            useColor = console.getTerminal().isAnsiSupported();
+        }
+
+        Ansi ansi = AnsiDecorator.newAnsi(useColor, sb);
+
+        String path;
+        for (int i = 0; i < conflicts.size() && i < limit; i++) {
+            path = conflicts.get(i).getPath();
+            sb.setLength(0);
+            ansi.a("#      ").fg(color).a("unmerged").a("  ").a(path).reset();
             console.println(ansi.toString());
         }
 

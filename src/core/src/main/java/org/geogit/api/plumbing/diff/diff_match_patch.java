@@ -1552,7 +1552,8 @@ public class diff_match_patch {
             return loc;
         } else {
             // Do a fuzzy compare.
-            return match_bitap(text, pattern, loc);
+            return -1;
+            // return match_bitap(text, pattern, loc);
         }
     }
 

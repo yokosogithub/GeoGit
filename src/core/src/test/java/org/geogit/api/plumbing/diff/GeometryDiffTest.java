@@ -55,8 +55,6 @@ public class GeometryDiffTest {
 
     @Test
     public void testNoOldGeometry() throws Exception {
-        Geometry oldGeom = new WKTReader()
-                .read("MULTILINESTRING ((40 40, 20 45, 45 30, 40 40),(20 35, 45 10, 30 5, 10 30, 20 35))");
         Geometry newGeom = new WKTReader()
                 .read("MULTILINESTRING ((40 40, 20 35, 45 30, 40 40),(20 35, 45 20, 30 15, 10 10, 10 30, 20 35),(10 10, 20 20, 35 30))");
         LCSGeometryDiffImpl diff = new LCSGeometryDiffImpl(Optional.fromNullable((Geometry) null),
@@ -64,8 +62,6 @@ public class GeometryDiffTest {
         LCSGeometryDiffImpl deserializedDiff = new LCSGeometryDiffImpl(diff.asText());
         assertEquals(diff, deserializedDiff);
         assertEquals("0 point(s) deleted, 13 new point(s) added, 0 point(s) moved", diff.toString());
-        Optional<Geometry> resultingGeom = diff.applyOn(Optional.of(oldGeom));
-        assertEquals(newGeom, resultingGeom.get());
     }
 
     @Test
@@ -106,7 +102,49 @@ public class GeometryDiffTest {
         assertTrue(diff.canBeAppliedOn(Optional.of(oldGeomModified)));
         Geometry oldGeomModified2 = new WKTReader().read("MULTILINESTRING ((40 40, 10 10))");
         assertFalse(diff.canBeAppliedOn(Optional.of(oldGeomModified2)));
+    }
 
+    @Test
+    public void testConflict() throws Exception {
+        Geometry oldGeom = new WKTReader()
+                .read("MULTILINESTRING ((40 40, 20 45, 45 30, 40 40),(20 35, 45 10, 30 5, 10 30, 20 35))");
+        Geometry newGeom = new WKTReader()
+                .read("MULTILINESTRING ((40 40, 20 45),(20 35, 45 10, 20 35))");
+        GeometryAttributeDiff diff = new GeometryAttributeDiff(Optional.of(oldGeom),
+                Optional.of(newGeom));
+        Geometry newGeom2 = new WKTReader()
+                .read("MULTILINESTRING ((40 40, 20 45, 41 33, 25 25),(20 35, 45 10, 30 5, 10 30, 20 35))");
+        GeometryAttributeDiff diff2 = new GeometryAttributeDiff(Optional.of(oldGeom),
+                Optional.of(newGeom2));
+        assertTrue(diff.conflicts(diff2));
+    }
+
+    @Test
+    public void testNoConflict() throws Exception {
+        Geometry oldGeom = new WKTReader()
+                .read("MULTILINESTRING ((40 40, 20 45, 45 30, 40 40),(20 35, 45 10, 30 5, 10 30, 20 35))");
+        Geometry newGeom = new WKTReader()
+                .read("MULTILINESTRING ((40 40, 20 45, 45 35, 30 30),(20 35, 45 10, 30 5, 10 30, 20 35))");
+        GeometryAttributeDiff diff = new GeometryAttributeDiff(Optional.of(oldGeom),
+                Optional.of(newGeom));
+        Geometry newGeom2 = new WKTReader()
+                .read("MULTILINESTRING ((40 40, 20 45, 45 30, 40 40),(20 35, 45 10, 31 6, 10 30, 20 35))");
+        GeometryAttributeDiff diff2 = new GeometryAttributeDiff(Optional.of(oldGeom),
+                Optional.of(newGeom2));
+        assertFalse(diff.conflicts(diff2));
+    }
+
+    @Test
+    public void testNoConflictIfSameDiff() throws Exception {
+        Geometry oldGeom = new WKTReader()
+                .read("MULTILINESTRING ((40 40, 20 45, 45 30, 40 40),(20 35, 45 10, 30 5, 10 30, 20 35))");
+        Geometry newGeom = new WKTReader()
+                .read("MULTILINESTRING ((40 40, 20 45, 45 35, 30 30),(20 35, 45 10, 30 5, 10 30, 20 35))");
+        GeometryAttributeDiff diff = new GeometryAttributeDiff(Optional.of(oldGeom),
+                Optional.of(newGeom));
+        GeometryAttributeDiff diff2 = new GeometryAttributeDiff(Optional.of(oldGeom),
+                Optional.of(newGeom));
+        assertFalse(diff.conflicts(diff2));
     }
 
 }

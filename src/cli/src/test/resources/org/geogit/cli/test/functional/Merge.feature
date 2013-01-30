@@ -40,4 +40,38 @@ Feature: "merge" command
     Given I am in an empty directory
      When I run the command "merge branch1"
      Then the response should start with "Not a geogit repository"
+
+  Scenario: Try to merge two conflicting branches
+    Given I have a repository
+      And I have two conflicting branches
+     When I run the command "merge branch1"
+     Then the response should contain "CONFLICT: Merge conflict in Points/Points.1"     
      
+  Scenario: Try to merge two conflicting branches using --ours strategy
+    Given I have a repository
+      And I have two conflicting branches
+     When I run the command "merge branch1 --ours"
+     Then the response should contain "Merge branch refs/heads/branch1"   
+
+  Scenario: Try to merge two conflicting branches using --ours and --theirs strategy
+    Given I have a repository
+      And I have two conflicting branches
+     When I run the command "merge branch1 --ours --theirs"
+     Then the response should contain "Cannot use both --ours and --theirs" 
+     
+  Scenario: Try to merge two conflicting branches using --theirs strategy
+    Given I have a repository
+      And I have two conflicting branches
+     When I run the command "merge branch1 --theirs"
+     Then the response should contain "Merge branch refs/heads/branch1"     
+     
+  Scenario: Try to abort a conflicted merge
+    Given I have a repository
+      And I have a merge conflict state
+     When I run the command "merge branch1 --abort"
+     Then the response should contain "Merge aborted succesfully"     
+     
+  Scenario: Try to abort when there is no conflict
+    Given I have a repository
+     When I run the command "merge branch1 --abort"
+     Then the response should contain "There is no merge to abort"            

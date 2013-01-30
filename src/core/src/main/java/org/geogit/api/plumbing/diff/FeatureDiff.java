@@ -204,6 +204,26 @@ public class FeatureDiff {
             return false;
         }
         FeatureDiff f = (FeatureDiff) o;
-        return f.diffs.equals(diffs) && f.path.equals(path);
+        return f.asText().equals(asText());
+        // return f.diffs.equals(diffs) && f.path.equals(path);
+    }
+
+    /**
+     * Checks whether a FeatureDiff conflicts with this one
+     * 
+     * @param featureDiff the featureDiff to check against this one
+     */
+    public boolean conflicts(FeatureDiff featureDiff) {
+        Map<PropertyDescriptor, AttributeDiff> otherDiffs = featureDiff.diffs;
+        for (PropertyDescriptor pd : otherDiffs.keySet()) {
+            if (diffs.containsKey(pd)) {
+                AttributeDiff ad = diffs.get(pd);
+                AttributeDiff otherAd = otherDiffs.get(pd);
+                if (ad.conflicts(otherAd)) {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 }

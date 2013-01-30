@@ -151,7 +151,7 @@ public class CreatePatchOpTest extends RepositoryTestCase {
         Iterator<DiffEntry> diffs = op.call();
         // ArrayList<DiffEntry> list = Lists.newArrayList(diffs);
         Patch patch = geogit.command(CreatePatchOp.class).setDiffs(diffs).call();
-        assertEquals(1, patch.getAdded().size());
+        assertEquals(1, patch.getAlteredTrees().size());
     }
 
 }

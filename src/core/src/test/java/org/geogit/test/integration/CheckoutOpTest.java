@@ -18,21 +18,30 @@ import org.geogit.api.SymRef;
 import org.geogit.api.plumbing.FindTreeChild;
 import org.geogit.api.plumbing.RefParse;
 import org.geogit.api.plumbing.RevObjectParse;
+import org.geogit.api.plumbing.RevParse;
+import org.geogit.api.plumbing.merge.MergeConflictsException;
 import org.geogit.api.porcelain.BranchCreateOp;
 import org.geogit.api.porcelain.CheckoutException;
 import org.geogit.api.porcelain.CheckoutOp;
 import org.geogit.api.porcelain.CommitOp;
 import org.geogit.api.porcelain.ConfigOp;
 import org.geogit.api.porcelain.ConfigOp.ConfigAction;
+import org.geogit.api.porcelain.MergeOp;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
+import org.opengis.feature.Feature;
 
 import com.google.common.base.Optional;
+import com.google.common.base.Suppliers;
 
 public class CheckoutOpTest extends RepositoryTestCase {
     @Rule
     public ExpectedException exception = ExpectedException.none();
+
+    private Feature points1ModifiedB;
+
+    private Feature points1Modified;
 
     @Override
     protected void setUpInternal() throws Exception {
@@ -43,6 +52,10 @@ public class CheckoutOpTest extends RepositoryTestCase {
                 .setValue("groldan").call();
         repo.command(ConfigOp.class).setAction(ConfigAction.CONFIG_SET).setName("user.email")
                 .setValue("groldan@opengeo.org").call();
+        points1ModifiedB = feature(pointsType, idP1, "StringProp1_3", new Integer(2000),
+                "POINT(1 1)");
+        points1Modified = feature(pointsType, idP1, "StringProp1_2", new Integer(1000),
+                "POINT(1 1)");
     }
 
     @Test
@@ -338,4 +351,107 @@ public class CheckoutOpTest extends RepositoryTestCase {
                 .setChildPath("Lines/Lines.3").call();
         assertFalse(nodeRef.isPresent());
     }
+
+    @Test
+    public void testCheckoutPathDuringConflict() throws Exception {
+        createConflictedState();
+        String path = NodeRef.appendChild(pointsName, idP1);
+        try {
+            geogit.command(CheckoutOp.class).addPath(path).call();
+        } catch (CheckoutException e) {
+            assertTrue(true);
+        }
+    }
+
+    @Test
+    public void testCheckoutBranchDuringConflict() throws Exception {
+        createConflictedState();
+        try {
+            geogit.command(CheckoutOp.class).setSource("TestBranch").call();
+        } catch (CheckoutException e) {
+            assertTrue(true);
+        }
+    }
+
+    @Test
+    public void testCheckoutOursAndBranchDuringConflict() throws Exception {
+        createConflictedState();
+        try {
+            geogit.command(CheckoutOp.class).setSource("TestBranch").setOurs(true).call();
+        } catch (IllegalArgumentException e) {
+            assertTrue(true);
+        }
+    }
+
+    @Test
+    public void testCheckoutForceDuringConflict() throws Exception {
+        createConflictedState();
+        String path = NodeRef.appendChild(pointsName, idP1);
+        String path2 = NodeRef.appendChild(pointsName, idP1);
+        geogit.command(CheckoutOp.class).addPath(path).addPath(path2).setForce(true).call();
+    }
+
+    @Test
+    public void testCheckoutOursAndTheirs() throws Exception {
+        try {
+            geogit.command(CheckoutOp.class).setOurs(true).setTheirs(true).addPath("dummypath")
+                    .call();
+            fail();
+        } catch (IllegalArgumentException e) {
+            assertTrue(true);
+        }
+    }
+
+    @Test
+    public void testCheckoutOurs() throws Exception {
+        createConflictedState();
+        String path = NodeRef.appendChild(pointsName, idP1);
+        geogit.command(CheckoutOp.class).addPath(path).setOurs(true).call();
+        Optional<Node> node = geogit.getRepository().getWorkingTree().findUnstaged(path);
+        String headPath = Ref.HEAD + ":" + path;
+        Optional<ObjectId> id = geogit.command(RevParse.class).setRefSpec(headPath).call();
+        assertEquals(id.get(), node.get().getObjectId());
+    }
+
+    @Test
+    public void testCheckoutTheirs() throws Exception {
+        createConflictedState();
+        String path = NodeRef.appendChild(pointsName, idP1);
+        geogit.command(CheckoutOp.class).addPath(path).setTheirs(true).call();
+        Optional<Node> node = geogit.getRepository().getWorkingTree().findUnstaged(path);
+        String headPath = Ref.MERGE_HEAD + ":" + path;
+        Optional<ObjectId> id = geogit.command(RevParse.class).setRefSpec(headPath).call();
+        assertEquals(id.get(), node.get().getObjectId());
+    }
+
+    private void createConflictedState() throws Exception {
+        // Create the following revision graph
+        // o
+        // |
+        // o - Points 1 added
+        // |\
+        // | o - TestBranch - Points 1 modified and points 2 added
+        // |
+        // o - master - HEAD - Points 1 modifiedB
+        insertAndAdd(points1);
+        geogit.command(CommitOp.class).call();
+        geogit.command(BranchCreateOp.class).setName("TestBranch").call();
+        insertAndAdd(points1Modified);
+        geogit.command(CommitOp.class).call();
+        geogit.command(CheckoutOp.class).setSource("TestBranch").call();
+        insertAndAdd(points1ModifiedB);
+        insertAndAdd(points2);
+        geogit.command(CommitOp.class).call();
+
+        geogit.command(CheckoutOp.class).setSource("master").call();
+        Ref branch = geogit.command(RefParse.class).setName("TestBranch").call().get();
+        try {
+            geogit.command(MergeOp.class).addCommit(Suppliers.ofInstance(branch.getObjectId()))
+                    .call();
+            fail();
+        } catch (MergeConflictsException e) {
+            assertTrue(true);// conflicted state correctly created
+        }
+    }
+
 }

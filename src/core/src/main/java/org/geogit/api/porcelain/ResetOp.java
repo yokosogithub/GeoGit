@@ -18,6 +18,7 @@ import org.geogit.api.plumbing.RefParse;
 import org.geogit.api.plumbing.UpdateRef;
 import org.geogit.api.plumbing.UpdateSymRef;
 import org.geogit.api.plumbing.diff.DiffEntry;
+import org.geogit.di.CanRunDuringConflict;
 import org.geogit.repository.Repository;
 
 import com.google.common.base.Optional;
@@ -32,6 +33,7 @@ import com.google.inject.Inject;
  * Reset current HEAD to the specified state.
  * 
  */
+@CanRunDuringConflict
 public class ResetOp extends AbstractGeoGitOp<Boolean> {
 
     /**
@@ -156,6 +158,11 @@ public class ResetOp extends AbstractGeoGitOp<Boolean> {
             // Update branch head to the specified commit
             command(UpdateRef.class).setName(currentBranch).setNewValue(oldCommit.getId()).call();
             command(UpdateSymRef.class).setName(Ref.HEAD).setNewValue(currentBranch).call();
+
+            Optional<Ref> ref = command(RefParse.class).setName(Ref.MERGE_HEAD).call();
+            if (ref.isPresent()) {
+                command(UpdateRef.class).setName(Ref.MERGE_HEAD).setDelete(true).call();
+            }
         }
         return true;
     }

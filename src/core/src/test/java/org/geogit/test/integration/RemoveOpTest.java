@@ -3,12 +3,25 @@ package org.geogit.test.integration;
 import java.util.List;
 
 import org.geogit.api.NodeRef;
-import org.geogit.api.plumbing.DiffWorkTree;
+import org.geogit.api.ObjectId;
+import org.geogit.api.Ref;
+import org.geogit.api.plumbing.RefParse;
+import org.geogit.api.plumbing.RevParse;
 import org.geogit.api.plumbing.diff.DiffEntry;
+import org.geogit.api.plumbing.merge.Conflict;
+import org.geogit.api.plumbing.merge.MergeConflictsException;
+import org.geogit.api.porcelain.BranchCreateOp;
+import org.geogit.api.porcelain.CheckoutOp;
+import org.geogit.api.porcelain.CommitOp;
+import org.geogit.api.porcelain.MergeOp;
 import org.geogit.api.porcelain.RemoveOp;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
+import org.opengis.feature.Feature;
+
+import com.google.common.base.Optional;
+import com.google.common.base.Suppliers;
 
 public class RemoveOpTest extends RepositoryTestCase {
 
@@ -21,27 +34,21 @@ public class RemoveOpTest extends RepositoryTestCase {
 
     @Test
     public void testSingleFeatureRemoval() throws Exception {
-
         populate(false, points1, points2, points3);
 
         String featureId = points1.getIdentifier().getID();
         String path = NodeRef.appendChild(pointsName, featureId);
         geogit.command(RemoveOp.class).addPathToRemove(path).call();
 
-        List<DiffEntry> deleted = toList(geogit.command(DiffWorkTree.class).call());
-
-        // Check something has been deleted
-        assertEquals(1, deleted.size());
-
-        // Check the diffEntry corresponds to the deleted tree
-        DiffEntry diffEntry = deleted.get(0);
-        assertEquals(path, diffEntry.oldPath());
-        assertNull(diffEntry.newPath());
+        Optional<ObjectId> id = geogit.command(RevParse.class)
+                .setRefSpec(Ref.WORK_HEAD + ":" + path).call();
+        assertFalse(id.isPresent());
+        id = geogit.command(RevParse.class).setRefSpec(Ref.STAGE_HEAD + ":" + path).call();
+        assertFalse(id.isPresent());
     }
 
     @Test
     public void testMultipleRemoval() throws Exception {
-
         populate(false, points1, points2, points3);
 
         String featureId = points1.getIdentifier().getID();
@@ -51,27 +58,34 @@ public class RemoveOpTest extends RepositoryTestCase {
 
         geogit.command(RemoveOp.class).addPathToRemove(path).addPathToRemove(path2).call();
 
-        List<DiffEntry> deleted = toList(geogit.command(DiffWorkTree.class).call());
-        assertEquals(2, deleted.size());
+        Optional<ObjectId> id = geogit.command(RevParse.class)
+                .setRefSpec(Ref.WORK_HEAD + ":" + path).call();
+        assertFalse(id.isPresent());
+        id = geogit.command(RevParse.class).setRefSpec(Ref.STAGE_HEAD + ":" + path).call();
+        assertFalse(id.isPresent());
+        id = geogit.command(RevParse.class).setRefSpec(Ref.WORK_HEAD + ":" + path2).call();
+        assertFalse(id.isPresent());
+        id = geogit.command(RevParse.class).setRefSpec(Ref.STAGE_HEAD + ":" + path2).call();
+        assertFalse(id.isPresent());
     }
 
     @Test
     public void testTreeRemoval() throws Exception {
-
         populate(false, points1, points2, points3, lines1, lines2);
 
         geogit.command(RemoveOp.class).addPathToRemove(pointsName).call();
-
-        List<DiffEntry> deleted = toList(geogit.command(DiffWorkTree.class).call());
-
-        // Check that something has been deleted
-        assertEquals(3, deleted.size());
-
+        Optional<ObjectId> id = geogit.command(RevParse.class)
+                .setRefSpec(Ref.WORK_HEAD + ":" + pointsName).call();
+        assertFalse(id.isPresent());
+        id = geogit.command(RevParse.class).setRefSpec(Ref.STAGE_HEAD + ":" + pointsName).call();
+        List<DiffEntry> list = toList(repo.getIndex().getStaged(null));
+        assertFalse(id.isPresent());
+        id = geogit.command(RevParse.class).setRefSpec(Ref.STAGE_HEAD + ":" + linesName).call();
+        assertTrue(id.isPresent());
     }
 
     @Test
     public void testUnexistentPathRemoval() throws Exception {
-
         populate(false, points1, points2, points3);
 
         try {
@@ -80,7 +94,40 @@ public class RemoveOpTest extends RepositoryTestCase {
         } catch (IllegalArgumentException e) {
             assertTrue(true);
         }
-
     }
 
+    @Test
+    public void testRemovalFixesConflict() throws Exception {
+        Feature points1Modified = feature(pointsType, idP1, "StringProp1_2", new Integer(1000),
+                "POINT(1 1)");
+        Feature points1ModifiedB = feature(pointsType, idP1, "StringProp1_3", new Integer(2000),
+                "POINT(1 1)");
+        insertAndAdd(points1);
+        geogit.command(CommitOp.class).call();
+        geogit.command(BranchCreateOp.class).setName("TestBranch").call();
+        insertAndAdd(points1Modified);
+        geogit.command(CommitOp.class).call();
+        geogit.command(CheckoutOp.class).setSource("TestBranch").call();
+        insertAndAdd(points1ModifiedB);
+        insertAndAdd(points2);
+        geogit.command(CommitOp.class).call();
+
+        geogit.command(CheckoutOp.class).setSource("master").call();
+        Ref branch = geogit.command(RefParse.class).setName("TestBranch").call().get();
+        try {
+            geogit.command(MergeOp.class).addCommit(Suppliers.ofInstance(branch.getObjectId()))
+                    .call();
+            fail();
+        } catch (MergeConflictsException e) {
+            assertTrue(true);// conflicted state correctly created
+        }
+        String path = NodeRef.appendChild(pointsName, idP1);
+        geogit.command(RemoveOp.class).addPathToRemove(path).call();
+        List<Conflict> conflicts = geogit.getRepository().getIndex().getDatabase()
+                .getConflicts(null);
+        assertTrue(conflicts.isEmpty());
+        geogit.command(CommitOp.class).call();
+        Optional<Ref> ref = geogit.command(RefParse.class).setName(Ref.MERGE_HEAD).call();
+        assertFalse(ref.isPresent());
+    }
 }

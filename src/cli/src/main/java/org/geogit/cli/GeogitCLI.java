@@ -25,6 +25,7 @@ import org.geogit.api.GeoGIT;
 import org.geogit.api.GlobalInjectorBuilder;
 import org.geogit.api.Platform;
 import org.geogit.api.plumbing.ResolveGeogitDir;
+import org.geogit.api.porcelain.GeoGitOpException;
 import org.geotools.util.DefaultProgressListener;
 import org.geotools.util.logging.Logging;
 import org.opengis.util.ProgressListener;
@@ -268,7 +269,7 @@ public class GeogitCLI {
                     consoleReader.println(e.getMessage() + ". See geogit --help.");
                     consoleReader.flush();
                 } else if (e instanceof IllegalArgumentException
-                        || e instanceof IllegalStateException) {
+                        || e instanceof IllegalStateException || e instanceof GeoGitOpException) {
                     // e.printStackTrace();
                     consoleReader.println(Optional.fromNullable(e.getMessage()).or("Uknown error"));
                     consoleReader.flush();

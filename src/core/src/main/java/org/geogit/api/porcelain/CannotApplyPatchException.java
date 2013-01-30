@@ -18,6 +18,7 @@ public class CannotApplyPatchException extends RuntimeException {
     private Patch patch;
 
     public CannotApplyPatchException(Patch patch) {
+        super("Error: Patch cannot be applied\n\nConflicting entries:\n\n" + patch.toString());
         this.patch = patch;
     }
 

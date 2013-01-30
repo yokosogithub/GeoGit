@@ -2,6 +2,7 @@ package org.geogit.api.plumbing.diff;
 
 import org.geogit.storage.text.AttributeValueSerializer;
 
+import com.google.common.base.Objects;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.vividsolutions.jts.geom.Geometry;
@@ -14,18 +15,20 @@ public class GeometryAttributeDiff implements AttributeDiff {
 
     private TYPE type;
 
-    private Optional<Geometry> geometry;
+    private Optional<Geometry> oldGeometry;
+
+    private Optional<Geometry> newGeometry;
 
     private LCSGeometryDiffImpl diff;
 
     public GeometryAttributeDiff(Optional<Geometry> oldGeom, Optional<Geometry> newGeom) {
         Preconditions.checkArgument(oldGeom != null || newGeom != null);
+        oldGeometry = oldGeom;
+        newGeometry = newGeom;
         if (newGeom == null) {
             type = TYPE.REMOVED;
-            geometry = oldGeom;
         } else if (oldGeom == null) {
             type = TYPE.ADDED;
-            geometry = newGeom;
         } else {
             type = TYPE.MODIFIED;
             diff = new LCSGeometryDiffImpl(oldGeom, newGeom);
@@ -46,12 +49,12 @@ public class GeometryAttributeDiff implements AttributeDiff {
         } else if (tokens[0].equals("A")) {
             Preconditions.checkArgument(tokens.length == 3);
             type = TYPE.ADDED;
-            geometry = Optional.fromNullable((Geometry) AttributeValueSerializer.fromText(
+            newGeometry = Optional.fromNullable((Geometry) AttributeValueSerializer.fromText(
                     Geometry.class.getName(), tokens[1]));
         } else if (tokens[0].equals("R")) {
             Preconditions.checkArgument(tokens.length == 3);
             type = TYPE.REMOVED;
-            geometry = Optional.fromNullable((Geometry) AttributeValueSerializer.fromText(
+            oldGeometry = Optional.fromNullable((Geometry) AttributeValueSerializer.fromText(
                     Geometry.class.getName(), tokens[1]));
         } else {
             throw new IllegalArgumentException("Wrong difference definition:" + s);
@@ -68,10 +71,8 @@ public class GeometryAttributeDiff implements AttributeDiff {
     public AttributeDiff reversed() {
         if (type == TYPE.MODIFIED) {
             return new GeometryAttributeDiff(this.diff.reversed());
-        } else if (type == TYPE.REMOVED) {
-            return new GeometryAttributeDiff(null, geometry);
         } else {
-            return new GeometryAttributeDiff(geometry, null);
+            return new GeometryAttributeDiff(oldGeometry, newGeometry);
         }
     }
 
@@ -80,7 +81,7 @@ public class GeometryAttributeDiff implements AttributeDiff {
         Preconditions.checkState(canBeAppliedOn(obj));
         switch (type) {
         case ADDED:
-            return geometry;
+            return newGeometry;
         case REMOVED:
             return null;
         case MODIFIED:
@@ -95,7 +96,7 @@ public class GeometryAttributeDiff implements AttributeDiff {
         case ADDED:
             return obj == null;
         case REMOVED:
-            return obj.equals(geometry);
+            return obj.equals(oldGeometry);
         case MODIFIED:
         default:
             return diff.canBeAppliedOn((Optional<Geometry>) obj);
@@ -106,9 +107,9 @@ public class GeometryAttributeDiff implements AttributeDiff {
     public String toString() {
         switch (type) {
         case ADDED:
-            return "[MISSING] -> " + AttributeValueSerializer.asText(geometry);
+            return "[MISSING] -> " + AttributeValueSerializer.asText(newGeometry);
         case REMOVED:
-            return AttributeValueSerializer.asText(geometry) + " -> [MISSING]";
+            return AttributeValueSerializer.asText(oldGeometry) + " -> [MISSING]";
         case MODIFIED:
         default:
             return diff.toString();
@@ -119,8 +120,11 @@ public class GeometryAttributeDiff implements AttributeDiff {
     public String asText() {
         switch (type) {
         case ADDED:
+            return type.name().toCharArray()[0] + "\t"
+                    + AttributeValueSerializer.asText(newGeometry);
         case REMOVED:
-            return type.name().toCharArray()[0] + "\t" + AttributeValueSerializer.asText(geometry);
+            return type.name().toCharArray()[0] + "\t"
+                    + AttributeValueSerializer.asText(oldGeometry);
         case MODIFIED:
         default:
             return type.name().toCharArray()[0] + "\t" + diff.asText();
@@ -133,8 +137,9 @@ public class GeometryAttributeDiff implements AttributeDiff {
             return false;
         }
         GeometryAttributeDiff d = (GeometryAttributeDiff) o;
-        if (geometry != null) {
-            return geometry.equals(d.geometry) && type == d.type;
+        if (oldGeometry == null && newGeometry == null) {
+            return Objects.equal(oldGeometry, oldGeometry)
+                    && Objects.equal(newGeometry, d.newGeometry) && Objects.equal(type, d.type);
         } else {
             return diff.equals(d.diff);
         }
@@ -146,6 +151,29 @@ public class GeometryAttributeDiff implements AttributeDiff {
      */
     public LCSGeometryDiffImpl getDiff() {
         return diff;
+    }
+
+    @Override
+    public boolean conflicts(AttributeDiff ad) {
+        if (!(ad instanceof GeometryAttributeDiff)) {
+            return true;
+        }
+        GeometryAttributeDiff gad = (GeometryAttributeDiff) ad;
+        if (TYPE.REMOVED.equals(ad.getType()) && TYPE.REMOVED.equals(getType())) {
+            return false;
+        }
+        if (TYPE.MODIFIED.equals(ad.getType()) && TYPE.MODIFIED.equals(getType())) {
+            if (gad.diff.equals(diff)) {
+                return false;
+            } else {
+                return !gad.canBeAppliedOn(newGeometry);
+            }
+        }
+        if (TYPE.ADDED.equals(ad.getType()) && TYPE.ADDED.equals(getType())) {
+            return !gad.newGeometry.equals(newGeometry);
+        }
+
+        return true;
     }
 
 }

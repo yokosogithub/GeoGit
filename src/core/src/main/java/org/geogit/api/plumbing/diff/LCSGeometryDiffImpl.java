@@ -211,9 +211,10 @@ public class LCSGeometryDiffImpl {
 
     public boolean canBeAppliedOn(Optional<Geometry> obj) {
         String wkt = obj.isPresent() ? obj.get().toText() : "";
-        boolean[] res = (boolean[]) diffMatchPatch.patch_apply(patches, wkt)[1];
-        for (int i = 0; i < res.length; i++) {
-            if (!res[i]) {
+        Object[] res = diffMatchPatch.patch_apply(patches, wkt);
+        boolean[] bool = (boolean[]) res[1];
+        for (int i = 0; i < bool.length; i++) {
+            if (!bool[i]) {
                 return false;
             }
         }

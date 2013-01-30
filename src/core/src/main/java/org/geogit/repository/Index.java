@@ -5,6 +5,7 @@
 package org.geogit.repository;
 
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 
 import javax.annotation.Nullable;
@@ -25,6 +26,7 @@ import org.geogit.api.plumbing.RevObjectParse;
 import org.geogit.api.plumbing.UpdateRef;
 import org.geogit.api.plumbing.WriteBack;
 import org.geogit.api.plumbing.diff.DiffEntry;
+import org.geogit.api.plumbing.merge.Conflict;
 import org.geogit.storage.StagingDatabase;
 import org.opengis.util.ProgressListener;
 
@@ -83,6 +85,7 @@ public class Index implements StagingArea {
     @Override
     public void updateStageHead(ObjectId newTree) {
         commandLocator.command(UpdateRef.class).setName(Ref.STAGE_HEAD).setNewValue(newTree).call();
+        indexDatabase.removeConflicts();
     }
 
     /**
@@ -196,6 +199,8 @@ public class Index implements StagingArea {
                 Node node = newObject.getNode();
                 parentTree.put(node);
             }
+
+            indexDatabase.removeConflict(fullPath);
         }
 
         ObjectId newRootTree = currentIndexHead.getId();
@@ -276,7 +281,17 @@ public class Index implements StagingArea {
     @Override
     public long countStaged(final @Nullable String pathFilter) {
         Long count = commandLocator.command(DiffCount.class).setOldVersion(Ref.HEAD)
-                .setNewVersion(Ref.STAGE_HEAD).setFilter(pathFilter).call();
+                .setNewVersion(Ref.STAGE_HEAD).setReportTrees(true).setFilter(pathFilter).call();
         return count.longValue();
+    }
+
+    @Override
+    public int countConflicted(String pathFilter) {
+        return indexDatabase.getConflicts(pathFilter).size();
+    }
+
+    @Override
+    public List<Conflict> getConflicted(@Nullable String pathFilter) {
+        return indexDatabase.getConflicts(pathFilter);
     }
 }

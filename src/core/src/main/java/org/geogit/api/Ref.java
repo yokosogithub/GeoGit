@@ -41,6 +41,16 @@ public class Ref implements Comparable<Ref> {
     public static final String WORK_HEAD = "WORK_HEAD";
 
     /**
+     * Pointer to the commit to be merged during a merge operation
+     */
+    public static final String MERGE_HEAD = "MERGE_HEAD";
+
+    /**
+     * Pointer to the commit onto which another commit is to be merged during a merge operation
+     */
+    public static final String ORIG_HEAD = "ORIG_HEAD";
+
+    /**
      * Directory prefix for refs.
      */
     public static final String REFS_PREFIX = "refs/";

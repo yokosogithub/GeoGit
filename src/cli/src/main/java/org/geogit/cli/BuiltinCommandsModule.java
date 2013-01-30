@@ -23,6 +23,7 @@ import org.geogit.cli.porcelain.Help;
 import org.geogit.cli.porcelain.Init;
 import org.geogit.cli.porcelain.Log;
 import org.geogit.cli.porcelain.Merge;
+import org.geogit.cli.porcelain.MergeTool;
 import org.geogit.cli.porcelain.Pull;
 import org.geogit.cli.porcelain.Push;
 import org.geogit.cli.porcelain.Rebase;
@@ -83,6 +84,7 @@ public class BuiltinCommandsModule extends AbstractModule implements CLIModule {
         bind(Help.class);
         bind(Init.class);
         bind(Merge.class);
+        bind(MergeTool.class);
         bind(Log.class);
         bind(RemoteExtension.class);
         bind(Remove.class);

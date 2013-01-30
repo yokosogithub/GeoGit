@@ -17,12 +17,16 @@ import org.fusesource.jansi.Ansi;
 import org.fusesource.jansi.Ansi.Color;
 import org.geogit.api.GeoGIT;
 import org.geogit.api.ObjectId;
+import org.geogit.api.Ref;
 import org.geogit.api.RevCommit;
+import org.geogit.api.plumbing.RefParse;
 import org.geogit.api.plumbing.RevParse;
 import org.geogit.api.plumbing.diff.DiffEntry;
 import org.geogit.api.porcelain.DiffOp;
 import org.geogit.api.porcelain.MergeOp;
 import org.geogit.api.porcelain.NothingToCommitException;
+import org.geogit.api.porcelain.ResetOp;
+import org.geogit.api.porcelain.ResetOp.ResetMode;
 import org.geogit.cli.AbstractCommand;
 import org.geogit.cli.AnsiDecorator;
 import org.geogit.cli.CLICommand;
@@ -42,7 +46,7 @@ import com.google.common.collect.Lists;
  * <p>
  * Usage:
  * <ul>
- * <li> {@code geogit merge [-m <msg>] <commitish>...}
+ * <li> {@code geogit merge [-m <msg>] [--ours] [--theirs] <commitish>...}
  * </ul>
  * 
  * @see MergeOp
@@ -52,6 +56,18 @@ public class Merge extends AbstractCommand implements CLICommand {
 
     @Parameter(names = "-m", description = "Commit message")
     private String message;
+
+    @Parameter(names = "--ours", description = "Use 'ours' strategy")
+    private boolean ours;
+
+    @Parameter(names = "--theirs", description = "Use 'theirs' strategy")
+    private boolean theirs;
+
+    @Parameter(names = "--no-commit", description = "Do not perform a commit after merging")
+    private boolean noCommit;
+
+    @Parameter(names = "--abort", description = "Aborts the current merge")
+    private boolean abort;
 
     @Parameter(description = "<commitish>...")
     private List<String> commits = Lists.newArrayList();
@@ -73,9 +89,22 @@ public class Merge extends AbstractCommand implements CLICommand {
 
         Ansi ansi = AnsiDecorator.newAnsi(console.getTerminal().isAnsiSupported());
 
+        if (abort) {
+            Optional<Ref> ref = geogit.command(RefParse.class).setName(Ref.MERGE_HEAD).call();
+            if (!ref.isPresent()) {
+                throw new IllegalArgumentException(
+                        "There is no merge to abort <MERGE_HEAD missing>.");
+            }
+            geogit.command(ResetOp.class).setMode(ResetMode.HARD)
+                    .setCommit(Suppliers.ofInstance(ref.get().getObjectId()));
+            console.println("Merge aborted successfully.");
+            return;
+        }
+
         RevCommit commit;
         try {
             MergeOp merge = geogit.command(MergeOp.class);
+            merge.setOurs(ours).setTheirs(theirs).setNoCommit(noCommit);
             merge.setMessage(message).setProgressListener(cli.getProgressListener());
             for (String commitish : commits) {
                 Optional<ObjectId> commitId;

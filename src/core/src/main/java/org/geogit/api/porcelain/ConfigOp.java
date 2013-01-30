@@ -5,6 +5,7 @@ import java.util.Map;
 
 import org.geogit.api.AbstractGeoGitOp;
 import org.geogit.api.porcelain.ConfigException.StatusCode;
+import org.geogit.di.CanRunDuringConflict;
 import org.geogit.storage.ConfigDatabase;
 
 import com.google.common.base.Optional;
@@ -21,6 +22,7 @@ import com.google.inject.Inject;
  * 
  * @see ConfigDatabase
  */
+@CanRunDuringConflict
 public class ConfigOp extends AbstractGeoGitOp<Optional<Map<String, String>>> {
 
     /**

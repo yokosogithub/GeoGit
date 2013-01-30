@@ -51,4 +51,14 @@ public interface AttributeDiff {
      */
     public String asText();
 
+    /**
+     * Return true if the changes represented by AttributeDiff are in conflict with changes
+     * represented by the passed one
+     * 
+     * @param ad the AttributeDiff to check against
+     * @return true if the changes represented by AttributeDiff are in conflict with changes
+     *         represented by the passed one
+     */
+    public boolean conflicts(AttributeDiff otherAd);
+
 }

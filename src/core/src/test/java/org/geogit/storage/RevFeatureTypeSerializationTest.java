@@ -11,6 +11,7 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.opengis.feature.simple.SimpleFeatureType;
+import org.opengis.feature.type.AttributeDescriptor;
 
 public abstract class RevFeatureTypeSerializationTest extends Assert {
 
@@ -63,6 +64,8 @@ public abstract class RevFeatureTypeSerializationTest extends Assert {
     }
 
     private void testFeatureTypeSerialization(RevFeatureType revFeatureType) throws Exception {
+
+        final SimpleFeatureType expectedType = (SimpleFeatureType) revFeatureType.type();
         ObjectWriter<RevObject> writer = factory.createObjectWriter(TYPE.FEATURETYPE);
 
         ByteArrayOutputStream output = new ByteArrayOutputStream();
@@ -77,16 +80,19 @@ public abstract class RevFeatureTypeSerializationTest extends Assert {
 
         assertNotNull(rft);
         SimpleFeatureType serializedFeatureType = (SimpleFeatureType) rft.type();
-        assertEquals(featureType.getDescriptors().size(), serializedFeatureType.getDescriptors()
+        assertEquals(expectedType.getDescriptors().size(), serializedFeatureType.getDescriptors()
                 .size());
 
-        for (int i = 0; i < featureType.getDescriptors().size(); i++) {
-            assertEquals(featureType.getDescriptor(i), serializedFeatureType.getDescriptor(i));
+        for (int i = 0; i < expectedType.getDescriptors().size(); i++) {
+
+            AttributeDescriptor actual = serializedFeatureType.getDescriptor(i);
+            AttributeDescriptor expected = expectedType.getDescriptor(i);
+            assertEquals(expected, actual);
         }
 
-        assertEquals(featureType.getGeometryDescriptor(),
+        assertEquals(expectedType.getGeometryDescriptor(),
                 serializedFeatureType.getGeometryDescriptor());
-        assertEquals(featureType.getCoordinateReferenceSystem(),
+        assertEquals(expectedType.getCoordinateReferenceSystem(),
                 serializedFeatureType.getCoordinateReferenceSystem());
 
     }

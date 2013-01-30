@@ -18,7 +18,6 @@ import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -26,7 +25,6 @@ import java.util.Map.Entry;
 import java.util.TreeMap;
 import java.util.UUID;
 
-import org.apache.commons.collections.map.LRUMap;
 import org.geogit.api.Bucket;
 import org.geogit.api.CommitBuilder;
 import org.geogit.api.Node;
@@ -204,10 +202,6 @@ public class TextSerializationFactory implements ObjectSerialisingFactory {
     private static abstract class TextWriter<T extends RevObject> implements ObjectWriter<T> {
 
         public static final String NULL_BOUNDING_BOX = "null";
-
-        @SuppressWarnings("unchecked")
-        private static Map<CoordinateReferenceSystem, String> crsIdCache = Collections
-                .synchronizedMap(new LRUMap(3));
 
         /**
          * Different types of tree nodes.
@@ -566,10 +560,6 @@ public class TextSerializationFactory implements ObjectSerialisingFactory {
     };
 
     private abstract static class TextReader<T extends RevObject> implements ObjectReader<T> {
-
-        @SuppressWarnings("unchecked")
-        private static Map<String, CoordinateReferenceSystem> crsCache = Collections
-                .synchronizedMap(new LRUMap(3));
 
         @Override
         public T read(ObjectId id, InputStream rawData) throws IllegalArgumentException {

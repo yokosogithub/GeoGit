@@ -11,7 +11,6 @@ import static com.google.common.base.Preconditions.checkState;
 import java.util.List;
 
 import org.geogit.api.GeoGIT;
-import org.geogit.api.porcelain.CheckoutException;
 import org.geogit.api.porcelain.CheckoutOp;
 import org.geogit.cli.AbstractCommand;
 import org.geogit.cli.CLICommand;
@@ -54,6 +53,12 @@ public class Checkout extends AbstractCommand implements CLICommand {
             + "working tree from the index tree or a named treeish object.", variableArity = true)
     private List<String> paths = Lists.newArrayList();
 
+    @Parameter(names = "--ours", description = "When checking out paths from the index, check out 'ours' version for unmerged paths")
+    private boolean ours;
+
+    @Parameter(names = "--theirs", description = "When checking out paths from the index, check out 'theirs' version for unmerged paths")
+    private boolean theirs;
+
     @Override
     public void runInternal(GeogitCLI cli) throws Exception {
         final GeoGIT geogit = cli.getGeogit();
@@ -62,22 +67,11 @@ public class Checkout extends AbstractCommand implements CLICommand {
                 "no branch or paths specified");
         checkArgument(branchOrStartPoint.size() < 2, "too many arguments");
 
-        try {
-            // final ConsoleReader console = cli.getConsole();
-            String branchOrCommit = (branchOrStartPoint.size() > 0 ? branchOrStartPoint.get(0)
-                    : null);
+        String branchOrCommit = (branchOrStartPoint.size() > 0 ? branchOrStartPoint.get(0) : null);
 
-            geogit.command(CheckoutOp.class).setForce(force).setSource(branchOrCommit)
-                    .addPaths(paths).call();
-        } catch (CheckoutException e) {
-            switch (e.statusCode) {
-            case LOCAL_CHANGES_NOT_COMMITTED:
-                cli.getConsole()
-                        .println(
-                                "Doing a checkout without a clean working tree and index is currently unsupported.");
-                break;
-            }
-        }
+        geogit.command(CheckoutOp.class).setForce(force).setSource(branchOrCommit).addPaths(paths)
+                .setOurs(ours).setTheirs(theirs).call();
+
     }
 
 }

@@ -5,11 +5,14 @@
 package org.geogit.api.porcelain;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
 import org.geogit.api.AbstractGeoGitOp;
 import org.geogit.api.NodeRef;
 import org.geogit.api.plumbing.FindTreeChild;
+import org.geogit.api.plumbing.diff.DiffEntry;
+import org.geogit.di.CanRunDuringConflict;
 import org.geogit.repository.WorkingTree;
 
 import com.google.common.base.Optional;
@@ -17,9 +20,10 @@ import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 
 /**
- * Removes a feature or a tree from the working tree and the index
+ * Removes a feature or a tree from the working tree and index
  * 
  */
+@CanRunDuringConflict
 public class RemoveOp extends AbstractGeoGitOp<WorkingTree> {
 
     private List<String> pathsToRemove;
@@ -69,6 +73,10 @@ public class RemoveOp extends AbstractGeoGitOp<WorkingTree> {
             default:
                 break;
             }
+
+            final long numChanges = getWorkTree().countUnstaged(pathToRemove);
+            Iterator<DiffEntry> unstaged = getWorkTree().getUnstaged(pathToRemove);
+            getIndex().stage(getProgressListener(), unstaged, numChanges);
         }
 
         return getWorkTree();
