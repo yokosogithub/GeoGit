@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Iterator;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Queue;
 
 import org.geogit.api.Bucket;
@@ -27,6 +28,7 @@ import org.geogit.storage.ObjectInserter;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
+import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableSet;
 import com.google.inject.Injector;
 
@@ -44,6 +46,8 @@ public class LocalRemoteRepo implements IRemoteRepo {
     private File workingDirectory;
 
     private Queue<ObjectId> commitQueue;
+
+    private List<ObjectId> fetchedIds;
 
     /**
      * Constructs a new {@code LocalRemoteRepo} with the given parameters.
@@ -133,12 +137,23 @@ public class LocalRemoteRepo implements IRemoteRepo {
      */
     @Override
     public void fetchNewData(Repository localRepository, Ref ref) {
+        fetchedIds = new LinkedList<ObjectId>();
         ObjectInserter objectInserter = localRepository.newObjectInserter();
         commitQueue.clear();
         commitQueue.add(ref.getObjectId());
-        while (!commitQueue.isEmpty()) {
-            walkCommit(commitQueue.remove(), remoteGeoGit.getRepository(), localRepository,
-                    objectInserter);
+        try {
+            while (!commitQueue.isEmpty()) {
+                walkCommit(commitQueue.remove(), remoteGeoGit.getRepository(), localRepository,
+                        objectInserter);
+            }
+        } catch (Exception e) {
+            for (ObjectId oid : fetchedIds) {
+                localRepository.getObjectDatabase().delete(oid);
+            }
+            Throwables.propagate(e);
+        } finally {
+            fetchedIds.clear();
+            fetchedIds = null;
         }
     }
 
@@ -227,6 +242,7 @@ public class LocalRemoteRepo implements IRemoteRepo {
             walkTree(commit.getTreeId(), from, to, objectInserter);
 
             objectInserter.insert(commit);
+            fetchedIds.add(commitId);
             for (ObjectId parentCommit : commit.getParentIds()) {
                 commitQueue.add(parentCommit);
             }
@@ -245,6 +261,7 @@ public class LocalRemoteRepo implements IRemoteRepo {
             RevTree tree = (RevTree) object.get();
 
             objectInserter.insert(tree);
+            fetchedIds.add(treeId);
             // walk subtrees
             if (tree.buckets().isPresent()) {
                 for (Bucket bucket : tree.buckets().get().values()) {
@@ -279,6 +296,7 @@ public class LocalRemoteRepo implements IRemoteRepo {
                 walkTree(objectId, from, to, objectInserter);
             }
             objectInserter.insert(revObject);
+            fetchedIds.add(objectId);
         }
     }
 }

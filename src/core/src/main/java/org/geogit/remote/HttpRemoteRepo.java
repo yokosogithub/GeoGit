@@ -10,6 +10,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Iterator;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Queue;
 
 import javax.annotation.Nullable;
@@ -41,6 +42,8 @@ public class HttpRemoteRepo implements IRemoteRepo {
     private URL repositoryURL;
 
     private Queue<ObjectId> commitQueue;
+
+    private List<ObjectId> fetchedIds;
 
     /**
      * Constructs a new {@code HttpRemoteRepo} with the given parameters.
@@ -217,10 +220,21 @@ public class HttpRemoteRepo implements IRemoteRepo {
      */
     @Override
     public void fetchNewData(Repository localRepository, Ref ref) {
+        fetchedIds = new LinkedList<ObjectId>();
         commitQueue.clear();
         commitQueue.add(ref.getObjectId());
-        while (!commitQueue.isEmpty()) {
-            walkCommit(commitQueue.remove(), localRepository, false);
+        try {
+            while (!commitQueue.isEmpty()) {
+                walkCommit(commitQueue.remove(), localRepository, false);
+            }
+        } catch (Exception e) {
+            for (ObjectId oid : fetchedIds) {
+                localRepository.getObjectDatabase().delete(oid);
+            }
+            Throwables.propagate(e);
+        } finally {
+            fetchedIds.clear();
+            fetchedIds = null;
         }
     }
 
