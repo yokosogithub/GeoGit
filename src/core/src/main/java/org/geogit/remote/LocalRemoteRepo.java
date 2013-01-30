@@ -47,7 +47,7 @@ public class LocalRemoteRepo implements IRemoteRepo {
 
     private Queue<ObjectId> commitQueue;
 
-    private List<ObjectId> fetchedIds;
+    private List<ObjectId> touchedIds;
 
     /**
      * Constructs a new {@code LocalRemoteRepo} with the given parameters.
@@ -137,7 +137,7 @@ public class LocalRemoteRepo implements IRemoteRepo {
      */
     @Override
     public void fetchNewData(Repository localRepository, Ref ref) {
-        fetchedIds = new LinkedList<ObjectId>();
+        touchedIds = new LinkedList<ObjectId>();
         ObjectInserter objectInserter = localRepository.newObjectInserter();
         commitQueue.clear();
         commitQueue.add(ref.getObjectId());
@@ -147,13 +147,13 @@ public class LocalRemoteRepo implements IRemoteRepo {
                         objectInserter);
             }
         } catch (Exception e) {
-            for (ObjectId oid : fetchedIds) {
+            for (ObjectId oid : touchedIds) {
                 localRepository.getObjectDatabase().delete(oid);
             }
             Throwables.propagate(e);
         } finally {
-            fetchedIds.clear();
-            fetchedIds = null;
+            touchedIds.clear();
+            touchedIds = null;
         }
     }
 
@@ -165,25 +165,37 @@ public class LocalRemoteRepo implements IRemoteRepo {
      */
     @Override
     public void pushNewData(Repository localRepository, Ref ref) {
+        touchedIds = new LinkedList<ObjectId>();
         ObjectInserter objectInserter = remoteGeoGit.getRepository().newObjectInserter();
         commitQueue.clear();
         commitQueue.add(ref.getObjectId());
-        while (!commitQueue.isEmpty()) {
-            walkCommit(commitQueue.remove(), localRepository, remoteGeoGit.getRepository(),
-                    objectInserter);
-        }
-        remoteGeoGit.command(UpdateRef.class).setName(ref.getName()).setNewValue(ref.getObjectId())
-                .call();
-
-        Ref remoteHead = headRef();
-        if (remoteHead instanceof SymRef) {
-            if (((SymRef) remoteHead).getTarget().equals(ref.getName())) {
-                remoteGeoGit.command(UpdateSymRef.class).setName(Ref.HEAD)
-                        .setNewValue(ref.getName()).call();
-                RevCommit commit = remoteGeoGit.getRepository().getCommit(ref.getObjectId());
-                remoteGeoGit.getRepository().getWorkingTree().updateWorkHead(commit.getTreeId());
-                remoteGeoGit.getRepository().getIndex().updateStageHead(commit.getTreeId());
+        try {
+            while (!commitQueue.isEmpty()) {
+                walkCommit(commitQueue.remove(), localRepository, remoteGeoGit.getRepository(),
+                        objectInserter);
             }
+            remoteGeoGit.command(UpdateRef.class).setName(ref.getName())
+                    .setNewValue(ref.getObjectId()).call();
+
+            Ref remoteHead = headRef();
+            if (remoteHead instanceof SymRef) {
+                if (((SymRef) remoteHead).getTarget().equals(ref.getName())) {
+                    remoteGeoGit.command(UpdateSymRef.class).setName(Ref.HEAD)
+                            .setNewValue(ref.getName()).call();
+                    RevCommit commit = remoteGeoGit.getRepository().getCommit(ref.getObjectId());
+                    remoteGeoGit.getRepository().getWorkingTree()
+                            .updateWorkHead(commit.getTreeId());
+                    remoteGeoGit.getRepository().getIndex().updateStageHead(commit.getTreeId());
+                }
+            }
+        } catch (Exception e) {
+            for (ObjectId oid : touchedIds) {
+                remoteGeoGit.getRepository().getObjectDatabase().delete(oid);
+            }
+            Throwables.propagate(e);
+        } finally {
+            touchedIds.clear();
+            touchedIds = null;
         }
     }
 
@@ -196,25 +208,37 @@ public class LocalRemoteRepo implements IRemoteRepo {
      */
     @Override
     public void pushNewData(Repository localRepository, Ref ref, String refspec) {
+        touchedIds = new LinkedList<ObjectId>();
         ObjectInserter objectInserter = remoteGeoGit.getRepository().newObjectInserter();
         commitQueue.clear();
         commitQueue.add(ref.getObjectId());
-        while (!commitQueue.isEmpty()) {
-            walkCommit(commitQueue.remove(), localRepository, remoteGeoGit.getRepository(),
-                    objectInserter);
-        }
-        remoteGeoGit.command(UpdateRef.class).setName(refspec).setNewValue(ref.getObjectId())
-                .call();
-
-        Ref remoteHead = headRef();
-        if (remoteHead instanceof SymRef) {
-            if (((SymRef) remoteHead).getTarget().equals(refspec)) {
-                remoteGeoGit.command(UpdateSymRef.class).setName(Ref.HEAD)
-                        .setNewValue(ref.getName()).call();
-                RevCommit commit = remoteGeoGit.getRepository().getCommit(ref.getObjectId());
-                remoteGeoGit.getRepository().getWorkingTree().updateWorkHead(commit.getTreeId());
-                remoteGeoGit.getRepository().getIndex().updateStageHead(commit.getTreeId());
+        try {
+            while (!commitQueue.isEmpty()) {
+                walkCommit(commitQueue.remove(), localRepository, remoteGeoGit.getRepository(),
+                        objectInserter);
             }
+            remoteGeoGit.command(UpdateRef.class).setName(refspec).setNewValue(ref.getObjectId())
+                    .call();
+
+            Ref remoteHead = headRef();
+            if (remoteHead instanceof SymRef) {
+                if (((SymRef) remoteHead).getTarget().equals(refspec)) {
+                    remoteGeoGit.command(UpdateSymRef.class).setName(Ref.HEAD)
+                            .setNewValue(ref.getName()).call();
+                    RevCommit commit = remoteGeoGit.getRepository().getCommit(ref.getObjectId());
+                    remoteGeoGit.getRepository().getWorkingTree()
+                            .updateWorkHead(commit.getTreeId());
+                    remoteGeoGit.getRepository().getIndex().updateStageHead(commit.getTreeId());
+                }
+            }
+        } catch (Exception e) {
+            for (ObjectId oid : touchedIds) {
+                remoteGeoGit.getRepository().getObjectDatabase().delete(oid);
+            }
+            Throwables.propagate(e);
+        } finally {
+            touchedIds.clear();
+            touchedIds = null;
         }
     }
 
@@ -242,7 +266,7 @@ public class LocalRemoteRepo implements IRemoteRepo {
             walkTree(commit.getTreeId(), from, to, objectInserter);
 
             objectInserter.insert(commit);
-            fetchedIds.add(commitId);
+            touchedIds.add(commitId);
             for (ObjectId parentCommit : commit.getParentIds()) {
                 commitQueue.add(parentCommit);
             }
@@ -261,7 +285,7 @@ public class LocalRemoteRepo implements IRemoteRepo {
             RevTree tree = (RevTree) object.get();
 
             objectInserter.insert(tree);
-            fetchedIds.add(treeId);
+            touchedIds.add(treeId);
             // walk subtrees
             if (tree.buckets().isPresent()) {
                 for (Bucket bucket : tree.buckets().get().values()) {
@@ -296,7 +320,7 @@ public class LocalRemoteRepo implements IRemoteRepo {
                 walkTree(objectId, from, to, objectInserter);
             }
             objectInserter.insert(revObject);
-            fetchedIds.add(objectId);
+            touchedIds.add(objectId);
         }
     }
 }

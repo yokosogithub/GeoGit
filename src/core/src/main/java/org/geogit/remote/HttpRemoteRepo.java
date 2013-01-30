@@ -420,8 +420,37 @@ public class HttpRemoteRepo implements IRemoteRepo {
     }
 
     private boolean networkObjectExists(ObjectId objectId, Repository localRepo) {
-        // TODO: make this more efficient
-        return getNetworkObject(objectId, localRepo).isPresent();
+        HttpURLConnection connection = null;
+        boolean exists = false;
+        try {
+            String expanded = repositoryURL.toString() + "/repo/exists?oid=" + objectId.toString();
+
+            connection = (HttpURLConnection) new URL(expanded).openConnection();
+            connection.setRequestMethod("GET");
+
+            connection.setUseCaches(false);
+            connection.setDoOutput(true);
+
+            // Get Response
+            InputStream is = connection.getInputStream();
+            BufferedReader rd = new BufferedReader(new InputStreamReader(is));
+            String line = rd.readLine();
+
+            exists = line.startsWith("1");
+
+            rd.close();
+
+        } catch (Exception e) {
+
+            Throwables.propagate(e);
+
+        } finally {
+
+            if (connection != null) {
+                connection.disconnect();
+            }
+        }
+        return exists;
     }
 
     private Optional<RevObject> getNetworkObject(ObjectId objectId, Repository localRepo) {
