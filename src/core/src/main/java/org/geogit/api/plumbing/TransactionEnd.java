@@ -9,6 +9,7 @@ import java.util.concurrent.TimeoutException;
 
 import org.geogit.api.AbstractGeoGitOp;
 import org.geogit.api.GeogitTransaction;
+import org.geogit.api.ObjectId;
 import org.geogit.api.Ref;
 import org.geogit.api.SymRef;
 import org.geogit.api.porcelain.CheckoutOp;
@@ -38,6 +39,8 @@ public class TransactionEnd extends AbstractGeoGitOp<Boolean> {
 
     private GeogitTransaction transaction = null;
 
+    private boolean sync = false;
+
     @Inject
     public TransactionEnd() {
     }
@@ -58,6 +61,11 @@ public class TransactionEnd extends AbstractGeoGitOp<Boolean> {
      */
     public TransactionEnd setTransaction(GeogitTransaction transaction) {
         this.transaction = transaction;
+        return this;
+    }
+
+    public TransactionEnd setSync() {
+        sync = true;
         return this;
     }
 
@@ -97,13 +105,24 @@ public class TransactionEnd extends AbstractGeoGitOp<Boolean> {
                     Optional<Ref> repoRef = command(RefParse.class).setName(ref.getName()).call();
                     if (repoRef.isPresent() && repositoryChanged(repoRef.get())) {
                         // Try to rebase
-                        transaction.command(CheckoutOp.class).setSource(ref.getName())
-                                .setForce(true).call();
-                        transaction.command(RebaseOp.class)
-                                .setUpstream(Suppliers.ofInstance(repoRef.get().getObjectId()))
-                                .call();
-                        updatedRef = transaction.command(RefParse.class).setName(ref.getName())
-                                .call().get();
+                        if (sync) {
+                            ObjectId updatedRefId = ref.getObjectId();
+                            command(CheckoutOp.class).setSource(repoRef.get().getName())
+                                    .setForce(true).call();
+                            command(RebaseOp.class).setUpstream(Suppliers.ofInstance(updatedRefId))
+                                    .call();
+                            updatedRef = command(RefParse.class).setName(ref.getName()).call()
+                                    .get();
+
+                        } else {
+                            transaction.command(CheckoutOp.class).setSource(ref.getName())
+                                    .setForce(true).call();
+                            transaction.command(RebaseOp.class)
+                                    .setUpstream(Suppliers.ofInstance(repoRef.get().getObjectId()))
+                                    .call();
+                            updatedRef = transaction.command(RefParse.class).setName(ref.getName())
+                                    .call().get();
+                        }
                     }
                     command(UpdateRef.class).setName(ref.getName())
                             .setNewValue(updatedRef.getObjectId()).call();

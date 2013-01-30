@@ -13,12 +13,14 @@ import org.geogit.api.ObjectId;
 import org.geogit.api.Ref;
 import org.geogit.api.RevCommit;
 import org.geogit.api.RevObject;
+import org.geogit.api.SymRef;
 import org.geogit.api.RevObject.TYPE;
 import org.geogit.api.RevTree;
 import org.geogit.api.plumbing.ForEachRef;
 import org.geogit.api.plumbing.RefParse;
 import org.geogit.api.plumbing.RevObjectParse;
 import org.geogit.api.plumbing.UpdateRef;
+import org.geogit.api.plumbing.UpdateSymRef;
 import org.geogit.repository.Repository;
 import org.geogit.storage.ObjectInserter;
 
@@ -157,6 +159,17 @@ public class LocalRemoteRepo implements IRemoteRepo {
         }
         remoteGeoGit.command(UpdateRef.class).setName(ref.getName()).setNewValue(ref.getObjectId())
                 .call();
+
+        Ref remoteHead = headRef();
+        if (remoteHead instanceof SymRef) {
+            if (((SymRef) remoteHead).getTarget().equals(ref.getName())) {
+                remoteGeoGit.command(UpdateSymRef.class).setName(Ref.HEAD)
+                        .setNewValue(ref.getName()).call();
+                RevCommit commit = remoteGeoGit.getRepository().getCommit(ref.getObjectId());
+                remoteGeoGit.getRepository().getWorkingTree().updateWorkHead(commit.getTreeId());
+                remoteGeoGit.getRepository().getIndex().updateStageHead(commit.getTreeId());
+            }
+        }
     }
 
     /**
@@ -177,6 +190,17 @@ public class LocalRemoteRepo implements IRemoteRepo {
         }
         remoteGeoGit.command(UpdateRef.class).setName(refspec).setNewValue(ref.getObjectId())
                 .call();
+
+        Ref remoteHead = headRef();
+        if (remoteHead instanceof SymRef) {
+            if (((SymRef) remoteHead).getTarget().equals(refspec)) {
+                remoteGeoGit.command(UpdateSymRef.class).setName(Ref.HEAD)
+                        .setNewValue(ref.getName()).call();
+                RevCommit commit = remoteGeoGit.getRepository().getCommit(ref.getObjectId());
+                remoteGeoGit.getRepository().getWorkingTree().updateWorkHead(commit.getTreeId());
+                remoteGeoGit.getRepository().getIndex().updateStageHead(commit.getTreeId());
+            }
+        }
     }
 
     /**

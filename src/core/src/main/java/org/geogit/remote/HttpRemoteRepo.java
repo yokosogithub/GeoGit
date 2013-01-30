@@ -238,6 +238,16 @@ public class HttpRemoteRepo implements IRemoteRepo {
             walkCommit(commitQueue.remove(), localRepository, true);
         }
         updateRemoteRef(ref.getName(), ref.getObjectId(), false);
+
+        Ref remoteHead = headRef();
+        if (remoteHead instanceof SymRef) {
+            if (((SymRef) remoteHead).getTarget().equals(ref.getName())) {
+
+                RevCommit commit = localRepository.getCommit(ref.getObjectId());
+                updateRemoteRef(Ref.WORK_HEAD, commit.getTreeId(), false);
+                updateRemoteRef(Ref.STAGE_HEAD, commit.getTreeId(), false);
+            }
+        }
     }
 
     /**
@@ -255,6 +265,16 @@ public class HttpRemoteRepo implements IRemoteRepo {
             walkCommit(commitQueue.remove(), localRepository, true);
         }
         updateRemoteRef(refspec, ref.getObjectId(), false);
+
+        Ref remoteHead = headRef();
+        if (remoteHead instanceof SymRef) {
+            if (((SymRef) remoteHead).getTarget().equals(refspec)) {
+
+                RevCommit commit = localRepository.getCommit(ref.getObjectId());
+                updateRemoteRef(Ref.WORK_HEAD, commit.getTreeId(), false);
+                updateRemoteRef(Ref.STAGE_HEAD, commit.getTreeId(), false);
+            }
+        }
     }
 
     /**
@@ -307,7 +327,9 @@ public class HttpRemoteRepo implements IRemoteRepo {
     private void walkCommit(ObjectId commitId, Repository localRepo, boolean sendObject) {
         // See if we already have it
         if (sendObject) {
-
+            if (networkObjectExists(commitId, localRepo)) {
+                return;
+            }
         } else if (localRepo.getObjectDatabase().exists(commitId)) {
             return;
         }
@@ -327,7 +349,9 @@ public class HttpRemoteRepo implements IRemoteRepo {
     private void walkTree(ObjectId treeId, Repository localRepo, boolean sendObject) {
         // See if we already have it
         if (sendObject) {
-
+            if (networkObjectExists(treeId, localRepo)) {
+                return;
+            }
         } else if (localRepo.getObjectDatabase().exists(treeId)) {
             return;
         }
@@ -364,7 +388,9 @@ public class HttpRemoteRepo implements IRemoteRepo {
     private void moveObject(ObjectId objectId, Repository localRepo, boolean sendObject) {
         // See if we already have it
         if (sendObject) {
-
+            if (networkObjectExists(objectId, localRepo)) {
+                return;
+            }
         } else if (localRepo.getObjectDatabase().exists(objectId)) {
             return;
         }
@@ -377,6 +403,11 @@ public class HttpRemoteRepo implements IRemoteRepo {
                 walkLocalTree((RevTree) revObject, localRepo, sendObject);
             }
         }
+    }
+
+    private boolean networkObjectExists(ObjectId objectId, Repository localRepo) {
+        // TODO: make this more efficient
+        return getNetworkObject(objectId, localRepo).isPresent();
     }
 
     private Optional<RevObject> getNetworkObject(ObjectId objectId, Repository localRepo) {

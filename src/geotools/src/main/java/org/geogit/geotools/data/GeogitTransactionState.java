@@ -106,7 +106,12 @@ class GeogitTransactionState implements State {
         } catch (NothingToCommitException nochanges) {
             // ok
         }
+
         this.geogitTx.commit();
+        GeoGitDataStore dataStore = (GeoGitDataStore) entry.getDataStore();
+        GeogitSynchronizationHandler.get().setDirty(dataStore.getGeogit(),
+                dataStore.getOrFigureOutBranch());
+
         this.geogitTx = null;
     }
 

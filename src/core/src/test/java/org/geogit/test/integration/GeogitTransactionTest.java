@@ -79,6 +79,66 @@ public class GeogitTransactionTest extends RepositoryTestCase {
     }
 
     @Test
+    public void testSyncTransaction() throws Exception {
+        LinkedList<RevCommit> expectedMain = new LinkedList<RevCommit>();
+        LinkedList<RevCommit> expectedTransaction = new LinkedList<RevCommit>();
+
+        // make a commit
+        insertAndAdd(points1);
+        RevCommit firstCommit = geogit.command(CommitOp.class).call();
+        expectedMain.addFirst(firstCommit);
+        expectedTransaction.addFirst(firstCommit);
+
+        // start a transaction
+        GeogitTransaction t = geogit.command(TransactionBegin.class).call();
+
+        // perform a commit in the transaction
+        insertAndAdd(t, points2);
+        RevCommit transactionCommit = t.command(CommitOp.class).call();
+        expectedTransaction.addFirst(transactionCommit);
+
+        // perform a commit on the repo
+        insertAndAdd(points3);
+        RevCommit repoCommit = geogit.command(CommitOp.class).call();
+        expectedMain.addFirst(repoCommit);
+
+        // Verify that the base repository is unchanged
+        Iterator<RevCommit> logs = geogit.command(LogOp.class).call();
+        List<RevCommit> logged = new ArrayList<RevCommit>();
+        for (; logs.hasNext();) {
+            logged.add(logs.next());
+        }
+
+        assertEquals(expectedMain, logged);
+
+        // Verify that the transaction has the commit
+        logs = t.command(LogOp.class).call();
+        logged = new ArrayList<RevCommit>();
+        for (; logs.hasNext();) {
+            logged.add(logs.next());
+        }
+
+        assertEquals(expectedTransaction, logged);
+
+        // Commit the transaction
+        geogit.command(TransactionEnd.class).setTransaction(t).setSync().call();
+
+        // Verify that the base repository has the changes from the transaction
+        logs = geogit.command(LogOp.class).call();
+        RevCommit lastCommit = logs.next();
+        assertFalse(lastCommit.equals(repoCommit));
+        assertEquals(lastCommit.getMessage(), repoCommit.getMessage());
+        assertEquals(lastCommit.getAuthor(), repoCommit.getAuthor());
+        assertEquals(lastCommit.getCommitter().getName(), repoCommit.getCommitter().getName());
+        assertFalse(lastCommit.getCommitter().getTimestamp() == repoCommit.getCommitter()
+                .getTimestamp());
+        assertEquals(logs.next(), transactionCommit);
+        assertEquals(logs.next(), firstCommit);
+        assertFalse(logs.hasNext());
+
+    }
+
+    @Test
     public void testMultipleTransaction() throws Exception {
 
         // make a commit

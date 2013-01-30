@@ -102,6 +102,11 @@ public class GeogitTransaction implements CommandLocator {
         locator.command(TransactionEnd.class).setTransaction(this).setCancel(false).call();
     }
 
+    public void commitSyncTransaction() {
+        locator.command(TransactionEnd.class).setTransaction(this).setCancel(false).setSync()
+                .call();
+    }
+
     public void abort() {
         locator.command(TransactionEnd.class).setTransaction(this).setCancel(true).call();
     }

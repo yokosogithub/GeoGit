@@ -123,6 +123,10 @@ class GeoGitDataStore extends ContentDataStore implements DataStore {
         return getCheckedOutBranch();
     }
 
+    public GeoGIT getGeogit() {
+        return geogit;
+    }
+
     /**
      * @return the configured name of the branch this datastore works against, or {@code null} if no
      *         branch in particular has been set, meaning the data store works against whatever the
