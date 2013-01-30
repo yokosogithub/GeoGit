@@ -69,8 +69,8 @@ public class UpdateRefWeb implements WebAPICommand {
 
             } else {
                 oldValue = ref.get().getObjectId().toString();
-                Optional<ObjectId> target = geogit.command(RevParse.class)
-                        .setRefSpec(newValue + "^0").call();
+                Optional<ObjectId> target = geogit.command(RevParse.class).setRefSpec(newValue)
+                        .call();
                 if (target.isPresent()) {
                     newValueName = target.get().toString();
                     ref = geogit.command(UpdateRef.class).setDelete(delete)
