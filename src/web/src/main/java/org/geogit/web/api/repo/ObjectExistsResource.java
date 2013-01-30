@@ -5,6 +5,7 @@ import java.io.Writer;
 
 import org.geogit.api.GeoGIT;
 import org.geogit.api.ObjectId;
+import org.restlet.data.ClientInfo;
 import org.restlet.data.Form;
 import org.restlet.data.MediaType;
 import org.restlet.representation.WriterRepresentation;
@@ -27,7 +28,9 @@ public class ObjectExistsResource extends ServerResource {
             ObjectId oid = ObjectId.valueOf(options.getFirstValue("oid", ObjectId.NULL.toString()));
 
             GeoGIT ggit = (GeoGIT) getApplication().getContext().getAttributes().get("geogit");
-            if (ggit.getRepository().blobExists(oid)) {
+            ClientInfo info = getRequest().getClientInfo();
+            if (ggit.getRepository().blobExists(oid)
+                    || PushManager.get().alreadyPushed(info.getAddress(), oid)) {
                 w.write("1");
             } else {
                 w.write("0");

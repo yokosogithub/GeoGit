@@ -5,6 +5,7 @@ import java.io.InputStream;
 
 import org.geogit.api.GeoGIT;
 import org.geogit.api.ObjectId;
+import org.restlet.data.ClientInfo;
 import org.restlet.representation.Representation;
 import org.restlet.representation.StringRepresentation;
 import org.restlet.resource.Post;
@@ -16,6 +17,8 @@ public class SendObjectResource extends ServerResource {
     public Representation acceptObject(Representation entity) throws IOException {
         Representation result = null;
 
+        ClientInfo info = entity.createClientInfo();
+
         InputStream input = entity.getStream();
         byte objectIdBytes[] = new byte[20];
         input.read(objectIdBytes, 0, 20);
@@ -26,7 +29,9 @@ public class SendObjectResource extends ServerResource {
             result = new StringRepresentation("Object already existed: " + objectId.toString());
 
         } else {
-            ggit.getRepository().getObjectDatabase().put(objectId, input);
+            // put it into the staging database until we have all of the data
+            ggit.getRepository().getIndex().getDatabase().put(objectId, input);
+            PushManager.get().addObject(info.getAddress(), objectId);
             result = new StringRepresentation("Object added: " + objectId.toString());
         }
 

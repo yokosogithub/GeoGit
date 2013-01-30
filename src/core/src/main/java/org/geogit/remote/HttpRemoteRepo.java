@@ -246,11 +246,13 @@ public class HttpRemoteRepo implements IRemoteRepo {
      */
     @Override
     public void pushNewData(Repository localRepository, Ref ref) {
+        beginPush();
         commitQueue.clear();
         commitQueue.add(ref.getObjectId());
         while (!commitQueue.isEmpty()) {
             walkCommit(commitQueue.remove(), localRepository, true);
         }
+        endPush();
         updateRemoteRef(ref.getName(), ref.getObjectId(), false);
 
         Ref remoteHead = headRef();
@@ -273,11 +275,13 @@ public class HttpRemoteRepo implements IRemoteRepo {
      */
     @Override
     public void pushNewData(Repository localRepository, Ref ref, String refspec) {
+        beginPush();
         commitQueue.clear();
         commitQueue.add(ref.getObjectId());
         while (!commitQueue.isEmpty()) {
             walkCommit(commitQueue.remove(), localRepository, true);
         }
+        endPush();
         updateRemoteRef(refspec, ref.getObjectId(), false);
 
         Ref remoteHead = headRef();
@@ -299,6 +303,56 @@ public class HttpRemoteRepo implements IRemoteRepo {
     @Override
     public void deleteRef(String refspec) {
         updateRemoteRef(refspec, null, true);
+    }
+
+    private void beginPush() {
+        HttpURLConnection connection = null;
+        try {
+            String expanded = repositoryURL.toString() + "/beginpush";
+
+            connection = (HttpURLConnection) new URL(expanded).openConnection();
+            connection.setRequestMethod("GET");
+
+            connection.setUseCaches(false);
+            connection.setDoOutput(true);
+
+            connection.getInputStream();
+
+        } catch (Exception e) {
+
+            Throwables.propagate(e);
+
+        } finally {
+
+            if (connection != null) {
+                connection.disconnect();
+            }
+        }
+    }
+
+    private void endPush() {
+        HttpURLConnection connection = null;
+        try {
+            String expanded = repositoryURL.toString() + "/endpush";
+
+            connection = (HttpURLConnection) new URL(expanded).openConnection();
+            connection.setRequestMethod("GET");
+
+            connection.setUseCaches(false);
+            connection.setDoOutput(true);
+
+            connection.getInputStream();
+
+        } catch (Exception e) {
+
+            Throwables.propagate(e);
+
+        } finally {
+
+            if (connection != null) {
+                connection.disconnect();
+            }
+        }
     }
 
     private void updateRemoteRef(String refspec, ObjectId newValue, boolean delete) {
