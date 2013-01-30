@@ -72,7 +72,7 @@ import com.google.common.collect.Lists;
  * provides for optimistic locking and reduces thread contention.
  * 
  */
-class GeoGitDataStore extends ContentDataStore implements DataStore {
+public class GeoGitDataStore extends ContentDataStore implements DataStore {
 
     private final GeoGIT geogit;
 
@@ -304,5 +304,12 @@ class GeoGitDataStore extends ContentDataStore implements DataStore {
                 tx.abort();
             }
         }
+    }
+
+    /**
+     * @return
+     */
+    public GeoGIT getGeogit() {
+        return geogit;
     }
 }

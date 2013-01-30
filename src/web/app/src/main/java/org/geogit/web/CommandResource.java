@@ -18,9 +18,9 @@ import org.geogit.web.api.CommandResponse;
 import org.geogit.web.api.CommandSpecException;
 import org.geogit.web.api.ResponseWriter;
 import org.geogit.web.api.WebAPICommand;
+import org.geogit.web.api.commands.Status;
 import org.restlet.data.Form;
 import org.restlet.data.MediaType;
-import org.restlet.data.Status;
 import org.restlet.representation.Representation;
 import org.restlet.representation.Variant;
 import org.restlet.representation.WriterRepresentation;
@@ -103,7 +103,7 @@ public class CommandResource extends ServerResource {
             } else if (requested.equalsIgnoreCase("json")) {
                 retval = MediaType.APPLICATION_JSON;
             } else {
-                throw new ResourceException(Status.CLIENT_ERROR_BAD_REQUEST,
+                throw new ResourceException(org.restlet.data.Status.CLIENT_ERROR_BAD_REQUEST,
                         "Invalid output_format '" + requested + "'");
             }
         }

@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE beans PUBLIC "-//SPRING//DTD BEAN//EN" "http://www.springframework.org/dtd/spring-beans.dtd">
+<beans>
+
+  <bean id="geogitConfigMapping" class="org.geoserver.rest.RESTMapping">
+    <property name="routes">
+      <map>
+        <entry>
+          <key><value>/geogit</value></key>
+          <value>geogitRepositoryFinder</value>
+        </entry>
+        <entry>
+          <key><value>/geogit/{repository}</value></key>
+          <value>geogitRepositoryFinder</value>
+        </entry>
+      </map>
+    </property>
+  </bean>
+
+  <bean id="geogitRepositoryFinder" class="org.geogit.rest.RepositoryFinder">
+    <constructor-arg ref="catalog" />
+  </bean>
+
+  <!--bean id="repositoryFinder" class="org.geogit.geoserver.rest.RepositoryFinder" / -->
+</beans>

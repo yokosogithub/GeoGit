@@ -36,6 +36,9 @@ import com.google.common.base.Preconditions;
 
 public class GeoGitDataStoreFactory implements DataStoreFactorySpi {
 
+    /** GEO_GIT */
+    public static final String DISPLAY_NAME = "GeoGIT";
+
     static {
         if (GlobalInjectorBuilder.builder == null
                 || GlobalInjectorBuilder.builder.getClass().equals(InjectorBuilder.class)) {
@@ -58,7 +61,7 @@ public class GeoGitDataStoreFactory implements DataStoreFactorySpi {
 
     @Override
     public String getDisplayName() {
-        return "GeoGIT";
+        return DISPLAY_NAME;
     }
 
     @Override
