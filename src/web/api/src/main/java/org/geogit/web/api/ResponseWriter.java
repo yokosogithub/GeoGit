@@ -1,6 +1,7 @@
 package org.geogit.web.api;
 
 import java.util.Iterator;
+import java.util.List;
 
 import javax.annotation.Nullable;
 import javax.xml.stream.XMLStreamException;
@@ -130,6 +131,14 @@ public class ResponseWriter {
             out.writeStartElement("commit");
             writeElement("id", entry.getId().toString());
             writeElement("tree", entry.getTreeId().toString());
+
+            List<ObjectId> parentIds = entry.getParentIds();
+            out.writeStartElement("parents");
+            for (ObjectId parentId : parentIds) {
+                writeElement("id", parentId.toString());
+            }
+            out.writeEndElement();
+
             writePerson("author", entry.getAuthor());
             writePerson("committer", entry.getCommitter());
             writeElement("message", entry.getMessage());

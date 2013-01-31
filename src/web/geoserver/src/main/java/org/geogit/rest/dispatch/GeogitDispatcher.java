@@ -89,6 +89,7 @@ public class GeogitDispatcher extends AbstractController {
         router.attach("/", RepositoryListResource.class);
         router.attach("/{repository}", RepositoryResource.class);
         router.attach("/{repository}/repo", makeRepoRouter());
+        router.attach("/{repository}/{command}.{extension}", CommandResource.class);
         router.attach("/{repository}/{command}", CommandResource.class);
         return router;
     }

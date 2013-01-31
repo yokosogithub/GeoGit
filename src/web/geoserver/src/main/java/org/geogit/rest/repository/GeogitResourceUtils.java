@@ -32,7 +32,7 @@ import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterators;
 
-public class GeogitResourceUtils {
+class GeogitResourceUtils {
 
     public static Catalog getCatalog(Request request) {
         Map<String, Object> attributes = request.getAttributes();

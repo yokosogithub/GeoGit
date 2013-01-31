@@ -11,7 +11,7 @@ import org.restlet.data.Form;
 /**
  *
  */
-public class FormParams implements ParameterSet {
+class FormParams implements ParameterSet {
 
     private Form options;
 
