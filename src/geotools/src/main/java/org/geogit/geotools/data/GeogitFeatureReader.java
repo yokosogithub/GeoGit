@@ -50,6 +50,7 @@ import org.opengis.filter.Id;
 import org.opengis.filter.identity.FeatureId;
 import org.opengis.filter.identity.Identifier;
 import org.opengis.filter.spatial.BBOX;
+import org.opengis.referencing.crs.CoordinateReferenceSystem;
 
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
@@ -354,8 +355,19 @@ class GeogitFeatureReader<T extends FeatureType, F extends Feature> implements F
      */
     private Filter reprojectFilter(Filter filter) {
         if (hasSpatialFilter(filter)) {
-            FilterFactory2 factory = CommonFactoryFinder.getFilterFactory2();
-            filter = (Filter) filter.accept(new ReprojectingFilterVisitor(factory, schema), null);
+            CoordinateReferenceSystem crs = schema.getCoordinateReferenceSystem();
+            if (crs == null) {
+                LOGGER.fine("Not reprojecting filter to native CRS because feature type does not declare a CRS");
+
+            } else {
+
+                FilterFactory2 factory = CommonFactoryFinder.getFilterFactory2();
+
+                filter = (Filter) filter.accept(new ReprojectingFilterVisitor(factory, schema),
+
+                null);
+
+            }
         }
         return filter;
     }
