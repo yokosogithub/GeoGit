@@ -35,7 +35,7 @@ public class RepositoryResource extends MapResource {
         Map<String, Object> map = Maps.newHashMap();
         PageInfo pageInfo = getPageInfo();
         map.put("page", pageInfo);
-        
+
         map.put("Manifest", "manifest");
         return map;
     }

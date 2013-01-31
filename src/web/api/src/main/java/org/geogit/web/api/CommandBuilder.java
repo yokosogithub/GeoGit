@@ -15,7 +15,8 @@ import org.geogit.web.api.commands.UpdateRefWeb;
  */
 public class CommandBuilder {
 
-    public static WebAPICommand build(String commandName, ParameterSet options) throws CommandSpecException {
+    public static WebAPICommand build(String commandName, ParameterSet options)
+            throws CommandSpecException {
         WebAPICommand command = null;
         if ("status".equalsIgnoreCase(commandName)) {
             command = buildStatus(options);

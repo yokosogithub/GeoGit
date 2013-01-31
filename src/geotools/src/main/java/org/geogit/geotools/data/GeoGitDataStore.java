@@ -305,11 +305,4 @@ public class GeoGitDataStore extends ContentDataStore implements DataStore {
             }
         }
     }
-
-    /**
-     * @return
-     */
-    public GeoGIT getGeogit() {
-        return geogit;
-    }
 }

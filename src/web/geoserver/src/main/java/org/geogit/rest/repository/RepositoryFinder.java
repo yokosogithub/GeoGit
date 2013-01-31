@@ -66,12 +66,13 @@ public class RepositoryFinder extends org.restlet.Finder {
     /**
      * @param geogitDataStore
      * @param command
-     * @param request 
+     * @param request
      * @return
      */
-    private Resource findCommandResource(GeoGitDataStore geogitDataStore, String command, Request request) {
+    private Resource findCommandResource(GeoGitDataStore geogitDataStore, String command,
+            Request request) {
         Form form = request.getResourceRef().getQueryAsForm();
-        
+
         return null;
     }
 
