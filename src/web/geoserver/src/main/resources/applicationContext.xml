@@ -12,38 +12,8 @@
     </property>
   </bean>
 
-  <bean id="geogitDispatcher" class="org.geogit.rest.dispatch.GeogitDispatcher" />
-
-  <bean id="geogitConfigMapping" class="org.geogit.rest.dispatch.GeogitRESTMapping">
-    <property name="routes">
-      <map>
-        <entry>
-          <key><value></value></key>
-          <value>geogitRepositoryFinder</value>
-        </entry>
-        <entry>
-          <key><value>/</value></key>
-          <value>geogitRepositoryFinder</value>
-        </entry>
-        <entry>
-          <key><value>/{repository}</value></key>
-          <value>geogitRepositoryFinder</value>
-        </entry>
-        <entry>
-          <key><value>/{repository}/{command}</value></key>
-          <value>geogitRepositoryFinder</value>
-        </entry>
-        <entry>
-          <key><value>/{repository}/repo/{resource}</value></key>
-          <value>geogitRepositoryFinder</value>
-        </entry>
-      </map>
-    </property>
+  <bean id="geogitDispatcher" class="org.geogit.rest.dispatch.GeogitDispatcher" >
+    <constructor-arg ref="catalog"/>
   </bean>
 
-  <bean id="geogitRepositoryFinder" class="org.geogit.rest.repository.RepositoryFinder">
-    <constructor-arg ref="catalog" />
-  </bean>
-
-  <!--bean id="repositoryFinder" class="org.geogit.geoserver.rest.RepositoryFinder" / -->
 </beans>

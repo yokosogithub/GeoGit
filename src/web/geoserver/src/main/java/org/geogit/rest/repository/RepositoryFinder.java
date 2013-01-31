@@ -18,6 +18,9 @@ import org.geotools.data.DataAccess;
 import org.opengis.feature.Feature;
 import org.opengis.feature.type.FeatureType;
 import org.opengis.filter.Filter;
+import org.restlet.Context;
+import org.restlet.Restlet;
+import org.restlet.Router;
 import org.restlet.data.Form;
 import org.restlet.data.Request;
 import org.restlet.data.Response;
@@ -31,6 +34,8 @@ import com.google.common.collect.Iterators;
 public class RepositoryFinder extends org.restlet.Finder {
     private Catalog catalog;
 
+    private Restlet routes;
+
     public RepositoryFinder(Catalog catalog) {
         this.catalog = catalog;
     }
@@ -39,7 +44,7 @@ public class RepositoryFinder extends org.restlet.Finder {
     public Resource findTarget(Request request, Response response) {
 
         final String repo = RESTUtils.getAttribute(request, "repository");
-        final String command = RESTUtils.getAttribute(request, "command");
+
         Resource result;
         if (repo == null) {
             List<DataStoreInfo> geogitStores = findGeogitStores();
@@ -51,16 +56,51 @@ public class RepositoryFinder extends org.restlet.Finder {
 
             request.getAttributes().put("store", geogitDataStore);
             request.getAttributes().put("geogit", geogit);
-
-            if (command == null) {
-                result = new RepositoryResource();
-            } else {
-                result = findCommandResource(geogitDataStore, command, request);
-            }
+//
+//            if (command == null) {
+//                result = new RepositoryResource();
+//            } else {
+//                result = findCommandResource(geogitDataStore, command, request);
+//            }
         }
 
-        result.init(getContext(), request, response);
-        return result;
+//        Restlet chain = getRoutes();
+//        chain.handle(request, response);
+//        result.init(getContext(), request, response);
+        return null;//result;
+    }
+
+    /**
+     * @return
+     */
+    private synchronized Restlet getRoutes() {
+        if (routes == null) {
+            routes = createInboundRoot();
+            Context context = getContext();
+            routes.setContext(context);
+        }
+        return routes;
+    }
+
+    public Restlet createInboundRoot() {
+        Router router = new Router();
+        router.attach("/repo", makeRepoRouter());
+        router.attach("/{command}", CommandResource.class);
+        return router;
+    }
+
+    private Router makeRepoRouter() {
+        Router router = new Router();
+        new org.restlet.Filter() {
+        };
+        router.attach("/", RepositoryResource.class);
+        router.attach("/manifest", ManifestResource.class);
+        router.attach("/objects/{id}", ObjectResource.class);
+        router.attach("/sendobject", SendObjectResource.class);
+        router.attach("/exists", ObjectExistsResource.class);
+        router.attach("/beginpush", BeginPush.class);
+        router.attach("/endpush", EndPush.class);
+        return router;
     }
 
     /**
