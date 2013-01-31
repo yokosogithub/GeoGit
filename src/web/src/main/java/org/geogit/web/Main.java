@@ -61,6 +61,9 @@ public class Main extends Application {
             }
             context.getAttributes().put("geogit", loadGeoGIT(repo));
         }
+        if (!attributes.containsKey("pushmanager")) {
+            context.getAttributes().put("pushmanager", PushManager.get());
+        }
     }
 
     @Override

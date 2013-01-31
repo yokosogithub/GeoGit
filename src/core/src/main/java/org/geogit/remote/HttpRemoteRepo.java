@@ -308,7 +308,7 @@ public class HttpRemoteRepo implements IRemoteRepo {
     private void beginPush() {
         HttpURLConnection connection = null;
         try {
-            String expanded = repositoryURL.toString() + "/beginpush";
+            String expanded = repositoryURL.toString() + "/repo/beginpush";
 
             connection = (HttpURLConnection) new URL(expanded).openConnection();
             connection.setRequestMethod("GET");
@@ -333,7 +333,7 @@ public class HttpRemoteRepo implements IRemoteRepo {
     private void endPush() {
         HttpURLConnection connection = null;
         try {
-            String expanded = repositoryURL.toString() + "/endpush";
+            String expanded = repositoryURL.toString() + "/repo/endpush";
 
             connection = (HttpURLConnection) new URL(expanded).openConnection();
             connection.setRequestMethod("GET");

@@ -11,7 +11,7 @@ import org.geogit.api.RevObject;
 
 public class PushManager {
 
-    private static Map<String, List<ObjectId>> incomingData;
+    private Map<String, List<ObjectId>> incomingData;
 
     private static PushManager instance = new PushManager();
 
@@ -29,6 +29,7 @@ public class PushManager {
         }
         List<ObjectId> newList = new LinkedList<ObjectId>();
         incomingData.put(ipAddress, newList);
+        System.out.println("Added new list " + ipAddress);
     }
 
     public void connectionSucceeded(GeoGIT geogit, String ipAddress) {
@@ -41,6 +42,7 @@ public class PushManager {
     }
 
     public boolean alreadyPushed(String ipAddress, ObjectId oid) {
+        System.out.println("Already Pushed: " + ipAddress);
         return incomingData.get(ipAddress).contains(oid);
     }
 
