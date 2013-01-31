@@ -5,6 +5,7 @@ import java.io.InputStream;
 
 import org.geogit.api.GeoGIT;
 import org.geogit.api.ObjectId;
+import org.geogit.web.api.commands.PushManager;
 import org.restlet.data.ClientInfo;
 import org.restlet.representation.Representation;
 import org.restlet.representation.StringRepresentation;
@@ -25,8 +26,7 @@ public class SendObjectResource extends ServerResource {
         ObjectId objectId = new ObjectId(objectIdBytes);
 
         final GeoGIT ggit = (GeoGIT) getApplication().getContext().getAttributes().get("geogit");
-        PushManager pushManager = (PushManager) getApplication().getContext().getAttributes()
-                .get("pushmanager");
+        PushManager pushManager = PushManager.get();
         if (ggit.getRepository().getObjectDatabase().exists(objectId)) {
             result = new StringRepresentation("Object already existed: " + objectId.toString());
 

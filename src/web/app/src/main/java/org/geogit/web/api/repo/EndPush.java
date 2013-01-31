@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.io.Writer;
 
 import org.geogit.api.GeoGIT;
+import org.geogit.web.api.commands.PushManager;
 import org.restlet.data.ClientInfo;
 import org.restlet.data.MediaType;
 import org.restlet.representation.WriterRepresentation;
@@ -23,8 +24,7 @@ public class EndPush extends ServerResource {
         public void write(Writer w) throws IOException {
             ClientInfo info = getRequest().getClientInfo();
             GeoGIT ggit = (GeoGIT) getApplication().getContext().getAttributes().get("geogit");
-            PushManager pushManager = (PushManager) getApplication().getContext().getAttributes()
-                    .get("pushmanager");
+            PushManager pushManager = PushManager.get();
             pushManager.connectionSucceeded(ggit, info.getAddress());
             w.write("Push succeeded for address: " + info.getAddress());
             w.flush();

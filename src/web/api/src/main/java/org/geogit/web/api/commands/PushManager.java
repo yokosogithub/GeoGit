@@ -1,4 +1,4 @@
-package org.geogit.web.api.repo;
+package org.geogit.web.api.commands;
 
 import java.util.HashMap;
 import java.util.LinkedList;

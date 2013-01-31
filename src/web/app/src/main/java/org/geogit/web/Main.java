@@ -15,12 +15,12 @@ import org.geogit.api.Platform;
 import org.geogit.api.plumbing.ResolveGeogitDir;
 import org.geogit.di.GeogitModule;
 import org.geogit.storage.bdbje.JEStorageModule;
+import org.geogit.web.api.commands.PushManager;
 import org.geogit.web.api.repo.BeginPush;
 import org.geogit.web.api.repo.EndPush;
 import org.geogit.web.api.repo.ManifestResource;
 import org.geogit.web.api.repo.ObjectExistsResource;
 import org.geogit.web.api.repo.ObjectResource;
-import org.geogit.web.api.repo.PushManager;
 import org.geogit.web.api.repo.SendObjectResource;
 import org.restlet.Application;
 import org.restlet.Component;
@@ -61,9 +61,6 @@ public class Main extends Application {
             }
             context.getAttributes().put("geogit", loadGeoGIT(repo));
         }
-        if (!attributes.containsKey("pushmanager")) {
-            context.getAttributes().put("pushmanager", PushManager.get());
-        }
     }
 
     @Override
@@ -91,7 +88,6 @@ public class Main extends Application {
     static void startServer(String repo) throws Exception {
         Context context = new Context();
         context.getAttributes().put("geogit", loadGeoGIT(repo));
-        context.getAttributes().put("pushmanager", PushManager.get());
 
         Application application = new Main();
         application.setContext(context);

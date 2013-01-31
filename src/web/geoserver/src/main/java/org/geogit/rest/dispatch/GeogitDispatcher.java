@@ -16,7 +16,7 @@ import org.geogit.rest.repository.CommandResource;
 import org.geogit.rest.repository.EndPush;
 import org.geogit.rest.repository.ManifestResource;
 import org.geogit.rest.repository.ObjectExistsResource;
-import org.geogit.rest.repository.ObjectResource;
+import org.geogit.rest.repository.ObjectFinder;
 import org.geogit.rest.repository.RepositoryListResource;
 import org.geogit.rest.repository.RepositoryResource;
 import org.geogit.rest.repository.SendObjectResource;
@@ -97,7 +97,7 @@ public class GeogitDispatcher extends AbstractController {
     private Router makeRepoRouter() {
         Router router = new Router();
         router.attach("/manifest", ManifestResource.class);
-        router.attach("/objects/{id}", ObjectResource.class);
+        router.attach("/objects/{id}", new ObjectFinder());
         router.attach("/sendobject", SendObjectResource.class);
         router.attach("/exists", ObjectExistsResource.class);
         router.attach("/beginpush", BeginPush.class);

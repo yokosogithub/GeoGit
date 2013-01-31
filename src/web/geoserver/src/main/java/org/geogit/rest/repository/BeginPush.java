@@ -5,16 +5,46 @@
 
 package org.geogit.rest.repository;
 
+import java.io.IOException;
+import java.io.Writer;
+import java.util.List;
+
+import org.geogit.web.api.commands.PushManager;
+import org.restlet.Context;
+import org.restlet.data.ClientInfo;
+import org.restlet.data.MediaType;
+import org.restlet.data.Request;
+import org.restlet.data.Response;
 import org.restlet.resource.Resource;
+import org.restlet.resource.Variant;
 
 /**
  *
  */
 public class BeginPush extends Resource {
-    
+
     @Override
-    public boolean allowGet() {
-        return false;
+    public void init(Context context, Request request, Response response) {
+        super.init(context, request, response);
+        List<Variant> variants = getVariants();
+
+        variants.add(new BeginPushRepresentation());
+    }
+
+    private class BeginPushRepresentation extends WriterRepresentation {
+        
+        public BeginPushRepresentation() {
+            super(MediaType.TEXT_PLAIN);
+        }
+
+        @Override
+        public void write(Writer w) throws IOException {
+            ClientInfo info = getRequest().getClientInfo();
+            PushManager pushManager = PushManager.get();
+            pushManager.connectionBegin(info.getAddress());
+            w.write("Push began for address: " + info.getAddress());
+            w.flush();
+        }
     }
 
 }
