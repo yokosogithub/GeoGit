@@ -12,6 +12,8 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.Queue;
 
+import javax.annotation.Nullable;
+
 import org.geogit.api.Bucket;
 import org.geogit.api.Node;
 import org.geogit.api.ObjectId;
@@ -96,15 +98,19 @@ public class HttpRemoteRepo implements IRemoteRepo {
 
             // Get Response
             InputStream is = connection.getInputStream();
-            BufferedReader rd = new BufferedReader(new InputStreamReader(is));
-            String line;
+            try {
+                BufferedReader rd = new BufferedReader(new InputStreamReader(is));
+                String line;
 
-            while ((line = rd.readLine()) != null) {
-                if (line.startsWith("HEAD")) {
-                    headRef = parseRef(line);
+                while ((line = rd.readLine()) != null) {
+                    if (line.startsWith("HEAD")) {
+                        headRef = parseRef(line);
+                    }
                 }
+                rd.close();
+            } finally {
+                is.close();
             }
-            rd.close();
 
         } catch (Exception e) {
 
@@ -153,9 +159,8 @@ public class HttpRemoteRepo implements IRemoteRepo {
             rd.close();
 
         } catch (Exception e) {
-
-            Throwables.propagate(e);
-
+            consumeErrStreamAndCloseConnection(connection);
+            throw Throwables.propagate(e);
         } finally {
 
             if (connection != null) {
@@ -163,6 +168,28 @@ public class HttpRemoteRepo implements IRemoteRepo {
             }
         }
         return builder.build();
+    }
+
+    /**
+     * @param connection
+     */
+    private void consumeErrStreamAndCloseConnection(@Nullable HttpURLConnection connection) {
+        if (connection == null) {
+            return;
+        }
+        try {
+            InputStream es = ((HttpURLConnection) connection).getErrorStream();
+            if (es != null) {
+                // read the response body
+                while (es.read() > -1) {
+                    ;
+                }
+                // close the errorstream
+                es.close();
+            }
+        } catch (IOException ex) {
+            throw Throwables.propagate(ex);
+        }
     }
 
     private Ref parseRef(String refString) {
@@ -257,10 +284,16 @@ public class HttpRemoteRepo implements IRemoteRepo {
             connection.setUseCaches(false);
             connection.setDoOutput(true);
 
-            connection.getInputStream();
-
+            InputStream inputStream = connection.getInputStream();
+            try {
+                while (inputStream.read() > -1) {
+                    ;
+                }
+            } finally {
+                inputStream.close();
+            }
         } catch (Exception e) {
-
+            consumeErrStreamAndCloseConnection(connection);
             Throwables.propagate(e);
 
         } finally {
@@ -358,13 +391,14 @@ public class HttpRemoteRepo implements IRemoteRepo {
 
             // Get Response
             InputStream is = connection.getInputStream();
-
-            localRepo.getObjectDatabase().put(objectId, is);
-
+            try {
+                localRepo.getObjectDatabase().put(objectId, is);
+            } finally {
+                is.close();
+            }
         } catch (Exception e) {
-
+            consumeErrStreamAndCloseConnection(connection);
             Throwables.propagate(e);
-
         } finally {
 
             if (connection != null) {
@@ -391,31 +425,36 @@ public class HttpRemoteRepo implements IRemoteRepo {
             connection.setDoOutput(true);
 
             DataOutputStream wr = new DataOutputStream(connection.getOutputStream());
-            wr.write(objectId.getRawValue());
-            InputStream rawObject = localRepo.getIndex().getDatabase().getRaw(objectId);
-            byte[] buffer = new byte[1024];
-            int bytesRead;
-            while ((bytesRead = rawObject.read(buffer)) != -1) {
-                wr.write(buffer, 0, bytesRead);
+            try {
+                wr.write(objectId.getRawValue());
+                InputStream rawObject = localRepo.getIndex().getDatabase().getRaw(objectId);
+                byte[] buffer = new byte[1024];
+                int bytesRead;
+                while ((bytesRead = rawObject.read(buffer)) != -1) {
+                    wr.write(buffer, 0, bytesRead);
+                }
+                wr.flush();
+            } finally {
+                wr.close();
             }
-            wr.flush();
-            wr.close();
 
             // Get Response
             InputStream is = connection.getInputStream();
+            try {
+                BufferedReader rd = new BufferedReader(new InputStreamReader(is));
+                String line;
 
-            BufferedReader rd = new BufferedReader(new InputStreamReader(is));
-            String line;
-
-            while ((line = rd.readLine()) != null) {
-                if (line.contains("Object already existed")) {
-                    return Optional.absent();
+                while ((line = rd.readLine()) != null) {
+                    if (line.contains("Object already existed")) {
+                        return Optional.absent();
+                    }
                 }
+                rd.close();
+            } finally {
+                is.close();
             }
-            rd.close();
-
         } catch (Exception e) {
-
+            consumeErrStreamAndCloseConnection(connection);
             Throwables.propagate(e);
 
         } finally {
