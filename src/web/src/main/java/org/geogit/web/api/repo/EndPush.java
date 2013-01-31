@@ -23,7 +23,9 @@ public class EndPush extends ServerResource {
         public void write(Writer w) throws IOException {
             ClientInfo info = getRequest().getClientInfo();
             GeoGIT ggit = (GeoGIT) getApplication().getContext().getAttributes().get("geogit");
-            PushManager.get().connectionSucceeded(ggit, info.getAddress());
+            PushManager pushManager = (PushManager) getApplication().getContext().getAttributes()
+                    .get("pushmanager");
+            pushManager.connectionSucceeded(ggit, info.getAddress());
             w.write("Push succeeded for address: " + info.getAddress());
             w.flush();
         }

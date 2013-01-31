@@ -3,6 +3,7 @@ package org.geogit.web.api.repo;
 import java.io.IOException;
 import java.io.Writer;
 
+import org.geogit.api.GeoGIT;
 import org.restlet.data.ClientInfo;
 import org.restlet.data.MediaType;
 import org.restlet.representation.WriterRepresentation;
@@ -21,7 +22,9 @@ public class BeginPush extends ServerResource {
         @Override
         public void write(Writer w) throws IOException {
             ClientInfo info = getRequest().getClientInfo();
-            PushManager.get().connectionBegin(info.getAddress());
+            PushManager pushManager = (PushManager) getApplication().getContext().getAttributes()
+                    .get("pushmanager");
+            pushManager.connectionBegin(info.getAddress());
             w.write("Push began for address: " + info.getAddress());
             w.flush();
         }

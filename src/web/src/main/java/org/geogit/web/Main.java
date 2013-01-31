@@ -20,6 +20,7 @@ import org.geogit.web.api.repo.EndPush;
 import org.geogit.web.api.repo.ManifestResource;
 import org.geogit.web.api.repo.ObjectExistsResource;
 import org.geogit.web.api.repo.ObjectResource;
+import org.geogit.web.api.repo.PushManager;
 import org.geogit.web.api.repo.SendObjectResource;
 import org.restlet.Application;
 import org.restlet.Component;
@@ -87,6 +88,7 @@ public class Main extends Application {
     static void startServer(String repo) throws Exception {
         Context context = new Context();
         context.getAttributes().put("geogit", loadGeoGIT(repo));
+        context.getAttributes().put("pushmanager", PushManager.get());
 
         Application application = new Main();
         application.setContext(context);

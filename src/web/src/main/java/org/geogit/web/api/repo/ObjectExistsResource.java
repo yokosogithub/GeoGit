@@ -28,9 +28,11 @@ public class ObjectExistsResource extends ServerResource {
             ObjectId oid = ObjectId.valueOf(options.getFirstValue("oid", ObjectId.NULL.toString()));
 
             GeoGIT ggit = (GeoGIT) getApplication().getContext().getAttributes().get("geogit");
+            PushManager pushManager = (PushManager) getApplication().getContext().getAttributes()
+                    .get("pushmanager");
             ClientInfo info = getRequest().getClientInfo();
             if (ggit.getRepository().blobExists(oid)
-                    || PushManager.get().alreadyPushed(info.getAddress(), oid)) {
+                    || pushManager.alreadyPushed(info.getAddress(), oid)) {
                 w.write("1");
             } else {
                 w.write("0");

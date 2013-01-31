@@ -25,13 +25,15 @@ public class SendObjectResource extends ServerResource {
         ObjectId objectId = new ObjectId(objectIdBytes);
 
         final GeoGIT ggit = (GeoGIT) getApplication().getContext().getAttributes().get("geogit");
+        PushManager pushManager = (PushManager) getApplication().getContext().getAttributes()
+                .get("pushmanager");
         if (ggit.getRepository().getObjectDatabase().exists(objectId)) {
             result = new StringRepresentation("Object already existed: " + objectId.toString());
 
         } else {
             // put it into the staging database until we have all of the data
             ggit.getRepository().getIndex().getDatabase().put(objectId, input);
-            PushManager.get().addObject(info.getAddress(), objectId);
+            pushManager.addObject(info.getAddress(), objectId);
             result = new StringRepresentation("Object added: " + objectId.toString());
         }
 
