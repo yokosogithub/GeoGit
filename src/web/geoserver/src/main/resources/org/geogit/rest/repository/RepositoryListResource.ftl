@@ -12,7 +12,7 @@
 </#foreach>
 </ul>
 <#else>
-<p>There are no REST extensions installed.  If you expected some, please verify your installation (did you restart the server?).</p>
+<p>There are no Geogit DataStores configured and enabled.</p>
 </#if>
 </body>
 </html>

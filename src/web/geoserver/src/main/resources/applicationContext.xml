@@ -2,8 +2,6 @@
 <!DOCTYPE beans PUBLIC "-//SPRING//DTD BEAN//EN" "http://www.springframework.org/dtd/spring-beans.dtd">
 <beans>
 
-  <bean id="geogitDispatcher" class="org.geogit.rest.GeogitDispatcher" />
-
   <bean id="geogitDispatcherMapping" class="org.springframework.web.servlet.handler.SimpleUrlHandlerMapping">
     <property name="alwaysUseFullPath" value="true" />
     <property name="mappings">
@@ -12,10 +10,11 @@
         <prop key="/geogit/**">geogitDispatcher</prop>
       </props>
     </property>
-
   </bean>
 
-  <bean id="geogitConfigMapping" class="org.geogit.rest.GeogitRESTMapping">
+  <bean id="geogitDispatcher" class="org.geogit.rest.dispatch.GeogitDispatcher" />
+
+  <bean id="geogitConfigMapping" class="org.geogit.rest.dispatch.GeogitRESTMapping">
     <property name="routes">
       <map>
         <entry>
@@ -30,11 +29,19 @@
           <key><value>/{repository}</value></key>
           <value>geogitRepositoryFinder</value>
         </entry>
+        <entry>
+          <key><value>/{repository}/{command}</value></key>
+          <value>geogitRepositoryFinder</value>
+        </entry>
+        <entry>
+          <key><value>/{repository}/repo/{resource}</value></key>
+          <value>geogitRepositoryFinder</value>
+        </entry>
       </map>
     </property>
   </bean>
 
-  <bean id="geogitRepositoryFinder" class="org.geogit.rest.RepositoryFinder">
+  <bean id="geogitRepositoryFinder" class="org.geogit.rest.repository.RepositoryFinder">
     <constructor-arg ref="catalog" />
   </bean>
 

@@ -3,7 +3,7 @@
  * application directory.
  */
 
-package org.geogit.rest;
+package org.geogit.rest.dispatch;
 
 import java.util.Iterator;
 import java.util.List;

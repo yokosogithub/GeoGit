@@ -1,4 +1,4 @@
-package org.geogit.rest;
+package org.geogit.rest.repository;
 
 import java.util.Collections;
 import java.util.List;
@@ -25,7 +25,8 @@ public class RepositoryListResource extends MapResource {
     protected List<DataFormat> createSupportedFormats(Request request, Response response) {
         List<DataFormat> formats = Lists.newArrayListWithCapacity(3);
 
-        formats.add(new FreemarkerFormat("templates/index.ftl", getClass(), MediaType.TEXT_HTML));
+        formats.add(new FreemarkerFormat(RepositoryListResource.class.getSimpleName() + ".ftl",
+                getClass(), MediaType.TEXT_HTML));
 
         return formats;
     }
@@ -50,7 +51,7 @@ public class RepositoryListResource extends MapResource {
         for (DataStoreInfo info : geogitStores) {
             String wsname = info.getWorkspace().getName();
             String storename = info.getName();
-            String repoName = wsname + ":" + storename + ".geogit";
+            String repoName = wsname + ":" + storename;
             repoNames.add(repoName);
         }
         Collections.sort(repoNames);

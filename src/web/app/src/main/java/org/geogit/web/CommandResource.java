@@ -13,12 +13,13 @@ import javax.xml.stream.XMLStreamWriter;
 import org.codehaus.jettison.mapped.MappedNamespaceConvention;
 import org.codehaus.jettison.mapped.MappedXMLStreamWriter;
 import org.geogit.api.GeoGIT;
+import org.geogit.web.api.CommandBuilder;
 import org.geogit.web.api.CommandContext;
 import org.geogit.web.api.CommandResponse;
 import org.geogit.web.api.CommandSpecException;
+import org.geogit.web.api.ParameterSet;
 import org.geogit.web.api.ResponseWriter;
 import org.geogit.web.api.WebAPICommand;
-import org.geogit.web.api.commands.Status;
 import org.restlet.data.Form;
 import org.restlet.data.MediaType;
 import org.restlet.representation.Representation;
@@ -51,7 +52,8 @@ public class CommandResource extends ServerResource {
         String commandName = (String) getRequest().getAttributes().get("command");
         MediaType format = resolveFormat(options, variant);
         try {
-            command = CommandBuilder.build(commandName, options);
+            ParameterSet params = new FormParams(options);
+            command = CommandBuilder.build(commandName, params);
             assert command != null;
         } catch (CommandSpecException ex) {
             rep = formatException(ex, format);

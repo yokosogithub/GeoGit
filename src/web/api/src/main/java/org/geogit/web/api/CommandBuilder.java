@@ -1,24 +1,21 @@
-package org.geogit.web;
+package org.geogit.web.api;
 
 import java.util.Arrays;
 
 import org.geogit.api.ObjectId;
-import org.geogit.web.api.CommandSpecException;
-import org.geogit.web.api.WebAPICommand;
 import org.geogit.web.api.commands.Commit;
 import org.geogit.web.api.commands.Diff;
 import org.geogit.web.api.commands.Log;
 import org.geogit.web.api.commands.LsTree;
 import org.geogit.web.api.commands.Status;
 import org.geogit.web.api.commands.UpdateRefWeb;
-import org.restlet.data.Form;
 
 /**
  *
  */
 public class CommandBuilder {
 
-    public static WebAPICommand build(String commandName, Form options) throws CommandSpecException {
+    public static WebAPICommand build(String commandName, ParameterSet options) throws CommandSpecException {
         WebAPICommand command = null;
         if ("status".equalsIgnoreCase(commandName)) {
             command = buildStatus(options);
@@ -38,7 +35,7 @@ public class CommandBuilder {
         return command;
     }
 
-    static Integer parseInt(Form form, String key, Integer defaultValue) {
+    static Integer parseInt(ParameterSet form, String key, Integer defaultValue) {
         String val = form.getFirstValue(key);
         Integer retval = defaultValue;
         if (val != null) {
@@ -52,14 +49,14 @@ public class CommandBuilder {
         return retval;
     }
 
-    static Status buildStatus(Form options) {
+    static Status buildStatus(ParameterSet options) {
         Status command = new Status();
         command.setLimit(parseInt(options, "limit", 50));
         command.setOffset(parseInt(options, "offset", 0));
         return command;
     }
 
-    static Log buildLog(Form options) {
+    static Log buildLog(ParameterSet options) {
         Log command = new Log();
         command.setLimit(parseInt(options, "limit", 50));
         command.setOffset(parseInt(options, "offset", null));
@@ -69,14 +66,14 @@ public class CommandBuilder {
         return command;
     }
 
-    static Commit buildCommit(Form options) {
+    static Commit buildCommit(ParameterSet options) {
         Commit commit = new Commit();
         commit.setAll(Boolean.valueOf(options.getFirstValue("all", "false")));
         commit.setMessage(options.getFirstValue("message", null));
         return commit;
     }
 
-    static LsTree buildLsTree(Form options) {
+    static LsTree buildLsTree(ParameterSet options) {
         LsTree lsTree = new LsTree();
         lsTree.setIncludeTrees(Boolean.valueOf(options.getFirstValue("showTree", "false")));
         lsTree.setOnlyTrees(Boolean.valueOf(options.getFirstValue("onlyTree", "false")));
@@ -86,15 +83,15 @@ public class CommandBuilder {
         return lsTree;
     }
 
-    static UpdateRefWeb buildUpdateRef(Form options) {
+    static UpdateRefWeb buildUpdateRef(ParameterSet options) {
         UpdateRefWeb command = new UpdateRefWeb();
         command.setName(options.getFirstValue("name", null));
-        command.setDelete(Boolean.valueOf(options.getFirstValue("delete", false)));
+        command.setDelete(Boolean.valueOf(options.getFirstValue("delete", "false")));
         command.setNewValue(options.getFirstValue("newValue", ObjectId.NULL.toString()));
         return command;
     }
 
-    static Diff buildDiff(Form options) {
+    static Diff buildDiff(ParameterSet options) {
         Diff command = new Diff();
         command.setOldRefSpec(options.getFirstValue("oldRefSpec", null));
         command.setNewRefSpec(options.getFirstValue("newRefSpec", null));

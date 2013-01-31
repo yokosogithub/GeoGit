@@ -2,7 +2,7 @@
  * This code is licensed under the GPL 2.0 license, available at the root
  * application directory.
  */
-package org.geogit.rest;
+package org.geogit.rest.dispatch;
 
 import java.util.Map;
 
