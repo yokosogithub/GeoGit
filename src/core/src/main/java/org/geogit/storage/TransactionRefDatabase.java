@@ -93,7 +93,7 @@ public class TransactionRefDatabase implements RefDatabase {
             insertRef(toInternal(Ref.STAGE_HEAD), stageHeadValue);
         }
 
-        Map<String, String> origRefs = refDb.getAll(Ref.REFS_PREFIX);
+        Map<String, String> origRefs = refDb.getAll(Ref.HEADS_PREFIX);
         Map<String, String> thisTxRefs = toOrigInternal(origRefs);
 
         for (Entry<String, String> entry : thisTxRefs.entrySet()) {
