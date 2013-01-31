@@ -20,7 +20,6 @@ public class BeginPush extends ServerResource {
 
         @Override
         public void write(Writer w) throws IOException {
-            System.out.println("Push Begins");
             ClientInfo info = getRequest().getClientInfo();
             PushManager pushManager = (PushManager) getApplication().getContext().getAttributes()
                     .get("pushmanager");

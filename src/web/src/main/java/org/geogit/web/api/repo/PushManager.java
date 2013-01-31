@@ -29,26 +29,34 @@ public class PushManager {
         }
         List<ObjectId> newList = new LinkedList<ObjectId>();
         incomingData.put(ipAddress, newList);
-        System.out.println("Added new list " + ipAddress);
     }
 
     public void connectionSucceeded(GeoGIT geogit, String ipAddress) {
         // Add objects to the repository
-        List<ObjectId> objectsToMove = incomingData.remove(ipAddress);
-        for (ObjectId oid : objectsToMove) {
-            RevObject toAdd = geogit.getRepository().getIndex().getDatabase().get(oid);
-            geogit.getRepository().getObjectDatabase().put(toAdd);
+        if (incomingData.containsKey(ipAddress)) {
+            List<ObjectId> objectsToMove = incomingData.remove(ipAddress);
+            for (ObjectId oid : objectsToMove) {
+                RevObject toAdd = geogit.getRepository().getIndex().getDatabase().get(oid);
+                geogit.getRepository().getObjectDatabase().put(toAdd);
+            }
+        } else {
+            throw new RuntimeException("Tried to end a connection that didn't exist.");
         }
     }
 
     public boolean alreadyPushed(String ipAddress, ObjectId oid) {
-        System.out.println("Already Pushed: " + ipAddress);
-        return incomingData.get(ipAddress).contains(oid);
+        if (incomingData.containsKey(ipAddress)) {
+            return incomingData.get(ipAddress).contains(oid);
+        }
+        return false;
     }
 
     public void addObject(String ipAddress, ObjectId oid) {
         if (incomingData.containsKey(ipAddress)) {
             incomingData.get(ipAddress).add(oid);
+        } else {
+            throw new RuntimeException(
+                    "Tried to push an object without first opening a connection.");
         }
     }
 

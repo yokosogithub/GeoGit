@@ -17,7 +17,7 @@ public class SendObjectResource extends ServerResource {
     public Representation acceptObject(Representation entity) throws IOException {
         Representation result = null;
 
-        ClientInfo info = entity.createClientInfo();
+        ClientInfo info = getRequest().getClientInfo();
 
         InputStream input = entity.getStream();
         byte objectIdBytes[] = new byte[20];
