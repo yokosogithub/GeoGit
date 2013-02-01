@@ -28,7 +28,9 @@ import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 
 /**
- *
+ * Expects an {@code id} request attribute containing the string representation of an
+ * {@link ObjectId} (40 char hex string) to look up for in the repository database and return it as
+ * a plain byte stream.
  */
 public class ObjectFinder extends Finder {
 
@@ -71,16 +73,16 @@ public class ObjectFinder extends Finder {
             super.init(context, request, response);
             List<Variant> variants = getVariants();
 
-            variants.add(new ObjectRepresentation(oid, geogit));
+            variants.add(new RevObjectBinaryRepresentation(oid, geogit));
         }
     }
 
-    private static class ObjectRepresentation extends OutputRepresentation {
+    private static class RevObjectBinaryRepresentation extends OutputRepresentation {
         private final ObjectId oid;
 
         private final GeoGIT ggit;
 
-        public ObjectRepresentation(ObjectId oid, GeoGIT ggit) {
+        public RevObjectBinaryRepresentation(ObjectId oid, GeoGIT ggit) {
             super(MediaType.APPLICATION_OCTET_STREAM);
             this.oid = oid;
             this.ggit = ggit;

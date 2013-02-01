@@ -30,6 +30,7 @@ import org.geogit.repository.Repository;
 import com.google.common.base.Optional;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.io.Closeables;
 
 /**
  * An implementation of a remote repository that exists on a remote machine and made public via an
@@ -120,10 +121,7 @@ public class HttpRemoteRepo implements IRemoteRepo {
             Throwables.propagate(e);
 
         } finally {
-
-            if (connection != null) {
-                connection.disconnect();
-            }
+            consumeErrStreamAndCloseConnection(connection);
         }
         return headRef;
     }
@@ -152,23 +150,21 @@ public class HttpRemoteRepo implements IRemoteRepo {
             InputStream is = connection.getInputStream();
             BufferedReader rd = new BufferedReader(new InputStreamReader(is));
             String line;
-
-            while ((line = rd.readLine()) != null) {
-                if ((getHeads && line.startsWith("refs/heads"))
-                        || (getTags && line.startsWith("refs/tags"))) {
-                    builder.add(parseRef(line));
+            try {
+                while ((line = rd.readLine()) != null) {
+                    if ((getHeads && line.startsWith("refs/heads"))
+                            || (getTags && line.startsWith("refs/tags"))) {
+                        builder.add(parseRef(line));
+                    }
                 }
+            } finally {
+                rd.close();
             }
-            rd.close();
 
         } catch (Exception e) {
-            consumeErrStreamAndCloseConnection(connection);
             throw Throwables.propagate(e);
         } finally {
-
-            if (connection != null) {
-                connection.disconnect();
-            }
+            consumeErrStreamAndCloseConnection(connection);
         }
         return builder.build();
     }
@@ -182,16 +178,25 @@ public class HttpRemoteRepo implements IRemoteRepo {
         }
         try {
             InputStream es = ((HttpURLConnection) connection).getErrorStream();
-            if (es != null) {
-                // read the response body
-                while (es.read() > -1) {
-                    ;
-                }
-                // close the errorstream
-                es.close();
-            }
+            consumeAndCloseStream(es);
         } catch (IOException ex) {
             throw Throwables.propagate(ex);
+        } finally {
+            connection.disconnect();
+        }
+    }
+
+    private void consumeAndCloseStream(InputStream stream) throws IOException {
+        if (stream != null) {
+            try {
+                // read the response body
+                while (stream.read() > -1) {
+                    ;
+                }
+            } finally {
+                // close the errorstream
+                Closeables.closeQuietly(stream);
+            }
         }
     }
 
@@ -316,17 +321,13 @@ public class HttpRemoteRepo implements IRemoteRepo {
             connection.setUseCaches(false);
             connection.setDoOutput(true);
 
-            connection.getInputStream();
+            InputStream stream = connection.getInputStream();
+            consumeAndCloseStream(stream);
 
         } catch (Exception e) {
-
             Throwables.propagate(e);
-
         } finally {
-
-            if (connection != null) {
-                connection.disconnect();
-            }
+            consumeErrStreamAndCloseConnection(connection);
         }
     }
 
@@ -344,14 +345,9 @@ public class HttpRemoteRepo implements IRemoteRepo {
             connection.getInputStream();
 
         } catch (Exception e) {
-
             Throwables.propagate(e);
-
         } finally {
-
-            if (connection != null) {
-                connection.disconnect();
-            }
+            consumeErrStreamAndCloseConnection(connection);
         }
     }
 
@@ -381,14 +377,9 @@ public class HttpRemoteRepo implements IRemoteRepo {
                 inputStream.close();
             }
         } catch (Exception e) {
-            consumeErrStreamAndCloseConnection(connection);
             Throwables.propagate(e);
-
         } finally {
-
-            if (connection != null) {
-                connection.disconnect();
-            }
+            consumeErrStreamAndCloseConnection(connection);
         }
     }
 
@@ -487,22 +478,19 @@ public class HttpRemoteRepo implements IRemoteRepo {
 
             // Get Response
             InputStream is = connection.getInputStream();
-            BufferedReader rd = new BufferedReader(new InputStreamReader(is));
-            String line = rd.readLine();
+            try {
+                BufferedReader rd = new BufferedReader(new InputStreamReader(is));
+                String line = rd.readLine();
 
-            exists = line.startsWith("1");
-
-            rd.close();
+                exists = line.startsWith("1");
+            } finally {
+                consumeAndCloseStream(is);
+            }
 
         } catch (Exception e) {
-
             Throwables.propagate(e);
-
         } finally {
-
-            if (connection != null) {
-                connection.disconnect();
-            }
+            consumeErrStreamAndCloseConnection(connection);
         }
         return exists;
     }
@@ -522,16 +510,12 @@ public class HttpRemoteRepo implements IRemoteRepo {
             try {
                 localRepo.getObjectDatabase().put(objectId, is);
             } finally {
-                is.close();
+                consumeAndCloseStream(is);
             }
         } catch (Exception e) {
-            consumeErrStreamAndCloseConnection(connection);
             Throwables.propagate(e);
         } finally {
-
-            if (connection != null) {
-                connection.disconnect();
-            }
+            consumeErrStreamAndCloseConnection(connection);
         }
 
         return localRepo.command(RevObjectParse.class).setObjectId(objectId).call();
@@ -579,17 +563,12 @@ public class HttpRemoteRepo implements IRemoteRepo {
                 }
                 rd.close();
             } finally {
-                is.close();
+                consumeAndCloseStream(is);
             }
         } catch (Exception e) {
-            consumeErrStreamAndCloseConnection(connection);
             Throwables.propagate(e);
-
         } finally {
-
-            if (connection != null) {
-                connection.disconnect();
-            }
+            consumeErrStreamAndCloseConnection(connection);
         }
         return object;
     }
