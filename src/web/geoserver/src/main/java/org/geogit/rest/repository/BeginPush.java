@@ -32,7 +32,7 @@ public class BeginPush extends Resource {
     }
 
     private class BeginPushRepresentation extends WriterRepresentation {
-        
+
         public BeginPushRepresentation() {
             super(MediaType.TEXT_PLAIN);
         }

@@ -206,12 +206,17 @@ public class HttpRemoteRepo implements IRemoteRepo {
         if (tokens.length == 2) {
             // normal ref
             // NAME HASH
-            ref = new Ref(tokens[0], ObjectId.valueOf(tokens[1]), RevObject.TYPE.COMMIT);
+            String name = tokens[0];
+            ObjectId objectId = ObjectId.valueOf(tokens[1]);
+            ref = new Ref(name, objectId, RevObject.TYPE.COMMIT);
         } else {
             // symbolic ref
             // NAME TARGET HASH
-            Ref target = new Ref(tokens[1], ObjectId.valueOf(tokens[2]), RevObject.TYPE.COMMIT);
-            ref = new SymRef(tokens[0], target);
+            String name = tokens[0];
+            String targetRef = tokens[1];
+            ObjectId targetObjectId = ObjectId.valueOf(tokens[2]);
+            Ref target = new Ref(targetRef, targetObjectId, RevObject.TYPE.COMMIT);
+            ref = new SymRef(name, target);
 
         }
         return ref;

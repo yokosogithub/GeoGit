@@ -6,11 +6,11 @@
 <body>
 <h2>Geogit repository ${page.pagePath}</h2>
 
-Access to the <a href="repo/manifest">manifest</a> or send a command.
+Access to the <a href="${page.baseURL}${page.pagePath}/repo/manifest">manifest</a> or send a command.
 
 Common commands:
-<a href="log">log</a>
-<a href="status">status</a>
+<a href="${page.baseURL}${page.pagePath}/log">log</a>
+<a href="${page.baseURL}${page.pagePath}/status">status</a>
 
 </body>
 </html>

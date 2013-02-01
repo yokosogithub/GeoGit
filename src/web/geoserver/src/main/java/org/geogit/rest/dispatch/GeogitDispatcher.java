@@ -86,6 +86,7 @@ public class GeogitDispatcher extends AbstractController {
 
     public Router createInboundRoot() {
         Router router = createRoot();
+        router.attach("", RepositoryListResource.class);
         router.attach("/", RepositoryListResource.class);
         router.attach("/{repository}", RepositoryResource.class);
         router.attach("/{repository}/repo", makeRepoRouter());

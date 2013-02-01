@@ -98,6 +98,7 @@ public class ObjectFinder extends Finder {
                 while ((len = rawObject.read(buff)) >= 0) {
                     out.write(buff, 0, len);
                 }
+                out.flush();
             } finally {
                 rawObject.close();
             }

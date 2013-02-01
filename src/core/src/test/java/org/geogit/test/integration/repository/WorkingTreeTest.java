@@ -43,7 +43,6 @@ public class WorkingTreeTest extends RepositoryTestCase {
     @Override
     protected void setUpInternal() throws Exception {
         workTree = repo.getWorkingTree();
-        transaction = Optional.absent();
     }
 
     @Test

@@ -44,7 +44,6 @@ import org.opengis.feature.type.Name;
 import org.opengis.geometry.BoundingBox;
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
 
-import com.google.common.base.Optional;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Iterators;
 import com.google.inject.Injector;
@@ -52,25 +51,25 @@ import com.vividsolutions.jts.io.ParseException;
 
 public abstract class RepositoryTestCase extends Assert {
 
-    protected static final String idL1 = "Lines.1";
+    public static final String idL1 = "Lines.1";
 
-    protected static final String idL2 = "Lines.2";
+    public static final String idL2 = "Lines.2";
 
-    protected static final String idL3 = "Lines.3";
+    public static final String idL3 = "Lines.3";
 
-    protected static final String idP1 = "Points.1";
+    public static final String idP1 = "Points.1";
 
-    protected static final String idP2 = "Points.2";
+    public static final String idP2 = "Points.2";
 
-    protected static final String idP3 = "Points.3";
+    public static final String idP3 = "Points.3";
 
-    protected static final String pointsNs = "http://geogit.points";
+    public static final String pointsNs = "http://geogit.points";
 
-    protected static final String pointsName = "Points";
+    public static final String pointsName = "Points";
 
-    protected static final String pointsTypeSpec = "sp:String,ip:Integer,pp:Point:srid=4326";
+    public static final String pointsTypeSpec = "sp:String,ip:Integer,pp:Point:srid=4326";
 
-    protected static final Name pointsTypeName = new NameImpl("http://geogit.points", pointsName);
+    public static final Name pointsTypeName = new NameImpl("http://geogit.points", pointsName);
 
     protected SimpleFeatureType pointsType;
 
@@ -82,21 +81,21 @@ public abstract class RepositoryTestCase extends Assert {
 
     protected Feature points3;
 
-    protected static final String linesNs = "http://geogit.lines";
+    public static final String linesNs = "http://geogit.lines";
 
-    protected static final String linesName = "Lines";
+    public static final String linesName = "Lines";
 
-    protected static final String linesTypeSpec = "sp:String,ip:Integer,pp:LineString:srid=4326";
+    public static final String linesTypeSpec = "sp:String,ip:Integer,pp:LineString:srid=4326";
 
-    protected static final Name linesTypeName = new NameImpl("http://geogit.lines", linesName);
+    public static final Name linesTypeName = new NameImpl("http://geogit.lines", linesName);
 
-    protected SimpleFeatureType linesType;
+    public SimpleFeatureType linesType;
 
-    protected Feature lines1;
+    public Feature lines1;
 
-    protected Feature lines2;
+    public Feature lines2;
 
-    protected Feature lines3;
+    public Feature lines3;
 
     protected GeoGIT geogit;
 
@@ -108,8 +107,6 @@ public abstract class RepositoryTestCase extends Assert {
     private static File envHome;
 
     Injector injector;
-
-    protected Optional<GeogitTransaction> transaction = Optional.absent();
 
     @Before
     public final void setUp() throws Exception {
@@ -194,6 +191,10 @@ public abstract class RepositoryTestCase extends Assert {
         return repo;
     }
 
+    public GeoGIT getGeogit() {
+        return geogit;
+    }
+
     protected Feature feature(SimpleFeatureType type, String id, Object... values)
             throws ParseException {
         SimpleFeatureBuilder builder = new SimpleFeatureBuilder(type);
@@ -238,14 +239,14 @@ public abstract class RepositoryTestCase extends Assert {
     /**
      * Inserts the Feature to the index and stages it to be committed.
      */
-    protected ObjectId insertAndAdd(Feature f) throws Exception {
+    public ObjectId insertAndAdd(Feature f) throws Exception {
         return insertAndAdd(null, f);
     }
 
     /**
      * Inserts the Feature to the index and stages it to be committed.
      */
-    protected ObjectId insertAndAdd(GeogitTransaction transaction, Feature f) throws Exception {
+    public ObjectId insertAndAdd(GeogitTransaction transaction, Feature f) throws Exception {
         ObjectId objectId = insert(transaction, f);
 
         if (transaction != null) {
@@ -259,14 +260,14 @@ public abstract class RepositoryTestCase extends Assert {
     /**
      * Inserts the feature to the index but does not stages it to be committed
      */
-    protected ObjectId insert(Feature f) throws Exception {
+    public ObjectId insert(Feature f) throws Exception {
         return insert(null, f);
     }
 
     /**
      * Inserts the feature to the index but does not stages it to be committed
      */
-    protected ObjectId insert(GeogitTransaction transaction, Feature f) throws Exception {
+    public ObjectId insert(GeogitTransaction transaction, Feature f) throws Exception {
         final WorkingTree workTree = (transaction != null ? transaction.getWorkingTree() : repo
                 .getWorkingTree());
         Name name = f.getType().getName();
@@ -276,21 +277,20 @@ public abstract class RepositoryTestCase extends Assert {
         return objectId;
     }
 
-    protected void insertAndAdd(Feature... features) throws Exception {
+    public void insertAndAdd(Feature... features) throws Exception {
         insertAndAdd(null, features);
     }
 
-    protected void insertAndAdd(GeogitTransaction transaction, Feature... features)
-            throws Exception {
+    public void insertAndAdd(GeogitTransaction transaction, Feature... features) throws Exception {
         insert(transaction, features);
         geogit.command(AddOp.class).call();
     }
 
-    protected void insert(Feature... features) throws Exception {
+    public void insert(Feature... features) throws Exception {
         insert(null, features);
     }
 
-    protected void insert(GeogitTransaction transaction, Feature... features) throws Exception {
+    public void insert(GeogitTransaction transaction, Feature... features) throws Exception {
         for (Feature f : features) {
             insert(transaction, f);
         }
@@ -303,7 +303,7 @@ public abstract class RepositoryTestCase extends Assert {
      * @return
      * @throws Exception
      */
-    protected boolean deleteAndAdd(Feature f) throws Exception {
+    public boolean deleteAndAdd(Feature f) throws Exception {
         return deleteAndAdd(null, f);
     }
 
@@ -314,7 +314,7 @@ public abstract class RepositoryTestCase extends Assert {
      * @return
      * @throws Exception
      */
-    protected boolean deleteAndAdd(GeogitTransaction transaction, Feature f) throws Exception {
+    public boolean deleteAndAdd(GeogitTransaction transaction, Feature f) throws Exception {
         boolean existed = delete(transaction, f);
         if (existed) {
             if (transaction != null) {
@@ -327,11 +327,11 @@ public abstract class RepositoryTestCase extends Assert {
         return existed;
     }
 
-    protected boolean delete(Feature f) throws Exception {
+    public boolean delete(Feature f) throws Exception {
         return delete(null, f);
     }
 
-    protected boolean delete(GeogitTransaction transaction, Feature f) throws Exception {
+    public boolean delete(GeogitTransaction transaction, Feature f) throws Exception {
         final WorkingTree workTree = (transaction != null ? transaction.getWorkingTree() : repo
                 .getWorkingTree());
         Name name = f.getType().getName();
@@ -341,13 +341,13 @@ public abstract class RepositoryTestCase extends Assert {
         return existed;
     }
 
-    protected <E> List<E> toList(Iterator<E> logs) {
+    public <E> List<E> toList(Iterator<E> logs) {
         List<E> logged = new ArrayList<E>();
         Iterators.addAll(logged, logs);
         return logged;
     }
 
-    protected <E> List<E> toList(Iterable<E> logs) {
+    public <E> List<E> toList(Iterable<E> logs) {
         List<E> logged = new ArrayList<E>();
         Iterables.addAll(logged, logs);
         return logged;
@@ -356,7 +356,7 @@ public abstract class RepositoryTestCase extends Assert {
     /**
      * Computes the aggregated bounds of {@code features}, assuming all of them are in the same CRS
      */
-    protected ReferencedEnvelope boundsOf(Feature... features) {
+    public ReferencedEnvelope boundsOf(Feature... features) {
         ReferencedEnvelope bounds = null;
         for (int i = 0; i < features.length; i++) {
             Feature f = features[i];
@@ -372,7 +372,7 @@ public abstract class RepositoryTestCase extends Assert {
     /**
      * Computes the aggregated bounds of {@code features} in the {@code targetCrs}
      */
-    protected ReferencedEnvelope boundsOf(CoordinateReferenceSystem targetCrs, Feature... features)
+    public ReferencedEnvelope boundsOf(CoordinateReferenceSystem targetCrs, Feature... features)
             throws Exception {
         ReferencedEnvelope bounds = new ReferencedEnvelope(targetCrs);
 

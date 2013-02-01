@@ -77,9 +77,9 @@ public class SendObjectResource extends Resource {
                 pushManager.addObject(info.getAddress(), objectId);
                 result = new StringRepresentation("Object added: " + objectId.toString());
             }
-            
+
             response.setEntity(result);
-            
+
         } catch (Exception e) {
             throw new RestletException(e.getMessage(), Status.SERVER_ERROR_INTERNAL, e);
         } finally {

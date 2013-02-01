@@ -43,6 +43,10 @@ class GeogitResourceUtils {
 
     public static Optional<String> getRepositoryName(Request request) {
         final String repo = RESTUtils.getAttribute(request, "repository");
+        if (repo != null && !repo.contains(":")) {
+            throw new IllegalArgumentException(
+                    "Repository name should be of the form <workspace>:<datastore>: " + repo);
+        }
         return Optional.fromNullable(repo);
     }
 
