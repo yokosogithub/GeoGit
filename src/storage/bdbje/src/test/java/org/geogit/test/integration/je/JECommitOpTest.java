@@ -13,6 +13,7 @@ import org.geogit.storage.bdbje.JEStorageModule;
 import org.junit.Rule;
 import org.junit.rules.TemporaryFolder;
 
+import com.google.common.base.Throwables;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.util.Modules;
@@ -23,7 +24,12 @@ public class JECommitOpTest extends org.geogit.test.integration.CommitOpTest {
 
     @Override
     protected Injector createInjector() {
-        File workingDirectory = tempFolder.newFolder("mockWorkingDir");
+        File workingDirectory;
+        try {
+            workingDirectory = tempFolder.newFolder("mockWorkingDir");
+        } catch (Exception e) {
+            throw Throwables.propagate(e);
+        }
         Platform testPlatform = new TestPlatform(workingDirectory);
         return Guice.createInjector(Modules.override(new GeogitModule()).with(
                 new JEStorageModule(), new TestModule(testPlatform)));
