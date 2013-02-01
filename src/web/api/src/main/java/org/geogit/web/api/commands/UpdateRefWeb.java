@@ -47,8 +47,7 @@ public class UpdateRefWeb implements WebAPICommand {
 
         final GeoGIT geogit = context.getGeoGIT();
         Optional<Ref> ref;
-        final String oldValue;
-        final String newValueName;
+
         try {
             ref = geogit.command(RefParse.class).setName(name).call();
 
@@ -57,10 +56,8 @@ public class UpdateRefWeb implements WebAPICommand {
             }
 
             if (ref.get() instanceof SymRef) {
-                oldValue = ((SymRef) ref.get()).getTarget();
                 Optional<Ref> target = geogit.command(RefParse.class).setName(newValue).call();
                 if (target.isPresent() && target.get() instanceof Ref) {
-                    newValueName = target.get().getName();
                     ref = geogit.command(UpdateSymRef.class).setDelete(delete).setName(name)
                             .setNewValue(target.get().getName()).call();
                 } else {
@@ -68,11 +65,9 @@ public class UpdateRefWeb implements WebAPICommand {
                 }
 
             } else {
-                oldValue = ref.get().getObjectId().toString();
                 Optional<ObjectId> target = geogit.command(RevParse.class).setRefSpec(newValue)
                         .call();
                 if (target.isPresent()) {
-                    newValueName = target.get().toString();
                     ref = geogit.command(UpdateRef.class).setDelete(delete)
                             .setName(ref.get().getName()).setNewValue(target.get()).call();
                 } else {
