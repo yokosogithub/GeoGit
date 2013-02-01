@@ -10,6 +10,8 @@ import javax.xml.stream.XMLStreamWriter;
 import org.codehaus.jettison.AbstractXMLStreamWriter;
 import org.geogit.api.NodeRef;
 import org.geogit.api.ObjectId;
+import org.geogit.api.Ref;
+import org.geogit.api.SymRef;
 import org.geogit.api.RevCommit;
 import org.geogit.api.RevPerson;
 import org.geogit.api.plumbing.DiffIndex;
@@ -194,12 +196,14 @@ public class ResponseWriter {
 
     }
 
-    public void writeUpdateRefResponse(String name, String newValue, String oldValue)
+    public void writeUpdateRefResponse(Ref ref)
             throws XMLStreamException {
         out.writeStartElement("ChangedRef");
-        writeElement("name", name);
-        writeElement("oldValue", oldValue.toString());
-        writeElement("newValue", newValue.toString());
+        writeElement("name", ref.getName());
+        writeElement("objectId", ref.getObjectId().toString());
+        if(ref instanceof SymRef) {
+            writeElement("target", ((SymRef)ref).getTarget());
+        }
         out.writeEndElement();
     }
 }

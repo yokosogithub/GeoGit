@@ -86,12 +86,13 @@ public class UpdateRefWeb implements WebAPICommand {
         }
 
         if (ref.isPresent()) {
+            final Ref newRef = ref.get();
             context.setResponseContent(new CommandResponse() {
 
                 @Override
                 public void write(ResponseWriter out) throws Exception {
                     out.start();
-                    out.writeUpdateRefResponse(name, newValueName, oldValue);
+                    out.writeUpdateRefResponse(newRef);
                     out.finish();
                 }
             });
