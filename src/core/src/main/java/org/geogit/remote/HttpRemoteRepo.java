@@ -265,18 +265,17 @@ public class HttpRemoteRepo implements IRemoteRepo {
         while (!commitQueue.isEmpty()) {
             walkCommit(commitQueue.remove(), localRepository, true);
         }
-        endPush();
-        updateRemoteRef(ref.getName(), ref.getObjectId(), false);
-
-        Ref remoteHead = headRef();
-        if (remoteHead instanceof SymRef) {
-            if (((SymRef) remoteHead).getTarget().equals(ref.getName())) {
-
-                RevCommit commit = localRepository.getCommit(ref.getObjectId());
-                updateRemoteRef(Ref.WORK_HEAD, commit.getTreeId(), false);
-                updateRemoteRef(Ref.STAGE_HEAD, commit.getTreeId(), false);
-            }
-        }
+        endPush(ref.getName(), ref.getObjectId().toString());
+        /*
+         * updateRemoteRef(ref.getName(), ref.getObjectId(), false);
+         * 
+         * Ref remoteHead = headRef(); if (remoteHead instanceof SymRef) { if (((SymRef)
+         * remoteHead).getTarget().equals(ref.getName())) {
+         * 
+         * RevCommit commit = localRepository.getCommit(ref.getObjectId());
+         * updateRemoteRef(Ref.WORK_HEAD, commit.getTreeId(), false);
+         * updateRemoteRef(Ref.STAGE_HEAD, commit.getTreeId(), false); } }
+         */
     }
 
     /**
@@ -294,18 +293,17 @@ public class HttpRemoteRepo implements IRemoteRepo {
         while (!commitQueue.isEmpty()) {
             walkCommit(commitQueue.remove(), localRepository, true);
         }
-        endPush();
-        Ref updatedRef = updateRemoteRef(refspec, ref.getObjectId(), false);
-
-        Ref remoteHead = headRef();
-        if (remoteHead instanceof SymRef) {
-            if (((SymRef) remoteHead).getTarget().equals(updatedRef.getName())) {
-
-                RevCommit commit = localRepository.getCommit(ref.getObjectId());
-                updateRemoteRef(Ref.WORK_HEAD, commit.getTreeId(), false);
-                updateRemoteRef(Ref.STAGE_HEAD, commit.getTreeId(), false);
-            }
-        }
+        endPush(refspec, ref.getObjectId().toString());
+        /*
+         * Ref updatedRef = updateRemoteRef(refspec, ref.getObjectId(), false);
+         * 
+         * Ref remoteHead = headRef(); if (remoteHead instanceof SymRef) { if (((SymRef)
+         * remoteHead).getTarget().equals(updatedRef.getName())) {
+         * 
+         * RevCommit commit = localRepository.getCommit(ref.getObjectId());
+         * updateRemoteRef(Ref.WORK_HEAD, commit.getTreeId(), false);
+         * updateRemoteRef(Ref.STAGE_HEAD, commit.getTreeId(), false); } }
+         */
     }
 
     /**
@@ -339,10 +337,11 @@ public class HttpRemoteRepo implements IRemoteRepo {
         }
     }
 
-    private void endPush() {
+    private void endPush(String refspec, String oid) {
         HttpURLConnection connection = null;
         try {
-            String expanded = repositoryURL.toString() + "/repo/endpush";
+            String expanded = repositoryURL.toString() + "/repo/endpush?refspec=" + refspec
+                    + "&objectId=" + oid;
 
             connection = (HttpURLConnection) new URL(expanded).openConnection();
             connection.setRequestMethod("GET");

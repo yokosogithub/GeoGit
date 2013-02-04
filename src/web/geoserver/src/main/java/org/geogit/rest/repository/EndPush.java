@@ -12,9 +12,11 @@ import java.io.Writer;
 import java.util.List;
 
 import org.geogit.api.GeoGIT;
+import org.geogit.api.ObjectId;
 import org.geogit.web.api.commands.PushManager;
 import org.restlet.Context;
 import org.restlet.data.ClientInfo;
+import org.restlet.data.Form;
 import org.restlet.data.MediaType;
 import org.restlet.data.Request;
 import org.restlet.data.Response;
@@ -44,11 +46,17 @@ public class EndPush extends Resource {
         @Override
         public void write(Writer w) throws IOException {
             ClientInfo info = getRequest().getClientInfo();
+            Form options = getRequest().getResourceRef().getQueryAsForm();
+
+            String refspec = options.getFirstValue("refspec", null);
+            ObjectId oid = ObjectId.valueOf(options.getFirstValue("objectId",
+                    ObjectId.NULL.toString()));
+
             Request request = getRequest();
             Optional<GeoGIT> ggit = getGeogit(request);
             Preconditions.checkState(ggit.isPresent());
             PushManager pushManager = PushManager.get();
-            pushManager.connectionSucceeded(ggit.get(), info.getAddress());
+            pushManager.connectionSucceeded(ggit.get(), info.getAddress(), refspec, oid);
             w.write("Push succeeded for address: " + info.getAddress());
             w.flush();
         }

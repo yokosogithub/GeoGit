@@ -7,7 +7,14 @@ import java.util.Map;
 
 import org.geogit.api.GeoGIT;
 import org.geogit.api.ObjectId;
+import org.geogit.api.Ref;
+import org.geogit.api.RevCommit;
 import org.geogit.api.RevObject;
+import org.geogit.api.SymRef;
+import org.geogit.api.plumbing.RefParse;
+import org.geogit.api.plumbing.UpdateRef;
+
+import com.google.common.base.Optional;
 
 /**
  * Provides a safety net for remote pushes. This class keeps track of all objects that are being
@@ -43,6 +50,9 @@ public class PushManager {
         if (incomingData.containsKey(ipAddress)) {
             incomingData.remove(ipAddress);
         }
+        if (incomingData.size() > 0) {
+            // Fail?
+        }
         List<ObjectId> newList = new LinkedList<ObjectId>();
         incomingData.put(ipAddress, newList);
     }
@@ -55,7 +65,8 @@ public class PushManager {
      * @param geogit the geogit of the local repository
      * @param ipAddress the remote machine that is pushing objects
      */
-    public void connectionSucceeded(GeoGIT geogit, String ipAddress) {
+    public void connectionSucceeded(GeoGIT geogit, String ipAddress, String refspec,
+            ObjectId newCommit) {
         // Add objects to the repository
         if (incomingData.containsKey(ipAddress)) {
             List<ObjectId> objectsToMove = incomingData.remove(ipAddress);
@@ -63,6 +74,26 @@ public class PushManager {
                 RevObject toAdd = geogit.getRepository().getIndex().getDatabase().get(oid);
                 geogit.getRepository().getObjectDatabase().put(toAdd);
             }
+            Optional<Ref> oldRef = geogit.command(RefParse.class).setName(refspec).call();
+            Optional<Ref> headRef = geogit.command(RefParse.class).setName(Ref.HEAD).call();
+            String refName = refspec;
+            if (oldRef.isPresent()) {
+                if (oldRef.get().getObjectId().equals(newCommit)) {
+                    return;
+                }
+                refName = oldRef.get().getName();
+            }
+            if (headRef.isPresent() && headRef.get() instanceof SymRef) {
+                if (((SymRef) headRef.get()).getTarget().equals(refName)) {
+                    RevCommit commit = geogit.getRepository().getCommit(newCommit);
+                    geogit.command(UpdateRef.class).setName(Ref.WORK_HEAD)
+                            .setNewValue(commit.getTreeId()).call();
+                    geogit.command(UpdateRef.class).setName(Ref.STAGE_HEAD)
+                            .setNewValue(commit.getTreeId()).call();
+                }
+            }
+
+            geogit.command(UpdateRef.class).setName(refName).setNewValue(newCommit).call();
         } else {
             throw new RuntimeException("Tried to end a connection that didn't exist.");
         }
