@@ -36,7 +36,11 @@ public class GeogitSynchronizationHandler {
     }
 
     public void setDirty(GeoGIT geogit, @Nullable String branch) {
-        repositories.add(new Pair<GeoGIT, Optional<String>>(geogit, Optional.fromNullable(branch)));
+        Pair<GeoGIT, Optional<String>> entry = new Pair<GeoGIT, Optional<String>>(geogit,
+                Optional.fromNullable(branch));
+        if (!repositories.contains(entry)) {
+            repositories.add(entry);
+        }
     }
 
     public static GeogitSynchronizationHandler get() {
