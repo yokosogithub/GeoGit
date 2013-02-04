@@ -32,7 +32,7 @@ public class GeogitSynchronizationHandler {
         repositories = new ConcurrentLinkedQueue<Pair<GeoGIT, Optional<String>>>();
 
         executor = Executors.newSingleThreadScheduledExecutor();
-        executor.scheduleAtFixedRate(new GeoGitSynchronizer(), 0, 5, TimeUnit.SECONDS);
+        executor.scheduleAtFixedRate(new GeoGitSynchronizer(), 0, 1, TimeUnit.SECONDS);
     }
 
     public void setDirty(GeoGIT geogit, @Nullable String branch) {

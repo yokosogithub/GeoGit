@@ -85,6 +85,8 @@ public class GeoGitDataStore extends ContentDataStore implements DataStore {
         Preconditions.checkNotNull(geogit.getRepository(), "No repository exists at %s", geogit
                 .getPlatform().pwd());
 
+        AutoSynchronizationHandler.get().addRepo(geogit);
+
         this.geogit = geogit;
     }
 
