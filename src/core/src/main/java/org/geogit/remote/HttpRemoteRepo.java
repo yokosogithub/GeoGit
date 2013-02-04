@@ -400,9 +400,9 @@ public class HttpRemoteRepo implements IRemoteRepo {
 
                 if (target != null) {
                     updatedRef = new SymRef(refName, new Ref(target, ObjectId.valueOf(objectId),
-                            null));
+                            RevObject.TYPE.COMMIT));
                 } else {
-                    updatedRef = new Ref(refName, ObjectId.valueOf(objectId), null);
+                    updatedRef = new Ref(refName, ObjectId.valueOf(objectId), RevObject.TYPE.COMMIT);
                 }
 
             } finally {
