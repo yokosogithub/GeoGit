@@ -36,10 +36,14 @@ public class GeogitSynchronizationHandler {
     }
 
     public void setDirty(GeoGIT geogit, @Nullable String branch) {
-        Pair<GeoGIT, Optional<String>> entry = new Pair<GeoGIT, Optional<String>>(geogit,
-                Optional.fromNullable(branch));
-        if (!repositories.contains(entry)) {
-            repositories.add(entry);
+        Optional<Remote> originRemote = geogit.command(RemoteResolve.class).setName("origin")
+                .call();
+        if (originRemote.isPresent()) {
+            Pair<GeoGIT, Optional<String>> entry = new Pair<GeoGIT, Optional<String>>(geogit,
+                    Optional.fromNullable(branch));
+            if (!repositories.contains(entry)) {
+                repositories.add(entry);
+            }
         }
     }
 

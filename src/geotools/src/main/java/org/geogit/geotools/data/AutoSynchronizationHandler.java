@@ -9,6 +9,10 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 import org.geogit.api.GeoGIT;
+import org.geogit.api.Remote;
+import org.geogit.api.porcelain.RemoteResolve;
+
+import com.google.common.base.Optional;
 
 public class AutoSynchronizationHandler {
 
@@ -27,7 +31,11 @@ public class AutoSynchronizationHandler {
 
     public void addRepo(GeoGIT geogit) {
         checkNotNull(geogit);
-        repositories.add(geogit);
+        Optional<Remote> originRemote = geogit.command(RemoteResolve.class).setName("origin")
+                .call();
+        if (originRemote.isPresent()) {
+            repositories.add(geogit);
+        }
     }
 
     public static AutoSynchronizationHandler get() {
