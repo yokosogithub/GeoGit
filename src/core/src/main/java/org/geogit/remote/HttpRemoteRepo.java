@@ -14,6 +14,9 @@ import java.util.List;
 import java.util.Queue;
 
 import javax.annotation.Nullable;
+import javax.xml.stream.XMLInputFactory;
+import javax.xml.stream.XMLStreamException;
+import javax.xml.stream.XMLStreamReader;
 
 import org.geogit.api.Bucket;
 import org.geogit.api.Node;
@@ -262,18 +265,17 @@ public class HttpRemoteRepo implements IRemoteRepo {
         while (!commitQueue.isEmpty()) {
             walkCommit(commitQueue.remove(), localRepository, true);
         }
-        endPush();
-        updateRemoteRef(ref.getName(), ref.getObjectId(), false);
-
-        Ref remoteHead = headRef();
-        if (remoteHead instanceof SymRef) {
-            if (((SymRef) remoteHead).getTarget().equals(ref.getName())) {
-
-                RevCommit commit = localRepository.getCommit(ref.getObjectId());
-                updateRemoteRef(Ref.WORK_HEAD, commit.getTreeId(), false);
-                updateRemoteRef(Ref.STAGE_HEAD, commit.getTreeId(), false);
-            }
-        }
+        endPush(ref.getName(), ref.getObjectId().toString());
+        /*
+         * updateRemoteRef(ref.getName(), ref.getObjectId(), false);
+         * 
+         * Ref remoteHead = headRef(); if (remoteHead instanceof SymRef) { if (((SymRef)
+         * remoteHead).getTarget().equals(ref.getName())) {
+         * 
+         * RevCommit commit = localRepository.getCommit(ref.getObjectId());
+         * updateRemoteRef(Ref.WORK_HEAD, commit.getTreeId(), false);
+         * updateRemoteRef(Ref.STAGE_HEAD, commit.getTreeId(), false); } }
+         */
     }
 
     /**
@@ -291,18 +293,17 @@ public class HttpRemoteRepo implements IRemoteRepo {
         while (!commitQueue.isEmpty()) {
             walkCommit(commitQueue.remove(), localRepository, true);
         }
-        endPush();
-        updateRemoteRef(refspec, ref.getObjectId(), false);
-
-        Ref remoteHead = headRef();
-        if (remoteHead instanceof SymRef) {
-            if (((SymRef) remoteHead).getTarget().equals(refspec)) {
-
-                RevCommit commit = localRepository.getCommit(ref.getObjectId());
-                updateRemoteRef(Ref.WORK_HEAD, commit.getTreeId(), false);
-                updateRemoteRef(Ref.STAGE_HEAD, commit.getTreeId(), false);
-            }
-        }
+        endPush(refspec, ref.getObjectId().toString());
+        /*
+         * Ref updatedRef = updateRemoteRef(refspec, ref.getObjectId(), false);
+         * 
+         * Ref remoteHead = headRef(); if (remoteHead instanceof SymRef) { if (((SymRef)
+         * remoteHead).getTarget().equals(updatedRef.getName())) {
+         * 
+         * RevCommit commit = localRepository.getCommit(ref.getObjectId());
+         * updateRemoteRef(Ref.WORK_HEAD, commit.getTreeId(), false);
+         * updateRemoteRef(Ref.STAGE_HEAD, commit.getTreeId(), false); } }
+         */
     }
 
     /**
@@ -336,10 +337,11 @@ public class HttpRemoteRepo implements IRemoteRepo {
         }
     }
 
-    private void endPush() {
+    private void endPush(String refspec, String oid) {
         HttpURLConnection connection = null;
         try {
-            String expanded = repositoryURL.toString() + "/repo/endpush";
+            String expanded = repositoryURL.toString() + "/repo/endpush?refspec=" + refspec
+                    + "&objectId=" + oid;
 
             connection = (HttpURLConnection) new URL(expanded).openConnection();
             connection.setRequestMethod("GET");
@@ -356,8 +358,9 @@ public class HttpRemoteRepo implements IRemoteRepo {
         }
     }
 
-    private void updateRemoteRef(String refspec, ObjectId newValue, boolean delete) {
+    private Ref updateRemoteRef(String refspec, ObjectId newValue, boolean delete) {
         HttpURLConnection connection = null;
+        Ref updatedRef = null;
         try {
             String expanded;
             if (!delete) {
@@ -374,17 +377,51 @@ public class HttpRemoteRepo implements IRemoteRepo {
             connection.setDoOutput(true);
 
             InputStream inputStream = connection.getInputStream();
+
+            XMLStreamReader reader = XMLInputFactory.newFactory()
+                    .createXMLStreamReader(inputStream);
+
             try {
-                while (inputStream.read() > -1) {
-                    ;
+                readToElementStart(reader, "ChangedRef");
+
+                readToElementStart(reader, "name");
+                final String refName = reader.getElementText();
+
+                readToElementStart(reader, "objectId");
+                final String objectId = reader.getElementText();
+
+                readToElementStart(reader, "target");
+                String target = null;
+                if (reader.hasNext()) {
+                    target = reader.getElementText();
                 }
+                reader.close();
+
+                if (target != null) {
+                    updatedRef = new SymRef(refName, new Ref(target, ObjectId.valueOf(objectId),
+                            RevObject.TYPE.COMMIT));
+                } else {
+                    updatedRef = new Ref(refName, ObjectId.valueOf(objectId), RevObject.TYPE.COMMIT);
+                }
+
             } finally {
+                reader.close();
                 inputStream.close();
             }
         } catch (Exception e) {
             Throwables.propagate(e);
         } finally {
             consumeErrStreamAndCloseConnection(connection);
+        }
+        return updatedRef;
+    }
+
+    private void readToElementStart(XMLStreamReader reader, String name) throws XMLStreamException {
+        while (reader.hasNext()) {
+            if (reader.isStartElement() && reader.getLocalName().equals(name)) {
+                break;
+            }
+            reader.next();
         }
     }
 

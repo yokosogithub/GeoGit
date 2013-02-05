@@ -32,11 +32,15 @@ public class GeogitSynchronizationHandler {
         repositories = new ConcurrentLinkedQueue<Pair<GeoGIT, Optional<String>>>();
 
         executor = Executors.newSingleThreadScheduledExecutor();
-        executor.scheduleAtFixedRate(new GeoGitSynchronizer(), 0, 5, TimeUnit.SECONDS);
+        executor.scheduleAtFixedRate(new GeoGitSynchronizer(), 0, 1, TimeUnit.SECONDS);
     }
 
     public void setDirty(GeoGIT geogit, @Nullable String branch) {
-        repositories.add(new Pair<GeoGIT, Optional<String>>(geogit, Optional.fromNullable(branch)));
+        Pair<GeoGIT, Optional<String>> entry = new Pair<GeoGIT, Optional<String>>(geogit,
+                Optional.fromNullable(branch));
+        if (!repositories.contains(entry)) {
+            repositories.add(entry);
+        }
     }
 
     public static GeogitSynchronizationHandler get() {
