@@ -141,7 +141,13 @@ public class ResponseWriter {
 
             writePerson("author", entry.getAuthor());
             writePerson("committer", entry.getCommitter());
-            writeElement("message", entry.getMessage());
+
+            out.writeStartElement("message");
+            if (entry.getMessage() != null) {
+                out.writeCData(entry.getMessage());
+            }
+            out.writeEndElement();
+
             out.writeEndElement();
         }
     }
