@@ -125,7 +125,7 @@ public class TransactionRefDatabase implements RefDatabase {
      */
     @Override
     public void close() {
-        refDb.removeAll(this.txNamespace);
+        refDb.removeAll(this.txRootNamespace);
     }
 
     /**
