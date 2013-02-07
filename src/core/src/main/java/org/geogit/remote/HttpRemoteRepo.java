@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
+import java.net.InetAddress;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Iterator;
@@ -319,7 +320,8 @@ public class HttpRemoteRepo implements IRemoteRepo {
     private void beginPush() {
         HttpURLConnection connection = null;
         try {
-            String expanded = repositoryURL.toString() + "/repo/beginpush";
+            String internalIp = InetAddress.getLocalHost().getHostAddress();
+            String expanded = repositoryURL.toString() + "/repo/beginpush?internalIp=" + internalIp;
 
             connection = (HttpURLConnection) new URL(expanded).openConnection();
             connection.setRequestMethod("GET");

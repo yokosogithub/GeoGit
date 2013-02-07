@@ -12,6 +12,7 @@ import java.util.List;
 import org.geogit.web.api.commands.PushManager;
 import org.restlet.Context;
 import org.restlet.data.ClientInfo;
+import org.restlet.data.Form;
 import org.restlet.data.MediaType;
 import org.restlet.data.Request;
 import org.restlet.data.Response;
@@ -40,9 +41,15 @@ public class BeginPush extends Resource {
         @Override
         public void write(Writer w) throws IOException {
             ClientInfo info = getRequest().getClientInfo();
+            Form options = getRequest().getResourceRef().getQueryAsForm();
+
+            // make a combined ip address to handle requests from multiple machines in the same
+            // external network.
+            // e.g.: ext.ern.al.IP.int.ern.al.IP
+            String ipAddress = info.getAddress() + "." + options.getFirstValue("internalIp", null);
             PushManager pushManager = PushManager.get();
-            pushManager.connectionBegin(info.getAddress());
-            w.write("Push began for address: " + info.getAddress());
+            pushManager.connectionBegin(ipAddress);
+            w.write("Push began for address: " + ipAddress);
             w.flush();
         }
     }
