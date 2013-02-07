@@ -342,8 +342,9 @@ public class HttpRemoteRepo implements IRemoteRepo {
     private void endPush(String refspec, String oid) {
         HttpURLConnection connection = null;
         try {
+            String internalIp = InetAddress.getLocalHost().getHostAddress();
             String expanded = repositoryURL.toString() + "/repo/endpush?refspec=" + refspec
-                    + "&objectId=" + oid;
+                    + "&objectId=" + oid + "&internalIp=" + internalIp;
 
             connection = (HttpURLConnection) new URL(expanded).openConnection();
             connection.setRequestMethod("GET");
@@ -512,7 +513,9 @@ public class HttpRemoteRepo implements IRemoteRepo {
         HttpURLConnection connection = null;
         boolean exists = false;
         try {
-            String expanded = repositoryURL.toString() + "/repo/exists?oid=" + objectId.toString();
+            String internalIp = InetAddress.getLocalHost().getHostAddress();
+            String expanded = repositoryURL.toString() + "/repo/exists?oid=" + objectId.toString()
+                    + "&internalIp=" + internalIp;
 
             connection = (HttpURLConnection) new URL(expanded).openConnection();
             connection.setRequestMethod("GET");
@@ -572,7 +575,9 @@ public class HttpRemoteRepo implements IRemoteRepo {
 
         HttpURLConnection connection = null;
         try {
-            String expanded = repositoryURL.toString() + "/repo/sendobject";
+            String internalIp = InetAddress.getLocalHost().getHostAddress();
+            String expanded = repositoryURL.toString() + "/repo/sendobject?internalIp="
+                    + internalIp;
             connection = (HttpURLConnection) new URL(expanded).openConnection();
             connection.setRequestMethod("POST");
 

@@ -59,9 +59,12 @@ public class ObjectExistsResource extends Resource {
             boolean blobExists = repository.blobExists(oid);
 
             ClientInfo info = getRequest().getClientInfo();
-            String address = info.getAddress();
+            // make a combined ip address to handle requests from multiple machines in the same
+            // external network.
+            // e.g.: ext.ern.al.IP.int.ern.al.IP
+            String ipAddress = info.getAddress() + "." + options.getFirstValue("internalIp", "");
             PushManager pushManager = PushManager.get();
-            boolean alreadyPushed = pushManager.alreadyPushed(address, oid);
+            boolean alreadyPushed = pushManager.alreadyPushed(ipAddress, oid);
 
             if (blobExists || alreadyPushed) {
                 w.write("1");

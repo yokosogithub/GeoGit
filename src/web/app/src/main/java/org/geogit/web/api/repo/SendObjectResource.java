@@ -7,6 +7,7 @@ import org.geogit.api.GeoGIT;
 import org.geogit.api.ObjectId;
 import org.geogit.web.api.commands.PushManager;
 import org.restlet.data.ClientInfo;
+import org.restlet.data.Form;
 import org.restlet.representation.Representation;
 import org.restlet.representation.StringRepresentation;
 import org.restlet.resource.Post;
@@ -19,6 +20,12 @@ public class SendObjectResource extends ServerResource {
         Representation result = null;
 
         ClientInfo info = getRequest().getClientInfo();
+
+        Form options = getRequest().getResourceRef().getQueryAsForm();
+        // make a combined ip address to handle requests from multiple machines in the same
+        // external network.
+        // e.g.: ext.ern.al.IP.int.ern.al.IP
+        String ipAddress = info.getAddress() + "." + options.getFirstValue("internalIp", "");
 
         InputStream input = entity.getStream();
         byte objectIdBytes[] = new byte[20];
@@ -33,7 +40,7 @@ public class SendObjectResource extends ServerResource {
         } else {
             // put it into the staging database until we have all of the data
             ggit.getRepository().getIndex().getDatabase().put(objectId, input);
-            pushManager.addObject(info.getAddress(), objectId);
+            pushManager.addObject(ipAddress, objectId);
             result = new StringRepresentation("Object added: " + objectId.toString());
         }
 

@@ -31,8 +31,11 @@ public class ObjectExistsResource extends ServerResource {
             GeoGIT ggit = (GeoGIT) getApplication().getContext().getAttributes().get("geogit");
             PushManager pushManager = PushManager.get();
             ClientInfo info = getRequest().getClientInfo();
-            if (ggit.getRepository().blobExists(oid)
-                    || pushManager.alreadyPushed(info.getAddress(), oid)) {
+            // make a combined ip address to handle requests from multiple machines in the same
+            // external network.
+            // e.g.: ext.ern.al.IP.int.ern.al.IP
+            String ipAddress = info.getAddress() + "." + options.getFirstValue("internalIp", "");
+            if (ggit.getRepository().blobExists(oid) || pushManager.alreadyPushed(ipAddress, oid)) {
                 w.write("1");
             } else {
                 w.write("0");

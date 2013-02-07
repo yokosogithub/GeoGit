@@ -46,7 +46,7 @@ public class BeginPush extends Resource {
             // make a combined ip address to handle requests from multiple machines in the same
             // external network.
             // e.g.: ext.ern.al.IP.int.ern.al.IP
-            String ipAddress = info.getAddress() + "." + options.getFirstValue("internalIp", null);
+            String ipAddress = info.getAddress() + "." + options.getFirstValue("internalIp", "");
             PushManager pushManager = PushManager.get();
             pushManager.connectionBegin(ipAddress);
             w.write("Push began for address: " + ipAddress);

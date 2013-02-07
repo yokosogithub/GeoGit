@@ -18,6 +18,7 @@ import org.geogit.storage.StagingDatabase;
 import org.geogit.web.api.commands.PushManager;
 import org.geoserver.rest.RestletException;
 import org.restlet.data.ClientInfo;
+import org.restlet.data.Form;
 import org.restlet.data.Request;
 import org.restlet.data.Response;
 import org.restlet.data.Status;
@@ -45,6 +46,11 @@ public class SendObjectResource extends Resource {
         final Response response = getResponse();
 
         ClientInfo info = request.getClientInfo();
+        Form options = getRequest().getResourceRef().getQueryAsForm();
+        // make a combined ip address to handle requests from multiple machines in the same
+        // external network.
+        // e.g.: ext.ern.al.IP.int.ern.al.IP
+        String ipAddress = info.getAddress() + "." + options.getFirstValue("internalIp", "");
         byte objectIdBytes[] = new byte[20];
         InputStream input;
         try {
@@ -74,7 +80,7 @@ public class SendObjectResource extends Resource {
                 StagingArea index = repository.getIndex();
                 StagingDatabase stagingDatabase = index.getDatabase();
                 stagingDatabase.put(objectId, input);
-                pushManager.addObject(info.getAddress(), objectId);
+                pushManager.addObject(ipAddress, objectId);
                 result = new StringRepresentation("Object added: " + objectId.toString());
             }
 
