@@ -320,7 +320,7 @@ public class HttpRemoteRepo implements IRemoteRepo {
     private void beginPush() {
         HttpURLConnection connection = null;
         try {
-            String internalIp = InetAddress.getLocalHost().getHostAddress();
+            String internalIp = InetAddress.getLocalHost().getHostName();
             String expanded = repositoryURL.toString() + "/repo/beginpush?internalIp=" + internalIp;
 
             connection = (HttpURLConnection) new URL(expanded).openConnection();
@@ -342,7 +342,7 @@ public class HttpRemoteRepo implements IRemoteRepo {
     private void endPush(String refspec, String oid) {
         HttpURLConnection connection = null;
         try {
-            String internalIp = InetAddress.getLocalHost().getHostAddress();
+            String internalIp = InetAddress.getLocalHost().getHostName();
             String expanded = repositoryURL.toString() + "/repo/endpush?refspec=" + refspec
                     + "&objectId=" + oid + "&internalIp=" + internalIp;
 
@@ -513,7 +513,7 @@ public class HttpRemoteRepo implements IRemoteRepo {
         HttpURLConnection connection = null;
         boolean exists = false;
         try {
-            String internalIp = InetAddress.getLocalHost().getHostAddress();
+            String internalIp = InetAddress.getLocalHost().getHostName();
             String expanded = repositoryURL.toString() + "/repo/exists?oid=" + objectId.toString()
                     + "&internalIp=" + internalIp;
 
@@ -575,7 +575,7 @@ public class HttpRemoteRepo implements IRemoteRepo {
 
         HttpURLConnection connection = null;
         try {
-            String internalIp = InetAddress.getLocalHost().getHostAddress();
+            String internalIp = InetAddress.getLocalHost().getHostName();
             String expanded = repositoryURL.toString() + "/repo/sendobject?internalIp="
                     + internalIp;
             connection = (HttpURLConnection) new URL(expanded).openConnection();
