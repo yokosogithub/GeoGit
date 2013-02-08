@@ -28,8 +28,8 @@ import org.geogit.cli.AnsiDecorator;
 import org.geogit.cli.CLICommand;
 import org.geogit.cli.GeogitCLI;
 
-import com.beust.jcommander.Parameter;
 import com.beust.jcommander.Parameters;
+import com.beust.jcommander.ParametersDelegate;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
@@ -37,7 +37,6 @@ import com.google.common.base.Splitter;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterators;
-import com.google.common.collect.Lists;
 
 /**
  * Shows the commit logs.
@@ -54,29 +53,8 @@ import com.google.common.collect.Lists;
 @Parameters(commandNames = "log", commandDescription = "Show commit logs")
 public class Log extends AbstractCommand implements CLICommand {
 
-    @Parameter(names = { "--max-count", "-n" }, description = "Maximum number of commits to log.")
-    private Integer limit;
-
-    @Parameter(names = "--skip", description = "Skip number commits before starting to show the commit output.")
-    private Integer skip;
-
-    @Parameter(names = "--since", description = "Maximum number of commits to log")
-    private String since;
-
-    @Parameter(names = "--until", description = "Maximum number of commits to log")
-    private String until;
-
-    @Parameter(names = "--oneline", description = "Print only commit id and message on a sinlge line per commit")
-    private boolean oneline;
-
-    @Parameter(description = "[[<until>]|[<since>..<until>]], arity = 1")
-    private List<String> sinceUntilPaths = Lists.newArrayList();
-
-    @Parameter(names = { "--path", "-p" }, description = "Print only commits that have modified the given path(s)", variableArity = true)
-    private List<String> pathNames = Lists.newArrayList();
-
-    @Parameter(names = "--color", description = "Whether to apply colored output. Possible values are auto|never|always.", converter = ColorArg.Converter.class)
-    private ColorArg color = ColorArg.auto;
+    @ParametersDelegate
+    public final LogArgs args = new LogArgs();
 
     /**
      * Executes the log command using the provided options.
@@ -95,18 +73,18 @@ public class Log extends AbstractCommand implements CLICommand {
 
         LogOp op = geogit.command(LogOp.class);
 
-        if (skip != null) {
-            op.setSkip(skip.intValue());
+        if (args.skip != null) {
+            op.setSkip(args.skip.intValue());
         }
-        if (limit != null) {
-            op.setLimit(limit.intValue());
+        if (args.limit != null) {
+            op.setLimit(args.limit.intValue());
         }
-        if (!sinceUntilPaths.isEmpty()) {
-            List<String> sinceUntil = ImmutableList.copyOf((Splitter.on("..").split(sinceUntilPaths
-                    .get(0))));
+        if (!args.sinceUntilPaths.isEmpty()) {
+            List<String> sinceUntil = ImmutableList.copyOf((Splitter.on("..")
+                    .split(args.sinceUntilPaths.get(0))));
             Preconditions.checkArgument(sinceUntil.size() == 1 || sinceUntil.size() == 2,
                     "Invalid refSpec format, expected [<until>]|[<since>..<until>]: %s",
-                    sinceUntilPaths.get(0));
+                    args.sinceUntilPaths.get(0));
 
             String sinceRefSpec;
             String untilRefSpec;
@@ -133,8 +111,8 @@ public class Log extends AbstractCommand implements CLICommand {
                 op.setUntil(until.get());
             }
         }
-        if (!pathNames.isEmpty()) {
-            for (String s : pathNames) {
+        if (!args.pathNames.isEmpty()) {
+            for (String s : args.pathNames) {
                 op.addPath(s);
             }
         }
@@ -142,7 +120,7 @@ public class Log extends AbstractCommand implements CLICommand {
         ConsoleReader console = cli.getConsole();
         Terminal terminal = console.getTerminal();
         final boolean useColor;
-        switch (color) {
+        switch (args.color) {
         case never:
             useColor = false;
             break;
@@ -160,7 +138,9 @@ public class Log extends AbstractCommand implements CLICommand {
         }
 
         Function<RevCommit, CharSequence> printFunction;
-        if (oneline) {
+        if (args.raw) {
+            printFunction = rawConverter(useColor);
+        } else if (args.oneline) {
             printFunction = oneLineConverter(useColor);
         } else {
             printFunction = standardConverter(useColor, geogit.getPlatform());
@@ -224,6 +204,43 @@ public class Log extends AbstractCommand implements CLICommand {
                         .a(formattedDate).newline();
                 ansi.a("Subject: ").a(commit.getMessage()).newline();
                 return ansi.toString();
+            }
+        };
+    }
+
+    private Function<RevCommit, CharSequence> rawConverter(final boolean useColor) {
+
+        return new Function<RevCommit, CharSequence>() {
+            @Override
+            public CharSequence apply(RevCommit commit) {
+                Ansi ansi = AnsiDecorator.newAnsi(useColor);
+
+                ansi.fg(Color.YELLOW).a("commit ").a(commit.getId().toString()).reset().newline();
+                ansi.a("tree ").a(commit.getTreeId().toString()).newline();
+                for (ObjectId parentId : commit.getParentIds()) {
+                    ansi.a("parent ").a(parentId.toString()).newline();
+                }
+                ansi.a("author ").a(format(commit.getAuthor())).newline();
+                ansi.a("committer ").a(format(commit.getCommitter())).newline();
+
+                ansi.newline();
+                if (commit.getMessage() != null) {
+                    ansi.a(commit.getMessage());
+                    ansi.newline();
+                }
+                return ansi.toString();
+            }
+
+            private String format(RevPerson p) {
+                StringBuilder sb = new StringBuilder();
+                if (p.getName().isPresent()) {
+                    sb.append(p.getName().get()).append(' ');
+                }
+                if (p.getEmail().isPresent()) {
+                    sb.append('<').append(p.getEmail().get()).append(" ");
+                }
+                sb.append(p.getTimestamp()).append(' ').append(p.getTimeZoneOffset());
+                return sb.toString();
             }
         };
     }
