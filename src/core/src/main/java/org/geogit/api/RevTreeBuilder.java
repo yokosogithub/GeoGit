@@ -19,8 +19,6 @@ import javax.annotation.Nullable;
 
 import org.geogit.api.RevObject.TYPE;
 import org.geogit.api.plumbing.HashObject;
-import org.geogit.api.plumbing.diff.DepthTreeIterator;
-import org.geogit.api.plumbing.diff.DepthTreeIterator.Strategy;
 import org.geogit.repository.DepthSearch;
 import org.geogit.repository.SpatialOps;
 import org.geogit.storage.NodePathStorageOrder;
@@ -59,6 +57,8 @@ public class RevTreeBuilder {
 
     protected NodePathStorageOrder storageOrder = new NodePathStorageOrder();
 
+    private Map<ObjectId, RevTree> pendingWritesCache;
+
     /**
      * Empty tree constructor, used to create trees from scratch
      * 
@@ -73,17 +73,21 @@ public class RevTreeBuilder {
      * Copy constructor with tree depth
      */
     public RevTreeBuilder(ObjectDatabase db, @Nullable final RevTree copy) {
-        this(db, copy, 0);
+        this(db, copy, 0, new TreeMap<ObjectId, RevTree>());
     }
 
     /**
      * Copy constructor
      */
-    public RevTreeBuilder(ObjectDatabase db, @Nullable final RevTree copy, int depth) {
+    private RevTreeBuilder(final ObjectDatabase db, @Nullable final RevTree copy, final int depth,
+            final Map<ObjectId, RevTree> pendingWritesCache) {
 
         checkNotNull(db);
+        checkNotNull(pendingWritesCache);
+
         this.db = db;
         this.depth = depth;
+        this.pendingWritesCache = pendingWritesCache;
 
         this.deletes = Sets.newHashSet();
         this.treeChanges = Maps.newHashMap();
@@ -130,7 +134,10 @@ public class RevTreeBuilder {
     }
 
     private RevTree loadTree(final ObjectId subtreeId) {
-        RevTree subtree = db.getTree(subtreeId);
+        RevTree subtree = this.pendingWritesCache.get(subtreeId);
+        if (subtree == null) {
+            subtree = db.getTree(subtreeId);
+        }
         return subtree;
     }
 
@@ -197,7 +204,19 @@ public class RevTreeBuilder {
             }
             if (unnamedTree.size() <= NORMALIZED_SIZE_LIMIT) {
                 unnamedTree = moveBucketsToChildren(unnamedTree);
+                if (this.depth == 0) {
+                    pendingWritesCache.clear();
+                }
             }
+        }
+
+        final int pendingWritesThreshold = 10 * 1000;
+        final boolean actualTree = this.depth == 0;// am I an actual (addressable) tree or bucket
+                                                   // tree of a higher level one?
+        final boolean forceWrite = pendingWritesCache.size() > pendingWritesThreshold;
+        if (!pendingWritesCache.isEmpty() && (actualTree || forceWrite)) {
+            db.putAll(pendingWritesCache.values().iterator());
+            pendingWritesCache.clear();
         }
         return unnamedTree;
     }
@@ -208,13 +227,22 @@ public class RevTreeBuilder {
      */
     private RevTree moveBucketsToChildren(RevTree unnamedTree) {
         checkState(featureChanges.isEmpty());
-        // TODO:**********
-        Iterator<NodeRef> iterator = new DepthTreeIterator("", ObjectId.NULL, unnamedTree, db,
-                Strategy.CHILDREN);
-        this.bucketTreesByBucket.clear();
-        while (iterator.hasNext()) {
-            put(iterator.next().getNode());
+        for (Bucket bucket : this.bucketTreesByBucket.values()) {
+            ObjectId id = bucket.id();
+            RevTree bucketTree = this.loadTree(id);
+            if (bucketTree.buckets().isPresent()) {
+                moveBucketsToChildren(bucketTree);
+            } else {
+                Iterator<Node> children = bucketTree.children();
+                while (children.hasNext()) {
+                    Node next = children.next();
+                    putInternal(next);
+                }
+            }
         }
+
+        this.bucketTreesByBucket.clear();
+
         return normalizeToChildren();
     }
 
@@ -248,7 +276,6 @@ public class RevTreeBuilder {
      */
     private RevTree normalizeToBuckets() {
         // update all inner trees
-        final int childDepth = this.depth + 1;
         long accSize = 0;
         int accChildTreeCount = 0;
         try {
@@ -277,11 +304,14 @@ public class RevTreeBuilder {
                 {
                     final Collection<Node> bucketEntries = changesByBucket.removeAll(bucketIndex);
                     final Bucket bucket = bucketTreesByBucket.get(bucketIndex);
+                    final int childDepth = this.depth + 1;
                     if (bucket == null) {
-                        bucketTreeBuilder = new RevTreeBuilder(db, null, childDepth);
+                        bucketTreeBuilder = new RevTreeBuilder(this.db, null, childDepth,
+                                this.pendingWritesCache);
                     } else {
-                        bucketTreeBuilder = new RevTreeBuilder(db, loadTree(bucket.id()),
-                                childDepth);
+                        RevTree currentBucketTree = loadTree(bucket.id());
+                        bucketTreeBuilder = new RevTreeBuilder(this.db, currentBucketTree,
+                                childDepth, this.pendingWritesCache);
                     }
                     for (String deleted : deletes) {
                         Integer bucketOfDelete = computeBucket(deleted);
@@ -299,7 +329,8 @@ public class RevTreeBuilder {
                 if (bucketTree.isEmpty()) {
                     bucketTreesByBucket.remove(bucketIndex);
                 } else {
-                    db.put(bucketTree);
+                    // db.put(bucketTree);
+                    this.pendingWritesCache.put(bucketTree.getId(), bucketTree);
                     Envelope bucketBounds = SpatialOps.boundsOf(bucketTree);
                     Bucket bucket = Bucket.create(bucketTree.getId(), bucketBounds);
                     bucketTreesByBucket.put(bucketIndex, bucket);

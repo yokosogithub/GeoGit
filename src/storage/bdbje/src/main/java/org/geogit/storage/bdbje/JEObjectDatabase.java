@@ -8,23 +8,24 @@ import static com.sleepycat.je.OperationStatus.NOTFOUND;
 import static com.sleepycat.je.OperationStatus.SUCCESS;
 
 import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import javax.annotation.Nullable;
 
 import org.geogit.api.ObjectId;
+import org.geogit.api.RevObject;
 import org.geogit.storage.AbstractObjectDatabase;
 import org.geogit.storage.ObjectDatabase;
 import org.geogit.storage.ObjectSerialisingFactory;
-import org.geotools.util.logging.Logging;
 
 import com.google.common.base.Preconditions;
+import com.google.common.base.Throwables;
 import com.google.inject.Inject;
 import com.sleepycat.collections.CurrentTransaction;
 import com.sleepycat.je.Cursor;
@@ -36,13 +37,12 @@ import com.sleepycat.je.Environment;
 import com.sleepycat.je.LockMode;
 import com.sleepycat.je.OperationStatus;
 import com.sleepycat.je.Transaction;
+import com.sleepycat.je.TransactionConfig;
 
 /**
  * @TODO: extract interface
  */
 public class JEObjectDatabase extends AbstractObjectDatabase implements ObjectDatabase {
-
-    private static final Logger LOGGER = Logging.getLogger(JEObjectDatabase.class);
 
     private EnvironmentBuilder envProvider;
 
@@ -201,22 +201,47 @@ public class JEObjectDatabase extends AbstractObjectDatabase implements ObjectDa
     }
 
     @Override
+    public void putAll(final Iterator<? extends RevObject> objects) {
+        TransactionConfig config = TransactionConfig.DEFAULT;
+        Transaction transaction = txn.beginTransaction(config);
+        try {
+            ByteArrayOutputStream rawOut = new ByteArrayOutputStream();
+            while (objects.hasNext()) {
+                RevObject object = objects.next();
+
+                rawOut.reset();
+
+                writeObject(object, rawOut);
+                final byte[] rawData = rawOut.toByteArray();
+                final ObjectId id = object.getId();
+                putInternal(id, rawData, transaction);
+            }
+            txn.commitTransaction();
+        } catch (Exception e) {
+            txn.abortTransaction();
+            throw Throwables.propagate(e);
+        }
+    }
+
+    @Override
     protected boolean putInternal(final ObjectId id, final byte[] rawData) {
+        OperationStatus status;
+        Transaction transaction = txn == null ? null : txn.getTransaction();
+        status = putInternal(id, rawData, transaction);
+        final boolean didntExist = SUCCESS.equals(status);
+
+        return didntExist;
+    }
+
+    private OperationStatus putInternal(final ObjectId id, final byte[] rawData,
+            Transaction transaction) {
+        OperationStatus status;
         final byte[] rawKey = id.getRawValue();
         DatabaseEntry key = new DatabaseEntry(rawKey);
         DatabaseEntry data = new DatabaseEntry(rawData);
 
-        OperationStatus status;
-        Transaction transaction = txn == null ? null : txn.getTransaction();
         status = objectDb.putNoOverwrite(transaction, key, data);
-        final boolean didntExist = SUCCESS.equals(status);
-
-        if (LOGGER.isLoggable(Level.FINER)) {
-            if (didntExist) {
-                LOGGER.finer("Key already exists in blob store, blob reused for id: " + id);
-            }
-        }
-        return didntExist;
+        return status;
     }
 
     @Override

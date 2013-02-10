@@ -5,6 +5,7 @@
 package org.geogit.storage;
 
 import java.io.InputStream;
+import java.util.Iterator;
 import java.util.List;
 
 import javax.annotation.Nullable;
@@ -149,5 +150,10 @@ public interface ObjectDatabase {
      * @return
      */
     public boolean put(ObjectId objectId, InputStream raw);
+
+    /**
+     * @param iterator
+     */
+    public void putAll(Iterator<? extends RevObject> objects);
 
 }

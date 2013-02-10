@@ -7,6 +7,8 @@ package org.geogit.storage;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
+import java.util.Iterator;
 import java.util.List;
 
 import javax.annotation.Nullable;
@@ -34,7 +36,7 @@ import com.ning.compress.lzf.LZFOutputStream;
  */
 public abstract class AbstractObjectDatabase implements ObjectDatabase {
 
-    private ObjectSerialisingFactory serializationFactory;
+    protected ObjectSerialisingFactory serializationFactory;
 
     public AbstractObjectDatabase(final ObjectSerialisingFactory serializationFactory) {
         Preconditions.checkNotNull(serializationFactory);
@@ -216,11 +218,38 @@ public abstract class AbstractObjectDatabase implements ObjectDatabase {
         Preconditions.checkNotNull(object);
         Preconditions.checkArgument(!object.getId().isNull(), "ObjectId is NULL %s", object);
 
+        ByteArrayOutputStream rawOut = new ByteArrayOutputStream();
+        writeObject(object, rawOut);
         final ObjectId id = object.getId();
-        ObjectWriter<T> writer = serializationFactory.createObjectWriter(object.getType());
+        final byte[] rawData = rawOut.toByteArray();
+        final boolean inserted = putInternal(id, rawData);
+        return inserted;
+    }
+
+    /**
+     * This default implementation calls {@link #putInternal(ObjectId, byte[])} for each object;
+     * subclasses may override if appropriate.
+     */
+    @Override
+    public void putAll(Iterator<? extends RevObject> objects) {
 
         ByteArrayOutputStream rawOut = new ByteArrayOutputStream();
-        LZFOutputStream cOut = new LZFOutputStream(rawOut);
+        while (objects.hasNext()) {
+            RevObject object = objects.next();
+            rawOut.reset();
+
+            writeObject(object, rawOut);
+            final byte[] rawData = rawOut.toByteArray();
+
+            final ObjectId id = object.getId();
+            putInternal(id, rawData);
+        }
+    }
+
+    protected void writeObject(RevObject object, OutputStream target) {
+
+        ObjectWriter<RevObject> writer = serializationFactory.createObjectWriter(object.getType());
+        LZFOutputStream cOut = new LZFOutputStream(target);
         try {
             writer.write(object, cOut);
         } catch (IOException e) {
@@ -233,9 +262,6 @@ public abstract class AbstractObjectDatabase implements ObjectDatabase {
                 throw Throwables.propagate(e);
             }
         }
-        final byte[] rawData = rawOut.toByteArray();
-        final boolean inserted = putInternal(id, rawData);
-        return inserted;
     }
 
     /**

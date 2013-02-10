@@ -7,6 +7,7 @@ package org.geogit.storage.bdbje;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
@@ -195,6 +196,11 @@ public class JEStagingDatabase implements ObjectDatabase, StagingDatabase {
     }
 
     @Override
+    public void putAll(Iterator<? extends RevObject> objects) {
+        stagingDb.putAll(objects);
+    }
+
+    @Override
     public boolean put(ObjectId objectId, InputStream raw) {
         return stagingDb.put(objectId, raw);
     }
@@ -223,5 +229,4 @@ public class JEStagingDatabase implements ObjectDatabase, StagingDatabase {
     public RevTag getTag(ObjectId id) {
         return get(id, RevTag.class);
     }
-
 }
