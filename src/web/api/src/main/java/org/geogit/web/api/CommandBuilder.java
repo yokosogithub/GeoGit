@@ -9,6 +9,7 @@ import org.geogit.web.api.commands.Log;
 import org.geogit.web.api.commands.LsTree;
 import org.geogit.web.api.commands.Status;
 import org.geogit.web.api.commands.UpdateRefWeb;
+import org.geogit.web.api.commands.RefParseWeb;
 
 /**
  *
@@ -30,6 +31,8 @@ public class CommandBuilder {
             command = buildUpdateRef(options);
         } else if ("diff".equalsIgnoreCase(commandName)) {
             command = buildDiff(options);
+        } else if ("refparse".equalsIgnoreCase(commandName)) {
+            command = buildRefParse(options);
         } else {
             throw new CommandSpecException("'" + commandName + "' is not a geogit command");
         }
@@ -97,6 +100,12 @@ public class CommandBuilder {
         command.setOldRefSpec(options.getFirstValue("oldRefSpec", null));
         command.setNewRefSpec(options.getFirstValue("newRefSpec", null));
         command.setPathFilter(options.getFirstValue("pathFilter", null));
+        return command;
+    }
+    
+    static RefParseWeb buildRefParse(ParameterSet options) {
+        RefParseWeb command = new RefParseWeb();
+        command.setName(options.getFirstValue("name", null));
         return command;
     }
 }
