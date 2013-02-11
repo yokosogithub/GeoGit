@@ -271,6 +271,10 @@ public class HttpRemoteRepo implements IRemoteRepo {
                 Optional<RevCommit> ancestor = localRepository.command(FindCommonAncestor.class)
                         .setLeft(leftCommit).setRight(rightCommit).call();
                 if (!ancestor.isPresent()) {
+                    // There is no common ancestor, a push will overwrite history
+                    return;
+                } else if (ancestor.get().getId().equals(ref.getObjectId())) {
+                    // My last commit is the common ancestor, the remote already has my data.
                     return;
                 }
             } else {
@@ -315,6 +319,10 @@ public class HttpRemoteRepo implements IRemoteRepo {
                 Optional<RevCommit> ancestor = localRepository.command(FindCommonAncestor.class)
                         .setLeft(leftCommit).setRight(rightCommit).call();
                 if (!ancestor.isPresent()) {
+                    // There is no common ancestor, a push will overwrite history
+                    return;
+                } else if (ancestor.get().getId().equals(ref.getObjectId())) {
+                    // My last commit is the common ancestor, the remote already has my data.
                     return;
                 }
             } else {
