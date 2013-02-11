@@ -115,17 +115,18 @@ public class RevTreeBuilder {
     }
 
     /**
-     * @param bucket
-     * @param node
-     * @return
      */
-    private @Nullable
-    Node putInternal(Node node) {
+    private void putInternal(Node node) {
+
+        deletes.remove(node.getName());
+
         switch (node.getType()) {
         case FEATURE:
-            return featureChanges.put(node.getName(), node);
+            featureChanges.put(node.getName(), node);
+            break;
         case TREE:
-            return treeChanges.put(node.getName(), node);
+            treeChanges.put(node.getName(), node);
+            break;
         default:
             throw new IllegalArgumentException(
                     "Only tree or feature nodes can be added to a tree: " + node + " "
@@ -199,10 +200,11 @@ public class RevTreeBuilder {
             unnamedTree = normalizeToChildren();
         } else {
             unnamedTree = normalizeToBuckets();
-            if (unnamedTree.isEmpty()) {
-                return RevTree.EMPTY;
-            }
+            checkState(featureChanges.isEmpty());
+            checkState(treeChanges.isEmpty());
+
             if (unnamedTree.size() <= NORMALIZED_SIZE_LIMIT) {
+                this.bucketTreesByBucket.clear();
                 unnamedTree = moveBucketsToChildren(unnamedTree);
                 if (this.depth == 0) {
                     pendingWritesCache.clear();
@@ -222,12 +224,14 @@ public class RevTreeBuilder {
     }
 
     /**
-     * @param unnamedTree
+     * @param tree
      * @return
      */
-    private RevTree moveBucketsToChildren(RevTree unnamedTree) {
-        checkState(featureChanges.isEmpty());
-        for (Bucket bucket : this.bucketTreesByBucket.values()) {
+    private RevTree moveBucketsToChildren(RevTree tree) {
+        checkState(tree.buckets().isPresent());
+        checkState(this.bucketTreesByBucket.isEmpty());
+
+        for (Bucket bucket : tree.buckets().get().values()) {
             ObjectId id = bucket.id();
             RevTree bucketTree = this.loadTree(id);
             if (bucketTree.buckets().isPresent()) {
@@ -241,8 +245,6 @@ public class RevTreeBuilder {
             }
         }
 
-        this.bucketTreesByBucket.clear();
-
         return normalizeToChildren();
     }
 
@@ -251,7 +253,7 @@ public class RevTreeBuilder {
      */
     private RevTree normalizeToChildren() {
         Preconditions.checkState(this.bucketTreesByBucket.isEmpty());
-        // remove deletes
+        // remove delete requests, we're building a leaf tree out of our nodes
         deletes.clear();
 
         long size = featureChanges.size();
@@ -276,64 +278,40 @@ public class RevTreeBuilder {
      */
     private RevTree normalizeToBuckets() {
         // update all inner trees
-        long accSize = 0;
-        int accChildTreeCount = 0;
+        final ImmutableSet<Integer> changedBucketIndexes;
         try {
-            Multimap<Integer, Node> changesByBucket = ArrayListMultimap.create();
-            for (Iterator<Node> it = featureChanges.values().iterator(); it.hasNext();) {
-                Node change = it.next();
-                it.remove();
-                Integer bucketIndex = computeBucket(change.getName());
-                changesByBucket.put(bucketIndex, change);
-            }
-            Preconditions.checkState(featureChanges.isEmpty());
-            for (Iterator<Node> it = treeChanges.values().iterator(); it.hasNext();) {
-                Node change = it.next();
-                it.remove();
-                Integer bucketIndex = computeBucket(change.getName());
-                changesByBucket.put(bucketIndex, change);
-            }
+            Multimap<Integer, Node> changesByBucket = getChangesByBucket();
             Preconditions.checkState(featureChanges.isEmpty());
             Preconditions.checkState(treeChanges.isEmpty());
+            Preconditions.checkState(deletes.isEmpty());
 
-            final Set<Integer> buckets = ImmutableSet.copyOf(Sets.union(changesByBucket.keySet(),
-                    bucketTreesByBucket.keySet()));
+            changedBucketIndexes = ImmutableSet.copyOf(changesByBucket.keySet());
 
-            for (Integer bucketIndex : buckets) {
+            for (Integer bucketIndex : changedBucketIndexes) {
                 final RevTreeBuilder bucketTreeBuilder;
                 {
                     final Collection<Node> bucketEntries = changesByBucket.removeAll(bucketIndex);
-                    final Bucket bucket = bucketTreesByBucket.get(bucketIndex);
-                    final int childDepth = this.depth + 1;
-                    if (bucket == null) {
-                        bucketTreeBuilder = new RevTreeBuilder(this.db, null, childDepth,
-                                this.pendingWritesCache);
-                    } else {
-                        RevTree currentBucketTree = loadTree(bucket.id());
-                        bucketTreeBuilder = new RevTreeBuilder(this.db, currentBucketTree,
-                                childDepth, this.pendingWritesCache);
-                    }
-                    for (String deleted : deletes) {
-                        Integer bucketOfDelete = computeBucket(deleted);
-                        if (bucketIndex.equals(bucketOfDelete)) {
-                            bucketTreeBuilder.remove(deleted);
-                        }
-                    }
+                    bucketTreeBuilder = getOrCreateBucketTreeBuilder(bucketIndex);
+
                     for (Node node : bucketEntries) {
-                        bucketTreeBuilder.put(node);
+                        if (node.getObjectId().isNull()) {
+                            bucketTreeBuilder.remove(node.getName());
+                        } else {
+                            bucketTreeBuilder.put(node);
+                        }
                     }
                 }
                 final RevTree bucketTree = bucketTreeBuilder.build();
-                accSize += bucketTree.size();
-                accChildTreeCount += bucketTree.numTrees();
                 if (bucketTree.isEmpty()) {
                     bucketTreesByBucket.remove(bucketIndex);
                 } else {
-                    // db.put(bucketTree);
-                    this.pendingWritesCache.put(bucketTree.getId(), bucketTree);
-                    Envelope bucketBounds = SpatialOps.boundsOf(bucketTree);
-                    Bucket bucket = Bucket.create(bucketTree.getId(), bucketBounds);
-                    bucketTreesByBucket.put(bucketIndex, bucket);
+                    final Bucket currBucket = this.bucketTreesByBucket.get(bucketIndex);
+                    if (currBucket == null || !currBucket.id().equals(bucketTree.getId())) {
+                        this.pendingWritesCache.put(bucketTree.getId(), bucketTree);
+                        Envelope bucketBounds = SpatialOps.boundsOf(bucketTree);
+                        Bucket bucket = Bucket.create(bucketTree.getId(), bucketBounds);
+                        bucketTreesByBucket.put(bucketIndex, bucket);
+                    }
                 }
             }
         } catch (RuntimeException e) {
@@ -341,8 +319,60 @@ public class RevTreeBuilder {
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
+
+        long accSize = 0;
+        int accChildTreeCount = 0;
+        for (Bucket bucket : this.bucketTreesByBucket.values()) {
+            RevTree bucketTree = loadTree(bucket.id());
+            accSize += bucketTree.size();
+            accChildTreeCount += bucketTree.numTrees();
+        }
         return RevTreeImpl.createNodeTree(ObjectId.NULL, accSize, accChildTreeCount,
                 this.bucketTreesByBucket);
+    }
+
+    private Multimap<Integer, Node> getChangesByBucket() {
+        Multimap<Integer, Node> changesByBucket = ArrayListMultimap.create();
+        if (!featureChanges.isEmpty()) {
+            for (Node change : featureChanges.values()) {
+                Integer bucketIndex = computeBucket(change.getName());
+                changesByBucket.put(bucketIndex, change);
+            }
+            featureChanges.clear();
+        }
+
+        if (!treeChanges.isEmpty()) {
+            for (Node change : treeChanges.values()) {
+                Integer bucketIndex = computeBucket(change.getName());
+                changesByBucket.put(bucketIndex, change);
+            }
+            treeChanges.clear();
+        }
+
+        if (!deletes.isEmpty()) {
+            for (String delete : deletes) {
+                Integer bucketIndex = computeBucket(delete);
+                Node node = Node.create(delete, ObjectId.NULL, ObjectId.NULL, TYPE.FEATURE);
+                changesByBucket.put(bucketIndex, node);
+            }
+            deletes.clear();
+        }
+        return changesByBucket;
+    }
+
+    private RevTreeBuilder getOrCreateBucketTreeBuilder(Integer bucketIndex) {
+        final RevTreeBuilder bucketTreeBuilder;
+        final Bucket bucket = bucketTreesByBucket.get(bucketIndex);
+        final int childDepth = this.depth + 1;
+        if (bucket == null) {
+            bucketTreeBuilder = new RevTreeBuilder(this.db, null, childDepth,
+                    this.pendingWritesCache);
+        } else {
+            RevTree currentBucketTree = loadTree(bucket.id());
+            bucketTreeBuilder = new RevTreeBuilder(this.db, currentBucketTree, childDepth,
+                    this.pendingWritesCache);
+        }
+        return bucketTreeBuilder;
     }
 
     protected final Integer computeBucket(final String path) {
@@ -390,11 +420,11 @@ public class RevTreeBuilder {
      */
     public RevTreeBuilder remove(final String childName) {
         Preconditions.checkNotNull(childName, "key can't be null");
-        // uses a Node with ObjectId.NULL id signaling the removal
-        // of the entry. normalize() is gonna take care of removing it from the subtree
-        // subsequently
-        featureChanges.remove(childName);
-        treeChanges.remove(childName);
+
+        if (null == featureChanges.remove(childName)) {
+            treeChanges.remove(childName);
+        }
+
         deletes.add(childName);
         return this;
     }
