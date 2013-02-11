@@ -14,20 +14,20 @@ import com.google.common.base.Optional;
 public class RefParseWeb implements WebAPICommand {
 
     private String refSpec;
-      
+
     public void setName(String name) {
         this.refSpec = name;
     }
-    
+
     @Override
     public void run(CommandContext context) {
         if (refSpec == null) {
             throw new CommandSpecException("No name was given.");
         }
-        
+
         final GeoGIT geogit = context.getGeoGIT();
         Optional<Ref> ref;
-        
+
         try {
             ref = geogit.command(RefParse.class).setName(refSpec).call();
         } catch (Exception e) {
@@ -35,7 +35,7 @@ public class RefParseWeb implements WebAPICommand {
                     + e.getMessage()));
             return;
         }
-        
+
         if (ref.isPresent()) {
             final Ref newRef = ref.get();
             context.setResponseContent(new CommandResponse() {
@@ -43,11 +43,21 @@ public class RefParseWeb implements WebAPICommand {
                 @Override
                 public void write(ResponseWriter out) throws Exception {
                     out.start();
-                    out.writeUpdateRefResponse(newRef);
+                    out.writeRefParseResponse(newRef);
+                    out.finish();
+                }
+            });
+        } else {
+            context.setResponseContent(new CommandResponse() {
+
+                @Override
+                public void write(ResponseWriter out) throws Exception {
+                    out.start();
+                    out.writeEmptyRefResponse();
                     out.finish();
                 }
             });
         }
     }
-    
+
 }

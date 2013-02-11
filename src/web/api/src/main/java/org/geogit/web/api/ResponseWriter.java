@@ -202,25 +202,28 @@ public class ResponseWriter {
 
     }
 
-    public void writeUpdateRefResponse(Ref ref)
-            throws XMLStreamException {
+    public void writeUpdateRefResponse(Ref ref) throws XMLStreamException {
         out.writeStartElement("ChangedRef");
         writeElement("name", ref.getName());
         writeElement("objectId", ref.getObjectId().toString());
-        if(ref instanceof SymRef) {
-            writeElement("target", ((SymRef)ref).getTarget());
+        if (ref instanceof SymRef) {
+            writeElement("target", ((SymRef) ref).getTarget());
         }
         out.writeEndElement();
     }
-    
-    public void writeRefParseResponse(Ref ref)
-            throws XMLStreamException {
+
+    public void writeRefParseResponse(Ref ref) throws XMLStreamException {
         out.writeStartElement("Ref");
         writeElement("name", ref.getName());
         writeElement("objectId", ref.getObjectId().toString());
-        if(ref instanceof SymRef) {
-            writeElement("target", ((SymRef)ref).getTarget());
+        if (ref instanceof SymRef) {
+            writeElement("target", ((SymRef) ref).getTarget());
         }
+        out.writeEndElement();
+    }
+
+    public void writeEmptyRefResponse() throws XMLStreamException {
+        out.writeStartElement("RefNotFound");
         out.writeEndElement();
     }
 }

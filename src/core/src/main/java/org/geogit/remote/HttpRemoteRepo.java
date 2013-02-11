@@ -28,6 +28,7 @@ import org.geogit.api.RevObject;
 import org.geogit.api.RevObject.TYPE;
 import org.geogit.api.RevTree;
 import org.geogit.api.SymRef;
+import org.geogit.api.plumbing.FindCommonAncestor;
 import org.geogit.api.plumbing.RevObjectParse;
 import org.geogit.repository.Repository;
 
@@ -260,6 +261,22 @@ public class HttpRemoteRepo implements IRemoteRepo {
      */
     @Override
     public void pushNewData(Repository localRepository, Ref ref) {
+        Optional<Ref> remoteRef = getRemoteRef(ref.getName());
+        if (remoteRef.isPresent()) {
+            if (remoteRef.get().getObjectId().equals(ref.getObjectId())) {
+                return;
+            } else if (localRepository.blobExists(remoteRef.get().getObjectId())) {
+                RevCommit leftCommit = localRepository.getCommit(remoteRef.get().getObjectId());
+                RevCommit rightCommit = localRepository.getCommit(ref.getObjectId());
+                Optional<RevCommit> ancestor = localRepository.command(FindCommonAncestor.class)
+                        .setLeft(leftCommit).setRight(rightCommit).call();
+                if (!ancestor.isPresent()) {
+                    return;
+                }
+            } else {
+                return;
+            }
+        }
         beginPush();
         commitQueue.clear();
         commitQueue.add(ref.getObjectId());
@@ -288,6 +305,22 @@ public class HttpRemoteRepo implements IRemoteRepo {
      */
     @Override
     public void pushNewData(Repository localRepository, Ref ref, String refspec) {
+        Optional<Ref> remoteRef = getRemoteRef(refspec);
+        if (remoteRef.isPresent()) {
+            if (remoteRef.get().getObjectId().equals(ref.getObjectId())) {
+                return;
+            } else if (localRepository.blobExists(remoteRef.get().getObjectId())) {
+                RevCommit leftCommit = localRepository.getCommit(remoteRef.get().getObjectId());
+                RevCommit rightCommit = localRepository.getCommit(ref.getObjectId());
+                Optional<RevCommit> ancestor = localRepository.command(FindCommonAncestor.class)
+                        .setLeft(leftCommit).setRight(rightCommit).call();
+                if (!ancestor.isPresent()) {
+                    return;
+                }
+            } else {
+                return;
+            }
+        }
         beginPush();
         commitQueue.clear();
         commitQueue.add(ref.getObjectId());
@@ -359,6 +392,61 @@ public class HttpRemoteRepo implements IRemoteRepo {
         } finally {
             consumeErrStreamAndCloseConnection(connection);
         }
+    }
+
+    private Optional<Ref> getRemoteRef(String refspec) {
+        HttpURLConnection connection = null;
+        Optional<Ref> remoteRef = Optional.absent();
+        try {
+            String expanded = repositoryURL.toString() + "/refparse?name=" + refspec;
+
+            connection = (HttpURLConnection) new URL(expanded).openConnection();
+            connection.setRequestMethod("GET");
+
+            connection.setUseCaches(false);
+            connection.setDoOutput(true);
+
+            InputStream inputStream = connection.getInputStream();
+
+            XMLStreamReader reader = XMLInputFactory.newFactory()
+                    .createXMLStreamReader(inputStream);
+
+            try {
+                readToElementStart(reader, "Ref");
+                if (reader.hasNext()) {
+
+                    readToElementStart(reader, "name");
+                    final String refName = reader.getElementText();
+
+                    readToElementStart(reader, "objectId");
+                    final String objectId = reader.getElementText();
+
+                    readToElementStart(reader, "target");
+                    String target = null;
+                    if (reader.hasNext()) {
+                        target = reader.getElementText();
+                    }
+                    reader.close();
+
+                    if (target != null) {
+                        remoteRef = Optional.of((Ref) new SymRef(refName, new Ref(target, ObjectId
+                                .valueOf(objectId), RevObject.TYPE.COMMIT)));
+                    } else {
+                        remoteRef = Optional.of(new Ref(refName, ObjectId.valueOf(objectId),
+                                RevObject.TYPE.COMMIT));
+                    }
+                }
+
+            } finally {
+                reader.close();
+                inputStream.close();
+            }
+        } catch (Exception e) {
+            Throwables.propagate(e);
+        } finally {
+            consumeErrStreamAndCloseConnection(connection);
+        }
+        return remoteRef;
     }
 
     private Ref updateRemoteRef(String refspec, ObjectId newValue, boolean delete) {
