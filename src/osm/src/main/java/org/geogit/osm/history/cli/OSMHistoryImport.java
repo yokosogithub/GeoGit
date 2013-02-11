@@ -15,12 +15,14 @@ import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 
+import javax.annotation.Nullable;
 import javax.management.relation.Relation;
 
 import jline.console.ConsoleReader;
@@ -176,6 +178,7 @@ public class OSMHistoryImport extends AbstractCommand implements CLICommand {
 
             Iterator<Change> changes = changeset.getChanges().get();
             console.print("applying...");
+            console.flush();
             insertAndAddChanges(cli, changes);
             // listener.progress(100f);
             // listener.complete();
@@ -387,7 +390,7 @@ public class OSMHistoryImport extends AbstractCommand implements CLICommand {
 
     private synchronized static SimpleFeatureType nodeType() {
         if (NodeType == null) {
-            String typeSpec = "visible:Boolean,version:Integer,timestamp:java.lang.Long,location:Point:srid=4326";
+            String typeSpec = "visible:Boolean,version:Integer,timestamp:java.lang.Long,tags:String,location:Point:srid=4326";
             try {
                 SimpleFeatureType type = DataUtilities.createType(NAMESPACE, NODE_TYPE_NAME,
                         typeSpec);
@@ -403,7 +406,7 @@ public class OSMHistoryImport extends AbstractCommand implements CLICommand {
 
     private synchronized static SimpleFeatureType wayType() {
         if (WayType == null) {
-            String typeSpec = "visible:Boolean,version:Integer,timestamp:java.lang.Long,way:LineString:srid=4326";
+            String typeSpec = "visible:Boolean,version:Integer,timestamp:java.lang.Long,tags:String,way:LineString:srid=4326";
             try {
                 SimpleFeatureType type = DataUtilities.createType(NAMESPACE, NODE_TYPE_NAME,
                         typeSpec);
@@ -431,6 +434,8 @@ public class OSMHistoryImport extends AbstractCommand implements CLICommand {
         builder.set("version", Integer.valueOf(feature.getVersion()));
         builder.set("timestamp", Long.valueOf(feature.getTimestamp()));
 
+        String tags = buildTagsString(feature.getTags());
+        builder.set("tags", tags);
         if (feature instanceof Node) {
             builder.set("location", geom);
         } else if (feature instanceof Way) {
@@ -442,5 +447,30 @@ public class OSMHistoryImport extends AbstractCommand implements CLICommand {
         String fid = String.valueOf(feature.getId());
         SimpleFeature simpleFeature = builder.buildFeature(fid);
         return simpleFeature;
+    }
+
+    /**
+     * @param tags
+     * @return
+     */
+    @Nullable
+    private static String buildTagsString(Map<String, String> tags) {
+        if (tags.isEmpty()) {
+            return null;
+        }
+        StringBuilder sb = new StringBuilder();
+        for (Iterator<Map.Entry<String, String>> it = tags.entrySet().iterator(); it.hasNext();) {
+            Entry<String, String> e = it.next();
+            String key = e.getKey();
+            if (key == null || key.isEmpty()) {
+                continue;
+            }
+            String value = e.getValue();
+            sb.append(key).append(':').append(value);
+            if (it.hasNext()) {
+                sb.append(';');
+            }
+        }
+        return sb.toString();
     }
 }
