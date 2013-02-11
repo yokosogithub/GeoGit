@@ -264,6 +264,7 @@ public class HttpRemoteRepo implements IRemoteRepo {
         Optional<Ref> remoteRef = getRemoteRef(ref.getName());
         if (remoteRef.isPresent()) {
             if (remoteRef.get().getObjectId().equals(ref.getObjectId())) {
+                // The branches are equal, no need to push.
                 return;
             } else if (localRepository.blobExists(remoteRef.get().getObjectId())) {
                 RevCommit leftCommit = localRepository.getCommit(remoteRef.get().getObjectId());
@@ -276,8 +277,13 @@ public class HttpRemoteRepo implements IRemoteRepo {
                 } else if (ancestor.get().getId().equals(ref.getObjectId())) {
                     // My last commit is the common ancestor, the remote already has my data.
                     return;
+                } else if (!ancestor.get().getId().equals(remoteRef.get().getObjectId())) {
+                    // The remote branch's latest commit is not my ancestor, a push will cause a
+                    // loss of history.
+                    return;
                 }
             } else {
+                // The remote has data that I do not, a push will cause this data to be lost.
                 return;
             }
         }
@@ -312,6 +318,7 @@ public class HttpRemoteRepo implements IRemoteRepo {
         Optional<Ref> remoteRef = getRemoteRef(refspec);
         if (remoteRef.isPresent()) {
             if (remoteRef.get().getObjectId().equals(ref.getObjectId())) {
+                // The branches are equal, no need to push.
                 return;
             } else if (localRepository.blobExists(remoteRef.get().getObjectId())) {
                 RevCommit leftCommit = localRepository.getCommit(remoteRef.get().getObjectId());
@@ -324,8 +331,13 @@ public class HttpRemoteRepo implements IRemoteRepo {
                 } else if (ancestor.get().getId().equals(ref.getObjectId())) {
                     // My last commit is the common ancestor, the remote already has my data.
                     return;
+                } else if (!ancestor.get().getId().equals(remoteRef.get().getObjectId())) {
+                    // The remote branch's latest commit is not my ancestor, a push will cause a
+                    // loss of history.
+                    return;
                 }
             } else {
+                // The remote has data that I do not, a push will cause this data to be lost.
                 return;
             }
         }
