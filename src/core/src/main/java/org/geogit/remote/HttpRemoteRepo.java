@@ -21,6 +21,7 @@ import javax.xml.stream.XMLStreamReader;
 
 import org.geogit.api.Bucket;
 import org.geogit.api.Node;
+import org.geogit.api.NodeRef;
 import org.geogit.api.ObjectId;
 import org.geogit.api.Ref;
 import org.geogit.api.RevCommit;
@@ -28,8 +29,10 @@ import org.geogit.api.RevObject;
 import org.geogit.api.RevObject.TYPE;
 import org.geogit.api.RevTree;
 import org.geogit.api.SymRef;
+import org.geogit.api.plumbing.DiffTree;
 import org.geogit.api.plumbing.FindCommonAncestor;
 import org.geogit.api.plumbing.RevObjectParse;
+import org.geogit.api.plumbing.diff.DiffEntry;
 import org.geogit.repository.Repository;
 
 import com.google.common.base.Optional;
@@ -291,7 +294,25 @@ public class HttpRemoteRepo implements IRemoteRepo {
         commitQueue.clear();
         commitQueue.add(ref.getObjectId());
         while (!commitQueue.isEmpty()) {
-            walkCommit(commitQueue.remove(), localRepository, true);
+            ObjectId commitId = commitQueue.remove();
+            walkCommit(commitId, localRepository, true);
+            RevCommit oldCommit = localRepository.getCommit(commitId);
+            ObjectId parentId = oldCommit.getParentIds().get(0);
+            RevCommit parentCommit = localRepository.getCommit(parentId);
+            Iterator<DiffEntry> diff = localRepository.command(DiffTree.class)
+                    .setOldTree(parentCommit.getId()).setNewTree(oldCommit.getId()).call();
+            // Send the features that changed.
+            while (diff.hasNext()) {
+                DiffEntry entry = diff.next();
+                if (entry.getNewObject() != null) {
+                    NodeRef nodeRef = entry.getNewObject();
+                    moveObject(nodeRef.getNode().getObjectId(), localRepository, true);
+                    ObjectId metadataId = nodeRef.getMetadataId();
+                    if (!metadataId.isNull()) {
+                        moveObject(metadataId, localRepository, true);
+                    }
+                }
+            }
         }
         endPush(ref.getName(), ref.getObjectId().toString());
         /*
@@ -345,7 +366,25 @@ public class HttpRemoteRepo implements IRemoteRepo {
         commitQueue.clear();
         commitQueue.add(ref.getObjectId());
         while (!commitQueue.isEmpty()) {
-            walkCommit(commitQueue.remove(), localRepository, true);
+            ObjectId commitId = commitQueue.remove();
+            walkCommit(commitId, localRepository, true);
+            RevCommit oldCommit = localRepository.getCommit(commitId);
+            ObjectId parentId = oldCommit.getParentIds().get(0);
+            RevCommit parentCommit = localRepository.getCommit(parentId);
+            Iterator<DiffEntry> diff = localRepository.command(DiffTree.class)
+                    .setOldTree(parentCommit.getId()).setNewTree(oldCommit.getId()).call();
+            // Send the features that changed.
+            while (diff.hasNext()) {
+                DiffEntry entry = diff.next();
+                if (entry.getNewObject() != null) {
+                    NodeRef nodeRef = entry.getNewObject();
+                    moveObject(nodeRef.getNode().getObjectId(), localRepository, true);
+                    ObjectId metadataId = nodeRef.getMetadataId();
+                    if (!metadataId.isNull()) {
+                        moveObject(metadataId, localRepository, true);
+                    }
+                }
+            }
         }
         endPush(refspec, ref.getObjectId().toString());
         /*
@@ -585,13 +624,15 @@ public class HttpRemoteRepo implements IRemoteRepo {
                 walkTree(bucketId, localRepo, sendObject);
             }
         } else {
-            // get new objects
-            for (Iterator<Node> children = tree.children(); children.hasNext();) {
-                Node ref = children.next();
-                moveObject(ref.getObjectId(), localRepo, sendObject);
-                ObjectId metadataId = ref.getMetadataId().or(ObjectId.NULL);
-                if (!metadataId.isNull()) {
-                    moveObject(metadataId, localRepo, sendObject);
+            if (!sendObject) {
+                // get new objects
+                for (Iterator<Node> children = tree.children(); children.hasNext();) {
+                    Node ref = children.next();
+                    moveObject(ref.getObjectId(), localRepo, sendObject);
+                    ObjectId metadataId = ref.getMetadataId().or(ObjectId.NULL);
+                    if (!metadataId.isNull()) {
+                        moveObject(metadataId, localRepo, sendObject);
+                    }
                 }
             }
         }
