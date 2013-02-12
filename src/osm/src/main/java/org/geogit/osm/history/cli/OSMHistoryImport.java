@@ -33,13 +33,17 @@ import jline.console.ConsoleReader;
 import org.geogit.api.FeatureBuilder;
 import org.geogit.api.GeoGIT;
 import org.geogit.api.NodeRef;
+import org.geogit.api.ObjectId;
 import org.geogit.api.Ref;
 import org.geogit.api.RevFeature;
 import org.geogit.api.RevFeatureType;
+import org.geogit.api.RevTree;
 import org.geogit.api.SymRef;
 import org.geogit.api.plumbing.FindTreeChild;
 import org.geogit.api.plumbing.RefParse;
 import org.geogit.api.plumbing.ResolveGeogitDir;
+import org.geogit.api.plumbing.ResolveTreeish;
+import org.geogit.api.plumbing.RevObjectParse;
 import org.geogit.api.porcelain.AddOp;
 import org.geogit.api.porcelain.CommitOp;
 import org.geogit.cli.AbstractCommand;
@@ -395,6 +399,14 @@ public class OSMHistoryImport extends AbstractCommand implements CLICommand {
         FeatureBuilder featureBuilder = new FeatureBuilder(NODE_REV_TYPE);
         List<Coordinate> coordinates = Lists.newArrayList(nodes.size());
         FindTreeChild findTreeChild = geogit.command(FindTreeChild.class);
+        findTreeChild.setIndex(true);
+        ObjectId rootTreeId = geogit.command(ResolveTreeish.class).setTreeish(Ref.HEAD).call()
+                .get();
+        if (!rootTreeId.isNull()) {
+            RevTree headTree = geogit.command(RevObjectParse.class).setObjectId(rootTreeId)
+                    .call(RevTree.class).get();
+            findTreeChild.setParent(headTree);
+        }
         for (Long nodeId : nodes) {
             Coordinate coord = thisChangePointCache.get(nodeId);
             if (coord == null) {
