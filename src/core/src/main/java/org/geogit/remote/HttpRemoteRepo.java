@@ -624,10 +624,10 @@ public class HttpRemoteRepo implements IRemoteRepo {
                 walkTree(bucketId, localRepo, sendObject);
             }
         } else {
-            if (!sendObject) {
-                // get new objects
-                for (Iterator<Node> children = tree.children(); children.hasNext();) {
-                    Node ref = children.next();
+            // get new objects
+            for (Iterator<Node> children = tree.children(); children.hasNext();) {
+                Node ref = children.next();
+                if (ref.getType() == RevObject.TYPE.TREE || !sendObject) {
                     moveObject(ref.getObjectId(), localRepo, sendObject);
                     ObjectId metadataId = ref.getMetadataId().or(ObjectId.NULL);
                     if (!metadataId.isNull()) {
