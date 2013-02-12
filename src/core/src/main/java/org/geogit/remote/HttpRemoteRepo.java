@@ -295,21 +295,22 @@ public class HttpRemoteRepo implements IRemoteRepo {
         commitQueue.add(ref.getObjectId());
         while (!commitQueue.isEmpty()) {
             ObjectId commitId = commitQueue.remove();
-            walkCommit(commitId, localRepository, true);
-            RevCommit oldCommit = localRepository.getCommit(commitId);
-            ObjectId parentId = oldCommit.getParentIds().get(0);
-            RevCommit parentCommit = localRepository.getCommit(parentId);
-            Iterator<DiffEntry> diff = localRepository.command(DiffTree.class)
-                    .setOldTree(parentCommit.getId()).setNewTree(oldCommit.getId()).call();
-            // Send the features that changed.
-            while (diff.hasNext()) {
-                DiffEntry entry = diff.next();
-                if (entry.getNewObject() != null) {
-                    NodeRef nodeRef = entry.getNewObject();
-                    moveObject(nodeRef.getNode().getObjectId(), localRepository, true);
-                    ObjectId metadataId = nodeRef.getMetadataId();
-                    if (!metadataId.isNull()) {
-                        moveObject(metadataId, localRepository, true);
+            if (walkCommit(commitId, localRepository, true)) {
+                RevCommit oldCommit = localRepository.getCommit(commitId);
+                ObjectId parentId = oldCommit.getParentIds().get(0);
+                RevCommit parentCommit = localRepository.getCommit(parentId);
+                Iterator<DiffEntry> diff = localRepository.command(DiffTree.class)
+                        .setOldTree(parentCommit.getId()).setNewTree(oldCommit.getId()).call();
+                // Send the features that changed.
+                while (diff.hasNext()) {
+                    DiffEntry entry = diff.next();
+                    if (entry.getNewObject() != null) {
+                        NodeRef nodeRef = entry.getNewObject();
+                        moveObject(nodeRef.getNode().getObjectId(), localRepository, true);
+                        ObjectId metadataId = nodeRef.getMetadataId();
+                        if (!metadataId.isNull()) {
+                            moveObject(metadataId, localRepository, true);
+                        }
                     }
                 }
             }
@@ -367,21 +368,22 @@ public class HttpRemoteRepo implements IRemoteRepo {
         commitQueue.add(ref.getObjectId());
         while (!commitQueue.isEmpty()) {
             ObjectId commitId = commitQueue.remove();
-            walkCommit(commitId, localRepository, true);
-            RevCommit oldCommit = localRepository.getCommit(commitId);
-            ObjectId parentId = oldCommit.getParentIds().get(0);
-            RevCommit parentCommit = localRepository.getCommit(parentId);
-            Iterator<DiffEntry> diff = localRepository.command(DiffTree.class)
-                    .setOldTree(parentCommit.getId()).setNewTree(oldCommit.getId()).call();
-            // Send the features that changed.
-            while (diff.hasNext()) {
-                DiffEntry entry = diff.next();
-                if (entry.getNewObject() != null) {
-                    NodeRef nodeRef = entry.getNewObject();
-                    moveObject(nodeRef.getNode().getObjectId(), localRepository, true);
-                    ObjectId metadataId = nodeRef.getMetadataId();
-                    if (!metadataId.isNull()) {
-                        moveObject(metadataId, localRepository, true);
+            if (walkCommit(commitId, localRepository, true)) {
+                RevCommit oldCommit = localRepository.getCommit(commitId);
+                ObjectId parentId = oldCommit.getParentIds().get(0);
+                RevCommit parentCommit = localRepository.getCommit(parentId);
+                Iterator<DiffEntry> diff = localRepository.command(DiffTree.class)
+                        .setOldTree(parentCommit.getId()).setNewTree(oldCommit.getId()).call();
+                // Send the features that changed.
+                while (diff.hasNext()) {
+                    DiffEntry entry = diff.next();
+                    if (entry.getNewObject() != null) {
+                        NodeRef nodeRef = entry.getNewObject();
+                        moveObject(nodeRef.getNode().getObjectId(), localRepository, true);
+                        ObjectId metadataId = nodeRef.getMetadataId();
+                        if (!metadataId.isNull()) {
+                            moveObject(metadataId, localRepository, true);
+                        }
                     }
                 }
             }
@@ -575,14 +577,14 @@ public class HttpRemoteRepo implements IRemoteRepo {
         }
     }
 
-    private void walkCommit(ObjectId commitId, Repository localRepo, boolean sendObject) {
+    private boolean walkCommit(ObjectId commitId, Repository localRepo, boolean sendObject) {
         // See if we already have it
         if (sendObject) {
             if (networkObjectExists(commitId, localRepo)) {
-                return;
+                return false;
             }
         } else if (localRepo.getObjectDatabase().exists(commitId)) {
-            return;
+            return false;
         }
 
         Optional<RevObject> object = sendObject ? sendNetworkObject(commitId, localRepo)
@@ -595,6 +597,7 @@ public class HttpRemoteRepo implements IRemoteRepo {
                 commitQueue.add(parentCommit);
             }
         }
+        return true;
     }
 
     private void walkTree(ObjectId treeId, Repository localRepo, boolean sendObject) {
