@@ -394,6 +394,7 @@ public class OSMHistoryImport extends AbstractCommand implements CLICommand {
 
         FeatureBuilder featureBuilder = new FeatureBuilder(NODE_REV_TYPE);
         List<Coordinate> coordinates = Lists.newArrayList(nodes.size());
+        FindTreeChild findTreeChild = geogit.command(FindTreeChild.class);
         for (Long nodeId : nodes) {
             Coordinate coord = thisChangePointCache.get(nodeId);
             if (coord == null) {
@@ -401,8 +402,7 @@ public class OSMHistoryImport extends AbstractCommand implements CLICommand {
                 String path = NodeRef.appendChild(NODE_TYPE_NAME, fid);
                 Optional<org.geogit.api.Node> ref = index.findStaged(path);
                 if (!ref.isPresent()) {
-                    Optional<NodeRef> nodeRef = geogit.command(FindTreeChild.class)
-                            .setChildPath(path).call();
+                    Optional<NodeRef> nodeRef = findTreeChild.setChildPath(path).call();
                     if (nodeRef.isPresent()) {
                         ref = Optional.of(nodeRef.get().getNode());
                     } else {
