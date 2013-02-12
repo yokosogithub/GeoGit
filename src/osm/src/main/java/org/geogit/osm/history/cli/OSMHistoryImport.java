@@ -10,6 +10,9 @@ import static com.google.common.base.Preconditions.checkState;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.URISyntaxException;
+import java.net.URL;
+import java.nio.charset.Charset;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
@@ -30,9 +33,13 @@ import jline.console.ConsoleReader;
 import org.geogit.api.FeatureBuilder;
 import org.geogit.api.GeoGIT;
 import org.geogit.api.NodeRef;
+import org.geogit.api.Ref;
 import org.geogit.api.RevFeature;
 import org.geogit.api.RevFeatureType;
+import org.geogit.api.SymRef;
 import org.geogit.api.plumbing.FindTreeChild;
+import org.geogit.api.plumbing.RefParse;
+import org.geogit.api.plumbing.ResolveGeogitDir;
 import org.geogit.api.porcelain.AddOp;
 import org.geogit.api.porcelain.CommitOp;
 import org.geogit.cli.AbstractCommand;
@@ -61,11 +68,13 @@ import com.beust.jcommander.Parameters;
 import com.beust.jcommander.ParametersDelegate;
 import com.beust.jcommander.internal.Lists;
 import com.google.common.base.Optional;
+import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
+import com.google.common.io.Files;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.geom.Geometry;
@@ -103,7 +112,17 @@ public class OSMHistoryImport extends AbstractCommand implements CLICommand {
         ConsoleReader console = cli.getConsole();
 
         final String osmAPIUrl = resolveAPIURL();
-        console.println("Obtaining OSM changesets " + args.startIndex + " to " + args.endIndex
+
+        final long startIndex;
+        final long endIndex = args.endIndex;
+        if (args.resume) {
+            GeoGIT geogit = cli.getGeogit();
+            long lastChangeset = getCurrentBranchChangeset(geogit);
+            startIndex = 1 + lastChangeset;
+        } else {
+            startIndex = args.startIndex;
+        }
+        console.println("Obtaining OSM changesets " + startIndex + " to " + args.endIndex
                 + " from " + osmAPIUrl);
 
         final ThreadFactory threadFactory = new ThreadFactoryBuilder().setDaemon(true)
@@ -117,8 +136,8 @@ public class OSMHistoryImport extends AbstractCommand implements CLICommand {
         console.flush();
 
         HistoryDownloader downloader;
-        downloader = new HistoryDownloader(osmAPIUrl, targetDir, args.startIndex, args.endIndex,
-                executor, args.keepFiles);
+        downloader = new HistoryDownloader(osmAPIUrl, targetDir, startIndex, endIndex, executor,
+                args.keepFiles);
         try {
             importOsmHistory(cli, console, downloader);
         } finally {
@@ -197,7 +216,8 @@ public class OSMHistoryImport extends AbstractCommand implements CLICommand {
         console.print("Committing changeset " + changeset.getId() + "...");
         console.flush();
 
-        CommitOp command = cli.getGeogit().command(CommitOp.class);
+        GeoGIT geogit = cli.getGeogit();
+        CommitOp command = geogit.command(CommitOp.class);
         command.setAllowEmpty(true);
         String message = "";
         if (changeset.getComment().isPresent()) {
@@ -217,12 +237,59 @@ public class OSMHistoryImport extends AbstractCommand implements CLICommand {
         command.setProgressListener(listener);
         try {
             command.call();
+            updateBranchChangeset(geogit, changeset.getId());
             listener.complete();
             console.println("done.");
             console.flush();
         } catch (Exception e) {
             throw Throwables.propagate(e);
         }
+    }
+
+    /**
+     * @param geogit
+     * @param id
+     * @throws IOException
+     */
+    private void updateBranchChangeset(GeoGIT geogit, long id) throws IOException {
+        final File branchTrackingChangesetFile = getBranchTrackingFile(geogit);
+        Preconditions.checkState(branchTrackingChangesetFile.exists());
+        Files.write(String.valueOf(id), branchTrackingChangesetFile, Charset.forName("UTF-8"));
+    }
+
+    private long getCurrentBranchChangeset(GeoGIT geogit) throws IOException {
+        final File branchTrackingChangesetFile = getBranchTrackingFile(geogit);
+        Preconditions.checkState(branchTrackingChangesetFile.exists());
+        String line = Files.readFirstLine(branchTrackingChangesetFile, Charset.forName("UTF-8"));
+        if (line == null) {
+            return 0;
+        }
+        long changeset = Long.parseLong(line);
+        return changeset;
+    }
+
+    private File getBranchTrackingFile(GeoGIT geogit) throws IOException {
+        final SymRef head = getHead(geogit);
+        final String branch = head.getTarget();
+        final URL geogitDirUrl = geogit.command(ResolveGeogitDir.class).call();
+        File repoDir;
+        try {
+            repoDir = new File(geogitDirUrl.toURI());
+        } catch (URISyntaxException e) {
+            throw Throwables.propagate(e);
+        }
+        File branchTrackingFile = new File(new File(repoDir, "osm"), branch);
+        Files.createParentDirs(branchTrackingFile);
+        if (!branchTrackingFile.exists()) {
+            Files.touch(branchTrackingFile);
+        }
+        return branchTrackingFile;
+    }
+
+    private SymRef getHead(GeoGIT geogit) {
+        final Ref currentHead = geogit.command(RefParse.class).setName(Ref.HEAD).call().get();
+        Preconditions.checkState(currentHead instanceof SymRef);
+        return (SymRef) currentHead;
     }
 
     /**
