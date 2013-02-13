@@ -21,11 +21,14 @@ import org.geogit.api.RevObject;
 import org.geogit.api.RevObject.TYPE;
 import org.geogit.api.RevTree;
 import org.geogit.api.SymRef;
+import org.geogit.api.plumbing.FindCommonAncestor;
 import org.geogit.api.plumbing.ForEachRef;
 import org.geogit.api.plumbing.RefParse;
 import org.geogit.api.plumbing.RevObjectParse;
 import org.geogit.api.plumbing.UpdateRef;
 import org.geogit.api.plumbing.UpdateSymRef;
+import org.geogit.api.porcelain.PushException;
+import org.geogit.api.porcelain.PushException.StatusCode;
 import org.geogit.repository.Repository;
 import org.geogit.storage.ObjectInserter;
 
@@ -168,7 +171,21 @@ public class LocalRemoteRepo implements IRemoteRepo {
      * @param ref the local ref that points to new commit data
      */
     @Override
-    public void pushNewData(Repository localRepository, Ref ref) {
+    public void pushNewData(Repository localRepository, Ref ref) throws PushException {
+        pushNewData(localRepository, ref, ref.getName());
+    }
+
+    /**
+     * Push all new objects from the specified {@link Ref} to the given refspec.
+     * 
+     * @param localRepository the repository to get new objects from
+     * @param ref the local ref that points to new commit data
+     * @param refspec the refspec to push to
+     */
+    @Override
+    public void pushNewData(Repository localRepository, Ref ref, String refspec)
+            throws PushException {
+        checkPush(localRepository, ref, refspec);
         touchedIds = new LinkedList<ObjectId>();
         ObjectInserter objectInserter = remoteGeoGit.getRepository().newObjectInserter();
         commitQueue.clear();
@@ -178,12 +195,12 @@ public class LocalRemoteRepo implements IRemoteRepo {
                 walkCommit(commitQueue.remove(), localRepository, remoteGeoGit.getRepository(),
                         objectInserter);
             }
-            remoteGeoGit.command(UpdateRef.class).setName(ref.getName())
-                    .setNewValue(ref.getObjectId()).call();
+            Ref updatedRef = remoteGeoGit.command(UpdateRef.class).setName(refspec)
+                    .setNewValue(ref.getObjectId()).call().get();
 
             Ref remoteHead = headRef();
             if (remoteHead instanceof SymRef) {
-                if (((SymRef) remoteHead).getTarget().equals(ref.getName())) {
+                if (((SymRef) remoteHead).getTarget().equals(updatedRef.getName())) {
                     remoteGeoGit.command(UpdateSymRef.class).setName(Ref.HEAD)
                             .setNewValue(ref.getName()).call();
                     RevCommit commit = remoteGeoGit.getRepository().getCommit(ref.getObjectId());
@@ -203,46 +220,33 @@ public class LocalRemoteRepo implements IRemoteRepo {
         }
     }
 
-    /**
-     * Push all new objects from the specified {@link Ref} to the given refspec.
-     * 
-     * @param localRepository the repository to get new objects from
-     * @param ref the local ref that points to new commit data
-     * @param refspec the refspec to push to
-     */
-    @Override
-    public void pushNewData(Repository localRepository, Ref ref, String refspec) {
-        touchedIds = new LinkedList<ObjectId>();
-        ObjectInserter objectInserter = remoteGeoGit.getRepository().newObjectInserter();
-        commitQueue.clear();
-        commitQueue.add(ref.getObjectId());
-        try {
-            while (!commitQueue.isEmpty()) {
-                walkCommit(commitQueue.remove(), localRepository, remoteGeoGit.getRepository(),
-                        objectInserter);
-            }
-            remoteGeoGit.command(UpdateRef.class).setName(refspec).setNewValue(ref.getObjectId())
-                    .call();
-
-            Ref remoteHead = headRef();
-            if (remoteHead instanceof SymRef) {
-                if (((SymRef) remoteHead).getTarget().equals(refspec)) {
-                    remoteGeoGit.command(UpdateSymRef.class).setName(Ref.HEAD)
-                            .setNewValue(ref.getName()).call();
-                    RevCommit commit = remoteGeoGit.getRepository().getCommit(ref.getObjectId());
-                    remoteGeoGit.getRepository().getWorkingTree()
-                            .updateWorkHead(commit.getTreeId());
-                    remoteGeoGit.getRepository().getIndex().updateStageHead(commit.getTreeId());
+    private void checkPush(Repository localRepository, Ref ref, String refspec)
+            throws PushException {
+        Optional<Ref> remoteRef = remoteGeoGit.command(RefParse.class).setName(refspec).call();
+        if (remoteRef.isPresent()) {
+            if (remoteRef.get().getObjectId().equals(ref.getObjectId())) {
+                // The branches are equal, no need to push.
+                throw new PushException(StatusCode.NOTHING_TO_PUSH);
+            } else if (localRepository.blobExists(remoteRef.get().getObjectId())) {
+                RevCommit leftCommit = localRepository.getCommit(remoteRef.get().getObjectId());
+                RevCommit rightCommit = localRepository.getCommit(ref.getObjectId());
+                Optional<RevCommit> ancestor = localRepository.command(FindCommonAncestor.class)
+                        .setLeft(leftCommit).setRight(rightCommit).call();
+                if (!ancestor.isPresent()) {
+                    // There is no common ancestor, a push will overwrite history
+                    throw new PushException(StatusCode.REMOTE_HAS_CHANGES);
+                } else if (ancestor.get().getId().equals(ref.getObjectId())) {
+                    // My last commit is the common ancestor, the remote already has my data.
+                    throw new PushException(StatusCode.NOTHING_TO_PUSH);
+                } else if (!ancestor.get().getId().equals(remoteRef.get().getObjectId())) {
+                    // The remote branch's latest commit is not my ancestor, a push will cause a
+                    // loss of history.
+                    throw new PushException(StatusCode.REMOTE_HAS_CHANGES);
                 }
+            } else {
+                // The remote has data that I do not, a push will cause this data to be lost.
+                throw new PushException(StatusCode.REMOTE_HAS_CHANGES);
             }
-        } catch (Exception e) {
-            for (ObjectId oid : touchedIds) {
-                remoteGeoGit.getRepository().getObjectDatabase().delete(oid);
-            }
-            Throwables.propagate(e);
-        } finally {
-            touchedIds.clear();
-            touchedIds = null;
         }
     }
 

@@ -8,6 +8,7 @@ package org.geogit.remote;
 import java.io.IOException;
 
 import org.geogit.api.Ref;
+import org.geogit.api.porcelain.PushException;
 import org.geogit.repository.Repository;
 
 import com.google.common.collect.ImmutableSet;
@@ -59,7 +60,7 @@ public interface IRemoteRepo {
      * @param localRepository the repository to get new objects from
      * @param ref the local ref that points to new commit data
      */
-    public void pushNewData(Repository localRepository, Ref ref);
+    public void pushNewData(Repository localRepository, Ref ref) throws PushException;
 
     /**
      * Push all new objects from the specified {@link Ref} to the given refspec.
@@ -68,7 +69,8 @@ public interface IRemoteRepo {
      * @param ref the local ref that points to new commit data
      * @param refspec the refspec to push to
      */
-    public void pushNewData(Repository localRepository, Ref ref, String refspec);
+    public void pushNewData(Repository localRepository, Ref ref, String refspec)
+            throws PushException;
 
     /**
      * Delete the given refspec from the remote repository.

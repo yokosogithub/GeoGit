@@ -9,6 +9,7 @@ import static com.google.common.base.Preconditions.checkState;
 
 import java.util.List;
 
+import org.geogit.api.porcelain.PushException;
 import org.geogit.api.porcelain.PushOp;
 import org.geogit.cli.AbstractCommand;
 import org.geogit.cli.CLICommand;
@@ -60,7 +61,19 @@ public class Push extends AbstractCommand implements CLICommand {
                 push.addRefSpec(args.get(i));
             }
         }
-
-        push.call();
+        try {
+            push.call();
+        } catch (PushException e) {
+            switch (e.statusCode) {
+            case NOTHING_TO_PUSH:
+                cli.getConsole().println("Nothing to push.");
+                break;
+            case REMOTE_HAS_CHANGES:
+                cli.getConsole()
+                        .println(
+                                "Push failed: The remote repository has changes that would be lost in the event of a push.");
+                break;
+            }
+        }
     }
 }

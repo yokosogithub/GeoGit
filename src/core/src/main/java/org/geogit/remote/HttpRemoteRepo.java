@@ -33,6 +33,8 @@ import org.geogit.api.plumbing.DiffTree;
 import org.geogit.api.plumbing.FindCommonAncestor;
 import org.geogit.api.plumbing.RevObjectParse;
 import org.geogit.api.plumbing.diff.DiffEntry;
+import org.geogit.api.porcelain.PushException;
+import org.geogit.api.porcelain.PushException.StatusCode;
 import org.geogit.repository.Repository;
 
 import com.google.common.base.Optional;
@@ -263,69 +265,8 @@ public class HttpRemoteRepo implements IRemoteRepo {
      * @param ref the local ref that points to new commit data
      */
     @Override
-    public void pushNewData(Repository localRepository, Ref ref) {
-        Optional<Ref> remoteRef = getRemoteRef(ref.getName());
-        if (remoteRef.isPresent()) {
-            if (remoteRef.get().getObjectId().equals(ref.getObjectId())) {
-                // The branches are equal, no need to push.
-                return;
-            } else if (localRepository.blobExists(remoteRef.get().getObjectId())) {
-                RevCommit leftCommit = localRepository.getCommit(remoteRef.get().getObjectId());
-                RevCommit rightCommit = localRepository.getCommit(ref.getObjectId());
-                Optional<RevCommit> ancestor = localRepository.command(FindCommonAncestor.class)
-                        .setLeft(leftCommit).setRight(rightCommit).call();
-                if (!ancestor.isPresent()) {
-                    // There is no common ancestor, a push will overwrite history
-                    return;
-                } else if (ancestor.get().getId().equals(ref.getObjectId())) {
-                    // My last commit is the common ancestor, the remote already has my data.
-                    return;
-                } else if (!ancestor.get().getId().equals(remoteRef.get().getObjectId())) {
-                    // The remote branch's latest commit is not my ancestor, a push will cause a
-                    // loss of history.
-                    return;
-                }
-            } else {
-                // The remote has data that I do not, a push will cause this data to be lost.
-                return;
-            }
-        }
-        beginPush();
-        commitQueue.clear();
-        commitQueue.add(ref.getObjectId());
-        while (!commitQueue.isEmpty()) {
-            ObjectId commitId = commitQueue.remove();
-            if (walkCommit(commitId, localRepository, true)) {
-                RevCommit oldCommit = localRepository.getCommit(commitId);
-                ObjectId parentId = oldCommit.getParentIds().get(0);
-                RevCommit parentCommit = localRepository.getCommit(parentId);
-                Iterator<DiffEntry> diff = localRepository.command(DiffTree.class)
-                        .setOldTree(parentCommit.getId()).setNewTree(oldCommit.getId()).call();
-                // Send the features that changed.
-                while (diff.hasNext()) {
-                    DiffEntry entry = diff.next();
-                    if (entry.getNewObject() != null) {
-                        NodeRef nodeRef = entry.getNewObject();
-                        moveObject(nodeRef.getNode().getObjectId(), localRepository, true);
-                        ObjectId metadataId = nodeRef.getMetadataId();
-                        if (!metadataId.isNull()) {
-                            moveObject(metadataId, localRepository, true);
-                        }
-                    }
-                }
-            }
-        }
-        endPush(ref.getName(), ref.getObjectId().toString());
-        /*
-         * updateRemoteRef(ref.getName(), ref.getObjectId(), false);
-         * 
-         * Ref remoteHead = headRef(); if (remoteHead instanceof SymRef) { if (((SymRef)
-         * remoteHead).getTarget().equals(ref.getName())) {
-         * 
-         * RevCommit commit = localRepository.getCommit(ref.getObjectId());
-         * updateRemoteRef(Ref.WORK_HEAD, commit.getTreeId(), false);
-         * updateRemoteRef(Ref.STAGE_HEAD, commit.getTreeId(), false); } }
-         */
+    public void pushNewData(Repository localRepository, Ref ref) throws PushException {
+        pushNewData(localRepository, ref, ref.getName());
     }
 
     /**
@@ -336,33 +277,9 @@ public class HttpRemoteRepo implements IRemoteRepo {
      * @param refspec the remote branch to push to
      */
     @Override
-    public void pushNewData(Repository localRepository, Ref ref, String refspec) {
-        Optional<Ref> remoteRef = getRemoteRef(refspec);
-        if (remoteRef.isPresent()) {
-            if (remoteRef.get().getObjectId().equals(ref.getObjectId())) {
-                // The branches are equal, no need to push.
-                return;
-            } else if (localRepository.blobExists(remoteRef.get().getObjectId())) {
-                RevCommit leftCommit = localRepository.getCommit(remoteRef.get().getObjectId());
-                RevCommit rightCommit = localRepository.getCommit(ref.getObjectId());
-                Optional<RevCommit> ancestor = localRepository.command(FindCommonAncestor.class)
-                        .setLeft(leftCommit).setRight(rightCommit).call();
-                if (!ancestor.isPresent()) {
-                    // There is no common ancestor, a push will overwrite history
-                    return;
-                } else if (ancestor.get().getId().equals(ref.getObjectId())) {
-                    // My last commit is the common ancestor, the remote already has my data.
-                    return;
-                } else if (!ancestor.get().getId().equals(remoteRef.get().getObjectId())) {
-                    // The remote branch's latest commit is not my ancestor, a push will cause a
-                    // loss of history.
-                    return;
-                }
-            } else {
-                // The remote has data that I do not, a push will cause this data to be lost.
-                return;
-            }
-        }
+    public void pushNewData(Repository localRepository, Ref ref, String refspec)
+            throws PushException {
+        checkPush(localRepository, ref, refspec);
         beginPush();
         commitQueue.clear();
         commitQueue.add(ref.getObjectId());
@@ -389,16 +306,36 @@ public class HttpRemoteRepo implements IRemoteRepo {
             }
         }
         endPush(refspec, ref.getObjectId().toString());
-        /*
-         * Ref updatedRef = updateRemoteRef(refspec, ref.getObjectId(), false);
-         * 
-         * Ref remoteHead = headRef(); if (remoteHead instanceof SymRef) { if (((SymRef)
-         * remoteHead).getTarget().equals(updatedRef.getName())) {
-         * 
-         * RevCommit commit = localRepository.getCommit(ref.getObjectId());
-         * updateRemoteRef(Ref.WORK_HEAD, commit.getTreeId(), false);
-         * updateRemoteRef(Ref.STAGE_HEAD, commit.getTreeId(), false); } }
-         */
+    }
+
+    private void checkPush(Repository localRepository, Ref ref, String refspec)
+            throws PushException {
+        Optional<Ref> remoteRef = getRemoteRef(refspec);
+        if (remoteRef.isPresent()) {
+            if (remoteRef.get().getObjectId().equals(ref.getObjectId())) {
+                // The branches are equal, no need to push.
+                throw new PushException(StatusCode.NOTHING_TO_PUSH);
+            } else if (localRepository.blobExists(remoteRef.get().getObjectId())) {
+                RevCommit leftCommit = localRepository.getCommit(remoteRef.get().getObjectId());
+                RevCommit rightCommit = localRepository.getCommit(ref.getObjectId());
+                Optional<RevCommit> ancestor = localRepository.command(FindCommonAncestor.class)
+                        .setLeft(leftCommit).setRight(rightCommit).call();
+                if (!ancestor.isPresent()) {
+                    // There is no common ancestor, a push will overwrite history
+                    throw new PushException(StatusCode.REMOTE_HAS_CHANGES);
+                } else if (ancestor.get().getId().equals(ref.getObjectId())) {
+                    // My last commit is the common ancestor, the remote already has my data.
+                    throw new PushException(StatusCode.NOTHING_TO_PUSH);
+                } else if (!ancestor.get().getId().equals(remoteRef.get().getObjectId())) {
+                    // The remote branch's latest commit is not my ancestor, a push will cause a
+                    // loss of history.
+                    throw new PushException(StatusCode.REMOTE_HAS_CHANGES);
+                }
+            } else {
+                // The remote has data that I do not, a push will cause this data to be lost.
+                throw new PushException(StatusCode.REMOTE_HAS_CHANGES);
+            }
+        }
     }
 
     /**

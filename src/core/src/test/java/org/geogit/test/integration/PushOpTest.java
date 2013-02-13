@@ -163,18 +163,32 @@ public class PushOpTest extends RemoteRepositoryTestCase {
         RevCommit commit = localGeogit.geogit.command(CommitOp.class).call();
         expectedMaster.addFirst(commit);
 
+        localGeogit.geogit.command(CheckoutOp.class).setSource("Branch1").call();
+        insertAndAdd(localGeogit.geogit, points1_modified);
+        RevCommit commit2 = localGeogit.geogit.command(CommitOp.class).call();
+        expectedBranch.addFirst(commit2);
+
         // Push the commit
         PushOp push = push();
         push.setAll(true).call();
 
-        // verify that the remote got the commit
+        // verify that the remote got the commit on both branches
+        remoteGeogit.geogit.command(CheckoutOp.class).setSource("master").call();
         Iterator<RevCommit> logs = remoteGeogit.geogit.command(LogOp.class).call();
         List<RevCommit> logged = new ArrayList<RevCommit>();
         for (; logs.hasNext();) {
             logged.add(logs.next());
         }
-
         assertEquals(expectedMaster, logged);
+
+        remoteGeogit.geogit.command(CheckoutOp.class).setSource("Branch1").call();
+        logs = remoteGeogit.geogit.command(LogOp.class).call();
+        logged = new ArrayList<RevCommit>();
+        for (; logs.hasNext();) {
+            logged.add(logs.next());
+        }
+        assertEquals(expectedBranch, logged);
+
     }
 
     @Test
