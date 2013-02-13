@@ -7,6 +7,7 @@ package org.geogit.repository;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import javax.annotation.Nullable;
 
@@ -17,6 +18,7 @@ import org.geogit.api.ObjectId;
 import org.geogit.api.Ref;
 import org.geogit.api.RevTree;
 import org.geogit.api.RevTreeBuilder;
+import org.geogit.api.RevObject.TYPE;
 import org.geogit.api.plumbing.DiffCount;
 import org.geogit.api.plumbing.DiffIndex;
 import org.geogit.api.plumbing.FindOrCreateSubtree;
@@ -35,6 +37,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 
 /**
@@ -164,12 +167,18 @@ public class Index implements StagingArea {
 
         Map<String, RevTreeBuilder> parentTress = Maps.newHashMap();
         Map<String, ObjectId> parentMetadataIds = Maps.newHashMap();
-
+        Set<String> removedTrees = Sets.newHashSet();
         while (unstaged.hasNext()) {
             final DiffEntry diff = unstaged.next();
             final String fullPath = diff.oldPath() == null ? diff.newPath() : diff.oldPath();
             final String parentPath = NodeRef.parentPath(fullPath);
-
+            /*
+             * TODO: revisit, ideally the list of diff entries would come with one single entry for
+             * the whole removed tree instead of that one and every single children of it.
+             */
+            if (removedTrees.contains(parentPath)) {
+                continue;
+            }
             if (null == parentPath) {
                 // it is the root tree that's been changed, update head and ignore anything else
                 ObjectId newRoot = diff.newObjectId();
@@ -189,6 +198,9 @@ public class Index implements StagingArea {
             if (newObject == null) {
                 // Delete
                 parentTree.remove(oldObject.name());
+                if (TYPE.TREE.equals(oldObject.getType())) {
+                    removedTrees.add(oldObject.path());
+                }
             } else if (oldObject == null) {
                 // Add
                 Node node = newObject.getNode();
