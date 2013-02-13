@@ -55,6 +55,10 @@ public class RevTreeBuilder {
 
     private int depth;
 
+    private long initialSize;
+
+    private int initialNumTrees;
+
     protected NodePathStorageOrder storageOrder = new NodePathStorageOrder();
 
     private Map<ObjectId, RevTree> pendingWritesCache;
@@ -95,6 +99,9 @@ public class RevTreeBuilder {
         this.bucketTreesByBucket = Maps.newTreeMap();
 
         if (copy != null) {
+            this.initialSize = copy.size();
+            this.initialNumTrees = copy.numTrees();
+
             if (copy.trees().isPresent()) {
                 checkArgument(!copy.buckets().isPresent());
                 for (Node node : copy.trees().get()) {
@@ -220,6 +227,8 @@ public class RevTreeBuilder {
             db.putAll(pendingWritesCache.values().iterator());
             pendingWritesCache.clear();
         }
+        this.initialSize = unnamedTree.size();
+        this.initialNumTrees = unnamedTree.numTrees();
         return unnamedTree;
     }
 
@@ -279,6 +288,12 @@ public class RevTreeBuilder {
     private RevTree normalizeToBuckets() {
         // update all inner trees
         final ImmutableSet<Integer> changedBucketIndexes;
+
+        // aggregate size delta for all changed buckets
+        long sizeDelta = 0L;
+        // aggregate number of trees delta for all changed buckets
+        int treesDelta = 0;
+
         try {
             Multimap<Integer, Node> changesByBucket = getChangesByBucket();
             Preconditions.checkState(featureChanges.isEmpty());
@@ -288,11 +303,12 @@ public class RevTreeBuilder {
             changedBucketIndexes = ImmutableSet.copyOf(changesByBucket.keySet());
 
             for (Integer bucketIndex : changedBucketIndexes) {
-                final RevTreeBuilder bucketTreeBuilder;
+                final RevTree currentBucketTree = getBucketTree(bucketIndex);
+                final int bucketDepth = this.depth + 1;
+                final RevTreeBuilder bucketTreeBuilder = new RevTreeBuilder(this.db,
+                        currentBucketTree, bucketDepth, this.pendingWritesCache);
                 {
                     final Collection<Node> bucketEntries = changesByBucket.removeAll(bucketIndex);
-                    bucketTreeBuilder = getOrCreateBucketTreeBuilder(bucketIndex);
-
                     for (Node node : bucketEntries) {
                         if (node.getObjectId().isNull()) {
                             bucketTreeBuilder.remove(node.getName());
@@ -301,15 +317,20 @@ public class RevTreeBuilder {
                         }
                     }
                 }
-                final RevTree bucketTree = bucketTreeBuilder.build();
-                if (bucketTree.isEmpty()) {
+                final RevTree modifiedBucketTree = bucketTreeBuilder.build();
+                final long bucketSizeDelta = modifiedBucketTree.size() - currentBucketTree.size();
+                final int bucketTreesDelta = modifiedBucketTree.numTrees()
+                        - currentBucketTree.numTrees();
+                sizeDelta += bucketSizeDelta;
+                treesDelta += bucketTreesDelta;
+                if (modifiedBucketTree.isEmpty()) {
                     bucketTreesByBucket.remove(bucketIndex);
                 } else {
                     final Bucket currBucket = this.bucketTreesByBucket.get(bucketIndex);
-                    if (currBucket == null || !currBucket.id().equals(bucketTree.getId())) {
-                        this.pendingWritesCache.put(bucketTree.getId(), bucketTree);
-                        Envelope bucketBounds = SpatialOps.boundsOf(bucketTree);
-                        Bucket bucket = Bucket.create(bucketTree.getId(), bucketBounds);
+                    if (currBucket == null || !currBucket.id().equals(modifiedBucketTree.getId())) {
+                        this.pendingWritesCache.put(modifiedBucketTree.getId(), modifiedBucketTree);
+                        Envelope bucketBounds = SpatialOps.boundsOf(modifiedBucketTree);
+                        Bucket bucket = Bucket.create(modifiedBucketTree.getId(), bucketBounds);
                         bucketTreesByBucket.put(bucketIndex, bucket);
                     }
                 }
@@ -320,15 +341,24 @@ public class RevTreeBuilder {
             throw new RuntimeException(e);
         }
 
-        long accSize = 0;
-        int accChildTreeCount = 0;
-        for (Bucket bucket : this.bucketTreesByBucket.values()) {
-            RevTree bucketTree = loadTree(bucket.id());
-            accSize += bucketTree.size();
-            accChildTreeCount += bucketTree.numTrees();
-        }
+        // compute final size and number of trees out of the aggregate deltas
+        long accSize = this.initialSize + sizeDelta;
+        int accChildTreeCount = this.initialNumTrees + treesDelta;
         return RevTreeImpl.createNodeTree(ObjectId.NULL, accSize, accChildTreeCount,
                 this.bucketTreesByBucket);
+    }
+
+    /**
+     * @return the bucket tree or {@link RevTree#EMPTY} if this tree does not have a bucket for the
+     *         given bucket index
+     */
+    private RevTree getBucketTree(Integer bucketIndex) {
+        final Bucket bucket = bucketTreesByBucket.get(bucketIndex);
+        if (bucket == null) {
+            return RevTree.EMPTY;
+        } else {
+            return loadTree(bucket.id());
+        }
     }
 
     private Multimap<Integer, Node> getChangesByBucket() {
@@ -358,21 +388,6 @@ public class RevTreeBuilder {
             deletes.clear();
         }
         return changesByBucket;
-    }
-
-    private RevTreeBuilder getOrCreateBucketTreeBuilder(Integer bucketIndex) {
-        final RevTreeBuilder bucketTreeBuilder;
-        final Bucket bucket = bucketTreesByBucket.get(bucketIndex);
-        final int childDepth = this.depth + 1;
-        if (bucket == null) {
-            bucketTreeBuilder = new RevTreeBuilder(this.db, null, childDepth,
-                    this.pendingWritesCache);
-        } else {
-            RevTree currentBucketTree = loadTree(bucket.id());
-            bucketTreeBuilder = new RevTreeBuilder(this.db, currentBucketTree, childDepth,
-                    this.pendingWritesCache);
-        }
-        return bucketTreeBuilder;
     }
 
     protected final Integer computeBucket(final String path) {
