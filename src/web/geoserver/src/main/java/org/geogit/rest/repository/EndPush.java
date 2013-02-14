@@ -13,6 +13,8 @@ import java.util.List;
 
 import org.geogit.api.GeoGIT;
 import org.geogit.api.ObjectId;
+import org.geogit.api.Ref;
+import org.geogit.api.plumbing.RefParse;
 import org.geogit.web.api.commands.PushManager;
 import org.restlet.Context;
 import org.restlet.data.ClientInfo;
@@ -46,6 +48,9 @@ public class EndPush extends Resource {
         @Override
         public void write(Writer w) throws IOException {
             ClientInfo info = getRequest().getClientInfo();
+            Request request = getRequest();
+            Optional<GeoGIT> ggit = getGeogit(request);
+            Preconditions.checkState(ggit.isPresent());
             Form options = getRequest().getResourceRef().getQueryAsForm();
 
             // make a combined ip address to handle requests from multiple machines in the same
@@ -56,14 +61,23 @@ public class EndPush extends Resource {
             String refspec = options.getFirstValue("refspec", null);
             ObjectId oid = ObjectId.valueOf(options.getFirstValue("objectId",
                     ObjectId.NULL.toString()));
+            ObjectId originalRefValue = ObjectId.valueOf(options.getFirstValue("originalRefValue",
+                    ObjectId.NULL.toString()));
 
-            Request request = getRequest();
-            Optional<GeoGIT> ggit = getGeogit(request);
-            Preconditions.checkState(ggit.isPresent());
-            PushManager pushManager = PushManager.get();
-            pushManager.connectionSucceeded(ggit.get(), ipAddress, refspec, oid);
-            w.write("Push succeeded for address: " + ipAddress);
-            w.flush();
+            Optional<Ref> currentRef = ggit.get().command(RefParse.class).setName(refspec).call();
+
+            if (currentRef.isPresent() && !currentRef.get().getObjectId().equals(ObjectId.NULL)
+                    && !currentRef.get().getObjectId().equals(originalRefValue)) {
+                // Abort push
+                w.write("Push aborted for address: " + ipAddress
+                        + ". The ref was changed during push.");
+                w.flush();
+            } else {
+                PushManager pushManager = PushManager.get();
+                pushManager.connectionSucceeded(ggit.get(), ipAddress, refspec, oid);
+                w.write("Push succeeded for address: " + ipAddress);
+                w.flush();
+            }
         }
     }
 

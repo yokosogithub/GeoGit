@@ -279,7 +279,7 @@ public class HttpRemoteRepo implements IRemoteRepo {
     @Override
     public void pushNewData(Repository localRepository, Ref ref, String refspec)
             throws PushException {
-        checkPush(localRepository, ref, refspec);
+        Optional<Ref> remoteRef = checkPush(localRepository, ref, refspec);
         beginPush();
         commitQueue.clear();
         commitQueue.add(ref.getObjectId());
@@ -305,10 +305,14 @@ public class HttpRemoteRepo implements IRemoteRepo {
                 }
             }
         }
-        endPush(refspec, ref.getObjectId().toString());
+        ObjectId originalRemoteRefValue = ObjectId.NULL;
+        if (remoteRef.isPresent()) {
+            originalRemoteRefValue = remoteRef.get().getObjectId();
+        }
+        endPush(refspec, ref.getObjectId().toString(), originalRemoteRefValue.toString());
     }
 
-    private void checkPush(Repository localRepository, Ref ref, String refspec)
+    private Optional<Ref> checkPush(Repository localRepository, Ref ref, String refspec)
             throws PushException {
         Optional<Ref> remoteRef = getRemoteRef(refspec);
         if (remoteRef.isPresent()) {
@@ -336,6 +340,7 @@ public class HttpRemoteRepo implements IRemoteRepo {
                 throw new PushException(StatusCode.REMOTE_HAS_CHANGES);
             }
         }
+        return remoteRef;
     }
 
     /**
@@ -370,12 +375,13 @@ public class HttpRemoteRepo implements IRemoteRepo {
         }
     }
 
-    private void endPush(String refspec, String oid) {
+    private void endPush(String refspec, String oid, String originalRefValue) {
         HttpURLConnection connection = null;
         try {
             String internalIp = InetAddress.getLocalHost().getHostName();
             String expanded = repositoryURL.toString() + "/repo/endpush?refspec=" + refspec
-                    + "&objectId=" + oid + "&internalIp=" + internalIp;
+                    + "&objectId=" + oid + "&internalIp=" + internalIp + "&originalRefValue="
+                    + originalRefValue;
 
             connection = (HttpURLConnection) new URL(expanded).openConnection();
             connection.setRequestMethod("GET");
