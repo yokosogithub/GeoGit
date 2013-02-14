@@ -124,7 +124,7 @@ public class ImportOp extends AbstractGeoGitOp<RevTree> {
                 workTree.delete(revType.getName());
                 getWorkTree().insert(treePath, iterator, taskProgress, null, collectionSize);
             } catch (Exception e) {
-                throw new GeoToolsOpException(StatusCode.UNABLE_TO_INSERT);
+                throw new GeoToolsOpException(e, StatusCode.UNABLE_TO_INSERT);
             } finally {
                 featureIterator.close();
             }
