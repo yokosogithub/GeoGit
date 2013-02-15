@@ -6,13 +6,13 @@ package org.geogit.test.integration;
 
 import java.util.Iterator;
 
-import org.geogit.api.ObjectId;
 import org.geogit.api.Ref;
 import org.geogit.api.RevCommit;
 import org.geogit.api.SymRef;
 import org.geogit.api.plumbing.RefParse;
 import org.geogit.api.porcelain.BranchCreateOp;
 import org.geogit.api.porcelain.CheckoutOp;
+import org.geogit.api.porcelain.CheckoutResult;
 import org.geogit.api.porcelain.CommitOp;
 import org.geogit.api.porcelain.ConfigOp;
 import org.geogit.api.porcelain.ConfigOp.ConfigAction;
@@ -84,15 +84,15 @@ public class RebaseOpTest extends RepositoryTestCase {
         geogit.command(RebaseOp.class).setUpstream(Suppliers.ofInstance(branch1.getObjectId()))
                 .call();
 
-        ObjectId workTreeId;
-        workTreeId = geogit.command(CheckoutOp.class).setSource("branch1").call();
-        assertEquals(c2.getTreeId(), workTreeId);
+        CheckoutResult result;
+        result = geogit.command(CheckoutOp.class).setSource("branch1").call();
+        assertEquals(c2.getTreeId(), result.getNewTree());
         assertTrue(geogit.command(RefParse.class).setName(Ref.HEAD).call().get() instanceof SymRef);
         assertEquals(branch1.getName(), ((SymRef) geogit.command(RefParse.class).setName(Ref.HEAD)
                 .call().get()).getTarget());
 
-        workTreeId = geogit.command(CheckoutOp.class).setSource("branch2").call();
-        assertFalse(c4.getTreeId().equals(workTreeId));
+        result = geogit.command(CheckoutOp.class).setSource("branch2").call();
+        assertFalse(c4.getTreeId().equals(result.getNewTree()));
         assertTrue(geogit.command(RefParse.class).setName(Ref.HEAD).call().get() instanceof SymRef);
         assertEquals(branch2.getName(), ((SymRef) geogit.command(RefParse.class).setName(Ref.HEAD)
                 .call().get()).getTarget());
@@ -209,15 +209,15 @@ public class RebaseOpTest extends RepositoryTestCase {
         geogit.command(RebaseOp.class).setUpstream(Suppliers.ofInstance(branch1.getObjectId()))
                 .setOnto(Suppliers.ofInstance(master.get().getObjectId())).call();
 
-        ObjectId workTreeId;
-        workTreeId = geogit.command(CheckoutOp.class).setSource("branch1").call();
-        assertEquals(c3.getTreeId(), workTreeId);
+        CheckoutResult result;
+        result = geogit.command(CheckoutOp.class).setSource("branch1").call();
+        assertEquals(c3.getTreeId(), result.getNewTree());
         assertTrue(geogit.command(RefParse.class).setName(Ref.HEAD).call().get() instanceof SymRef);
         assertEquals(branch1.getName(), ((SymRef) geogit.command(RefParse.class).setName(Ref.HEAD)
                 .call().get()).getTarget());
 
-        workTreeId = geogit.command(CheckoutOp.class).setSource("branch2").call();
-        assertFalse(c4.getTreeId().equals(workTreeId));
+        result = geogit.command(CheckoutOp.class).setSource("branch2").call();
+        assertFalse(c4.getTreeId().equals(result.getNewTree()));
         assertTrue(geogit.command(RefParse.class).setName(Ref.HEAD).call().get() instanceof SymRef);
         assertEquals(branch2.getName(), ((SymRef) geogit.command(RefParse.class).setName(Ref.HEAD)
                 .call().get()).getTarget());

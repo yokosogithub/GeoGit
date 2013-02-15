@@ -21,6 +21,7 @@ import org.geogit.api.plumbing.RevObjectParse;
 import org.geogit.api.porcelain.BranchCreateOp;
 import org.geogit.api.porcelain.CheckoutException;
 import org.geogit.api.porcelain.CheckoutOp;
+import org.geogit.api.porcelain.CheckoutResult;
 import org.geogit.api.porcelain.CommitOp;
 import org.geogit.api.porcelain.ConfigOp;
 import org.geogit.api.porcelain.ConfigOp.ConfigAction;
@@ -112,18 +113,18 @@ public class CheckoutOpTest extends RepositoryTestCase {
         insertAndAdd(lines1);
         final RevCommit c3 = geogit.command(CommitOp.class).setMessage("commit for " + idL2).call();
 
-        ObjectId workTreeId;
-        workTreeId = geogit.command(CheckoutOp.class).setSource(c1.getId().toString()).call();
-        assertEquals(c1.getTreeId(), workTreeId);
+        CheckoutResult result;
+        result = geogit.command(CheckoutOp.class).setSource(c1.getId().toString()).call();
+        assertEquals(c1.getTreeId(), result.getNewTree());
 
         assertFalse(geogit.command(RefParse.class).setName(Ref.HEAD).call().get() instanceof SymRef);
         assertTrue(geogit.command(RefParse.class).setName(Ref.HEAD).call().get() instanceof Ref);
 
-        workTreeId = geogit.command(CheckoutOp.class).setSource(c2.getId().toString()).call();
-        assertEquals(c2.getTreeId(), workTreeId);
+        result = geogit.command(CheckoutOp.class).setSource(c2.getId().toString()).call();
+        assertEquals(c2.getTreeId(), result.getNewTree());
 
-        workTreeId = geogit.command(CheckoutOp.class).setSource(c3.getId().toString()).call();
-        assertEquals(c3.getTreeId(), workTreeId);
+        result = geogit.command(CheckoutOp.class).setSource(c3.getId().toString()).call();
+        assertEquals(c3.getTreeId(), result.getNewTree());
     }
 
     @Test
@@ -140,21 +141,21 @@ public class CheckoutOpTest extends RepositoryTestCase {
         final RevCommit c3 = geogit.command(CommitOp.class).setMessage("commit for " + idL2).call();
         final Ref branch3 = geogit.command(BranchCreateOp.class).setName("branch3").call();
 
-        ObjectId workTreeId;
-        workTreeId = geogit.command(CheckoutOp.class).setSource("branch1").call();
-        assertEquals(c1.getTreeId(), workTreeId);
+        CheckoutResult result;
+        result = geogit.command(CheckoutOp.class).setSource("branch1").call();
+        assertEquals(c1.getTreeId(), result.getNewTree());
         assertTrue(geogit.command(RefParse.class).setName(Ref.HEAD).call().get() instanceof SymRef);
         assertEquals(branch1.getName(), ((SymRef) geogit.command(RefParse.class).setName(Ref.HEAD)
                 .call().get()).getTarget());
 
-        workTreeId = geogit.command(CheckoutOp.class).setSource("branch2").call();
-        assertEquals(c2.getTreeId(), workTreeId);
+        result = geogit.command(CheckoutOp.class).setSource("branch2").call();
+        assertEquals(c2.getTreeId(), result.getNewTree());
         assertTrue(geogit.command(RefParse.class).setName(Ref.HEAD).call().get() instanceof SymRef);
         assertEquals(branch2.getName(), ((SymRef) geogit.command(RefParse.class).setName(Ref.HEAD)
                 .call().get()).getTarget());
 
-        workTreeId = geogit.command(CheckoutOp.class).setSource("branch3").call();
-        assertEquals(c3.getTreeId(), workTreeId);
+        result = geogit.command(CheckoutOp.class).setSource("branch3").call();
+        assertEquals(c3.getTreeId(), result.getNewTree());
         assertTrue(geogit.command(RefParse.class).setName(Ref.HEAD).call().get() instanceof SymRef);
         assertEquals(branch3.getName(), ((SymRef) geogit.command(RefParse.class).setName(Ref.HEAD)
                 .call().get()).getTarget());
@@ -166,10 +167,10 @@ public class CheckoutOpTest extends RepositoryTestCase {
         geogit.command(CommitOp.class).setMessage("commit for " + idP1).call();
         insert(points1_modified);
 
-        ObjectId workTreeId = geogit.command(CheckoutOp.class).addPath("Points/Points.1").call();
+        CheckoutResult result = geogit.command(CheckoutOp.class).addPath("Points/Points.1").call();
 
-        Optional<RevTree> workTree = geogit.command(RevObjectParse.class).setObjectId(workTreeId)
-                .call(RevTree.class);
+        Optional<RevTree> workTree = geogit.command(RevObjectParse.class)
+                .setObjectId(result.getNewTree()).call(RevTree.class);
 
         Optional<NodeRef> nodeRef = geogit.command(FindTreeChild.class).setParent(workTree.get())
                 .setChildPath("Points/Points.1").call();
@@ -195,9 +196,9 @@ public class CheckoutOpTest extends RepositoryTestCase {
         insert(points1_modified);
         insert(lines2);
         Collection<String> paths = Arrays.asList("Points/Points.1", "Lines");
-        ObjectId workTreeId = geogit.command(CheckoutOp.class).addPaths(paths).call();
-        Optional<RevTree> workTree = geogit.command(RevObjectParse.class).setObjectId(workTreeId)
-                .call(RevTree.class);
+        CheckoutResult result = geogit.command(CheckoutOp.class).addPaths(paths).call();
+        Optional<RevTree> workTree = geogit.command(RevObjectParse.class)
+                .setObjectId(result.getNewTree()).call(RevTree.class);
         Optional<NodeRef> nodeRef = geogit.command(FindTreeChild.class).setParent(workTree.get())
                 .setChildPath("Points/Points.1").call();
 
@@ -222,11 +223,11 @@ public class CheckoutOpTest extends RepositoryTestCase {
         geogit.command(CommitOp.class).setMessage("commit 3").call();
         insert(points1_modified);
 
-        ObjectId workTreeId = geogit.command(CheckoutOp.class).setSource(c2.getTreeId().toString())
-                .addPath("Points").call();
+        CheckoutResult result = geogit.command(CheckoutOp.class)
+                .setSource(c2.getTreeId().toString()).addPath("Points").call();
 
-        Optional<RevTree> workTree = geogit.command(RevObjectParse.class).setObjectId(workTreeId)
-                .call(RevTree.class);
+        Optional<RevTree> workTree = geogit.command(RevObjectParse.class)
+                .setObjectId(result.getNewTree()).call(RevTree.class);
         Optional<NodeRef> nodeRef = geogit.command(FindTreeChild.class).setParent(workTree.get())
                 .setChildPath("Points/Points.1").call();
 
@@ -275,10 +276,10 @@ public class CheckoutOpTest extends RepositoryTestCase {
         RevCommit c1 = geogit.command(CommitOp.class).setMessage("commit for " + idP1).call();
         Ref branch1 = geogit.command(BranchCreateOp.class).setName("branch1").call();
         insertAndAdd(points2);
-        ObjectId workTreeId = geogit.command(CheckoutOp.class).setSource("branch1").setForce(true)
-                .call();
+        CheckoutResult result = geogit.command(CheckoutOp.class).setSource("branch1")
+                .setForce(true).call();
 
-        assertEquals(c1.getTreeId(), workTreeId);
+        assertEquals(c1.getTreeId(), result.getNewTree());
         assertTrue(geogit.command(RefParse.class).setName(Ref.HEAD).call().get() instanceof SymRef);
         assertEquals(branch1.getName(), ((SymRef) geogit.command(RefParse.class).setName(Ref.HEAD)
                 .call().get()).getTarget());
@@ -308,11 +309,11 @@ public class CheckoutOpTest extends RepositoryTestCase {
 
         geogit.command(CheckoutOp.class).setSource("master").call();
 
-        ObjectId workTreeId = geogit.command(CheckoutOp.class).setSource("branch1")
+        CheckoutResult result = geogit.command(CheckoutOp.class).setSource("branch1")
                 .addPath("Lines/Lines.1").call();
 
-        Optional<RevTree> workTree = geogit.command(RevObjectParse.class).setObjectId(workTreeId)
-                .call(RevTree.class);
+        Optional<RevTree> workTree = geogit.command(RevObjectParse.class)
+                .setObjectId(result.getNewTree()).call(RevTree.class);
 
         Optional<NodeRef> nodeRef = geogit.command(FindTreeChild.class).setParent(workTree.get())
                 .setChildPath("Points/Points.1").call();

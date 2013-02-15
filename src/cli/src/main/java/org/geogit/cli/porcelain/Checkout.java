@@ -10,9 +10,12 @@ import static com.google.common.base.Preconditions.checkState;
 
 import java.util.List;
 
+import jline.console.ConsoleReader;
+
 import org.geogit.api.GeoGIT;
 import org.geogit.api.porcelain.CheckoutException;
 import org.geogit.api.porcelain.CheckoutOp;
+import org.geogit.api.porcelain.CheckoutResult;
 import org.geogit.cli.AbstractCommand;
 import org.geogit.cli.CLICommand;
 import org.geogit.cli.GeogitCLI;
@@ -63,12 +66,33 @@ public class Checkout extends AbstractCommand implements CLICommand {
         checkArgument(branchOrStartPoint.size() < 2, "too many arguments");
 
         try {
-            // final ConsoleReader console = cli.getConsole();
+            final ConsoleReader console = cli.getConsole();
             String branchOrCommit = (branchOrStartPoint.size() > 0 ? branchOrStartPoint.get(0)
                     : null);
 
-            geogit.command(CheckoutOp.class).setForce(force).setSource(branchOrCommit)
-                    .addPaths(paths).call();
+            CheckoutResult result = geogit.command(CheckoutOp.class).setForce(force)
+                    .setSource(branchOrCommit).addPaths(paths).call();
+
+            switch (result.getResult()) {
+            case CHECKOUT_LOCAL_BRANCH:
+                console.println("Switched to branch '" + result.getNewRef().localName() + "'");
+                break;
+            case CHECKOUT_REMOTE_BRANCH:
+                console.println("Branch '" + result.getNewRef().localName()
+                        + "' was set up to track remote branch '" + result.getNewRef().localName()
+                        + "from " + result.getRemoteName() + ".");
+                console.println("Switched to a new branch '" + result.getNewRef().localName() + "'");
+                break;
+            case UPDATE_OBJECTS:
+                console.println("Objects in the working tree were updated to the specifed version.");
+                break;
+            case DETACHED_HEAD:
+                console.println("You are in 'detached HEAD' state. HEAD is now at "
+                        + result.getOid().toString().substring(0, 7) + "...");
+                break;
+            default:
+                break;
+            }
         } catch (CheckoutException e) {
             switch (e.statusCode) {
             case LOCAL_CHANGES_NOT_COMMITTED:
