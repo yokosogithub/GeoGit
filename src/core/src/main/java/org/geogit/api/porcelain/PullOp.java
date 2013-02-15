@@ -25,7 +25,7 @@ import com.google.inject.Inject;
  * Incorporates changes from a remote repository into the current branch.
  * 
  */
-public class PullOp extends AbstractGeoGitOp<Void> {
+public class PullOp extends AbstractGeoGitOp<PullResult> {
 
     private boolean all;
 
@@ -95,11 +95,13 @@ public class PullOp extends AbstractGeoGitOp<Void> {
      * @return {@code null}
      * @see org.geogit.api.AbstractGeoGitOp#call()
      */
-    public Void call() {
+    public PullResult call() {
 
         if (remote == null) {
             setRemote("origin");
         }
+
+        PullResult result = new PullResult();
 
         Optional<Remote> remoteRepo = remote.get();
 
@@ -148,6 +150,7 @@ public class PullOp extends AbstractGeoGitOp<Void> {
 
             Optional<Ref> destRef = command(RefParse.class).setName(destinationref).call();
             if (destRef.isPresent()) {
+                result.addChangedRef(destRef.get());
                 if (destRef.get().getObjectId().equals(ObjectId.NULL)) {
                     command(UpdateRef.class).setName(destRef.get().getName())
                             .setNewValue(sourceRef.get().getObjectId()).call();
@@ -163,15 +166,19 @@ public class PullOp extends AbstractGeoGitOp<Void> {
                 }
             } else {
                 // make a new branch
-                command(BranchCreateOp.class).setAutoCheckout(true).setName(destinationref)
+                Ref newRef = command(BranchCreateOp.class).setAutoCheckout(true)
+                        .setName(destinationref)
                         .setSource(sourceRef.get().getObjectId().toString()).call();
+                result.addNewRef(newRef);
             }
 
         }
 
         getProgressListener().complete();
 
-        return null;
+        result.setRemoteName(remote.get().get().getFetchURL());
+
+        return result;
     }
 
     /**

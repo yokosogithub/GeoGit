@@ -9,13 +9,20 @@ import static com.google.common.base.Preconditions.checkState;
 
 import java.util.List;
 
+import jline.console.ConsoleReader;
+
+import org.geogit.api.ObjectId;
+import org.geogit.api.Ref;
+import org.geogit.api.plumbing.RevParse;
 import org.geogit.api.porcelain.PullOp;
+import org.geogit.api.porcelain.PullResult;
 import org.geogit.cli.AbstractCommand;
 import org.geogit.cli.CLICommand;
 import org.geogit.cli.GeogitCLI;
 
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.Parameters;
+import com.google.common.base.Optional;
 
 /**
  * Incorporates changes from a remote repository into the current branch.
@@ -68,7 +75,22 @@ public class Pull extends AbstractCommand implements CLICommand {
             }
         }
 
-        pull.call();
+        PullResult result = pull.call();
 
+        ConsoleReader console = cli.getConsole();
+
+        console.println("From " + result.getRemoteName());
+        for (Ref ref : result.getNewRefs()) {
+            String line = " * [new branch]     " + ref.localName() + " -> " + ref.getName();
+            console.println(line);
+        }
+        for (Ref ref : result.getChangedRefs()) {
+            Optional<ObjectId> oid = cli.getGeogit().command(RevParse.class)
+                    .setRefSpec(ref.localName()).call();
+            String line = "   " + ref.getObjectId().toString().substring(0, 7) + ".."
+                    + oid.get().toString().substring(0, 7) + "     " + ref.localName() + " -> "
+                    + ref.getName();
+            console.println(line);
+        }
     }
 }
