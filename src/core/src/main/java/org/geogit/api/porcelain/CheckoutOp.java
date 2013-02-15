@@ -30,6 +30,8 @@ import org.geogit.api.plumbing.UpdateRef;
 import org.geogit.api.plumbing.UpdateSymRef;
 import org.geogit.api.plumbing.WriteBack;
 import org.geogit.api.porcelain.CheckoutException.StatusCode;
+import org.geogit.api.porcelain.ConfigOp.ConfigAction;
+import org.geogit.api.porcelain.ConfigOp.ConfigScope;
 
 import com.google.common.base.Optional;
 import com.google.common.collect.Sets;
@@ -144,6 +146,38 @@ public class CheckoutOp extends AbstractGeoGitOp<ObjectId> {
             targetRef = command(RefParse.class).setName(branchOrCommit).call();
             if (targetRef.isPresent()) {
                 ObjectId commitId = targetRef.get().getObjectId();
+                if (targetRef.get().getName().startsWith(Ref.REMOTES_PREFIX)) {
+                    String remoteName = targetRef.get().getName();
+                    remoteName = remoteName.substring(Ref.REMOTES_PREFIX.length(), targetRef.get()
+                            .getName().lastIndexOf("/"));
+
+                    if (branchOrCommit.contains(remoteName + '/')) {
+                        RevCommit commit = command(RevObjectParse.class).setObjectId(commitId)
+                                .call(RevCommit.class).get();
+
+                        targetTreeId = Optional.of(commit.getTreeId());
+                        targetCommitId = Optional.of(commit.getId());
+                        targetRef = Optional.absent();
+                    } else {
+
+                        Ref branch = command(BranchCreateOp.class)
+                                .setName(targetRef.get().localName())
+                                .setSource(commitId.toString()).call();
+
+                        command(ConfigOp.class).setAction(ConfigAction.CONFIG_SET)
+                                .setScope(ConfigScope.LOCAL)
+                                .setName("branches." + branch.localName() + ".remote")
+                                .setValue(remoteName).call();
+
+                        command(ConfigOp.class).setAction(ConfigAction.CONFIG_SET)
+                                .setScope(ConfigScope.LOCAL)
+                                .setName("branches." + branch.localName() + ".merge")
+                                .setValue(targetRef.get().getName()).call();
+
+                        targetRef = Optional.of(branch);
+                    }
+                }
+
                 if (commitId.isNull()) {
                     targetTreeId = Optional.of(ObjectId.NULL);
                     targetCommitId = Optional.of(ObjectId.NULL);
