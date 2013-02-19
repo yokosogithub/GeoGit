@@ -1,34 +1,16 @@
 package org.geogit.api.porcelain;
 
-import java.util.List;
-
 import org.geogit.api.Ref;
-
-import com.google.common.collect.Lists;
 
 public class PullResult {
 
-    private List<Ref> changedRefs = Lists.newArrayList();
+    private Ref oldRef = null;
 
-    private List<Ref> newRefs = Lists.newArrayList();
+    private Ref newRef = null;
 
     private String remoteName = null;
 
-    public void addChangedRef(Ref changedRef) {
-        changedRefs.add(changedRef);
-    }
-
-    public List<Ref> getChangedRefs() {
-        return changedRefs;
-    }
-
-    public void addNewRef(Ref newRef) {
-        newRefs.add(newRef);
-    }
-
-    public List<Ref> getNewRefs() {
-        return newRefs;
-    }
+    private FetchResult fetchResult = null;
 
     public String getRemoteName() {
         return remoteName;
@@ -36,5 +18,29 @@ public class PullResult {
 
     public void setRemoteName(String remoteName) {
         this.remoteName = remoteName;
+    }
+
+    public FetchResult getFetchResult() {
+        return fetchResult;
+    }
+
+    public void setFetchResult(FetchResult fetchResult) {
+        this.fetchResult = fetchResult;
+    }
+
+    public Ref getOldRef() {
+        return oldRef;
+    }
+
+    public void setOldRef(Ref oldRef) {
+        this.oldRef = oldRef;
+    }
+
+    public Ref getNewRef() {
+        return newRef;
+    }
+
+    public void setNewRef(Ref newRef) {
+        this.newRef = newRef;
     }
 }

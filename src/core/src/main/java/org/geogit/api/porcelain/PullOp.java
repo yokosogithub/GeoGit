@@ -108,8 +108,10 @@ public class PullOp extends AbstractGeoGitOp<PullResult> {
         Preconditions.checkArgument(remoteRepo.isPresent(), "Remote could not be resolved.");
         getProgressListener().started();
 
-        command(FetchOp.class).addRemote(remote).setAll(all).setProgressListener(subProgress(80.f))
-                .call();
+        FetchResult fetchResult = command(FetchOp.class).addRemote(remote).setAll(all)
+                .setProgressListener(subProgress(80.f)).call();
+
+        result.setFetchResult(fetchResult);
 
         if (refSpecs.size() == 0) {
             // pull current branch
@@ -150,7 +152,7 @@ public class PullOp extends AbstractGeoGitOp<PullResult> {
 
             Optional<Ref> destRef = command(RefParse.class).setName(destinationref).call();
             if (destRef.isPresent()) {
-                result.addChangedRef(destRef.get());
+                result.setOldRef(destRef.get());
                 if (destRef.get().getObjectId().equals(ObjectId.NULL)) {
                     command(UpdateRef.class).setName(destRef.get().getName())
                             .setNewValue(sourceRef.get().getObjectId()).call();
@@ -164,12 +166,14 @@ public class PullOp extends AbstractGeoGitOp<PullResult> {
                                 Suppliers.ofInstance(sourceRef.get().getObjectId())).call();
                     }
                 }
+                destRef = command(RefParse.class).setName(destinationref).call();
+                result.setNewRef(destRef.get());
             } else {
                 // make a new branch
                 Ref newRef = command(BranchCreateOp.class).setAutoCheckout(true)
                         .setName(destinationref)
                         .setSource(sourceRef.get().getObjectId().toString()).call();
-                result.addNewRef(newRef);
+                result.setNewRef(newRef);
             }
 
         }

@@ -51,7 +51,7 @@ public class CheckoutResult {
     }
 
     public CheckoutResult setResult(Results result) {
-        if (result == Results.NO_RESULT) {
+        if (this.result == Results.NO_RESULT) {
             this.result = result;
         }
         return this;

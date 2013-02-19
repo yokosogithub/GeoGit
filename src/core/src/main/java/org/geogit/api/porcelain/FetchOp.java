@@ -16,6 +16,8 @@ import org.geogit.api.SymRef;
 import org.geogit.api.plumbing.LsRemote;
 import org.geogit.api.plumbing.UpdateRef;
 import org.geogit.api.plumbing.UpdateSymRef;
+import org.geogit.api.porcelain.FetchResult.ChangedRef;
+import org.geogit.api.porcelain.FetchResult.ChangedRef.ChangeTypes;
 import org.geogit.remote.IRemoteRepo;
 import org.geogit.remote.RemoteUtils;
 import org.geogit.repository.Repository;
@@ -28,6 +30,7 @@ import com.google.common.base.Suppliers;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 
 /**
@@ -35,7 +38,7 @@ import com.google.inject.Inject;
  * to complete them.
  * 
  */
-public class FetchOp extends AbstractGeoGitOp<Void> {
+public class FetchOp extends AbstractGeoGitOp<FetchResult> {
 
     private boolean all;
 
@@ -102,7 +105,7 @@ public class FetchOp extends AbstractGeoGitOp<Void> {
      * @return {@code null}
      * @see org.geogit.api.AbstractGeoGitOp#call()
      */
-    public Void call() {
+    public FetchResult call() {
         if (all) {
             // Add all remotes to list.
             ImmutableList<Remote> localRemotes = command(RemoteListOp.class).call();
@@ -120,6 +123,8 @@ public class FetchOp extends AbstractGeoGitOp<Void> {
 
         getProgressListener().started();
 
+        FetchResult result = new FetchResult();
+
         for (Remote remote : remotes) {
             ProgressListener subProgress = this.subProgress(100.f / remotes.size());
             subProgress.started();
@@ -128,7 +133,7 @@ public class FetchOp extends AbstractGeoGitOp<Void> {
             final ImmutableSet<Ref> localRemoteRefs = command(LsRemote.class)
                     .retrieveLocalRefs(true).setRemote(Suppliers.ofInstance(Optional.of(remote)))
                     .call();
-            final ImmutableSet<Ref> needUpdate = findOutdatedRefs(remote, remoteRemoteRefs,
+            List<ChangedRef> needUpdate = findOutdatedRefs(remote, remoteRemoteRefs,
                     localRemoteRefs);
 
             if (prune) {
@@ -143,6 +148,9 @@ public class FetchOp extends AbstractGeoGitOp<Void> {
                 for (Ref localRef : localRemoteRefs) {
                     if (!locals.contains(localRef)) {
                         // Delete the ref
+                        ChangedRef changedRef = new ChangedRef(localRef, null,
+                                ChangeTypes.REMOVED_REF);
+                        needUpdate.add(changedRef);
                         command(UpdateRef.class).setDelete(true).setName(localRef.getName()).call();
                     }
                 }
@@ -157,15 +165,19 @@ public class FetchOp extends AbstractGeoGitOp<Void> {
                 Throwables.propagate(e);
             }
             int refCount = 0;
-            for (Ref ref : needUpdate) {
-                refCount++;
-                subProgress.progress((refCount * 100.f) / needUpdate.size());
-                // Fetch updated data from this ref
-                remoteRepo.get().fetchNewData(localRepository, ref);
+            for (ChangedRef ref : needUpdate) {
+                if (ref.getType() != ChangeTypes.REMOVED_REF) {
+                    refCount++;
+                    subProgress.progress((refCount * 100.f) / needUpdate.size());
+                    // Fetch updated data from this ref
+                    remoteRepo.get().fetchNewData(localRepository, ref.getNewRef());
 
-                // Update the ref
-                updateLocalRef(ref, remote, localRemoteRefs);
+                    // Update the ref
+                    updateLocalRef(ref.getNewRef(), remote, localRemoteRefs);
+                }
             }
+
+            result.getChangedRefs().put(remote.getFetchURL(), needUpdate);
 
             // Update HEAD ref
             Ref remoteHead = remoteRepo.get().headRef();
@@ -181,7 +193,7 @@ public class FetchOp extends AbstractGeoGitOp<Void> {
         }
         getProgressListener().complete();
 
-        return null;
+        return result;
     }
 
     /**
@@ -207,23 +219,26 @@ public class FetchOp extends AbstractGeoGitOp<Void> {
      * Filters the remote references for the given remote that are not present or outdated in the
      * local repository
      */
-    private ImmutableSet<Ref> findOutdatedRefs(Remote remote, ImmutableSet<Ref> remoteRefs,
+    private List<ChangedRef> findOutdatedRefs(Remote remote, ImmutableSet<Ref> remoteRefs,
             ImmutableSet<Ref> localRemoteRefs) {
 
-        ImmutableSet.Builder<Ref> outdatedOrMissing = ImmutableSet.builder();
+        List<ChangedRef> changedRefs = Lists.newLinkedList();
 
         for (Ref remoteRef : remoteRefs) {// refs/heads/xxx or refs/tags/yyy, though we don't handle
                                           // tags yet
             Optional<Ref> local = findLocal(remoteRef, localRemoteRefs);
             if (local.isPresent()) {
                 if (!local.get().getObjectId().equals(remoteRef.getObjectId())) {
-                    outdatedOrMissing.add(remoteRef);
+                    ChangedRef changedRef = new ChangedRef(local.get(), remoteRef,
+                            ChangeTypes.CHANGED_REF);
+                    changedRefs.add(changedRef);
                 }
             } else {
-                outdatedOrMissing.add(remoteRef);
+                ChangedRef changedRef = new ChangedRef(null, remoteRef, ChangeTypes.ADDED_REF);
+                changedRefs.add(changedRef);
             }
         }
-        return outdatedOrMissing.build();
+        return changedRefs;
     }
 
     /**

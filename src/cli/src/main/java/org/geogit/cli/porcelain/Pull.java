@@ -8,12 +8,12 @@ package org.geogit.cli.porcelain;
 import static com.google.common.base.Preconditions.checkState;
 
 import java.util.List;
+import java.util.Map.Entry;
 
 import jline.console.ConsoleReader;
 
-import org.geogit.api.ObjectId;
-import org.geogit.api.Ref;
-import org.geogit.api.plumbing.RevParse;
+import org.geogit.api.porcelain.FetchResult.ChangedRef;
+import org.geogit.api.porcelain.FetchResult.ChangedRef.ChangeTypes;
 import org.geogit.api.porcelain.PullOp;
 import org.geogit.api.porcelain.PullResult;
 import org.geogit.cli.AbstractCommand;
@@ -22,7 +22,6 @@ import org.geogit.cli.GeogitCLI;
 
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.Parameters;
-import com.google.common.base.Optional;
 
 /**
  * Incorporates changes from a remote repository into the current branch.
@@ -79,17 +78,36 @@ public class Pull extends AbstractCommand implements CLICommand {
 
         ConsoleReader console = cli.getConsole();
 
-        console.println("From " + result.getRemoteName());
-        for (Ref ref : result.getNewRefs()) {
-            String line = " * [new branch]     " + ref.localName() + " -> " + ref.getName();
-            console.println(line);
+        for (Entry<String, List<ChangedRef>> entry : result.getFetchResult().getChangedRefs()
+                .entrySet()) {
+            console.println("From " + entry.getKey());
+
+            for (ChangedRef ref : entry.getValue()) {
+                String line;
+                if (ref.getType() == ChangeTypes.CHANGED_REF) {
+                    line = "   " + ref.getOldRef().getObjectId().toString().substring(0, 7) + ".."
+                            + ref.getNewRef().toString().substring(0, 7) + "     "
+                            + ref.getNewRef().localName() + " -> " + ref.getNewRef().getName();
+                } else if (ref.getType() == ChangeTypes.ADDED_REF) {
+                    line = " * [new branch]     " + ref.getNewRef().localName() + " -> "
+                            + ref.getNewRef().getName();
+                } else {
+                    line = " x [deleted]        (none) -> " + ref.getOldRef().getName();
+                }
+                console.println(line);
+            }
         }
-        for (Ref ref : result.getChangedRefs()) {
-            Optional<ObjectId> oid = cli.getGeogit().command(RevParse.class)
-                    .setRefSpec(ref.localName()).call();
-            String line = "   " + ref.getObjectId().toString().substring(0, 7) + ".."
-                    + oid.get().toString().substring(0, 7) + "     " + ref.localName() + " -> "
-                    + ref.getName();
+
+        console.println("From " + result.getRemoteName());
+        if (result.getOldRef() == null) {
+            console.println(" * [new branch]     " + result.getNewRef().localName() + " -> "
+                    + result.getNewRef().getName());
+        } else if (result.getOldRef().equals(result.getNewRef())) {
+            console.println("Already up to date.");
+        } else {
+            String line = "   " + result.getOldRef().getObjectId().toString().substring(0, 7)
+                    + ".." + result.getNewRef().toString().substring(0, 7) + "     "
+                    + result.getNewRef().localName() + " -> " + result.getNewRef().getName();
             console.println(line);
         }
     }
