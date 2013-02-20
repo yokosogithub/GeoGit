@@ -73,23 +73,28 @@ public class Fetch extends AbstractCommand implements CLICommand {
 
         FetchResult result = fetch.call();
         ConsoleReader console = cli.getConsole();
-        for (Entry<String, List<ChangedRef>> entry : result.getChangedRefs().entrySet()) {
-            console.println("From " + entry.getKey());
+        if (result.getChangedRefs().entrySet().size() > 0) {
+            for (Entry<String, List<ChangedRef>> entry : result.getChangedRefs().entrySet()) {
+                console.println("From " + entry.getKey());
 
-            for (ChangedRef ref : entry.getValue()) {
-                String line;
-                if (ref.getType() == ChangeTypes.CHANGED_REF) {
-                    line = "   " + ref.getOldRef().getObjectId().toString().substring(0, 7) + ".."
-                            + ref.getNewRef().toString().substring(0, 7) + "     "
-                            + ref.getOldRef().localName() + " -> " + ref.getOldRef().getName();
-                } else if (ref.getType() == ChangeTypes.ADDED_REF) {
-                    line = " * [new branch]     " + ref.getOldRef().localName() + " -> "
-                            + ref.getOldRef().getName();
-                } else {
-                    line = " x [deleted]        (none) -> " + ref.getOldRef().getName();
+                for (ChangedRef ref : entry.getValue()) {
+                    String line;
+                    if (ref.getType() == ChangeTypes.CHANGED_REF) {
+                        line = "   " + ref.getOldRef().getObjectId().toString().substring(0, 7)
+                                + ".." + ref.getNewRef().getObjectId().toString().substring(0, 7)
+                                + "     " + ref.getOldRef().localName() + " -> "
+                                + ref.getOldRef().getName();
+                    } else if (ref.getType() == ChangeTypes.ADDED_REF) {
+                        line = " * [new branch]     " + ref.getOldRef().localName() + " -> "
+                                + ref.getOldRef().getName();
+                    } else {
+                        line = " x [deleted]        (none) -> " + ref.getOldRef().getName();
+                    }
+                    console.println(line);
                 }
-                console.println(line);
             }
+        } else {
+            console.println("Already up to date.");
         }
     }
 }

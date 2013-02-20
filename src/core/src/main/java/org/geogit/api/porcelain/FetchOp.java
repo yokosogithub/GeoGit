@@ -177,7 +177,9 @@ public class FetchOp extends AbstractGeoGitOp<FetchResult> {
                 }
             }
 
-            result.getChangedRefs().put(remote.getFetchURL(), needUpdate);
+            if (needUpdate.size() > 0) {
+                result.getChangedRefs().put(remote.getFetchURL(), needUpdate);
+            }
 
             // Update HEAD ref
             Ref remoteHead = remoteRepo.get().headRef();
