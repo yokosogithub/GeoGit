@@ -5,11 +5,6 @@
 
 package org.geogit.api.plumbing;
 
-import java.util.HashSet;
-import java.util.LinkedList;
-import java.util.Queue;
-import java.util.Set;
-
 import org.geogit.api.AbstractGeoGitOp;
 import org.geogit.api.ObjectId;
 import org.geogit.api.RevCommit;
@@ -88,43 +83,5 @@ public class FindCommonAncestor extends AbstractGeoGitOp<Optional<RevCommit>> {
         getProgressListener().complete();
 
         return ancestorCommit;
-    }
-
-    private Optional<RevCommit> findAncestor(RevCommit left, RevCommit right) {
-        Set<ObjectId> leftSet = new HashSet<ObjectId>();
-        Set<ObjectId> rightSet = new HashSet<ObjectId>();
-
-        Queue<RevCommit> leftQueue = new LinkedList<RevCommit>();
-        leftQueue.add(left);
-        Queue<RevCommit> rightQueue = new LinkedList<RevCommit>();
-        rightQueue.add(right);
-        while (!leftQueue.isEmpty() || !rightQueue.isEmpty()) {
-            if (!leftQueue.isEmpty()) {
-                RevCommit commit = leftQueue.poll();
-                if (!leftSet.contains(commit.getId())) {
-                    leftSet.add(commit.getId());
-                    if (rightSet.contains(commit.getId())) {
-                        return Optional.of(commit);
-                    }
-                    for (ObjectId parentCommit : commit.getParentIds()) {
-                        leftQueue.add(repository.getCommit(parentCommit));
-                    }
-                }
-            }
-            if (!rightQueue.isEmpty()) {
-                RevCommit commit = rightQueue.poll();
-                if (!rightSet.contains(commit.getId())) {
-                    rightSet.add(commit.getId());
-                    if (leftSet.contains(commit.getId())) {
-                        return Optional.of(commit);
-                    }
-                    for (ObjectId parentCommit : commit.getParentIds()) {
-                        rightQueue.add(repository.getCommit(parentCommit));
-                    }
-                }
-            }
-        }
-
-        return Optional.absent();
     }
 }

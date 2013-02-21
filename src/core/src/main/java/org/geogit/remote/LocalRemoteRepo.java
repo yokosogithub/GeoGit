@@ -267,7 +267,6 @@ public class LocalRemoteRepo implements IRemoteRepo {
             walkTree(commit.getTreeId(), from, to, objectInserter);
 
             objectInserter.insert(commit);
-            to.getGraphDatabase().put(commit.getId(), ImmutableList.copyOf(commit.getParentIds()));
             touchedIds.add(commitId);
             for (ObjectId parentCommit : commit.getParentIds()) {
                 commitQueue.add(parentCommit);

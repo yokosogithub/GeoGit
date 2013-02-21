@@ -440,10 +440,6 @@ public class HttpRemoteRepo implements IRemoteRepo {
                 : getNetworkObject(commitId, localRepo);
         if (object.isPresent() && object.get().getType().equals(TYPE.COMMIT)) {
             RevCommit commit = (RevCommit) object.get();
-            if (!sendObject) {
-                localRepo.getGraphDatabase().put(commit.getId(),
-                        ImmutableList.copyOf(commit.getParentIds()));
-            }
             walkTree(commit.getTreeId(), localRepo, sendObject);
 
             for (ObjectId parentCommit : commit.getParentIds()) {

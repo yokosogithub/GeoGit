@@ -101,13 +101,6 @@ public class Repository implements CommandLocator {
     }
 
     /**
-     * @return the {@link GraphDatabase} for this repository
-     */
-    public GraphDatabase getGraphDatabase() {
-        return graphDatabase;
-    }
-
-    /**
      * @return the {@link StagingArea} for this repository
      */
     @Override

@@ -13,19 +13,14 @@ import java.util.Set;
 
 import org.geogit.api.ObjectId;
 import org.geogit.api.Platform;
-import org.geogit.api.RevCommit;
 import org.geogit.api.plumbing.ResolveGeogitDir;
-import org.neo4j.graphalgo.impl.ancestor.AncestorsUtil;
-import org.neo4j.graphdb.Direction;
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.Relationship;
-import org.neo4j.graphdb.RelationshipExpander;
 import org.neo4j.graphdb.RelationshipType;
 import org.neo4j.graphdb.Transaction;
 import org.neo4j.graphdb.factory.GraphDatabaseFactory;
 import org.neo4j.graphdb.index.Index;
-import org.neo4j.kernel.Traversal;
 
 import com.google.common.base.Optional;
 import com.google.common.base.Throwables;
@@ -33,7 +28,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableList.Builder;
 import com.google.inject.Inject;
 
-@SuppressWarnings("deprecation")
 public class Neo4JGraphDatabase extends AbstractGraphDatabase {
 
     GraphDatabaseService graphDB = null;

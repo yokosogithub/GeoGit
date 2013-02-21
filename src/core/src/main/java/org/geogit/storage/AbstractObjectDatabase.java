@@ -214,7 +214,7 @@ public abstract class AbstractObjectDatabase implements ObjectDatabase {
     }
 
     @Override
-    public final <T extends RevObject> boolean put(final T object) {
+    public <T extends RevObject> boolean put(final T object) {
         Preconditions.checkNotNull(object);
         Preconditions.checkArgument(!object.getId().isNull(), "ObjectId is NULL %s", object);
 
