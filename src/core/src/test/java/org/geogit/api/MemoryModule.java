@@ -9,6 +9,7 @@ import org.geogit.storage.GraphDatabase;
 import org.geogit.storage.ObjectDatabase;
 import org.geogit.storage.RefDatabase;
 import org.geogit.storage.StagingDatabase;
+import org.geogit.storage.TestNeo4JGraphDatabase;
 import org.geogit.storage.memory.HeapObjectDatabse;
 import org.geogit.storage.memory.HeapRefDatabase;
 import org.geogit.storage.memory.HeapStagingDatabase;

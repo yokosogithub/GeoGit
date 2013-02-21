@@ -1,5 +1,6 @@
-package org.geogit.api;
+package org.geogit.storage;
 
+import org.geogit.api.Platform;
 import org.geogit.storage.Neo4JGraphDatabase;
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.test.TestGraphDatabaseFactory;
