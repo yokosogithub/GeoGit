@@ -29,6 +29,7 @@ import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.base.Throwables;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.inject.Injector;
 
@@ -266,6 +267,7 @@ public class LocalRemoteRepo implements IRemoteRepo {
             walkTree(commit.getTreeId(), from, to, objectInserter);
 
             objectInserter.insert(commit);
+            to.getGraphDatabase().put(commit.getId(), ImmutableList.copyOf(commit.getParentIds()));
             touchedIds.add(commitId);
             for (ObjectId parentCommit : commit.getParentIds()) {
                 commitQueue.add(parentCommit);

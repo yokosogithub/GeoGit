@@ -22,6 +22,7 @@ import org.geogit.api.plumbing.ResolveTreeish;
 import org.geogit.api.plumbing.RevObjectParse;
 import org.geogit.api.plumbing.RevParse;
 import org.geogit.storage.ConfigDatabase;
+import org.geogit.storage.GraphDatabase;
 import org.geogit.storage.ObjectDatabase;
 import org.geogit.storage.ObjectInserter;
 import org.geogit.storage.RefDatabase;
@@ -61,6 +62,9 @@ public class Repository implements CommandLocator {
     @Inject
     private ObjectDatabase objectDatabase;
 
+    @Inject
+    private GraphDatabase graphDatabase;
+
     /**
      * Creates the repository.
      */
@@ -70,6 +74,7 @@ public class Repository implements CommandLocator {
     public void open() {
         refDatabase.create();
         objectDatabase.open();
+        graphDatabase.open();
         index.getDatabase().open();
     }
 
@@ -96,6 +101,13 @@ public class Repository implements CommandLocator {
     }
 
     /**
+     * @return the {@link GraphDatabase} for this repository
+     */
+    public GraphDatabase getGraphDatabase() {
+        return graphDatabase;
+    }
+
+    /**
      * @return the {@link StagingArea} for this repository
      */
     @Override
@@ -109,6 +121,7 @@ public class Repository implements CommandLocator {
     public void close() {
         refDatabase.close();
         objectDatabase.close();
+        graphDatabase.close();
         index.getDatabase().close();
     }
 

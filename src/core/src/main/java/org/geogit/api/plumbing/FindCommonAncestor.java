@@ -5,25 +5,19 @@
 
 package org.geogit.api.plumbing;
 
-import java.util.Collections;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.LinkedList;
-import java.util.List;
 import java.util.Queue;
 import java.util.Set;
 
 import org.geogit.api.AbstractGeoGitOp;
 import org.geogit.api.ObjectId;
 import org.geogit.api.RevCommit;
-import org.geogit.api.porcelain.ConfigOp;
-import org.geogit.api.porcelain.ConfigOp.ConfigAction;
-import org.geogit.api.porcelain.LogOp;
 import org.geogit.repository.Repository;
+import org.geogit.storage.GraphDatabase;
 
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.Iterators;
 import com.google.inject.Inject;
 
 /**
@@ -37,14 +31,17 @@ public class FindCommonAncestor extends AbstractGeoGitOp<Optional<RevCommit>> {
 
     private Repository repository;
 
+    private GraphDatabase graphDb;
+
     /**
      * Construct a new {@code FindCommonAncestor} using the specified {@link Repository}.
      * 
      * @param repository the repository
      */
     @Inject
-    public FindCommonAncestor(Repository repository) {
+    public FindCommonAncestor(Repository repository, GraphDatabase graphDb) {
         this.repository = repository;
+        this.graphDb = graphDb;
     }
 
     /**
@@ -81,55 +78,50 @@ public class FindCommonAncestor extends AbstractGeoGitOp<Optional<RevCommit>> {
 
         getProgressListener().started();
 
-        final int partitionSize;
-        {
-            final String key = "plumbing.partitionSize";
-            partitionSize = Integer.parseInt(command(ConfigOp.class)
-                    .setAction(ConfigAction.CONFIG_GET).setName(key).call()
-                    .or(Collections.singletonMap(key, "1000")).get(key));
-        }
+        Optional<ObjectId> ancestor = graphDb.lowestCommonAncestor(left.getId(), right.getId());
 
-        Iterator<RevCommit> log = command(LogOp.class).setUntil(right.getId()).call();
-
-        Iterator<List<RevCommit>> partitions = Iterators.partition(log, partitionSize);
-
-        getProgressListener().progress(50.f);
-
-        while (partitions.hasNext()) {
-
-            Set<ObjectId> ancestrySet = new HashSet<ObjectId>();
-            populateSet(partitions.next(), ancestrySet);
-            Optional<RevCommit> ancestor = findAncestor(left, ancestrySet);
-            if (ancestor.isPresent()) {
-                getProgressListener().complete();
-                return ancestor;
-            }
+        Optional<RevCommit> ancestorCommit = Optional.absent();
+        if (ancestor.isPresent()) {
+            ancestorCommit = Optional.of(repository.getCommit(ancestor.get()));
         }
 
         getProgressListener().complete();
 
-        return Optional.absent();
+        return ancestorCommit;
     }
 
-    private void populateSet(List<RevCommit> commits, Set<ObjectId> ancestrySet) {
-        for (int i = 0; i < commits.size(); i++) {
-            ancestrySet.add(commits.get(i).getId());
-        }
-    }
+    private Optional<RevCommit> findAncestor(RevCommit left, RevCommit right) {
+        Set<ObjectId> leftSet = new HashSet<ObjectId>();
+        Set<ObjectId> rightSet = new HashSet<ObjectId>();
 
-    private Optional<RevCommit> findAncestor(RevCommit descendant, Set<ObjectId> ancestrySet) {
-        // Perform a breadth-first search of the graph, looking for a common ancestor
-        Queue<RevCommit> commitQueue = new LinkedList<RevCommit>();
-        commitQueue.add(descendant);
-        while (!commitQueue.isEmpty()) {
-            RevCommit commit = (RevCommit) commitQueue.remove();
-
-            if (ancestrySet.contains(commit.getId())) {
-                return Optional.of(commit);
+        Queue<RevCommit> leftQueue = new LinkedList<RevCommit>();
+        leftQueue.add(left);
+        Queue<RevCommit> rightQueue = new LinkedList<RevCommit>();
+        rightQueue.add(right);
+        while (!leftQueue.isEmpty() || !rightQueue.isEmpty()) {
+            if (!leftQueue.isEmpty()) {
+                RevCommit commit = leftQueue.poll();
+                if (!leftSet.contains(commit.getId())) {
+                    leftSet.add(commit.getId());
+                    if (rightSet.contains(commit.getId())) {
+                        return Optional.of(commit);
+                    }
+                    for (ObjectId parentCommit : commit.getParentIds()) {
+                        leftQueue.add(repository.getCommit(parentCommit));
+                    }
+                }
             }
-
-            for (ObjectId parent : commit.getParentIds()) {
-                commitQueue.add(repository.getCommit(parent));
+            if (!rightQueue.isEmpty()) {
+                RevCommit commit = rightQueue.poll();
+                if (!rightSet.contains(commit.getId())) {
+                    rightSet.add(commit.getId());
+                    if (leftSet.contains(commit.getId())) {
+                        return Optional.of(commit);
+                    }
+                    for (ObjectId parentCommit : commit.getParentIds()) {
+                        rightQueue.add(repository.getCommit(parentCommit));
+                    }
+                }
             }
         }
 

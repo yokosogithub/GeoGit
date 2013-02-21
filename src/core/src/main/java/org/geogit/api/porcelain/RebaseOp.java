@@ -25,12 +25,14 @@ import org.geogit.api.plumbing.UpdateSymRef;
 import org.geogit.api.plumbing.WriteTree;
 import org.geogit.api.plumbing.diff.DiffEntry;
 import org.geogit.repository.Repository;
+import org.geogit.storage.GraphDatabase;
 import org.opengis.util.ProgressListener;
 
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
+import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
 
 /**
@@ -48,6 +50,8 @@ public class RebaseOp extends AbstractGeoGitOp<Boolean> {
 
     private Platform platform;
 
+    private GraphDatabase graphDb;
+
     /**
      * Constructs a new {@code RebaseOp} using the specified parameters.
      * 
@@ -55,9 +59,10 @@ public class RebaseOp extends AbstractGeoGitOp<Boolean> {
      * @param platform the platform to use
      */
     @Inject
-    public RebaseOp(Repository repository, Platform platform) {
+    public RebaseOp(Repository repository, Platform platform, GraphDatabase graphDb) {
         this.repository = repository;
         this.platform = platform;
+        this.graphDb = graphDb;
     }
 
     /**
@@ -182,6 +187,7 @@ public class RebaseOp extends AbstractGeoGitOp<Boolean> {
 
             RevCommit newCommit = builder.build();
             repository.getObjectDatabase().put(newCommit);
+            graphDb.put(newCommit.getId(), ImmutableList.copyOf(newCommit.getParentIds()));
 
             rebaseHead = newCommit.getId();
 

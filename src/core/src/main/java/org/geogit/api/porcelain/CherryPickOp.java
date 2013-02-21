@@ -21,10 +21,12 @@ import org.geogit.api.plumbing.UpdateSymRef;
 import org.geogit.api.plumbing.WriteTree;
 import org.geogit.api.plumbing.diff.DiffEntry;
 import org.geogit.repository.Repository;
+import org.geogit.storage.GraphDatabase;
 
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
+import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
 
 /**
@@ -43,15 +45,18 @@ public class CherryPickOp extends AbstractGeoGitOp<RevCommit> {
 
     private Repository repository;
 
+    private GraphDatabase graphDb;
+
     private Platform platform;
 
     /**
      * Constructs a new {@code CherryPickOp}.
      */
     @Inject
-    public CherryPickOp(Repository repository, Platform platform) {
+    public CherryPickOp(Repository repository, Platform platform, GraphDatabase graphDb) {
         this.repository = repository;
         this.platform = platform;
+        this.graphDb = graphDb;
     }
 
     /**
@@ -121,6 +126,7 @@ public class CherryPickOp extends AbstractGeoGitOp<RevCommit> {
 
         RevCommit newCommit = builder.build();
         repository.getObjectDatabase().put(newCommit);
+        graphDb.put(newCommit.getId(), ImmutableList.copyOf(newCommit.getParentIds()));
 
         cherryPickHead = newCommit.getId();
 

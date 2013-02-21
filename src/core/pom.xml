@@ -82,6 +82,12 @@
       <groupId>com.caucho</groupId>
       <artifactId>resin-hessian</artifactId>
     </dependency>
+      
+    <dependency>
+      <groupId>org.neo4j</groupId>
+      <artifactId>neo4j</artifactId>
+      <version>1.9.M04</version>
+    </dependency>
 
     <!-- Test scope dependencies -->
     <dependency>
@@ -103,6 +109,13 @@
     <dependency>
       <groupId>org.mockito</groupId>
       <artifactId>mockito-all</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.neo4j</groupId>
+      <artifactId>neo4j-kernel</artifactId>
+      <version>1.9.M04</version>
+      <type>test-jar</type>
       <scope>test</scope>
     </dependency>
   </dependencies>

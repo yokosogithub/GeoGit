@@ -19,6 +19,8 @@ import org.geogit.repository.StagingArea;
 import org.geogit.repository.WorkingTree;
 import org.geogit.storage.CachingObjectDatabaseGetInterceptor;
 import org.geogit.storage.ConfigDatabase;
+import org.geogit.storage.GraphDatabase;
+import org.geogit.storage.Neo4JGraphDatabase;
 import org.geogit.storage.ObjectDatabase;
 import org.geogit.storage.ObjectSerialisingFactory;
 import org.geogit.storage.RefDatabase;
@@ -62,6 +64,7 @@ public class GeogitModule extends AbstractModule {
         bind(ConfigDatabase.class).to(IniConfigDatabase.class).in(Scopes.SINGLETON);
         bind(StagingArea.class).to(Index.class).in(Scopes.SINGLETON);
         bind(WorkingTree.class).in(Scopes.SINGLETON);
+        bind(GraphDatabase.class).to(Neo4JGraphDatabase.class).in(Scopes.SINGLETON);
 
         bind(ObjectDatabase.class).to(FileObjectDatabase.class).in(Scopes.SINGLETON);
         bind(RefDatabase.class).to(FileRefDatabase.class).in(Scopes.SINGLETON);

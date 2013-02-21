@@ -28,12 +28,14 @@ import org.geogit.api.plumbing.UpdateRef;
 import org.geogit.api.plumbing.UpdateSymRef;
 import org.geogit.api.plumbing.WriteTree;
 import org.geogit.api.porcelain.ConfigOp.ConfigAction;
+import org.geogit.storage.GraphDatabase;
 import org.geogit.storage.ObjectDatabase;
 
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
+import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
 
 /**
@@ -52,6 +54,8 @@ public class CommitOp extends AbstractGeoGitOp<RevCommit> {
     private final ObjectDatabase objectDb;
 
     private final Platform platform;
+
+    private final GraphDatabase graphDb;
 
     private Optional<String> authorName;
 
@@ -88,9 +92,11 @@ public class CommitOp extends AbstractGeoGitOp<RevCommit> {
      * @param platform the current platform
      */
     @Inject
-    public CommitOp(final ObjectDatabase objectDb, final Platform platform) {
+    public CommitOp(final ObjectDatabase objectDb, final Platform platform,
+            final GraphDatabase graphDb) {
         this.objectDb = objectDb;
         this.platform = platform;
+        this.graphDb = graphDb;
     }
 
     /**
@@ -277,6 +283,7 @@ public class CommitOp extends AbstractGeoGitOp<RevCommit> {
             }
             commit = cb.build();
             objectDb.put(commit);
+            graphDb.put(commit.getId(), ImmutableList.copyOf(commit.getParentIds()));
         }
         // set the HEAD pointing to the new commit
         final Optional<Ref> branchHead = command(UpdateRef.class).setName(currentBranch)

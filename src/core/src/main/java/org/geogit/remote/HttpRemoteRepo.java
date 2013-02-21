@@ -32,6 +32,7 @@ import org.geogit.repository.Repository;
 
 import com.google.common.base.Optional;
 import com.google.common.base.Throwables;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.io.Closeables;
 
@@ -439,6 +440,10 @@ public class HttpRemoteRepo implements IRemoteRepo {
                 : getNetworkObject(commitId, localRepo);
         if (object.isPresent() && object.get().getType().equals(TYPE.COMMIT)) {
             RevCommit commit = (RevCommit) object.get();
+            if (!sendObject) {
+                localRepo.getGraphDatabase().put(commit.getId(),
+                        ImmutableList.copyOf(commit.getParentIds()));
+            }
             walkTree(commit.getTreeId(), localRepo, sendObject);
 
             for (ObjectId parentCommit : commit.getParentIds()) {
