@@ -68,12 +68,6 @@ class TreeDiffEntryIterator extends AbstractIterator<DiffEntry> {
         checkArgument(oldTree != null || newTree != null);
         this.reportTrees = reportTrees;
         this.objectDb = db;
-        if (oldTree == null) {
-            oldTree = RevTree.EMPTY;
-        }
-        if (newTree == null) {
-            newTree = RevTree.EMPTY;
-        }
 
         if (reportTrees) {
             strategy = DepthTreeIterator.Strategy.RECURSIVE;
@@ -81,11 +75,11 @@ class TreeDiffEntryIterator extends AbstractIterator<DiffEntry> {
             strategy = DepthTreeIterator.Strategy.RECURSIVE_FEATURES_ONLY;
         }
 
-        if (oldTree.getId().equals(newTree.getId())) {
+        if (oldTree != null && newTree != null && oldTree.getId().equals(newTree.getId())) {
             delegate = Iterators.emptyIterator();
-        } else if (oldTree.isEmpty()) {
+        } else if (oldTree == null) {
             delegate = addRemoveAll(newTreeRef, newTree, ADDED);
-        } else if (newTree.isEmpty()) {
+        } else if (newTree == null) {
             delegate = addRemoveAll(oldTreeRef, oldTree, REMOVED);
         } else if (!oldTree.buckets().isPresent() && !newTree.buckets().isPresent()) {
 

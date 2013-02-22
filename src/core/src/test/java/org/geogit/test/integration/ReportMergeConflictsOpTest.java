@@ -8,6 +8,7 @@ import org.geogit.api.porcelain.AddOp;
 import org.geogit.api.porcelain.BranchCreateOp;
 import org.geogit.api.porcelain.CheckoutOp;
 import org.geogit.api.porcelain.CommitOp;
+import org.geogit.api.porcelain.RemoveOp;
 import org.geotools.data.DataUtilities;
 import org.junit.Test;
 import org.opengis.feature.Feature;
@@ -180,7 +181,10 @@ public class ReportMergeConflictsOpTest extends RepositoryTestCase {
         insertAndAdd(points2);
         RevCommit masterCommit = geogit.command(CommitOp.class).call();
         geogit.command(CheckoutOp.class).setSource("TestBranch").call();
-        deleteAndAdd(points1);
+        
+        geogit.command(RemoveOp.class).addPathToRemove(pointsName).call();
+        geogit.command(AddOp.class).call();
+        
         RevCommit branchCommit = geogit.command(CommitOp.class).call();
         ConflictsReport conflicts = geogit.command(ReportMergeConflictsOp.class)
                 .setMergeIntoCommit(masterCommit).setToMergeCommit(branchCommit).call();

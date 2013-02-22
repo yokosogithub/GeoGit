@@ -1,20 +1,27 @@
 package org.geogit.test.integration;
 
+import java.util.Iterator;
 import java.util.List;
 
 import org.geogit.api.NodeRef;
 import org.geogit.api.ObjectId;
 import org.geogit.api.Ref;
+import org.geogit.api.RevCommit;
+import org.geogit.api.plumbing.LsTreeOp;
 import org.geogit.api.plumbing.RefParse;
 import org.geogit.api.plumbing.RevParse;
 import org.geogit.api.plumbing.diff.DiffEntry;
 import org.geogit.api.plumbing.merge.Conflict;
 import org.geogit.api.plumbing.merge.MergeConflictsException;
+import org.geogit.api.porcelain.AddOp;
 import org.geogit.api.porcelain.BranchCreateOp;
 import org.geogit.api.porcelain.CheckoutOp;
 import org.geogit.api.porcelain.CommitOp;
 import org.geogit.api.porcelain.MergeOp;
 import org.geogit.api.porcelain.RemoveOp;
+import org.geogit.api.porcelain.ResetOp;
+import org.geogit.api.porcelain.ResetOp.ResetMode;
+import org.geogit.repository.WorkingTree;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -130,4 +137,38 @@ public class RemoveOpTest extends RepositoryTestCase {
         Optional<Ref> ref = geogit.command(RefParse.class).setName(Ref.MERGE_HEAD).call();
         assertFalse(ref.isPresent());
     }
+
+    // TODO: Remove this test
+    @SuppressWarnings(value = { "unused" })
+    @Test
+    public void testRemovalOfAllFeaturesOfAGivenType() throws Exception {
+        List<RevCommit> commits = populate(false, points1, points2, points3, lines1, lines2);
+
+        String featureId = lines1.getIdentifier().getID();
+        String path = NodeRef.appendChild(linesName, featureId);
+        String featureId2 = lines2.getIdentifier().getID();
+        String path2 = NodeRef.appendChild(linesName, featureId2);
+
+        WorkingTree tree = geogit.command(RemoveOp.class).addPathToRemove(path)
+                .addPathToRemove(path2).call();
+
+        geogit.command(AddOp.class).call();
+
+        RevCommit commit = geogit.command(CommitOp.class).setMessage("Removed lines").call();
+        Iterator<NodeRef> nodes = geogit.command(LsTreeOp.class).call();
+
+        while (nodes.hasNext()) {
+            NodeRef node = nodes.next();
+            assertNotNull(node);
+        }
+
+        geogit.command(ResetOp.class).setMode(ResetMode.HARD).call();
+
+        nodes = geogit.command(LsTreeOp.class).call();
+        while (nodes.hasNext()) {
+            NodeRef node = nodes.next();
+            assertNotNull(node);
+        }
+    }
+
 }
