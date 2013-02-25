@@ -279,7 +279,7 @@ public class MergeOp extends AbstractGeoGitOp<RevCommit> {
                     RevCommit oldCommit = commitsToMerge.get(i);
                     Iterator<DiffEntry> diff = command(DiffTree.class)
                             .setOldTree(commitsToMerge.get(i + 1).getId())
-                            .setNewTree(oldCommit.getId()).call();
+                            .setNewTree(oldCommit.getId()).setReportTrees(true).call();
                     // stage changes
                     getIndex().stage(
                             new SubProgressListener(subProgress, commitCount * 100.f / numCommits),
