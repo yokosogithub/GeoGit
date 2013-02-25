@@ -19,10 +19,10 @@ import org.geogit.api.RevObject;
 import org.geogit.api.RevObject.TYPE;
 import org.geogit.api.plumbing.DiffFeature;
 import org.geogit.api.plumbing.DiffTree;
+import org.geogit.api.plumbing.FindTreeChild;
 import org.geogit.api.plumbing.ResolveObjectType;
 import org.geogit.api.plumbing.RevObjectParse;
 import org.geogit.api.plumbing.diff.AttributeDiff;
-import org.geogit.api.plumbing.diff.ConflictsReport;
 import org.geogit.api.plumbing.diff.DiffEntry;
 import org.geogit.api.plumbing.diff.FeatureDiff;
 import org.geogit.repository.DepthSearch;
@@ -40,7 +40,7 @@ import com.google.inject.Inject;
  * the current branch without overwriting changes It classifies the changes of the commit in
  * conflicting or unconflicting, so they can be applied partially
  */
-public class ReportCommitConflictsOp extends AbstractGeoGitOp<ConflictsReport> {
+public class ReportCommitConflictsOp extends AbstractGeoGitOp<MergeScenarioReport> {
 
     private RevCommit commit;
 
@@ -60,9 +60,9 @@ public class ReportCommitConflictsOp extends AbstractGeoGitOp<ConflictsReport> {
     }
 
     @Override
-    public ConflictsReport call() {
+    public MergeScenarioReport call() {
 
-        ConflictsReport report = new ConflictsReport();
+        MergeScenarioReport report = new MergeScenarioReport();
 
         ObjectId parentCommitId = ObjectId.NULL;
         if (commit.getParentIds().size() > 0) {
@@ -84,9 +84,21 @@ public class ReportCommitConflictsOp extends AbstractGeoGitOp<ConflictsReport> {
             switch (diff.changeType()) {
             case ADDED:
                 if (obj.isPresent()) {
-                    if (!obj.get().getId().equals(diff.newObjectId())) {
-                        report.addConflict(new Conflict(path, ObjectId.NULL, diff.newObjectId(),
-                                obj.get().getId()));
+                    TYPE type = command(ResolveObjectType.class).setObjectId(
+                            diff.getNewObject().objectId()).call();
+                    if (TYPE.TREE.equals(type)) {
+                        NodeRef headVersion = command(FindTreeChild.class).setChildPath(path)
+                                .setParent(repository.getOrCreateHeadTree()).call().get();
+                        if (!headVersion.getMetadataId()
+                                .equals(diff.getNewObject().getMetadataId())) {
+                            report.addConflict(new Conflict(path, ObjectId.NULL, diff
+                                    .getNewObject().getMetadataId(), headVersion.getMetadataId()));
+                        }
+                    } else {
+                        if (!obj.get().getId().equals(diff.newObjectId())) {
+                            report.addConflict(new Conflict(path, ObjectId.NULL,
+                                    diff.newObjectId(), obj.get().getId()));
+                        }
                     }
                 } else {
                     report.addUnconflicted(diff);
@@ -106,7 +118,7 @@ public class ReportCommitConflictsOp extends AbstractGeoGitOp<ConflictsReport> {
                 TYPE type = command(ResolveObjectType.class).setObjectId(
                         diff.getNewObject().objectId()).call();
                 if (TYPE.TREE.equals(type)) {
-                    // TODO:see how to do this. For now, we will pass any change as an unconflicted
+                    // TODO:see how to do this. For now, we will pass any change as a conflicted
                     // one
                     report.addUnconflicted(diff);
                 } else {

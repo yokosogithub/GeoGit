@@ -173,28 +173,32 @@ public class InitSteps extends AbstractGeogitFunctionalTest {
     @Given("^I have conflicting branches$")
     public void I_have_conflicting_branches() throws Throwable {
         // Create the following revision graph
-        // ············o
-        // ············|
-        // ············o - Points 1 added
-        // ···········/|\
-        // branch2 - o | o - branch1 - Points 1 modified and points 2 added
-        // ············|
-        // ············o - master - HEAD - Points 1 modifiedB
+        // ............o
+        // ............|
+        // ............o - Points 1 added
+        // .........../|\
+        // branch2 - o | o - branch1 - Points 1 modifiedB and points 2 added
+        // ............|
+        // ............o - points 1 modified
+        // ............|
+        // ............o - master - HEAD - Lines 1 modified
         // branch1 and master are conflicting
         Feature points1ModifiedB = feature(pointsType, idP1, "StringProp1_3", new Integer(2000),
                 "POINT(1 1)");
         Feature points1Modified = feature(pointsType, idP1, "StringProp1_2", new Integer(1000),
                 "POINT(1 1)");
         insertAndAdd(points1);
-        geogit.command(CommitOp.class).call();
+        geogit.command(CommitOp.class).setMessage("Commit1").call();
         geogit.command(BranchCreateOp.class).setName("branch1").call();
         geogit.command(BranchCreateOp.class).setName("branch2").call();
         insertAndAdd(points1Modified);
-        geogit.command(CommitOp.class).call();
+        geogit.command(CommitOp.class).setMessage("Commit2").call();
+        insertAndAdd(lines1);
+        geogit.command(CommitOp.class).setMessage("Commit3").call();
         geogit.command(CheckoutOp.class).setSource("branch1").call();
         insertAndAdd(points1ModifiedB);
         insertAndAdd(points2);
-        geogit.command(CommitOp.class).call();
+        geogit.command(CommitOp.class).setMessage("Commit4").call();
         geogit.command(CheckoutOp.class).setSource("branch2").call();
         insertAndAdd(points3);
         geogit.command(CommitOp.class).call();

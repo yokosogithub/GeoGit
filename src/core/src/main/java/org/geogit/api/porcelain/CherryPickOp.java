@@ -16,10 +16,10 @@ import org.geogit.api.plumbing.DiffTree;
 import org.geogit.api.plumbing.RefParse;
 import org.geogit.api.plumbing.UpdateRef;
 import org.geogit.api.plumbing.WriteTree;
-import org.geogit.api.plumbing.diff.ConflictsReport;
 import org.geogit.api.plumbing.diff.DiffEntry;
 import org.geogit.api.plumbing.merge.Conflict;
 import org.geogit.api.plumbing.merge.ConflictsWriteOp;
+import org.geogit.api.plumbing.merge.MergeScenarioReport;
 import org.geogit.api.plumbing.merge.ReportCommitConflictsOp;
 import org.geogit.repository.Repository;
 
@@ -106,30 +106,14 @@ public class CherryPickOp extends AbstractGeoGitOp<RevCommit> {
                 .setNewTree(commitToApply.getTreeId()).setReportTrees(true).call();
 
         // see if there are conflicts
-        ConflictsReport report = command(ReportCommitConflictsOp.class).setCommit(commitToApply)
-                .call();
+        MergeScenarioReport report = command(ReportCommitConflictsOp.class)
+                .setCommit(commitToApply).call();
         if (report.getConflicts().isEmpty()) {
             // stage changes
             getIndex().stage(getProgressListener(), diff, 0);
             // write new tree
             ObjectId newTreeId = command(WriteTree.class).call();
             RevCommit newCommit = command(CommitOp.class).setCommit(commitToApply).call();
-
-            // long timestamp = platform.currentTimeMillis();
-            // // Create new commit
-            // CommitBuilder builder = new CommitBuilder(commitToApply);
-            // builder.setParentIds(Arrays.asList(headId));
-            // builder.setTreeId(newTreeId);
-            // builder.setCommitterTimestamp(timestamp);
-            // builder.setCommitterTimeZoneOffset(platform.timeZoneOffset(timestamp));
-            //
-            // RevCommit newCommit = builder.build();
-            // repository.getObjectDatabase().put(newCommit);
-            //
-            // headId = newCommit.getId();
-            //
-            // command(UpdateRef.class).setName(currentBranch).setNewValue(headId).call();
-            // command(UpdateSymRef.class).setName(Ref.HEAD).setNewValue(currentBranch).call();
 
             repository.getWorkingTree().updateWorkHead(newTreeId);
             repository.getIndex().updateStageHead(newTreeId);
@@ -159,7 +143,7 @@ public class CherryPickOp extends AbstractGeoGitOp<RevCommit> {
             for (Conflict conflict : report.getConflicts()) {
                 sb.append("CONFLICT: conflict in " + conflict.getPath() + "\n");
             }
-            sb.append("Fix conflicts and then commit the result using 'geogit commit -c + "
+            sb.append("Fix conflicts and then commit the result using 'geogit commit -c "
                     + commitToApply.getId().toString().substring(0, 7) + "\n");
             throw new IllegalStateException(sb.toString());
         }

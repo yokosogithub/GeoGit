@@ -12,10 +12,11 @@ import org.geogit.api.RevFeature;
 import org.geogit.api.RevFeatureType;
 import org.geogit.api.RevObject;
 import org.geogit.api.RevObject.TYPE;
+import org.geogit.api.RevTree;
 import org.geogit.api.plumbing.FindTreeChild;
 import org.geogit.api.plumbing.ResolveTreeish;
 import org.geogit.api.plumbing.RevObjectParse;
-import org.geogit.api.RevTree;
+import org.geogit.di.CanRunDuringConflict;
 import org.geogit.repository.WorkingTree;
 
 import com.google.common.base.Optional;
@@ -25,6 +26,9 @@ import com.google.inject.Inject;
 /**
  * Returns the NodeRef corresponding to a given refspec, if available.
  */
+// The annotation is here to allow this being run from the 'conflicts' command.
+// Other than that, there is no reason for this to be restricted to non-conflicting scenarios
+@CanRunDuringConflict
 public class FeatureNodeRefFromRefspec extends AbstractGeoGitOp<Optional<NodeRef>> {
 
     private WorkingTree workTree;

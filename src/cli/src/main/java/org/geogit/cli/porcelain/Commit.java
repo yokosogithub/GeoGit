@@ -7,7 +7,6 @@ package org.geogit.cli.porcelain;
 
 import static com.google.common.base.Preconditions.checkState;
 
-import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
@@ -97,8 +96,7 @@ public class Commit extends AbstractCommand implements CLICommand {
                         "Provided reference does not resolve to a commit");
                 commitOp.setCommit(geogit.getRepository().getCommit(commitId.get()));
             }
-            commit = commitOp.setProgressListener(cli.getProgressListener()).call();
-            commit = geogit.command(CommitOp.class).setMessage(message).setPathFilters(pathFilters)
+            commit = commitOp.setPathFilters(pathFilters)
                     .setProgressListener(cli.getProgressListener()).call();
         } catch (NothingToCommitException noChanges) {
             console.println(ansi.fg(Color.RED).a(noChanges.getMessage()).reset().toString());

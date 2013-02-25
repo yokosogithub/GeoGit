@@ -73,10 +73,6 @@ public class CommitOp extends AbstractGeoGitOp<RevCommit> {
 
     private Integer authorTimeZoneOffset;
 
-    /**
-     * This commit's parents. Will be the current HEAD, but when we support merges it should include
-     * the equivalent to git's .git/MERGE_HEAD
-     */
     private List<ObjectId> parents = new LinkedList<ObjectId>();
 
     // like the -a option in git commit

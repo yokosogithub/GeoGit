@@ -1,8 +1,9 @@
 package org.geogit.test.integration;
 
 import org.geogit.api.RevCommit;
-import org.geogit.api.plumbing.diff.ConflictsReport;
+import org.geogit.api.plumbing.merge.MergeScenarioReport;
 import org.geogit.api.plumbing.merge.ReportCommitConflictsOp;
+import org.geogit.api.porcelain.AddOp;
 import org.geogit.api.porcelain.BranchCreateOp;
 import org.geogit.api.porcelain.CheckoutOp;
 import org.geogit.api.porcelain.CommitOp;
@@ -26,7 +27,7 @@ public class ReportCommitConflictsOpTest extends RepositoryTestCase {
         insertAndAdd(points2);
         RevCommit branchCommit = geogit.command(CommitOp.class).call();
         geogit.command(CheckoutOp.class).setSource("master").call();
-        ConflictsReport conflicts = geogit.command(ReportCommitConflictsOp.class)
+        MergeScenarioReport conflicts = geogit.command(ReportCommitConflictsOp.class)
                 .setCommit(branchCommit).call();
         assertEquals(0, conflicts.getConflicts().size());
         assertEquals(0, conflicts.getUnconflicted().size());
@@ -43,7 +44,7 @@ public class ReportCommitConflictsOpTest extends RepositoryTestCase {
         deleteAndAdd(points1);
         RevCommit branchCommit = geogit.command(CommitOp.class).call();
         geogit.command(CheckoutOp.class).setSource("master").call();
-        ConflictsReport conflicts = geogit.command(ReportCommitConflictsOp.class)
+        MergeScenarioReport conflicts = geogit.command(ReportCommitConflictsOp.class)
                 .setCommit(branchCommit).call();
         assertEquals(0, conflicts.getConflicts().size());
         assertEquals(0, conflicts.getUnconflicted().size());
@@ -64,7 +65,7 @@ public class ReportCommitConflictsOpTest extends RepositoryTestCase {
         insertAndAdd(points1ModifiedB);
         RevCommit branchCommit = geogit.command(CommitOp.class).call();
         geogit.command(CheckoutOp.class).setSource("master").call();
-        ConflictsReport conflicts = geogit.command(ReportCommitConflictsOp.class)
+        MergeScenarioReport conflicts = geogit.command(ReportCommitConflictsOp.class)
                 .setCommit(branchCommit).call();
         assertEquals(0, conflicts.getConflicts().size());
         assertEquals(1, conflicts.getUnconflicted().size());
@@ -83,7 +84,7 @@ public class ReportCommitConflictsOpTest extends RepositoryTestCase {
         insertAndAdd(points1Modified);
         RevCommit branchCommit = geogit.command(CommitOp.class).call();
         geogit.command(CheckoutOp.class).setSource("master").call();
-        ConflictsReport conflicts = geogit.command(ReportCommitConflictsOp.class)
+        MergeScenarioReport conflicts = geogit.command(ReportCommitConflictsOp.class)
                 .setCommit(branchCommit).call();
         assertEquals(0, conflicts.getConflicts().size());
         assertEquals(1, conflicts.getUnconflicted().size());
@@ -104,7 +105,7 @@ public class ReportCommitConflictsOpTest extends RepositoryTestCase {
         insertAndAdd(points1ModifiedB);
         RevCommit branchCommit = geogit.command(CommitOp.class).call();
         geogit.command(CheckoutOp.class).setSource("master").call();
-        ConflictsReport conflicts = geogit.command(ReportCommitConflictsOp.class)
+        MergeScenarioReport conflicts = geogit.command(ReportCommitConflictsOp.class)
                 .setCommit(branchCommit).call();
         assertEquals(0, conflicts.getConflicts().size());
         assertEquals(1, conflicts.getUnconflicted().size());
@@ -125,7 +126,7 @@ public class ReportCommitConflictsOpTest extends RepositoryTestCase {
         insertAndAdd(points1ModifiedB);
         RevCommit branchCommit = geogit.command(CommitOp.class).call();
         geogit.command(CheckoutOp.class).setSource("master").call();
-        ConflictsReport conflicts = geogit.command(ReportCommitConflictsOp.class)
+        MergeScenarioReport conflicts = geogit.command(ReportCommitConflictsOp.class)
                 .setCommit(branchCommit).call();
         assertEquals(1, conflicts.getConflicts().size());
         assertEquals(0, conflicts.getUnconflicted().size());
@@ -144,7 +145,7 @@ public class ReportCommitConflictsOpTest extends RepositoryTestCase {
         deleteAndAdd(points1);
         RevCommit branchCommit = geogit.command(CommitOp.class).call();
         geogit.command(CheckoutOp.class).setSource("master").call();
-        ConflictsReport conflicts = geogit.command(ReportCommitConflictsOp.class)
+        MergeScenarioReport conflicts = geogit.command(ReportCommitConflictsOp.class)
                 .setCommit(branchCommit).call();
         assertEquals(1, conflicts.getConflicts().size());
         assertEquals(0, conflicts.getUnconflicted().size());
@@ -161,82 +162,52 @@ public class ReportCommitConflictsOpTest extends RepositoryTestCase {
         insertAndAdd(points3);
         RevCommit branchCommit = geogit.command(CommitOp.class).call();
         geogit.command(CheckoutOp.class).setSource("master").call();
-        ConflictsReport conflicts = geogit.command(ReportCommitConflictsOp.class)
+        MergeScenarioReport conflicts = geogit.command(ReportCommitConflictsOp.class)
                 .setCommit(branchCommit).call();
         assertEquals(0, conflicts.getConflicts().size());
         assertEquals(1, conflicts.getUnconflicted().size());
     }
 
-    // @Test
-    // public void testAddedSameFeatureType() throws Exception {
-    // insertAndAdd(lines1);
-    // geogit.command(CommitOp.class).call();
-    // geogit.command(BranchCreateOp.class).setName("TestBranch").call();
-    // insert(points2);
-    // delete(points2);
-    // geogit.command(AddOp.class).call();
-    // RevCommit masterCommit = geogit.command(CommitOp.class).call();
-    // geogit.command(CheckoutOp.class).setSource("TestBranch").call();
-    // insert(points2);
-    // delete(points2);
-    // geogit.command(AddOp.class).call();
-    // RevCommit branchCommit = geogit.command(CommitOp.class).call();
-    // ConflictsReport conflicts = geogit.command(ReportMergeConflictsOp.class)
-    // .setMergeIntoCommit(masterCommit).setToMergeCommit(branchCommit).call();
-    // assertEquals(0, conflicts.getConflicts().size());
-    // assertEquals(0, conflicts.getUnconflicted().size());
-    // Boolean hasConflicts = geogit.command(CheckMergeConflictsOp.class)
-    // .setCommits(Lists.newArrayList(masterCommit, branchCommit)).call();
-    // assertFalse(hasConflicts.booleanValue());
-    // }
-    //
-    // @Test
-    // public void testAddedDifferentFeatureType() throws Exception {
-    // insertAndAdd(lines1);
-    // geogit.command(CommitOp.class).call();
-    // geogit.command(BranchCreateOp.class).setName("TestBranch").call();
-    // insert(points2);
-    // delete(points2);
-    // geogit.command(AddOp.class).call();
-    // RevCommit masterCommit = geogit.command(CommitOp.class).call();
-    // geogit.command(CheckoutOp.class).setSource("TestBranch").call();
-    // insert(points1B);
-    // delete(points1B);
-    // geogit.command(AddOp.class).call();
-    // RevCommit branchCommit = geogit.command(CommitOp.class).call();
-    // ConflictsReport conflicts = geogit.command(ReportMergeConflictsOp.class)
-    // .setMergeIntoCommit(masterCommit).setToMergeCommit(branchCommit).call();
-    // assertEquals(1, conflicts.getConflicts().size());
-    // assertEquals(0, conflicts.getUnconflicted().size());
-    // Boolean hasConflicts = geogit.command(CheckMergeConflictsOp.class)
-    // .setCommits(Lists.newArrayList(masterCommit, branchCommit)).call();
-    // assertTrue(hasConflicts.booleanValue());
-    // }
-    //
-    // @Test
-    // public void testModifiedFeatureType() throws Exception {
-    // insertAndAdd(points1);
-    // geogit.command(CommitOp.class).call();
-    // geogit.command(BranchCreateOp.class).setName("TestBranch").call();
-    // geogit.getRepository().getWorkingTree().updateTypeTree(pointsName, modifiedPointsType);
-    // insert(points1B);
-    // geogit.command(AddOp.class).call();
-    // RevCommit masterCommit = geogit.command(CommitOp.class).call();
-    // geogit.command(CheckoutOp.class).setSource("TestBranch").call();
-    // String modifiedPointsTypeSpecB = "sp:String,ip:Integer,pp:Point:srid=4326,extraB:String";
-    // SimpleFeatureType modifiedPointsTypeB = DataUtilities.createType(pointsNs, pointsName,
-    // modifiedPointsTypeSpecB);
-    // geogit.getRepository().getWorkingTree().updateTypeTree(pointsName, modifiedPointsTypeB);
-    // insert(points1B);
-    // geogit.command(AddOp.class).call();
-    // RevCommit branchCommit = geogit.command(CommitOp.class).call();
-    // ConflictsReport conflicts = geogit.command(ReportMergeConflictsOp.class)
-    // .setMergeIntoCommit(masterCommit).setToMergeCommit(branchCommit).call();
-    // assertEquals(1, conflicts.getConflicts().size()); // the conflict in the feature type
-    // assertEquals(0, conflicts.getUnconflicted().size()); // the change in the feature is the
-    // // same, so no conflict
-    // Boolean hasConflicts = geogit.command(CheckMergeConflictsOp.class)
-    // .setCommits(Lists.newArrayList(masterCommit, branchCommit)).call();
-    // assertTrue(hasConflicts.booleanValue());
-    // }
+    @Test
+    public void testAddedSameFeatureType() throws Exception {
+        insertAndAdd(lines1);
+        geogit.command(CommitOp.class).call();
+        geogit.command(BranchCreateOp.class).setName("TestBranch").call();
+        insert(points2);
+        delete(points2);
+        geogit.command(AddOp.class).call();
+        geogit.command(CommitOp.class).call();
+        geogit.command(CheckoutOp.class).setSource("TestBranch").call();
+        insert(points2);
+        delete(points2);
+        geogit.command(AddOp.class).call();
+        RevCommit branchCommit = geogit.command(CommitOp.class).call();
+        geogit.command(CheckoutOp.class).setSource("master").call();
+        MergeScenarioReport conflicts = geogit.command(ReportCommitConflictsOp.class)
+                .setCommit(branchCommit).call();
+        assertEquals(0, conflicts.getConflicts().size());
+        assertEquals(0, conflicts.getUnconflicted().size());
+    }
+
+    @Test
+    public void testAddedDifferentFeatureType() throws Exception {
+        insertAndAdd(lines1);
+        geogit.command(CommitOp.class).call();
+        geogit.command(BranchCreateOp.class).setName("TestBranch").call();
+        insert(points1);
+        delete(points1);
+        geogit.command(AddOp.class).call();
+        geogit.command(CommitOp.class).call();
+        geogit.command(CheckoutOp.class).setSource("TestBranch").call();
+        insert(points1B);
+        delete(points1B);
+        geogit.command(AddOp.class).call();
+        RevCommit branchCommit = geogit.command(CommitOp.class).call();
+        geogit.command(CheckoutOp.class).setSource("master").call();
+        MergeScenarioReport conflicts = geogit.command(ReportCommitConflictsOp.class)
+                .setCommit(branchCommit).call();
+        assertEquals(1, conflicts.getConflicts().size());
+        assertEquals(0, conflicts.getUnconflicted().size());
+    }
+
 }

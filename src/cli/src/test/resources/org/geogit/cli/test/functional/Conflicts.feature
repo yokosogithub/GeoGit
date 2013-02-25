@@ -5,7 +5,7 @@ Feature: "conflicts" command
 
   Scenario: Try to merge list conflicts
     Given I have a repository
-      And I have two conflicting branches
+      And I have conflicting branches
      When I run the command "merge branch1"
      And I run the command "conflicts"
      Then the response should contain "Ancestor"
@@ -14,7 +14,7 @@ Feature: "conflicts" command
      
 Scenario: Try to merge list conflicts showing diffs
     Given I have a repository
-      And I have two conflicting branches
+      And I have conflicting branches
      When I run the command "merge branch1"
      And I run the command "conflicts --diff"
      Then the response should contain "StringProp1_1 -> StringProp1_2"     

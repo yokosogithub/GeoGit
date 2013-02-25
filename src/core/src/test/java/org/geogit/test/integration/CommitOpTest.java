@@ -444,7 +444,7 @@ public class CommitOpTest extends RepositoryTestCase {
         assertNotSame(commit.getMessage(), commit2.getMessage());
         assertEquals(commit.getAuthor(), commit2.getAuthor());
         assertNotSame(commit.getCommitter(), commit2.getCommitter());
-        assertEquals(message, commit.getMessage());
+        assertEquals(message, commit2.getMessage());
     }
 
     @Test

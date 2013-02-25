@@ -39,7 +39,7 @@ Feature: "cherry-pick" command
      
   Scenario: Try to cherry pick a commit that causes conflict
     Given I have a repository
-      And I have two conflicting branches
+      And I have conflicting branches
      When I run the command "cherry-pick branch1"
      Then the response should contain "CONFLICT: conflict in Points/Points.1"
      
