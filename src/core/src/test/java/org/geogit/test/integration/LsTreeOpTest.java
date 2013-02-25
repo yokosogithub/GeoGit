@@ -84,4 +84,12 @@ public class LsTreeOpTest extends RepositoryTestCase {
         }
     }
 
+    @Test
+    public void testListingWithJustAFeature() {
+        Iterator<NodeRef> iter = geogit.command(LsTreeOp.class).setReference("Points/Points.1")
+                .setStrategy(Strategy.TREES_ONLY).call();
+
+        assertEquals(2, Iterators.size(iter));
+    }
+
 }
