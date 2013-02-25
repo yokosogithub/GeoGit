@@ -63,6 +63,12 @@ public abstract class RepositoryTestCase extends Assert {
 
     public static final String idP3 = "Points.3";
 
+    public static final String idPG1 = "Polygon.1";
+
+    public static final String idPG2 = "Polygon.2";
+
+    public static final String idPG3 = "Polygon.3";
+
     public static final String pointsNs = "http://geogit.points";
 
     public static final String pointsName = "Points";
@@ -104,6 +110,22 @@ public abstract class RepositoryTestCase extends Assert {
     public Feature lines2;
 
     public Feature lines3;
+
+    public static final String polyNs = "http://geogit.polygon";
+
+    public static final String polyName = "Polygon";
+
+    public static final String polyTypeSpec = "sp:String,ip:Integer,pp:Polygon:srid=4326";
+
+    public static final Name polyTypeName = new NameImpl("http://geogit.polygon", polyName);
+
+    public SimpleFeatureType polyType;
+
+    public Feature poly1;
+
+    public Feature poly2;
+
+    public Feature poly3;
 
     protected GeoGIT geogit;
 
@@ -166,6 +188,15 @@ public abstract class RepositoryTestCase extends Assert {
                 "LINESTRING (3 3, 4 4)");
         lines3 = feature(linesType, idL3, "StringProp2_3", new Integer(3000),
                 "LINESTRING (5 5, 6 6)");
+
+        polyType = DataUtilities.createType(polyNs, polyName, polyTypeSpec);
+
+        poly1 = feature(polyType, idPG1, "StringProp3_1", new Integer(1000),
+                "POLYGON ((1 1, 2 2, 3 3, 4 4, 1 1))");
+        poly2 = feature(polyType, idPG2, "StringProp3_2", new Integer(2000),
+                "POLYGON ((6 6, 7 7, 8 8, 9 9, 6 6))");
+        poly3 = feature(polyType, idPG3, "StringProp3_3", new Integer(3000),
+                "POLYGON ((11 11, 12 12, 13 13, 14 14, 11 11))");
 
         setUpInternal();
     }

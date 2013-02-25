@@ -855,4 +855,22 @@ public class MergeOpTest extends RepositoryTestCase {
 
     }
 
+    @Test
+    public void testMergeTwoBranchesWithNewFeatureType() throws Exception {
+        insertAndAdd(points1);
+        geogit.command(CommitOp.class).call();
+        geogit.command(BranchCreateOp.class).setName("branch1").call();
+        insertAndAdd(lines1);
+        geogit.command(CommitOp.class).call();
+        geogit.command(CheckoutOp.class).setSource("branch1").call();
+        insertAndAdd(poly1);
+        RevCommit commit2 = geogit.command(CommitOp.class).call();
+        geogit.command(CheckoutOp.class).setSource("master").call();
+        geogit.command(MergeOp.class).addCommit(Suppliers.ofInstance(commit2.getId())).call();
+
+        Optional<NodeRef> ref = geogit.command(FindTreeChild.class).setChildPath(polyName).call();
+
+        assertTrue(ref.isPresent());
+        assertFalse(ref.get().getMetadataId().equals(ObjectId.NULL));
+    }
 }
