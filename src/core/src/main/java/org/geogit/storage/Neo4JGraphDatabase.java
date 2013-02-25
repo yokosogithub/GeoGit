@@ -147,6 +147,10 @@ public class Neo4JGraphDatabase extends AbstractGraphDatabase {
 
     @Override
     public boolean put(ObjectId commitId, ImmutableList<ObjectId> parentIds) {
+        if (exists(commitId)) {
+            return false;
+        }
+
         Transaction tx = graphDB.beginTx();
 
         Node commitNode = null;
