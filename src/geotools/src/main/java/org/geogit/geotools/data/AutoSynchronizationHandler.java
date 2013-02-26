@@ -26,7 +26,7 @@ public class AutoSynchronizationHandler {
         repositories = new ConcurrentLinkedQueue<GeoGIT>();
 
         executor = Executors.newSingleThreadScheduledExecutor();
-        executor.scheduleAtFixedRate(new AutoSynchronizer(), 0, 10, TimeUnit.SECONDS);
+        executor.scheduleAtFixedRate(new AutoSynchronizer(), 0, 60, TimeUnit.SECONDS);
     }
 
     public void addRepo(GeoGIT geogit) {
