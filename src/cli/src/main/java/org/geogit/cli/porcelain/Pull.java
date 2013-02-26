@@ -103,7 +103,8 @@ public class Pull extends AbstractCommand implements CLICommand {
             }
         }
 
-        if (result.getOldRef().equals(result.getNewRef())) {
+        if (result.getOldRef() != null && result.getNewRef() != null
+                && result.getOldRef().equals(result.getNewRef())) {
             console.println("Already up to date.");
         } else {
             Iterator<DiffEntry> iter;
@@ -115,10 +116,12 @@ public class Pull extends AbstractCommand implements CLICommand {
                 iter = cli.getGeogit().command(DiffOp.class)
                         .setNewVersion(result.getNewRef().getObjectId())
                         .setOldVersion(ObjectId.NULL).call();
+            } else {
+                iter = cli.getGeogit().command(DiffOp.class)
+                        .setNewVersion(result.getNewRef().getObjectId())
+                        .setOldVersion(result.getOldRef().getObjectId()).call();
             }
-            iter = cli.getGeogit().command(DiffOp.class)
-                    .setNewVersion(result.getNewRef().getObjectId())
-                    .setOldVersion(result.getOldRef().getObjectId()).call();
+
             int added = 0;
             int removed = 0;
             int modified = 0;

@@ -85,8 +85,8 @@ public class Fetch extends AbstractCommand implements CLICommand {
                                 + "     " + ref.getOldRef().localName() + " -> "
                                 + ref.getOldRef().getName();
                     } else if (ref.getType() == ChangeTypes.ADDED_REF) {
-                        line = " * [new branch]     " + ref.getOldRef().localName() + " -> "
-                                + ref.getOldRef().getName();
+                        line = " * [new branch]     " + ref.getNewRef().localName() + " -> "
+                                + ref.getNewRef().getName();
                     } else {
                         line = " x [deleted]        (none) -> " + ref.getOldRef().getName();
                     }
