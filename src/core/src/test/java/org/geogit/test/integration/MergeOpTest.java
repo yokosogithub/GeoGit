@@ -873,4 +873,81 @@ public class MergeOpTest extends RepositoryTestCase {
         assertTrue(ref.isPresent());
         assertFalse(ref.get().getMetadataId().equals(ObjectId.NULL));
     }
+
+    @Test
+    public void testOctopusMerge() throws Exception {
+        insertAndAdd(points1);
+        RevCommit initialCommit = geogit.command(CommitOp.class).call();
+        geogit.command(BranchCreateOp.class).setName("branch1").call();
+        geogit.command(BranchCreateOp.class).setName("branch2").call();
+        geogit.command(BranchCreateOp.class).setName("branch3").call();
+        geogit.command(BranchCreateOp.class).setName("branch4").call();
+        geogit.command(BranchCreateOp.class).setName("branch5").call();
+        geogit.command(BranchCreateOp.class).setName("branch6").call();
+        geogit.command(CheckoutOp.class).setSource("branch1").call();
+        ObjectId points2Id = insertAndAdd(points2);
+        RevCommit branch1 = geogit.command(CommitOp.class).call();
+        geogit.command(CheckoutOp.class).setSource("branch2").call();
+        ObjectId points3Id = insertAndAdd(points3);
+        RevCommit branch2 = geogit.command(CommitOp.class).call();
+        geogit.command(CheckoutOp.class).setSource("branch3").call();
+        ObjectId lines1Id = insertAndAdd(lines1);
+        RevCommit branch3 = geogit.command(CommitOp.class).call();
+        geogit.command(CheckoutOp.class).setSource("branch4").call();
+        ObjectId lines2Id = insertAndAdd(lines2);
+        RevCommit branch4 = geogit.command(CommitOp.class).call();
+        geogit.command(CheckoutOp.class).setSource("branch5").call();
+        ObjectId lines3Id = insertAndAdd(lines3);
+        RevCommit branch5 = geogit.command(CommitOp.class).call();
+        geogit.command(CheckoutOp.class).setSource("branch6").call();
+        ObjectId points1Id = insertAndAdd(points1_modified);
+        RevCommit branch6 = geogit.command(CommitOp.class).call();
+        geogit.command(CheckoutOp.class).setSource("master").call();
+        geogit.command(MergeOp.class).addCommit(Suppliers.ofInstance(branch1.getId()))
+                .addCommit(Suppliers.ofInstance(branch2.getId()))
+                .addCommit(Suppliers.ofInstance(branch3.getId()))
+                .addCommit(Suppliers.ofInstance(branch4.getId()))
+                .addCommit(Suppliers.ofInstance(branch5.getId()))
+                .addCommit(Suppliers.ofInstance(branch6.getId())).call();
+
+        Optional<NodeRef> ref = geogit.command(FindTreeChild.class)
+                .setChildPath(pointsName + "/" + idP1).call();
+        assertTrue(ref.isPresent());
+        assertEquals(points1Id, ref.get().getNode().getObjectId());
+        ref = geogit.command(FindTreeChild.class).setChildPath(pointsName + "/" + idP2).call();
+        assertTrue(ref.isPresent());
+        assertEquals(points2Id, ref.get().getNode().getObjectId());
+        ref = geogit.command(FindTreeChild.class).setChildPath(pointsName + "/" + idP3).call();
+        assertTrue(ref.isPresent());
+        assertEquals(points3Id, ref.get().getNode().getObjectId());
+        ref = geogit.command(FindTreeChild.class).setChildPath(linesName + "/" + idL1).call();
+        assertTrue(ref.isPresent());
+        assertEquals(lines1Id, ref.get().getNode().getObjectId());
+        ref = geogit.command(FindTreeChild.class).setChildPath(linesName + "/" + idL2).call();
+        assertTrue(ref.isPresent());
+        assertEquals(lines2Id, ref.get().getNode().getObjectId());
+        ref = geogit.command(FindTreeChild.class).setChildPath(linesName + "/" + idL3).call();
+        assertTrue(ref.isPresent());
+        assertEquals(lines3Id, ref.get().getNode().getObjectId());
+
+        Iterator<RevCommit> log = geogit.command(LogOp.class).call();
+
+        // MergeCommit
+        RevCommit logMerge = log.next();
+        assertEquals(7, logMerge.getParentIds().size());
+
+        // Initial Commit
+        RevCommit initial = log.next();
+        assertEquals(initialCommit.getMessage(), initial.getMessage());
+        assertEquals(initialCommit.getCommitter().getName(), initial.getCommitter().getName());
+        assertEquals(initialCommit.getCommitter().getEmail(), initial.getCommitter().getEmail());
+        assertEquals(initialCommit.getAuthor().getTimeZoneOffset(), initial.getAuthor()
+                .getTimeZoneOffset());
+        assertEquals(initialCommit.getCommitter().getTimeZoneOffset(), initial.getCommitter()
+                .getTimeZoneOffset());
+        assertEquals(initialCommit.getTreeId(), initial.getTreeId());
+        assertEquals(initialCommit.getId(), initial.getId());
+
+        assertFalse(log.hasNext());
+    }
 }

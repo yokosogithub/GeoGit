@@ -244,19 +244,22 @@ public class MergeOp extends AbstractGeoGitOp<RevCommit> {
                 Preconditions.checkState(ancestorCommit.isPresent(),
                         "No ancestor commit could be found.");
 
-                if (ancestorCommit.get().getId().equals(headCommit.getId())) {
-                    // Fast-forward
-                    command(UpdateRef.class).setName(currentBranch).setNewValue(commitId).call();
-                    headRef = (SymRef) command(UpdateSymRef.class).setName(Ref.HEAD)
-                            .setNewValue(currentBranch).call().get();
+                if (commits.size() == 1) {
+                    if (ancestorCommit.get().getId().equals(headCommit.getId())) {
+                        // Fast-forward
+                        command(UpdateRef.class).setName(currentBranch).setNewValue(commitId)
+                                .call();
+                        headRef = (SymRef) command(UpdateSymRef.class).setName(Ref.HEAD)
+                                .setNewValue(currentBranch).call().get();
 
-                    getWorkTree().updateWorkHead(commitId);
-                    getIndex().updateStageHead(commitId);
-                    subProgress.complete();
-                    changed = true;
-                    continue;
-                } else if (ancestorCommit.get().getId().equals(commitId)) {
-                    continue;
+                        getWorkTree().updateWorkHead(commitId);
+                        getIndex().updateStageHead(commitId);
+                        subProgress.complete();
+                        changed = true;
+                        continue;
+                    } else if (ancestorCommit.get().getId().equals(commitId)) {
+                        continue;
+                    }
                 }
 
                 // Get all commits between the head commit and the ancestor.
