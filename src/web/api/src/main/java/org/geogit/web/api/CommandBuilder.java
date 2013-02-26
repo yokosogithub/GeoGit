@@ -7,6 +7,7 @@ import org.geogit.web.api.commands.BranchWebOp;
 import org.geogit.web.api.commands.Commit;
 import org.geogit.web.api.commands.Diff;
 import org.geogit.web.api.commands.FeatureDiffWeb;
+import org.geogit.web.api.commands.GetCommitGraph;
 import org.geogit.web.api.commands.Log;
 import org.geogit.web.api.commands.LsTree;
 import org.geogit.web.api.commands.RefParseWeb;
@@ -45,6 +46,8 @@ public class CommandBuilder {
             command = buildTag(options);
         } else if ("featurediff".equalsIgnoreCase(commandName)) {
             command = buildFeatureDiff(options);
+        } else if ("getCommitGraph".equalsIgnoreCase(commandName)) {
+            command = buildGetCommitGraph(options);
         } else {
             throw new CommandSpecException("'" + commandName + "' is not a geogit command");
         }
@@ -145,6 +148,13 @@ public class CommandBuilder {
         command.setPath(options.getFirstValue("path", null));
         command.setOldCommitId(options.getFirstValue("oldCommitId", ObjectId.NULL.toString()));
         command.setNewCommitId(options.getFirstValue("newCommitId", ObjectId.NULL.toString()));
+        return command;
+    }
+
+    static GetCommitGraph buildGetCommitGraph(ParameterSet options) {
+        GetCommitGraph command = new GetCommitGraph();
+        command.setDepth(parseInt(options, "depth", 0));
+        command.setCommitId(options.getFirstValue("commitId", ObjectId.NULL.toString()));
         return command;
     }
 }
