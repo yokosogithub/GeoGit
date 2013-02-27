@@ -46,7 +46,7 @@ And once the new data is in the working tree, stage it and make a new commit
 	$geogit add
 	$geogit commit -m "Added new feature"
 
-We have commited the change to the ``master`` branch, since we had not created any new branch. So now our ``master`` branch is different from the master branch of the original repository. To synchronize both of them and add the work we have done to the original repository, we can use the ``push`` command.
+We have committed the change to the ``master`` branch, since we had not created any new branch. So now our ``master`` branch is different from the master branch of the original repository. To synchronize both of them and add the work we have done to the original repository, we can use the ``push`` command.
 
 ::
 
@@ -54,4 +54,44 @@ We have commited the change to the ``master`` branch, since we had not created a
 
 Let's now put another player in the game. A new person joins our team of people working on our data. The first thing he has to do is to clone the central repository. Create a folder named ``repo_b`` in your repositories folder and clone it there.
 
-Since we had already pushed the changed made by the first collaborator in his repository (in the ``repo_a`` folder), this second collaborator will get them when he clones the central repository
+Since we had already pushed the changed made by the first collaborator in his repository (in the ``repo_a`` folder), this second collaborator will get them when he clones the central repository.
+
+Suppose now that this new collaborator starts working on the repository data. Instead of working on the ``master`` branch, he creates a new branch named ``fixes``, in which he plans to correct some wrong data that he has found. Move to the ``repo_b`` folder and run the following command:
+
+
+::
+
+	$geogit branch fixes -c
+
+The ``parks_3.shp`` shapefile contains a modified version of the data, in which some attributes have been modified and a group of points in a geometry have been moved. Import it into the working tree of the ``rebo_b`` repository, and then stage an commit the changes.
+
+::
+
+	$geogit shp import ~/home/geogit_data/parks_3.shp
+	$geogit add
+	$geogit commit -m "Corrected minor errors"
+
+Now this commit has been added to the ``fixes`` branch. You can see the differences between this latest version and the latest one (which is to say, the differences between the ``parks_2.shp`` and ``parks_3.shp`` files), by running the ``diff`` command. We want the difference between the current ``HEAD`` and its ancestor, so we can use the following line:
+
+::
+
+	$geogit diff HEAD HEAD~1
+
+You can see that one of the changes is to correct an entry in the *area* attribute, which holds the area of the polygon.
+
+Considering that this modification is finished, the second collaborator merges the ``fixes`` branch into ``master``
+
+::
+
+	$geogit checkout master
+	$geogit merge fixes
+
+and pushes the changes to the central repository
+
+::
+
+	$geogit
+
+The first collaborator also has started working on the data in his repository. He has also created a new branch named ``cleanup``, in which he wants to remove some data. He has removed some redundant points in a couple of polygons, and also he has changed the values of a the *area* attribute, so now they are expressed in square kilometers instead of square miles. 
+
+The corresponding modified data can be found on the ``parks_4.shp``

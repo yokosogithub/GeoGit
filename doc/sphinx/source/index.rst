@@ -26,7 +26,7 @@ Contents:
   merging
   rebase
   cloning
-  interacting
+  remotes
   patches
   exercise
 
