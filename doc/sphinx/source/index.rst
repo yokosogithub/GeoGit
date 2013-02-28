@@ -12,6 +12,7 @@ Contents:
 
   intro   
   init
+  config
   import
   adding 
   commiting
@@ -25,7 +26,6 @@ Contents:
   checkout
   merging
   rebase
-  cloning
   remotes
   patches
   exercise

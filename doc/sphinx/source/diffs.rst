@@ -10,7 +10,7 @@ For this task, the most basic usage of the ``diff`` command requires no options 
 	$geogit diff
 
 
-This will produce something like the output shown below.
+This will produce something like the output shown in the example below.
 
 ::
 
@@ -103,12 +103,9 @@ In case the difference includes new features added or old ones removed, the synt
 
 	6350a6... 000000... 6997bd... 000000...   R  parks/parks.23
 
-Removals are just indicated with the header line and no additional information. Notice the null Id of the new object.
+Removals are just indicated with the header line and no additional information. Notice the null ID of the new object.
 
 Adittions are described with the full printing of the object added, represented as a list of ``(attribute_name, attribute_value)`` pairs, similar to the one produced by the ``show`` command. A raw description of the feature and its feature type can be obtained using the ``cat`` command and the feature and feature type Id's provided by the ``diff`` command. Notice that, in this case, the old object has null Id's for both the feature and feature type. The one corresponding to the feature type, however, doesn't have to be necessarily null, as it might already exist another feature with that feature type in the repository, prior to adding the one described by this ``diff`` output.
-
-Summary mode
--------------
 
 A summary mode is available, by using the ``--summary`` option. When used, only the header line of each modification will be shown.
 

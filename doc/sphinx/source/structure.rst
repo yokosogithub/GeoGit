@@ -11,14 +11,13 @@ A GeoGit repository can contain the following elements:
 
 - Commits. A commit is generated each time some data is written (*committed*) from the staging area into the repository database. A commit points to the data after that commit (it points to a tree under which the data is found), so it represents a given version of the data. You can go back to you data as it was at a certain point, by going to the corresponding commit. 
 
-All these objects are stored in GeoGit and referenced by an ID, so you can use that ID to refer to the object anytime and in any of the commands available in GeoGit when that is needed. The ID is a 40 character string. Here are some valid IDs corresponding to a few GeoGit objects
+All these objects are stored in GeoGit and referenced by an ID, so you can use that ID to refer to the object anytime and in any of the commands available in GeoGit when that is needed. The ID is a 40 character string. For instance, ``509a481257c5791f50f5a35087e432247f9dc8b7`` is a valid valid IDs of a real GeoGit object.
 
-
-All IDs are unique, so each of them is reference to just one single object.
+All IDs are unique, so each of them is a reference to just one single object.
 
 .. note:: In GeoGit, even in the working tree, objects are hashed and stored like that.
 
-We will use object IDs frequently in the following section, as we describe the different commands used to work on a GeoGit repository.
+We will use object IDs frequently in the following sections, as we describe the different commands used to work on a GeoGit repository.
 
 Another element that is found in a GeoGit repository is a *ref*. A *ref* is a short string that references a given element in the GeoGit repository, which can be an object of any of the types described above. Think about it as the GeoGit equivalent of a UNIX symbolic link, or a Windows shortcut.
 

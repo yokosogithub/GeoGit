@@ -1,7 +1,7 @@
 Commiting changes
 ==================
 
-Once the data is in the staging area, it has to be commited to be finally stored in the database of the GeoGit repository and to create a persistent version of that data.
+Once the data is in the staging area, it has to be committed to be finally stored in the database of the GeoGit repository and to create a persistent version of that data.
 
 Commiting data from the staging area to the database is done using the ``commit`` command, as shown above
 

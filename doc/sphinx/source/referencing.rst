@@ -10,7 +10,7 @@ Since a GeoGit repository keeps all the history of your data, it requires a nami
 The ``ref`` part of the full reference can be specified in several different ways, including the following.
 
 - An object ID refering to an object that eventually resolves to a tree
-- The name of a ref object (i.e. WORK_HEAD, HEAD)
+- The name of a ref object (i.e. ``WORK_HEAD, HEAD``)
 - The n-th parent of a commit denoted with its ID. This is denoted as ``ID^n``. For instance, ``509a481257c5791f50f5a35087e432247f9dc8b7^2``
 - The n-th historical ancestor of an element denoted with its ID, by first parent. For instance, to refer to the ancestor of the current HEAD (the element the current HEAD pointed before the last change), ``HEAD~1`` should be used.
 
@@ -23,7 +23,7 @@ Going back to the proposed example of referencing a given path in a previous com
 ::
 
 	$commit -m "modified parks"
-	[bf214975321a457e1ac524b18dbab31c5d4b6964] modified parks
+	[c3bf45d6539a0d946a9f61e5ec17474d39529bb5] modified parks
 	Committed, counting objects...0 features added, 3 changed, 0 deleted.
 
 
@@ -42,7 +42,7 @@ If, as it happens in this case, you want to refer not to the last commit, but to
 	Date:    (1 day ago) 2013-02-25 15:31:24 +0100
 	Subject: first commit
 
-The latest commit (``c3bf45d6539a0d946a9f61e5ec17474d39529bb5``) is the current one, and the HEAD of the repository is pointing at it, so the following 3 alternatives reference the same element:
+The latest commit (``c3bf45d6539a0d946a9f61e5ec17474d39529bb5``) is the current one, and the ``HEAD`` of the repository is pointing at it, so the following 3 alternatives reference the same element:
 
 * ``c3bf45d6539a0d946a9f61e5ec17474d39529bb5:parks``
 * ``c3bf45d:parks``

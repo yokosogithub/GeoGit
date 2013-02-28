@@ -85,7 +85,7 @@ To see that the data is actually in the working tree, you can use the ``status``
 	#      added  parks/parks.1
 	# 3 total.
 
-There were 3 features in the imported shapefile, and now they are in the working tree. They are still unversioned, and have to be added to the staging area before they can be committed from there into the repository database, creating a new snapshot of the repository data. 
+There were 3 features in the imported shapefile, and now they are in the working tree. They are still unversioned, and they have to be added to the staging area before they can be committed from there into the repository database, creating a new snapshot of the repository data. 
 
 
 

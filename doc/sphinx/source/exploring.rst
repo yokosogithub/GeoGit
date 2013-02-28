@@ -194,8 +194,9 @@ Globbing
 
 Some commands in GeoGit, such as the ones used to describe objects shown above, support using wildcards. This way, you can more easily select a set of objects without having to type the name of each of them.
 
-GeoGit uses an ant-like globbing notation, supporting the most common wildcards, namely ``*``, ``?`` and ``**``. Please, check the `section about directory-based tasks in the ant manual <http://ant.apache.org/manual/dirtasks.html>`_ for more information.
+GeoGit uses an ant-like globbing notation, supporting the most common wildcards, namely ``*``, ``?`` and ``**``. The ``*`` character can be any string of any length (includiing zero characters), while ``?`` represents a single character. The ``**`` string is used to indicate any path, so it will cause the command to recursively search into a given path. For instance, the string ``roads/**/???`` will return all features with a name of just three characters, in any path under ``roads``. that includes ``roads/N501``, and also ``roads/spain/madrid/N501``
+
+Please, check the `section about directory-based tasks in the ant manual <http://ant.apache.org/manual/dirtasks.html>`_ for more information.
 
 Since objects are not stored in the filesystem, but in the repository database, the expansion of wildcards is not (and should not be) performed by the command-line interpreter, but by the GeoGit interpreter itself.
 
-The following are some examples to illustrate how wildcards are used.

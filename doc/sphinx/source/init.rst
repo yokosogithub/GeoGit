@@ -13,6 +13,8 @@ This creates a new folder in the current folder, named ``.geogit``. That folder 
 
 .. note:: In Geogit, the working tree is not the folder where the ``.geogit`` subfolder is located. The working tree itself is also located within the ``geogit`` folder.
 
+All GeoGit commands have to be run fro within a valid Geogit repository. The only exception to this rule is the ``init`` command we have just used. From now own, you should move to the repository folder whenever you want to run a GeoGit operation and apply it to it. In case you have several repositories in your computer, each of them in its corresponding repository, the operations you execute will affect just the repository you are currently in, from where the commands are invoked.
+
 The GeoGit repository that we have just created is empty, that meaning that it contains no spatial data at all. Even if the folder where the repository has been created previously contained some files, those are not part of the repository itself, and they are ignored as well.
 
-To start adding data to our repository, we need to import data into its working tree, which we will explain next.
+To start adding data to our repository, we need to import data into its working tree. But first, let's learn how to configure some important information about our repository.

@@ -9,12 +9,11 @@ The ``add`` and ``commit`` commands *move* the data from the working tree into t
 
 To checkout a past version of the repository data, the ``checkout`` command is used, just in the same way as we use it to move from one branch to another. Instead of a branch name, you must supply the name of a commit (its ID), and data corresponding to that commit will be put in the working tree. Since the data in the working tree will be overwritten, this command cannot be run when the working tree has unstaged changes.
 
-The following is a valid workflow that shows how to update the version in the working tree from the current one to the snapshot corresponding to 5 commits ago.
+The following is a valid command that will update the version in the working tree from the current one to the snapshot corresponding to 5 commits ago.
 
 ::
 
 	$geogit checkout HEAD~5
-	TODO******
 
 
 Apart from updating the working tree, the ``checkout`` command updates the HEAD ``reference``, which will now point to the commit from where the data to update the working tree was taken. 
@@ -30,7 +29,7 @@ To go back to the most recent state, where you were before checking out the prev
 Reseting to a previous commit
 ------------------------------
 
-When you perform a checkout using a commit, the ``HEAD`` reference points directly to the commit. Usually, ``HEAD`` is itself a symbolic reference, and it point to the tip of a given branch. If we are in ``master``, then ``HEAD`` points to whereever ``master`` is pointing. If there is a commit, the tip of the branch changes, and ``HEAD changes automatically.
+When you perform a checkout using a commit, the ``HEAD`` reference points directly to the commit. Usually, ``HEAD`` is itself a symbolic reference, and it point to the tip of a given branch. If we are in ``master``, then ``HEAD`` points to wherever ``master`` is pointing. If there is a commit, the tip of the branch changes, and ``HEAD`` changes automatically.
 
 When ``HEAD`` is pointing to a commit directly, it is said to be in a *detached* state. You should not make commits in that state, because they will not be added to the tip of you current branch.
 
