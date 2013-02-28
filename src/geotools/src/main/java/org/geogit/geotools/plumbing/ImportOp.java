@@ -12,7 +12,6 @@ import org.geogit.api.AbstractGeoGitOp;
 import org.geogit.api.RevFeatureType;
 import org.geogit.api.RevTree;
 import org.geogit.geotools.plumbing.GeoToolsOpException.StatusCode;
-import org.geogit.repository.WorkingTree;
 import org.geotools.data.DataStore;
 import org.geotools.data.simple.SimpleFeatureCollection;
 import org.geotools.data.simple.SimpleFeatureIterator;
@@ -118,11 +117,17 @@ public class ImportOp extends AbstractGeoGitOp<RevTree> {
             };
 
             try {
-                ProgressListener taskProgress = subProgress(100.f / (all ? typeNames.size() : 1f));
-                Integer collectionSize = features.size();
-                WorkingTree workTree = getWorkTree();
-                workTree.delete(revType.getName());
-                getWorkTree().insert(treePath, iterator, taskProgress, null, collectionSize);
+                if (iterator.hasNext()) {
+                    ProgressListener taskProgress = subProgress(100.f / (all ? typeNames.size()
+                            : 1f));
+                    Integer collectionSize = features.size();
+                    getWorkTree().delete(revType.getName());
+                    getWorkTree().insert(treePath, iterator, taskProgress, null, collectionSize);
+                } else {
+                    // No features
+                    getWorkTree().delete(revType.getName());
+                    getWorkTree().createTypeTree(treePath, revType.type());
+                }
             } catch (Exception e) {
                 throw new GeoToolsOpException(StatusCode.UNABLE_TO_INSERT);
             } finally {
