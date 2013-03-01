@@ -1,5 +1,6 @@
 package org.geogit.geotools.data;
 
+import java.util.Iterator;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.Executors;
@@ -16,10 +17,11 @@ import org.geogit.api.porcelain.CheckoutOp;
 import org.geogit.api.porcelain.PullOp;
 import org.geogit.api.porcelain.PushException;
 import org.geogit.api.porcelain.PushOp;
-import org.geogit.api.porcelain.RemoteResolve;
+import org.geogit.api.porcelain.RemoteListOp;
 
 import com.google.common.base.Optional;
 import com.google.common.base.Suppliers;
+import com.google.common.collect.ImmutableList;
 
 public class GeogitSynchronizationHandler {
 
@@ -37,9 +39,8 @@ public class GeogitSynchronizationHandler {
     }
 
     public void setDirty(GeoGIT geogit, @Nullable String branch) {
-        Optional<Remote> originRemote = geogit.command(RemoteResolve.class).setName("origin")
-                .call();
-        if (originRemote.isPresent()) {
+        ImmutableList<Remote> remotes = geogit.command(RemoteListOp.class).call();
+        if (remotes.size() > 0) {
             Pair<GeoGIT, Optional<String>> entry = new Pair<GeoGIT, Optional<String>>(geogit,
                     Optional.fromNullable(branch));
             if (!repositories.contains(entry)) {
@@ -65,11 +66,12 @@ public class GeogitSynchronizationHandler {
                                 .call();
                     }
 
-                    Optional<Remote> originRemote = geogitTx.command(RemoteResolve.class)
-                            .setName("origin").call();
-                    if (originRemote.isPresent()) {
-                        PullOp pull = geogitTx.command(PullOp.class)
-                                .setRemote(Suppliers.ofInstance(originRemote)).setRebase(true);
+                    ImmutableList<Remote> remotes = geogitTx.command(RemoteListOp.class).call();
+                    Iterator<Remote> remoteIter = remotes.iterator();
+                    while (remoteIter.hasNext()) {
+                        Optional<Remote> remote = Optional.of(remoteIter.next());
+                        PullOp pull = geogitTx.command(PullOp.class).setRemote(
+                                Suppliers.ofInstance(remote));
                         if (workingBranch != null) {
                             pull.addRefSpec(workingBranch);
                         } else {
@@ -78,7 +80,7 @@ public class GeogitSynchronizationHandler {
                         pull.call();
 
                         PushOp push = geogitTx.command(PushOp.class).setRemote(
-                                Suppliers.ofInstance(originRemote));
+                                Suppliers.ofInstance(remote));
                         if (workingBranch != null) {
                             push.addRefSpec(workingBranch);
                         } else {

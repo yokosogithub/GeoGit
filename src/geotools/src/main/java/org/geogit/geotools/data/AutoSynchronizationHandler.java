@@ -10,9 +10,9 @@ import java.util.concurrent.TimeUnit;
 
 import org.geogit.api.GeoGIT;
 import org.geogit.api.Remote;
-import org.geogit.api.porcelain.RemoteResolve;
+import org.geogit.api.porcelain.RemoteListOp;
 
-import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableList;
 
 public class AutoSynchronizationHandler {
 
@@ -31,9 +31,8 @@ public class AutoSynchronizationHandler {
 
     public void addRepo(GeoGIT geogit) {
         checkNotNull(geogit);
-        Optional<Remote> originRemote = geogit.command(RemoteResolve.class).setName("origin")
-                .call();
-        if (originRemote.isPresent()) {
+        ImmutableList<Remote> remotes = geogit.command(RemoteListOp.class).call();
+        if (remotes.size() > 0 && !repositories.contains(geogit)) {
             repositories.add(geogit);
         }
     }
