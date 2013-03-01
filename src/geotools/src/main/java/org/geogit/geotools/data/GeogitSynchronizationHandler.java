@@ -93,6 +93,8 @@ public class GeogitSynchronizationHandler {
                         }
 
                         geogitTx.commitSyncTransaction();
+                    } else {
+                        geogitTx.abort();
                     }
                 } catch (RuntimeException e) {
                     // abort sync transaction, but do not stop trying to sync.

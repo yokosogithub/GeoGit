@@ -65,14 +65,19 @@ class GeogitTransactionState implements State {
         this.tx = transaction;
 
         if (transaction == null) {
-            // Transaction.removeState has been called (during transaction.close())
+            // Transaction.removeState has been called (during
+            // transaction.close())
             if (this.geogitTx != null) {
-                // throw new IllegalStateException("Transaction is attempting to "
+                // throw new
+                // IllegalStateException("Transaction is attempting to "
                 // + "close a non committed or aborted geogit transaction");
                 geogitTx.abort();
             }
             this.geogitTx = null;
         } else {
+            if (this.geogitTx != null) {
+                geogitTx.abort();
+            }
             GeoGitDataStore dataStore = (GeoGitDataStore) entry.getDataStore();
             CommandLocator commandLocator = dataStore.getCommandLocator(this.tx);
             this.geogitTx = commandLocator.command(TransactionBegin.class).call();
