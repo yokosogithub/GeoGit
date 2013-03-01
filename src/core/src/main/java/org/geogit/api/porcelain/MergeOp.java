@@ -262,34 +262,14 @@ public class MergeOp extends AbstractGeoGitOp<RevCommit> {
                     }
                 }
 
-                // Get all commits between the head commit and the ancestor.
-                Iterator<RevCommit> commitIterator = command(LogOp.class).setUntil(commitId).call();
-
-                List<RevCommit> commitsToMerge = new ArrayList<RevCommit>();
-
-                RevCommit commit;
-                do {
-                    commit = commitIterator.next();
-                    commitsToMerge.add(commit);
-                } while (!commit.getId().equals(ancestorCommit.get().getId()));
-
-                int numCommits = commitsToMerge.size() - 1;
-
-                int commitCount = 0;
-                for (int i = commitsToMerge.size() - 2; i >= 0; i--) {
-                    commitCount++;
-                    // get changes
-                    RevCommit oldCommit = commitsToMerge.get(i);
-                    Iterator<DiffEntry> diff = command(DiffTree.class)
-                            .setOldTree(commitsToMerge.get(i + 1).getId())
-                            .setNewTree(oldCommit.getId()).setReportTrees(true).call();
-                    // stage changes
-                    getIndex().stage(
-                            new SubProgressListener(subProgress, commitCount * 100.f / numCommits),
-                            diff, 0);
-                    changed = true;
-                    fastForward = false;
-                }
+                // get changes
+                Iterator<DiffEntry> diff = command(DiffTree.class)
+                        .setOldTree(ancestorCommit.get().getId()).setNewTree(targetCommit.getId())
+                        .setReportTrees(true).call();
+                // stage changes
+                getIndex().stage(new SubProgressListener(subProgress, 100.f), diff, 0);
+                changed = true;
+                fastForward = false;
 
                 getWorkTree().updateWorkHead(getIndex().getTree().getId());
 
