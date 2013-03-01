@@ -58,15 +58,14 @@ public class GeogitSynchronizationHandler {
             if (repositories.peek() != null) {
                 Pair<GeoGIT, Optional<String>> repo = repositories.poll();
 
-                try {
-                    final String workingBranch = repo.getSecond().orNull();
+                final String workingBranch = repo.getSecond().orNull();
 
-                    ImmutableList<Remote> remotes = repo.first.command(RemoteListOp.class).call();
-                    Iterator<Remote> remoteIter = remotes.iterator();
-                    while (remoteIter.hasNext()) {
-                        GeogitTransaction geogitTx = repo.getFirst()
-                                .command(TransactionBegin.class).call();
-                        // checkout the working branch
+                ImmutableList<Remote> remotes = repo.first.command(RemoteListOp.class).call();
+                Iterator<Remote> remoteIter = remotes.iterator();
+                while (remoteIter.hasNext()) {
+                    GeogitTransaction geogitTx = repo.getFirst().command(TransactionBegin.class)
+                            .call();
+                    try {
                         if (workingBranch != null) {
                             geogitTx.command(CheckoutOp.class).setForce(true)
                                     .setSource(workingBranch).call();
@@ -95,10 +94,12 @@ public class GeogitSynchronizationHandler {
                         }
 
                         geogitTx.commitSyncTransaction();
+                        geogitTx = null;
+                    } catch (RuntimeException e) {
+                        // Do not stop trying to sync.
+                        geogitTx.abort();
+                        repositories.add(repo);
                     }
-                } catch (RuntimeException e) {
-                    // abort sync transaction, but do not stop trying to sync.
-                    repositories.add(repo);
                 }
             }
         }
