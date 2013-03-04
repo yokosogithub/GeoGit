@@ -4,18 +4,12 @@
  */
 package org.geogit.storage.hessian;
 
-import junit.framework.TestCase;
+import org.geogit.storage.ObjectSerialisingFactory;
+import org.geogit.storage.RevTreeSerialisationTest;
 
-import org.junit.Before;
-
-public class HessianRevTreeSerialisationTest extends TestCase {
-
-    @Before
-    public void setUp() throws Exception {
+public class HessianRevTreeSerialisationTest extends RevTreeSerialisationTest {
+    @Override
+    protected ObjectSerialisingFactory getObjectSerialisingFactory() {
+        return new HessianFactory();
     }
-
-    public void testRevTreeRoundTrippin() throws Exception {
-
-    }
-
 }
