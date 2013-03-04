@@ -14,6 +14,7 @@ import java.util.Set;
 import org.geogit.api.ObjectId;
 import org.geogit.api.Platform;
 import org.geogit.api.plumbing.ResolveGeogitDir;
+import org.neo4j.graphdb.Direction;
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.Relationship;
@@ -136,11 +137,10 @@ public class Neo4JGraphDatabase extends AbstractGraphDatabase {
 
         Builder<ObjectId> listBuilder = new ImmutableList.Builder<ObjectId>();
 
-        for (Relationship parent : node.getRelationships(CommitRelationshipTypes.PARENT)) {
-            Node parentNode = parent.getEndNode();
-            if (parentNode.getId() != node.getId()) {
-                listBuilder.add(ObjectId.valueOf((String) parentNode.getProperty("id")));
-            }
+        for (Relationship parent : node.getRelationships(Direction.OUTGOING,
+                CommitRelationshipTypes.PARENT)) {
+            Node parentNode = parent.getOtherNode(node);
+            listBuilder.add(ObjectId.valueOf((String) parentNode.getProperty("id")));
         }
         return listBuilder.build();
     }
@@ -155,15 +155,17 @@ public class Neo4JGraphDatabase extends AbstractGraphDatabase {
             commitNode = getOrAddNode(commitId);
 
             if (parentIds.isEmpty()) {
-                if (!commitNode.getRelationships(CommitRelationshipTypes.TOROOT).iterator()
-                        .hasNext()) {
+                if (!commitNode
+                        .getRelationships(Direction.OUTGOING, CommitRelationshipTypes.TOROOT)
+                        .iterator().hasNext()) {
                     // Attach this node to the root node
                     commitNode.createRelationshipTo(graphDB.getNodeById(0),
                             CommitRelationshipTypes.TOROOT);
                 }
             }
 
-            if (!commitNode.getRelationships(CommitRelationshipTypes.PARENT).iterator().hasNext()) {
+            if (!commitNode.getRelationships(Direction.OUTGOING, CommitRelationshipTypes.PARENT)
+                    .iterator().hasNext()) {
                 // Don't make relationships if they have been created already
                 for (ObjectId parent : parentIds) {
                     Node parentNode = getOrAddNode(parent);
@@ -245,10 +247,9 @@ public class Neo4JGraphDatabase extends AbstractGraphDatabase {
 
                 return true;
             }
-            for (Relationship parent : commit.getRelationships(CommitRelationshipTypes.PARENT)) {
-                if (parent.getEndNode().getId() != commit.getId()) {
-                    myQueue.add(parent.getEndNode());
-                }
+            for (Relationship parent : commit.getRelationships(Direction.OUTGOING,
+                    CommitRelationshipTypes.PARENT)) {
+                myQueue.add(parent.getEndNode());
             }
         }
         return false;
