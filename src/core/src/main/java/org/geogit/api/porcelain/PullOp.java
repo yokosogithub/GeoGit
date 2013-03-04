@@ -152,6 +152,12 @@ public class PullOp extends AbstractGeoGitOp<PullResult> {
 
             Optional<Ref> destRef = command(RefParse.class).setName(destinationref).call();
             if (destRef.isPresent()) {
+                if (destRef.get().getObjectId().equals(sourceRef.get().getObjectId())) {
+                    // Already up to date.
+                    result.setOldRef(destRef.get());
+                    result.setNewRef(destRef.get());
+                    continue;
+                }
                 result.setOldRef(destRef.get());
                 if (destRef.get().getObjectId().equals(ObjectId.NULL)) {
                     command(UpdateRef.class).setName(destRef.get().getName())
