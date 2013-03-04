@@ -11,6 +11,7 @@ import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamWriter;
 
 import org.codehaus.jettison.AbstractXMLStreamWriter;
+import org.geogit.api.GeogitSimpleFeature;
 import org.geogit.api.NodeRef;
 import org.geogit.api.ObjectId;
 import org.geogit.api.Ref;
@@ -24,6 +25,7 @@ import org.geogit.api.plumbing.DiffWorkTree;
 import org.geogit.api.plumbing.diff.AttributeDiff;
 import org.geogit.api.plumbing.diff.DiffEntry;
 import org.opengis.feature.type.PropertyDescriptor;
+import org.geogit.api.plumbing.diff.DiffEntry.ChangeType;
 
 import com.google.common.collect.ImmutableList;
 
@@ -299,5 +301,20 @@ public class ResponseWriter {
             }
             out.writeEndElement();
         }
+    }
+
+    public void writeDiffResponse(Iterator<GeogitSimpleFeature> features,
+            Iterator<ChangeType> changes) throws XMLStreamException {
+
+        while (features.hasNext()) {
+            GeogitSimpleFeature feature = features.next();
+            ChangeType change = changes.next();
+            out.writeStartElement("Feature");
+            writeElement("change", change.toString());
+            writeElement("id", feature.getID().toString());
+            writeElement("geometry", feature.getDefaultGeometry().toString());
+            out.writeEndElement();
+        }
+
     }
 }
