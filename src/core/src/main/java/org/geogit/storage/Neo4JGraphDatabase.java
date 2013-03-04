@@ -39,7 +39,7 @@ public class Neo4JGraphDatabase extends AbstractGraphDatabase {
     private final Platform platform;
 
     private enum CommitRelationshipTypes implements RelationshipType {
-        PARENT
+        TOROOT, PARENT
     }
 
     /**
@@ -147,10 +147,6 @@ public class Neo4JGraphDatabase extends AbstractGraphDatabase {
 
     @Override
     public boolean put(ObjectId commitId, ImmutableList<ObjectId> parentIds) {
-        if (exists(commitId)) {
-            return false;
-        }
-
         Transaction tx = graphDB.beginTx();
 
         Node commitNode = null;
@@ -158,9 +154,21 @@ public class Neo4JGraphDatabase extends AbstractGraphDatabase {
             // See if it already exists
             commitNode = getOrAddNode(commitId);
 
-            for (ObjectId parent : parentIds) {
-                Node parentNode = getOrAddNode(parent);
-                commitNode.createRelationshipTo(parentNode, CommitRelationshipTypes.PARENT);
+            if (parentIds.isEmpty()) {
+                if (!commitNode.getRelationships(CommitRelationshipTypes.TOROOT).iterator()
+                        .hasNext()) {
+                    // Attach this node to the root node
+                    commitNode.createRelationshipTo(graphDB.getNodeById(0),
+                            CommitRelationshipTypes.TOROOT);
+                }
+            }
+
+            if (!commitNode.getRelationships(CommitRelationshipTypes.PARENT).iterator().hasNext()) {
+                // Don't make relationships if they have been created already
+                for (ObjectId parent : parentIds) {
+                    Node parentNode = getOrAddNode(parent);
+                    commitNode.createRelationshipTo(parentNode, CommitRelationshipTypes.PARENT);
+                }
             }
 
             tx.success();
