@@ -117,6 +117,11 @@ public class CommandBuilder {
         command.setOldRefSpec(options.getFirstValue("oldRefSpec", null));
         command.setNewRefSpec(options.getFirstValue("newRefSpec", null));
         command.setPathFilter(options.getFirstValue("pathFilter", null));
+        command.setCRS(options.getFirstValue("crs", null));
+        command.setXMax(Double.valueOf(options.getFirstValue("xMax", null)));
+        command.setXMin(Double.valueOf(options.getFirstValue("xMin", null)));
+        command.setYMax(Double.valueOf(options.getFirstValue("yMax", null)));
+        command.setYMin(Double.valueOf(options.getFirstValue("yMin", null)));
         return command;
     }
 
