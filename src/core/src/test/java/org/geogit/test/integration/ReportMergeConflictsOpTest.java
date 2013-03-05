@@ -166,7 +166,7 @@ public class ReportMergeConflictsOpTest extends RepositoryTestCase {
         RevCommit branchCommit = geogit.command(CommitOp.class).call();
         ConflictsReport conflicts = geogit.command(ReportMergeConflictsOp.class)
                 .setMergeIntoCommit(masterCommit).setToMergeCommit(branchCommit).call();
-        assertEquals(2, conflicts.getConflicts().size());
+        assertEquals(1, conflicts.getConflicts().size());
         assertEquals(0, conflicts.getUnconflicted().size());
         Boolean hasConflicts = geogit.command(CheckMergeConflictsOp.class)
                 .setCommits(Lists.newArrayList(masterCommit, branchCommit)).call();
@@ -181,10 +181,10 @@ public class ReportMergeConflictsOpTest extends RepositoryTestCase {
         insertAndAdd(points2);
         RevCommit masterCommit = geogit.command(CommitOp.class).call();
         geogit.command(CheckoutOp.class).setSource("TestBranch").call();
-        
+
         geogit.command(RemoveOp.class).addPathToRemove(pointsName).call();
         geogit.command(AddOp.class).call();
-        
+
         RevCommit branchCommit = geogit.command(CommitOp.class).call();
         ConflictsReport conflicts = geogit.command(ReportMergeConflictsOp.class)
                 .setMergeIntoCommit(masterCommit).setToMergeCommit(branchCommit).call();
