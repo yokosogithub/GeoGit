@@ -179,8 +179,8 @@ public class RevParseTest extends RepositoryTestCase {
 
     @Test
     public void testRevParseWithInvalidRefSpec() {
-        exception.expect(IllegalArgumentException.class);
-        geogit.command(RevParse.class).setRefSpec("WORK_HEAD:Lines/Lines.1").call();
+        Optional<ObjectId> oid = geogit.command(RevParse.class).setRefSpec("WORK_HEAD:Lines/Lines.1").call();
+        assertFalse(oid.isPresent());
     }
 
     @Test

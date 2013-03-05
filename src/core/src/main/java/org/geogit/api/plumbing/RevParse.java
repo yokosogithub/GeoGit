@@ -174,10 +174,7 @@ public class RevParse extends AbstractGeoGitOp<Optional<ObjectId>> {
                     .call(RevTree.class);
             Optional<NodeRef> ref = command(FindTreeChild.class).setParent(revTree.get())
                     .setChildPath(path).call();
-            /*
-             * Preconditions.checkArgument(ref.isPresent(),
-             * "pathspec '%s' did not match any valid path", path);
-             */
+
             if (!ref.isPresent()) {
                 return Optional.absent();
             }
