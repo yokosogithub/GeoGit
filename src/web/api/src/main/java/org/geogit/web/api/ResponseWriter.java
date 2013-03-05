@@ -136,8 +136,11 @@ public class ResponseWriter {
         }
     }
 
-    public void writeCommits(Iterator<RevCommit> entries) throws XMLStreamException {
-        while (entries.hasNext()) {
+    public void writeCommits(Iterator<RevCommit> entries, int page, int elementsPerPage)
+            throws XMLStreamException {
+        advance(entries, page * elementsPerPage);
+        int counter = 0;
+        while (entries.hasNext() && counter < elementsPerPage) {
             RevCommit entry = entries.next();
             out.writeStartElement("commit");
             writeElement("id", entry.getId().toString());
@@ -160,6 +163,7 @@ public class ResponseWriter {
             out.writeEndElement();
 
             out.writeEndElement();
+            counter++;
         }
     }
 

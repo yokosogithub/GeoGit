@@ -31,6 +31,10 @@ public class Log implements WebAPICommand {
 
     List<String> paths;
 
+    private int page;
+
+    private int elementsPerPage;
+
     public void setLimit(Integer limit) {
         this.limit = limit;
     }
@@ -49,6 +53,14 @@ public class Log implements WebAPICommand {
 
     public void setPaths(List<String> paths) {
         this.paths = paths;
+    }
+
+    public void setPage(int page) {
+        this.page = page;
+    }
+
+    public void setElementsPerPage(int elementsPerPage) {
+        this.elementsPerPage = elementsPerPage;
     }
 
     @Override
@@ -87,7 +99,7 @@ public class Log implements WebAPICommand {
             @Override
             public void write(ResponseWriter out) throws Exception {
                 out.start();
-                out.writeCommits(log);
+                out.writeCommits(log, page, elementsPerPage);
                 out.finish();
             }
         });

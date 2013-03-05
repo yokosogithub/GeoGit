@@ -19,12 +19,24 @@ public class GetCommitGraph implements WebAPICommand {
 
     private int depth;
 
+    private int page;
+
+    private int elementsPerPage;
+
     public void setCommitId(String commitId) {
         this.commitId = commitId;
     }
 
     public void setDepth(int depth) {
         this.depth = depth;
+    }
+
+    public void setPage(int page) {
+        this.page = page;
+    }
+
+    public void setElementsPerPage(int elementsPerPage) {
+        this.elementsPerPage = elementsPerPage;
     }
 
     @Override
@@ -57,7 +69,7 @@ public class GetCommitGraph implements WebAPICommand {
             @Override
             public void write(ResponseWriter out) throws Exception {
                 out.start();
-                out.writeCommits(history.iterator());
+                out.writeCommits(history.iterator(), page, elementsPerPage);
                 out.finish();
             }
         });
