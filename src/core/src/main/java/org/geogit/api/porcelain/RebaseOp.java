@@ -37,6 +37,10 @@ import com.google.inject.Inject;
  * 
  * Rebase the current head to the included branch head.
  * 
+ * <b>NOTE:</b> so far we don't have the ability to merge non conflicting changes. Instead, the diff
+ * list we get acts on whole objects, , so its possible that this operation overrites non
+ * conflicting changes when reabasing a branch that has non conflicting changes at both sides. This
+ * needs to be revisited once we get more merge tools.
  */
 public class RebaseOp extends AbstractGeoGitOp<Boolean> {
 

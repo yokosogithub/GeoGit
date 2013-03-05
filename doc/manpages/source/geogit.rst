@@ -54,6 +54,7 @@ SEE ALSO
 :ref:`geogit-rebase`
 :ref:`geogit-reset`
 :ref:`geogit-remote`
+:ref:`geogit-revert`
 :ref:`geogit-clone`
 :ref:`geogit-cherrypick`
 :ref:`geogit-fetch`
