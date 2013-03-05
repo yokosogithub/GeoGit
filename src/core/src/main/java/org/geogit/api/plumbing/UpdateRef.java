@@ -24,7 +24,7 @@ public class UpdateRef extends AbstractGeoGitOp<Optional<Ref>> {
 
     private ObjectId newValue;
 
-    private ObjectId oldValue;
+    private String oldValue;
 
     private boolean delete;
 
@@ -63,6 +63,11 @@ public class UpdateRef extends AbstractGeoGitOp<Optional<Ref>> {
      * @return {@code this}
      */
     public UpdateRef setOldValue(ObjectId oldValue) {
+        this.oldValue = oldValue.toString();
+        return this;
+    }
+
+    public UpdateRef setOldValue(String oldValue) {
         this.oldValue = oldValue;
         return this;
     }

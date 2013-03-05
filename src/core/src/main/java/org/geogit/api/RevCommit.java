@@ -78,9 +78,8 @@ public class RevCommit extends AbstractRevObject {
     /**
      * @return the parentIds
      */
-    @SuppressWarnings("unchecked")
     public List<ObjectId> getParentIds() {
-        return parentIds == null ? Collections.EMPTY_LIST : Collections.unmodifiableList(parentIds);
+        return Collections.unmodifiableList(parentIds);
     }
 
     /**
@@ -137,7 +136,7 @@ public class RevCommit extends AbstractRevObject {
      */
     @Override
     public boolean equals(Object o) {
-        if (!(o instanceof RevCommit) && super.equals(o)) {
+        if (!(o instanceof RevCommit) && !super.equals(o)) {
             return false;
         }
         RevCommit c = (RevCommit) o;

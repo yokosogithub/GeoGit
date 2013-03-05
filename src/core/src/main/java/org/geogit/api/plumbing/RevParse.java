@@ -127,11 +127,17 @@ public class RevParse extends AbstractGeoGitOp<Optional<ObjectId>> {
         int ancestorN = -1;// -1 = not given, 0 = same commit, > 0 = nth. historical ancestor, by
                            // first parent
 
+        RevObject.TYPE type = null;
+
         final StringBuilder remaining = new StringBuilder();
         if (refSpec.indexOf(PARENT_DELIMITER) > 0) {
             prefix = parsePrefix(refSpec, PARENT_DELIMITER);
             String suffix = parseSuffix(refSpec, PARENT_DELIMITER);
-            parentN = parseNumber(suffix, 1, remaining);
+            if (suffix.indexOf('{') == 0) {
+                type = parseType(suffix);
+            } else {
+                parentN = parseNumber(suffix, 1, remaining);
+            }
         } else if (refSpec.indexOf(ANCESTOR_DELIMITER) > 0) {
             prefix = parsePrefix(refSpec, ANCESTOR_DELIMITER);
             String suffix = parseSuffix(refSpec, ANCESTOR_DELIMITER);
@@ -149,6 +155,8 @@ public class RevParse extends AbstractGeoGitOp<Optional<ObjectId>> {
             resolved = resolveParent(resolved.get(), parentN);
         } else if (ancestorN > -1) {
             resolved = resolveAncestor(resolved.get(), ancestorN);
+        } else if (type != null) {
+            resolved = verifyId(resolved.get(), type);
         }
         if (resolved.isPresent() && remaining.length() > 0) {
             String newRefSpec = resolved.get().toString() + remaining.toString();
@@ -236,6 +244,21 @@ public class RevParse extends AbstractGeoGitOp<Optional<ObjectId>> {
         return resolveAncestor(firstParent.get(), ancestorN - 1);
     }
 
+    private Optional<ObjectId> verifyId(ObjectId objectId, RevObject.TYPE type) {
+        final Optional<RevObject> object = command(RevObjectParse.class).setObjectId(objectId)
+                .call();
+
+        checkArgument(object.isPresent(), "No object named %s could be found", objectId);
+        final RevObject revObject = object.get();
+
+        if (type.equals(revObject.getType())) {
+            return Optional.of(revObject.getId());
+        } else {
+            throw new IllegalArgumentException(String.format("%s did not resolve to %s: %s",
+                    objectId, type, revObject.getType()));
+        }
+    }
+
     private int parseNumber(final String suffix, final int defaultValue,
             StringBuilder remainingTarget) {
         if (suffix.isEmpty() || !Character.isDigit(suffix.charAt(0))) {
@@ -262,6 +285,21 @@ public class RevParse extends AbstractGeoGitOp<Optional<ObjectId>> {
     private String parsePrefix(String spec, char delim) {
         checkArgument(spec.indexOf(delim) > -1);
         return spec.substring(0, spec.indexOf(delim));
+    }
+
+    private RevObject.TYPE parseType(String spec) {
+        String type = spec.substring(1, spec.length() - 1);
+
+        if (type.equals("commit")) {
+            return RevObject.TYPE.COMMIT;
+        } else if (type.equals("tree")) {
+            return RevObject.TYPE.TREE;
+        } else if (type.equals("tag")) {
+            return RevObject.TYPE.TAG;
+        } else if (type.equals("feature")) {
+            return RevObject.TYPE.FEATURE;
+        }
+        throw new IllegalArgumentException(String.format("%s did not resolve to a type", type));
     }
 
     /**

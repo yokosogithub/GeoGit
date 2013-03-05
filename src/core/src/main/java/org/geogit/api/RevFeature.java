@@ -62,14 +62,14 @@ public class RevFeature extends AbstractRevObject {
         builder.append(getId().toString());
         builder.append("; ");
         boolean first = true;
-        for (Object value : getValues()) {
+        for (Optional<Object> value : getValues()) {
             if (first) {
                 first = false;
             } else {
                 builder.append(", ");
             }
 
-            String valueString = value.toString();
+            String valueString = value.get().toString();
             builder.append(valueString.substring(0, Math.min(10, valueString.length())));
         }
         builder.append("]");
