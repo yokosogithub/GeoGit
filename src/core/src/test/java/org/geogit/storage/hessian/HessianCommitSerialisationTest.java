@@ -8,10 +8,8 @@ import org.geogit.storage.ObjectSerialisingFactory;
 import org.geogit.storage.RevCommitSerializationTest;
 
 public class HessianCommitSerialisationTest extends RevCommitSerializationTest {
-
     @Override
     protected ObjectSerialisingFactory getFactory() {
         return new HessianFactory();
     }
-
 }
