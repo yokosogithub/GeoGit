@@ -147,7 +147,7 @@ public class Neo4JGraphDatabase extends AbstractGraphDatabase {
 
     @Override
     public boolean put(ObjectId commitId, ImmutableList<ObjectId> parentIds) {
-        Transaction tx = graphDB.beginTx();
+        Transaction currThreadTx = graphDB.beginTx();
 
         Node commitNode = null;
         try {
@@ -173,12 +173,12 @@ public class Neo4JGraphDatabase extends AbstractGraphDatabase {
                 }
             }
 
-            tx.success();
+            currThreadTx.success();
         } catch (Exception e) {
-            tx.failure();
+            currThreadTx.failure();
             throw Throwables.propagate(e);
         } finally {
-            tx.finish();
+            currThreadTx.finish();
         }
 
         return true;
@@ -193,11 +193,12 @@ public class Neo4JGraphDatabase extends AbstractGraphDatabase {
      */
     private Node getOrAddNode(ObjectId commitId) {
         Index<Node> idIndex = graphDB.index().forNodes("identifiers");
-        Node node = idIndex.get("id", commitId.toString()).getSingle();
+        final String commitIdStr = commitId.toString();
+        Node node = idIndex.get("id", commitIdStr).getSingle();
         if (node == null) {
             node = graphDB.createNode();
-            node.setProperty("id", commitId.toString());
-            idIndex.add(node, "id", commitId.toString());
+            node.setProperty("id", commitIdStr);
+            idIndex.add(node, "id", commitIdStr);
         }
         return node;
     }
