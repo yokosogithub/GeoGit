@@ -176,6 +176,7 @@ public class Neo4JGraphDatabase extends AbstractGraphDatabase {
             tx.success();
         } catch (Exception e) {
             tx.failure();
+            throw Throwables.propagate(e);
         } finally {
             tx.finish();
         }
