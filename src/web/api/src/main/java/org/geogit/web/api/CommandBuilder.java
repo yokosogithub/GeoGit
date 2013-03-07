@@ -68,6 +68,20 @@ public class CommandBuilder {
         return retval;
     }
 
+    static Double parseDouble(ParameterSet form, String key, Double defaultValue) {
+        String val = form.getFirstValue(key);
+        Double retval = defaultValue;
+        if (val != null) {
+            try {
+                retval = new Double(val);
+            } catch (NumberFormatException nfe) {
+                throw new CommandSpecException("Invalid value '" + val + "' specified for option: "
+                        + key);
+            }
+        }
+        return retval;
+    }
+
     static Status buildStatus(ParameterSet options) {
         Status command = new Status();
         command.setLimit(parseInt(options, "limit", 50));
@@ -118,10 +132,10 @@ public class CommandBuilder {
         command.setNewRefSpec(options.getFirstValue("newRefSpec", null));
         command.setPathFilter(options.getFirstValue("pathFilter", null));
         command.setCRS(options.getFirstValue("crs", null));
-        command.setXMax(Double.valueOf(options.getFirstValue("xMax", null)));
-        command.setXMin(Double.valueOf(options.getFirstValue("xMin", null)));
-        command.setYMax(Double.valueOf(options.getFirstValue("yMax", null)));
-        command.setYMin(Double.valueOf(options.getFirstValue("yMin", null)));
+        command.setXMax(parseDouble(options, "xMax", null));
+        command.setXMin(parseDouble(options, "xMin", null));
+        command.setYMax(parseDouble(options, "yMax", null));
+        command.setYMin(parseDouble(options, "yMin", null));
         return command;
     }
 
