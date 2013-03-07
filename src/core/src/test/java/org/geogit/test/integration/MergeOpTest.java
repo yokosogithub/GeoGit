@@ -86,7 +86,7 @@ public class MergeOpTest extends RepositoryTestCase {
         // o - master - HEAD - Merge commit
 
         Ref branch1 = geogit.command(RefParse.class).setName("branch1").call().get();
-        final RevCommit mergeCommit = geogit.command(MergeOp.class)
+        RevCommit mergeCommit = geogit.command(MergeOp.class)
                 .addCommit(Suppliers.ofInstance(branch1.getObjectId()))
                 .setMessage("My merge message.").call();
 
