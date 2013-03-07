@@ -86,14 +86,12 @@
     <dependency>
       <groupId>org.neo4j</groupId>
       <artifactId>neo4j</artifactId>
-      <version>1.8.2</version>
     </dependency>
-      <dependency>
-          <groupId>org.neo4j</groupId>
-          <artifactId>neo4j-kernel</artifactId>
-          <version>1.8.2</version>
-          <type>test-jar</type>
-      </dependency>
+    <dependency>
+      <groupId>org.neo4j</groupId>
+      <artifactId>neo4j-kernel</artifactId>
+      <type>test-jar</type>
+    </dependency>
 
     <!-- Test scope dependencies -->
     <dependency>
