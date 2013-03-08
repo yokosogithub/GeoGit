@@ -15,7 +15,9 @@ import org.geogit.api.RevCommit;
 import org.geogit.api.RevObject;
 import org.geogit.repository.Repository;
 
+import com.google.common.base.Function;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Iterators;
 import com.google.common.collect.Lists;
 import com.google.inject.Provider;
 
@@ -37,34 +39,51 @@ public class ObjectDatabasePutInterceptor implements MethodInterceptor {
 
     @Override
     public Object invoke(MethodInvocation invocation) throws Throwable {
-        if (invocation.getMethod().getName().equals("put")) {
+        final String methodName = invocation.getMethod().getName();
+        if (methodName.equals("put")) {
             if (invocation.getArguments()[0].getClass().equals(ObjectId.class)) {
                 return putObjectIdInputStreamInterceptor(invocation);
             } else {
                 return putRevObjectInterceptor(invocation);
             }
 
-        } else if (invocation.getMethod().getName().equals("putAll")) {
+        } else if (methodName.equals("putAll")) {
             return putAllInterceptor(invocation);
         }
         return invocation.proceed();
     }
 
     private Object putAllInterceptor(MethodInvocation invocation) throws Throwable {
+        Object[] arguments = invocation.getArguments();
+
         @SuppressWarnings("unchecked")
-        final Iterator<? extends RevObject> objects = (Iterator<? extends RevObject>) invocation
-                .getArguments()[0];
-        List<? extends RevObject> list = Lists.newArrayList(objects);
-        for (RevObject o : list) {
-            if (o.getType() == RevObject.TYPE.COMMIT) {
-                // add to graph database
-                RevCommit commit = (RevCommit) o;
-                graphDb.get().put(commit.getId(), ImmutableList.copyOf(commit.getParentIds()));
+        final Iterator<? extends RevObject> objects = (Iterator<? extends RevObject>) arguments[0];
+
+        final Iterator<? extends RevObject> sideEffectIterator;
+        final List<RevCommit> addedCommits = Lists.newLinkedList();
+        sideEffectIterator = Iterators.transform(objects, new Function<RevObject, RevObject>() {
+
+            @Override
+            public RevObject apply(RevObject input) {
+                if (input instanceof RevCommit) {
+                    addedCommits.add((RevCommit) input);
+                }
+                return input;
+            }
+        });
+        arguments[0] = sideEffectIterator;
+
+        Object result = invocation.proceed();
+        if (!addedCommits.isEmpty()) {
+            GraphDatabase graphDatabase = graphDb.get();
+            for (RevCommit commit : addedCommits) {
+                ObjectId commitId = commit.getId();
+                List<ObjectId> parentIds = commit.getParentIds();
+                graphDatabase.put(commitId, ImmutableList.copyOf(parentIds));
             }
         }
-        invocation.getArguments()[0] = list.iterator();
 
-        return invocation.proceed();
+        return result;
     }
 
     private Object putObjectIdInputStreamInterceptor(MethodInvocation invocation) throws Throwable {

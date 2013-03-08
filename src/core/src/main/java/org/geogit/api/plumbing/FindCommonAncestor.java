@@ -73,7 +73,7 @@ public class FindCommonAncestor extends AbstractGeoGitOp<Optional<RevCommit>> {
 
         getProgressListener().started();
 
-        Optional<ObjectId> ancestor = graphDb.lowestCommonAncestor(left.getId(), right.getId());
+        Optional<ObjectId> ancestor = graphDb.findLowestCommonAncestor(left.getId(), right.getId());
 
         Optional<RevCommit> ancestorCommit = Optional.absent();
         if (ancestor.isPresent()) {

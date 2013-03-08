@@ -1,3 +1,7 @@
+/* Copyright (c) 2011 TOPP - www.openplans.org. All rights reserved.
+ * This code is licensed under the LGPL 2.1 license, available at the root
+ * application directory.
+ */
 package org.geogit.storage;
 
 import java.io.File;
@@ -147,7 +151,7 @@ public class Neo4JGraphDatabase extends AbstractGraphDatabase {
 
     @Override
     public boolean put(ObjectId commitId, ImmutableList<ObjectId> parentIds) {
-        Transaction currThreadTx = graphDB.beginTx();
+        Transaction tx = graphDB.beginTx();
 
         Node commitNode = null;
         try {
@@ -173,12 +177,12 @@ public class Neo4JGraphDatabase extends AbstractGraphDatabase {
                 }
             }
 
-            currThreadTx.success();
+            tx.success();
         } catch (Exception e) {
-            currThreadTx.failure();
+            tx.failure();
             throw Throwables.propagate(e);
         } finally {
-            currThreadTx.finish();
+            tx.finish();
         }
 
         return true;
@@ -204,7 +208,7 @@ public class Neo4JGraphDatabase extends AbstractGraphDatabase {
     }
 
     @Override
-    public Optional<ObjectId> lowestCommonAncestor(ObjectId leftId, ObjectId rightId) {
+    public Optional<ObjectId> findLowestCommonAncestor(ObjectId leftId, ObjectId rightId) {
         Index<Node> idIndex = graphDB.index().forNodes("identifiers");
 
         Set<Node> leftSet = new HashSet<Node>();

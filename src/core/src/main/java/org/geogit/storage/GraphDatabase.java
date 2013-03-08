@@ -1,10 +1,16 @@
+/* Copyright (c) 2011 TOPP - www.openplans.org. All rights reserved.
+ * This code is licensed under the LGPL 2.1 license, available at the root
+ * application directory.
+ */
 package org.geogit.storage;
 
 import org.geogit.api.ObjectId;
 
+import com.google.common.annotations.Beta;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 
+@Beta
 public interface GraphDatabase {
 
     /**
@@ -58,5 +64,5 @@ public interface GraphDatabase {
      * @return An {@link Optional} of the lowest common ancestor of the two commits, or
      *         {@link Optional#absent()} if a common ancestor could not be found.
      */
-    public Optional<ObjectId> lowestCommonAncestor(ObjectId leftId, ObjectId rightId);
+    public Optional<ObjectId> findLowestCommonAncestor(ObjectId leftId, ObjectId rightId);
 }
