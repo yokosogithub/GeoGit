@@ -26,7 +26,7 @@ import org.geogit.storage.GraphDatabase;
 import org.geogit.storage.Neo4JGraphDatabase;
 import org.geogit.storage.ObjectDatabase;
 import org.geogit.storage.ObjectDatabasePutInterceptor;
-import org.geogit.storage.ObjectSerialisingFactory;
+import org.geogit.storage.ObjectSerializingFactory;
 import org.geogit.storage.RefDatabase;
 import org.geogit.storage.fs.FileObjectDatabase;
 import org.geogit.storage.fs.FileRefDatabase;
@@ -49,7 +49,7 @@ import com.google.inject.matcher.Matcher;
  * @see WorkingTree
  * @see ObjectDatabase
  * @see RefDatabase
- * @see ObjectSerialisingFactory
+ * @see ObjectSerializingFactory
  */
 
 public class GeogitModule extends AbstractModule {
@@ -73,7 +73,7 @@ public class GeogitModule extends AbstractModule {
         bind(ObjectDatabase.class).to(FileObjectDatabase.class).in(Scopes.SINGLETON);
         bind(RefDatabase.class).to(FileRefDatabase.class).in(Scopes.SINGLETON);
 
-        bind(ObjectSerialisingFactory.class).to(HessianFactory.class).in(Scopes.SINGLETON);
+        bind(ObjectSerializingFactory.class).to(HessianFactory.class).in(Scopes.SINGLETON);
 
         final Method getObjectId;
         final Method getObjectIdClass;

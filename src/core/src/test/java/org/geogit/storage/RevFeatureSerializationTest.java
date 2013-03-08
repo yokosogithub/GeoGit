@@ -22,7 +22,7 @@ import org.opengis.feature.type.GeometryDescriptor;
 
 import com.vividsolutions.jts.io.ParseException;
 
-public abstract class RevFeatureSerialisationTest extends Assert {
+public abstract class RevFeatureSerializationTest extends Assert {
     private String namespace1 = "http://geoserver.org/test";
     private String typeName1 = "TestType";
     private String typeSpec1 = "str:String," + "bool:Boolean," + "byte:java.lang.Byte,"
@@ -31,12 +31,12 @@ public abstract class RevFeatureSerialisationTest extends Assert {
                 + "uuid:java.util.UUID";
     private SimpleFeatureType featureType1;
     private Feature feature1_1;
-    private ObjectSerialisingFactory factory = getObjectSerialisingFactory();
+    private ObjectSerializingFactory factory = getObjectSerializingFactory();
 
-    protected abstract ObjectSerialisingFactory getObjectSerialisingFactory();
+    protected abstract ObjectSerializingFactory getObjectSerializingFactory();
 
     @Before
-    public void initialiseFeatureAndFeatureType() throws Exception {
+    public void initializeFeatureAndFeatureType() throws Exception {
         /* now we will setup our feature types and test features. */
         featureType1 = DataUtilities.createType(namespace1, typeName1, typeSpec1);
         feature1_1 = feature(featureType1, "TestType.feature.1", "StringProp1_1", Boolean.TRUE,
@@ -46,7 +46,7 @@ public abstract class RevFeatureSerialisationTest extends Assert {
     }
 
     @Test
-    public void testSerialise() throws Exception {
+    public void testSerialize() throws Exception {
     
         RevFeatureBuilder builder = new RevFeatureBuilder();
         RevFeature newFeature = builder.build(feature1_1);

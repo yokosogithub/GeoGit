@@ -19,7 +19,7 @@ import org.geogit.storage.AbstractObjectDatabase;
 import org.geogit.storage.ObjectDatabase;
 import org.geogit.storage.ObjectInserter;
 import org.geogit.storage.ObjectReader;
-import org.geogit.storage.ObjectSerialisingFactory;
+import org.geogit.storage.ObjectSerializingFactory;
 import org.geogit.storage.StagingDatabase;
 
 import com.google.common.base.Throwables;
@@ -42,7 +42,7 @@ public class HeapStagingDatabase extends HeapObjectDatabse implements StagingDat
      */
     @Inject
     public HeapStagingDatabase(final ObjectDatabase repositoryDb,
-            final ObjectSerialisingFactory serialFactory) {
+            final ObjectSerializingFactory serialFactory) {
         super(serialFactory);
         this.repositoryDb = repositoryDb;
     }

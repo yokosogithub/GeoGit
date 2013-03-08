@@ -24,7 +24,7 @@ import com.google.common.collect.Lists;
 
 public abstract class RevCommitSerializationTest extends Assert {
 
-    private ObjectSerialisingFactory factory;
+    private ObjectSerializingFactory factory;
 
     private CommitBuilder testCommit;
 
@@ -36,7 +36,7 @@ public abstract class RevCommitSerializationTest extends Assert {
                 "jd@lmnsolutions.com", 10000L, "test message", ObjectId.forString("first parent"));
     }
 
-    protected abstract ObjectSerialisingFactory getFactory();
+    protected abstract ObjectSerializingFactory getFactory();
 
     @Test
     public void testCommitSerialization() throws IOException {

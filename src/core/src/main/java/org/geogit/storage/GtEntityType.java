@@ -53,7 +53,7 @@ public enum GtEntityType implements Serializable {
     MULTIPOLYGON(21, MultiPolygon.class), //
     GEOMETRYCOLLECTION(22, GeometryCollection.class), //
     GEOMETRY(23, Geometry.class), //
-    UNKNOWN_SERIALISABLE(24, Serializable.class), //
+    UNKNOWN_SERIALIZABLE(24, Serializable.class), //
     UNKNOWN(25, null), //
     UUID(26, java.util.UUID.class), //
     DATE_UTIL(27, java.util.Date.class), //

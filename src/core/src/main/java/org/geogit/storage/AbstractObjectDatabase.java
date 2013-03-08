@@ -36,9 +36,9 @@ import com.ning.compress.lzf.LZFOutputStream;
  */
 public abstract class AbstractObjectDatabase implements ObjectDatabase {
 
-    protected ObjectSerialisingFactory serializationFactory;
+    protected ObjectSerializingFactory serializationFactory;
 
-    public AbstractObjectDatabase(final ObjectSerialisingFactory serializationFactory) {
+    public AbstractObjectDatabase(final ObjectSerializingFactory serializationFactory) {
         Preconditions.checkNotNull(serializationFactory);
         this.serializationFactory = serializationFactory;
     }

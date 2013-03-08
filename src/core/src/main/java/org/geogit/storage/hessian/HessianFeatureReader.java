@@ -171,7 +171,7 @@ class HessianFeatureReader extends HessianRevReader<RevFeature> implements Objec
         case NULL:
             in.readNull();
             return null;
-        case UNKNOWN_SERIALISABLE:
+        case UNKNOWN_SERIALIZABLE:
             return in.readObject();
         case UNKNOWN:
             String classname = in.readString();

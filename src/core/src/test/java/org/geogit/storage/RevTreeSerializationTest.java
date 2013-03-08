@@ -18,9 +18,9 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.vividsolutions.jts.geom.Envelope;
 
-public abstract class RevTreeSerialisationTest extends Assert {
-    private ObjectSerialisingFactory factory = getObjectSerialisingFactory();
-    protected abstract ObjectSerialisingFactory getObjectSerialisingFactory();
+public abstract class RevTreeSerializationTest extends Assert {
+    private ObjectSerializingFactory factory = getObjectSerializingFactory();
+    protected abstract ObjectSerializingFactory getObjectSerializingFactory();
     
     private RevTree tree1_leaves;
     private RevTree tree2_internal;

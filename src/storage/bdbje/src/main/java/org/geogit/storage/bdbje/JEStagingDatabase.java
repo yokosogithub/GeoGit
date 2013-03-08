@@ -22,7 +22,7 @@ import org.geogit.api.RevTag;
 import org.geogit.api.RevTree;
 import org.geogit.storage.ObjectDatabase;
 import org.geogit.storage.ObjectInserter;
-import org.geogit.storage.ObjectSerialisingFactory;
+import org.geogit.storage.ObjectSerializingFactory;
 import org.geogit.storage.StagingDatabase;
 
 import com.google.inject.Inject;
@@ -69,7 +69,7 @@ public class JEStagingDatabase implements ObjectDatabase, StagingDatabase {
      */
     private ObjectDatabase repositoryDb;
 
-    private ObjectSerialisingFactory sfac;
+    private ObjectSerializingFactory sfac;
 
     /**
      * @param referenceDatabase the repository reference database, used to get the head re
@@ -77,7 +77,7 @@ public class JEStagingDatabase implements ObjectDatabase, StagingDatabase {
      * @param stagingDb
      */
     @Inject
-    public JEStagingDatabase(final ObjectSerialisingFactory sfac,
+    public JEStagingDatabase(final ObjectSerializingFactory sfac,
             final ObjectDatabase repositoryDb, final EnvironmentBuilder envBuilder) {
         this.sfac = sfac;
         this.repositoryDb = repositoryDb;

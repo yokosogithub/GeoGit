@@ -178,7 +178,7 @@ class HessianFeatureWriter implements ObjectWriter<RevFeature> {
         case NULL:
             out.writeNull();
             break;
-        case UNKNOWN_SERIALISABLE:
+        case UNKNOWN_SERIALIZABLE:
             out.writeObject(value);
             break;
         case UNKNOWN:

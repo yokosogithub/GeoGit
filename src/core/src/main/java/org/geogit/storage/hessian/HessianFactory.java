@@ -19,7 +19,7 @@ import org.geogit.api.RevObject.TYPE;
 import org.geogit.api.RevTag;
 import org.geogit.api.RevTree;
 import org.geogit.storage.ObjectReader;
-import org.geogit.storage.ObjectSerialisingFactory;
+import org.geogit.storage.ObjectSerializingFactory;
 import org.geogit.storage.ObjectWriter;
 
 import com.caucho.hessian.io.Hessian2Input;
@@ -31,7 +31,7 @@ import com.google.common.collect.Maps;
  * with the serialized forms of various repository elements in the hessian format.
  * 
  */
-public class HessianFactory implements ObjectSerialisingFactory {
+public class HessianFactory implements ObjectSerializingFactory {
 
     /** generic revobject reader */
     private static final HessianRevObjectReader OBJECT_READER = new HessianRevObjectReader();
