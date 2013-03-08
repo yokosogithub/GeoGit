@@ -35,5 +35,5 @@ Scenario: Try to show the content of HEAD.
      When I run the command "commit -m TestCommit"
      When I run the command "cat HEAD"
      Then the response should contain "COMMIT"
-      And the response should contain "John Doe <JohnDoe@example.com>"
-      And the response should contain "timestamp"       
+      And the response should contain "JohnDoe@example.com"
+      And the response should contain "TestCommit"       

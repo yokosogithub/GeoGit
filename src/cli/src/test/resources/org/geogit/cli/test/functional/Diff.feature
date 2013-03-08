@@ -19,7 +19,7 @@ Scenario: Show diff between working tree and index, showing only summary
     Given I have a repository
       And I stage 6 features      
       And I modify a feature
-     When I run the command "diff --raw"
+     When I run the command "diff --summary"
      Then the response should contain "Points/Points.1"   
      
 Scenario: Show diff between working tree and index, when no changes have been made 
@@ -56,7 +56,7 @@ Scenario: Show diff using a wrong commit refspec
       And I stage 6 features   
       And I modify a feature         
      When I run the command "diff wrongcommit"
-	 Then the response should contain "Refspec wrongcommit did not resolve to a tree"  	 
+	 Then the response should contain "Refspec wrongcommit does not resolve to a tree"  	 
      
 Scenario: Show diff between working tree and index, for a single modified tree, showing only summary
     Given I have a repository
@@ -72,6 +72,7 @@ Scenario: Show diff between working tree and index, for a single feature whose f
       And I stage 6 features   
       And I modify a feature type         
      When I run the command "diff -- Points/Points.1"
-     Then the response should contain "extra: [MISSING] -> ExtraString"  
+     Then the response should contain "extra: [MISSING] -> "
+     And the response should contain "ExtraString"  
             
      

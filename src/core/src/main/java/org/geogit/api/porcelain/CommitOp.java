@@ -29,7 +29,6 @@ import org.geogit.api.plumbing.UpdateSymRef;
 import org.geogit.api.plumbing.WriteTree;
 import org.geogit.api.plumbing.merge.Conflict;
 import org.geogit.api.plumbing.merge.ConflictsReadOp;
-import org.geogit.api.plumbing.merge.MergeConflictsException;
 import org.geogit.api.plumbing.merge.ReadMergeCommitMessageOp;
 import org.geogit.api.porcelain.ConfigOp.ConfigAction;
 import org.geogit.di.CanRunDuringConflict;
@@ -235,7 +234,7 @@ public class CommitOp extends AbstractGeoGitOp<RevCommit> {
 
         List<Conflict> conflicts = command(ConflictsReadOp.class).call();
         if (!conflicts.isEmpty()) {
-            throw new MergeConflictsException("Cannot run operation while merge conflicts exist.");
+            throw new IllegalStateException("Cannot run operation while merge conflicts exist.");
         }
 
         final Optional<Ref> currHead = command(RefParse.class).setName(Ref.HEAD).call();

@@ -22,6 +22,7 @@ import org.geogit.api.RevCommit;
 import org.geogit.api.plumbing.RefParse;
 import org.geogit.api.plumbing.RevParse;
 import org.geogit.api.plumbing.diff.DiffEntry;
+import org.geogit.api.plumbing.merge.MergeConflictsException;
 import org.geogit.api.porcelain.DiffOp;
 import org.geogit.api.porcelain.MergeOp;
 import org.geogit.api.porcelain.NothingToCommitException;
@@ -115,6 +116,9 @@ public class Merge extends AbstractCommand implements CLICommand {
             commit = merge.call();
         } catch (NothingToCommitException noChanges) {
             console.println(ansi.fg(Color.RED).a(noChanges.getMessage()).reset().toString());
+            return;
+        } catch (MergeConflictsException e) {
+            console.println(e.getMessage());
             return;
         }
         final ObjectId parentId = commit.parentN(0).or(ObjectId.NULL);

@@ -107,6 +107,8 @@ public class Checkout extends AbstractCommand implements CLICommand {
                         .println(
                                 "Doing a checkout without a clean working tree and index is currently unsupported.");
                 break;
+            case UNMERGED_PATHS:
+                cli.getConsole().println(e.getMessage());
             }
         }
     }

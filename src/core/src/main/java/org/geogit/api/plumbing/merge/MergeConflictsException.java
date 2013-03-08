@@ -4,9 +4,8 @@
  */
 package org.geogit.api.plumbing.merge;
 
-import org.geogit.api.porcelain.GeoGitOpException;
 
-public class MergeConflictsException extends GeoGitOpException {
+public class MergeConflictsException extends RuntimeException {
 
     private static final long serialVersionUID = 1L;
 

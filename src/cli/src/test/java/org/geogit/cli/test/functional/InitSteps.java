@@ -168,7 +168,7 @@ public class InitSteps extends AbstractGeogitFunctionalTest {
                     .call();
             fail();
         } catch (MergeConflictsException e) {
-
+            e = e;
         }
     }
 

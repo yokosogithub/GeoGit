@@ -35,6 +35,7 @@ import org.geogit.api.plumbing.diff.Patch;
 import org.geogit.api.plumbing.diff.PatchFeature;
 import org.geogit.api.plumbing.diff.PatchSerializer;
 import org.geogit.api.porcelain.ApplyPatchOp;
+import org.geogit.api.porcelain.CannotApplyPatchException;
 import org.geogit.cli.AbstractCommand;
 import org.geogit.cli.GeogitCLI;
 import org.geogit.repository.DepthSearch;
@@ -130,26 +131,31 @@ public class Apply extends AbstractCommand {
                 console.println(rejected.toString());
             }
         } else {
-            Patch rejected = geogit.command(ApplyPatchOp.class).setPatch(patch)
-                    .setApplyPartial(reject).call();
-            if (reject) {
-                if (rejected.isEmpty()) {
-                    console.println("Patch applied succesfully");
+            try {
+                Patch rejected = geogit.command(ApplyPatchOp.class).setPatch(patch)
+                        .setApplyPartial(reject).call();
+                if (reject) {
+                    if (rejected.isEmpty()) {
+                        console.println("Patch applied succesfully");
+                    } else {
+                        int accepted = patch.count() - rejected.count();
+                        File file = new File(patchFile.getAbsolutePath() + ".rej");
+                        console.println("Patch applied only partially.");
+                        console.println(Integer.toString(accepted) + " changes were applied.");
+                        console.println(Integer.toString(rejected.count())
+                                + " changes were rejected.");
+                        BufferedWriter writer = Files.newWriter(file, Charsets.UTF_8);
+                        PatchSerializer.write(writer, patch);
+                        writer.flush();
+                        writer.close();
+                        console.println("Patch file with rejected changes created at "
+                                + file.getAbsolutePath());
+                    }
                 } else {
-                    int accepted = patch.count() - rejected.count();
-                    File file = new File(patchFile.getAbsolutePath() + ".rej");
-                    console.println("Patch applied only partially.");
-                    console.println(Integer.toString(accepted) + " changes were applied.");
-                    console.println(Integer.toString(rejected.count()) + " changes were rejected.");
-                    BufferedWriter writer = Files.newWriter(file, Charsets.UTF_8);
-                    PatchSerializer.write(writer, patch);
-                    writer.flush();
-                    writer.close();
-                    console.println("Patch file with rejected changes created at "
-                            + file.getAbsolutePath());
+                    console.println("Patch applied succesfully");
                 }
-            } else {
-                console.println("Patch applied succesfully");
+            } catch (CannotApplyPatchException e) {
+                console.println(e.getMessage());
             }
 
         }

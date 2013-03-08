@@ -117,7 +117,7 @@ Feature: "checkout" command
     Given I have a repository
       And I have a merge conflict state
      When I run the command "checkout -p Points/Points.1"
-     Then the response should contain "Cannot run operation while merge conflicts exist" 
+     Then the response should contain "path Points/Points.1 is unmerged" 
           
   Scenario: Try to revert a feature to the --theirs version and fix the conflict
     Given I have a repository

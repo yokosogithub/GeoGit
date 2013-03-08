@@ -1,6 +1,6 @@
 package org.geogit.api.porcelain;
 
-public class CannotMergeException extends GeoGitOpException {
+public class CannotMergeException extends RuntimeException {
 
     private static final long serialVersionUID = 1L;
 

@@ -577,8 +577,8 @@ public class MergeOpTest extends RepositoryTestCase {
         try {
             geogit.command(CommitOp.class).call();
             fail();
-        } catch (MergeConflictsException e) {
-            assertTrue(true);
+        } catch (IllegalStateException e) {
+            assertEquals(e.getMessage(), "Cannot run operation while merge conflicts exist.");
         }
 
         // solve, and commit
@@ -849,8 +849,8 @@ public class MergeOpTest extends RepositoryTestCase {
         try {
             geogit.command(PullOp.class).call();
             fail();
-        } catch (MergeConflictsException e) {
-            assertTrue(true);
+        } catch (IllegalStateException e) {
+            assertEquals(e.getMessage(), "Cannot run operation while merge conflicts exist.");
         }
 
     }

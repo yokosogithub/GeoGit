@@ -69,7 +69,7 @@ Feature: "merge" command
     Given I have a repository
       And I have a merge conflict state
      When I run the command "merge branch1 --abort"
-     Then the response should contain "Merge aborted succesfully"     
+     Then the response should contain "Merge aborted successfully"     
      
   Scenario: Try to abort when there is no conflict
     Given I have a repository

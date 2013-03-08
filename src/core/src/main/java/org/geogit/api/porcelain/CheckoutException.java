@@ -7,7 +7,7 @@ package org.geogit.api.porcelain;
  * @TODO: define and codify the possible causes for a checkout to fail
  */
 @SuppressWarnings("serial")
-public class CheckoutException extends GeoGitOpException {
+public class CheckoutException extends RuntimeException {
 
     public enum StatusCode {
         LOCAL_CHANGES_NOT_COMMITTED {
