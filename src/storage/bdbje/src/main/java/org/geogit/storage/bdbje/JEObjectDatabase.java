@@ -22,7 +22,7 @@ import org.geogit.api.ObjectId;
 import org.geogit.api.RevObject;
 import org.geogit.storage.AbstractObjectDatabase;
 import org.geogit.storage.ObjectDatabase;
-import org.geogit.storage.ObjectSerialisingFactory;
+import org.geogit.storage.ObjectSerializingFactory;
 
 import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
@@ -57,13 +57,13 @@ public class JEObjectDatabase extends AbstractObjectDatabase implements ObjectDa
     private CurrentTransaction txn;
 
     @Inject
-    public JEObjectDatabase(final ObjectSerialisingFactory serialFactory,
+    public JEObjectDatabase(final ObjectSerializingFactory serialFactory,
             final EnvironmentBuilder envProvider) {
         super(serialFactory);
         this.envProvider = envProvider;
     }
 
-    public JEObjectDatabase(final ObjectSerialisingFactory serialFactory, final Environment env) {
+    public JEObjectDatabase(final ObjectSerializingFactory serialFactory, final Environment env) {
         super(serialFactory);
         this.env = env;
     }

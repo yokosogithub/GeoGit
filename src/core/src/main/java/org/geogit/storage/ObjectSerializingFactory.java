@@ -15,11 +15,11 @@ import org.geogit.api.RevObject.TYPE;
 import org.geogit.api.RevTree;
 
 /**
- * The ObjectSerialisingFactory is used to create instances of the various writers and readers used
+ * The ObjectSerializingFactory is used to create instances of the various writers and readers used
  * to work with the serialized forms of various repository elements.
  * 
  */
-public interface ObjectSerialisingFactory {
+public interface ObjectSerializingFactory {
 
     /**
      * Creates an instance of a commit reader.

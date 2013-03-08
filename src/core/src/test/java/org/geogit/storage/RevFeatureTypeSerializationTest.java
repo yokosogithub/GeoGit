@@ -11,8 +11,8 @@ import org.junit.Before;
 import org.junit.Test;
 import org.opengis.feature.simple.SimpleFeatureType;
 
-public abstract class RevFeatureTypeSerialisationTest extends Assert {
-    private ObjectSerialisingFactory factory = getObjectSerialisingFactory();
+public abstract class RevFeatureTypeSerializationTest extends Assert {
+    private ObjectSerializingFactory factory = getObjectSerializingFactory();
     private String namespace = "http://geoserver.org/test";
     private String typeName = "TestType";
     private String typeSpec = "str:String," + "bool:Boolean," + "byte:java.lang.Byte,"
@@ -20,7 +20,7 @@ public abstract class RevFeatureTypeSerialisationTest extends Assert {
                 + "bint:java.math.BigInteger," + "pp:Point:srid=4326," + "lng:java.lang.Long,"
                 + "uuid:java.util.UUID";
     private SimpleFeatureType featureType;
-    protected abstract ObjectSerialisingFactory getObjectSerialisingFactory();
+    protected abstract ObjectSerializingFactory getObjectSerializingFactory();
 
     @Before
     public void setUp() throws Exception {

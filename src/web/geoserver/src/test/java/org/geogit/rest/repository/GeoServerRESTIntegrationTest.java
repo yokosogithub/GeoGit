@@ -26,7 +26,7 @@ import org.geogit.api.porcelain.CommitOp;
 import org.geogit.di.GeogitModule;
 import org.geogit.geotools.data.GeoGitDataStore;
 import org.geogit.geotools.data.GeoGitDataStoreFactory;
-import org.geogit.storage.ObjectSerialisingFactory;
+import org.geogit.storage.ObjectSerializingFactory;
 import org.geogit.storage.bdbje.JEStorageModule;
 import org.geogit.storage.hessian.HessianFactory;
 import org.geogit.test.integration.RepositoryTestCase;
@@ -197,7 +197,7 @@ public class GeoServerRESTIntegrationTest extends GeoServerSystemTestSupport {
 
         responseStream = getBinaryInputStream(servletResponse);
 
-        ObjectSerialisingFactory factory = new HessianFactory();
+        ObjectSerializingFactory factory = new HessianFactory();
 
         RevObject actual = factory.createObjectReader().read(oid, responseStream);
         RevObject expected = geogit.command(RevObjectParse.class).setObjectId(oid).call().get();

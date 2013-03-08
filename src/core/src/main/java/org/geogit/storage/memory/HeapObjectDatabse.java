@@ -11,7 +11,7 @@ import java.util.Map;
 import org.geogit.api.ObjectId;
 import org.geogit.storage.AbstractObjectDatabase;
 import org.geogit.storage.ObjectDatabase;
-import org.geogit.storage.ObjectSerialisingFactory;
+import org.geogit.storage.ObjectSerializingFactory;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
@@ -29,7 +29,7 @@ public class HeapObjectDatabse extends AbstractObjectDatabase implements ObjectD
     private Map<ObjectId, byte[]> objects;
 
     @Inject
-    public HeapObjectDatabse(final ObjectSerialisingFactory sfac) {
+    public HeapObjectDatabse(final ObjectSerializingFactory sfac) {
         super(sfac);
     }
 

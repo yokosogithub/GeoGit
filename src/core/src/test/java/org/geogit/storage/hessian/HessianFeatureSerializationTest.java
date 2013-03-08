@@ -4,12 +4,12 @@
  */
 package org.geogit.storage.hessian;
 
-import org.geogit.storage.ObjectSerialisingFactory;
-import org.geogit.storage.RevCommitSerializationTest;
+import org.geogit.storage.ObjectSerializingFactory;
+import org.geogit.storage.RevFeatureSerializationTest;
 
-public class HessianCommitSerialisationTest extends RevCommitSerializationTest {
+public class HessianFeatureSerializationTest extends RevFeatureSerializationTest {
     @Override
-    protected ObjectSerialisingFactory getFactory() {
+    public ObjectSerializingFactory getObjectSerializingFactory() {
         return new HessianFactory();
     }
 }
