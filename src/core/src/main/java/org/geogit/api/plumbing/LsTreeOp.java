@@ -7,6 +7,7 @@ package org.geogit.api.plumbing;
 import static com.google.common.base.Preconditions.checkArgument;
 
 import java.util.Iterator;
+import java.util.List;
 
 import org.geogit.api.AbstractGeoGitOp;
 import org.geogit.api.Bounded;
@@ -23,6 +24,7 @@ import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.collect.Iterators;
+import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 
 /**
@@ -126,6 +128,8 @@ public class LsTreeOp extends AbstractGeoGitOp<Iterator<NodeRef>> {
         Optional<RevObject> revObject = command(RevObjectParse.class).setRefSpec(ref).call(
                 RevObject.class);
 
+        Optional<NodeRef> treeRef = Optional.absent();
+
         if (!revObject.isPresent()) {
             if (Ref.WORK_HEAD.equals(ref)) { // we are requesting a listing of the whole working
                                              // tree but it is empty
@@ -134,8 +138,8 @@ public class LsTreeOp extends AbstractGeoGitOp<Iterator<NodeRef>> {
             // let's try to see if it is a feature type or feature in the working tree
             NodeRef.checkValidPath(ref);
 
-            Optional<NodeRef> treeRef = command(FindTreeChild.class)
-                    .setParent(getWorkTree().getTree()).setChildPath(ref).call();
+            treeRef = command(FindTreeChild.class).setParent(getWorkTree().getTree())
+                    .setChildPath(ref).call();
 
             Preconditions.checkArgument(treeRef.isPresent(), "Invalid reference: %s", ref);
             ObjectId treeId = treeRef.get().objectId();
@@ -148,8 +152,21 @@ public class LsTreeOp extends AbstractGeoGitOp<Iterator<NodeRef>> {
         final TYPE type = revObject.get().getType();
         switch (type) {
         case FEATURE:
-            NodeRef nodeRef = null;
-            return Iterators.forArray(new NodeRef[] { nodeRef });
+            NodeRef nodeRef = treeRef.isPresent() ? treeRef.get() : null;
+            List<NodeRef> nodeRefs = Lists.newArrayList();
+            nodeRefs.add(nodeRef);
+            // If show trees options is passed in show all trees that contain this feature
+            if (this.strategy == Strategy.TREES_ONLY) {
+                if (nodeRef != null) {
+                    while (!nodeRef.getParentPath().isEmpty()) {
+                        treeRef = command(FindTreeChild.class).setParent(getWorkTree().getTree())
+                                .setChildPath(nodeRef.getParentPath()).call();
+                        nodeRef = treeRef.get();
+                        nodeRefs.add(nodeRef);
+                    }
+                }
+            }
+            return nodeRefs.iterator();
         case COMMIT:
             RevCommit revCommit = (RevCommit) revObject.get();
             ObjectId treeId = revCommit.getTreeId();
