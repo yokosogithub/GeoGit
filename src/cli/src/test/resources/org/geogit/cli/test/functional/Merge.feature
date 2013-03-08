@@ -22,7 +22,7 @@ Feature: "merge" command
      When I run the command "merge branch1 -m MergeMessage"
      Then the response should contain "2 features added"
      When I run the command "merge branch1 -m MergeMessage2"
-     Then the response should contain "Already up to date."
+     Then the response should contain "The branch has already been merged."
       
   Scenario: Try to merge without specifying any commits
     Given I have a repository

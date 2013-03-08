@@ -174,7 +174,7 @@ public class MergeOp extends AbstractGeoGitOp<RevCommit> {
         }
 
         if (!changed) {
-            throw new NothingToCommitException("Already up to date.");
+            throw new NothingToCommitException("The branch has already been merged.");
         }
 
         RevCommit mergeCommit;
@@ -189,8 +189,8 @@ public class MergeOp extends AbstractGeoGitOp<RevCommit> {
                 }
             }
 
-            mergeCommit = command(CommitOp.class).setMessage(commitMessage).addParents(commits)
-                    .call();
+            mergeCommit = command(CommitOp.class).setAllowEmpty(true).setMessage(commitMessage)
+                    .addParents(commits).call();
         }
 
         getProgressListener().complete();
