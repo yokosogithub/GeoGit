@@ -5,7 +5,6 @@
 package org.geogit.api.porcelain;
 
 import java.util.ArrayList;
-import java.util.LinkedList;
 import java.util.List;
 
 import org.geogit.api.AbstractGeoGitOp;
@@ -20,18 +19,13 @@ import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
-import com.google.common.collect.ImmutableSet;
 import com.google.inject.Inject;
 
 /**
  * Incorporates changes from a remote repository into the current branch.
  * 
- * <b>NOTE:</b> so far we don't have the ability to merge non conflicting changes. Instead, the diff
- * list we get acts on whole objects, , so its possible that this operation overrites non
- * conflicting changes when pulling a branch that has non conflicting changes at both sides. This
- * needs to be revisited once we get more merge tools.
  */
-public class PullOp extends AbstractGeoGitOp<ImmutableSet<Ref>> {
+public class PullOp extends AbstractGeoGitOp<PullResult> {
 
     private boolean all;
 
@@ -101,21 +95,23 @@ public class PullOp extends AbstractGeoGitOp<ImmutableSet<Ref>> {
      * @return {@code null}
      * @see org.geogit.api.AbstractGeoGitOp#call()
      */
-    public ImmutableSet<Ref> call() {
+    public PullResult call() {
 
         if (remote == null) {
             setRemote("origin");
         }
+
+        PullResult result = new PullResult();
 
         Optional<Remote> remoteRepo = remote.get();
 
         Preconditions.checkArgument(remoteRepo.isPresent(), "Remote could not be resolved.");
         getProgressListener().started();
 
-        command(FetchOp.class).addRemote(remote).setAll(all).setProgressListener(subProgress(80.f))
-                .call();
+        FetchResult fetchResult = command(FetchOp.class).addRemote(remote).setAll(all)
+                .setProgressListener(subProgress(80.f)).call();
 
-        List<Ref> updatedRefs = new LinkedList<Ref>();
+        result.setFetchResult(fetchResult);
 
         if (refSpecs.size() == 0) {
             // pull current branch
@@ -153,16 +149,18 @@ public class PullOp extends AbstractGeoGitOp<ImmutableSet<Ref>> {
                 final SymRef headRef = (SymRef) currHead.get();
                 destinationref = headRef.getTarget();
             }
-            Optional<Ref> updatedRef = Optional.absent();
 
             Optional<Ref> destRef = command(RefParse.class).setName(destinationref).call();
             if (destRef.isPresent()) {
                 if (destRef.get().getObjectId().equals(sourceRef.get().getObjectId())) {
                     // Already up to date.
+                    result.setOldRef(destRef.get());
+                    result.setNewRef(destRef.get());
                     continue;
                 }
+                result.setOldRef(destRef.get());
                 if (destRef.get().getObjectId().equals(ObjectId.NULL)) {
-                    updatedRef = command(UpdateRef.class).setName(destRef.get().getName())
+                    command(UpdateRef.class).setName(destRef.get().getName())
                             .setNewValue(sourceRef.get().getObjectId()).call();
                 } else {
                     command(CheckoutOp.class).setSource(destinationref).call();
@@ -173,24 +171,24 @@ public class PullOp extends AbstractGeoGitOp<ImmutableSet<Ref>> {
                         command(MergeOp.class).addCommit(
                                 Suppliers.ofInstance(sourceRef.get().getObjectId())).call();
                     }
-                    updatedRef = command(RefParse.class).setName(destinationref).call();
                 }
-
+                destRef = command(RefParse.class).setName(destinationref).call();
+                result.setNewRef(destRef.get());
             } else {
                 // make a new branch
-                updatedRef = Optional.of(command(BranchCreateOp.class).setAutoCheckout(true)
+                Ref newRef = command(BranchCreateOp.class).setAutoCheckout(true)
                         .setName(destinationref)
-                        .setSource(sourceRef.get().getObjectId().toString()).call());
-            }
-            if (updatedRef.isPresent()) {
-                updatedRefs.add(updatedRef.get());
+                        .setSource(sourceRef.get().getObjectId().toString()).call();
+                result.setNewRef(newRef);
             }
 
         }
 
         getProgressListener().complete();
 
-        return new ImmutableSet.Builder<Ref>().addAll(updatedRefs).build();
+        result.setRemoteName(remote.get().get().getFetchURL());
+
+        return result;
     }
 
     /**

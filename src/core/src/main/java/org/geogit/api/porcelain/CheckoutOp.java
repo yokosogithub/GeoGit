@@ -30,6 +30,8 @@ import org.geogit.api.plumbing.UpdateRef;
 import org.geogit.api.plumbing.UpdateSymRef;
 import org.geogit.api.plumbing.WriteBack;
 import org.geogit.api.porcelain.CheckoutException.StatusCode;
+import org.geogit.api.porcelain.ConfigOp.ConfigAction;
+import org.geogit.api.porcelain.ConfigOp.ConfigScope;
 
 import com.google.common.base.Optional;
 import com.google.common.collect.Sets;
@@ -42,7 +44,7 @@ import com.google.inject.Inject;
  * is a commit id instead of a branch name, in which case HEAD will be a plain ref instead of a
  * symbolic ref, hence making it a "dettached head".
  */
-public class CheckoutOp extends AbstractGeoGitOp<ObjectId> {
+public class CheckoutOp extends AbstractGeoGitOp<CheckoutResult> {
 
     private String branchOrCommit;
 
@@ -83,11 +85,14 @@ public class CheckoutOp extends AbstractGeoGitOp<ObjectId> {
      * @return the id of the new work tree
      */
     @Override
-    public ObjectId call() {
+    public CheckoutResult call() {
         checkState(branchOrCommit != null || !paths.isEmpty(),
                 "No branch, tree, or path were specified");
 
+        CheckoutResult result = new CheckoutResult();
+
         if (!paths.isEmpty()) {
+            result.setResult(CheckoutResult.Results.UPDATE_OBJECTS);
             Optional<RevTree> tree = Optional.absent();
             if (branchOrCommit != null) {
                 Optional<ObjectId> id = command(ResolveTreeish.class).setTreeish(branchOrCommit)
@@ -144,6 +149,40 @@ public class CheckoutOp extends AbstractGeoGitOp<ObjectId> {
             targetRef = command(RefParse.class).setName(branchOrCommit).call();
             if (targetRef.isPresent()) {
                 ObjectId commitId = targetRef.get().getObjectId();
+                if (targetRef.get().getName().startsWith(Ref.REMOTES_PREFIX)) {
+                    String remoteName = targetRef.get().getName();
+                    remoteName = remoteName.substring(Ref.REMOTES_PREFIX.length(), targetRef.get()
+                            .getName().lastIndexOf("/"));
+
+                    if (branchOrCommit.contains(remoteName + '/')) {
+                        RevCommit commit = command(RevObjectParse.class).setObjectId(commitId)
+                                .call(RevCommit.class).get();
+
+                        targetTreeId = Optional.of(commit.getTreeId());
+                        targetCommitId = Optional.of(commit.getId());
+                        targetRef = Optional.absent();
+                    } else {
+
+                        Ref branch = command(BranchCreateOp.class)
+                                .setName(targetRef.get().localName())
+                                .setSource(commitId.toString()).call();
+
+                        command(ConfigOp.class).setAction(ConfigAction.CONFIG_SET)
+                                .setScope(ConfigScope.LOCAL)
+                                .setName("branches." + branch.localName() + ".remote")
+                                .setValue(remoteName).call();
+
+                        command(ConfigOp.class).setAction(ConfigAction.CONFIG_SET)
+                                .setScope(ConfigScope.LOCAL)
+                                .setName("branches." + branch.localName() + ".merge")
+                                .setValue(targetRef.get().getName()).call();
+
+                        targetRef = Optional.of(branch);
+                        result.setResult(CheckoutResult.Results.CHECKOUT_REMOTE_BRANCH);
+                        result.setRemoteName(remoteName);
+                    }
+                }
+
                 if (commitId.isNull()) {
                     targetTreeId = Optional.of(ObjectId.NULL);
                     targetCommitId = Optional.of(ObjectId.NULL);
@@ -181,19 +220,25 @@ public class CheckoutOp extends AbstractGeoGitOp<ObjectId> {
                 ObjectId treeId = targetTreeId.get();
                 getWorkTree().updateWorkHead(treeId);
                 getIndex().updateStageHead(treeId);
+                result.setNewTree(treeId);
                 if (targetRef.isPresent()) {
                     // update HEAD
                     String refName = targetRef.get().getName();
                     command(UpdateSymRef.class).setName(Ref.HEAD).setNewValue(refName).call();
+                    result.setNewRef(targetRef.get());
+                    result.setOid(targetCommitId.get());
+                    result.setResult(CheckoutResult.Results.CHECKOUT_LOCAL_BRANCH);
                 } else {
                     // set HEAD to a dettached state
                     ObjectId commitId = targetCommitId.get();
                     command(UpdateRef.class).setName(Ref.HEAD).setNewValue(commitId).call();
+                    result.setOid(commitId);
+                    result.setResult(CheckoutResult.Results.DETACHED_HEAD);
                 }
-                return treeId;
+                return result;
             }
         }
-
-        return getWorkTree().getTree().getId();
+        result.setNewTree(getWorkTree().getTree().getId());
+        return result;
     }
 }

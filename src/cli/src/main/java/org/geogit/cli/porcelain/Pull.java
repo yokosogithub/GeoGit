@@ -7,9 +7,20 @@ package org.geogit.cli.porcelain;
 
 import static com.google.common.base.Preconditions.checkState;
 
+import java.util.Iterator;
 import java.util.List;
+import java.util.Map.Entry;
 
+import jline.console.ConsoleReader;
+
+import org.geogit.api.ObjectId;
+import org.geogit.api.plumbing.diff.DiffEntry;
+import org.geogit.api.plumbing.diff.DiffEntry.ChangeType;
+import org.geogit.api.porcelain.DiffOp;
+import org.geogit.api.porcelain.FetchResult.ChangedRef;
+import org.geogit.api.porcelain.FetchResult.ChangedRef.ChangeTypes;
 import org.geogit.api.porcelain.PullOp;
+import org.geogit.api.porcelain.PullResult;
 import org.geogit.cli.AbstractCommand;
 import org.geogit.cli.CLICommand;
 import org.geogit.cli.GeogitCLI;
@@ -68,7 +79,65 @@ public class Pull extends AbstractCommand implements CLICommand {
             }
         }
 
-        pull.call();
+        PullResult result = pull.call();
+
+        ConsoleReader console = cli.getConsole();
+
+        for (Entry<String, List<ChangedRef>> entry : result.getFetchResult().getChangedRefs()
+                .entrySet()) {
+            console.println("From " + entry.getKey());
+
+            for (ChangedRef ref : entry.getValue()) {
+                String line;
+                if (ref.getType() == ChangeTypes.CHANGED_REF) {
+                    line = "   " + ref.getOldRef().getObjectId().toString().substring(0, 7) + ".."
+                            + ref.getNewRef().getObjectId().toString().substring(0, 7) + "     "
+                            + ref.getNewRef().localName() + " -> " + ref.getNewRef().getName();
+                } else if (ref.getType() == ChangeTypes.ADDED_REF) {
+                    line = " * [new branch]     " + ref.getNewRef().localName() + " -> "
+                            + ref.getNewRef().getName();
+                } else {
+                    line = " x [deleted]        (none) -> " + ref.getOldRef().getName();
+                }
+                console.println(line);
+            }
+        }
+
+        if (result.getOldRef() != null && result.getNewRef() != null
+                && result.getOldRef().equals(result.getNewRef())) {
+            console.println("Already up to date.");
+        } else {
+            Iterator<DiffEntry> iter;
+            if (result.getOldRef() == null) {
+                console.println("From " + result.getRemoteName());
+                console.println(" * [new branch]     " + result.getNewRef().localName() + " -> "
+                        + result.getNewRef().getName());
+
+                iter = cli.getGeogit().command(DiffOp.class)
+                        .setNewVersion(result.getNewRef().getObjectId())
+                        .setOldVersion(ObjectId.NULL).call();
+            } else {
+                iter = cli.getGeogit().command(DiffOp.class)
+                        .setNewVersion(result.getNewRef().getObjectId())
+                        .setOldVersion(result.getOldRef().getObjectId()).call();
+            }
+
+            int added = 0;
+            int removed = 0;
+            int modified = 0;
+            while (iter.hasNext()) {
+                DiffEntry entry = iter.next();
+                if (entry.changeType() == ChangeType.ADDED) {
+                    added++;
+                } else if (entry.changeType() == ChangeType.MODIFIED) {
+                    modified++;
+                } else if (entry.changeType() == ChangeType.REMOVED) {
+                    removed++;
+                }
+            }
+            console.println("Features Added: " + added + " Removed: " + removed + " Modified: "
+                    + modified);
+        }
 
     }
 }

@@ -11,7 +11,7 @@ Feature: "pull" command
   Scenario: Try to pull from origin
     Given I have a repository with a remote
      When I run the command "pull origin --rebase"
-      And I run the command "branch --all"
+     When I run the command "branch --all"
      Then the response should contain "origin/master"
       And the response should contain "origin/branch1"
       And the response should contain "origin/HEAD"

@@ -172,7 +172,8 @@ public class Ref implements Comparable<Ref> {
             return false;
         }
         Ref r = (Ref) o;
-        return name.equals(r.getName()) && type.equals(r.getType())
+        return name.equals(r.getName())
+                && (type == null ? r.getType() == null : type.equals(r.getType()))
                 && objectId.equals(r.getObjectId());
     }
 
