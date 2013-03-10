@@ -22,6 +22,21 @@
             <destName>geogit-console</destName>
             <fileMode>0755</fileMode>
         </file>
+        <file>
+            <source>target/geogit-build/bin/geogit.bat</source>
+            <outputDirectory>bin</outputDirectory>
+        </file>
+        <file>
+            <source>target/geogit-build/bin/geogit-console.bat</source>
+            <outputDirectory>bin</outputDirectory>
+        </file>
+        <file>
+            <source>target/geogit-build/dependency-tree.txt</source>
+            <outputDirectory>repo</outputDirectory>
+        </file>
+        <file>
+            <source>../../LICENSE.txt</source>
+        </file>
     </files>
     
     <fileSets>

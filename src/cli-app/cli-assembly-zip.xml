@@ -13,6 +13,7 @@
             <directory>target/geogit</directory>
             <outputDirectory>geogit</outputDirectory>
             <includes>
+                <include>LICENSE.txt</include>
                 <include>man/**</include>
                 <include>repo/**</include>
             </includes>
