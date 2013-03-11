@@ -45,9 +45,13 @@ public class InitSteps extends AbstractGeogitFunctionalTest {
 
     @cucumber.annotation.After
     public void after() {
+        if (GlobalState.geogitCLI != null) {
+            GlobalState.geogitCLI.close();
+        }
         if (GlobalState.geogit != null) {
             GlobalState.geogit.close();
         }
+
         deleteDirectories();
     }
 

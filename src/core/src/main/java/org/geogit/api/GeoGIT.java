@@ -92,6 +92,15 @@ public class GeoGIT {
     }
 
     /**
+     * Sets the repository for this GeoGIT instance.
+     * 
+     * @param repository
+     */
+    public void setRepository(Repository repository) {
+        this.repository = repository;
+    }
+
+    /**
      * Obtains the repository for the current directory or creates a new one and returns it if no
      * repository can be found on the current directory.
      * 

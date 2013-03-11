@@ -7,13 +7,14 @@ package org.geogit.storage;
 import java.io.File;
 import java.net.URISyntaxException;
 import java.net.URL;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Queue;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.geogit.api.ObjectId;
 import org.geogit.api.Platform;
@@ -39,7 +40,7 @@ public class Neo4JGraphDatabase extends AbstractGraphDatabase {
 
     private String dbPath = null;
 
-    private static Map<String, GraphDatabaseService> databaseServices = new HashMap<String, GraphDatabaseService>();
+    private static Map<String, GraphDatabaseService> databaseServices = new ConcurrentHashMap<String, GraphDatabaseService>();
 
     private final Platform platform;
 
@@ -55,6 +56,7 @@ public class Neo4JGraphDatabase extends AbstractGraphDatabase {
     @Inject
     public Neo4JGraphDatabase(final Platform platform) {
         this.platform = platform;
+        registerShutdownHook();
     }
 
     @Override
@@ -89,25 +91,30 @@ public class Neo4JGraphDatabase extends AbstractGraphDatabase {
             graphDB = databaseServices.get(dbPath);
         } else {
             graphDB = getGraphDatabase(dbPath);
-            databaseServices.put(dbPath, graphDB);
-            registerShutdownHook(graphDB, dbPath);
         }
 
     }
 
     protected GraphDatabaseService getGraphDatabase(String dbPath) {
-        return new GraphDatabaseFactory().newEmbeddedDatabase(dbPath);
+        GraphDatabaseService dbService = new GraphDatabaseFactory().newEmbeddedDatabase(dbPath);
+        databaseServices.put(dbPath, dbService);
+        return dbService;
     }
 
-    private static void registerShutdownHook(final GraphDatabaseService graphDB, final String dbPath) {
+    private static void registerShutdownHook() {
         // Registers a shutdown hook for the Neo4j instance so that it
         // shuts down nicely when the VM exits (even if you "Ctrl-C" the
         // running example before it's completed)
         Runtime.getRuntime().addShutdownHook(new Thread() {
             @Override
             public void run() {
-                graphDB.shutdown();
-                databaseServices.remove(dbPath);
+                for (Entry<String, GraphDatabaseService> entry : databaseServices.entrySet()) {
+                    File graphPath = new File(entry.getKey());
+                    if (graphPath.exists()) {
+                        entry.getValue().shutdown();
+                    }
+                }
+                databaseServices.clear();
             }
         });
     }
@@ -120,7 +127,10 @@ public class Neo4JGraphDatabase extends AbstractGraphDatabase {
     @Override
     public void close() {
         if (isOpen()) {
-            graphDB.shutdown();
+            File graphPath = new File(dbPath);
+            if (graphPath.exists()) {
+                graphDB.shutdown();
+            }
             databaseServices.remove(dbPath);
             graphDB = null;
         }

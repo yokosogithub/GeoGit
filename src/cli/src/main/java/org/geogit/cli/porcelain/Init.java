@@ -70,10 +70,16 @@ public class Init extends AbstractCommand implements CLICommand {
                 }
             }
 
-            GeoGIT geogit = new GeoGIT(cli.getGeogitInjector(), repoDir);
+            GeoGIT geogit = null;
+            if (cli.getGeogit() == null) {
+                geogit = new GeoGIT(cli.getGeogitInjector(), repoDir);
+            } else {
+                geogit = cli.getGeogit();
+            }
 
             Repository repository = geogit.command(InitOp.class).call();
             final boolean repoExisted = repository == null;
+            geogit.setRepository(repository);
             cli.setGeogit(geogit);
 
             final URL envHome = geogit.command(ResolveGeogitDir.class).call();
