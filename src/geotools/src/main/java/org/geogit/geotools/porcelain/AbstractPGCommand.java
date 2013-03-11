@@ -99,6 +99,7 @@ public abstract class AbstractPGCommand implements CLICommand {
         params.put(PostgisNGDataStoreFactory.DATABASE.key, commonArgs.database);
         params.put(PostgisNGDataStoreFactory.USER.key, commonArgs.username);
         params.put(PostgisNGDataStoreFactory.PASSWD.key, commonArgs.password);
+        params.put(PostgisNGDataStoreFactory.FETCHSIZE.key, 1000);
 
         DataStore dataStore = dataStoreFactory.createDataStore(params);
 
