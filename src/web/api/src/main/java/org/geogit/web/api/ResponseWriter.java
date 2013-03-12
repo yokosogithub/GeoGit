@@ -1,7 +1,6 @@
 package org.geogit.web.api;
 
 import java.util.Iterator;
-import java.util.List;
 
 import javax.annotation.Nullable;
 import javax.xml.stream.XMLStreamException;
@@ -11,12 +10,14 @@ import org.codehaus.jettison.AbstractXMLStreamWriter;
 import org.geogit.api.NodeRef;
 import org.geogit.api.ObjectId;
 import org.geogit.api.Ref;
-import org.geogit.api.SymRef;
 import org.geogit.api.RevCommit;
 import org.geogit.api.RevPerson;
+import org.geogit.api.SymRef;
 import org.geogit.api.plumbing.DiffIndex;
 import org.geogit.api.plumbing.DiffWorkTree;
 import org.geogit.api.plumbing.diff.DiffEntry;
+
+import com.google.common.collect.ImmutableList;
 
 /**
  *
@@ -134,7 +135,7 @@ public class ResponseWriter {
             writeElement("id", entry.getId().toString());
             writeElement("tree", entry.getTreeId().toString());
 
-            List<ObjectId> parentIds = entry.getParentIds();
+            ImmutableList<ObjectId> parentIds = entry.getParentIds();
             out.writeStartElement("parents");
             for (ObjectId parentId : parentIds) {
                 writeElement("id", parentId.toString());

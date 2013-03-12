@@ -1,15 +1,13 @@
 package org.geogit.api;
 
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
-import java.util.List;
 
 import org.geogit.api.RevObject.TYPE;
 import org.geogit.test.integration.RepositoryTestCase;
 import org.junit.Test;
 
 import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableList;
 
 public class RevCommitTest extends RepositoryTestCase {
 
@@ -27,19 +25,20 @@ public class RevCommitTest extends RepositoryTestCase {
         ObjectId id = ObjectId.forString("new commit");
         ObjectId treeId = ObjectId.forString("test tree");
         String message = "This is a test commit";
-        List<ObjectId> parentId = Arrays.asList(ObjectId.forString("Parent 1"));
-        RevCommit commit = new RevCommit(id, treeId, parentId, author, committer, message);
+        ImmutableList<ObjectId> parentIds = ImmutableList.of(ObjectId.forString("Parent 1"));
+        RevCommit commit = new RevCommit(id, treeId, parentIds, author, committer, message);
 
         assertEquals(committer, commit.getCommitter());
         assertEquals(author, commit.getAuthor());
         assertEquals(id, commit.getId());
         assertEquals(treeId, commit.getTreeId());
         assertEquals(message, commit.getMessage());
-        assertEquals(parentId, commit.getParentIds());
+        assertEquals(parentIds, commit.getParentIds());
         assertEquals(TYPE.COMMIT, commit.getType());
-        assertEquals(parentId.get(0), commit.parentN(0).get());
+        assertEquals(parentIds.get(0), commit.parentN(0).get());
 
-        commit = new RevCommit(id, treeId, new ArrayList<ObjectId>(), author, committer, message);
+        parentIds = ImmutableList.of();
+        commit = new RevCommit(id, treeId, parentIds, author, committer, message);
         assertEquals(Collections.EMPTY_LIST, commit.getParentIds());
         assertEquals(Optional.absent(), commit.parentN(0));
     }
@@ -52,15 +51,16 @@ public class RevCommitTest extends RepositoryTestCase {
         ObjectId id = ObjectId.forString("new commit");
         ObjectId treeId = ObjectId.forString("test tree");
         String message = "This is a test commit";
-        List<ObjectId> parentId = Arrays.asList(ObjectId.forString("Parent 1"));
+        ImmutableList<ObjectId> parentId = ImmutableList.of(ObjectId.forString("Parent 1"));
+        ImmutableList<ObjectId> emptyParentIds = ImmutableList.of();
         RevCommit commit = new RevCommit(id, treeId, parentId, author, committer, message);
 
         String commitString = commit.toString();
 
         assertEquals("Commit[" + id.toString() + ", '" + message + "']", commitString);
 
-        RevCommit commit2 = new RevCommit(ObjectId.forString("second commit"), treeId, parentId,
-                author, committer, message);
+        RevCommit commit2 = new RevCommit(ObjectId.forString("second commit"), treeId,
+                parentId, author, committer, message);
 
         assertTrue(commit.equals(commit2));
 
@@ -69,7 +69,7 @@ public class RevCommitTest extends RepositoryTestCase {
 
         assertFalse(commit.equals(commit2));
 
-        commit2 = new RevCommit(id, treeId, new ArrayList<ObjectId>(), author, committer, message);
+        commit2 = new RevCommit(id, treeId, emptyParentIds, author, committer, message);
 
         assertFalse(commit.equals(commit2));
 

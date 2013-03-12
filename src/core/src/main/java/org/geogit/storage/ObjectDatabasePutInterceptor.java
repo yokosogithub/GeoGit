@@ -78,8 +78,8 @@ public class ObjectDatabasePutInterceptor implements MethodInterceptor {
             GraphDatabase graphDatabase = graphDb.get();
             for (RevCommit commit : addedCommits) {
                 ObjectId commitId = commit.getId();
-                List<ObjectId> parentIds = commit.getParentIds();
-                graphDatabase.put(commitId, ImmutableList.copyOf(parentIds));
+                ImmutableList<ObjectId> parentIds = commit.getParentIds();
+                graphDatabase.put(commitId, parentIds);
             }
         }
 
@@ -92,7 +92,9 @@ public class ObjectDatabasePutInterceptor implements MethodInterceptor {
 
         if (repository.get().commitExists(objectId)) {
             RevCommit commit = repository.get().getCommit(objectId);
-            graphDb.get().put(commit.getId(), ImmutableList.copyOf(commit.getParentIds()));
+            ObjectId commitId = commit.getId();
+            ImmutableList<ObjectId> parentIds = commit.getParentIds();
+            graphDb.get().put(commitId, parentIds);
         }
 
         return result;
@@ -104,7 +106,9 @@ public class ObjectDatabasePutInterceptor implements MethodInterceptor {
         if (revObject.getType() == RevObject.TYPE.COMMIT) {
             // add to graph database
             RevCommit commit = (RevCommit) revObject;
-            graphDb.get().put(commit.getId(), ImmutableList.copyOf(commit.getParentIds()));
+            ObjectId commitId = commit.getId();
+            ImmutableList<ObjectId> parentIds = commit.getParentIds();
+            graphDb.get().put(commitId, parentIds);
         }
 
         return invocation.proceed();

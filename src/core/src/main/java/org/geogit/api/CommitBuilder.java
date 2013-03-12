@@ -10,6 +10,7 @@ import org.geogit.api.plumbing.HashObject;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Lists;
 
 public final class CommitBuilder {
 
@@ -47,7 +48,7 @@ public final class CommitBuilder {
     public CommitBuilder(Platform platform) {
         Preconditions.checkNotNull(platform);
         this.platform = platform;
-        this.parentIds = ImmutableList.of();
+        this.parentIds = Lists.newArrayListWithCapacity(2);
     }
 
     /**
@@ -94,8 +95,8 @@ public final class CommitBuilder {
      */
     @SuppressWarnings("unchecked")
     public CommitBuilder setParentIds(List<ObjectId> parentIds) {
-        this.parentIds = (List<ObjectId>) (parentIds == null ? ImmutableList.of() : ImmutableList
-                .copyOf(parentIds));
+        this.parentIds = (List<ObjectId>) (parentIds == null ? Lists.newArrayListWithCapacity(2)
+                : Lists.newArrayList(parentIds));
         return this;
     }
 
@@ -242,7 +243,7 @@ public final class CommitBuilder {
         }
 
         final ObjectId treeId = this.treeId;
-        final List<ObjectId> parentIds = this.parentIds;
+        final ImmutableList<ObjectId> parentIds = ImmutableList.copyOf(this.parentIds);
 
         final RevPerson author = new RevPerson(this.author, authorEmail, getAuthorTimestamp(),
                 getAuthorTimeZoneOffset());

@@ -15,6 +15,7 @@ import org.geogit.api.RevPerson;
 import org.geogit.storage.ObjectWriter;
 
 import com.caucho.hessian.io.Hessian2Output;
+import com.google.common.collect.ImmutableList;
 
 /**
  * Writes {@link RevCommit commits} to a binary encoded stream.
@@ -33,7 +34,7 @@ class HessianCommitWriter extends HessianRevWriter implements ObjectWriter<RevCo
 
         writeObjectId(hout, commit.getTreeId());
 
-        List<ObjectId> parentIds = commit.getParentIds();
+        ImmutableList<ObjectId> parentIds = commit.getParentIds();
         hout.writeInt(parentIds.size());
         for (ObjectId pId : parentIds) {
             writeObjectId(hout, pId);

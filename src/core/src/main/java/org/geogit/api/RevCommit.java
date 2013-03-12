@@ -7,11 +7,9 @@ package org.geogit.api;
 import static com.google.common.base.Objects.equal;
 import static com.google.common.base.Preconditions.checkNotNull;
 
-import java.util.Collections;
-import java.util.List;
-
 import com.google.common.base.Objects;
 import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableList;
 
 /**
  * A reference to a commit in the DAG.
@@ -21,7 +19,7 @@ public class RevCommit extends AbstractRevObject {
 
     private ObjectId treeId;
 
-    private List<ObjectId> parentIds;
+    private ImmutableList<ObjectId> parentIds;
 
     private RevPerson author;
 
@@ -53,7 +51,7 @@ public class RevCommit extends AbstractRevObject {
      * @param committer the committer of this commit
      * @param message the message for this commit
      */
-    public RevCommit(final ObjectId id, ObjectId treeId, List<ObjectId> parentIds,
+    public RevCommit(final ObjectId id, ObjectId treeId, ImmutableList<ObjectId> parentIds,
             RevPerson author, RevPerson committer, String message) {
         this(id);
         checkNotNull(treeId);
@@ -78,8 +76,8 @@ public class RevCommit extends AbstractRevObject {
     /**
      * @return the parentIds
      */
-    public List<ObjectId> getParentIds() {
-        return Collections.unmodifiableList(parentIds);
+    public ImmutableList<ObjectId> getParentIds() {
+        return this.parentIds;
     }
 
     /**
