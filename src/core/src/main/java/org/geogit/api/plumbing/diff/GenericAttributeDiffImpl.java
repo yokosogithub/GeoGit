@@ -80,7 +80,7 @@ public class GenericAttributeDiffImpl implements AttributeDiff {
         if (obj == null) {
             return oldValue == null;
         }
-        return obj.equals(oldValue);
+        return obj.equals(oldValue) || obj.equals(newValue);
     }
 
     @Override

@@ -37,7 +37,6 @@ import org.geogit.api.plumbing.diff.FeatureDiff;
 import org.geogit.api.plumbing.diff.GenericAttributeDiffImpl;
 import org.geogit.api.plumbing.diff.Patch;
 import org.geogit.api.plumbing.diff.PatchSerializer;
-import org.geogit.api.plumbing.merge.MergeConflictsException;
 import org.geogit.api.porcelain.BranchCreateOp;
 import org.geogit.api.porcelain.CheckoutOp;
 import org.geogit.api.porcelain.CommitOp;
@@ -167,21 +166,20 @@ public class InitSteps extends AbstractGeogitFunctionalTest {
             geogit.command(MergeOp.class).addCommit(Suppliers.ofInstance(branch.getObjectId()))
                     .call();
             fail();
-        } catch (MergeConflictsException e) {
-
+        } catch (IllegalStateException e) {
         }
     }
 
     @Given("^I have conflicting branches$")
     public void I_have_conflicting_branches() throws Throwable {
         // Create the following revision graph
-        // Â·Â·Â·Â·Â·Â·Â·Â·Â·Â·Â·Â·o
-        // Â·Â·Â·Â·Â·Â·Â·Â·Â·Â·Â·Â·|
-        // Â·Â·Â·Â·Â·Â·Â·Â·Â·Â·Â·Â·o - Points 1 added
-        // Â·Â·Â·Â·Â·Â·Â·Â·Â·Â·Â·/|\
+        // ············o
+        // ············|
+        // ············o - Points 1 added
+        // ···········/|\
         // branch2 - o | o - branch1 - Points 1 modified and points 2 added
-        // Â·Â·Â·Â·Â·Â·Â·Â·Â·Â·Â·Â·|
-        // Â·Â·Â·Â·Â·Â·Â·Â·Â·Â·Â·Â·o - master - HEAD - Points 1 modifiedB
+        // ············|
+        // ············o - master - HEAD - Points 1 modifiedB
         // branch1 and master are conflicting
         Feature points1ModifiedB = feature(pointsType, idP1, "StringProp1_3", new Integer(2000),
                 "POINT(1 1)");

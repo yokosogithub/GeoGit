@@ -25,7 +25,6 @@ import org.geogit.api.plumbing.diff.DiffEntry;
 import org.geogit.api.plumbing.merge.CheckMergeScenarioOp;
 import org.geogit.api.plumbing.merge.Conflict;
 import org.geogit.api.plumbing.merge.ConflictsWriteOp;
-import org.geogit.api.plumbing.merge.MergeConflictsException;
 import org.geogit.api.plumbing.merge.MergeScenarioReport;
 import org.geogit.api.plumbing.merge.ReportMergeScenarioOp;
 import org.geogit.api.plumbing.merge.SaveMergeCommitMessageOp;

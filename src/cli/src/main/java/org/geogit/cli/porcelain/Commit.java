@@ -18,6 +18,9 @@ import org.fusesource.jansi.Ansi.Color;
 import org.geogit.api.GeoGIT;
 import org.geogit.api.ObjectId;
 import org.geogit.api.RevCommit;
+import org.geogit.api.RevObject.TYPE;
+import org.geogit.api.plumbing.ResolveObjectType;
+import org.geogit.api.plumbing.RevParse;
 import org.geogit.api.plumbing.diff.DiffEntry;
 import org.geogit.api.plumbing.merge.ReadMergeCommitMessageOp;
 import org.geogit.api.porcelain.CommitOp;
@@ -30,6 +33,7 @@ import org.geogit.cli.GeogitCLI;
 
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.Parameters;
+import com.google.common.base.Optional;
 import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
 
@@ -52,6 +56,9 @@ public class Commit extends AbstractCommand implements CLICommand {
     @Parameter(names = "-m", description = "Commit message")
     private String message;
 
+    @Parameter(names = "-c", description = "Commit to reuse")
+    private String commitToReuse;
+
     @Parameter(description = "<pathFilter>  [<paths_to_commit]...")
     private List<String> pathFilters = Lists.newLinkedList();
 
@@ -70,7 +77,8 @@ public class Commit extends AbstractCommand implements CLICommand {
         if (message == null || Strings.isNullOrEmpty(message)) {
             message = geogit.command(ReadMergeCommitMessageOp.class).call();
         }
-        checkState(!Strings.isNullOrEmpty(message), "No commit message provided");
+        checkState(!Strings.isNullOrEmpty(message) || commitToReuse != null,
+                "No commit message provided");
 
         ConsoleReader console = cli.getConsole();
 
@@ -78,6 +86,18 @@ public class Commit extends AbstractCommand implements CLICommand {
 
         RevCommit commit;
         try {
+            CommitOp commitOp = geogit.command(CommitOp.class).setMessage(message);
+            if (commitToReuse != null) {
+                Optional<ObjectId> commitId = geogit.command(RevParse.class)
+                        .setRefSpec(commitToReuse).call();
+                checkState(commitId.isPresent(), "Provided reference does not exist");
+                TYPE type = geogit.command(ResolveObjectType.class).setObjectId(commitId.get())
+                        .call();
+                checkState(TYPE.COMMIT.equals(type),
+                        "Provided reference does not resolve to a commit");
+                commitOp.setCommit(geogit.getRepository().getCommit(commitId.get()));
+            }
+            commit = commitOp.setProgressListener(cli.getProgressListener()).call();
             commit = geogit.command(CommitOp.class).setMessage(message).setPathFilters(pathFilters)
                     .setProgressListener(cli.getProgressListener()).call();
         } catch (NothingToCommitException noChanges) {

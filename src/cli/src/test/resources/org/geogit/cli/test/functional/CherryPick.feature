@@ -20,10 +20,10 @@ Feature: "cherry-pick" command
       And the response should contain "Commit5"
       And the response should contain "Commit1"
       
-  Scenario: Try to cherry pick a nonexistant branch
+  Scenario: Try to cherry pick a nonexistent branch
     Given I have a repository
       And I have several branches
-     When I run the command "cherry-pick nonexistant"
+     When I run the command "cherry-pick nonexistent"
      Then the response should contain "Commit not found"
      
   Scenario: Try to cherry pick without specifying any commits
@@ -36,4 +36,10 @@ Feature: "cherry-pick" command
     Given I am in an empty directory
      When I run the command "cherry-pick branch1"
      Then it should answer "Not in a geogit repository."
+     
+  Scenario: Try to cherry pick a commit that causes conflict
+    Given I have a repository
+      And I have two conflicting branches
+     When I run the command "cherry-pick branch1"
+     Then the response should contain "CONFLICT: conflict in Points/Points.1"
      

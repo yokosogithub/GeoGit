@@ -23,7 +23,6 @@ import org.geogit.api.plumbing.UpdateRef;
 import org.geogit.api.plumbing.UpdateSymRef;
 import org.geogit.api.plumbing.merge.Conflict;
 import org.geogit.api.plumbing.merge.ConflictsReadOp;
-import org.geogit.api.plumbing.merge.MergeConflictsException;
 import org.geogit.api.plumbing.merge.ReadMergeCommitMessageOp;
 import org.geogit.api.porcelain.AddOp;
 import org.geogit.api.porcelain.BranchCreateOp;
@@ -549,8 +548,8 @@ public class MergeOpTest extends RepositoryTestCase {
             geogit.command(MergeOp.class).addCommit(Suppliers.ofInstance(branch.getObjectId()))
                     .call();
             fail();
-        } catch (MergeConflictsException e) {
-            assertTrue(true);
+        } catch (IllegalStateException e) {
+            assertTrue(e.getMessage().contains("conflict"));
         }
 
         Optional<Ref> ref = geogit.command(RefParse.class).setName(Ref.ORIG_HEAD).call();
@@ -842,8 +841,8 @@ public class MergeOpTest extends RepositoryTestCase {
             geogit.command(MergeOp.class).addCommit(Suppliers.ofInstance(branch.getObjectId()))
                     .call();
             fail();
-        } catch (MergeConflictsException e) {
-            assertTrue(true);
+        } catch (IllegalStateException e) {
+            assertTrue(e.getMessage().contains("conflict"));
         }
 
         try {

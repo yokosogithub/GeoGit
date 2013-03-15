@@ -13,7 +13,6 @@ import org.geogit.api.Ref;
 import org.geogit.api.RevCommit;
 import org.geogit.api.plumbing.RefParse;
 import org.geogit.api.plumbing.merge.Conflict;
-import org.geogit.api.plumbing.merge.MergeConflictsException;
 import org.geogit.api.porcelain.BranchCreateOp;
 import org.geogit.api.porcelain.CheckoutOp;
 import org.geogit.api.porcelain.CommitOp;
@@ -339,8 +338,8 @@ public class ResetOpTest extends RepositoryTestCase {
             geogit.command(MergeOp.class).addCommit(Suppliers.ofInstance(branch.getObjectId()))
                     .call();
             fail();
-        } catch (MergeConflictsException e) {
-            assertTrue(true);
+        } catch (IllegalStateException e) {
+            assertTrue(e.getMessage().contains("conflict"));
         }
 
         geogit.command(ResetOp.class).setMode(ResetMode.HARD)

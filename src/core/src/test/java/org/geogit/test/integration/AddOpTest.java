@@ -12,6 +12,7 @@ import org.geogit.api.plumbing.diff.DiffEntry;
 import org.geogit.api.plumbing.diff.DiffEntry.ChangeType;
 import org.geogit.api.plumbing.merge.Conflict;
 import org.geogit.api.plumbing.merge.MergeConflictsException;
+import org.geogit.api.plumbing.merge.Conflict;
 import org.geogit.api.porcelain.AddOp;
 import org.geogit.api.porcelain.BranchCreateOp;
 import org.geogit.api.porcelain.CheckoutOp;
@@ -169,8 +170,8 @@ public class AddOpTest extends RepositoryTestCase {
             geogit.command(MergeOp.class).addCommit(Suppliers.ofInstance(branch.getObjectId()))
                     .call();
             fail();
-        } catch (MergeConflictsException e) {
-            assertTrue(true);
+        } catch (IllegalStateException e) {
+            assertTrue(e.getMessage().contains("conflict"));
         }
         insert(points1);
         geogit.command(AddOp.class).call();
@@ -204,7 +205,7 @@ public class AddOpTest extends RepositoryTestCase {
             geogit.command(MergeOp.class).addCommit(Suppliers.ofInstance(branch.getObjectId()))
                     .call();
             fail();
-        } catch (MergeConflictsException e) {
+        } catch (IllegalStateException e) {
             assertTrue(true);
         }
         geogit.command(AddOp.class).call();

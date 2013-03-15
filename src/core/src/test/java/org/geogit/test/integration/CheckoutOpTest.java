@@ -19,7 +19,6 @@ import org.geogit.api.plumbing.FindTreeChild;
 import org.geogit.api.plumbing.RefParse;
 import org.geogit.api.plumbing.RevObjectParse;
 import org.geogit.api.plumbing.RevParse;
-import org.geogit.api.plumbing.merge.MergeConflictsException;
 import org.geogit.api.porcelain.BranchCreateOp;
 import org.geogit.api.porcelain.CheckoutException;
 import org.geogit.api.porcelain.CheckoutOp;
@@ -450,8 +449,8 @@ public class CheckoutOpTest extends RepositoryTestCase {
             geogit.command(MergeOp.class).addCommit(Suppliers.ofInstance(branch.getObjectId()))
                     .call();
             fail();
-        } catch (MergeConflictsException e) {
-            assertTrue(true);// conflicted state correctly created
+        } catch (IllegalStateException e) {
+            assertTrue(e.getMessage().contains("conflict"));
         }
     }
 

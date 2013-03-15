@@ -6,8 +6,15 @@ package org.geogit.test.integration;
 
 import java.util.Iterator;
 
+import org.geogit.api.NodeRef;
 import org.geogit.api.ObjectId;
+import org.geogit.api.Ref;
 import org.geogit.api.RevCommit;
+import org.geogit.api.RevFeatureBuilder;
+import org.geogit.api.RevObject;
+import org.geogit.api.plumbing.RefParse;
+import org.geogit.api.plumbing.RevObjectParse;
+import org.geogit.api.porcelain.AddOp;
 import org.geogit.api.porcelain.BranchCreateOp;
 import org.geogit.api.porcelain.CheckoutOp;
 import org.geogit.api.porcelain.CherryPickOp;
@@ -15,10 +22,14 @@ import org.geogit.api.porcelain.CommitOp;
 import org.geogit.api.porcelain.ConfigOp;
 import org.geogit.api.porcelain.ConfigOp.ConfigAction;
 import org.geogit.api.porcelain.LogOp;
+import org.geogit.api.porcelain.NothingToCommitException;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
+import org.opengis.feature.Feature;
 
+import com.google.common.base.Optional;
 import com.google.common.base.Suppliers;
 
 public class CherryPickOpTest extends RepositoryTestCase {
@@ -143,6 +154,59 @@ public class CherryPickOpTest extends RepositoryTestCase {
     }
 
     @Test
+    public void testCherryPickWithConflicts() throws Exception {
+        insertAndAdd(points1);
+        geogit.command(CommitOp.class).call();
+
+        // create branch1, checkout and add a commit
+        geogit.command(BranchCreateOp.class).setAutoCheckout(true).setName("branch1").call();
+        insert(points2);
+        Feature points1Modified = feature(pointsType, idP1, "StringProp1_2", new Integer(1000),
+                "POINT(1 1)");
+        insertAndAdd(points1Modified);
+        geogit.command(AddOp.class).call();
+        RevCommit branchCommit = geogit.command(CommitOp.class).call();
+        geogit.command(CheckoutOp.class).setSource(Ref.MASTER).call();
+        Feature points1ModifiedB = feature(pointsType, idP1, "StringProp1_3", new Integer(2000),
+                "POINT(1 1)");
+        insert(points1ModifiedB);
+        geogit.command(AddOp.class).call();
+        geogit.command(CommitOp.class).call();
+        try {
+            geogit.command(CherryPickOp.class)
+                    .setCommit(Suppliers.ofInstance(branchCommit.getId())).call();
+        } catch (IllegalStateException e) {
+            assertTrue(e.getMessage().contains("conflict in Points/Points.1"));
+        }
+        Optional<Ref> cherrypickHead = geogit.command(RefParse.class).setName(Ref.CHERRY_PICK_HEAD)
+                .call();
+        assertTrue(cherrypickHead.isPresent());
+        // check that unconflicted changes are in index and working tree
+        Optional<RevObject> pts2 = geogit.command(RevObjectParse.class)
+                .setRefSpec(Ref.WORK_HEAD + ":" + NodeRef.appendChild(pointsName, idP2)).call();
+        assertTrue(pts2.isPresent());
+        assertEquals(new RevFeatureBuilder().build(points2), pts2.get());
+        pts2 = geogit.command(RevObjectParse.class)
+                .setRefSpec(Ref.STAGE_HEAD + ":" + NodeRef.appendChild(pointsName, idP2)).call();
+        assertTrue(pts2.isPresent());
+        assertEquals(new RevFeatureBuilder().build(points2), pts2.get());
+        // solve and commit
+        Feature points1Solved = feature(pointsType, idP1, "StringProp1_2", new Integer(2000),
+                "POINT(1 1)");
+        insert(points1Solved);
+        geogit.command(AddOp.class).call();
+        geogit.command(CommitOp.class).setCommit(branchCommit).call();
+        Optional<RevObject> ptsSolved = geogit.command(RevObjectParse.class)
+                .setRefSpec(Ref.WORK_HEAD + ":" + NodeRef.appendChild(pointsName, idP1)).call();
+        assertTrue(pts2.isPresent());
+        assertEquals(new RevFeatureBuilder().build(points1Solved), ptsSolved.get());
+
+        cherrypickHead = geogit.command(RefParse.class).setName(Ref.CHERRY_PICK_HEAD).call();
+        assertFalse(cherrypickHead.isPresent());
+
+    }
+
+    @Test
     public void testCherryPickInvalidCommit() throws Exception {
         CherryPickOp cherryPick = geogit.command(CherryPickOp.class);
         cherryPick.setCommit(Suppliers.ofInstance(ObjectId.NULL));
@@ -190,6 +254,8 @@ public class CherryPickOpTest extends RepositoryTestCase {
         cherryPick.call();
     }
 
+    @Ignore
+    // this test probably does not make test with the current behaviour of cherry pick
     @Test
     public void testCherryPickRootCommit() throws Exception {
         insertAndAdd(points1);
@@ -216,5 +282,16 @@ public class CherryPickOpTest extends RepositoryTestCase {
 
         assertFalse(log.hasNext());
 
+    }
+
+    @Test
+    public void testCherryPickExistingCommit() throws Exception {
+        insertAndAdd(points1);
+        final RevCommit c1 = geogit.command(CommitOp.class).setMessage("commit for " + idP1).call();
+
+        CherryPickOp cherryPick = geogit.command(CherryPickOp.class);
+        cherryPick.setCommit(Suppliers.ofInstance(c1.getId()));
+        exception.expect(NothingToCommitException.class);
+        cherryPick.call();
     }
 }

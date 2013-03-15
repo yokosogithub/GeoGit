@@ -4,11 +4,9 @@
  */
 package org.geogit.api.porcelain;
 
-import java.util.Arrays;
 import java.util.Iterator;
 
 import org.geogit.api.AbstractGeoGitOp;
-import org.geogit.api.CommitBuilder;
 import org.geogit.api.ObjectId;
 import org.geogit.api.Platform;
 import org.geogit.api.Ref;
@@ -17,9 +15,12 @@ import org.geogit.api.SymRef;
 import org.geogit.api.plumbing.DiffTree;
 import org.geogit.api.plumbing.RefParse;
 import org.geogit.api.plumbing.UpdateRef;
-import org.geogit.api.plumbing.UpdateSymRef;
 import org.geogit.api.plumbing.WriteTree;
+import org.geogit.api.plumbing.diff.ConflictsReport;
 import org.geogit.api.plumbing.diff.DiffEntry;
+import org.geogit.api.plumbing.merge.Conflict;
+import org.geogit.api.plumbing.merge.ConflictsWriteOp;
+import org.geogit.api.plumbing.merge.ReportCommitConflictsOp;
 import org.geogit.repository.Repository;
 
 import com.google.common.base.Optional;
@@ -31,10 +32,6 @@ import com.google.inject.Inject;
  * 
  * Apply the changes introduced by an existing commit.
  * <p>
- * <b>NOTE:</b> so far we don't have the ability to merge non conflicting changes. Instead, the diff
- * list we get acts on whole objects, so its possible that this operation overrites non conflicting
- * changes when cherry-picking a commit that has non conflicting changes at both sides. This needs
- * to be revisited once we get more merge tools.
  * 
  */
 public class CherryPickOp extends AbstractGeoGitOp<RevCommit> {
@@ -80,7 +77,7 @@ public class CherryPickOp extends AbstractGeoGitOp<RevCommit> {
         Preconditions.checkState(currHead.get() instanceof SymRef,
                 "Can't cherry pick from detached HEAD");
         final SymRef headRef = (SymRef) currHead.get();
-        final String currentBranch = headRef.getTarget();
+        // final String currentBranch = headRef.getTarget();
 
         // count staged and unstaged changes
         long staged = getIndex().countStaged(null);
@@ -94,7 +91,7 @@ public class CherryPickOp extends AbstractGeoGitOp<RevCommit> {
                 "Commit could not be resolved: %s.", commit);
         RevCommit commitToApply = repository.getCommit(commit);
 
-        ObjectId cherryPickHead = headRef.getObjectId();
+        ObjectId headId = headRef.getObjectId();
 
         ObjectId parentCommitId = ObjectId.NULL;
         if (commitToApply.getParentIds().size() > 0) {
@@ -107,31 +104,64 @@ public class CherryPickOp extends AbstractGeoGitOp<RevCommit> {
         // get changes
         Iterator<DiffEntry> diff = command(DiffTree.class).setOldTree(parentTreeId)
                 .setNewTree(commitToApply.getTreeId()).setReportTrees(true).call();
-        // stage changes
-        getIndex().stage(getProgressListener(), diff, 0);
-        // write new tree
-        ObjectId newTreeId = command(WriteTree.class).call();
-        long timestamp = platform.currentTimeMillis();
-        // Create new commit
-        CommitBuilder builder = new CommitBuilder(commitToApply);
-        builder.setParentIds(Arrays.asList(cherryPickHead));
-        builder.setTreeId(newTreeId);
-        builder.setCommitterTimestamp(timestamp);
-        builder.setCommitterTimeZoneOffset(platform.timeZoneOffset(timestamp));
 
-        RevCommit newCommit = builder.build();
-        repository.getObjectDatabase().put(newCommit);
+        // see if there are conflicts
+        ConflictsReport report = command(ReportCommitConflictsOp.class).setCommit(commitToApply)
+                .call();
+        if (report.getConflicts().isEmpty()) {
+            // stage changes
+            getIndex().stage(getProgressListener(), diff, 0);
+            // write new tree
+            ObjectId newTreeId = command(WriteTree.class).call();
+            RevCommit newCommit = command(CommitOp.class).setCommit(commitToApply).call();
 
-        cherryPickHead = newCommit.getId();
+            // long timestamp = platform.currentTimeMillis();
+            // // Create new commit
+            // CommitBuilder builder = new CommitBuilder(commitToApply);
+            // builder.setParentIds(Arrays.asList(headId));
+            // builder.setTreeId(newTreeId);
+            // builder.setCommitterTimestamp(timestamp);
+            // builder.setCommitterTimeZoneOffset(platform.timeZoneOffset(timestamp));
+            //
+            // RevCommit newCommit = builder.build();
+            // repository.getObjectDatabase().put(newCommit);
+            //
+            // headId = newCommit.getId();
+            //
+            // command(UpdateRef.class).setName(currentBranch).setNewValue(headId).call();
+            // command(UpdateSymRef.class).setName(Ref.HEAD).setNewValue(currentBranch).call();
 
-        command(UpdateRef.class).setName(currentBranch).setNewValue(cherryPickHead).call();
-        command(UpdateSymRef.class).setName(Ref.HEAD).setNewValue(currentBranch).call();
+            repository.getWorkingTree().updateWorkHead(newTreeId);
+            repository.getIndex().updateStageHead(newTreeId);
 
-        repository.getWorkingTree().updateWorkHead(newTreeId);
-        repository.getIndex().updateStageHead(newTreeId);
+            getProgressListener().complete();
 
-        getProgressListener().complete();
+            return newCommit;
+        } else {
+            Iterator<DiffEntry> unconflicted = report.getUnconflicted().iterator();
+            // stage changes
+            getIndex().stage(getProgressListener(), unconflicted, 0);
+            getWorkTree().updateWorkHead(getIndex().getTree().getId());
 
-        return newCommit;
+            command(UpdateRef.class).setName(Ref.CHERRY_PICK_HEAD).setNewValue(commit).call();
+            command(UpdateRef.class).setName(Ref.ORIG_HEAD).setNewValue(headId).call();
+            command(ConflictsWriteOp.class).setConflicts(report.getConflicts()).call();
+
+            StringBuilder msg = new StringBuilder();
+            msg.append("error: could not apply ");
+            msg.append(commitToApply.getId().toString().substring(0, 7));
+            msg.append(" " + commitToApply.getMessage());
+            for (Conflict conflict : report.getConflicts()) {
+                msg.append("\t" + conflict.getPath() + "\n");
+            }
+
+            StringBuilder sb = new StringBuilder();
+            for (Conflict conflict : report.getConflicts()) {
+                sb.append("CONFLICT: conflict in " + conflict.getPath() + "\n");
+            }
+            sb.append("Fix conflicts and then commit the result using 'geogit commit -c + "
+                    + commitToApply.getId().toString().substring(0, 7) + "\n");
+            throw new IllegalStateException(sb.toString());
+        }
     }
 }

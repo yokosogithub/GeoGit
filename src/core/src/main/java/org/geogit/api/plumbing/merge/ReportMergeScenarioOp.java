@@ -132,8 +132,8 @@ public class ReportMergeScenarioOp extends AbstractGeoGitOp<MergeScenarioReport>
                             // if the metadata ids match, it means both branches have added the same
                             // tree, maybe with different content, but there is no need to do
                             // anything. The correct tree is already there and the merge can be run
-                            // safely, so we do not added neither as a conflicted change nor as an
-                            // unconflicted on
+                            // safely, so we do not add it neither as a conflicted change nor as an
+                            // unconflicted one
                         } else {
                             report.addConflict(new Conflict(path, ancestorVersionId, ours, theirs));
                         }

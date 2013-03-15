@@ -421,6 +421,33 @@ public class CommitOpTest extends RepositoryTestCase {
     }
 
     @Test
+    public void testCommitUsingCommit() throws Exception {
+        insertAndAdd(points1);
+        final RevCommit commit = geogit.command(CommitOp.class)
+                .setCommitter("anothercommitter", "anothercommitter@opengeo.org").call();
+        insertAndAdd(points2);
+        RevCommit commit2 = geogit.command(CommitOp.class).setCommit(commit).call();
+        assertEquals(commit.getMessage(), commit2.getMessage());
+        assertEquals(commit.getAuthor(), commit2.getAuthor());
+        assertNotSame(commit.getCommitter(), commit2.getCommitter());
+    }
+
+    @Test
+    public void testCommitUsingCommitAndMessage() throws Exception {
+        String message = "A message";
+        insertAndAdd(points1);
+        final RevCommit commit = geogit.command(CommitOp.class)
+                .setCommitter("anothercommitter", "anothercommitter@opengeo.org").call();
+        insertAndAdd(points2);
+        RevCommit commit2 = geogit.command(CommitOp.class).setCommit(commit).setMessage(message)
+                .call();
+        assertNotSame(commit.getMessage(), commit2.getMessage());
+        assertEquals(commit.getAuthor(), commit2.getAuthor());
+        assertNotSame(commit.getCommitter(), commit2.getCommitter());
+        assertEquals(message, commit.getMessage());
+    }
+
+    @Test
     public void testCommitWithDeletedTree() throws Exception {
         insertAndAdd(points1, points2);
         insertAndAdd(lines1, lines2);

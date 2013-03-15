@@ -46,6 +46,11 @@ public class Ref implements Comparable<Ref> {
     public static final String MERGE_HEAD = "MERGE_HEAD";
 
     /**
+     * Pointer to the commit to be picked during a cherry-pick operation
+     */
+    public static final String CHERRY_PICK_HEAD = "CHERRY_PICK_HEAD";
+
+    /**
      * Pointer to the commit onto which another commit is to be merged during a merge operation
      */
     public static final String ORIG_HEAD = "ORIG_HEAD";
