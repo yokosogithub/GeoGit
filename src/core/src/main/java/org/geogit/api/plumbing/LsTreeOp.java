@@ -141,7 +141,7 @@ public class LsTreeOp extends AbstractGeoGitOp<Iterator<NodeRef>> {
             NodeRef.checkValidPath(ref);
 
             treeRef = command(FindTreeChild.class).setParent(getWorkTree().getTree())
-                    .setChildPath(ref).call();
+                    .setChildPath(ref).setIndex(true).call();
 
             Preconditions.checkArgument(treeRef.isPresent(), "Invalid reference: %s", ref);
             ObjectId treeId = treeRef.get().objectId();
@@ -162,7 +162,7 @@ public class LsTreeOp extends AbstractGeoGitOp<Iterator<NodeRef>> {
                 if (nodeRef != null) {
                     while (!nodeRef.getParentPath().isEmpty()) {
                         treeRef = command(FindTreeChild.class).setParent(getWorkTree().getTree())
-                                .setChildPath(nodeRef.getParentPath()).call();
+                                .setChildPath(nodeRef.getParentPath()).setIndex(true).call();
                         nodeRef = treeRef.get();
                         nodeRefs.add(nodeRef);
                     }

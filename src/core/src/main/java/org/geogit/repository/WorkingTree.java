@@ -324,7 +324,7 @@ public class WorkingTree {
 
             ObjectId metadataId = null;
             Optional<NodeRef> currentTreeRef = commandLocator.command(FindTreeChild.class)
-                    .setParent(currentWorkHead).setChildPath(path).call();
+                    .setIndex(true).setParent(currentWorkHead).setChildPath(path).call();
             if (currentTreeRef.isPresent()) {
                 metadataId = currentTreeRef.get().getMetadataId();
             }
@@ -491,7 +491,7 @@ public class WorkingTree {
         String localPart = typeName.getLocalPart();
 
         Optional<NodeRef> typeNameTreeRef = commandLocator.command(FindTreeChild.class)
-                .setChildPath(localPart).call();
+                .setIndex(true).setChildPath(localPart).call();
 
         return typeNameTreeRef.isPresent();
     }

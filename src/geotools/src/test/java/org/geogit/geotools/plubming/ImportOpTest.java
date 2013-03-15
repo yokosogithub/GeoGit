@@ -151,11 +151,11 @@ public class ImportOpTest {
 
         RevTree newWorkingTree = importOp.call();
         Optional<NodeRef> ref = cli.getGeogit().command(FindTreeChild.class)
-                .setParent(newWorkingTree).setChildPath("table1/table1.1").call();
+                .setParent(newWorkingTree).setChildPath("table1/table1.1").setIndex(true).call();
         assertTrue(ref.isPresent());
 
         ref = cli.getGeogit().command(FindTreeChild.class).setParent(newWorkingTree)
-                .setChildPath("table1/table1.2").call();
+                .setChildPath("table1/table1.2").setIndex(true).call();
         assertTrue(ref.isPresent());
     }
 
@@ -167,15 +167,15 @@ public class ImportOpTest {
 
         RevTree newWorkingTree = importOp.call();
         Optional<NodeRef> ref = cli.getGeogit().command(FindTreeChild.class)
-                .setParent(newWorkingTree).setChildPath("table1/table1.1").call();
+                .setParent(newWorkingTree).setChildPath("table1/table1.1").setIndex(true).call();
         assertTrue(ref.isPresent());
 
         ref = cli.getGeogit().command(FindTreeChild.class).setParent(newWorkingTree)
-                .setChildPath("table1/table1.2").call();
+                .setChildPath("table1/table1.2").setIndex(true).call();
         assertTrue(ref.isPresent());
 
         ref = cli.getGeogit().command(FindTreeChild.class).setParent(newWorkingTree)
-                .setChildPath("table2/table2.1").call();
+                .setChildPath("table2/table2.1").setIndex(true).call();
         assertTrue(ref.isPresent());
     }
 

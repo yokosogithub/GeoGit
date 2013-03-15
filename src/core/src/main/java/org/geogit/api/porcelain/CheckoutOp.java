@@ -158,7 +158,7 @@ public class CheckoutOp extends AbstractGeoGitOp<CheckoutResult> {
                 }
 
                 Optional<NodeRef> node = command(FindTreeChild.class).setParent(tree.get())
-                        .setChildPath(st).call();
+                        .setIndex(true).setChildPath(st).call();
 
                 checkState(node.isPresent(), "pathspec '" + st
                         + "' didn't match a feature in the tree");
@@ -173,7 +173,7 @@ public class CheckoutOp extends AbstractGeoGitOp<CheckoutResult> {
                 } else {
                     Optional<NodeRef> parentNode = command(FindTreeChild.class)
                             .setParent(getWorkTree().getTree())
-                            .setChildPath(node.get().getParentPath()).call();
+                            .setChildPath(node.get().getParentPath()).setIndex(true).call();
                     RevTreeBuilder treeBuilder = null;
                     if (parentNode.isPresent()) {
                         Optional<RevTree> parsed = command(RevObjectParse.class).setObjectId(

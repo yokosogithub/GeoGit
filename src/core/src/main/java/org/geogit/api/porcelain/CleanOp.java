@@ -48,7 +48,7 @@ public class CleanOp extends AbstractGeoGitOp<WorkingTree> {
             NodeRef.checkValidPath(path);
 
             Optional<NodeRef> ref = command(FindTreeChild.class).setParent(getWorkTree().getTree())
-                    .setChildPath(path).call();
+                    .setChildPath(path).setIndex(true).call();
 
             Preconditions.checkArgument(ref.isPresent(), "pathspec '%s' did not match any tree",
                     path);

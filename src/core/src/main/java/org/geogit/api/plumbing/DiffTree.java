@@ -16,6 +16,7 @@ import org.geogit.api.RevTree;
 import org.geogit.api.plumbing.diff.DiffEntry;
 import org.geogit.api.plumbing.diff.DiffTreeWalk;
 import org.geogit.storage.ObjectDatabase;
+import org.geogit.storage.StagingDatabase;
 
 import com.google.common.base.Optional;
 import com.google.inject.Inject;
@@ -26,7 +27,7 @@ import com.google.inject.Inject;
  */
 public class DiffTree extends AbstractGeoGitOp<Iterator<DiffEntry>> {
 
-    private ObjectDatabase objectDb;
+    private StagingDatabase objectDb;
 
     private String path;
 
@@ -42,7 +43,7 @@ public class DiffTree extends AbstractGeoGitOp<Iterator<DiffEntry>> {
      * @param objectDb the repository object database
      */
     @Inject
-    public DiffTree(ObjectDatabase objectDb) {
+    public DiffTree(StagingDatabase objectDb) {
         this.objectDb = objectDb;
     }
 

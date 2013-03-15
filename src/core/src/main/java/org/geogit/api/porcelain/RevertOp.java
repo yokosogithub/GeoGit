@@ -152,13 +152,15 @@ public class RevertOp extends AbstractGeoGitOp<Boolean> {
                     if (input.oldObjectId().equals(ObjectId.NULL)) {
                         // Feature was deleted
                         Optional<NodeRef> node = command(FindTreeChild.class)
-                                .setChildPath(input.newPath()).setParent(headTree).call();
+                                .setChildPath(input.newPath()).setIndex(true).setParent(headTree)
+                                .call();
                         // make sure it is still deleted
                         return !node.isPresent();
                     } else {
                         // Feature was added or modified
                         Optional<NodeRef> node = command(FindTreeChild.class)
-                                .setChildPath(input.oldPath()).setParent(headTree).call();
+                                .setChildPath(input.oldPath()).setIndex(true).setParent(headTree)
+                                .call();
                         // Make sure it wasn't changed
                         return node.isPresent()
                                 && node.get().getNode().getObjectId().equals(input.oldObjectId());

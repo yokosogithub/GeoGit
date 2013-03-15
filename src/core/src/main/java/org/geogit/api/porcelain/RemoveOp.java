@@ -60,7 +60,8 @@ public class RemoveOp extends AbstractGeoGitOp<WorkingTree> {
         // separate trees from features an delete accordingly
         for (String pathToRemove : pathsToRemove) {
             Optional<NodeRef> node = command(FindTreeChild.class)
-                    .setParent(getWorkTree().getTree()).setChildPath(pathToRemove).call();
+                    .setParent(getWorkTree().getTree()).setIndex(true).setChildPath(pathToRemove)
+                    .call();
             switch (node.get().getType()) {
             case TREE:
                 getWorkTree().delete(pathToRemove);
