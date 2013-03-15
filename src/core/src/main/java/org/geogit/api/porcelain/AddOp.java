@@ -6,6 +6,7 @@ package org.geogit.api.porcelain;
 
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Set;
 
 import javax.annotation.Nullable;
@@ -17,6 +18,8 @@ import org.geogit.api.RevTree;
 import org.geogit.api.plumbing.RevParse;
 import org.geogit.api.plumbing.UpdateRef;
 import org.geogit.api.plumbing.diff.DiffEntry;
+import org.geogit.api.plumbing.merge.Conflict;
+import org.geogit.di.CanRunDuringConflict;
 import org.geogit.repository.StagingArea;
 import org.geogit.repository.WorkingTree;
 import org.opengis.util.ProgressListener;
@@ -33,6 +36,7 @@ import com.google.inject.Inject;
  * @see WorkingTree
  * @see StagingArea
  */
+@CanRunDuringConflict
 public class AddOp extends AbstractGeoGitOp<WorkingTree> {
 
     private Set<String> patterns;
@@ -80,8 +84,8 @@ public class AddOp extends AbstractGeoGitOp<WorkingTree> {
 
         // short cut for the case where the index is empty and we're staging all changes in the
         // working tree, so it's just a matter of updating the index ref to working tree RevTree id
-        if (null == pathFilter && !getIndex().getStaged(null).hasNext() && !updateOnly) {
-
+        if (null == pathFilter && !getIndex().getStaged(null).hasNext() && !updateOnly
+                && getIndex().countConflicted(null) == 0) {
             progress.started();
             Optional<ObjectId> workHead = command(RevParse.class).setRefSpec(Ref.WORK_HEAD).call();
             if (workHead.isPresent()) {
@@ -106,6 +110,15 @@ public class AddOp extends AbstractGeoGitOp<WorkingTree> {
         }
 
         getIndex().stage(progress, unstaged, numChanges);
+
+        List<Conflict> conflicts = getIndex().getConflicted(pathFilter);
+        for (Conflict conflict : conflicts) {
+            // if we are staging unmerged files, the conflict should get solved. However, if the
+            // working index object is the same as the staging area one (for instance, after running
+            // checkout --ours), it will not be reported by the getUnstaged method. We solve that
+            // here.
+            getIndex().getDatabase().removeConflict(conflict.getPath());
+        }
     }
 
     /**

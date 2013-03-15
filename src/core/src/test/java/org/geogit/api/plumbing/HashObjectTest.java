@@ -20,6 +20,7 @@ import org.geogit.api.RevCommit;
 import org.geogit.api.RevFeature;
 import org.geogit.api.RevFeatureBuilder;
 import org.geogit.api.RevFeatureType;
+import org.geogit.api.RevPerson;
 import org.geogit.api.RevTag;
 import org.geogit.test.integration.RepositoryTestCase;
 import org.geotools.data.DataUtilities;
@@ -215,13 +216,18 @@ public class HashObjectTest extends RepositoryTestCase {
     @Test
     public void testHashTags() throws Exception {
 
-        try {
-            hashCommand.setObject(new RevTag(null, "tag1", ObjectId.forString("fake commit id")))
-                    .call();
-            fail("expected UnsupportedOperationException on RevTag");
-        } catch (Exception e) {
-            assertTrue(e instanceof UnsupportedOperationException);
-        }
+        RevPerson tagger = new RevPerson("volaya", "volaya@opengeo.org", -1000, -1);
+        RevPerson tagger2 = new RevPerson("groldan", "groldan@opengeo.org", 10000, 0);
+        RevTag tag = new RevTag(null, "tag1", ObjectId.forString("fake commit id"), "message",
+                tagger);
+        RevTag tag2 = new RevTag(null, "tag2", ObjectId.forString("another fake commit id"),
+                "another message", tagger2);
+        ObjectId tagId = hashCommand.setObject(tag).call();
+        ObjectId tagId2 = hashCommand.setObject(tag2).call();
+        assertNotNull(tagId);
+        assertNotNull(tagId2);
+        assertNotSame(tagId, tagId2);
+
     }
 
     protected Feature feature(SimpleFeatureType type, String id, Object... values)

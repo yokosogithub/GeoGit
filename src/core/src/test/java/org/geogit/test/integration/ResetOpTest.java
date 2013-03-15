@@ -6,17 +6,26 @@ package org.geogit.test.integration;
 
 import static org.geogit.api.NodeRef.appendChild;
 
+import java.util.List;
+
 import org.geogit.api.ObjectId;
 import org.geogit.api.Ref;
+import org.geogit.api.RevCommit;
 import org.geogit.api.plumbing.RefParse;
+import org.geogit.api.plumbing.merge.Conflict;
+import org.geogit.api.plumbing.merge.MergeConflictsException;
+import org.geogit.api.porcelain.BranchCreateOp;
+import org.geogit.api.porcelain.CheckoutOp;
 import org.geogit.api.porcelain.CommitOp;
 import org.geogit.api.porcelain.ConfigOp;
 import org.geogit.api.porcelain.ConfigOp.ConfigAction;
+import org.geogit.api.porcelain.MergeOp;
 import org.geogit.api.porcelain.ResetOp;
 import org.geogit.api.porcelain.ResetOp.ResetMode;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
+import org.opengis.feature.Feature;
 
 import com.google.common.base.Optional;
 import com.google.common.base.Suppliers;
@@ -306,6 +315,41 @@ public class ResetOpTest extends RepositoryTestCase {
     public void testEnum() throws Exception {
         ResetMode.values();
         assertEquals(ResetMode.valueOf("HARD"), ResetMode.HARD);
+    }
+
+    @Test
+    public void testResetFixesConflict() throws Exception {
+        Feature points1Modified = feature(pointsType, idP1, "StringProp1_2", new Integer(1000),
+                "POINT(1 1)");
+        Feature points1ModifiedB = feature(pointsType, idP1, "StringProp1_3", new Integer(2000),
+                "POINT(1 1)");
+        insertAndAdd(points1);
+        RevCommit resetCommit = geogit.command(CommitOp.class).call();
+        geogit.command(BranchCreateOp.class).setName("TestBranch").call();
+        insertAndAdd(points1Modified);
+        geogit.command(CommitOp.class).call();
+        geogit.command(CheckoutOp.class).setSource("TestBranch").call();
+        insertAndAdd(points1ModifiedB);
+        insertAndAdd(points2);
+        geogit.command(CommitOp.class).call();
+
+        geogit.command(CheckoutOp.class).setSource("master").call();
+        Ref branch = geogit.command(RefParse.class).setName("TestBranch").call().get();
+        try {
+            geogit.command(MergeOp.class).addCommit(Suppliers.ofInstance(branch.getObjectId()))
+                    .call();
+            fail();
+        } catch (MergeConflictsException e) {
+            assertTrue(true);
+        }
+
+        geogit.command(ResetOp.class).setMode(ResetMode.HARD)
+                .setCommit(Suppliers.ofInstance(resetCommit.getId())).call();
+        List<Conflict> conflicts = geogit.getRepository().getIndex().getDatabase()
+                .getConflicts(null);
+        assertTrue(conflicts.isEmpty());
+        Optional<Ref> ref = geogit.command(RefParse.class).setName(Ref.MERGE_HEAD).call();
+        assertFalse(ref.isPresent());
     }
 
 }

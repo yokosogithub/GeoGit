@@ -39,4 +39,19 @@ Feature: "commit" command
     Given I have a repository
      When I run the command "commit -m Test"
      Then the response should start with "Nothing to commit"
+
+  Scenario: Try to commit when there is a merge conflict
+    Given I have a repository
+      And I have a merge conflict state
+     When I run the command "commit -m Message"
+     Then the response should contain "Cannot run operation while merge conflicts exist"
      
+  Scenario: Try to commit without message while solving a merge conflict
+    Given I have a repository
+      And I have a merge conflict state
+     When I run the command "checkout -p Points/Points.1 --theirs"
+      And I run the command "add"
+      And I run the command "commit"     
+     Then the response should contain "Merge branch refs/heads/branch1"
+      And the response should contain "Conflicts:"
+      And the response should contain "Points/Points.1"             

@@ -23,8 +23,8 @@ public class Remote {
      */
     public Remote(String name, String fetchurl, String pushurl, String fetch) {
         this.name = name;
-        this.fetchurl = fetchurl;
-        this.pushurl = pushurl;
+        this.fetchurl = fetchurl.replace("\\", "/");
+        this.pushurl = pushurl.replace("\\", "/");
         this.fetch = fetch;
     }
 

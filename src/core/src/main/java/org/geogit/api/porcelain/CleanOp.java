@@ -15,6 +15,7 @@ import org.geogit.api.plumbing.DiffWorkTree;
 import org.geogit.api.plumbing.FindTreeChild;
 import org.geogit.api.plumbing.diff.DiffEntry;
 import org.geogit.api.plumbing.diff.DiffEntry.ChangeType;
+import org.geogit.di.CanRunDuringConflict;
 import org.geogit.repository.WorkingTree;
 
 import com.google.common.base.Function;
@@ -28,6 +29,7 @@ import com.google.inject.Inject;
  * Removes untracked features from the working tree
  * 
  */
+@CanRunDuringConflict
 public class CleanOp extends AbstractGeoGitOp<WorkingTree> {
 
     private String path;

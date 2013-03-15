@@ -16,6 +16,7 @@ import org.geogit.api.plumbing.DiffIndex;
 import org.geogit.api.plumbing.DiffTree;
 import org.geogit.api.plumbing.DiffWorkTree;
 import org.geogit.api.plumbing.diff.DiffEntry;
+import org.geogit.di.CanRunDuringConflict;
 
 /**
  * Perform a diff between trees pointed out by two commits
@@ -44,6 +45,7 @@ import org.geogit.api.plumbing.diff.DiffEntry;
  * @see DiffIndex
  * @see DiffTree
  */
+@CanRunDuringConflict
 public class DiffOp extends AbstractGeoGitOp<Iterator<DiffEntry>> {
 
     private String oldRefSpec;

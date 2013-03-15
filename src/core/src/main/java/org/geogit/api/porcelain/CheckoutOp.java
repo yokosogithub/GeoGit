@@ -9,6 +9,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 
 import java.util.Collection;
+import java.util.List;
 import java.util.Set;
 
 import javax.annotation.Nullable;
@@ -29,11 +30,14 @@ import org.geogit.api.plumbing.RevParse;
 import org.geogit.api.plumbing.UpdateRef;
 import org.geogit.api.plumbing.UpdateSymRef;
 import org.geogit.api.plumbing.WriteBack;
+import org.geogit.api.plumbing.merge.Conflict;
 import org.geogit.api.porcelain.CheckoutException.StatusCode;
 import org.geogit.api.porcelain.ConfigOp.ConfigAction;
 import org.geogit.api.porcelain.ConfigOp.ConfigScope;
+import org.geogit.di.CanRunDuringConflict;
 
 import com.google.common.base.Optional;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 
@@ -44,6 +48,7 @@ import com.google.inject.Inject;
  * is a commit id instead of a branch name, in which case HEAD will be a plain ref instead of a
  * symbolic ref, hence making it a "dettached head".
  */
+@CanRunDuringConflict
 public class CheckoutOp extends AbstractGeoGitOp<CheckoutResult> {
 
     private String branchOrCommit;
@@ -51,6 +56,10 @@ public class CheckoutOp extends AbstractGeoGitOp<CheckoutResult> {
     private Set<String> paths;
 
     private boolean force = false;
+
+    private boolean ours;
+
+    private boolean theirs;
 
     @Inject
     public CheckoutOp() {
@@ -73,6 +82,16 @@ public class CheckoutOp extends AbstractGeoGitOp<CheckoutResult> {
         return this;
     }
 
+    public CheckoutOp setOurs(final boolean ours) {
+        this.ours = ours;
+        return this;
+    }
+
+    public CheckoutOp setTheirs(final boolean theirs) {
+        this.theirs = theirs;
+        return this;
+    }
+
     public CheckoutOp addPaths(final Collection<? extends CharSequence> paths) {
         checkNotNull(paths);
         for (CharSequence path : paths) {
@@ -88,12 +107,27 @@ public class CheckoutOp extends AbstractGeoGitOp<CheckoutResult> {
     public CheckoutResult call() {
         checkState(branchOrCommit != null || !paths.isEmpty(),
                 "No branch, tree, or path were specified");
+        checkArgument(!(ours && theirs), "Cannot use both --ours and --theirs.");
+        checkArgument((ours == theirs) || branchOrCommit == null,
+                "--ours/--theirs is incompatible with switching branches.");
 
         CheckoutResult result = new CheckoutResult();
 
+        List<Conflict> conflicts = getIndex().getDatabase().getConflicts(null);
         if (!paths.isEmpty()) {
             result.setResult(CheckoutResult.Results.UPDATE_OBJECTS);
             Optional<RevTree> tree = Optional.absent();
+            List<String> unmerged = lookForUnmerged(conflicts, paths);
+            if (!unmerged.isEmpty()) {
+                if (!(force || ours || theirs)) {
+                    StringBuilder msg = new StringBuilder();
+                    for (String path : unmerged) {
+                        msg.append("error: path " + path + " is unmerged.\n");
+                    }
+                    throw new CheckoutException(msg.toString(), StatusCode.UNMERGED_PATHS);
+                }
+            }
+
             if (branchOrCommit != null) {
                 Optional<ObjectId> id = command(ResolveTreeish.class).setTreeish(branchOrCommit)
                         .call();
@@ -104,7 +138,25 @@ public class CheckoutOp extends AbstractGeoGitOp<CheckoutResult> {
                 tree = Optional.of(getIndex().getTree());
             }
 
+            Optional<RevTree> mainTree = tree;
+
             for (String st : paths) {
+                if (unmerged.contains(st)) {
+                    if (ours || theirs) {
+                        String refspec = ours ? Ref.ORIG_HEAD : Ref.MERGE_HEAD;
+                        Optional<ObjectId> treeId = command(ResolveTreeish.class).setTreeish(
+                                refspec).call();
+                        if (treeId.isPresent()) {
+                            tree = command(RevObjectParse.class).setObjectId(treeId.get()).call(
+                                    RevTree.class);
+                        }
+                    } else {// --force
+                        continue;
+                    }
+                } else {
+                    tree = mainTree;
+                }
+
                 Optional<NodeRef> node = command(FindTreeChild.class).setParent(tree.get())
                         .setChildPath(st).call();
 
@@ -143,6 +195,16 @@ public class CheckoutOp extends AbstractGeoGitOp<CheckoutResult> {
             }
 
         } else {
+            if (!conflicts.isEmpty()) {
+                if (!(force)) {
+                    StringBuilder msg = new StringBuilder();
+                    for (Conflict conflict : conflicts) {
+                        msg.append("error: " + conflict.getPath() + " needs merge.\n");
+                    }
+                    msg.append("You need to resolve your index first.\n");
+                    throw new CheckoutException(msg.toString(), StatusCode.UNMERGED_PATHS);
+                }
+            }
             Optional<Ref> targetRef = Optional.absent();
             Optional<ObjectId> targetCommitId = Optional.absent();
             Optional<ObjectId> targetTreeId = Optional.absent();
@@ -235,10 +297,29 @@ public class CheckoutOp extends AbstractGeoGitOp<CheckoutResult> {
                     result.setOid(commitId);
                     result.setResult(CheckoutResult.Results.DETACHED_HEAD);
                 }
+                Optional<Ref> ref = command(RefParse.class).setName(Ref.MERGE_HEAD).call();
+                if (ref.isPresent()) {
+                    command(UpdateRef.class).setName(Ref.MERGE_HEAD).setDelete(true).call();
+                }
+
                 return result;
             }
+
         }
         result.setNewTree(getWorkTree().getTree().getId());
         return result;
+    }
+
+    private List<String> lookForUnmerged(List<Conflict> conflicts, Set<String> paths) {
+        List<String> unmerged = Lists.newArrayList();
+        for (String path : paths) {
+            for (Conflict conflict : conflicts) {
+                if (conflict.getPath().equals(path)) {
+                    unmerged.add(path);
+                    break;
+                }
+            }
+        }
+        return unmerged;
     }
 }

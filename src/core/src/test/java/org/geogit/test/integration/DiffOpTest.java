@@ -8,6 +8,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
+import org.geogit.api.Node;
 import org.geogit.api.NodeRef;
 import org.geogit.api.ObjectId;
 import org.geogit.api.Ref;
@@ -18,6 +19,7 @@ import org.geogit.api.plumbing.DiffWorkTree;
 import org.geogit.api.plumbing.diff.DiffEntry;
 import org.geogit.api.plumbing.diff.DiffEntry.ChangeType;
 import org.geogit.api.plumbing.diff.DiffTreeWalk;
+import org.geogit.api.porcelain.AddOp;
 import org.geogit.api.porcelain.CommitOp;
 import org.geogit.api.porcelain.DiffOp;
 import org.geogit.repository.WorkingTree;
@@ -25,6 +27,7 @@ import org.junit.Test;
 import org.opengis.feature.Feature;
 import org.opengis.feature.simple.SimpleFeature;
 import org.opengis.feature.simple.SimpleFeatureType;
+import org.opengis.feature.type.Name;
 
 import com.google.common.base.Function;
 import com.google.common.collect.Collections2;
@@ -480,6 +483,58 @@ public class DiffOpTest extends RepositoryTestCase {
     }
 
     @Test
+    public void testReportRename() throws Exception {
+
+        insertAndAdd(lines1);
+        final RevCommit commit1 = geogit.command(CommitOp.class).setAll(true).call();
+
+        Feature lines1B = feature(linesType, idL2, "StringProp2_1", new Integer(1000),
+                "LINESTRING (1 1, 2 2)");
+        delete(lines1);
+        // insert(lines2);
+        WorkingTree workTree = repo.getWorkingTree();
+        Name name = lines1.getType().getName();
+        String parentPath = name.getLocalPart();
+        Node ref = workTree.insert(parentPath, lines1B);
+        geogit.command(AddOp.class).call();
+        RevCommit commit2 = geogit.command(CommitOp.class).setAll(true).call();
+
+        List<DiffEntry> diffs;
+        diffOp.setOldVersion(commit1.getId());
+        diffOp.setNewVersion(commit2.getId());
+        diffs = toList(diffOp.call());
+        assertEquals(2, diffs.size()); // this is reported as an addition and a removal, with both
+                                       // nodes pointing to same ObjectId
+        assertEquals(diffs.get(0).newObjectId(), diffs.get(1).oldObjectId());
+        assertEquals(diffs.get(1).newObjectId(), diffs.get(0).oldObjectId());
+
+    }
+
+    @Test
+    public void testReportTreesEmptyTreeFromFeatureDeletion() throws Exception {
+        insert(lines1);
+        delete(lines1);
+
+        List<DiffEntry> difflist = toList(diffOp.setReportTrees(true).setOldVersion(ObjectId.NULL)
+                .setNewVersion(Ref.WORK_HEAD).call());
+
+        assertNotNull(difflist);
+        assertEquals(1, difflist.size());
+        assertEquals(linesName, difflist.get(0).newName());
+
+        DiffEntry de = difflist.get(0);
+
+        assertNull(de.getOldObject());
+        assertNotNull(de.getNewObject());
+
+        assertEquals(linesName, de.newPath());
+
+        assertEquals(DiffEntry.ChangeType.ADDED, de.changeType());
+        assertEquals(ObjectId.NULL, de.oldObjectId());
+        assertFalse(de.getNewObject().getMetadataId().isNull());
+    }
+
+    @Test
     public void testReportTrees() throws Exception {
 
         insert(points1);
@@ -502,4 +557,28 @@ public class DiffOpTest extends RepositoryTestCase {
                 }));
         assertEquals(expected, actual);
     }
+
+    @Test
+    public void testChangedFeatureType() throws Exception {
+
+        insertAndAdd(points1, points2);
+        geogit.getRepository().getWorkingTree().updateTypeTree(pointsName, modifiedPointsType);
+        List<DiffEntry> difflist = toList(diffOp.setReportTrees(true).call());
+
+        assertNotNull(difflist);
+        assertEquals(1, difflist.size());
+
+    }
+
+    @Test
+    public void testTreeModifiedByAddingExtraFeature() throws Exception {
+
+        insertAndAdd(points1, points2);
+        insert(points3);
+        List<DiffEntry> difflist = toList(diffOp.setReportTrees(true).call());
+        assertNotNull(difflist);
+        assertEquals(1, difflist.size());
+
+    }
+
 }

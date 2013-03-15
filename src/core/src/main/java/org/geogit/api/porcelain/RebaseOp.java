@@ -166,7 +166,7 @@ public class RebaseOp extends AbstractGeoGitOp<Boolean> {
             RevCommit oldCommit = commitsToRebase.get(i);
             Iterator<DiffEntry> diff = command(DiffTree.class)
                     .setOldTree(commitsToRebase.get(i + 1).getId()).setNewTree(oldCommit.getId())
-                    .call();
+                    .setReportTrees(true).call();
             // stage changes
             getIndex().stage(getProgressListener(), diff, 0);
             // write new tree

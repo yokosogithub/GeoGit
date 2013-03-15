@@ -17,6 +17,7 @@ import org.geogit.api.GeoGIT;
 import org.geogit.api.ObjectId;
 import org.geogit.api.RevCommit;
 import org.geogit.api.plumbing.diff.DiffEntry;
+import org.geogit.api.plumbing.merge.ReadMergeCommitMessageOp;
 import org.geogit.api.porcelain.CommitOp;
 import org.geogit.api.porcelain.DiffOp;
 import org.geogit.api.porcelain.NothingToCommitException;
@@ -27,6 +28,7 @@ import org.geogit.cli.GeogitCLI;
 
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.Parameters;
+import com.google.common.base.Strings;
 
 /**
  * Stores the current contents of the index in a new commit along with a log message from the user
@@ -56,11 +58,15 @@ public class Commit extends AbstractCommand implements CLICommand {
     @Override
     public void runInternal(GeogitCLI cli) throws Exception {
         checkState(cli.getGeogit() != null, "Not a geogit repository: " + cli.getPlatform().pwd());
-        checkState(message != null && !message.trim().isEmpty(), "No commit message provided");
-
-        ConsoleReader console = cli.getConsole();
 
         final GeoGIT geogit = cli.getGeogit();
+
+        if (message == null || Strings.isNullOrEmpty(message)) {
+            message = geogit.command(ReadMergeCommitMessageOp.class).call();
+        }
+        checkState(!Strings.isNullOrEmpty(message), "No commit message provided");
+
+        ConsoleReader console = cli.getConsole();
 
         Ansi ansi = AnsiDecorator.newAnsi(console.getTerminal().isAnsiSupported());
 

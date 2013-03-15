@@ -66,9 +66,13 @@ public abstract class AbstractGeogitFunctionalTest {
 
     protected static final String pointsTypeSpec = "sp:String,ip:Integer,pp:Point:srid=4326";
 
+    protected static final String modifiedPointsTypeSpec = "sp:String,ip:Integer,pp:Point:srid=4326,extra:String";
+
     protected static final Name pointsTypeName = new NameImpl("http://geogit.points", pointsName);
 
     protected SimpleFeatureType pointsType;
+
+    protected SimpleFeatureType modifiedPointsType;
 
     protected Feature points1;
 
@@ -77,6 +81,8 @@ public abstract class AbstractGeogitFunctionalTest {
     protected Feature points2;
 
     protected Feature points3;
+
+    protected Feature points1_FTmodified;
 
     protected static final String linesNs = "http://geogit.lines";
 
@@ -156,10 +162,13 @@ public abstract class AbstractGeogitFunctionalTest {
 
     protected void setupFeatures() throws Exception {
         pointsType = DataUtilities.createType(pointsNs, pointsName, pointsTypeSpec);
+        modifiedPointsType = DataUtilities.createType(pointsNs, pointsName, modifiedPointsTypeSpec);
 
         points1 = feature(pointsType, idP1, "StringProp1_1", new Integer(1000), "POINT(1 1)");
         points1_modified = feature(pointsType, idP1, "StringProp1_1a", new Integer(1001),
                 "POINT(1 2)");
+        points1_FTmodified = feature(modifiedPointsType, idP1, "StringProp1_1", new Integer(1000),
+                "POINT(1 1)", "ExtraString");
         points2 = feature(pointsType, idP2, "StringProp1_2", new Integer(2000), "POINT(2 2)");
         points3 = feature(pointsType, idP3, "StringProp1_3", new Integer(3000), "POINT(3 3)");
 
@@ -204,6 +213,16 @@ public abstract class AbstractGeogitFunctionalTest {
         insertAndAdd(lines1);
         insertAndAdd(lines2);
         insertAndAdd(lines3);
+    }
+
+    protected void deleteAndReplaceFeatureType() throws Exception {
+
+        final WorkingTree workTree = geogit.getRepository().getWorkingTree();
+        workTree.delete(points1.getType().getName());
+        Name name = points1_FTmodified.getType().getName();
+        String parentPath = name.getLocalPart();
+        workTree.insert(parentPath, points1_FTmodified);
+
     }
 
     /**

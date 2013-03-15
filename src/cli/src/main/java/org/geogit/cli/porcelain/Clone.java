@@ -91,7 +91,7 @@ public class Clone extends AbstractCommand implements CLICommand {
                         if (!repo.isAbsolute()) {
                             repo = new File(currDir, repoURL).getCanonicalFile();
                         }
-                        repoURL = repo.getPath();
+                        repoURL = repo.toURI().getPath();
                     }
 
                 } else {

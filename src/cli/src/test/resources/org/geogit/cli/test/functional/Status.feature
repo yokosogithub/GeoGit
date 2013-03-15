@@ -147,6 +147,12 @@ Feature: "status" command
     Given I have a repository
      When I run the command "status --limit -2"
      Then the response should contain "Limit must be 0 or greater"
+     
+   Scenario: Try the get the status of a repository with unmerged elements
+    Given I have a repository
+      And I have a merge conflict state
+     When I run the command "status"
+     Then the response should contain "unmerged  Points/Points.1"   
       
       
     

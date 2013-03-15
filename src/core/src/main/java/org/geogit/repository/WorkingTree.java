@@ -14,6 +14,7 @@ import java.util.Map;
 import javax.annotation.Nullable;
 
 import org.geogit.api.CommandLocator;
+import org.geogit.api.FeatureBuilder;
 import org.geogit.api.Node;
 import org.geogit.api.NodeRef;
 import org.geogit.api.ObjectId;
@@ -29,6 +30,8 @@ import org.geogit.api.plumbing.DiffCount;
 import org.geogit.api.plumbing.DiffWorkTree;
 import org.geogit.api.plumbing.FindOrCreateSubtree;
 import org.geogit.api.plumbing.FindTreeChild;
+import org.geogit.api.plumbing.LsTreeOp;
+import org.geogit.api.plumbing.LsTreeOp.Strategy;
 import org.geogit.api.plumbing.ResolveTreeish;
 import org.geogit.api.plumbing.RevObjectParse;
 import org.geogit.api.plumbing.UpdateRef;
@@ -370,13 +373,23 @@ public class WorkingTree {
         Optional<NodeRef> typeTreeRef = commandLocator.command(FindTreeChild.class).setIndex(true)
                 .setParent(getTree()).setChildPath(parentTreePath).call();
 
+        ObjectId metadataId;
         if (typeTreeRef.isPresent()) {
             treeRef = typeTreeRef.get();
+            RevFeatureType newFeatureType = RevFeatureType.build(featureType);
+            metadataId = newFeatureType.getId().equals(treeRef.getMetadataId()) ? ObjectId.NULL
+                    : newFeatureType.getId();
+            if (!newFeatureType.getId().equals(treeRef.getMetadataId())) {
+                indexDatabase.put(newFeatureType);
+            }
         } else {
             treeRef = createTypeTree(parentTreePath, featureType);
+            metadataId = ObjectId.NULL;// treeRef.getMetadataId();
         }
 
-        Node node = putInDatabase(feature, treeRef.getMetadataId());
+        // ObjectId metadataId = treeRef.getMetadataId();
+        final Node node = putInDatabase(feature, metadataId);
+
         RevTreeBuilder parentTree = commandLocator.command(FindOrCreateSubtree.class)
                 .setIndex(true).setParent(Suppliers.ofInstance(Optional.of(getTree())))
                 .setChildPath(parentTreePath).call().builder(indexDatabase);
@@ -591,9 +604,7 @@ public class WorkingTree {
                 revFeatureTypes.put(featureType.getName(), revFeatureTypeId);
             }
 
-            final ObjectId metadataId = defaultMetadataId;// defaultMetadataId.equals(revFeatureTypeId)
-                                                          // ? ObjectId.NULL : revFeatureTypeId;
-            final Node objectRef = putInDatabase(feature, metadataId);
+            final Node objectRef = putInDatabase(feature, defaultMetadataId);
             parentTree.put(objectRef);
             if (target != null) {
                 target.add(objectRef);
@@ -612,5 +623,57 @@ public class WorkingTree {
         List<NodeRef> typeTrees = commandLocator.command(FindFeatureTypeTrees.class)
                 .setRootTreeRef(Ref.WORK_HEAD).call();
         return typeTrees;
+    }
+
+    /**
+     * Updates the definition of a Feature type associated as default feature type to a given path.
+     * It also modifies the metadataId associated to features under the passed path, which used the
+     * previous default feature type.
+     * 
+     * @param path the path
+     * @param featureType the new feature type definition to set as default for the passed path
+     */
+    public NodeRef updateTypeTree(final String treePath, final FeatureType featureType) {
+
+        // TODO: This is not the optimal way of doing this. A better solution should be found.
+
+        final RevTree workHead = getTree();
+        Optional<NodeRef> typeTreeRef = commandLocator.command(FindTreeChild.class).setIndex(true)
+                .setParent(workHead).setChildPath(treePath).call();
+        Preconditions.checkArgument(typeTreeRef.isPresent(), "Tree does not exist: %s", treePath);
+
+        Iterator<NodeRef> iter = commandLocator.command(LsTreeOp.class).setReference(treePath)
+                .setStrategy(Strategy.DEPTHFIRST_ONLY_FEATURES).call();
+
+        final RevFeatureType revType = RevFeatureType.build(featureType);
+        indexDatabase.put(revType);
+
+        final ObjectId metadataId = revType.getId();
+        RevTreeBuilder treeBuilder = new RevTreeBuilder(indexDatabase);
+
+        final RevTree newTree = treeBuilder.build();
+        ObjectId newWorkHeadId = commandLocator.command(WriteBack.class).setToIndex(true)
+                .setAncestor(workHead.builder(indexDatabase)).setChildPath(treePath)
+                .setTree(newTree).setMetadataId(metadataId).call();
+        updateWorkHead(newWorkHeadId);
+
+        Map<ObjectId, FeatureBuilder> featureBuilders = Maps.newHashMap();
+        while (iter.hasNext()) {
+            NodeRef noderef = iter.next();
+            RevFeature feature = commandLocator.command(RevObjectParse.class)
+                    .setObjectId(noderef.objectId()).call(RevFeature.class).get();
+            if (!featureBuilders.containsKey(noderef.getMetadataId())) {
+                RevFeatureType ft = commandLocator.command(RevObjectParse.class)
+                        .setObjectId(noderef.getMetadataId()).call(RevFeatureType.class).get();
+                featureBuilders.put(noderef.getMetadataId(), new FeatureBuilder(ft));
+            }
+            FeatureBuilder fb = featureBuilders.get(noderef.getMetadataId());
+            String parentPath = NodeRef.parentPath(NodeRef.appendChild(treePath, noderef.path()));
+            insert(parentPath, fb.build(noderef.getNode().getName(), feature));
+        }
+
+        return commandLocator.command(FindTreeChild.class).setIndex(true).setParent(getTree())
+                .setChildPath(treePath).call().get();
+
     }
 }

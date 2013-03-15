@@ -106,7 +106,7 @@ public class CherryPickOp extends AbstractGeoGitOp<RevCommit> {
         }
         // get changes
         Iterator<DiffEntry> diff = command(DiffTree.class).setOldTree(parentTreeId)
-                .setNewTree(commitToApply.getTreeId()).call();
+                .setNewTree(commitToApply.getTreeId()).setReportTrees(true).call();
         // stage changes
         getIndex().stage(getProgressListener(), diff, 0);
         // write new tree
