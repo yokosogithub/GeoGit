@@ -26,15 +26,17 @@ public class CLITestInjectorBuilder extends InjectorBuilder {
     public Injector build() {
         return Guice.createInjector(Modules.override(new GeogitModule()).with(
                 new JEStorageModule(),
-                new TestModule(new TestPlatform(workingDirectory, homeDirectory))));
+                new FunctionalTestModule(new TestPlatform(workingDirectory, homeDirectory))));
     }
 
     @Override
     public Injector buildWithOverrides(Module... overrides) {
-        return Guice.createInjector(Modules.override(
-                Modules.override(new GeogitModule()).with(new JEStorageModule(),
-                        new TestModule(new TestPlatform(workingDirectory, homeDirectory)))).with(
-                overrides));
-    }
+        TestPlatform testPlatform = new TestPlatform(workingDirectory, homeDirectory);
+        JEStorageModule jeStorageModule = new JEStorageModule();
+        FunctionalTestModule functionalTestModule = new FunctionalTestModule(testPlatform);
 
+        return Guice.createInjector(Modules.override(
+                Modules.override(new GeogitModule()).with(jeStorageModule, functionalTestModule))
+                .with(overrides));
+    }
 }

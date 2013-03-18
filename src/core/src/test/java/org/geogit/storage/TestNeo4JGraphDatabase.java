@@ -5,7 +5,6 @@
 package org.geogit.storage;
 
 import org.geogit.api.Platform;
-import org.geogit.storage.Neo4JGraphDatabase;
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.test.TestGraphDatabaseFactory;
 
@@ -23,4 +22,12 @@ public class TestNeo4JGraphDatabase extends Neo4JGraphDatabase {
         return new TestGraphDatabaseFactory().newImpermanentDatabaseBuilder().newGraphDatabase();
     }
 
+    @Override
+    public void close() {
+        if (isOpen()) {
+            graphDB.shutdown();
+            graphDB = null;
+        }
+
+    }
 }

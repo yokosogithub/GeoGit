@@ -36,7 +36,7 @@ import com.google.inject.Inject;
 
 public class Neo4JGraphDatabase extends AbstractGraphDatabase {
 
-    GraphDatabaseService graphDB = null;
+    protected GraphDatabaseService graphDB = null;
 
     private String dbPath = null;
 
