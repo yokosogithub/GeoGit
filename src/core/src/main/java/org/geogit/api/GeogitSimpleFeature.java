@@ -173,7 +173,7 @@ class GeogitSimpleFeature implements SimpleFeature {
             if (geometryDescriptor != null) {
                 Integer defaultGeomIndex = nameToRevTypeIndex.get(geometryDescriptor.getName()
                         .getLocalPart());
-                defaultGeometry = revFeatureValues.get(defaultGeomIndex.intValue());
+                defaultGeometry = revFeatureValues.get(defaultGeomIndex.intValue()).get();
             }
         }
 
