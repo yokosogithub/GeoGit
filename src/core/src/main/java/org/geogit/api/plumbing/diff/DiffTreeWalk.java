@@ -100,12 +100,12 @@ public class DiffTreeWalk {
                 if (oldObjectRef.isPresent()) {
                     oldTree = objectDb.getTree(oldObjectRef.get().objectId());
                 } else {
-                    oldTree = RevTree.EMPTY;
+                    oldTree = null;
                 }
                 if (newObjectRef.isPresent()) {
                     newTree = objectDb.getTree(newObjectRef.get().objectId());
                 } else {
-                    newTree = RevTree.EMPTY;
+                    newTree = null;
                 }
                 break;
             default:

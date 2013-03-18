@@ -5,7 +5,9 @@
 package org.geogit.repository;
 
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import javax.annotation.Nullable;
 
@@ -16,6 +18,7 @@ import org.geogit.api.ObjectId;
 import org.geogit.api.Ref;
 import org.geogit.api.RevTree;
 import org.geogit.api.RevTreeBuilder;
+import org.geogit.api.RevObject.TYPE;
 import org.geogit.api.plumbing.DiffCount;
 import org.geogit.api.plumbing.DiffIndex;
 import org.geogit.api.plumbing.FindOrCreateSubtree;
@@ -25,6 +28,7 @@ import org.geogit.api.plumbing.RevObjectParse;
 import org.geogit.api.plumbing.UpdateRef;
 import org.geogit.api.plumbing.WriteBack;
 import org.geogit.api.plumbing.diff.DiffEntry;
+import org.geogit.api.plumbing.merge.Conflict;
 import org.geogit.storage.StagingDatabase;
 import org.opengis.util.ProgressListener;
 
@@ -33,6 +37,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 
 /**
@@ -83,6 +88,7 @@ public class Index implements StagingArea {
     @Override
     public void updateStageHead(ObjectId newTree) {
         commandLocator.command(UpdateRef.class).setName(Ref.STAGE_HEAD).setNewValue(newTree).call();
+        indexDatabase.removeConflicts();
     }
 
     /**
@@ -161,12 +167,18 @@ public class Index implements StagingArea {
 
         Map<String, RevTreeBuilder> parentTress = Maps.newHashMap();
         Map<String, ObjectId> parentMetadataIds = Maps.newHashMap();
-
+        Set<String> removedTrees = Sets.newHashSet();
         while (unstaged.hasNext()) {
             final DiffEntry diff = unstaged.next();
             final String fullPath = diff.oldPath() == null ? diff.newPath() : diff.oldPath();
             final String parentPath = NodeRef.parentPath(fullPath);
-
+            /*
+             * TODO: revisit, ideally the list of diff entries would come with one single entry for
+             * the whole removed tree instead of that one and every single children of it.
+             */
+            if (removedTrees.contains(parentPath)) {
+                continue;
+            }
             if (null == parentPath) {
                 // it is the root tree that's been changed, update head and ignore anything else
                 ObjectId newRoot = diff.newObjectId();
@@ -186,15 +198,21 @@ public class Index implements StagingArea {
             if (newObject == null) {
                 // Delete
                 parentTree.remove(oldObject.name());
+                if (TYPE.TREE.equals(oldObject.getType())) {
+                    removedTrees.add(oldObject.path());
+                }
             } else if (oldObject == null) {
                 // Add
                 Node node = newObject.getNode();
                 parentTree.put(node);
+                parentMetadataIds.put(newObject.path(), newObject.getMetadataId());
             } else {
                 // Modify
                 Node node = newObject.getNode();
                 parentTree.put(node);
             }
+
+            indexDatabase.removeConflict(fullPath);
         }
 
         ObjectId newRootTree = currentIndexHead.getId();
@@ -209,6 +227,7 @@ public class Index implements StagingArea {
                 indexDatabase.put(changedTree);
                 newRootTree = changedTree.getId();
             } else {
+                // parentMetadataId = parentMetadataId == null ?
                 Supplier<RevTreeBuilder> rootTreeSupplier = getTreeSupplier();
                 newRootTree = commandLocator.command(WriteBack.class).setAncestor(rootTreeSupplier)
                         .setChildPath(changedTreePath).setMetadataId(parentMetadataId)
@@ -248,7 +267,9 @@ public class Index implements StagingArea {
                         .setChildPath(parentPath).call().builder(getDatabase());
             }
             parentTress.put(parentPath, parentBuilder);
-            parentMetadataIds.put(parentPath, parentMetadataId);
+            if (parentMetadataId != null) {
+                parentMetadataIds.put(parentPath, parentMetadataId);
+            }
         }
         return parentBuilder;
     }
@@ -272,7 +293,17 @@ public class Index implements StagingArea {
     @Override
     public long countStaged(final @Nullable String pathFilter) {
         Long count = commandLocator.command(DiffCount.class).setOldVersion(Ref.HEAD)
-                .setNewVersion(Ref.STAGE_HEAD).setFilter(pathFilter).call();
+                .setNewVersion(Ref.STAGE_HEAD).setReportTrees(true).setFilter(pathFilter).call();
         return count.longValue();
+    }
+
+    @Override
+    public int countConflicted(String pathFilter) {
+        return indexDatabase.getConflicts(pathFilter).size();
+    }
+
+    @Override
+    public List<Conflict> getConflicted(@Nullable String pathFilter) {
+        return indexDatabase.getConflicts(pathFilter);
     }
 }

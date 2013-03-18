@@ -19,6 +19,7 @@ import org.geogit.repository.StagingArea;
 import org.geogit.repository.WorkingTree;
 
 import com.google.common.base.Optional;
+import com.google.common.base.Preconditions;
 
 /**
  * Compares the features in the {@link WorkingTree working tree} and the {@link StagingArea index}
@@ -87,13 +88,15 @@ public class DiffWorkTree extends AbstractGeoGitOp<Iterator<DiffEntry>> {
 
         final String oldVersion = Optional.fromNullable(refSpec).or(Ref.STAGE_HEAD);
 
-        ObjectId headTreeId = command(ResolveTreeish.class).setTreeish(oldVersion).call().get();
+        Optional<ObjectId> headTreeId = command(ResolveTreeish.class).setTreeish(oldVersion).call();
+        Preconditions.checkArgument(headTreeId.isPresent(), "Refspec " + oldVersion
+                + " does not resolve to a tree");
         final RevTree headTree;
-        if (headTreeId.isNull()) {
+        if (headTreeId.get().isNull()) {
             headTree = RevTree.EMPTY;
         } else {
-            headTree = command(RevObjectParse.class).setObjectId(headTreeId).call(RevTree.class)
-                    .get();
+            headTree = command(RevObjectParse.class).setObjectId(headTreeId.get())
+                    .call(RevTree.class).get();
         }
 
         return headTree;

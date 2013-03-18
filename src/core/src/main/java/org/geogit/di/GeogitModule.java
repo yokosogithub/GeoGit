@@ -11,6 +11,7 @@ import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.Iterator;
 
+import org.geogit.api.AbstractGeoGitOp;
 import org.geogit.api.CommandLocator;
 import org.geogit.api.DefaultPlatform;
 import org.geogit.api.ObjectId;
@@ -112,6 +113,60 @@ public class GeogitModule extends AbstractModule {
                 new CachingObjectDatabaseGetInterceptor());
 
         bindCommitGraphInterceptor();
+
+        final Method callMethod;
+        try {
+            callMethod = AbstractGeoGitOp.class.getMethod("call");
+        } catch (Exception e) {
+            throw Throwables.propagate(e);
+        }
+        Matcher<Method> callMatcher = new Matcher<Method>() {
+
+            @Override
+            public boolean matches(Method t) {
+                if (!t.isSynthetic()) {
+                    if (callMethod.getName().equals(t.getName())) {
+                        if (Arrays.equals(callMethod.getParameterTypes(), t.getParameterTypes())) {
+                            return true;
+                        }
+                    }
+                }
+                return false;
+            }
+
+            @Override
+            public Matcher<Method> and(Matcher<? super Method> other) {
+                throw new UnsupportedOperationException();
+            }
+
+            @Override
+            public Matcher<Method> or(Matcher<? super Method> other) {
+                throw new UnsupportedOperationException();
+            }
+        };
+
+        Matcher<Class<?>> canRunDuringCommitMatcher = new Matcher<Class<?>>() {
+
+            @Override
+            public boolean matches(Class<?> clazz) {
+                // TODO: this is not a very clean way of doing this...
+                return !(clazz.getPackage().getName().contains("plumbing") || clazz
+                        .isAnnotationPresent(CanRunDuringConflict.class));
+            }
+
+            @Override
+            public Matcher<Class<?>> or(Matcher<? super Class<?>> arg0) {
+                throw new UnsupportedOperationException();
+            }
+
+            @Override
+            public Matcher<Class<?>> and(Matcher<? super Class<?>> arg0) {
+                throw new UnsupportedOperationException();
+            }
+
+        };
+
+        bindInterceptor(canRunDuringCommitMatcher, callMatcher, new ConflictInterceptor());
     }
 
     private void bindCommitGraphInterceptor() {

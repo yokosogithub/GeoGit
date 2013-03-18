@@ -63,19 +63,33 @@ public abstract class RepositoryTestCase extends Assert {
 
     public static final String idP3 = "Points.3";
 
+    public static final String idPG1 = "Polygon.1";
+
+    public static final String idPG2 = "Polygon.2";
+
+    public static final String idPG3 = "Polygon.3";
+
     public static final String pointsNs = "http://geogit.points";
 
     public static final String pointsName = "Points";
 
     public static final String pointsTypeSpec = "sp:String,ip:Integer,pp:Point:srid=4326";
 
+    protected static final String modifiedPointsTypeSpec = "sp:String,ip:Integer,pp:Point:srid=4326,extra:String";
+
     public static final Name pointsTypeName = new NameImpl("http://geogit.points", pointsName);
 
     protected SimpleFeatureType pointsType;
 
+    protected SimpleFeatureType modifiedPointsType;
+
     protected Feature points1;
 
     protected Feature points1_modified;
+
+    protected Feature points1B;
+
+    protected Feature points1B_modified;
 
     protected Feature points2;
 
@@ -96,6 +110,22 @@ public abstract class RepositoryTestCase extends Assert {
     public Feature lines2;
 
     public Feature lines3;
+
+    public static final String polyNs = "http://geogit.polygon";
+
+    public static final String polyName = "Polygon";
+
+    public static final String polyTypeSpec = "sp:String,ip:Integer,pp:Polygon:srid=4326";
+
+    public static final Name polyTypeName = new NameImpl("http://geogit.polygon", polyName);
+
+    public SimpleFeatureType polyType;
+
+    public Feature poly1;
+
+    public Feature poly2;
+
+    public Feature poly3;
 
     protected GeoGIT geogit;
 
@@ -136,10 +166,17 @@ public abstract class RepositoryTestCase extends Assert {
                 .setValue("groldan@opengeo.org").call();
 
         pointsType = DataUtilities.createType(pointsNs, pointsName, pointsTypeSpec);
+        modifiedPointsType = DataUtilities.createType(pointsNs, pointsName, modifiedPointsTypeSpec);
 
         points1 = feature(pointsType, idP1, "StringProp1_1", new Integer(1000), "POINT(1 1)");
         points1_modified = feature(pointsType, idP1, "StringProp1_1a", new Integer(1001),
                 "POINT(1 2)");
+        points1B = feature(modifiedPointsType, idP1, "StringProp1_1", new Integer(1000),
+                "POINT(1 1)", "ExtraString");
+
+        points1B_modified = feature(modifiedPointsType, idP1, "StringProp1_1a", new Integer(1001),
+                "POINT(1 2)", "ExtraStringB");
+
         points2 = feature(pointsType, idP2, "StringProp1_2", new Integer(2000), "POINT(2 2)");
         points3 = feature(pointsType, idP3, "StringProp1_3", new Integer(3000), "POINT(3 3)");
 
@@ -151,6 +188,15 @@ public abstract class RepositoryTestCase extends Assert {
                 "LINESTRING (3 3, 4 4)");
         lines3 = feature(linesType, idL3, "StringProp2_3", new Integer(3000),
                 "LINESTRING (5 5, 6 6)");
+
+        polyType = DataUtilities.createType(polyNs, polyName, polyTypeSpec);
+
+        poly1 = feature(polyType, idPG1, "StringProp3_1", new Integer(1000),
+                "POLYGON ((1 1, 2 2, 3 3, 4 4, 1 1))");
+        poly2 = feature(polyType, idPG2, "StringProp3_2", new Integer(2000),
+                "POLYGON ((6 6, 7 7, 8 8, 9 9, 6 6))");
+        poly3 = feature(polyType, idPG3, "StringProp3_3", new Integer(3000),
+                "POLYGON ((11 11, 12 12, 13 13, 14 14, 11 11))");
 
         setUpInternal();
     }

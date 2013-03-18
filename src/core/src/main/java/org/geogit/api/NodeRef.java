@@ -112,7 +112,11 @@ public class NodeRef implements Bounded, Comparable<NodeRef> {
      *         metadata id otherwise.
      */
     public ObjectId getMetadataId() {
-        return node.getMetadataId().or(this.metadataId);
+        if (node.getMetadataId().isPresent() && !node.getMetadataId().get().isNull()) {
+            return node.getMetadataId().get();
+        } else {
+            return this.metadataId;
+        }
     }
 
     /**

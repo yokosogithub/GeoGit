@@ -24,14 +24,19 @@ import com.vividsolutions.jts.io.ParseException;
 
 public abstract class RevFeatureSerializationTest extends Assert {
     private String namespace1 = "http://geoserver.org/test";
+
     private String typeName1 = "TestType";
+
     private String typeSpec1 = "str:String," + "bool:Boolean," + "byte:java.lang.Byte,"
-                + "doub:Double," + "bdec:java.math.BigDecimal," + "flt:Float," + "int:Integer,"
-                + "bint:java.math.BigInteger," + "pp:Point:srid=4326," + "lng:java.lang.Long,"
-                + "uuid:java.util.UUID";
-    private SimpleFeatureType featureType1;
+            + "doub:Double," + "bdec:java.math.BigDecimal," + "flt:Float," + "int:Integer,"
+            + "bint:java.math.BigInteger," + "pp:Point:srid=4326," + "lng:java.lang.Long,"
+            + "uuid:java.util.UUID";
+
+    protected SimpleFeatureType featureType1;
+
     private Feature feature1_1;
-    private ObjectSerializingFactory factory = getObjectSerializingFactory();
+
+    protected ObjectSerializingFactory factory = getObjectSerializingFactory();
 
     protected abstract ObjectSerializingFactory getObjectSerializingFactory();
 
@@ -47,43 +52,46 @@ public abstract class RevFeatureSerializationTest extends Assert {
 
     @Test
     public void testSerialize() throws Exception {
-    
+        testFeatureReadWrite(feature1_1);
+    }
+
+    protected void testFeatureReadWrite(Feature feature) throws Exception {
+
         RevFeatureBuilder builder = new RevFeatureBuilder();
-        RevFeature newFeature = builder.build(feature1_1);
-        ObjectWriter<RevFeature> writer = factory.<RevFeature>createObjectWriter(TYPE.FEATURE);
-    
+        RevFeature newFeature = builder.build(feature);
+        ObjectWriter<RevFeature> writer = factory.<RevFeature> createObjectWriter(TYPE.FEATURE);
+
         ByteArrayOutputStream output = new ByteArrayOutputStream();
         writer.write(newFeature, output);
-    
+
         byte[] data = output.toByteArray();
         assertTrue(data.length > 0);
-    
-        ObjectReader<RevFeature> reader = factory.<RevFeature>createObjectReader(TYPE.FEATURE);
+
+        ObjectReader<RevFeature> reader = factory.<RevFeature> createObjectReader(TYPE.FEATURE);
         ByteArrayInputStream input = new ByteArrayInputStream(data);
-        RevFeature feat = reader
-                .read(ObjectId.forString(feature1_1.getIdentifier().getID()), input);
-    
+        RevFeature feat = reader.read(newFeature.getId(), input);
+
         assertNotNull(feat);
         assertEquals(newFeature.getValues().size(), feat.getValues().size());
-    
+
         for (int i = 0; i < newFeature.getValues().size(); i++) {
             assertEquals(newFeature.getValues().get(i).orNull(), feat.getValues().get(i).orNull());
         }
-    
+
     }
 
     protected Feature feature(SimpleFeatureType type, String id, Object... values)
             throws ParseException {
-                SimpleFeatureBuilder builder = new SimpleFeatureBuilder(type);
-                for (int i = 0; i < values.length; i++) {
-                    Object value = values[i];
-                    if (type.getDescriptor(i) instanceof GeometryDescriptor) {
-                        if (value instanceof String) {
-                            value = new WKTReader2().read((String) value);
-                        }
-                    }
-                    builder.set(i, value);
+        SimpleFeatureBuilder builder = new SimpleFeatureBuilder(type);
+        for (int i = 0; i < values.length; i++) {
+            Object value = values[i];
+            if (type.getDescriptor(i) instanceof GeometryDescriptor) {
+                if (value instanceof String) {
+                    value = new WKTReader2().read((String) value);
                 }
-                return builder.buildFeature(id);
             }
+            builder.set(i, value);
+        }
+        return builder.buildFeature(id);
+    }
 }

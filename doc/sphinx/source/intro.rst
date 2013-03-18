@@ -11,6 +11,8 @@ Users not familiar with *git* should skip notes like the one above.
 
 This user guide does not cover all possible uses of each GeoGit command, but just introduces the most common cases and the operations used by the great majority of users. Once you understand the concepts explained here, feel free to explore the GeoGit man pages to learn more about other options not covered here.
 
+All GeoGit commands accept a ``help`` option that will display the available options and their usage. Use it when you have questions about how to use the command, or to find out which other possibilities exist apart from the one described here.
+
 
 How does GeoGit work
 ---------------------

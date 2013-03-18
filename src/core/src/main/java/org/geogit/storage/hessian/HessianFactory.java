@@ -5,7 +5,6 @@
 package org.geogit.storage.hessian;
 
 import java.io.IOException;
-import java.io.OutputStream;
 import java.io.Serializable;
 import java.util.Map;
 import java.util.TreeMap;
@@ -54,13 +53,7 @@ public class HessianFactory implements ObjectSerializingFactory {
 
     private static final HessianRevTagReader TAG_READER = new HessianRevTagReader();
 
-    private static final ObjectWriter<RevTag> TAG_WRITER = new ObjectWriter<RevTag>() {
-
-        @Override
-        public void write(RevTag object, OutputStream out) throws IOException {
-            throw new UnsupportedOperationException();
-        }
-    };
+    private static final ObjectWriter<RevTag> TAG_WRITER = new HessianRevTagWriter();
 
     /**
      * Creates an instance of a commit reader.
@@ -157,7 +150,7 @@ public class HessianFactory implements ObjectSerializingFactory {
         case FEATURETYPE:
             return (ObjectReader<T>) SIMPLE_FEATURE_TYPE_READER;
         case TAG:
-            throw new UnsupportedOperationException();
+            return (ObjectReader<T>) TAG_READER;
         case TREE:
             return (ObjectReader<T>) TREE_READER;
         default:
@@ -185,8 +178,11 @@ public class HessianFactory implements ObjectSerializingFactory {
                 return TREE_READER.read(id, hin, type);
             case FEATURETYPE:
                 return SIMPLE_FEATURE_TYPE_READER.read(id, hin, type);
+            case TAG:
+                return TAG_READER.read(id, hin, type);
             default:
-                throw new IllegalArgumentException("Unknown object type " + type);
+                throw new IllegalArgumentException("Unkown type: " + type);
+
             }
         }
     }

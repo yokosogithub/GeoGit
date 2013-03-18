@@ -19,6 +19,7 @@ import org.geogit.api.RevObject;
 import org.geogit.api.RevObject.TYPE;
 import org.geogit.api.RevTree;
 import org.geogit.api.plumbing.diff.DepthTreeIterator;
+import org.geogit.di.CanRunDuringConflict;
 
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
@@ -35,6 +36,7 @@ import com.google.inject.Inject;
  * {@link RevParse#setRefSpec(String) RevParse} and must resolve to a tree object. If no ref spec is
  * specified, the root of the current working tree is assumed.
  */
+@CanRunDuringConflict
 public class LsTreeOp extends AbstractGeoGitOp<Iterator<NodeRef>> {
 
     /**

@@ -27,7 +27,11 @@ import org.geogit.api.plumbing.RevObjectParse;
 import org.geogit.api.plumbing.UpdateRef;
 import org.geogit.api.plumbing.UpdateSymRef;
 import org.geogit.api.plumbing.WriteTree;
+import org.geogit.api.plumbing.merge.Conflict;
+import org.geogit.api.plumbing.merge.ConflictsReadOp;
+import org.geogit.api.plumbing.merge.ReadMergeCommitMessageOp;
 import org.geogit.api.porcelain.ConfigOp.ConfigAction;
+import org.geogit.di.CanRunDuringConflict;
 import org.geogit.storage.ObjectDatabase;
 
 import com.google.common.base.Optional;
@@ -47,6 +51,7 @@ import com.google.inject.Inject;
  * </p>
  * 
  */
+@CanRunDuringConflict
 public class CommitOp extends AbstractGeoGitOp<RevCommit> {
 
     private final ObjectDatabase objectDb;
@@ -227,6 +232,11 @@ public class CommitOp extends AbstractGeoGitOp<RevCommit> {
             return null;
         }
 
+        List<Conflict> conflicts = command(ConflictsReadOp.class).call();
+        if (!conflicts.isEmpty()) {
+            throw new IllegalStateException("Cannot run operation while merge conflicts exist.");
+        }
+
         final Optional<Ref> currHead = command(RefParse.class).setName(Ref.HEAD).call();
         Preconditions.checkState(currHead.isPresent(), "Repository has no HEAD, can't commit");
         final Ref headRef = currHead.get();
@@ -240,7 +250,18 @@ public class CommitOp extends AbstractGeoGitOp<RevCommit> {
             parents.add(0, currHeadCommitId);
         }
 
-        // final ObjectId newTreeId = index.writeTree(currHead.get(), subProgress(49f));
+        // additional operations in case we are committing after a conflicted merge
+        final Optional<Ref> mergeHead = command(RefParse.class).setName(Ref.MERGE_HEAD).call();
+        if (mergeHead.isPresent()) {
+            ObjectId mergeCommitId = mergeHead.get().getObjectId();
+            if (!mergeCommitId.isNull()) {
+                parents.add(mergeCommitId);
+            }
+            if (message == null) {
+                message = command(ReadMergeCommitMessageOp.class).call();
+            }
+        }
+
         final ObjectId newTreeId = command(WriteTree.class).setOldRoot(resolveOldRoot())
                 .setProgressListener(subProgress(writeTreeProgress)).call();
 
@@ -295,6 +316,11 @@ public class CommitOp extends AbstractGeoGitOp<RevCommit> {
 
         getProgressListener().progress(100f);
         getProgressListener().complete();
+
+        if (mergeHead.isPresent()) {
+            command(UpdateRef.class).setDelete(true).setName(Ref.MERGE_HEAD).call();
+            command(UpdateRef.class).setDelete(true).setName(Ref.ORIG_HEAD).call();
+        }
 
         return commit;
     }

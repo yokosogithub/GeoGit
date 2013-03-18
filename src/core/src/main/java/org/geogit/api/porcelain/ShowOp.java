@@ -8,6 +8,7 @@ import java.io.PrintStream;
 
 import org.geogit.api.AbstractGeoGitOp;
 import org.geogit.api.ObjectId;
+import org.geogit.di.CanRunDuringConflict;
 import org.geogit.repository.Repository;
 
 import com.google.inject.Inject;
@@ -20,6 +21,7 @@ import com.google.inject.Inject;
  * @see Repository
  * @see PrintStream
  */
+@CanRunDuringConflict
 public class ShowOp extends AbstractGeoGitOp<Void> {
 
     private PrintStream out;

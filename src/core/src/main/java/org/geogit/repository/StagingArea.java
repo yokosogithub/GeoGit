@@ -5,6 +5,7 @@
 package org.geogit.repository;
 
 import java.util.Iterator;
+import java.util.List;
 
 import javax.annotation.Nullable;
 
@@ -12,6 +13,7 @@ import org.geogit.api.Node;
 import org.geogit.api.ObjectId;
 import org.geogit.api.RevTree;
 import org.geogit.api.plumbing.diff.DiffEntry;
+import org.geogit.api.plumbing.merge.Conflict;
 import org.geogit.storage.StagingDatabase;
 import org.opengis.util.ProgressListener;
 
@@ -71,5 +73,21 @@ public interface StagingArea {
      * @return the number differences between STAGE_HEAD and HEAD based on the path filter.
      */
     public abstract long countStaged(final @Nullable String pathFilter);
+
+    /**
+     * returns the number of conflicted objects in the index, for the given path filter
+     * 
+     * @param pathFilter
+     * @return
+     */
+    public int countConflicted(final @Nullable String pathFilter);
+
+    /**
+     * returns the list of conflicted objects in the index, for the given path filter
+     * 
+     * @param pathFilter
+     * @return
+     */
+    public List<Conflict> getConflicted(final @Nullable String pathFilter);
 
 }

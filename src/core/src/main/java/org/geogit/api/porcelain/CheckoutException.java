@@ -10,18 +10,30 @@ package org.geogit.api.porcelain;
 public class CheckoutException extends RuntimeException {
 
     public enum StatusCode {
-        LOCAL_CHANGES_NOT_COMMITTED
+        LOCAL_CHANGES_NOT_COMMITTED {
+            public String message() {
+                return "Doing a checkout without a clean working tree and index is currently unsupported.";
+            }
+        },
+        UNMERGED_PATHS {
+            public String message() {
+                return "There are unmerged paths.";
+            }
+        };
+
+        public abstract String message();
     }
 
     public StatusCode statusCode;
 
-    public CheckoutException(StatusCode statusCode) {
-        this(null, statusCode);
-
-    }
-
-    public CheckoutException(Exception e, StatusCode statusCode) {
-        super(e);
+    public CheckoutException(String msg, StatusCode statusCode) {
+        super(msg);
         this.statusCode = statusCode;
     }
+
+    public CheckoutException(StatusCode statusCode) {
+        super(statusCode.message());
+        this.statusCode = statusCode;
+    }
+
 }

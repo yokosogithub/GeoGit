@@ -101,9 +101,28 @@ Feature: "checkout" command
       And the response should contain "added"
       And the response should contain "# Changes not staged for commit:"
       
+  Scenario: Try to revert using both --ours and --theirs
+    Given I have a repository           
+      When I run the command "checkout -p Points/Points.1 --ours --theirs"
+     Then the response should contain "Cannot use both --ours and --theirs"
+     
   Scenario: Try to revert a feature where the version you want doesn't exist
     Given I have a repository
       And I have staged "points2"
      When I modify a feature
       And I run the command "checkout -p Points/Points.1"
      Then the response should contain "'Points/Points.1' didn't match a feature in the tree"
+
+  Scenario: Try to revert an unmerged feature
+    Given I have a repository
+      And I have a merge conflict state
+     When I run the command "checkout -p Points/Points.1"
+     Then the response should contain "path Points/Points.1 is unmerged" 
+          
+  Scenario: Try to revert a feature to the --theirs version and fix the conflict
+    Given I have a repository
+      And I have a merge conflict state
+     When I run the command "checkout -p Points/Points.1 --theirs"
+      And I run the command "add"
+      And I run the command "commit -m Commit"
+     Then the response should contain "Committed"        

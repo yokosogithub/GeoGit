@@ -241,7 +241,10 @@ class HashObjectFunnels {
         @Override
         public void funnel(RevTag from, PrimitiveSink into) {
             RevObjectTypeFunnel.funnel(TYPE.TAG, into);
-            throw new UnsupportedOperationException("not yet implemented");
+            ObjectIdFunnel.funnel(from.getCommitId(), into);
+            Funnels.stringFunnel().funnel(from.getName(), into);
+            Funnels.stringFunnel().funnel(from.getMessage(), into);
+            PersonFunnel.funnel(from.getTagger(), into);
         }
     };
 

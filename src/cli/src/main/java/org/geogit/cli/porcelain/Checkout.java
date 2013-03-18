@@ -57,6 +57,12 @@ public class Checkout extends AbstractCommand implements CLICommand {
             + "working tree from the index tree or a named treeish object.", variableArity = true)
     private List<String> paths = Lists.newArrayList();
 
+    @Parameter(names = "--ours", description = "When checking out paths from the index, check out 'ours' version for unmerged paths")
+    private boolean ours;
+
+    @Parameter(names = "--theirs", description = "When checking out paths from the index, check out 'theirs' version for unmerged paths")
+    private boolean theirs;
+
     @Override
     public void runInternal(GeogitCLI cli) throws Exception {
         final GeoGIT geogit = cli.getGeogit();
@@ -71,7 +77,8 @@ public class Checkout extends AbstractCommand implements CLICommand {
                     : null);
 
             CheckoutResult result = geogit.command(CheckoutOp.class).setForce(force)
-                    .setSource(branchOrCommit).addPaths(paths).call();
+                    .setSource(branchOrCommit).addPaths(paths).setOurs(ours).setTheirs(theirs)
+                    .call();
 
             switch (result.getResult()) {
             case CHECKOUT_LOCAL_BRANCH:
@@ -100,6 +107,8 @@ public class Checkout extends AbstractCommand implements CLICommand {
                         .println(
                                 "Doing a checkout without a clean working tree and index is currently unsupported.");
                 break;
+            case UNMERGED_PATHS:
+                cli.getConsole().println(e.getMessage());
             }
         }
     }

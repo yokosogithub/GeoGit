@@ -24,19 +24,19 @@ import com.google.common.collect.Lists;
 
 public abstract class RevCommitSerializationTest extends Assert {
 
-    private ObjectSerializingFactory factory;
+    protected ObjectSerializingFactory factory;
 
     private CommitBuilder testCommit;
 
     @Before
     public void before() {
-        this.factory = getFactory();
+        this.factory = getObjectSerializingFactory();
         ObjectId treeId = ObjectId.forString("treeid");
         testCommit = testCommit(treeId, "groldan", "groldan@opengeo.org", 5000L, "jd",
                 "jd@lmnsolutions.com", 10000L, "test message", ObjectId.forString("first parent"));
     }
 
-    protected abstract ObjectSerializingFactory getFactory();
+    protected abstract ObjectSerializingFactory getObjectSerializingFactory();
 
     @Test
     public void testCommitSerialization() throws IOException {

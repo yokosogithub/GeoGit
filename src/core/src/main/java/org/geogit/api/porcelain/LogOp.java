@@ -15,6 +15,7 @@ import org.geogit.api.Ref;
 import org.geogit.api.RevCommit;
 import org.geogit.api.plumbing.RevParse;
 import org.geogit.api.plumbing.diff.DiffEntry;
+import org.geogit.di.CanRunDuringConflict;
 import org.geogit.repository.Repository;
 import org.geotools.util.Range;
 
@@ -41,6 +42,7 @@ import com.google.inject.Inject;
  * 
  * 
  */
+@CanRunDuringConflict
 public class LogOp extends AbstractGeoGitOp<Iterator<RevCommit>> {
 
     private static final Range<Long> ALWAYS = new Range<Long>(Long.class, 0L, true, Long.MAX_VALUE,

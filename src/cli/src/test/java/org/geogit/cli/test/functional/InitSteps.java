@@ -15,21 +15,41 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.IOException;
 import java.net.URI;
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
 
 import org.apache.commons.io.FileUtils;
 import org.geogit.api.GeoGIT;
 import org.geogit.api.GlobalInjectorBuilder;
+import org.geogit.api.NodeRef;
 import org.geogit.api.ObjectId;
 import org.geogit.api.Ref;
+import org.geogit.api.RevFeatureType;
 import org.geogit.api.plumbing.RefParse;
 import org.geogit.api.plumbing.UpdateRef;
+import org.geogit.api.plumbing.diff.AttributeDiff;
+import org.geogit.api.plumbing.diff.FeatureDiff;
+import org.geogit.api.plumbing.diff.GenericAttributeDiffImpl;
+import org.geogit.api.plumbing.diff.Patch;
+import org.geogit.api.plumbing.diff.PatchSerializer;
+import org.geogit.api.plumbing.merge.MergeConflictsException;
+import org.geogit.api.porcelain.BranchCreateOp;
+import org.geogit.api.porcelain.CheckoutOp;
+import org.geogit.api.porcelain.CommitOp;
+import org.geogit.api.porcelain.MergeOp;
+import org.opengis.feature.Feature;
+import org.opengis.feature.type.PropertyDescriptor;
 
+import com.google.common.base.Charsets;
 import com.google.common.base.Optional;
+import com.google.common.base.Suppliers;
+import com.google.common.collect.Maps;
+import com.google.common.io.Files;
 import com.google.inject.Injector;
 
 import cucumber.annotation.en.Given;
@@ -65,6 +85,9 @@ public class InitSteps extends AbstractGeogitFunctionalTest {
     @When("^I run the command \"([^\"]*)\"$")
     public void I_run_the_command_X(String commandSpec) throws Throwable {
         String[] args = commandSpec.split(" ");
+        for (int i = 0; i < args.length; i++) {
+            args[i] = args[i].replace("${currentdir}", currentDirectory.getAbsolutePath());
+        }
         runCommand(args);
     }
 
@@ -134,6 +157,46 @@ public class InitSteps extends AbstractGeogitFunctionalTest {
         assertEquals(output.toString(), 1, output.size());
         assertNotNull(output.get(0));
         assertTrue(output.get(0), output.get(0).startsWith("Initialized"));
+    }
+
+    @Given("^I have a merge conflict state$")
+    public void I_have_a_merge_conflict_state() throws Throwable {
+        I_have_two_conflicting_branches();
+        Ref branch = geogit.command(RefParse.class).setName("branch1").call().get();
+        try {
+            geogit.command(MergeOp.class).addCommit(Suppliers.ofInstance(branch.getObjectId()))
+                    .call();
+            fail();
+        } catch (MergeConflictsException e) {
+            e = e;
+        }
+    }
+
+    @Given("^I have two conflicting branches$")
+    public void I_have_two_conflicting_branches() throws Throwable {
+        // Create the following revision graph
+        // o
+        // |
+        // o - Points 1 added
+        // |\
+        // | o - TestBranch - Points 1 modified and points 2 added
+        // |
+        // o - master - HEAD - Points 1 modifiedB
+        Feature points1ModifiedB = feature(pointsType, idP1, "StringProp1_3", new Integer(2000),
+                "POINT(1 1)");
+        Feature points1Modified = feature(pointsType, idP1, "StringProp1_2", new Integer(1000),
+                "POINT(1 1)");
+        insertAndAdd(points1);
+        geogit.command(CommitOp.class).call();
+        geogit.command(BranchCreateOp.class).setName("branch1").call();
+        insertAndAdd(points1Modified);
+        geogit.command(CommitOp.class).call();
+        geogit.command(CheckoutOp.class).setSource("branch1").call();
+        insertAndAdd(points1ModifiedB);
+        insertAndAdd(points2);
+        geogit.command(CommitOp.class).call();
+
+        geogit.command(CheckoutOp.class).setSource("master").call();
     }
 
     @Given("^there is a remote repository$")
@@ -306,6 +369,11 @@ public class InitSteps extends AbstractGeogitFunctionalTest {
         insert(points1_modified);
     }
 
+    @Given("^I modify a feature type$")
+    public void I_modify_a_feature_type() throws Throwable {
+        deleteAndReplaceFeatureType();
+    }
+
     @Then("^if I change to the respository subdirectory \"([^\"]*)\"$")
     public void if_I_change_to_the_respository_subdirectory(String subdirSpec) throws Throwable {
         String[] subdirs = subdirSpec.split("/");
@@ -315,6 +383,24 @@ public class InitSteps extends AbstractGeogitFunctionalTest {
         }
         assertTrue(dir.exists());
         currentDirectory = dir;
+    }
+
+    @Given("^I have a patch file$")
+    public void I_have_a_patch_file() throws Throwable {
+        Patch patch = new Patch();
+        String path = NodeRef.appendChild(pointsName, points1.getIdentifier().getID());
+        Map<PropertyDescriptor, AttributeDiff> map = Maps.newHashMap();
+        Optional<?> oldValue = Optional.fromNullable(points1.getProperty("sp").getValue());
+        GenericAttributeDiffImpl diff = new GenericAttributeDiffImpl(oldValue, Optional.of("new"));
+        map.put(pointsType.getDescriptor("sp"), diff);
+        FeatureDiff feaureDiff = new FeatureDiff(path, map, RevFeatureType.build(pointsType),
+                RevFeatureType.build(pointsType));
+        patch.addModifiedFeature(feaureDiff);
+        File file = new File(currentDirectory, "test.patch");
+        BufferedWriter writer = Files.newWriter(file, Charsets.UTF_8);
+        PatchSerializer.write(writer, patch);
+        writer.flush();
+        writer.close();
     }
 
     @Given("^I am inside a repository subdirectory \"([^\"]*)\"$")

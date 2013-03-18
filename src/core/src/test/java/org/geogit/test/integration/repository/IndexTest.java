@@ -442,6 +442,14 @@ public class IndexTest extends RepositoryTestCase {
             assertEquals(oId2_2, repo.getTreeChild(newRepoTree, appendChild(linesName, idL2)).get()
                     .getObjectId());
         }
+
     }
 
+    @Test
+    public void testAddEmptyTree() throws Exception {
+        WorkingTree workingTree = geogit.getRepository().getWorkingTree();
+        workingTree.createTypeTree(pointsName, pointsType);
+        geogit.command(AddOp.class).setUpdateOnly(false).call();
+        assertTrue(index.findStaged(pointsName).isPresent());
+    }
 }

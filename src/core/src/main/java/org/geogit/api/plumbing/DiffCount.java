@@ -38,6 +38,8 @@ public class DiffCount extends AbstractGeoGitOp<Long> {
 
     private String newRefSpec;
 
+    private boolean reportTrees;
+
     @Inject
     public DiffCount(StagingDatabase index) {
         this.index = index;
@@ -77,6 +79,7 @@ public class DiffCount extends AbstractGeoGitOp<Long> {
         } else {
             DiffTreeWalk treeWalk = new DiffTreeWalk(index, oldTree, newTree);
             treeWalk.setFilter(pathFilter);
+            treeWalk.setReportTrees(reportTrees);
             Iterator<DiffEntry> iterator = treeWalk.get();
             long count = 0;
             while (iterator.hasNext()) {
@@ -107,6 +110,11 @@ public class DiffCount extends AbstractGeoGitOp<Long> {
         }
 
         return headTree;
+    }
+
+    public DiffCount setReportTrees(boolean reportTrees) {
+        this.reportTrees = reportTrees;
+        return this;
     }
 
 }

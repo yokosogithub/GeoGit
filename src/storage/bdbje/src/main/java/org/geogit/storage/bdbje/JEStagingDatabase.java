@@ -4,6 +4,8 @@
  */
 package org.geogit.storage.bdbje;
 
+import java.io.File;
+import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -20,11 +22,18 @@ import org.geogit.api.RevFeatureType;
 import org.geogit.api.RevObject;
 import org.geogit.api.RevTag;
 import org.geogit.api.RevTree;
+import org.geogit.api.plumbing.merge.Conflict;
 import org.geogit.storage.ObjectDatabase;
 import org.geogit.storage.ObjectInserter;
 import org.geogit.storage.ObjectSerializingFactory;
 import org.geogit.storage.StagingDatabase;
 
+import com.google.common.base.Charsets;
+import com.google.common.base.Optional;
+import com.google.common.base.Throwables;
+import com.google.common.collect.Lists;
+import com.google.common.io.Files;
+import com.google.common.io.LineProcessor;
 import com.google.inject.Inject;
 import com.sleepycat.je.DatabaseConfig;
 import com.sleepycat.je.Environment;
@@ -229,4 +238,131 @@ public class JEStagingDatabase implements ObjectDatabase, StagingDatabase {
     public RevTag getTag(ObjectId id) {
         return get(id, RevTag.class);
     }
+
+    // TODO:
+    // *****************************************************************************************
+    // The following methods are a temporary implementation of conflict storage that relies on a
+    // conflict file in the index folder
+    // *****************************************************************************************
+
+    @Override
+    public List<Conflict> getConflicts(final String pathFilter) {
+        List<Conflict> conflicts = Lists.newArrayList();
+        File file;
+        try {
+            file = envProvider.get().getHome();
+        } catch (IllegalStateException e) {
+            return conflicts;
+        }
+        file = new File(file, "conflicts");
+        if (!file.exists()) {
+            return conflicts;
+        }
+        try {
+            synchronized (file.getCanonicalPath().intern()) {
+                conflicts = Files.readLines(file, Charsets.UTF_8,
+                        new LineProcessor<List<Conflict>>() {
+                            List<Conflict> conflicts = Lists.newArrayList();
+
+                            @Override
+                            public List<Conflict> getResult() {
+                                return conflicts;
+                            }
+
+                            @Override
+                            public boolean processLine(String s) throws IOException {
+                                Conflict c = Conflict.valueOf(s);
+                                if (pathFilter == null) {
+                                    conflicts.add(c);
+                                } else if (c.getPath().startsWith(pathFilter)) {
+                                    conflicts.add(c);
+                                }
+                                return true;
+                            }
+                        });
+            }
+        } catch (IOException e) {
+            throw Throwables.propagate(e);
+        }
+        return conflicts;
+    }
+
+    @Override
+    public void addConflict(Conflict conflict) {
+        File file = envProvider.get().getHome();
+        file = new File(file, "conflicts");
+        try {
+            if (!file.exists()) {
+                file.createNewFile();
+            }
+            Files.append(conflict.toString() + "\n", file, Charsets.UTF_8);
+        } catch (IOException e) {
+            throw Throwables.propagate(e);
+        }
+    }
+
+    @Override
+    public void removeConflict(String path) {
+        List<Conflict> conflicts = getConflicts(null);
+        File file = envProvider.get().getHome();
+        file = new File(file, "conflicts");
+        StringBuilder sb = new StringBuilder();
+        try {
+            for (Conflict conflict : conflicts) {
+                if (!path.equals(conflict.getPath())) {
+                    sb.append(conflict.toString() + "\n");
+                }
+            }
+            String s = sb.toString();
+            if (!s.isEmpty()) {
+                Files.append(s, file, Charsets.UTF_8);
+            }
+        } catch (IOException e) {
+            throw Throwables.propagate(e);
+        }
+    }
+
+    @Override
+    public Optional<Conflict> getConflict(final String path) {
+        File file = envProvider.get().getHome();
+        file = new File(file, "conflicts");
+        if (!file.exists()) {
+            return Optional.absent();
+        }
+        Conflict conflict = null;
+        try {
+            synchronized (file.getCanonicalPath().intern()) {
+                conflict = Files.readLines(file, Charsets.UTF_8, new LineProcessor<Conflict>() {
+                    Conflict conflict = null;
+
+                    @Override
+                    public Conflict getResult() {
+                        return conflict;
+                    }
+
+                    @Override
+                    public boolean processLine(String s) throws IOException {
+                        Conflict c = Conflict.valueOf(s);
+                        if (c.getPath().equals(path)) {
+                            conflict = c;
+                            return false;
+                        } else {
+                            return true;
+                        }
+                    }
+                });
+            }
+        } catch (IOException e) {
+            throw Throwables.propagate(e);
+        }
+        return Optional.fromNullable(conflict);
+    }
+
+    @Override
+    public void removeConflicts() {
+        File file = envProvider.get().getHome();
+        file = new File(file, "conflicts");
+        file.delete();
+    }
+
 }
