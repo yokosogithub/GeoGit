@@ -132,10 +132,10 @@ public class SLImportTest extends Assert {
     }
 
     @Test
-    public void testImportNonExistantTable() throws Exception {
+    public void testImportNonExistentTable() throws Exception {
         SLImport importCommand = new SLImport();
         importCommand.all = false;
-        importCommand.table = "nonexistant";
+        importCommand.table = "nonexistent";
         importCommand.dataStoreFactory = factory;
         importCommand.run(cli);
     }

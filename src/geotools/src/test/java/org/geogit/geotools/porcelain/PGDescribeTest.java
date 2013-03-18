@@ -81,15 +81,15 @@ public class PGDescribeTest extends Assert {
     @Test
     public void testInvalidDatabaseParams() throws Exception {
         PGDescribe describeCommand = new PGDescribe();
-        describeCommand.commonArgs.host = "nonexistant";
+        describeCommand.commonArgs.host = "nonexistent";
         describeCommand.table = "table1";
         describeCommand.run(cli);
     }
 
     @Test
-    public void testDescribeNonexistantTable() throws Exception {
+    public void testDescribeNonexistentTable() throws Exception {
         PGDescribe describeCommand = new PGDescribe();
-        describeCommand.table = "nonexistant";
+        describeCommand.table = "nonexistent";
         describeCommand.dataStoreFactory = factory;
         describeCommand.run(cli);
     }

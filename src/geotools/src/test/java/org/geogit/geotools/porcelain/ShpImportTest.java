@@ -66,7 +66,7 @@ public class ShpImportTest extends Assert {
     public void testImportFileNotExist() throws Exception {
         ShpImport importCommand = new ShpImport();
         importCommand.shapeFile = new ArrayList<String>();
-        importCommand.shapeFile.add("file://nonexistant.shp");
+        importCommand.shapeFile.add("file://nonexistent.shp");
         importCommand.run(cli);
     }
 

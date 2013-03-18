@@ -102,7 +102,7 @@ public class PGExportTest extends RepositoryTestCase {
     }
 
     @Test
-    public void testExportWithNonexistantFeatureTypeTree() throws Exception {
+    public void testExportWithNonexistentFeatureTypeTree() throws Exception {
         PGExport exportCommand = new PGExport();
         exportCommand.args = Arrays.asList("invalidType", "invalidTable");
         exportCommand.dataStoreFactory = factory;
