@@ -15,7 +15,6 @@ import org.geogit.api.Node;
 import org.geogit.api.ObjectId;
 import org.geogit.api.RevTree;
 
-import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
 import com.google.common.collect.Ordering;
 
@@ -55,14 +54,17 @@ public final class NodePathStorageOrder extends Ordering<String> {
         return pathHash;
     }
 
-    public Integer bucket(final String path, final int depth) {
+    /**
+     * Computes the bucket index that corresponds to the given node name at the given depth.
+     * 
+     * @return and Integer between zero and {@link RevTree#MAX_BUCKETS} minus one
+     */
+    public Integer bucket(final String nodeName, final int depth) {
 
-        final int byteN = pathHash(path).byteN(depth);// 0-255
-        final int maxBuckets = RevTree.BUCKET_SIZE;
+        final int byteN = pathHash(nodeName).byteN(depth);// 0-255
+        final int maxBuckets = RevTree.MAX_BUCKETS;
 
-        Preconditions.checkState(maxBuckets <= 256);
-
-        int bucket = (byteN * maxBuckets) / 255;
+        final int bucket = (byteN * maxBuckets) / 256;
         return Integer.valueOf(bucket);
     }
 }

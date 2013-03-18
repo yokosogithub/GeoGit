@@ -155,10 +155,13 @@ public abstract class RevTreeImpl extends AbstractRevObject implements RevTree {
         return createLeafTree(id, size, featuresList, treesList);
     }
 
-    public static RevTreeImpl createNodeTree(ObjectId id, long size, int childTreeCount,
-            Map<Integer, Bucket> bucketTrees) {
+    public static RevTreeImpl createNodeTree(final ObjectId id, final long size,
+            final int childTreeCount, final Map<Integer, Bucket> bucketTrees) {
+        
         Preconditions.checkNotNull(id);
         Preconditions.checkNotNull(bucketTrees);
+        Preconditions.checkArgument(bucketTrees.size() <= RevTree.MAX_BUCKETS);
+        
         ImmutableSortedMap<Integer, Bucket> innerTrees = ImmutableSortedMap.copyOf(bucketTrees);
 
         return new NodeTree(id, size, childTreeCount, innerTrees);

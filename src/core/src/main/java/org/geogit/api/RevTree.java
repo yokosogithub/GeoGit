@@ -21,10 +21,10 @@ import com.google.common.collect.Iterators;
 public interface RevTree extends RevObject {
 
     /**
-     * Number of buckets a tree is split into when its size exceeds the
+     * Maximum number of buckets a tree is split into when its size exceeds the
      * {@link #NORMALIZED_SIZE_LIMIT}
      */
-    public static final int BUCKET_SIZE = 32;
+    public static final int MAX_BUCKETS = 32;
 
     /**
      * The canonical max size of a tree, hard limit, can't be changed or would affect the hash of
