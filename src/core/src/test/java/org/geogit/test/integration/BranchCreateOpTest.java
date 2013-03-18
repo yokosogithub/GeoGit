@@ -106,13 +106,13 @@ public class BranchCreateOpTest extends RepositoryTestCase {
     }
 
     @Test
-    public void testCreateBranchFromNonExistantCommit() throws Exception {
+    public void testCreateBranchFromNonExistentCommit() throws Exception {
         insertAndAdd(points1);
         geogit.command(CommitOp.class).setMessage("Commit1").call();
 
         exception.expect(IllegalArgumentException.class);
         geogit.command(BranchCreateOp.class).setName("branch1").setAutoCheckout(true)
-                .setSource("Nonexistant Commit").call();
+                .setSource("Nonexistent Commit").call();
     }
 
     @Test

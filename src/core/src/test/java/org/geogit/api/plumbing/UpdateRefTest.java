@@ -74,7 +74,7 @@ public class UpdateRefTest extends RepositoryTestCase {
     }
 
     @Test
-    public void testDeleteWithNonexistantName() {
+    public void testDeleteWithNonexistentName() {
         Optional<Ref> ref = geogit.command(UpdateRef.class).setDelete(true).setName("NoRef").call();
         assertFalse(ref.isPresent());
     }

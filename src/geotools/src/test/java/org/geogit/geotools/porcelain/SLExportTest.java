@@ -110,7 +110,7 @@ public class SLExportTest extends RepositoryTestCase {
     }
 
     @Test
-    public void testExportWithNonexistantFeatureTypeTree() throws Exception {
+    public void testExportWithNonexistentFeatureTypeTree() throws Exception {
         SLExport exportCommand = new SLExport();
         exportCommand.args = Arrays.asList("invalidType", "invalidTable");
         exportCommand.dataStoreFactory = factory;

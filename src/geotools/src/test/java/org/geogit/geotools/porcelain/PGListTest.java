@@ -78,7 +78,7 @@ public class PGListTest extends Assert {
     @Test
     public void testInvalidDatabaseParams() throws Exception {
         PGList listCommand = new PGList();
-        listCommand.commonArgs.host = "nonexistant";
+        listCommand.commonArgs.host = "nonexistent";
         listCommand.run(cli);
     }
 

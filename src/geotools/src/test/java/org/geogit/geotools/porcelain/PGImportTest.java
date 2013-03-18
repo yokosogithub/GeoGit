@@ -118,7 +118,7 @@ public class PGImportTest extends Assert {
     @Test
     public void testInvalidDatabaseParams() throws Exception {
         PGImport importCommand = new PGImport();
-        importCommand.commonArgs.host = "nonexistant";
+        importCommand.commonArgs.host = "nonexistent";
         importCommand.all = true;
         importCommand.run(cli);
     }
@@ -140,10 +140,10 @@ public class PGImportTest extends Assert {
     }
 
     @Test
-    public void testImportNonExistantTable() throws Exception {
+    public void testImportNonExistentTable() throws Exception {
         PGImport importCommand = new PGImport();
         importCommand.all = false;
-        importCommand.table = "nonexistant";
+        importCommand.table = "nonexistent";
         importCommand.dataStoreFactory = factory;
         importCommand.run(cli);
     }

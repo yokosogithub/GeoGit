@@ -276,7 +276,7 @@ public class WorkingTreeTest extends RepositoryTestCase {
     }
 
     @Test
-    public void testDeleteNonexistantFeature() throws Exception {
+    public void testDeleteNonexistentFeature() throws Exception {
         List<Feature> featureList = new LinkedList<Feature>();
         featureList.add(points1);
         featureList.add(points2);

@@ -51,7 +51,7 @@ public class RemoteRemoveOpTest extends RepositoryTestCase {
     }
 
     @Test
-    public void testRemoveNonexistantRemote() {
+    public void testRemoveNonexistentRemote() {
         final RemoteAddOp remoteAdd = geogit.command(RemoteAddOp.class);
 
         String remoteName = "myremote";
@@ -67,7 +67,7 @@ public class RemoteRemoveOpTest extends RepositoryTestCase {
         final RemoteRemoveOp remoteRemove = geogit.command(RemoteRemoveOp.class);
 
         exception.expect(RemoteException.class);
-        remoteRemove.setName("nonexistant").call();
+        remoteRemove.setName("nonexistent").call();
     }
 
     @Test
