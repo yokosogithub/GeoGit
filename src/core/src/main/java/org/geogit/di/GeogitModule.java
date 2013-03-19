@@ -29,10 +29,10 @@ import org.geogit.storage.ObjectDatabase;
 import org.geogit.storage.ObjectDatabasePutInterceptor;
 import org.geogit.storage.ObjectSerializingFactory;
 import org.geogit.storage.RefDatabase;
+import org.geogit.storage.datastream.DataStreamSerializationFactory;
 import org.geogit.storage.fs.FileObjectDatabase;
 import org.geogit.storage.fs.FileRefDatabase;
 import org.geogit.storage.fs.IniConfigDatabase;
-import org.geogit.storage.hessian.HessianFactory;
 
 import com.google.common.base.Throwables;
 import com.google.inject.AbstractModule;
@@ -74,7 +74,8 @@ public class GeogitModule extends AbstractModule {
         bind(ObjectDatabase.class).to(FileObjectDatabase.class).in(Scopes.SINGLETON);
         bind(RefDatabase.class).to(FileRefDatabase.class).in(Scopes.SINGLETON);
 
-        bind(ObjectSerializingFactory.class).to(HessianFactory.class).in(Scopes.SINGLETON);
+        bind(ObjectSerializingFactory.class).to(DataStreamSerializationFactory.class).in(
+                Scopes.SINGLETON);
 
         bindRevObjectCachingDatabaseInterceptor();
 

@@ -79,11 +79,6 @@
     </dependency>
 
     <dependency>
-      <groupId>com.caucho</groupId>
-      <artifactId>resin-hessian</artifactId>
-    </dependency>
-      
-    <dependency>
       <groupId>org.neo4j</groupId>
       <artifactId>neo4j</artifactId>
     </dependency>

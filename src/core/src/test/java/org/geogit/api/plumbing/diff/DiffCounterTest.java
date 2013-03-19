@@ -13,7 +13,7 @@ import org.geogit.api.RevObject.TYPE;
 import org.geogit.api.RevTree;
 import org.geogit.api.RevTreeBuilder;
 import org.geogit.storage.ObjectDatabase;
-import org.geogit.storage.hessian.HessianFactory;
+import org.geogit.storage.datastream.DataStreamSerializationFactory;
 import org.geogit.storage.memory.HeapObjectDatabse;
 import org.junit.Assert;
 import org.junit.Before;
@@ -51,7 +51,7 @@ public class DiffCounterTest extends Assert {
 
     @Before
     public void setUp() {
-        odb = new HeapObjectDatabse(new HessianFactory());
+        odb = new HeapObjectDatabse(new DataStreamSerializationFactory());
         odb.open();
         {
             RevTreeBuilder builder = createFeaturesTree("", 10);
