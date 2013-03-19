@@ -783,7 +783,12 @@ public class FormatCommon {
             final CoordinateReferenceSystem crs;
             try {
                 if (isCRSCode) {
-                    crs = CRS.decode(crsText);
+                    if ("urn:ogc:def:crs:EPSG::0".equals(crsText)) {
+                        crs = null;
+                    } else {
+                        boolean forceLongitudeFirst = crsText.startsWith("EPSG:");
+                        crs = CRS.decode(crsText, forceLongitudeFirst);
+                    }
                 } else {
                     crs = CRS.parseWKT(crsText);
                 }

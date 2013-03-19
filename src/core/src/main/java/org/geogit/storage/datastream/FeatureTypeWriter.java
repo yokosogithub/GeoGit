@@ -15,6 +15,8 @@ import org.geogit.api.RevFeatureType;
 import org.geogit.storage.ObjectWriter;
 import org.geogit.storage.datastream.FormatCommon.FieldType;
 import org.geotools.referencing.CRS;
+import org.geotools.referencing.CRS.AxisOrder;
+import org.geotools.referencing.wkt.Formattable;
 import org.opengis.feature.type.GeometryType;
 import org.opengis.feature.type.Name;
 import org.opengis.feature.type.PropertyDescriptor;
@@ -47,25 +49,31 @@ public class FeatureTypeWriter implements ObjectWriter<RevFeatureType> {
         if (type instanceof GeometryType) {
             GeometryType gType = (GeometryType) type;
             CoordinateReferenceSystem crs = gType.getCoordinateReferenceSystem();
+            final String srsName;
             if (crs == null) {
-                data.writeBoolean(true);
-                data.writeUTF("EPSG:0");
+                srsName = "urn:ogc:def:crs:ESPG::0";
             } else {
-                Integer code;
-                try {
-                    code = CRS.lookupEpsgCode(crs, true);
-                } catch (FactoryException e) {
-                    // TODO: Log this exception?
-                    code = null;
-                }
-
-                if (code != null) {
-                    data.writeBoolean(true);
-                    data.writeUTF("EPSG:" + code);
+                final boolean longitudeFirst = CRS.getAxisOrder(crs, false) == AxisOrder.EAST_NORTH;
+                final boolean codeOnly = true;
+                String crsCode = CRS.toSRS(crs, codeOnly);
+                if (crsCode != null) {
+                    srsName = (longitudeFirst ? "EPSG:" : "urn:ogc:def:crs:EPSG::") + crsCode;
                 } else {
-                    data.writeBoolean(false);
-                    data.writeUTF(crs.toWKT());
+                    srsName = null;
                 }
+            }
+            if (srsName != null) {
+                data.writeBoolean(true);
+                data.writeUTF(srsName);
+            } else {
+                final String wkt;
+                if (crs instanceof Formattable) {
+                    wkt = ((Formattable) crs).toWKT(Formattable.SINGLE_LINE);
+                } else {
+                    wkt = crs.toWKT();
+                }
+                data.writeBoolean(false);
+                data.writeUTF(wkt);
             }
         }
     }
