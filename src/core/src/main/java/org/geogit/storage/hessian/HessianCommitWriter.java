@@ -6,7 +6,6 @@ package org.geogit.storage.hessian;
 
 import java.io.IOException;
 import java.io.OutputStream;
-import java.util.List;
 
 import org.geogit.api.ObjectId;
 import org.geogit.api.RevCommit;

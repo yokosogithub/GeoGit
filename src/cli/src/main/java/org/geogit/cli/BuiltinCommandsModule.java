@@ -4,6 +4,7 @@
  */
 package org.geogit.cli;
 
+import org.geogit.cli.plumbing.CatObject;
 import org.geogit.cli.plumbing.LsTree;
 import org.geogit.cli.plumbing.RevParse;
 import org.geogit.cli.porcelain.Add;
@@ -70,6 +71,7 @@ public class BuiltinCommandsModule extends AbstractModule implements CLIModule {
 
     @Override
     protected void configure() {
+        bind(CatObject.class);
         bind(RevParse.class);
         bind(Add.class);
         bind(Apply.class);
