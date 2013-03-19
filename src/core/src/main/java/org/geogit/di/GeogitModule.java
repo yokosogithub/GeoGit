@@ -76,6 +76,14 @@ public class GeogitModule extends AbstractModule {
 
         bind(ObjectSerializingFactory.class).to(HessianFactory.class).in(Scopes.SINGLETON);
 
+        bindRevObjectCachingDatabaseInterceptor();
+
+        bindCommitGraphInterceptor();
+
+        bindConflictCheckingInterceptor();
+    }
+
+    private void bindRevObjectCachingDatabaseInterceptor() {
         final Method getObjectId;
         final Method getObjectIdClass;
         try {
@@ -111,9 +119,9 @@ public class GeogitModule extends AbstractModule {
 
         bindInterceptor(subclassesOf(ObjectDatabase.class), methodMatcher,
                 new CachingObjectDatabaseGetInterceptor());
+    }
 
-        bindCommitGraphInterceptor();
-
+    private void bindConflictCheckingInterceptor() {
         final Method callMethod;
         try {
             callMethod = AbstractGeoGitOp.class.getMethod("call");
