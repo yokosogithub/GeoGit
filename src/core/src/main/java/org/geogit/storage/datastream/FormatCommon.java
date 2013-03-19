@@ -29,6 +29,7 @@ import org.geogit.api.RevTree;
 import org.geogit.api.RevTreeImpl;
 import org.geotools.feature.NameImpl;
 import org.geotools.feature.simple.SimpleFeatureTypeBuilder;
+import org.geotools.feature.type.BasicFeatureTypes;
 import org.geotools.referencing.CRS;
 import org.opengis.feature.simple.SimpleFeatureType;
 import org.opengis.feature.type.AttributeDescriptor;
@@ -760,7 +761,7 @@ public class FormatCommon {
             attributes.add(readAttributeDescriptor(in, typeFactory));
         }
         SimpleFeatureType ftype = typeFactory.createSimpleFeatureType(name, attributes, null,
-                false, Collections.<Filter> emptyList(), null, null);
+                false, Collections.<Filter> emptyList(), BasicFeatureTypes.FEATURE, null);
         return new RevFeatureType(id, ftype);
     }
 
