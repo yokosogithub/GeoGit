@@ -524,20 +524,18 @@ public class WorkingTreeTest extends RepositoryTestCase {
         insert(points1B);
         RevTree root = repo.getWorkingTree().getTree();
         assertNotNull(root);
-        Optional<Node> typeTreeId = repo.getTreeChild(root, pointsName);
+        Optional<Node> typeTreeId = findTreeChild(root, pointsName);
         assertEquals(typeTreeId.get().getMetadataId().get(), RevFeatureType.build(pointsType)
                 .getId());
         RevTree typeTree = repo.getTree(typeTreeId.get().getObjectId());
         assertNotNull(typeTree);
         String path = NodeRef.appendChild(pointsName, points1.getIdentifier().getID());
-        Optional<Node> featureBlobId = repo.getTreeChild(root, path);
+        Optional<NodeRef> featureBlobId = geogit.command(FindTreeChild.class).setParent(root)
+                .setChildPath(path).setIndex(true).call();
         assertTrue(featureBlobId.isPresent());
         assertEquals(RevFeatureType.build(modifiedPointsType).getId(), featureBlobId.get()
-                .getMetadataId().orNull());
+                .getMetadataId());
         path = NodeRef.appendChild(pointsName, points3.getIdentifier().getID());
-        featureBlobId = repo.getTreeChild(root, path);
-        assertEquals(null, featureBlobId.get().getMetadataId().orNull());
-
     }
 
     @Test
@@ -546,35 +544,45 @@ public class WorkingTreeTest extends RepositoryTestCase {
         insert(points1B);
         RevTree root = repo.getWorkingTree().getTree();
         assertNotNull(root);
-        Optional<Node> typeTreeId = repo.getTreeChild(root, pointsName);
+        Optional<Node> typeTreeId = findTreeChild(root, pointsName);
         assertEquals(typeTreeId.get().getMetadataId().get(), RevFeatureType.build(pointsType)
                 .getId());
         RevTree typeTree = repo.getTree(typeTreeId.get().getObjectId());
         assertNotNull(typeTree);
         String path = NodeRef.appendChild(pointsName, points1.getIdentifier().getID());
-        Optional<Node> featureBlobId = repo.getTreeChild(root, path);
+        Optional<Node> featureBlobId = findTreeChild(root, path);
         assertTrue(featureBlobId.isPresent());
         assertEquals(RevFeatureType.build(modifiedPointsType).getId(), featureBlobId.get()
                 .getMetadataId().orNull());
         path = NodeRef.appendChild(pointsName, points3.getIdentifier().getID());
-        featureBlobId = repo.getTreeChild(root, path);
+        featureBlobId = findTreeChild(root, path);
         assertEquals(null, featureBlobId.get().getMetadataId().orNull());
 
         workTree.updateTypeTree(pointsName, modifiedPointsType);
         root = repo.getWorkingTree().getTree();
-        typeTreeId = repo.getTreeChild(root, pointsName);
+        typeTreeId = findTreeChild(root, pointsName);
         assertEquals(typeTreeId.get().getMetadataId().get(),
                 RevFeatureType.build(modifiedPointsType).getId());
         typeTree = repo.getTree(typeTreeId.get().getObjectId());
         assertNotNull(typeTree);
         path = NodeRef.appendChild(pointsName, points1.getIdentifier().getID());
-        featureBlobId = repo.getTreeChild(root, path);
+        featureBlobId = findTreeChild(root, path);
         assertTrue(featureBlobId.isPresent());
         assertEquals(null, featureBlobId.get().getMetadataId().orNull());
         path = NodeRef.appendChild(pointsName, points3.getIdentifier().getID());
-        featureBlobId = repo.getTreeChild(root, path);
+        featureBlobId = findTreeChild(root, path);
         assertEquals(RevFeatureType.build(pointsType).getId(), featureBlobId.get().getMetadataId()
                 .orNull());
 
+    }
+
+    private Optional<Node> findTreeChild(RevTree root, String pathRemove) {
+        Optional<NodeRef> nodeRef = geogit.command(FindTreeChild.class).setParent(root)
+                .setChildPath(pathRemove).setIndex(true).call();
+        Optional<Node> node = Optional.absent();
+        if (nodeRef.isPresent()) {
+            node = Optional.of(nodeRef.get().getNode());
+        }
+        return node;
     }
 }

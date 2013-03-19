@@ -60,7 +60,7 @@ public class Clean implements CLICommand {
                 Repository repository = cli.getGeogit().getRepository();
                 NodeRef.checkValidPath(pathFilter);
 
-                Optional<NodeRef> ref = repository.command(FindTreeChild.class)
+                Optional<NodeRef> ref = repository.command(FindTreeChild.class).setIndex(true)
                         .setParent(repository.getWorkingTree().getTree()).setChildPath(pathFilter)
                         .call();
 

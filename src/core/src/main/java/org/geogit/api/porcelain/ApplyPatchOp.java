@@ -26,9 +26,8 @@ import org.geogit.api.plumbing.diff.FeatureTypeDiff;
 import org.geogit.api.plumbing.diff.Patch;
 import org.geogit.api.plumbing.diff.PatchFeature;
 import org.geogit.repository.DepthSearch;
-import org.geogit.repository.StagingArea;
 import org.geogit.repository.WorkingTree;
-import org.geogit.storage.ObjectDatabase;
+import org.geogit.storage.StagingDatabase;
 import org.geotools.feature.simple.SimpleFeatureBuilder;
 import org.geotools.feature.simple.SimpleFeatureTypeBuilder;
 import org.opengis.feature.simple.SimpleFeature;
@@ -58,13 +57,9 @@ public class ApplyPatchOp extends AbstractGeoGitOp<Patch> {
 
     private WorkingTree workTree;
 
-    private ObjectDatabase odb;
-
     private boolean applyPartial;
 
-    private boolean cached;
-
-    private StagingArea index;
+    private StagingDatabase indexDb;
 
     private boolean reverse;
 
@@ -74,10 +69,9 @@ public class ApplyPatchOp extends AbstractGeoGitOp<Patch> {
      * @param workTree the working tree to modify when applying the patch
      */
     @Inject
-    public ApplyPatchOp(final WorkingTree workTree, ObjectDatabase odb, StagingArea index) {
+    public ApplyPatchOp(final WorkingTree workTree, StagingDatabase indexDb) {
         this.workTree = workTree;
-        this.odb = odb;
-        this.index = index;
+        this.indexDb = indexDb;
     }
 
     /**
@@ -122,7 +116,7 @@ public class ApplyPatchOp extends AbstractGeoGitOp<Patch> {
      * @return {@code this}
      */
     public ApplyPatchOp setCached(boolean cached) {
-        this.cached = cached;
+        // this.cached = cached;
         return this;
     }
 
@@ -171,7 +165,7 @@ public class ApplyPatchOp extends AbstractGeoGitOp<Patch> {
         List<FeatureDiff> diffs = patch.getModifiedFeatures();
         for (FeatureDiff diff : diffs) {
             String path = diff.getPath();
-            DepthSearch depthSearch = new DepthSearch(odb);
+            DepthSearch depthSearch = new DepthSearch(indexDb);
             Optional<NodeRef> noderef = depthSearch.find(workTree.getTree(), path);
             RevFeatureType oldRevFeatureType = command(RevObjectParse.class)
                     .setObjectId(noderef.get().getMetadataId()).call(RevFeatureType.class).get();
@@ -260,7 +254,7 @@ public class ApplyPatchOp extends AbstractGeoGitOp<Patch> {
                 break;
             }
             RevFeature feature = (RevFeature) obj.get();
-            DepthSearch depthSearch = new DepthSearch(odb);
+            DepthSearch depthSearch = new DepthSearch(indexDb);
             Optional<NodeRef> noderef = depthSearch.find(workTree.getTree(), path);
             RevFeatureType featureType = command(RevObjectParse.class)
                     .setObjectId(noderef.get().getMetadataId()).call(RevFeatureType.class).get();
@@ -323,7 +317,7 @@ public class ApplyPatchOp extends AbstractGeoGitOp<Patch> {
                         feature.getFeatureType());
             } else {
                 RevFeature revFeature = (RevFeature) obj.get();
-                DepthSearch depthSearch = new DepthSearch(odb);
+                DepthSearch depthSearch = new DepthSearch(indexDb);
                 Optional<NodeRef> noderef = depthSearch.find(workTree.getTree(), feature.getPath());
                 RevFeatureType revFeatureType = command(RevObjectParse.class)
                         .setObjectId(noderef.get().getMetadataId()).call(RevFeatureType.class)
@@ -341,7 +335,7 @@ public class ApplyPatchOp extends AbstractGeoGitOp<Patch> {
         }
         ImmutableList<FeatureTypeDiff> alteredTrees = patch.getAlteredTrees();
         for (FeatureTypeDiff diff : alteredTrees) {
-            DepthSearch depthSearch = new DepthSearch(odb);
+            DepthSearch depthSearch = new DepthSearch(indexDb);
             Optional<NodeRef> noderef = depthSearch.find(workTree.getTree(), diff.getPath());
             ObjectId metadataId = noderef.isPresent() ? noderef.get().getMetadataId()
                     : ObjectId.NULL;

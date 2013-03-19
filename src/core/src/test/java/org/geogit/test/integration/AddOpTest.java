@@ -225,11 +225,11 @@ public class AddOpTest extends RepositoryTestCase {
         assertFalse(list.isEmpty());
         String path = NodeRef.appendChild(pointsName, idP1);
         Optional<NodeRef> ref = geogit.command(FindTreeChild.class).setChildPath(path)
-                .setParent(geogit.getRepository().getIndex().getTree()).call();
+                .setIndex(true).setParent(geogit.getRepository().getIndex().getTree()).call();
         assertTrue(ref.isPresent());
         assertFalse(ref.get().getNode().getMetadataId().isPresent());
         path = NodeRef.appendChild(pointsName, idP2);
-        ref = geogit.command(FindTreeChild.class).setChildPath(path)
+        ref = geogit.command(FindTreeChild.class).setChildPath(path).setIndex(true)
                 .setParent(geogit.getRepository().getIndex().getTree()).call();
         assertTrue(ref.isPresent());
         assertTrue(ref.get().getNode().getMetadataId().isPresent());

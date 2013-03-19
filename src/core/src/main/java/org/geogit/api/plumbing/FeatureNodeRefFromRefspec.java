@@ -10,7 +10,6 @@ import org.geogit.api.RevObject;
 import org.geogit.api.RevObject.TYPE;
 import org.geogit.api.RevTree;
 import org.geogit.repository.WorkingTree;
-import org.geogit.storage.ObjectDatabase;
 
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
@@ -20,14 +19,11 @@ public class FeatureNodeRefFromRefspec extends AbstractGeoGitOp<NodeRef> {
 
     private WorkingTree workTree;
 
-    private ObjectDatabase objectDb;
-
     private String ref;
 
     @Inject
-    public FeatureNodeRefFromRefspec(WorkingTree workTree, ObjectDatabase objectDb) {
+    public FeatureNodeRefFromRefspec(WorkingTree workTree) {
         this.workTree = workTree;
-        this.objectDb = objectDb;
     }
 
     public FeatureNodeRefFromRefspec setRefspec(String ref) {
@@ -52,7 +48,7 @@ public class FeatureNodeRefFromRefspec extends AbstractGeoGitOp<NodeRef> {
                 .get();
 
         Optional<NodeRef> nodeRef = command(FindTreeChild.class).setParent(revTree)
-                .setChildPath(path).call();
+                .setChildPath(path).setIndex(true).call();
         Preconditions.checkArgument(nodeRef.isPresent(), "Invalid reference: %s", ref);
 
         RevFeatureType revFeatureType = command(RevObjectParse.class)
@@ -69,9 +65,9 @@ public class FeatureNodeRefFromRefspec extends AbstractGeoGitOp<NodeRef> {
         if (!revObject.isPresent()) { // let's try to see if it is a feature in the working tree
             NodeRef.checkValidPath(ref);
             Optional<NodeRef> elementRef = command(FindTreeChild.class)
-                    .setParent(workTree.getTree()).setChildPath(ref).call();
+                    .setParent(workTree.getTree()).setChildPath(ref).setIndex(true).call();
             Preconditions.checkArgument(elementRef.isPresent(), "Invalid reference: %s", ref);
-            ObjectId id = elementRef.get().getNode().getObjectId();
+            ObjectId id = elementRef.get().objectId();
             revObject = command(RevObjectParse.class).setObjectId(id).call(RevObject.class);
         }
 
