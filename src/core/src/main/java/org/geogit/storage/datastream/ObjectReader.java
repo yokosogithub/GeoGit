@@ -1,3 +1,7 @@
+/* Copyright (c) 2011 TOPP - www.openplans.org. All rights reserved.
+ * This code is licensed under the LGPL 2.1 license, available at the root
+ * application directory.
+ */
 package org.geogit.storage.datastream;
 
 import static org.geogit.storage.datastream.FormatCommon.NUL;
@@ -5,6 +9,7 @@ import static org.geogit.storage.datastream.FormatCommon.readCommit;
 import static org.geogit.storage.datastream.FormatCommon.readFeature;
 import static org.geogit.storage.datastream.FormatCommon.readFeatureType;
 import static org.geogit.storage.datastream.FormatCommon.readToMarker;
+import static org.geogit.storage.datastream.FormatCommon.readTag;
 import static org.geogit.storage.datastream.FormatCommon.readTree;
 
 import java.io.DataInput;
@@ -36,6 +41,8 @@ public class ObjectReader implements org.geogit.storage.ObjectReader<RevObject> 
             return readFeature(id, in);
         else if ("featuretype".equals(header))
             return readFeatureType(id, in);
+        else if ("tag".equals(header))
+            return readTag(id, in);
         else
             throw new IllegalArgumentException("Unrecognized object header: " + header);
     }

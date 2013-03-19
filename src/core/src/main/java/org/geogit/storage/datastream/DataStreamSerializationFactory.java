@@ -1,3 +1,7 @@
+/* Copyright (c) 2011 TOPP - www.openplans.org. All rights reserved.
+ * This code is licensed under the LGPL 2.1 license, available at the root
+ * application directory.
+ */
 package org.geogit.storage.datastream;
 
 import java.io.Serializable;
@@ -8,6 +12,7 @@ import org.geogit.api.RevFeature;
 import org.geogit.api.RevFeatureType;
 import org.geogit.api.RevObject;
 import org.geogit.api.RevObject.TYPE;
+import org.geogit.api.RevTag;
 import org.geogit.api.RevTree;
 import org.geogit.storage.ObjectReader;
 import org.geogit.storage.ObjectSerializingFactory;
@@ -24,6 +29,8 @@ public class DataStreamSerializationFactory implements ObjectSerializingFactory 
 
     private final static ObjectReader<RevObject> OBJECT_READER = new org.geogit.storage.datastream.ObjectReader();
 
+    private final static ObjectReader<RevTag> TAG_READER = new TagReader();
+
     private final static ObjectWriter<RevCommit> COMMIT_WRITER = new CommitWriter();
 
     private final static ObjectWriter<RevTree> TREE_WRITER = new TreeWriter();
@@ -31,6 +38,8 @@ public class DataStreamSerializationFactory implements ObjectSerializingFactory 
     private final static ObjectWriter<RevFeature> FEATURE_WRITER = new FeatureWriter();
 
     private final static ObjectWriter<RevFeatureType> FEATURETYPE_WRITER = new FeatureTypeWriter();
+
+    private final static ObjectWriter<RevTag> TAG_WRITER = new TagWriter();
 
     @Override
     public ObjectReader<RevCommit> createCommitReader() {
@@ -69,6 +78,8 @@ public class DataStreamSerializationFactory implements ObjectSerializingFactory 
             return (ObjectWriter<T>) FEATURE_WRITER;
         case FEATURETYPE:
             return (ObjectWriter<T>) FEATURETYPE_WRITER;
+        case TAG:
+            return (ObjectWriter<T>) TAG_WRITER;
         default:
             throw new UnsupportedOperationException("No writer for " + type);
         }
@@ -86,6 +97,8 @@ public class DataStreamSerializationFactory implements ObjectSerializingFactory 
             return (ObjectReader<T>) FEATURE_READER;
         case FEATURETYPE:
             return (ObjectReader<T>) FEATURETYPE_READER;
+        case TAG:
+            return (ObjectReader<T>) TAG_READER;
         default:
             throw new UnsupportedOperationException("No reader for " + type);
         }

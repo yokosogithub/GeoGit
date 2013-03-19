@@ -1,3 +1,7 @@
+/* Copyright (c) 2011 TOPP - www.openplans.org. All rights reserved.
+ * This code is licensed under the LGPL 2.1 license, available at the root
+ * application directory.
+ */
 package org.geogit.storage.datastream;
 
 import static org.geogit.storage.datastream.FormatCommon.COMMIT_AUTHOR_PREFIX;
@@ -27,16 +31,9 @@ public class CommitWriter implements ObjectWriter<RevCommit> {
             data.write(pId.getRawValue());
         }
         data.writeByte(COMMIT_AUTHOR_PREFIX);
-        writePerson(commit.getAuthor(), data);
+        FormatCommon.writePerson(commit.getAuthor(), data);
         data.writeByte(COMMIT_COMMITTER_PREFIX);
-        writePerson(commit.getCommitter(), data);
+        FormatCommon.writePerson(commit.getCommitter(), data);
         data.writeUTF(commit.getMessage());
-    }
-
-    private void writePerson(RevPerson person, DataOutput data) throws IOException {
-        data.writeUTF(person.getName().or(""));
-        data.writeUTF(person.getEmail().or(""));
-        data.writeLong(person.getTimestamp());
-        data.writeInt(person.getTimeZoneOffset());
     }
 }

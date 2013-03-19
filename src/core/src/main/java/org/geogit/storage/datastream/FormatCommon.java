@@ -1,3 +1,7 @@
+/* Copyright (c) 2011 TOPP - www.openplans.org. All rights reserved.
+ * This code is licensed under the LGPL 2.1 license, available at the root
+ * application directory.
+ */
 package org.geogit.storage.datastream;
 
 import java.io.DataInput;
@@ -20,6 +24,7 @@ import org.geogit.api.RevFeature;
 import org.geogit.api.RevFeatureType;
 import org.geogit.api.RevObject;
 import org.geogit.api.RevPerson;
+import org.geogit.api.RevTag;
 import org.geogit.api.RevTree;
 import org.geogit.api.RevTreeImpl;
 import org.geotools.feature.NameImpl;
@@ -580,6 +585,22 @@ public class FormatCommon {
         public abstract void write(Object field, DataOutput data) throws IOException;
     }
 
+    public static RevTag readTag(ObjectId id, DataInput in) throws IOException {
+        final ObjectId commitId = readObjectId(in);
+        final String name = in.readUTF();
+        final String message = in.readUTF();
+        final RevPerson tagger = readRevPerson(in);
+
+        return new RevTag(id, name, commitId, message, tagger);
+    }
+
+    public static void writeTag(RevTag tag, DataOutput out) throws IOException {
+        out.write(tag.getCommitId().getRawValue());
+        out.writeUTF(tag.getName());
+        out.writeUTF(tag.getMessage());
+        writePerson(tag.getTagger(), out);
+    }
+
     public static RevCommit readCommit(ObjectId id, DataInput in) throws IOException {
         byte tag = in.readByte();
         if (tag != COMMIT_TREE_REF) {
@@ -629,6 +650,13 @@ public class FormatCommon {
         final int tzOffset = in.readInt();
         return new RevPerson(name.length() == 0 ? null : name, email.length() == 0 ? null : email,
                 timestamp, tzOffset);
+    }
+
+    public static final void writePerson(RevPerson person, DataOutput data) throws IOException {
+        data.writeUTF(person.getName().or(""));
+        data.writeUTF(person.getEmail().or(""));
+        data.writeLong(person.getTimestamp());
+        data.writeInt(person.getTimeZoneOffset());
     }
 
     public static RevTree readTree(ObjectId id, DataInput in) throws IOException {
