@@ -37,6 +37,8 @@ public abstract class RevFeatureTypeSerializationTest extends Assert {
 
     private SimpleFeatureType featureType2_axis_order;
 
+    private SimpleFeatureType featureType3_no_crs;
+
     protected abstract ObjectSerializingFactory getObjectSerializingFactory();
 
     @Before
@@ -68,6 +70,18 @@ public abstract class RevFeatureTypeSerializationTest extends Assert {
         builder.add("pp", Point.class, LON_LAT);
         builder.add("long", Long.class);
         featureType2_axis_order = builder.buildFeatureType();
+
+        builder.setName("featuretype2_axisorder");
+        builder.add("str", String.class);
+        builder.add("bool", Boolean.class);
+        builder.add("doub", Double.class);
+        builder.add("bdec", BigDecimal.class);
+        builder.add("flt", Float.class);
+        builder.add("int", Integer.class);
+        builder.add("bint", BigInteger.class);
+        builder.add("pp", Point.class, (CoordinateReferenceSystem) null);
+        builder.add("long", Long.class);
+        featureType3_no_crs = builder.buildFeatureType();
     }
 
     @Test
@@ -78,6 +92,11 @@ public abstract class RevFeatureTypeSerializationTest extends Assert {
     @Test
     public void testAxisOrder() throws Exception {
         roundtrip(featureType2_axis_order);
+    }
+
+    @Test
+    public void testNullCRS() throws Exception {
+        roundtrip(featureType3_no_crs);
     }
 
     private void roundtrip(SimpleFeatureType ftype) throws IOException {
