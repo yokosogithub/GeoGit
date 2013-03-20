@@ -1,11 +1,12 @@
+/* Copyright (c) 2011 TOPP - www.openplans.org. All rights reserved.
+ * This code is licensed under the LGPL 2.1 license, available at the root
+ * application directory.
+ */
 package org.geogit.api.plumbing;
-
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
 
 import org.geogit.api.NodeRef;
 import org.geogit.api.plumbing.diff.FeatureDiff;
+import org.geogit.api.porcelain.FeatureNodeRefFromRefspec;
 import org.geogit.test.integration.RepositoryTestCase;
 import org.junit.Test;
 
@@ -22,9 +23,9 @@ public class DiffFeatureTest extends RepositoryTestCase {
     @Test
     public void testDiffBetweenEditedFeatures() {
         NodeRef oldRef = geogit.command(FeatureNodeRefFromRefspec.class)
-                .setRefspec("HEAD:" + NodeRef.appendChild(pointsName, idP1)).call();
+                .setRefspec("HEAD:" + NodeRef.appendChild(pointsName, idP1)).call().orNull();
         NodeRef newRef = geogit.command(FeatureNodeRefFromRefspec.class)
-                .setRefspec(NodeRef.appendChild(pointsName, idP1)).call();
+                .setRefspec(NodeRef.appendChild(pointsName, idP1)).call().orNull();
         FeatureDiff diff = geogit.command(DiffFeature.class)
                 .setOldVersion(Suppliers.ofInstance(oldRef))
                 .setNewVersion(Suppliers.ofInstance(newRef)).call();
@@ -35,9 +36,9 @@ public class DiffFeatureTest extends RepositoryTestCase {
     @Test
     public void testDiffBetweenFeatureAndItself() {
         NodeRef oldRef = geogit.command(FeatureNodeRefFromRefspec.class)
-                .setRefspec(NodeRef.appendChild(pointsName, idP1)).call();
+                .setRefspec(NodeRef.appendChild(pointsName, idP1)).call().orNull();
         NodeRef newRef = geogit.command(FeatureNodeRefFromRefspec.class)
-                .setRefspec(NodeRef.appendChild(pointsName, idP1)).call();
+                .setRefspec(NodeRef.appendChild(pointsName, idP1)).call().orNull();
         FeatureDiff diff = geogit.command(DiffFeature.class)
                 .setOldVersion(Suppliers.ofInstance(oldRef))
                 .setNewVersion(Suppliers.ofInstance(newRef)).call();
@@ -49,9 +50,9 @@ public class DiffFeatureTest extends RepositoryTestCase {
     public void testDiffUnexistentFeature() {
         try {
             NodeRef oldRef = geogit.command(FeatureNodeRefFromRefspec.class)
-                    .setRefspec(NodeRef.appendChild(pointsName, "Points.100")).call();
+                    .setRefspec(NodeRef.appendChild(pointsName, "Points.100")).call().orNull();
             NodeRef newRef = geogit.command(FeatureNodeRefFromRefspec.class)
-                    .setRefspec(NodeRef.appendChild(pointsName, idP1)).call();
+                    .setRefspec(NodeRef.appendChild(pointsName, idP1)).call().orNull();
             geogit.command(DiffFeature.class).setOldVersion(Suppliers.ofInstance(oldRef))
                     .setNewVersion(Suppliers.ofInstance(newRef)).call();
             fail();
@@ -63,9 +64,10 @@ public class DiffFeatureTest extends RepositoryTestCase {
     @Test
     public void testDiffWrongPath() {
         try {
-            NodeRef oldRef = geogit.command(FeatureNodeRefFromRefspec.class).setRefspec(pointsName).call();
+            NodeRef oldRef = geogit.command(FeatureNodeRefFromRefspec.class).setRefspec(pointsName)
+                    .call().orNull();
             NodeRef newRef = geogit.command(FeatureNodeRefFromRefspec.class)
-                    .setRefspec(NodeRef.appendChild(pointsName, idP1)).call();
+                    .setRefspec(NodeRef.appendChild(pointsName, idP1)).call().orNull();
             geogit.command(DiffFeature.class).setOldVersion(Suppliers.ofInstance(oldRef))
                     .setNewVersion(Suppliers.ofInstance(newRef)).call();
             fail();

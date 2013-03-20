@@ -20,6 +20,7 @@ import java.util.Set;
 
 import jline.console.ConsoleReader;
 
+import org.geogit.api.FeatureInfo;
 import org.geogit.api.GeoGIT;
 import org.geogit.api.NodeRef;
 import org.geogit.api.ObjectId;
@@ -32,7 +33,6 @@ import org.geogit.api.plumbing.diff.AttributeDiff;
 import org.geogit.api.plumbing.diff.FeatureDiff;
 import org.geogit.api.plumbing.diff.FeatureTypeDiff;
 import org.geogit.api.plumbing.diff.Patch;
-import org.geogit.api.plumbing.diff.PatchFeature;
 import org.geogit.api.plumbing.diff.PatchSerializer;
 import org.geogit.api.porcelain.ApplyPatchOp;
 import org.geogit.api.porcelain.CannotApplyPatchException;
@@ -226,8 +226,8 @@ public class Apply extends AbstractCommand {
                 toApply.addModifiedFeature(diff);
             }
         }
-        List<PatchFeature> added = originalPatch.getAddedFeatures();
-        for (PatchFeature feature : added) {
+        List<FeatureInfo> added = originalPatch.getAddedFeatures();
+        for (FeatureInfo feature : added) {
             String refSpec = Ref.WORK_HEAD + ":" + feature.getPath();
             obj = geogit.command(RevObjectParse.class).setRefSpec(refSpec).call();
             if (obj.isPresent()) {
@@ -240,8 +240,8 @@ public class Apply extends AbstractCommand {
 
         }
 
-        List<PatchFeature> removed = originalPatch.getRemovedFeatures();
-        for (PatchFeature feature : removed) {
+        List<FeatureInfo> removed = originalPatch.getRemovedFeatures();
+        for (FeatureInfo feature : removed) {
             String refSpec = Ref.WORK_HEAD + ":" + feature.getPath();
             obj = geogit.command(RevObjectParse.class).setRefSpec(refSpec).call();
             if (!obj.isPresent()) {

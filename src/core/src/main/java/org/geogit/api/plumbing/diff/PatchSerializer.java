@@ -1,3 +1,7 @@
+/* Copyright (c) 2011 TOPP - www.openplans.org. All rights reserved.
+ * This code is licensed under the LGPL 2.1 license, available at the root
+ * application directory.
+ */
 package org.geogit.api.plumbing.diff;
 
 import java.io.BufferedReader;
@@ -12,6 +16,7 @@ import java.util.Map.Entry;
 import java.util.Set;
 
 import org.geogit.api.FeatureBuilder;
+import org.geogit.api.FeatureInfo;
 import org.geogit.api.NodeRef;
 import org.geogit.api.ObjectId;
 import org.geogit.api.RevFeature;
@@ -165,7 +170,7 @@ public class PatchSerializer {
         }
 
         TextSerializationFactory factory = new TextSerializationFactory();
-        for (PatchFeature feature : patch.getAddedFeatures()) {
+        for (FeatureInfo feature : patch.getAddedFeatures()) {
             String path = feature.getPath();
             sb.append("A\t" + path + "\t" + feature.getFeatureType().getId() + "\n");
             ObjectWriter<RevObject> writer = factory.createObjectWriter(TYPE.FEATURE);
@@ -178,7 +183,7 @@ public class PatchSerializer {
             sb.append(output.toString());
             sb.append("\n");
         }
-        for (PatchFeature feature : patch.getRemovedFeatures()) {
+        for (FeatureInfo feature : patch.getRemovedFeatures()) {
             String path = feature.getPath();
             sb.append("R\t" + path + "\t" + feature.getFeatureType().getId() + "\n");
             ObjectWriter<RevObject> writer = factory.createObjectWriter(TYPE.FEATURE);

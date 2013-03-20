@@ -1,3 +1,7 @@
+/* Copyright (c) 2011 TOPP - www.openplans.org. All rights reserved.
+ * This code is licensed under the LGPL 2.1 license, available at the root
+ * application directory.
+ */
 package org.geogit.api.plumbing.diff;
 
 import java.util.ArrayList;
@@ -325,71 +329,30 @@ public class LCSGeometryDiffImpl {
         }
     }
 
+    /**
+     * Returns a string with a human-readable version of this geometry diff. It is basically a
+     * collection of coordinates, using the following syntax:
+     * 
+     * - Coordinates added are shown between brackets, while removed coordinates are shown between
+     * square brackets.
+     * 
+     * - The structure of the text representing the geometry is as follows:
+     * 
+     * - It starts with the type name of the geometry, followed by the list of coordinates -
+     * Coordinates are x,y pairs, separated by a whitespace - In the case of multi-geometries,
+     * sub-geometries are separated by the slash (`/`) sign. For instance, `MultiLineString 0,10
+     * 0,20 0,30 / 10,10 50,65`` represents a multi-line with two lines
+     * 
+     * - In the case of polygons, the first string of coordinates represents the outer ring, and
+     * inner rings are added next, delimited by the ``@`` sign. For instance, ``MultiPolygon
+     * 40.0,40.0 20.0,45.0 45.0,30.0 40.0,40.0 / 20.0,35.0 45.0,20.0 30.0,5.0 10.0,10.0 10.0,30.0
+     * 20.0,35.0 @ 30.0,20.0 20.0,25.0 20.0,15.0 30.0,20.0`` represents a geometry with two
+     * polygons, the last one of them with an inner ring.
+     * 
+     * @return
+     */
     public String getDiffCoordsString() {
         return diffText;
     }
-
-    // ========================================================================================
-    //
-    // protected static class GeomToStringResult {
-    // protected String chars1;
-    //
-    // protected String chars2;
-    //
-    // protected List<Object> lineArray;
-    //
-    // protected GeomToStringResult(String chars1, String chars2, List<Object> lineArray) {
-    // this.chars1 = chars1;
-    // this.chars2 = chars2;
-    // this.lineArray = lineArray;
-    // }
-    // }
-    //
-    // public enum PARTICLES {
-    // POINT, LINESTRING, POLYGON, MULTIPOINT, MULTILINESTRING, MULTIPOLYGON, PART, HOLE,
-    // }
-    //
-    // protected GeomToStringResult geomsToString(Optional<Geometry> geom1, Optional<Geometry>
-    // geom2) {
-    // List<Object> lineArray = Lists.newArrayList();
-    // Map<Object, Integer> lineHash = Maps.newHashMap();
-    // lineArray.add("");
-    //
-    // Object[] array1 = geom1.isPresent() ? geomToArray(geom1.get()) : new Object[0];
-    // Object[] array2 = geom1.isPresent() ? geomToArray(geom2.get()) : new Object[0];
-    // String chars1 = arrayToString(array1, lineArray, lineHash);
-    // String chars2 = arrayToString(array2, lineArray, lineHash);
-    // return new GeomToStringResult(chars1, chars2, lineArray);
-    // }
-    //
-    // private Object[] geomToArray(Geometry geometry) {
-    // List<Object> list = Lists.newArrayList();
-    // if (geometry instanceof LineString) {
-    // list.add(PARTICLES.LINESTRING);
-    // for (Coordinate coord : geometry.getCoordinates()) {
-    // list.add(coord);
-    // }
-    // }
-    // return list.toArray(new Object[0]);
-    // }
-    //
-    // private String arrayToString(Object[] array, List<Object> lineArray,
-    // Map<Object, Integer> lineHash) {
-    // StringBuilder chars = new StringBuilder();
-    // for (Object obj : array) {
-    // if (lineHash.containsKey(obj)) {
-    // chars.append(String.valueOf((char) (int) lineHash.get(obj)));
-    // } else {
-    // lineArray.add(obj);
-    // lineHash.put(obj, lineArray.size() - 1);
-    // chars.append(String.valueOf((char) (lineArray.size() - 1)));
-    // }
-    // }
-    // return chars.toString();
-    // }
-    //
-    // protected void stringToArray(LinkedList<Diff> diffs, List<Object> lineArray) {
-    //
-    // }
 
 }
