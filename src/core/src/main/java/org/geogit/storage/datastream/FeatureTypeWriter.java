@@ -51,7 +51,7 @@ public class FeatureTypeWriter implements ObjectWriter<RevFeatureType> {
             CoordinateReferenceSystem crs = gType.getCoordinateReferenceSystem();
             final String srsName;
             if (crs == null) {
-                srsName = "urn:ogc:def:crs:ESPG::0";
+                srsName = "urn:ogc:def:crs:EPSG::0";
             } else {
                 final boolean longitudeFirst = CRS.getAxisOrder(crs, false) == AxisOrder.EAST_NORTH;
                 final boolean codeOnly = true;
