@@ -4,29 +4,29 @@
  */
 package org.geogit.storage.datastream;
 
+import static org.geogit.storage.datastream.FormatCommon.writeBucket;
+import static org.geogit.storage.datastream.FormatCommon.writeHeader;
+import static org.geogit.storage.datastream.FormatCommon.writeNode;
+
 import java.io.DataOutput;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.util.Arrays;
 import java.util.Map;
 
 import org.geogit.api.Bucket;
 import org.geogit.api.Node;
-import org.geogit.api.ObjectId;
-import org.geogit.api.RevObject;
 import org.geogit.api.RevTree;
 import org.geogit.storage.ObjectWriter;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedMap;
-import com.vividsolutions.jts.geom.Envelope;
 
 public class TreeWriter implements ObjectWriter<RevTree> {
     @Override
     public void write(RevTree tree, OutputStream out) throws IOException {
         DataOutput data = new DataOutputStream(out);
-        FormatCommon.writeHeader(data, "tree");
+        writeHeader(data, "tree");
         data.writeLong(tree.size());
         data.writeInt(tree.numTrees());
         if (tree.features().isPresent()) {
@@ -56,31 +56,5 @@ public class TreeWriter implements ObjectWriter<RevTree> {
         } else {
             data.writeInt(0);
         }
-    }
-
-    private void writeNode(Node node, DataOutput data) throws IOException {
-        data.writeUTF(node.getName());
-        data.write(node.getObjectId().getRawValue());
-        data.write(node.getMetadataId().or(ObjectId.NULL).getRawValue());
-        int typeN = Arrays.asList(RevObject.TYPE.values()).indexOf(node.getType());
-        data.writeByte(typeN);
-        Envelope envelope = new Envelope();
-        node.expand(envelope);
-        writeBoundingBox(envelope, data);
-    }
-
-    private void writeBucket(int index, Bucket bucket, DataOutput data) throws IOException {
-        data.writeInt(index);
-        data.write(bucket.id().getRawValue());
-        Envelope e = new Envelope();
-        bucket.expand(e);
-        writeBoundingBox(e, data);
-    }
-
-    private void writeBoundingBox(Envelope bbox, DataOutput data) throws IOException {
-        data.writeDouble(bbox.getMinX());
-        data.writeDouble(bbox.getMaxX());
-        data.writeDouble(bbox.getMinY());
-        data.writeDouble(bbox.getMaxY());
     }
 }

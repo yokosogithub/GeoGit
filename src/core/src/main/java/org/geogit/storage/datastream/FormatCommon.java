@@ -712,11 +712,12 @@ public class FormatCommon {
         final Envelope bbox = readBBox(in);
         final Node node;
         if (!bbox.isNull()) {
-            return Node.create(name, new ObjectId(objectId), new ObjectId(metadataId), contentType,
+            node = Node.create(name, new ObjectId(objectId), new ObjectId(metadataId), contentType,
                     bbox);
         } else {
-            return Node.create(name, new ObjectId(objectId), new ObjectId(metadataId), contentType);
+            node = Node.create(name, new ObjectId(objectId), new ObjectId(metadataId), contentType);
         }
+        return node;
     }
 
     public static final Bucket readBucket(DataInput in) throws IOException {
@@ -822,5 +823,31 @@ public class FormatCommon {
         byte[] bytes = header.getBytes(Charset.forName("US-ASCII"));
         data.write(bytes);
         data.writeByte(NUL);
+    }
+
+    public static void writeBoundingBox(Envelope bbox, DataOutput data) throws IOException {
+        data.writeDouble(bbox.getMinX());
+        data.writeDouble(bbox.getMaxX());
+        data.writeDouble(bbox.getMinY());
+        data.writeDouble(bbox.getMaxY());
+    }
+
+    public static void writeBucket(int index, Bucket bucket, DataOutput data) throws IOException {
+        data.writeInt(index);
+        data.write(bucket.id().getRawValue());
+        Envelope e = new Envelope();
+        bucket.expand(e);
+        writeBoundingBox(e, data);
+    }
+
+    public static void writeNode(Node node, DataOutput data) throws IOException {
+        data.writeUTF(node.getName());
+        data.write(node.getObjectId().getRawValue());
+        data.write(node.getMetadataId().or(ObjectId.NULL).getRawValue());
+        int typeN = node.getType().value();
+        data.writeByte(typeN);
+        Envelope envelope = new Envelope();
+        node.expand(envelope);
+        writeBoundingBox(envelope, data);
     }
 }
