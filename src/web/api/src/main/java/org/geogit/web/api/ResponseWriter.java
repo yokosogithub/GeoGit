@@ -28,6 +28,7 @@ import org.opengis.feature.type.PropertyDescriptor;
 import org.geogit.api.plumbing.diff.DiffEntry.ChangeType;
 
 import com.google.common.collect.ImmutableList;
+import com.vividsolutions.jts.geom.Geometry;
 
 /**
  *
@@ -312,7 +313,7 @@ public class ResponseWriter {
             out.writeStartElement("Feature");
             writeElement("change", change.toString());
             writeElement("id", feature.getID().toString());
-            writeElement("geometry", feature.getDefaultGeometry().toString());
+            writeElement("geometry", ((Geometry) feature.getDefaultGeometry()).toString());
             out.writeEndElement();
         }
 
