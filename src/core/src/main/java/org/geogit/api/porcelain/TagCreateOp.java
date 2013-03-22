@@ -7,8 +7,6 @@ package org.geogit.api.porcelain;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkState;
 
-import java.util.Map;
-
 import org.geogit.api.AbstractGeoGitOp;
 import org.geogit.api.ObjectId;
 import org.geogit.api.Platform;
@@ -18,7 +16,6 @@ import org.geogit.api.RevTag;
 import org.geogit.api.plumbing.HashObject;
 import org.geogit.api.plumbing.RefParse;
 import org.geogit.api.plumbing.UpdateRef;
-import org.geogit.api.porcelain.ConfigOp.ConfigAction;
 import org.geogit.storage.ObjectDatabase;
 
 import com.google.common.base.Optional;
@@ -94,22 +91,25 @@ public class TagCreateOp extends AbstractGeoGitOp<RevTag> {
     }
 
     private RevPerson resolveTagger() {
-        String key = "user.name";
-        Optional<Map<String, String>> result = command(ConfigOp.class)
-                .setAction(ConfigAction.CONFIG_GET).setName(key).call();
-        if (!result.isPresent()) {
-            throw new IllegalStateException(key + " not found in config. "
-                    + "Use geogit config [--global] " + key + " <your name> to configure it.");
-        }
-        String taggerName = result.get().get(key);
+        final String nameKey = "user.name";
+        final String emailKey = "user.email";
 
-        key = "user.email";
-        result = command(ConfigOp.class).setAction(ConfigAction.CONFIG_GET).setName(key).call();
-        if (!result.isPresent()) {
-            throw new IllegalStateException(key + " not found in config. "
-                    + "Use geogit config [--global] " + key + " <your name> to configure it.");
-        }
-        String taggerEmail = result.get().get(key);
+        Optional<String> name = command(ConfigGet.class).setName(nameKey).call();
+        Optional<String> email = command(ConfigGet.class).setName(emailKey).call();
+
+        checkState(
+                name.isPresent(),
+                "%s not found in config. Use geogit config [--global] %s <your name> to configure it.",
+                nameKey, nameKey);
+
+        checkState(
+                email.isPresent(),
+                "%s not found in config. Use geogit config [--global] %s <your email> to configure it.",
+                emailKey, emailKey);
+
+        String taggerName = name.get();
+        String taggerEmail = email.get();
+
         long taggerTimeStamp = platform.currentTimeMillis();
         int taggerTimeZoneOffset = platform.timeZoneOffset(taggerTimeStamp);
         return new RevPerson(taggerName, taggerEmail, taggerTimeStamp, taggerTimeZoneOffset);

@@ -4,11 +4,12 @@
  */
 package org.geogit.api.porcelain;
 
+import static com.google.common.base.Preconditions.checkState;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 
 import javax.annotation.Nullable;
 
@@ -28,7 +29,6 @@ import org.geogit.api.plumbing.UpdateRef;
 import org.geogit.api.plumbing.UpdateSymRef;
 import org.geogit.api.plumbing.WriteTree;
 import org.geogit.api.plumbing.diff.DiffEntry;
-import org.geogit.api.porcelain.ConfigOp.ConfigAction;
 import org.geogit.repository.Repository;
 import org.geogit.repository.StagingArea;
 import org.geogit.repository.WorkingTree;
@@ -211,28 +211,26 @@ public class RevertOp extends AbstractGeoGitOp<Boolean> {
     }
 
     private String resolveCommitter() {
+        final String key = "user.name";
+        Optional<String> name = command(ConfigGet.class).setName(key).call();
 
-        String key = "user.name";
-        Optional<Map<String, String>> result = command(ConfigOp.class)
-                .setAction(ConfigAction.CONFIG_GET).setName(key).call();
-        if (result.isPresent()) {
-            return result.get().get(key);
-        }
+        checkState(
+                name.isPresent(),
+                "%s not found in config. Use geogit config [--global] %s <your name> to configure it.",
+                key, key);
 
-        throw new IllegalStateException(key + " not found in config. "
-                + "Use geogit config [--global] " + key + " <your name> to configure it.");
+        return name.get();
     }
 
     private String resolveCommitterEmail() {
+        final String key = "user.email";
+        Optional<String> email = command(ConfigGet.class).setName(key).call();
 
-        String key = "user.email";
-        Optional<Map<String, String>> result = command(ConfigOp.class)
-                .setAction(ConfigAction.CONFIG_GET).setName(key).call();
-        if (result.isPresent()) {
-            return result.get().get(key);
-        }
+        checkState(
+                email.isPresent(),
+                "%s not found in config. Use geogit config [--global] %s <your email> to configure it.",
+                key, key);
 
-        throw new IllegalStateException(key + " not found in config. "
-                + "Use geogit config [--global] " + key + " <your email> to configure it.");
+        return email.get();
     }
 }

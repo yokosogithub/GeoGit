@@ -4,11 +4,13 @@
  */
 package org.geogit.api.porcelain;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.common.base.Preconditions.checkState;
+
 import java.util.Collection;
 import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 
 import javax.annotation.Nullable;
 
@@ -30,12 +32,10 @@ import org.geogit.api.plumbing.WriteTree;
 import org.geogit.api.plumbing.merge.Conflict;
 import org.geogit.api.plumbing.merge.ConflictsReadOp;
 import org.geogit.api.plumbing.merge.ReadMergeCommitMessageOp;
-import org.geogit.api.porcelain.ConfigOp.ConfigAction;
 import org.geogit.di.CanRunDuringConflict;
 import org.geogit.storage.ObjectDatabase;
 
 import com.google.common.base.Optional;
-import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
 import com.google.inject.Inject;
@@ -118,7 +118,7 @@ public class CommitOp extends AbstractGeoGitOp<RevCommit> {
      * @param committerEmail the committer's email
      */
     public CommitOp setCommitter(String committerName, @Nullable String committerEmail) {
-        Preconditions.checkNotNull(committerName);
+        checkNotNull(committerName);
         this.committerName = committerName;
         this.committerEmail = committerEmail;
         return this;
@@ -238,11 +238,10 @@ public class CommitOp extends AbstractGeoGitOp<RevCommit> {
         }
 
         final Optional<Ref> currHead = command(RefParse.class).setName(Ref.HEAD).call();
-        Preconditions.checkState(currHead.isPresent(), "Repository has no HEAD, can't commit");
+        checkState(currHead.isPresent(), "Repository has no HEAD, can't commit");
         final Ref headRef = currHead.get();
-        Preconditions
-                .checkState(headRef instanceof SymRef,//
-                        "HEAD is in a dettached state, cannot commit. Create a branch from it before committing");
+        checkState(headRef instanceof SymRef,//
+                "HEAD is in a dettached state, cannot commit. Create a branch from it before committing");
 
         final String currentBranch = ((SymRef) headRef).getTarget();
         final ObjectId currHeadCommitId = headRef.getObjectId();
@@ -302,17 +301,17 @@ public class CommitOp extends AbstractGeoGitOp<RevCommit> {
         // set the HEAD pointing to the new commit
         final Optional<Ref> branchHead = command(UpdateRef.class).setName(currentBranch)
                 .setNewValue(commit.getId()).call();
-        Preconditions.checkState(commit.getId().equals(branchHead.get().getObjectId()));
+        checkState(commit.getId().equals(branchHead.get().getObjectId()));
 
         final Optional<Ref> newHead = command(UpdateSymRef.class).setName(Ref.HEAD)
                 .setNewValue(currentBranch).call();
 
-        Preconditions.checkState(currentBranch.equals(((SymRef) newHead.get()).getTarget()));
+        checkState(currentBranch.equals(((SymRef) newHead.get()).getTarget()));
 
         Optional<ObjectId> treeId = command(ResolveTreeish.class).setTreeish(
                 branchHead.get().getObjectId()).call();
-        Preconditions.checkState(treeId.isPresent());
-        Preconditions.checkState(newTreeId.equals(treeId.get()));
+        checkState(treeId.isPresent());
+        checkState(newTreeId.equals(treeId.get()));
 
         getProgressListener().progress(100f);
         getProgressListener().complete();
@@ -382,15 +381,16 @@ public class CommitOp extends AbstractGeoGitOp<RevCommit> {
             return committerName;
         }
 
-        String key = "user.name";
-        Optional<Map<String, String>> result = command(ConfigOp.class)
-                .setAction(ConfigAction.CONFIG_GET).setName(key).call();
-        if (result.isPresent()) {
-            return result.get().get(key);
-        }
+        final String key = "user.name";
+        Optional<String> name = command(ConfigGet.class).setName(key).call();
 
-        throw new IllegalStateException(key + " not found in config. "
-                + "Use geogit config [--global] " + key + " <your name> to configure it.");
+        checkState(
+                name.isPresent(),
+                "%s not found in config. Use geogit config [--global] %s <your name> to configure it.",
+                key, key);
+
+        return name.get();
+
     }
 
     private String resolveCommitterEmail() {
@@ -398,15 +398,15 @@ public class CommitOp extends AbstractGeoGitOp<RevCommit> {
             return committerEmail;
         }
 
-        String key = "user.email";
-        Optional<Map<String, String>> result = command(ConfigOp.class)
-                .setAction(ConfigAction.CONFIG_GET).setName(key).call();
-        if (result.isPresent()) {
-            return result.get().get(key);
-        }
+        final String key = "user.email";
+        Optional<String> email = command(ConfigGet.class).setName(key).call();
 
-        throw new IllegalStateException(key + " not found in config. "
-                + "Use geogit config [--global] " + key + " <your email> to configure it.");
+        checkState(
+                email.isPresent(),
+                "%s not found in config. Use geogit config [--global] %s <your email> to configure it.",
+                key, key);
+
+        return email.get();
     }
 
     private String resolveAuthor() {
