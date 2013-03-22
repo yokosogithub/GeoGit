@@ -66,13 +66,13 @@ public interface StagingArea {
      * @return an iterator for all of the differences between STAGE_HEAD and HEAD based on the path
      *         filter.
      */
-    public abstract Iterator<DiffEntry> getStaged(final @Nullable String pathFilter);
+    public abstract Iterator<DiffEntry> getStaged(final @Nullable List<String> pathFilters);
 
     /**
      * @param pathFilter
      * @return the number differences between STAGE_HEAD and HEAD based on the path filter.
      */
-    public abstract long countStaged(final @Nullable String pathFilter);
+    public abstract long countStaged(final @Nullable List<String> pathFilters);
 
     /**
      * returns the number of conflicted objects in the index, for the given path filter

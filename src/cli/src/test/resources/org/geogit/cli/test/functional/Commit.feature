@@ -55,3 +55,13 @@ Feature: "commit" command
      Then the response should contain "Merge branch refs/heads/branch1"
       And the response should contain "Conflicts:"
       And the response should contain "Points/Points.1"             
+
+     
+  Scenario: Try to commit only points
+    Given I have a repository
+     And I have unstaged "points1"
+     And I have unstaged "points2"
+     And I have unstaged "lines1"
+     And I have staged "lines2"
+    When I run the command "commit -m Test Points"
+    Then the response should contain "2 features added"

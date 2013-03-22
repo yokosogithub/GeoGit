@@ -6,6 +6,8 @@
 package org.geogit.api.plumbing;
 
 import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
 
 import javax.annotation.Nullable;
 
@@ -27,7 +29,7 @@ public class DiffIndex extends AbstractGeoGitOp<Iterator<DiffEntry>> {
 
     private String refSpec;
 
-    private String pathFilter;
+    private List<String> pathFilters = new LinkedList<String>();
 
     private boolean reportTrees;
 
@@ -42,8 +44,15 @@ public class DiffIndex extends AbstractGeoGitOp<Iterator<DiffEntry>> {
      * @param pathFilter the path filter to use during the diff operation
      * @return {@code this}
      */
-    public DiffIndex setFilter(@Nullable String pathFilter) {
-        this.pathFilter = pathFilter;
+    public DiffIndex setFilter(@Nullable List<String> pathFilter) {
+        this.pathFilters = pathFilter;
+        return this;
+    }
+
+    public DiffIndex addFilter(@Nullable String pathFilter) {
+        if (pathFilter != null) {
+            this.pathFilters.add(pathFilter);
+        }
         return this;
     }
 
@@ -82,7 +91,11 @@ public class DiffIndex extends AbstractGeoGitOp<Iterator<DiffEntry>> {
         final RevTree newTree = getIndex().getTree();
 
         DiffTreeWalk treeWalk = new DiffTreeWalk(getIndex().getDatabase(), rootTree, newTree);
-        treeWalk.setFilter(pathFilter);
+        if (pathFilters != null) {
+            for (String path : pathFilters) {
+                treeWalk.addFilter(path);
+            }
+        }
         treeWalk.setReportTrees(reportTrees);
         return treeWalk.get();
     }

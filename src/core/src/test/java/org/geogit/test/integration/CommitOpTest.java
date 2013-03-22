@@ -8,6 +8,7 @@ import static org.geogit.api.NodeRef.appendChild;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import java.util.Arrays;
 import java.util.List;
 
 import javax.annotation.Nullable;
@@ -459,6 +460,69 @@ public class CommitOpTest extends RepositoryTestCase {
         }
         assertNotNull(repo.getTree(commit.getTreeId()));
         assertEquals(commit.getId(), getRepository().getRef(Ref.HEAD).get().getObjectId());
+    }
+
+    @Test
+    public void testPathFiltering() throws Exception {
+        insertAndAdd(points1);
+        insertAndAdd(points2);
+
+        RevCommit commit = geogit.command(CommitOp.class).call();
+
+        insert(points3);
+
+        insert(lines1);
+        insert(lines2);
+        insert(lines3);
+
+        List<String> filters = Arrays.asList("Points/Points.3", "Lines/Lines.1", "Lines/Lines.3");
+        commit = geogit.command(CommitOp.class).setPathFilters(filters).call();
+
+        assertNotNull(commit);
+        assertNotNull(commit.getParentIds());
+        assertEquals(1, commit.getParentIds().size());
+        assertNotNull(commit.getId());
+
+        ObjectId treeId = commit.getTreeId();
+
+        assertNotNull(treeId);
+        RevTree root = repo.getTree(treeId);
+        assertNotNull(root);
+
+        Optional<Node> typeTreeId = repo.getTreeChild(root, pointsName);
+        assertTrue(typeTreeId.isPresent());
+        RevTree typeTree = repo.getTree(typeTreeId.get().getObjectId());
+        assertNotNull(typeTree);
+
+        String featureId = points1.getIdentifier().getID();
+        Optional<Node> featureBlobId = repo.getTreeChild(root,
+                NodeRef.appendChild(pointsName, featureId));
+        assertTrue(featureBlobId.isPresent());
+
+        featureId = points2.getIdentifier().getID();
+        featureBlobId = repo.getTreeChild(root, NodeRef.appendChild(pointsName, featureId));
+        assertTrue(featureBlobId.isPresent());
+
+        featureId = points3.getIdentifier().getID();
+        featureBlobId = repo.getTreeChild(root, NodeRef.appendChild(pointsName, featureId));
+        assertTrue(featureBlobId.isPresent());
+
+        typeTreeId = repo.getTreeChild(root, linesName);
+        assertTrue(typeTreeId.isPresent());
+        typeTree = repo.getTree(typeTreeId.get().getObjectId());
+        assertNotNull(typeTree);
+
+        featureId = lines1.getIdentifier().getID();
+        featureBlobId = repo.getTreeChild(root, NodeRef.appendChild(linesName, featureId));
+        assertTrue(featureBlobId.isPresent());
+
+        featureId = lines2.getIdentifier().getID();
+        featureBlobId = repo.getTreeChild(root, NodeRef.appendChild(linesName, featureId));
+        assertFalse(featureBlobId.isPresent());
+
+        featureId = lines3.getIdentifier().getID();
+        featureBlobId = repo.getTreeChild(root, NodeRef.appendChild(linesName, featureId));
+        assertTrue(featureBlobId.isPresent());
     }
 
 }

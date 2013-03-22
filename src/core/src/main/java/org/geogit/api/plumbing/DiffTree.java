@@ -127,7 +127,7 @@ public class DiffTree extends AbstractGeoGitOp<Iterator<DiffEntry>> {
         }
 
         DiffTreeWalk treeWalk = new DiffTreeWalk(objectDb, oldTree, newTree);
-        treeWalk.setFilter(this.path);
+        treeWalk.addFilter(this.path);
         treeWalk.setReportTrees(reportTrees);
         return treeWalk.get();
     }

@@ -6,6 +6,8 @@
 package org.geogit.api.plumbing;
 
 import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -56,6 +58,8 @@ public class WriteTree extends AbstractGeoGitOp<ObjectId> {
 
     private Supplier<RevTree> oldRoot;
 
+    private List<String> pathFilters = new LinkedList<String>();
+
     /**
      * Creates a new {@code WriteTree} operation using the specified parameters.
      * 
@@ -76,6 +80,23 @@ public class WriteTree extends AbstractGeoGitOp<ObjectId> {
     }
 
     /**
+     * 
+     * @param pathFilter the pathfilter to pass on to the index
+     * @return {@code this}
+     */
+    public WriteTree addPathFilter(String pathFilter) {
+        if (pathFilter != null) {
+            this.pathFilters.add(pathFilter);
+        }
+        return this;
+    }
+
+    public WriteTree setPathFilter(List<String> pathFilters) {
+        this.pathFilters = pathFilters;
+        return this;
+    }
+
+    /**
      * Executes the write tree operation.
      * 
      * @return the new root tree id
@@ -86,7 +107,7 @@ public class WriteTree extends AbstractGeoGitOp<ObjectId> {
 
         final RevTree oldRootTree = resolveRootTree();
 
-        Iterator<DiffEntry> staged = getIndex().getStaged(null);
+        Iterator<DiffEntry> staged = getIndex().getStaged(pathFilters);
         if (!staged.hasNext()) {
             return oldRootTree.getId();
         }
@@ -100,7 +121,7 @@ public class WriteTree extends AbstractGeoGitOp<ObjectId> {
         Set<String> deletedTrees = Sets.newHashSet();
         NodeRef ref;
         int i = 0;
-        final long numChanges = getIndex().countStaged(null);
+        final long numChanges = getIndex().countStaged(pathFilters);
         while (staged.hasNext()) {
             progress.progress((float) (++i * 100) / numChanges);
             if (progress.isCanceled()) {

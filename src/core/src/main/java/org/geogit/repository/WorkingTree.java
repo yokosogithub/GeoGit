@@ -513,7 +513,7 @@ public class WorkingTree {
      */
     public long countUnstaged(final @Nullable String pathFilter) {
         Long count = commandLocator.command(DiffCount.class).setOldVersion(Ref.STAGE_HEAD)
-                .setNewVersion(Ref.WORK_HEAD).setFilter(pathFilter).call();
+                .setNewVersion(Ref.WORK_HEAD).addFilter(pathFilter).call();
         return count.longValue();
     }
 

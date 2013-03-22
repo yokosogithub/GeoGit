@@ -7,7 +7,9 @@ package org.geogit.cli.porcelain;
 
 import static com.google.common.base.Preconditions.checkState;
 
+import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.List;
 
 import jline.console.ConsoleReader;
 
@@ -49,6 +51,9 @@ public class Commit extends AbstractCommand implements CLICommand {
     @Parameter(names = "-m", description = "Commit message")
     private String message;
 
+    @Parameter(description = "<pathFilter>  [<paths_to_commit]...")
+    private List<String> pathFilters = new ArrayList<String>();
+
     /**
      * Executes the commit command using the provided options.
      * 
@@ -72,7 +77,7 @@ public class Commit extends AbstractCommand implements CLICommand {
 
         RevCommit commit;
         try {
-            commit = geogit.command(CommitOp.class).setMessage(message)
+            commit = geogit.command(CommitOp.class).setMessage(message).setPathFilters(pathFilters)
                     .setProgressListener(cli.getProgressListener()).call();
         } catch (NothingToCommitException noChanges) {
             console.println(ansi.fg(Color.RED).a(noChanges.getMessage()).reset().toString());

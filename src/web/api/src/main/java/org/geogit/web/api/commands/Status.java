@@ -50,7 +50,7 @@ public class Status implements WebAPICommand {
                     }
                 }
 
-                writer.writeStaged(geogit.command(DiffIndex.class).setFilter(pathFilter), offset,
+                writer.writeStaged(geogit.command(DiffIndex.class).addFilter(pathFilter), offset,
                         limit);
                 writer.writeUnstaged(geogit.command(DiffWorkTree.class).setFilter(pathFilter),
                         offset, limit);

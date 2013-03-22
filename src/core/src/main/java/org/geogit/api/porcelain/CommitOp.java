@@ -87,6 +87,8 @@ public class CommitOp extends AbstractGeoGitOp<RevCommit> {
 
     private String committerEmail;
 
+    private List<String> pathFilters = new LinkedList<String>();
+
     /**
      * Constructs a new {@code CommitOp} with the given parameters.
      * 
@@ -194,6 +196,11 @@ public class CommitOp extends AbstractGeoGitOp<RevCommit> {
         return this;
     }
 
+    public CommitOp setPathFilters(List<String> pathFilters) {
+        this.pathFilters = pathFilters;
+        return this;
+    }
+
     /**
      * @param parents parents to add
      * @return {@code this}
@@ -261,8 +268,23 @@ public class CommitOp extends AbstractGeoGitOp<RevCommit> {
             }
         }
 
-        final ObjectId newTreeId = command(WriteTree.class).setOldRoot(resolveOldRoot())
-                .setProgressListener(subProgress(writeTreeProgress)).call();
+        for (String st : pathFilters) {
+            command(AddOp.class).addPattern(st).call();
+        }
+        ObjectId newTreeId = null;
+        if (pathFilters.isEmpty()) {
+            newTreeId = command(WriteTree.class).setOldRoot(resolveOldRoot()).addPathFilter(null)
+                    .setProgressListener(subProgress(writeTreeProgress)).call();
+        } else {
+            Supplier<RevTree> tree = resolveOldRoot();
+            WriteTree command = command(WriteTree.class).setOldRoot(tree);
+            for (String st : pathFilters) {
+                command.addPathFilter(st);
+            }
+            newTreeId = command.call();
+            tree = Suppliers.ofInstance(command(RevObjectParse.class).setObjectId(newTreeId)
+                    .call(RevTree.class).get());
+        }
 
         if (getProgressListener().isCanceled()) {
             return null;

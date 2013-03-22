@@ -75,7 +75,7 @@ public class DiffWorkTree extends AbstractGeoGitOp<Iterator<DiffEntry>> {
         final RevTree newTree = getWorkTree().getTree();
 
         DiffTreeWalk treeWalk = new DiffTreeWalk(getIndex().getDatabase(), oldTree, newTree);
-        treeWalk.setFilter(pathFilter);
+        treeWalk.addFilter(pathFilter);
         treeWalk.setReportTrees(reportTrees);
 
         return treeWalk.get();

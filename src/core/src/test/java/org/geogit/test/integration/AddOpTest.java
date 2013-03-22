@@ -5,13 +5,13 @@ import java.util.List;
 
 import org.geogit.api.NodeRef;
 import org.geogit.api.Ref;
+import org.geogit.api.RevObject.TYPE;
 import org.geogit.api.plumbing.FindTreeChild;
 import org.geogit.api.plumbing.RefParse;
-import org.geogit.api.RevObject.TYPE;
 import org.geogit.api.plumbing.diff.DiffEntry;
+import org.geogit.api.plumbing.diff.DiffEntry.ChangeType;
 import org.geogit.api.plumbing.merge.Conflict;
 import org.geogit.api.plumbing.merge.MergeConflictsException;
-import org.geogit.api.plumbing.diff.DiffEntry.ChangeType;
 import org.geogit.api.porcelain.AddOp;
 import org.geogit.api.porcelain.BranchCreateOp;
 import org.geogit.api.porcelain.CheckoutOp;
@@ -23,6 +23,7 @@ import org.opengis.feature.Feature;
 import com.google.common.base.Optional;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Lists;
 
 public class AddOpTest extends RepositoryTestCase {
 
@@ -84,11 +85,11 @@ public class AddOpTest extends RepositoryTestCase {
         insert(points1);
         insert(points2);
         geogit.command(AddOp.class).call();
-        List<DiffEntry> staged = toList(repo.getIndex().getStaged(pointsName));
+        List<DiffEntry> staged = toList(repo.getIndex().getStaged(Lists.newArrayList(pointsName)));
         assertEquals(3, staged.size());
         delete(points1);
         geogit.command(AddOp.class).call();
-        staged = toList(repo.getIndex().getStaged(pointsName));
+        staged = toList(repo.getIndex().getStaged(Lists.newArrayList(pointsName)));
         assertEquals(2, staged.size());
     }
 
@@ -99,7 +100,7 @@ public class AddOpTest extends RepositoryTestCase {
         geogit.command(AddOp.class).call();
         repo.getWorkingTree().delete(pointsName);
         geogit.command(AddOp.class).call();
-        List<DiffEntry> staged = toList(repo.getIndex().getStaged(pointsName));
+        List<DiffEntry> staged = toList(repo.getIndex().getStaged(Lists.newArrayList(pointsName)));
         assertEquals(0, staged.size());
         assertEquals(0, repo.getIndex().countStaged(null));
     }
