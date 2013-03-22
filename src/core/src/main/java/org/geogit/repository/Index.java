@@ -16,9 +16,9 @@ import org.geogit.api.Node;
 import org.geogit.api.NodeRef;
 import org.geogit.api.ObjectId;
 import org.geogit.api.Ref;
+import org.geogit.api.RevObject.TYPE;
 import org.geogit.api.RevTree;
 import org.geogit.api.RevTreeBuilder;
-import org.geogit.api.RevObject.TYPE;
 import org.geogit.api.plumbing.DiffCount;
 import org.geogit.api.plumbing.DiffIndex;
 import org.geogit.api.plumbing.FindOrCreateSubtree;
@@ -280,9 +280,9 @@ public class Index implements StagingArea {
      *         filter.
      */
     @Override
-    public Iterator<DiffEntry> getStaged(final @Nullable String pathFilter) {
+    public Iterator<DiffEntry> getStaged(final @Nullable List<String> pathFilters) {
         Iterator<DiffEntry> unstaged = commandLocator.command(DiffIndex.class)
-                .setFilter(pathFilter).setReportTrees(true).call();
+                .setFilter(pathFilters).setReportTrees(true).call();
         return unstaged;
     }
 
@@ -291,9 +291,10 @@ public class Index implements StagingArea {
      * @return the number differences between STAGE_HEAD and HEAD based on the path filter.
      */
     @Override
-    public long countStaged(final @Nullable String pathFilter) {
+    public long countStaged(final @Nullable List<String> pathFilters) {
         Long count = commandLocator.command(DiffCount.class).setOldVersion(Ref.HEAD)
-                .setNewVersion(Ref.STAGE_HEAD).setReportTrees(true).setFilter(pathFilter).call();
+                .setNewVersion(Ref.STAGE_HEAD).setReportTrees(true).setFilter(pathFilters).call();
+
         return count.longValue();
     }
 

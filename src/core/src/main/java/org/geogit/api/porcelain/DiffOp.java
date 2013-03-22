@@ -125,7 +125,7 @@ public class DiffOp extends AbstractGeoGitOp<Iterator<DiffEntry>> {
         Iterator<DiffEntry> iterator;
         if (cached) {
             // compare the tree-ish (default to HEAD) and the index
-            DiffIndex diffIndex = command(DiffIndex.class).setFilter(this.pathFilter)
+            DiffIndex diffIndex = command(DiffIndex.class).addFilter(this.pathFilter)
                     .setReportTrees(reportTrees);
             if (oldRefSpec != null) {
                 diffIndex.setOldVersion(oldRefSpec);

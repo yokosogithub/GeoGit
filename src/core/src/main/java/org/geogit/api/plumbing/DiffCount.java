@@ -8,6 +8,8 @@ package org.geogit.api.plumbing;
 import static com.google.common.base.Preconditions.checkState;
 
 import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
 
 import javax.annotation.Nullable;
 
@@ -32,7 +34,7 @@ public class DiffCount extends AbstractGeoGitOp<Long> {
 
     private StagingDatabase index;
 
-    private String pathFilter;
+    private List<String> pathFilters = new LinkedList<String>();
 
     private String oldRefSpec;
 
@@ -59,8 +61,15 @@ public class DiffCount extends AbstractGeoGitOp<Long> {
      * @param path the path filter to use during the diff operation
      * @return {@code this}
      */
-    public DiffCount setFilter(@Nullable String path) {
-        pathFilter = path;
+    public DiffCount addFilter(@Nullable String path) {
+        if (path != null) {
+            pathFilters.add(path);
+        }
+        return this;
+    }
+
+    public DiffCount setFilter(@Nullable List<String> paths) {
+        pathFilters = paths;
         return this;
     }
 
@@ -73,12 +82,16 @@ public class DiffCount extends AbstractGeoGitOp<Long> {
         final RevTree newTree = getTree(newRefSpec);
 
         Long diffCount;
-        if (null == pathFilter) {
+        if (pathFilters == null || pathFilters.isEmpty()) {
             DiffCounter counter = new DiffCounter(index, oldTree, newTree);
             diffCount = counter.get();
         } else {
             DiffTreeWalk treeWalk = new DiffTreeWalk(index, oldTree, newTree);
-            treeWalk.setFilter(pathFilter);
+            if (pathFilters != null) {
+                for (String path : pathFilters) {
+                    treeWalk.addFilter(path);
+                }
+            }
             treeWalk.setReportTrees(reportTrees);
             Iterator<DiffEntry> iterator = treeWalk.get();
             long count = 0;

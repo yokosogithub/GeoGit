@@ -85,10 +85,9 @@ public class Status implements CLICommand {
 
         final WorkingTree workTree = geogit.getRepository().getWorkingTree();
 
-        String pathFilter = null;
-        final long countStaged = index.countStaged(pathFilter);
-        final int countConflicted = index.countConflicted(pathFilter);
-        final long countUnstaged = workTree.countUnstaged(pathFilter);
+        final long countStaged = index.countStaged(null);
+        final int countConflicted = index.countConflicted(null);
+        final long countUnstaged = workTree.countUnstaged(null);
 
         final Optional<Ref> currHead = geogit.command(RefParse.class).setName(Ref.HEAD).call();
         Preconditions.checkState(currHead.isPresent(), "Repository has no HEAD.");
@@ -105,8 +104,7 @@ public class Status implements CLICommand {
         }
 
         if (countStaged > 0) {
-            Iterator<DiffEntry> staged = geogit.command(DiffIndex.class).setFilter(pathFilter)
-                    .call();
+            Iterator<DiffEntry> staged = geogit.command(DiffIndex.class).addFilter(null).call();
 
             console.println("# Changes to be committed:");
             console.println("#   (use \"geogit reset HEAD <path/to/fid>...\" to unstage)");
@@ -125,7 +123,7 @@ public class Status implements CLICommand {
         }
 
         if (countUnstaged > 0) {
-            Iterator<DiffEntry> unstaged = geogit.command(DiffWorkTree.class).setFilter(pathFilter)
+            Iterator<DiffEntry> unstaged = geogit.command(DiffWorkTree.class).setFilter(null)
                     .call();
             console.println("# Changes not staged for commit:");
             console.println("#   (use \"geogit add <path/to/fid>...\" to update what will be committed");

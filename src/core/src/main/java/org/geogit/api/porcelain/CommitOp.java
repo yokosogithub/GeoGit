@@ -274,16 +274,17 @@ public class CommitOp extends AbstractGeoGitOp<RevCommit> {
         }
         ObjectId newTreeId = null;
         if (pathFilters.isEmpty()) {
-            newTreeId = command(WriteTree.class).setOldRoot(resolveOldRoot()).setPathFilter(null)
+            newTreeId = command(WriteTree.class).setOldRoot(resolveOldRoot()).addPathFilter(null)
                     .setProgressListener(subProgress(writeTreeProgress)).call();
         } else {
             Supplier<RevTree> tree = resolveOldRoot();
+            WriteTree command = command(WriteTree.class).setOldRoot(tree);
             for (String st : pathFilters) {
-                newTreeId = command(WriteTree.class).setOldRoot(tree).setPathFilter(st).call();
-                tree = Suppliers.ofInstance(command(RevObjectParse.class).setObjectId(newTreeId)
-                        .call(RevTree.class).get());
+                command.addPathFilter(st);
             }
-
+            newTreeId = command.call();
+            tree = Suppliers.ofInstance(command(RevObjectParse.class).setObjectId(newTreeId)
+                    .call(RevTree.class).get());
         }
 
         if (getProgressListener().isCanceled()) {

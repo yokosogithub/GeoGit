@@ -7,6 +7,8 @@ package org.geogit.api.plumbing.diff;
 import static com.google.common.base.Preconditions.checkState;
 
 import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -39,8 +41,7 @@ public class DiffTreeWalk {
     @Nonnull
     private ObjectDatabase objectDb;
 
-    @Nullable
-    private String pathFilter;
+    private List<String> pathFilter = new LinkedList<String>();
 
     private boolean reportTrees;
 
@@ -52,14 +53,11 @@ public class DiffTreeWalk {
         this.objectDb = db;
         this.fromRootTree = fromRootTree;
         this.toRootTree = toRootTree;
-        this.pathFilter = "";// root
     }
 
-    public void setFilter(final String pathPrefix) {
-        if (pathPrefix == null || pathPrefix.isEmpty()) {
-            this.pathFilter = "";// root
-        } else {
-            this.pathFilter = pathPrefix;
+    public void addFilter(final String pathPrefix) {
+        if (pathPrefix != null && !pathPrefix.isEmpty()) {
+            this.pathFilter.add(pathPrefix);
         }
     }
 
@@ -79,7 +77,7 @@ public class DiffTreeWalk {
         Optional<NodeRef> oldObjectRef = getFilteredObjectRef(fromRootTree);
         Optional<NodeRef> newObjectRef = getFilteredObjectRef(toRootTree);
         boolean pathFiltering = !pathFilter.isEmpty();
-        if (pathFiltering) {
+        if (pathFiltering && pathFilter.size() == 1) {
             if (Objects.equal(oldObjectRef, newObjectRef)) {
                 // filter didn't match anything
                 return Iterators.emptyIterator();
@@ -137,9 +135,14 @@ public class DiffTreeWalk {
                 public boolean apply(@Nullable DiffEntry input) {
                     String oldPath = input.oldPath();
                     String newPath = input.newPath();
-                    boolean apply = (oldPath != null && oldPath.startsWith(pathFilter))
-                            || (newPath != null && newPath.startsWith(pathFilter));
-                    return apply;
+                    for (String path : pathFilter) {
+                        boolean apply = (oldPath != null && oldPath.startsWith(path))
+                                || (newPath != null && newPath.startsWith(path));
+                        if (apply) {
+                            return true;
+                        }
+                    }
+                    return false;
                 }
             });
         }
@@ -147,7 +150,7 @@ public class DiffTreeWalk {
     }
 
     private Optional<NodeRef> getFilteredObjectRef(RevTree tree) {
-        if (pathFilter.isEmpty()) {
+        if (pathFilter.size() != 1) {
             Node node = Node.create("", tree.getId(), ObjectId.NULL, TYPE.TREE);
             String parentPath = "";
             ObjectId metadataId = ObjectId.NULL;
@@ -156,8 +159,9 @@ public class DiffTreeWalk {
         }
 
         final DepthSearch search = new DepthSearch(objectDb);
-        Optional<NodeRef> ref = search.find(tree, pathFilter);
+        Optional<NodeRef> ref = search.find(tree, pathFilter.get(0));
         return ref;
+
     }
 
 }
