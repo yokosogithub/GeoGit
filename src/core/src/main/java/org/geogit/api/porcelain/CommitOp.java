@@ -38,6 +38,7 @@ import org.geogit.storage.ObjectDatabase;
 import com.google.common.base.Optional;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
+import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 
 /**
@@ -87,7 +88,7 @@ public class CommitOp extends AbstractGeoGitOp<RevCommit> {
 
     private String committerEmail;
 
-    private List<String> pathFilters = new LinkedList<String>();
+    private final List<String> pathFilters = Lists.newLinkedList();
 
     /**
      * Constructs a new {@code CommitOp} with the given parameters.
@@ -196,8 +197,11 @@ public class CommitOp extends AbstractGeoGitOp<RevCommit> {
         return this;
     }
 
-    public CommitOp setPathFilters(List<String> pathFilters) {
-        this.pathFilters = pathFilters;
+    public CommitOp setPathFilters(@Nullable List<String> pathFilters) {
+        this.pathFilters.clear();
+        if (pathFilters != null) {
+            this.pathFilters.addAll(pathFilters);
+        }
         return this;
     }
 
@@ -271,20 +275,9 @@ public class CommitOp extends AbstractGeoGitOp<RevCommit> {
         for (String st : pathFilters) {
             command(AddOp.class).addPattern(st).call();
         }
-        ObjectId newTreeId = null;
-        if (pathFilters.isEmpty()) {
-            newTreeId = command(WriteTree.class).setOldRoot(resolveOldRoot()).addPathFilter(null)
-                    .setProgressListener(subProgress(writeTreeProgress)).call();
-        } else {
-            Supplier<RevTree> tree = resolveOldRoot();
-            WriteTree command = command(WriteTree.class).setOldRoot(tree);
-            for (String st : pathFilters) {
-                command.addPathFilter(st);
-            }
-            newTreeId = command.call();
-            tree = Suppliers.ofInstance(command(RevObjectParse.class).setObjectId(newTreeId)
-                    .call(RevTree.class).get());
-        }
+        ObjectId newTreeId = command(WriteTree.class).setOldRoot(resolveOldRoot())
+                .setPathFilter(pathFilters).setProgressListener(subProgress(writeTreeProgress))
+                .call();
 
         if (getProgressListener().isCanceled()) {
             return null;

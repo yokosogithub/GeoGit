@@ -104,7 +104,7 @@ public class Status implements CLICommand {
         }
 
         if (countStaged > 0) {
-            Iterator<DiffEntry> staged = geogit.command(DiffIndex.class).addFilter(null).call();
+            Iterator<DiffEntry> staged = geogit.command(DiffIndex.class).call();
 
             console.println("# Changes to be committed:");
             console.println("#   (use \"geogit reset HEAD <path/to/fid>...\" to unstage)");
@@ -123,8 +123,7 @@ public class Status implements CLICommand {
         }
 
         if (countUnstaged > 0) {
-            Iterator<DiffEntry> unstaged = geogit.command(DiffWorkTree.class).setFilter(null)
-                    .call();
+            Iterator<DiffEntry> unstaged = geogit.command(DiffWorkTree.class).call();
             console.println("# Changes not staged for commit:");
             console.println("#   (use \"geogit add <path/to/fid>...\" to update what will be committed");
             console.println("#   (use \"geogit checkout -- <path/to/fid>...\" to discard changes in working directory");

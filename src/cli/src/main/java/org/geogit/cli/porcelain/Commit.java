@@ -31,6 +31,7 @@ import org.geogit.cli.GeogitCLI;
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.Parameters;
 import com.google.common.base.Strings;
+import com.google.common.collect.Lists;
 
 /**
  * Stores the current contents of the index in a new commit along with a log message from the user
@@ -52,7 +53,7 @@ public class Commit extends AbstractCommand implements CLICommand {
     private String message;
 
     @Parameter(description = "<pathFilter>  [<paths_to_commit]...")
-    private List<String> pathFilters = new ArrayList<String>();
+    private List<String> pathFilters = Lists.newLinkedList();
 
     /**
      * Executes the commit command using the provided options.

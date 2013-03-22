@@ -8,7 +8,6 @@ package org.geogit.api.plumbing;
 import static com.google.common.base.Preconditions.checkState;
 
 import java.util.Iterator;
-import java.util.LinkedList;
 import java.util.List;
 
 import javax.annotation.Nullable;
@@ -22,6 +21,7 @@ import org.geogit.api.plumbing.diff.DiffTreeWalk;
 import org.geogit.storage.StagingDatabase;
 
 import com.google.common.base.Optional;
+import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 
 /**
@@ -34,7 +34,7 @@ public class DiffCount extends AbstractGeoGitOp<Long> {
 
     private StagingDatabase index;
 
-    private List<String> pathFilters = new LinkedList<String>();
+    private final List<String> pathFilters = Lists.newLinkedList();
 
     private String oldRefSpec;
 
@@ -68,8 +68,15 @@ public class DiffCount extends AbstractGeoGitOp<Long> {
         return this;
     }
 
+    /**
+     * @param paths list of paths to filter by, if {@code null} or empty, then no filtering is done,
+     *        otherwise the list must not contain null elements.
+     */
     public DiffCount setFilter(@Nullable List<String> paths) {
-        pathFilters = paths;
+        pathFilters.clear();
+        if (paths != null) {
+            pathFilters.addAll(paths);
+        }
         return this;
     }
 
@@ -82,16 +89,15 @@ public class DiffCount extends AbstractGeoGitOp<Long> {
         final RevTree newTree = getTree(newRefSpec);
 
         Long diffCount;
-        if (pathFilters == null || pathFilters.isEmpty()) {
+        if (pathFilters.isEmpty()) {
             DiffCounter counter = new DiffCounter(index, oldTree, newTree);
             diffCount = counter.get();
         } else {
             DiffTreeWalk treeWalk = new DiffTreeWalk(index, oldTree, newTree);
-            if (pathFilters != null) {
-                for (String path : pathFilters) {
-                    treeWalk.addFilter(path);
-                }
+            for (String path : pathFilters) {
+                treeWalk.addFilter(path);
             }
+
             treeWalk.setReportTrees(reportTrees);
             Iterator<DiffEntry> iterator = treeWalk.get();
             long count = 0;

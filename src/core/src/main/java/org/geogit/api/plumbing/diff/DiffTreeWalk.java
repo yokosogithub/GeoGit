@@ -26,6 +26,7 @@ import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.collect.Iterators;
+import com.google.common.collect.Lists;
 
 /**
  * Composes an {@link Iterator} of {@link DiffEntry} out of two {@link RevTree}ss
@@ -41,7 +42,7 @@ public class DiffTreeWalk {
     @Nonnull
     private ObjectDatabase objectDb;
 
-    private List<String> pathFilter = new LinkedList<String>();
+    private final List<String> pathFilter = Lists.newLinkedList();
 
     private boolean reportTrees;
 
@@ -61,6 +62,12 @@ public class DiffTreeWalk {
         }
     }
 
+    public void setFilter(@Nullable List<String> pathFitlers){
+        this.pathFilter.clear();
+        if(pathFitlers != null){
+            this.pathFilter.addAll(pathFitlers);
+        }
+    }
     /**
      * @param reportTrees tells the diff tree walk whether to report a {@link DiffEntry} for each
      *        changed tree or not, defaults to {@code false}
