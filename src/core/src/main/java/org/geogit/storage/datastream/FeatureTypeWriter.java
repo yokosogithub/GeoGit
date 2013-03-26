@@ -12,8 +12,8 @@ import java.io.IOException;
 import java.io.OutputStream;
 
 import org.geogit.api.RevFeatureType;
+import org.geogit.storage.FieldType;
 import org.geogit.storage.ObjectWriter;
-import org.geogit.storage.datastream.FormatCommon.FieldType;
 import org.geotools.referencing.CRS;
 import org.geotools.referencing.CRS.AxisOrder;
 import org.geotools.referencing.wkt.Formattable;
@@ -21,7 +21,6 @@ import org.opengis.feature.type.GeometryType;
 import org.opengis.feature.type.Name;
 import org.opengis.feature.type.PropertyDescriptor;
 import org.opengis.feature.type.PropertyType;
-import org.opengis.referencing.FactoryException;
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
 
 public class FeatureTypeWriter implements ObjectWriter<RevFeatureType> {

@@ -1,6 +1,6 @@
 package org.geogit.api.plumbing.diff;
 
-import org.geogit.storage.text.AttributeValueSerializer;
+import org.geogit.storage.text.TextValueSerializer;
 
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
@@ -33,9 +33,8 @@ public class GenericAttributeDiffImpl implements AttributeDiff {
 
     }
 
-    private CharSequence attributeValueAsString(Optional<?> opt) {
-        Object value = opt.orNull();
-        return AttributeValueSerializer.asText(value);
+    private CharSequence attributeValueAsString(Optional<?> value) {
+        return TextValueSerializer.asString(Optional.fromNullable((Object) value.orNull()));
     }
 
     @Override

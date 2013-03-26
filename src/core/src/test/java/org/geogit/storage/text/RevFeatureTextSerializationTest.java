@@ -10,6 +10,7 @@ import java.util.UUID;
 import org.geogit.api.ObjectId;
 import org.geogit.api.RevFeature;
 import org.geogit.api.RevObject.TYPE;
+import org.geogit.storage.FieldType;
 import org.geogit.storage.ObjectReader;
 import org.geogit.storage.ObjectSerializingFactory;
 import org.geogit.storage.RevFeatureSerializationTest;
@@ -41,8 +42,7 @@ public class RevFeatureTextSerializationTest extends RevFeatureSerializationTest
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         OutputStreamWriter writer = new OutputStreamWriter(out, "UTF-8");
         writer.write(TYPE.FEATURE.name() + "\n");
-        writer.write("id\t" + ObjectId.forString("ID_STRING") + "\n");
-        writer.write(Float.class.getName() + "\tNUMBER" + "\n");
+        writer.write(FieldType.FLOAT.name() + "\tNUMBER" + "\n");
         writer.flush();
 
         ObjectReader<RevFeature> reader = factory.createFeatureReader();
@@ -51,14 +51,13 @@ public class RevFeatureTextSerializationTest extends RevFeatureSerializationTest
                     new ByteArrayInputStream(out.toByteArray()));
             fail();
         } catch (Exception e) {
-            assertTrue(e.getMessage().contains("Wrong attribute value"));
+            assertTrue(e.getMessage().contains("wrong value"));
         }
 
         // an unrecognized class
         out = new ByteArrayOutputStream();
         writer = new OutputStreamWriter(out, "UTF-8");
         writer.write(TYPE.FEATURE.name() + "\n");
-        writer.write("id\t" + ObjectId.forString("ID_STRING") + "\n");
         writer.write(this.getClass().getName() + "\tvalue" + "\n");
         writer.flush();
 
@@ -67,7 +66,7 @@ public class RevFeatureTextSerializationTest extends RevFeatureSerializationTest
                     new ByteArrayInputStream(out.toByteArray()));
             fail();
         } catch (Exception e) {
-            assertTrue(e.getMessage().contains("Cannot deserialize attribute. Unknown type"));
+            assertTrue(e.getMessage().contains("Wrong type name"));
         }
 
         // a wrong category

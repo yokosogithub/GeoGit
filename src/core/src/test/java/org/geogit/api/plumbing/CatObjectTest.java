@@ -7,12 +7,12 @@ import org.geogit.api.RevFeatureBuilder;
 import org.geogit.api.RevObject.TYPE;
 import org.geogit.api.RevTree;
 import org.geogit.api.RevTreeBuilder;
+import org.geogit.storage.FieldType;
 import org.geogit.storage.ObjectDatabase;
 import org.geogit.test.integration.RepositoryTestCase;
 import org.junit.Test;
 
 import com.google.common.base.Suppliers;
-import com.vividsolutions.jts.geom.Point;
 
 public class CatObjectTest extends RepositoryTestCase {
 
@@ -75,9 +75,9 @@ public class CatObjectTest extends RepositoryTestCase {
         String[] lines = desc.toString().split("\n");
 
         assertEquals(points1.getProperties().size() + 2, lines.length);
-        assertEquals(Integer.class.getName() + "\t1000", lines[2]);
-        assertEquals(Point.class.getName() + "\tPOINT (1 1)", lines[3]);
-        assertEquals(String.class.getName() + "\tStringProp1_1", lines[4]);
+        assertEquals(FieldType.INTEGER.name() + "\t1000", lines[2]);
+        assertEquals(FieldType.POINT.name() + "\tPOINT (1 1)", lines[3]);
+        assertEquals(FieldType.STRING.name() + "\tStringProp1_1", lines[4]);
     }
 
 }

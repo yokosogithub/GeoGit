@@ -1,4 +1,4 @@
-/* Copyright (c) 2011 TOPP - www.openplans.org. All rights reserved.
+/* Copyright (c) 2011 TOPP - www.openplans.org. All rights reserved. 
  * This code is licensed under the LGPL 2.1 license, available at the root
  * application directory.
  */
@@ -14,8 +14,6 @@ import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.io.Serializable;
 import java.io.Writer;
-import java.math.BigDecimal;
-import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
@@ -23,7 +21,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.TreeMap;
-import java.util.UUID;
 
 import org.geogit.api.Bucket;
 import org.geogit.api.CommitBuilder;
@@ -37,7 +34,7 @@ import org.geogit.api.RevObject.TYPE;
 import org.geogit.api.RevPerson;
 import org.geogit.api.RevTree;
 import org.geogit.api.RevTreeImpl;
-import org.geogit.storage.EntityType;
+import org.geogit.storage.FieldType;
 import org.geogit.storage.GtEntityType;
 import org.geogit.storage.ObjectReader;
 import org.geogit.storage.ObjectSerializingFactory;
@@ -71,14 +68,8 @@ import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.Iterators;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.google.common.primitives.Bytes;
-import com.google.common.primitives.Doubles;
-import com.google.common.primitives.Floats;
-import com.google.common.primitives.Ints;
-import com.google.common.primitives.Longs;
 import com.vividsolutions.jts.geom.Envelope;
 import com.vividsolutions.jts.geom.Geometry;
-import com.vividsolutions.jts.io.WKTReader;
 
 /**
  * An {@link ObjectSerialisingFactory} for the {@link RevObject}s text format.
@@ -87,35 +78,52 @@ import com.vividsolutions.jts.io.WKTReader;
  * <H3>Commit:</H3>
  * 
  * <pre>
- * {@code "id" + "\t" +  <id> + "\n"}
+ * {@code COMMIT\n}
  * {@code "tree" + "\t" +  <tree id> + "\n"}
- * {@code "parents" + "\t" +  <parent id> [+ " " + <parent id>...]  + "\n"} 
- * {@code "author" + "\t" +  <<author name> | ""> + " " + "<" + <<author email> | ""> + ">\n"}
- * {@code "committer" + "\t" +  <<committer name> | ""> + " " + "<" + <<committer email> | ""> + ">\n"}
- * {@code "timestamp" + "\t" +  <timestamp> + "\n"}
+ * {@code "parents" + "\t" +  <parent id> [+ " " + <parent id>...]  + "\n"}
+ * {@code "author" + "\t" +  <author name>  + " " + <author email>  + "\t" + <author_timestamp> + "\t" + <author_timezone_offset> + "\n"}
+ * {@code "committer" + "\t" +  <committer name>  + " " + <committer email>  + "\t" + <committer_timestamp> + "\t" + <committer_timezone_offset> + "\n"}     * 
  * {@code "message" + "\t" +  <message> + "\n"}
  * </pre>
  * 
  * <H3>Tree:</H3>
  * 
  * <pre>
- * {@code "id" + "\t" +  <id> + "\n"}
- * ...
+ * {@code TREE\n} 
+ * {@code "size" + "\t" +  <size> + "\n"}
+ * {@code "numtrees" + "\t" +  <numtrees> + "\n"}
+ * 
+ * {@code "BUCKET" + "\t" +  <bucket_idx> + "\t" + <ObjectId> + "\t" + <bounds> + "\n"}
+ * or 
+ * {@code "REF" + "\t" +  <ref_type> + "\t" + <ref_name> + "\t" + <ObjectId> + "\t" + <MetadataId> + "\t" + <bounds>"\n"}
+ * .
+ * .
+ * .
  * </pre>
  * 
  * <H3>Feature:</H3>
  * 
  * <pre>
- * {@code "id" + "\t" +  <id> + "\n"}
- * {@code "id" + "\t" +  <id> + "\n"}
- * ...
+ * {@code FEATURE\n}
+ * {@code "<attribute_class_1>" + "\t" +  <attribute_value_1> + "\n"}
+ * .
+ * .
+ * .     
+ * {@code "<attribute_class_n>" + "\t" +  <attribute_value_n> + "\n"}
+ * For array types, values are written as a space-separated list of single values, enclosed between square brackets
  * </pre>
  * 
  * <H3>FeatureType:</H3>
  * 
  * <pre>
- * {@code "id" + "\t" +  <id> + "\n"}
- * ...
+ * {@code FEATURE_TYPE\n} 
+ * {@code "name" + "\t" +  <name> + "\n"}
+ * {@code "<attribute_name>" + "\t" +  <attribute_type> + "\t" + <min_occur> + "\t" + <max_occur> +  "\t" + <nillable <True|False>> + "\n"}
+ * {@code "<attribute_name>" + "\t" +  <attribute_type> + "\t" + <min_occur> + "\t" + <max_occur> +  "\t" + <nillable <True|False>> + "\n"}
+ * .
+ * .
+ * .
+ * 
  * </pre>
  * 
  * <H3>Tag:</H3>
@@ -127,7 +135,7 @@ import com.vividsolutions.jts.io.WKTReader;
  */
 public class TextSerializationFactory implements ObjectSerializingFactory {
 
-    protected static final String NULL = "null";
+    // protected static final String NULL = "null";
 
     @Override
     public ObjectReader<RevCommit> createCommitReader() {
@@ -276,7 +284,7 @@ public class TextSerializationFactory implements ObjectSerializingFactory {
      * Output format:
      * 
      * <pre>
-     * {@code "id" + "\t" +  <id> + "\n"}
+     * {@code COMMIT\n}
      * {@code "tree" + "\t" +  <tree id> + "\n"}
      * {@code "parents" + "\t" +  <parent id> [+ " " + <parent id>...]  + "\n"}
      * {@code "author" + "\t" +  <author name>  + " " + <author email>  + "\t" + <author_timestamp> + "\t" + <author_timezone_offset> + "\n"}
@@ -289,7 +297,6 @@ public class TextSerializationFactory implements ObjectSerializingFactory {
 
         @Override
         protected void print(RevCommit commit, Writer w) throws IOException {
-            println(w, "id\t", commit.getId().toString());
             println(w, "tree\t", commit.getTreeId().toString());
             print(w, "parents\t");
             for (Iterator<ObjectId> it = commit.getParentIds().iterator(); it.hasNext();) {
@@ -325,7 +332,7 @@ public class TextSerializationFactory implements ObjectSerializingFactory {
      * Output format:
      * 
      * <pre>
-     * {@code "id" + "\t" +  <id> + "\n"}
+     * {@code FEATURE\n}
      * {@code "<attribute_class_1>" + "\t" +  <attribute_value_1> + "\n"}
      * .
      * .
@@ -339,69 +346,14 @@ public class TextSerializationFactory implements ObjectSerializingFactory {
 
         @Override
         protected void print(RevFeature feature, Writer w) throws IOException {
-            println(w, "id\t", feature.getId().toString());
             ImmutableList<Optional<Object>> values = feature.getValues();
             for (Optional<Object> opt : values) {
-                if (opt.isPresent()) {
-                    Object value = opt.get();
-                    println(w, value.getClass().getName() + "\t", getValueAsString(value));
-                } else {
-                    println(w, NULL);
-                }
+                final FieldType type = FieldType.forValue(opt);
+                String valueString = TextValueSerializer.asString(opt);
+                println(w, type.toString() + "\t" + valueString);
+
             }
             w.flush();
-        }
-
-        private CharSequence getValueAsString(Object value) {
-            final EntityType type = EntityType.determineType(value);
-            switch (type) {
-            case CHAR_ARRAY:
-                String chars = new String((char[]) value);
-                return chars;
-            case DOUBLE_ARRAY:
-            case FLOAT_ARRAY:
-            case INT_ARRAY:
-            case LONG_ARRAY:
-            case BYTE_ARRAY:
-            case BOOLEAN_ARRAY:
-                return arrayAsString((Object[]) value);
-            case GEOMETRY:
-                Geometry geom = (Geometry) value;
-                return geom.toText();
-            case NULL:
-                return "";
-            case STRING:
-                return escapeNewLines(value.toString());
-            case BOOLEAN:
-            case BYTE:
-            case DOUBLE:
-            case FLOAT:
-            case INT:
-            case LONG:
-            case BIGDECIMAL:
-            case BIGINT:
-            case UNKNOWN_SERIALIZABLE:
-            case UNKNOWN:
-            case UUID:
-            default:
-                return value.toString();
-            }
-
-        }
-
-        private CharSequence escapeNewLines(String string) {
-            return string.replace("\\n", "\\\\n").replace("\n", "\\n");
-        }
-
-        private CharSequence arrayAsString(Object[] array) {
-            StringBuilder sb = new StringBuilder("[");
-            for (Object element : array) {
-                sb.append(element.toString());
-                sb.append(" ");
-            }
-            sb.deleteCharAt(sb.length() - 1);
-            sb.append("]");
-            return sb.toString();
         }
 
     };
@@ -412,7 +364,7 @@ public class TextSerializationFactory implements ObjectSerializingFactory {
      * Output format:
      * 
      * <pre>
-     * {@code "id" + "\t" +  <id> + "\n"}
+     * {@code FEATURE_TYPE\n} 
      * {@code "name" + "\t" +  <name> + "\n"}
      * {@code "<attribute_name>" + "\t" +  <attribute_type> + "\t" + <min_occur> + "\t" + <max_occur> +  "\t" + <nillable <True|False>> + "\n"}
      * {@code "<attribute_name>" + "\t" +  <attribute_type> + "\t" + <min_occur> + "\t" + <max_occur> +  "\t" + <nillable <True|False>> + "\n"}
@@ -429,7 +381,6 @@ public class TextSerializationFactory implements ObjectSerializingFactory {
 
         @Override
         protected void print(RevFeatureType featureType, Writer w) throws IOException {
-            println(w, "id\t", featureType.getId().toString());
             println(w, "name\t", featureType.getName().toString());
             Collection<PropertyDescriptor> attribs = featureType.type().getDescriptors();
             for (PropertyDescriptor attrib : attribs) {
@@ -442,7 +393,7 @@ public class TextSerializationFactory implements ObjectSerializingFactory {
                 throws IOException {
             print(w, attrib.getName().toString());
             print(w, "\t");
-            print(w, attrib.getType().getBinding().getName());
+            print(w, FieldType.forBinding(attrib.getType().getBinding()).name());
             print(w, "\t");
             print(w, Integer.toString(attrib.getMinOccurs()));
             print(w, "\t");
@@ -461,11 +412,11 @@ public class TextSerializationFactory implements ObjectSerializingFactory {
                     // use a flag to control whether the code is returned in EPSG: form instead of
                     // urn:ogc:.. form irrespective of the org.geotools.referencing.forceXY System
                     // property.
-                    final boolean longitudeFisrt = CRS.getAxisOrder(crs, false) == AxisOrder.EAST_NORTH;
+                    final boolean longitudeFirst = CRS.getAxisOrder(crs, false) == AxisOrder.EAST_NORTH;
                     boolean codeOnly = true;
                     String crsCode = CRS.toSRS(crs, codeOnly);
                     if (crsCode != null) {
-                        srsName = (longitudeFisrt ? "EPSG:" : "urn:ogc:def:crs:EPSG::") + crsCode;
+                        srsName = (longitudeFirst ? "EPSG:" : "urn:ogc:def:crs:EPSG::") + crsCode;
                     } else {
                         srsName = null;
                     }
@@ -496,7 +447,7 @@ public class TextSerializationFactory implements ObjectSerializingFactory {
      * Output format:
      * 
      * <pre>
-     * {@code "id" + "\t" +  <id> + "\n"}
+     * {@code TREE\n} 
      * {@code "size" + "\t" +  <size> + "\n"}
      * {@code "numtrees" + "\t" +  <numtrees> + "\n"}
      * 
@@ -512,7 +463,6 @@ public class TextSerializationFactory implements ObjectSerializingFactory {
 
         @Override
         protected void print(RevTree revTree, Writer w) throws IOException {
-            println(w, "id\t", revTree.getId().toString());
             println(w, "size\t", Long.toString(revTree.size()));
             println(w, "numtrees\t", Integer.toString(revTree.numTrees()));
             if (revTree.trees().isPresent()) {
@@ -567,10 +517,14 @@ public class TextSerializationFactory implements ObjectSerializingFactory {
                 BufferedReader reader;
                 reader = new BufferedReader(new InputStreamReader(rawData, "UTF-8"));
                 TYPE type = RevObject.TYPE.valueOf(reader.readLine().trim());
-                T parsed = read(reader, type);
+                T parsed = read(id, reader, type);
                 Preconditions.checkState(parsed != null, "parsed to null");
-                Preconditions.checkState(id.equals(parsed.getId()),
-                        "Expected and parsed object ids don't match: %s %s", id, parsed.getId());
+                if (id != null) {
+                    Preconditions
+                            .checkState(id.equals(parsed.getId()),
+                                    "Expected and parsed object ids don't match: %s %s", id,
+                                    parsed.getId());
+                }
                 return parsed;
             } catch (Exception e) {
                 throw Throwables.propagate(e);
@@ -587,7 +541,7 @@ public class TextSerializationFactory implements ObjectSerializingFactory {
             return value;
         }
 
-        protected abstract T read(BufferedReader reader, TYPE type) throws IOException;
+        protected abstract T read(ObjectId id, BufferedReader reader, TYPE type) throws IOException;
 
         protected Node parseNodeLine(String line) {
             List<String> tokens = Lists.newArrayList(Splitter.on('\t').split(line));
@@ -626,16 +580,16 @@ public class TextSerializationFactory implements ObjectSerializingFactory {
     private static final TextReader<RevObject> OBJECT_READER = new TextReader<RevObject>() {
 
         @Override
-        protected RevObject read(BufferedReader read, TYPE type) throws IOException {
+        protected RevObject read(ObjectId id, BufferedReader read, TYPE type) throws IOException {
             switch (type) {
             case COMMIT:
-                return COMMIT_READER.read(read, type);
+                return COMMIT_READER.read(id, read, type);
             case FEATURE:
-                return FEATURE_READER.read(read, type);
+                return FEATURE_READER.read(id, read, type);
             case TREE:
-                return TREE_READER.read(read, type);
+                return TREE_READER.read(id, read, type);
             case FEATURETYPE:
-                return FEATURETYPE_READER.read(read, type);
+                return FEATURETYPE_READER.read(id, read, type);
             default:
                 throw new IllegalArgumentException("Unknown object type " + type);
             }
@@ -649,12 +603,11 @@ public class TextSerializationFactory implements ObjectSerializingFactory {
      * Parses a commit of the format:
      * 
      * <pre>
-     * {@code "id" + "\t" +  <id> + "\n"}
+     * {@code COMMIT\n}
      * {@code "tree" + "\t" +  <tree id> + "\n"}
      * {@code "parents" + "\t" +  <parent id> [+ " " + <parent id>...]  + "\n"}
-     * {@code "author" + "\t" +  <<author name> | ""> + " " + "<" + <<author email> | ""> + ">\n"}
-     * {@code "committer" + "\t" +  <<committer name> | ""> + " " + "<" + <<committer email> | ""> + ">\n"}
-     * {@code "timestamp" + "\t" +  <timestamp> + "\n"}
+     * {@code "author" + "\t" +  <author name>  + " " + <author email>  + "\t" + <author_timestamp> + "\t" + <author_timezone_offset> + "\n"}
+     * {@code "committer" + "\t" +  <committer name>  + " " + <committer email>  + "\t" + <committer_timestamp> + "\t" + <committer_timezone_offset> + "\n"}     * 
      * {@code "message" + "\t" +  <message> + "\n"}
      * </pre>
      * 
@@ -662,9 +615,8 @@ public class TextSerializationFactory implements ObjectSerializingFactory {
     private static final TextReader<RevCommit> COMMIT_READER = new TextReader<RevCommit>() {
 
         @Override
-        protected RevCommit read(BufferedReader reader, TYPE type) throws IOException {
+        protected RevCommit read(ObjectId id, BufferedReader reader, TYPE type) throws IOException {
             Preconditions.checkArgument(TYPE.COMMIT.equals(type), "Wrong type: %s", type.name());
-            String id = parseLine(reader.readLine(), "id");
             String tree = parseLine(reader.readLine(), "tree");
             List<String> parents = Lists.newArrayList(Splitter.on(' ').omitEmptyStrings()
                     .split(parseLine(reader.readLine(), "parents")));
@@ -694,8 +646,6 @@ public class TextSerializationFactory implements ObjectSerializingFactory {
             builder.setParentIds(parentIds);
             builder.setTreeId(ObjectId.valueOf(tree));
             RevCommit commit = builder.build();
-            ObjectId oid = ObjectId.valueOf(id);
-            // Preconditions.checkArgument(oid.equals(commit.getId()));
             return commit;
         }
 
@@ -727,7 +677,6 @@ public class TextSerializationFactory implements ObjectSerializingFactory {
      * Parses a feature in the format:
      * 
      * <pre>
-     * {@code "id" + "\t" +  <id> + "\n"}
      * {@code "<attribute class_1>" + "\t" +  <attribute_value_1> + "\n"}
      * .
      * .
@@ -741,9 +690,8 @@ public class TextSerializationFactory implements ObjectSerializingFactory {
     private static final TextReader<RevFeature> FEATURE_READER = new TextReader<RevFeature>() {
 
         @Override
-        protected RevFeature read(BufferedReader reader, TYPE type) throws IOException {
+        protected RevFeature read(ObjectId id, BufferedReader reader, TYPE type) throws IOException {
             Preconditions.checkArgument(TYPE.FEATURE.equals(type), "Wrong type: %s", type.name());
-            String id = parseLine(reader.readLine(), "id");
             List<Object> values = Lists.newArrayList();
             String line;
             while ((line = reader.readLine()) != null) {
@@ -754,104 +702,21 @@ public class TextSerializationFactory implements ObjectSerializingFactory {
             for (Object value : values) {
                 valuesBuilder.add(Optional.fromNullable(value));
             }
-            return new RevFeature(ObjectId.valueOf(id), valuesBuilder.build());
+            return RevFeature.build(valuesBuilder.build());
         }
 
         private Object parseAttribute(String line) {
-            if (line.trim().equals(NULL)) {
-                return null;
-            }
             List<String> tokens = Lists.newArrayList(Splitter.on('\t').split(line));
             Preconditions.checkArgument(tokens.size() == 2, "Wrong attribute definition: %s", line);
+            String typeName = tokens.get(0);
             String value = tokens.get(1);
+            FieldType type;
             try {
-                Class<?> clazz = Class.forName(tokens.get(0));
-                if (clazz.equals(Double.class)) {
-                    return Double.parseDouble(value);
-                } else if (clazz.equals(Integer.class)) {
-                    return Integer.parseInt(value);
-                } else if (clazz.equals(Float.class)) {
-                    return Float.parseFloat(value);
-                } else if (clazz.equals(Long.class)) {
-                    return Long.parseLong(value);
-                } else if (clazz.equals(Boolean.class)) {
-                    return Boolean.parseBoolean(value);
-                } else if (clazz.equals(Byte.class)) {
-                    return Byte.parseByte(value);
-                } else if (clazz.equals(String.class)) {
-                    return unescapeNewLines(value);
-                } else if (clazz.equals(BigInteger.class)) {
-                    return new BigInteger(value);
-                } else if (clazz.equals(BigDecimal.class)) {
-                    return new BigDecimal(value);
-                } else if (clazz.equals(UUID.class)) {
-                    return UUID.fromString(value);
-                } else if (Geometry.class.isAssignableFrom(clazz)) {
-                    return new WKTReader().read(value);
-                } else if (clazz.equals(float[].class) || clazz.equals(double[].class)
-                        || clazz.equals(int[].class) || clazz.equals(byte[].class)
-                        || clazz.equals(long[].class)) {
-                    return stringAsArray(value, clazz);
-                } else if (clazz.equals(char[].class)) {
-                    return value.toCharArray();
-                } else {
-                    // TODO: try to somehow create instance of class from text value?
-                    throw new IllegalArgumentException(
-                            "Cannot deserialize attribute. Unknown type: " + tokens.get(0));
-                }
-
-            } catch (NumberFormatException e) {
-                throw new IllegalArgumentException("Wrong attribute value: " + value);
+                type = FieldType.valueOf(typeName);
             } catch (IllegalArgumentException e) {
-                throw e;
-            } catch (ClassNotFoundException e) {
-                throw new IllegalArgumentException("Cannot deserialize attribute. Unknown type: "
-                        + tokens.get(0));
-            } catch (Exception e) { // TODO: maybe add more detailed exception handling here
-                throw new IllegalArgumentException("Cannot deserialize attribute: " + line);
+                throw new IllegalArgumentException("Wrong type name: " + typeName);
             }
-        }
-
-        private CharSequence unescapeNewLines(String string) {
-            // TODO:
-            return string;
-        }
-
-        private Object stringAsArray(String value, Class<?> clazz) {
-            String[] s = value.replace("[", "").replace("]", "").split(" ");
-            List<Number> list = Lists.newArrayList();
-
-            for (String token : s) {
-                try {
-                    if (clazz.equals(double[].class)) {
-                        list.add(Double.parseDouble(token));
-                    } else if (clazz.equals(float[].class)) {
-                        list.add(Float.parseFloat(token));
-                    } else if (clazz.equals(long[].class)) {
-                        list.add(Long.parseLong(token));
-                    } else if (clazz.equals(int[].class)) {
-                        list.add(Integer.parseInt(token));
-                    } else if (clazz.equals(byte[].class)) {
-                        list.add(Byte.parseByte(token));
-                    }
-                } catch (NumberFormatException e) {
-                    throw new IllegalArgumentException("Cannot parse number array: " + value);
-                }
-            }
-            if (clazz.equals(double[].class)) {
-                return Doubles.toArray(list);
-            } else if (clazz.equals(float[].class)) {
-                return Floats.toArray(list);
-            } else if (clazz.equals(long[].class)) {
-                return Longs.toArray(list);
-            } else if (clazz.equals(int[].class)) {
-                return Ints.toArray(list);
-            } else if (clazz.equals(byte[].class)) {
-                return Bytes.toArray(list);
-            }
-
-            throw new IllegalArgumentException("Wrong class: " + clazz.getName());
-
+            return TextValueSerializer.fromString(type, value);
         }
 
     };
@@ -881,21 +746,29 @@ public class TextSerializationFactory implements ObjectSerializingFactory {
         private FeatureTypeFactory typeFactory;
 
         @Override
-        protected RevFeatureType read(BufferedReader reader, TYPE type) throws IOException {
+        protected RevFeatureType read(ObjectId id, BufferedReader reader, TYPE type)
+                throws IOException {
             Preconditions.checkArgument(TYPE.FEATURETYPE.equals(type), "Wrong type: %s",
                     type.name());
             builder = new SimpleFeatureTypeBuilder();
             typeFactory = builder.getFeatureTypeFactory();
-            String id = parseLine(reader.readLine(), "id");
             String name = parseLine(reader.readLine(), "name");
             SimpleFeatureTypeBuilder builder = new SimpleFeatureTypeBuilder();
-            builder.setName(new NameImpl(name));
+            if (name.contains(":")) {
+                int idx = name.lastIndexOf(':');
+                String namespace = name.substring(0, idx);
+                String local = name.substring(idx + 1);
+                builder.setName(new NameImpl(namespace, local));
+            } else {
+                builder.setName(new NameImpl(name));
+            }
+
             String line;
             while ((line = reader.readLine()) != null) {
                 builder.add(parseAttributeDescriptor(line));
             }
             SimpleFeatureType sft = builder.buildFeatureType();
-            return new RevFeatureType(ObjectId.valueOf(id), sft);
+            return RevFeatureType.build(sft);
 
         }
 
@@ -906,8 +779,8 @@ public class TextSerializationFactory implements ObjectSerializingFactory {
             NameImpl name = new NameImpl(tokens.get(0));
             Class<?> type;
             try {
-                type = Class.forName(tokens.get(1));
-            } catch (ClassNotFoundException e) {
+                type = FieldType.valueOf(tokens.get(1)).getBinding();
+            } catch (IllegalArgumentException e) {
                 throw new IllegalArgumentException("Wrong type: " + tokens.get(1));
             }
             int min = Integer.parseInt(tokens.get(2));
@@ -980,12 +853,11 @@ public class TextSerializationFactory implements ObjectSerializingFactory {
     private static final TextReader<RevTree> TREE_READER = new TextReader<RevTree>() {
 
         @Override
-        protected RevTree read(BufferedReader reader, TYPE type) throws IOException {
+        protected RevTree read(ObjectId id, BufferedReader reader, TYPE type) throws IOException {
             Preconditions.checkArgument(TYPE.TREE.equals(type), "Wrong type: %s", type.name());
             Builder<Node> features = ImmutableList.builder();
             Builder<Node> trees = ImmutableList.builder();
             TreeMap<Integer, Bucket> subtrees = Maps.newTreeMap();
-            ObjectId id = ObjectId.valueOf(parseLine(reader.readLine(), "id"));
             long size = Long.parseLong(parseLine(reader.readLine(), "size"));
             int numTrees = Integer.parseInt(parseLine(reader.readLine(), "numtrees"));
             String line;

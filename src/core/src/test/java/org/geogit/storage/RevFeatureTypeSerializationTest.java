@@ -8,7 +8,6 @@ import java.math.BigInteger;
 
 import org.geogit.api.RevFeatureType;
 import org.geogit.api.RevObject.TYPE;
-import org.geotools.data.DataUtilities;
 import org.geotools.feature.simple.SimpleFeatureTypeBuilder;
 import org.geotools.referencing.CRS;
 import org.junit.Assert;
@@ -17,7 +16,6 @@ import org.junit.Test;
 import org.opengis.feature.simple.SimpleFeatureType;
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
 
-import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.geom.Point;
 
 public abstract class RevFeatureTypeSerializationTest extends Assert {
@@ -27,11 +25,11 @@ public abstract class RevFeatureTypeSerializationTest extends Assert {
 
     private String typeName = "TestType";
 
-//    private String typeSpec = "♥";
-//            "str:String," + "bool:Boolean," + "byte:java.lang.Byte,"
-//            + "doub:Double," + "bdec:java.math.BigDecimal," + "flt:Float," + "int:Integer,"
-//            + "bint:java.math.BigInteger," + "pp:Point:srid=4326," + "lng:java.lang.Long,"
-//            + "uuid:java.util.UUID";
+    // private String typeSpec = "♥";
+    // "str:String," + "bool:Boolean," + "byte:java.lang.Byte,"
+    // + "doub:Double," + "bdec:java.math.BigDecimal," + "flt:Float," + "int:Integer,"
+    // + "bint:java.math.BigInteger," + "pp:Point:srid=4326," + "lng:java.lang.Long,"
+    // + "uuid:java.util.UUID";
 
     private SimpleFeatureType featureType1;
 
@@ -58,7 +56,7 @@ public abstract class RevFeatureTypeSerializationTest extends Assert {
         builder.add("pp", Point.class, LAT_LON);
         builder.add("long", Long.class);
         featureType1 = builder.buildFeatureType();
-        
+
         builder.setName("featuretype2_axisorder");
         builder.add("str", String.class);
         builder.add("bool", Boolean.class);
@@ -88,7 +86,7 @@ public abstract class RevFeatureTypeSerializationTest extends Assert {
     public void testSerialization() throws Exception {
         roundtrip(featureType1);
     }
-    
+
     @Test
     public void testAxisOrder() throws Exception {
         roundtrip(featureType2_axis_order);
@@ -115,15 +113,13 @@ public abstract class RevFeatureTypeSerializationTest extends Assert {
 
         assertNotNull(rft);
         SimpleFeatureType serializedFeatureType = (SimpleFeatureType) rft.type();
-        assertEquals(serializedFeatureType.getDescriptors().size(), ftype.getDescriptors()
-                .size());
+        assertEquals(serializedFeatureType.getDescriptors().size(), ftype.getDescriptors().size());
 
         for (int i = 0; i < ftype.getDescriptors().size(); i++) {
             assertEquals(ftype.getDescriptor(i), serializedFeatureType.getDescriptor(i));
         }
 
-        assertEquals(ftype.getGeometryDescriptor(),
-                serializedFeatureType.getGeometryDescriptor());
+        assertEquals(ftype.getGeometryDescriptor(), serializedFeatureType.getGeometryDescriptor());
         assertEquals(ftype.getCoordinateReferenceSystem(),
                 serializedFeatureType.getCoordinateReferenceSystem());
     }

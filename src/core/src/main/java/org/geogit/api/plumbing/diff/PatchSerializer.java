@@ -111,12 +111,11 @@ public class PatchSerializer {
                 } else if (operation.equals("A") || operation.equals("R")) {
                     String fullPath = headerTokens[1].trim();
                     String featureTypeId = headerTokens[2].trim();
-                    String id = lines.get(2).split("\t")[1].trim();
                     RevFeatureType revFeatureType;
                     revFeatureType = featureTypes.get(featureTypeId);
                     FeatureBuilder featureBuilder = new FeatureBuilder(revFeatureType);
                     ObjectReader<RevFeature> reader = factory.createFeatureReader();
-                    RevFeature revFeature = reader.read(ObjectId.valueOf(id), stream);
+                    RevFeature revFeature = reader.read(null, stream);
                     Feature feature = featureBuilder.build(NodeRef.nodeFromPath(fullPath),
                             revFeature);
                     if (operation.equals("R")) {
@@ -133,10 +132,9 @@ public class PatchSerializer {
             String element = Joiner.on("\n").join(lines);
             ByteArrayInputStream stream = new ByteArrayInputStream(element.getBytes(Charsets.UTF_8));
             String[] tokens = lines.get(1).split("\t");
-            String id = tokens[1].trim();
             ObjectReader<RevFeatureType> reader = factory.createFeatureTypeReader();
-            RevFeatureType featureType = reader.read(ObjectId.valueOf(id), stream);
-            featureTypes.put(id, featureType);
+            RevFeatureType featureType = reader.read(null, stream);
+            featureTypes.put(featureType.getId().toString(), featureType);
         } else {
             throw new IllegalArgumentException("Wrong patch content: " + lines.get(0));
         }

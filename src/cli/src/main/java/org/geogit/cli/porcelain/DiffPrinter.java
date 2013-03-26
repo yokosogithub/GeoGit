@@ -31,7 +31,7 @@ import org.geogit.api.plumbing.diff.FeatureDiff;
 import org.geogit.api.plumbing.diff.GeometryAttributeDiff;
 import org.geogit.api.plumbing.diff.LCSGeometryDiffImpl;
 import org.geogit.cli.AnsiDecorator;
-import org.geogit.storage.text.AttributeValueSerializer;
+import org.geogit.storage.text.TextValueSerializer;
 import org.opengis.feature.type.PropertyDescriptor;
 
 import com.google.common.base.Optional;
@@ -192,14 +192,10 @@ class FullDiffPrinter implements DiffPrinter {
             RevFeature feature = (RevFeature) obj.get();
             ImmutableList<Optional<Object>> values = feature.getValues();
             int i = 0;
-            for (Optional<Object> opt : values) {
-                if (opt.isPresent()) {
-                    Object value = opt.get();
-                    console.println(featureType.sortedDescriptors().get(i).getName() + "\t"
-                            + AttributeValueSerializer.asText(value));
-                } else {
-                    console.println("NULL");
-                }
+            for (Optional<Object> value : values) {
+                console.println(featureType.sortedDescriptors().get(i).getName() + "\t"
+                        + TextValueSerializer.asString(value));
+
                 i++;
             }
             console.println();

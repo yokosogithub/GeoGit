@@ -85,19 +85,19 @@ As it can be seen in the following first example, when the specified string poin
 
 	DEFAULT FEATURE TYPE ATTRIBUTES
 	--------------------------------
-	agency: <class java.lang.String>
-	area: <class java.lang.Double>
-	len: <class java.lang.Double>
-	name: <class java.lang.String>
-	number_fac: <class java.lang.Long>
-	owner: <class java.lang.String>
-	parktype: <class java.lang.String>
-	the_geom: <class com.vividsolutions.jts.geom.MultiPolygon>
-	usage: <class java.lang.String>
+	agency: <STRING>
+	area: <DOUBLE>
+	len: <DOUBLE>
+	name: <STRING>
+	number_fac: <Long>
+	owner: <STRING>
+	parktype: <STRING>
+	the_geom: <MULTIPOLYGON>
+	usage: <STRING>
 
 	$geogit cat parks 
-	TREE
 	id    0bbed3603377adfbd3b32afce4d36c2c2e59d9d4
+	TREE	
 	size    50
 	numtrees    0
 	REF    FEATURE    parks.34    38cadc88ef6dad9f38871d704523ee77f69a7f1d    6350a6955b124119850f5a6906f70dc02ebb31c9    -122.86117933535783;-122.854350067846;42.31833119598368;42.32102693871578;EPSG:4326
@@ -115,16 +115,16 @@ In the case of specifying a single feature, the output of the ``cat`` command co
 ::
 
 	$geogit cat HEAD:parks/parks.1
-	FEATURE
 	id    ff51bfc2a36d02a3a51d72eef3e7f44de9c4e231
-	java.lang.String    Medford School District
-	java.lang.Double    636382.400857
-	java.lang.Double    3818.6667552
-	java.lang.String    Abraham Lincoln Elementary
-	java.lang.Long    4
-	java.lang.String    Medford School District
-	java.lang.String    School Field
-	com.vividsolutions.jts.geom.MultiPolygon    MULTIPOLYGON (((-122.83646412838807 42.36016644633764, -122.83706843181271 42.36018038487805, -122.83740062537728 42.360187694790284, -122.83773129525122 42.36019528458837, -122.83795404148778 42.36020136945975, -122.83819236923999 42.36020660256662, -122.83846546872873 42.360518040102995, -122.83876233613934 42.36084768643743, -122.83979986790222 42.361999744796655, -122.83876583032126 42.36206395843249, -122.8387666181915 42.36241475445113, -122.8350544594257 42.362400655348836, -122.83505311158638 42.36190072779918, -122.8352814492704 42.36189781560542, -122.83546514962634 42.36183970799634, -122.8355995051357 42.361675638841625, -122.83649163970789 42.36166473464665, -122.83646412838807 42.36016644633764)))
+	FEATURE
+	STRING    Medford School District
+	DOUBLE    636382.400857
+	DOUBLE    3818.6667552
+	STRING    Abraham Lincoln Elementary
+	LONG    4
+	STRING    Medford School District
+	STRING    School Field
+	MULTIPOLYGON    MULTIPOLYGON (((-122.83646412838807 42.36016644633764, -122.83706843181271 42.36018038487805, -122.83740062537728 42.360187694790284, -122.83773129525122 42.36019528458837, -122.83795404148778 42.36020136945975, -122.83819236923999 42.36020660256662, -122.83846546872873 42.360518040102995, -122.83876233613934 42.36084768643743, -122.83979986790222 42.361999744796655, -122.83876583032126 42.36206395843249, -122.8387666181915 42.36241475445113, -122.8350544594257 42.362400655348836, -122.83505311158638 42.36190072779918, -122.8352814492704 42.36189781560542, -122.83546514962634 42.36183970799634, -122.8355995051357 42.361675638841625, -122.83649163970789 42.36166473464665, -122.83646412838807 42.36016644633764)))
 	java.lang.String    Public
 
 
@@ -160,8 +160,8 @@ Finally, the following example shows the output of both commands for a commit re
 ::
 
 	$geogit cat 509a481257c5791f50f5a35087e432247f9dc8b7
-	COMMIT
 	id    509a481257c5791f50f5a35087e432247f9dc8b7
+	COMMIT	
 	tree    6bc0644ba38372860254c61a62009448ebd8c1e0
 	parents    8c08469ffc54f6cc9132855f0415c79cf3fc7785
 	author    volaya    volaya@opengeo.org    1358773135891    3600000
@@ -194,7 +194,7 @@ Globbing
 
 Some commands in GeoGit, such as the ones used to describe objects shown above, support using wildcards. This way, you can more easily select a set of objects without having to type the name of each of them.
 
-GeoGit uses an ant-like globbing notation, supporting the most common wildcards, namely ``*``, ``?`` and ``**``. The ``*`` character can be any string of any length (includiing zero characters), while ``?`` represents a single character. The ``**`` string is used to indicate any path, so it will cause the command to recursively search into a given path. For instance, the string ``roads/**/???`` will return all features with a name of just three characters, in any path under ``roads``. that includes ``roads/N501``, and also ``roads/spain/madrid/N501``
+GeoGit uses an ant-like globbing notation, supporting the most common wildcards, namely ``*``, ``?`` and ``**``. The ``*`` character can be any string of any length (including zero characters), while ``?`` represents a single character. The ``**`` string is used to indicate any path, so it will cause the command to recursively search into a given path. For instance, the string ``roads/**/???`` will return all features with a name of just three characters, in any path under ``roads``. that includes ``roads/N501``, and also ``roads/spain/madrid/N501``
 
 Please, check the `section about directory-based tasks in the ant manual <http://ant.apache.org/manual/dirtasks.html>`_ for more information.
 

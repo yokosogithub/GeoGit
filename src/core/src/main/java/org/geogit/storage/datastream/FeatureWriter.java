@@ -12,8 +12,8 @@ import java.io.IOException;
 import java.io.OutputStream;
 
 import org.geogit.api.RevFeature;
+import org.geogit.storage.FieldType;
 import org.geogit.storage.ObjectWriter;
-import org.geogit.storage.datastream.FormatCommon.FieldType;
 
 import com.google.common.base.Optional;
 
@@ -27,7 +27,7 @@ public class FeatureWriter implements ObjectWriter<RevFeature> {
             FieldType type = FieldType.forValue(field);
             data.writeByte(type.getTag());
             if (type != FieldType.NULL) {
-                type.write(field.get(), data);
+                DataStreamValueSerializer.write(field, data);
             }
         }
     }

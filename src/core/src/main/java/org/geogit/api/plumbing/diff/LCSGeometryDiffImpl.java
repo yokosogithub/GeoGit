@@ -13,7 +13,8 @@ import org.geogit.api.plumbing.diff.diff_match_patch.Diff;
 import org.geogit.api.plumbing.diff.diff_match_patch.LinesToCharsResult;
 import org.geogit.api.plumbing.diff.diff_match_patch.Operation;
 import org.geogit.api.plumbing.diff.diff_match_patch.Patch;
-import org.geogit.storage.text.AttributeValueSerializer;
+import org.geogit.storage.FieldType;
+import org.geogit.storage.text.TextValueSerializer;
 
 import com.google.common.base.Function;
 import com.google.common.base.Joiner;
@@ -226,8 +227,8 @@ public class LCSGeometryDiffImpl {
         String wkt = obj.isPresent() ? obj.get().toText() : "";
         String res = (String) diffMatchPatch.patch_apply(patches, wkt)[0];
         if (!res.isEmpty()) {
-            return Optional.fromNullable((Geometry) AttributeValueSerializer.fromText(
-                    Geometry.class.getName(), res));
+            return Optional.fromNullable((Geometry) TextValueSerializer.fromString(
+                    FieldType.forBinding(Geometry.class), res));
         } else {
             return Optional.absent();
         }
