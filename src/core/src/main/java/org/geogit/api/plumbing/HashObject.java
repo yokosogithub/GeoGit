@@ -5,16 +5,18 @@
 
 package org.geogit.api.plumbing;
 
+import static org.geogit.api.RevObject.TYPE.COMMIT;
+import static org.geogit.api.RevObject.TYPE.FEATURE;
+import static org.geogit.api.RevObject.TYPE.FEATURETYPE;
+import static org.geogit.api.RevObject.TYPE.TAG;
+import static org.geogit.api.RevObject.TYPE.TREE;
+
 import org.geogit.api.AbstractGeoGitOp;
 import org.geogit.api.ObjectId;
-import org.geogit.api.RevCommit;
-import org.geogit.api.RevFeature;
-import org.geogit.api.RevFeatureType;
 import org.geogit.api.RevObject;
-import org.geogit.api.RevTag;
-import org.geogit.api.RevTree;
 
 import com.google.common.base.Preconditions;
+import com.google.common.hash.Funnel;
 import com.google.common.hash.Hasher;
 
 /**
@@ -24,6 +26,16 @@ import com.google.common.hash.Hasher;
  * @see ObjectId#HASH_FUNCTION
  */
 public class HashObject extends AbstractGeoGitOp<ObjectId> {
+
+    @SuppressWarnings("unchecked")
+    private static final Funnel<? extends RevObject>[] FUNNELS = new Funnel[RevObject.TYPE.values().length];
+    static {
+        FUNNELS[COMMIT.value()] = HashObjectFunnels.commitFunnel();
+        FUNNELS[TREE.value()] = HashObjectFunnels.treeFunnel();
+        FUNNELS[FEATURE.value()] = HashObjectFunnels.featureFunnel();
+        FUNNELS[TAG.value()] = HashObjectFunnels.tagFunnel();
+        FUNNELS[FEATURETYPE.value()] = HashObjectFunnels.featureTypeFunnel();
+    }
 
     private RevObject object;
 
@@ -46,25 +58,9 @@ public class HashObject extends AbstractGeoGitOp<ObjectId> {
         Preconditions.checkState(object != null, "Object has not been set.");
 
         final Hasher hasher = ObjectId.HASH_FUNCTION.newHasher();
-
-        switch (object.getType()) {
-        case COMMIT:
-            HashObjectFunnels.commitFunnel().funnel((RevCommit) object, hasher);
-            break;
-        case TREE:
-            HashObjectFunnels.treeFunnel().funnel((RevTree) object, hasher);
-            break;
-        case FEATURE:
-            HashObjectFunnels.featureFunnel().funnel((RevFeature) object, hasher);
-            break;
-        case TAG:
-            HashObjectFunnels.tagFunnel().funnel((RevTag) object, hasher);
-            break;
-        case FEATURETYPE:
-            HashObjectFunnels.featureTypeFunnel().funnel((RevFeatureType) object, hasher);
-            break;
-        }
-
+        @SuppressWarnings("unchecked")
+        final Funnel<RevObject> funnel = (Funnel<RevObject>) FUNNELS[object.getType().value()];
+        funnel.funnel(object, hasher);
         final byte[] rawKey = hasher.hash().asBytes();
         final ObjectId id = new ObjectId(rawKey);
 
