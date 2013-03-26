@@ -34,7 +34,6 @@ public class RevCommitTextSerializationTest extends RevCommitSerializationTest {
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         OutputStreamWriter writer = new OutputStreamWriter(out, "UTF-8");
         writer.write(TYPE.COMMIT.name() + "\n");
-        writer.write("id\t" + ObjectId.forString("ID_STRING") + "\n");
         writer.write("tree\t" + ObjectId.forString("TREE_ID_STRING") + "\n");
         writer.write("author\tvolaya\tvolaya@opengeo.org\n");
         writer.write("commiter\tvolaya<volaya@opengeo.org>\n");
@@ -55,7 +54,6 @@ public class RevCommitTextSerializationTest extends RevCommitSerializationTest {
         out = new ByteArrayOutputStream();
         writer = new OutputStreamWriter(out, "UTF-8");
         writer.write(TYPE.COMMIT.name() + "\n");
-        writer.write("id\t" + ObjectId.forString("ID_STRING") + "\n");
         writer.write("tree\t" + ObjectId.forString("TREE_ID_STRING") + "\n");
         writer.write("parents\t" + ObjectId.forString("PARENT_ID_STRING") + "\n");
         writer.write("author\tvolaya volaya@opengeo.org\n");

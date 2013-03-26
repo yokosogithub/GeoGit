@@ -1,6 +1,7 @@
 package org.geogit.api.plumbing.diff;
 
-import org.geogit.storage.text.AttributeValueSerializer;
+import org.geogit.storage.FieldType;
+import org.geogit.storage.text.TextValueSerializer;
 
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
@@ -26,16 +27,15 @@ public class DefaultGeometryDiffImpl {
     public DefaultGeometryDiffImpl(String s) {
         String[] tokens = s.split("\t");
         Preconditions.checkArgument(tokens.length == 2, "Wrong difference definition:", s);
-        oldGeom = Optional.fromNullable((Geometry) AttributeValueSerializer.fromText(
-                Geometry.class.getName(), tokens[0]));
-        newGeom = Optional.fromNullable((Geometry) AttributeValueSerializer.fromText(
-                Geometry.class.getName(), tokens[1]));
+        oldGeom = Optional.fromNullable((Geometry) TextValueSerializer.fromString(
+                FieldType.forBinding(Geometry.class), tokens[0]));
+        newGeom = Optional.fromNullable((Geometry) TextValueSerializer.fromString(
+                FieldType.forBinding(Geometry.class), tokens[1]));
 
     }
 
-    private CharSequence geometryValueAsString(Optional<Geometry> opt) {
-        Object value = opt.orNull();
-        return AttributeValueSerializer.asText(value);
+    private CharSequence geometryValueAsString(Optional<Geometry> value) {
+        return TextValueSerializer.asString(Optional.fromNullable((Object) value.orNull()));
     }
 
     public DefaultGeometryDiffImpl reversed() {

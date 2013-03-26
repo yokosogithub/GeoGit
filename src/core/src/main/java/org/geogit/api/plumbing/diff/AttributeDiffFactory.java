@@ -1,6 +1,7 @@
 package org.geogit.api.plumbing.diff;
 
-import org.geogit.storage.text.AttributeValueSerializer;
+import org.geogit.storage.FieldType;
+import org.geogit.storage.text.TextValueSerializer;
 
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
@@ -17,16 +18,20 @@ public class AttributeDiffFactory {
         } else {
             if (AttributeDiff.TYPE.REMOVED.name().startsWith(tokens[0])) {
                 Preconditions.checkArgument(tokens.length == 2, "Wrong difference definition:", s);
-                Object oldValue = AttributeValueSerializer.fromText(clazz.getName(), tokens[1]);
+                Object oldValue = TextValueSerializer.fromString(FieldType.forBinding(clazz),
+                        tokens[1]);
                 ad = new GenericAttributeDiffImpl(Optional.fromNullable(oldValue), null);
             } else if (AttributeDiff.TYPE.ADDED.name().startsWith(tokens[0])) {
                 Preconditions.checkArgument(tokens.length == 2, "Wrong difference definition:", s);
-                Object newValue = AttributeValueSerializer.fromText(clazz.getName(), tokens[1]);
+                Object newValue = TextValueSerializer.fromString(FieldType.forBinding(clazz),
+                        tokens[1]);
                 ad = new GenericAttributeDiffImpl(null, Optional.fromNullable(newValue));
             } else if (AttributeDiff.TYPE.MODIFIED.name().startsWith(tokens[0])) {
                 Preconditions.checkArgument(tokens.length == 3, "Wrong difference definition:", s);
-                Object oldValue = AttributeValueSerializer.fromText(clazz.getName(), tokens[1]);
-                Object newValue = AttributeValueSerializer.fromText(clazz.getName(), tokens[2]);
+                Object oldValue = TextValueSerializer.fromString(FieldType.forBinding(clazz),
+                        tokens[1]);
+                Object newValue = TextValueSerializer.fromString(FieldType.forBinding(clazz),
+                        tokens[2]);
                 ad = new GenericAttributeDiffImpl(Optional.fromNullable(oldValue),
                         Optional.fromNullable(newValue));
             } else {

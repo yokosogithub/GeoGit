@@ -1,6 +1,7 @@
 package org.geogit.api.plumbing.diff;
 
-import org.geogit.storage.text.AttributeValueSerializer;
+import org.geogit.storage.FieldType;
+import org.geogit.storage.text.TextValueSerializer;
 
 import com.google.common.base.Objects;
 import com.google.common.base.Optional;
@@ -49,13 +50,13 @@ public class GeometryAttributeDiff implements AttributeDiff {
         } else if (tokens[0].equals("A")) {
             Preconditions.checkArgument(tokens.length == 3);
             type = TYPE.ADDED;
-            newGeometry = Optional.fromNullable((Geometry) AttributeValueSerializer.fromText(
-                    Geometry.class.getName(), tokens[1]));
+            newGeometry = Optional.fromNullable((Geometry) TextValueSerializer.fromString(
+                    FieldType.forBinding(Geometry.class), tokens[1]));
         } else if (tokens[0].equals("R")) {
             Preconditions.checkArgument(tokens.length == 3);
             type = TYPE.REMOVED;
-            oldGeometry = Optional.fromNullable((Geometry) AttributeValueSerializer.fromText(
-                    Geometry.class.getName(), tokens[1]));
+            oldGeometry = Optional.fromNullable((Geometry) TextValueSerializer.fromString(
+                    FieldType.forBinding(Geometry.class), tokens[1]));
         } else {
             throw new IllegalArgumentException("Wrong difference definition:" + s);
         }
@@ -107,9 +108,13 @@ public class GeometryAttributeDiff implements AttributeDiff {
     public String toString() {
         switch (type) {
         case ADDED:
-            return "[MISSING] -> " + AttributeValueSerializer.asText(newGeometry);
+            return "[MISSING] -> "
+                    + TextValueSerializer.asString(Optional.fromNullable((Object) newGeometry
+                            .orNull()));
         case REMOVED:
-            return AttributeValueSerializer.asText(oldGeometry) + " -> [MISSING]";
+            return TextValueSerializer
+                    .asString(Optional.fromNullable((Object) oldGeometry.orNull()))
+                    + " -> [MISSING]";
         case MODIFIED:
         default:
             return diff.toString();
@@ -120,11 +125,15 @@ public class GeometryAttributeDiff implements AttributeDiff {
     public String asText() {
         switch (type) {
         case ADDED:
-            return type.name().toCharArray()[0] + "\t"
-                    + AttributeValueSerializer.asText(newGeometry);
+            return type.name().toCharArray()[0]
+                    + "\t"
+                    + TextValueSerializer.asString(Optional.fromNullable((Object) newGeometry
+                            .orNull()));
         case REMOVED:
-            return type.name().toCharArray()[0] + "\t"
-                    + AttributeValueSerializer.asText(oldGeometry);
+            return type.name().toCharArray()[0]
+                    + "\t"
+                    + TextValueSerializer.asString(Optional.fromNullable((Object) oldGeometry
+                            .orNull()));
         case MODIFIED:
         default:
             return type.name().toCharArray()[0] + "\t" + diff.asText();

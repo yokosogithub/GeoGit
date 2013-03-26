@@ -28,6 +28,7 @@ import org.geogit.api.plumbing.RevObjectParse;
 import org.geogit.cli.AnsiDecorator;
 import org.geogit.cli.CLICommand;
 import org.geogit.cli.GeogitCLI;
+import org.geogit.storage.FieldType;
 import org.opengis.feature.type.PropertyDescriptor;
 
 import com.beust.jcommander.Parameter;
@@ -111,7 +112,8 @@ public class Show implements CLICommand {
             ansi.a("--------------------------------").newline();
             for (PropertyDescriptor attrib : attribs) {
                 ansi.fg(Color.YELLOW).a(attrib.getName() + ": ").reset()
-                        .a("<" + attrib.getType().getBinding().toString() + ">").newline();
+                        .a("<" + FieldType.forBinding(attrib.getType().getBinding()) + ">")
+                        .newline();
             }
             console.println(ansi.toString());
         } else if (revObject instanceof RevCommit) {

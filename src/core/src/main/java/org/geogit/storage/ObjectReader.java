@@ -30,7 +30,7 @@ public interface ObjectReader<T> {
     /**
      * Reads an object from the given input stream and assigns it the provided {@link ObjectId id}.
      * 
-     * @param id the id to use for the object
+     * @param id the id for the object to create
      * @param rawData the input stream of the object
      * @return the final object
      * @throws IllegalArgumentException if the provided stream does not represents an object of the
