@@ -68,8 +68,8 @@ public class Show implements CLICommand {
         checkState(obj.isPresent(), "refspec did not resolve to any object.");
         RevObject revObject = obj.get();
         if (revObject instanceof RevFeature) {
-            RevFeatureType ft = geogit.command(ResolveFeatureType.class).setFeatureType(path)
-                    .call().get();
+            RevFeatureType ft = geogit.command(ResolveFeatureType.class).setRefSpec(path).call()
+                    .get();
             ImmutableList<PropertyDescriptor> attribs = ft.sortedDescriptors();
             RevFeature feature = (RevFeature) revObject;
             Ansi ansi = AnsiDecorator.newAnsi(true);
@@ -93,7 +93,7 @@ public class Show implements CLICommand {
         } else if (revObject instanceof RevTree) {
             RevTree tree = (RevTree) revObject;
             Optional<RevFeatureType> opt = geogit.command(ResolveFeatureType.class)
-                    .setFeatureType(path).call();
+                    .setRefSpec(path).call();
             checkArgument(opt.isPresent(),
                     "Refspec must resolve to a commit, feature or feature type");
             RevFeatureType ft = opt.get();
