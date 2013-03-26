@@ -51,7 +51,7 @@ Build the geogit.war like this:
 
 The output should tell you where the war is. Something like:
 
-  Building war: <project-home>/geogit/src/web/target/geogit-web-0.2-SNAPSHOT.war
+  Building war: <project-home>/geogit/src/web/target/geogit-web-0.1-SNAPSHOT.war
 
 Deploy the war to your container and ensure one of the two points to the full
 path to your repository:
