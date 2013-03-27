@@ -453,7 +453,7 @@ public class DataStreamValueSerializer {
     public static void write(Optional<Object> opt, DataOutput data) throws IOException {
         FieldType type = FieldType.forValue(opt);
         if (serializers.containsKey(type)) {
-            serializers.get(type).write(opt.get(), data);
+            serializers.get(type).write(opt.orNull(), data);
         } else {
             throw new IllegalArgumentException("The specified type (" + type + ") is not supported");
         }

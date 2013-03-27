@@ -9,6 +9,8 @@ import java.util.UUID;
 
 import org.geogit.storage.FieldType;
 
+import scala.collection.mutable.StringBuilder;
+
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import com.google.common.collect.Lists;
@@ -225,7 +227,55 @@ public class TextValueSerializer {
                 return new BigDecimal(in);
             }
         });
+        serializers.put(FieldType.DATETIME, new ValueSerializer() {
+            @Override
+            public Object fromString(String in) {
+                return new java.util.Date(Long.parseLong(in));
+            }
 
+            @Override
+            public String toString(Object value) {
+                return String.valueOf(((java.util.Date) value).getTime());
+            }
+        });
+        serializers.put(FieldType.DATE, new ValueSerializer() {
+            @Override
+            public Object fromString(String in) {
+                return new java.sql.Date(Long.parseLong(in));
+            }
+
+            @Override
+            public String toString(Object value) {
+                return String.valueOf(((java.sql.Date) value).getTime());
+            }
+        });
+        serializers.put(FieldType.TIME, new ValueSerializer() {
+            @Override
+            public Object fromString(String in) {
+                return new java.sql.Time(Long.parseLong(in));
+            }
+
+            @Override
+            public String toString(Object value) {
+                return String.valueOf(((java.sql.Time) value).getTime());
+            }
+        });
+        serializers.put(FieldType.TIMESTAMP, new ValueSerializer() {
+            @Override
+            public Object fromString(String in) {
+                String[] millisnanos = in.split(" ");
+                java.sql.Timestamp ts = new java.sql.Timestamp(Long.parseLong(millisnanos[0]));
+                ts.setNanos(Integer.parseInt(millisnanos[1]));
+                return ts;
+            }
+
+            @Override
+            public String toString(Object value) {
+                java.sql.Timestamp ts = (java.sql.Timestamp) value;
+                return new StringBuilder().append(ts.getTime()).append(" ").append(ts.getNanos())
+                        .toString();
+            }
+        });
     }
 
     /**
@@ -234,11 +284,11 @@ public class TextValueSerializer {
      * @param opt
      */
     public static String asString(Optional<Object> opt) {
-        FieldType type = FieldType.forValue(opt);
+        final FieldType type = FieldType.forValue(opt);
         if (serializers.containsKey(type)) {
-            return serializers.get(type).toString(opt.get());
+            return serializers.get(type).toString(opt.orNull());
         } else {
-            throw new IllegalArgumentException("The specified type is not supported");
+            throw new IllegalArgumentException("The specified type is not supported: " + type);
         }
     }
 
