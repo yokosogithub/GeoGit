@@ -137,6 +137,10 @@ Feature
     uuidField               := 0x19 <int64> <int64>
     bigIntField             := 0x1A <int32> <byte>*
     bigDecimalField         := 0x1B <int32> <int32> <byte>* (scale, length of byte array, byte array)
+    datetimeField           := 0x1C <int64> (milliseconds since unix epoch)
+    dateField               := 0x1D <int64> (datetime with hours, minutes, seconds, milliseconds all set to 0)
+    timeField               := 0x1E <int64> (datetime with years, months, days all set to zero (ie, a time on Jan 1 1970))
+    timestampField          := 0x1F <int64> <int32> (datetime followed by a specifier of nanoseconds within the millisecond)
 
 FeatureType
 -----------

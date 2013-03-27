@@ -5,6 +5,7 @@ import java.io.DataOutput;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -385,7 +386,62 @@ public class DataStreamValueSerializer {
                 bigInteger.write(i, data);
             }
         });
+        serializers.put(FieldType.DATETIME, new ValueSerializer() {
+            @Override
+            public Object read(DataInput in) throws IOException {
+                long time = in.readLong();
+                return new Date(time);
+            }
 
+            @Override
+            public void write(Object field, DataOutput data) throws IOException {
+                Date date = (Date) field;
+                data.writeLong(date.getTime());
+            }
+        });
+        serializers.put(FieldType.DATE, new ValueSerializer() {
+            @Override
+            public Object read(DataInput in) throws IOException {
+                long time = in.readLong();
+                return new java.sql.Date(time);
+            }
+
+            @Override
+            public void write(Object field, DataOutput data) throws IOException {
+                java.sql.Date date = (java.sql.Date) field;
+                data.writeLong(date.getTime());
+            }
+        });
+        serializers.put(FieldType.TIME, new ValueSerializer() {
+            @Override
+            public Object read(DataInput in) throws IOException {
+                long time = in.readLong();
+                return new java.sql.Time(time);
+            }
+
+            @Override
+            public void write(Object field, DataOutput data) throws IOException {
+                java.sql.Time time = (java.sql.Time) field;
+                data.writeLong(time.getTime());
+            }
+        });
+        serializers.put(FieldType.TIMESTAMP, new ValueSerializer() {
+            @Override
+            public Object read(DataInput in) throws IOException {
+                long time = in.readLong();
+                int nanos = in.readInt();
+                java.sql.Timestamp timestamp = new java.sql.Timestamp(time);
+                timestamp.setNanos(nanos);
+                return timestamp;
+            }
+
+            @Override
+            public void write(Object field, DataOutput data) throws IOException {
+                java.sql.Timestamp timestamp = (java.sql.Timestamp) field;
+                data.writeLong(timestamp.getTime());
+                data.writeInt(timestamp.getNanos());
+            }
+        });
     }
 
     /**
@@ -399,7 +455,7 @@ public class DataStreamValueSerializer {
         if (serializers.containsKey(type)) {
             serializers.get(type).write(opt.get(), data);
         } else {
-            throw new IllegalArgumentException("The specified type is not supported");
+            throw new IllegalArgumentException("The specified type (" + type + ") is not supported");
         }
     }
 

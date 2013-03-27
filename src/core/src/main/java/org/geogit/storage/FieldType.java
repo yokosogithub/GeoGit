@@ -7,6 +7,7 @@ package org.geogit.storage;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.util.Date;
 import java.util.Map;
 
 import com.google.common.base.Optional;
@@ -54,7 +55,11 @@ public enum FieldType {
     GEOMETRY(0x18, Geometry.class), //
     UUID(0x19, java.util.UUID.class), //
     BIG_INTEGER(0x1A, BigInteger.class), //
-    BIG_DECIMAL(0x1B, BigDecimal.class);
+    BIG_DECIMAL(0x1B, BigDecimal.class), //
+    DATETIME(0x1C, Date.class), //
+    DATE(0x1D, java.sql.Date.class), //
+    TIME(0x1E, java.sql.Time.class), //
+    TIMESTAMP(0x1F, java.sql.Timestamp.class);
 
     private final byte tagValue;
 
