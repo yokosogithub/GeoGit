@@ -2,6 +2,9 @@ package org.geogit.web.api;
 
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Set;
 
 import javax.annotation.Nullable;
 import javax.xml.stream.XMLStreamException;
@@ -18,7 +21,9 @@ import org.geogit.api.RevTag;
 import org.geogit.api.SymRef;
 import org.geogit.api.plumbing.DiffIndex;
 import org.geogit.api.plumbing.DiffWorkTree;
+import org.geogit.api.plumbing.diff.AttributeDiff;
 import org.geogit.api.plumbing.diff.DiffEntry;
+import org.opengis.feature.type.PropertyDescriptor;
 
 import com.google.common.collect.ImmutableList;
 
@@ -269,5 +274,17 @@ public class ResponseWriter {
             writeElement("name", tag.getName());
             out.writeEndElement();
         }
+    }
+
+    public void writeFeatureDiffResponse(Map<PropertyDescriptor, AttributeDiff> diffs)
+            throws XMLStreamException {
+        out.writeStartElement("Diffs");
+        Set<Entry<PropertyDescriptor, AttributeDiff>> entries = diffs.entrySet();
+        Iterator<Entry<PropertyDescriptor, AttributeDiff>> iter = entries.iterator();
+        while (iter.hasNext()) {
+            Entry<PropertyDescriptor, AttributeDiff> entry = iter.next();
+            writeElement(entry.getKey().toString(), entry.getValue().asText());
+        }
+        out.writeEndElement();
     }
 }
