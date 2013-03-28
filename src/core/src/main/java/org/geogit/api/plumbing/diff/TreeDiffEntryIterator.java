@@ -140,9 +140,9 @@ class TreeDiffEntryIterator extends AbstractIterator<DiffEntry> {
         DepthTreeIterator treeIterator;
 
         final String path = treeRef == null ? "" : treeRef.path();
+        final ObjectId metadataId = treeRef == null ? ObjectId.NULL : treeRef.getMetadataId();
 
-        treeIterator = new DepthTreeIterator(path, treeRef.getMetadataId(), tree, objectDb,
-                strategy);
+        treeIterator = new DepthTreeIterator(path, metadataId, tree, objectDb, strategy);
 
         Iterator<DiffEntry> iterator;
 

@@ -516,7 +516,7 @@ public class TextSerializationFactory implements ObjectSerializingFactory {
             try {
                 BufferedReader reader;
                 reader = new BufferedReader(new InputStreamReader(rawData, "UTF-8"));
-                TYPE type = RevObject.TYPE.valueOf(reader.readLine().trim());
+                TYPE type = RevObject.TYPE.valueOf(requireLine(reader).trim());
                 T parsed = read(id, reader, type);
                 Preconditions.checkState(parsed != null, "parsed to null");
                 if (id != null) {
@@ -617,11 +617,11 @@ public class TextSerializationFactory implements ObjectSerializingFactory {
         @Override
         protected RevCommit read(ObjectId id, BufferedReader reader, TYPE type) throws IOException {
             Preconditions.checkArgument(TYPE.COMMIT.equals(type), "Wrong type: %s", type.name());
-            String tree = parseLine(reader.readLine(), "tree");
+            String tree = parseLine(requireLine(reader), "tree");
             List<String> parents = Lists.newArrayList(Splitter.on(' ').omitEmptyStrings()
-                    .split(parseLine(reader.readLine(), "parents")));
-            RevPerson author = parsePerson(reader.readLine(), "author");
-            RevPerson committer = parsePerson(reader.readLine(), "committer");
+                    .split(parseLine(requireLine(reader), "parents")));
+            RevPerson author = parsePerson(requireLine(reader), "author");
+            RevPerson committer = parsePerson(requireLine(reader), "committer");
             String message = parseMessage(reader);
 
             CommitBuilder builder = new CommitBuilder();
@@ -661,7 +661,7 @@ public class TextSerializationFactory implements ObjectSerializingFactory {
         }
 
         private String parseMessage(BufferedReader reader) throws IOException {
-            StringBuilder msg = new StringBuilder(parseLine(reader.readLine(), "message"));
+            StringBuilder msg = new StringBuilder(parseLine(requireLine(reader), "message"));
             String extraLine;
             while ((extraLine = reader.readLine()) != null) {
                 msg.append('\n').append(extraLine);
@@ -752,7 +752,7 @@ public class TextSerializationFactory implements ObjectSerializingFactory {
                     type.name());
             builder = new SimpleFeatureTypeBuilder();
             typeFactory = builder.getFeatureTypeFactory();
-            String name = parseLine(reader.readLine(), "name");
+            String name = parseLine(requireLine(reader), "name");
             SimpleFeatureTypeBuilder builder = new SimpleFeatureTypeBuilder();
             if (name.contains(":")) {
                 int idx = name.lastIndexOf(':');
@@ -858,8 +858,8 @@ public class TextSerializationFactory implements ObjectSerializingFactory {
             Builder<Node> features = ImmutableList.builder();
             Builder<Node> trees = ImmutableList.builder();
             TreeMap<Integer, Bucket> subtrees = Maps.newTreeMap();
-            long size = Long.parseLong(parseLine(reader.readLine(), "size"));
-            int numTrees = Integer.parseInt(parseLine(reader.readLine(), "numtrees"));
+            long size = Long.parseLong(parseLine(requireLine(reader), "size"));
+            int numTrees = Integer.parseInt(parseLine(requireLine(reader), "numtrees"));
             String line;
             while ((line = reader.readLine()) != null) {
                 Preconditions.checkArgument(!line.isEmpty(), "Empty tree element definition");
@@ -911,5 +911,13 @@ public class TextSerializationFactory implements ObjectSerializingFactory {
         }
 
     };
+
+    private static String requireLine(BufferedReader reader) throws IOException {
+        String line = reader.readLine();
+        if (line == null) {
+            throw new IllegalStateException("Expected line bug got EOF");
+        }
+        return line;
+    }
 
 }

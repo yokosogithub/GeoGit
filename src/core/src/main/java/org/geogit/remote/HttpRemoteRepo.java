@@ -38,6 +38,7 @@ import org.geogit.api.porcelain.PushException.StatusCode;
 import org.geogit.repository.Repository;
 
 import com.google.common.base.Optional;
+import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.io.Closeables;
@@ -623,7 +624,8 @@ public class HttpRemoteRepo implements IRemoteRepo {
             try {
                 BufferedReader rd = new BufferedReader(new InputStreamReader(is));
                 String line = rd.readLine();
-
+                Preconditions.checkNotNull(line, "networkObjectExists returned no dat for %s",
+                        expanded);
                 exists = line.startsWith("1");
             } finally {
                 consumeAndCloseStream(is);

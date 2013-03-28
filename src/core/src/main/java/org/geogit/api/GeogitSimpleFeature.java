@@ -51,7 +51,7 @@ import com.vividsolutions.jts.geom.Geometry;
  */
 class GeogitSimpleFeature implements SimpleFeature {
 
-    private FeatureId id;
+    private final FeatureId id;
 
     private SimpleFeatureType featureType;
 
@@ -406,14 +406,6 @@ class GeogitSimpleFeature implements SimpleFeature {
         }
 
         GeogitSimpleFeature feat = (GeogitSimpleFeature) obj;
-
-        // this check shouldn't exist, by contract,
-        // all features should have an ID.
-        if (id == null) {
-            if (feat.getIdentifier() != null) {
-                return false;
-            }
-        }
 
         if (!id.equals(feat.getIdentifier())) {
             return false;
