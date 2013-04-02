@@ -75,7 +75,7 @@ public class ApplyPatchOpTest extends RepositoryTestCase {
 
     @Test
     public void testModifyFeatureAttributePatch() throws Exception {
-        insertAndAdd(points1);
+        insert(points1);
         Patch patch = new Patch();
         String path = NodeRef.appendChild(pointsName, points1.getIdentifier().getID());
         Map<PropertyDescriptor, AttributeDiff> map = Maps.newHashMap();
@@ -91,7 +91,7 @@ public class ApplyPatchOpTest extends RepositoryTestCase {
         assertTrue(featureBlobId.isPresent());
         Iterator<DiffEntry> unstaged = repo.getWorkingTree().getUnstaged(pointsName);
         ArrayList<DiffEntry> diffs = Lists.newArrayList(unstaged);
-        assertEquals(1, diffs.size());
+        assertEquals(2, diffs.size());
         Optional<RevFeature> feature = geogit.command(RevObjectParse.class)
                 .setRefSpec("WORK_HEAD:" + path).call(RevFeature.class);
         assertTrue(feature.isPresent());
