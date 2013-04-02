@@ -26,6 +26,7 @@ import org.geogit.storage.ObjectDatabase;
 
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Stopwatch;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Maps;
@@ -219,13 +220,19 @@ public class RevTreeBuilder {
             }
         }
 
-        final int pendingWritesThreshold = 10 * 1000;
+        final int pendingWritesThreshold = 1000 * 1000;
         final boolean actualTree = this.depth == 0;// am I an actual (addressable) tree or bucket
                                                    // tree of a higher level one?
         final boolean forceWrite = pendingWritesCache.size() > pendingWritesThreshold;
         if (!pendingWritesCache.isEmpty() && (actualTree || forceWrite)) {
+            // System.err.printf("calling db.putAll for %d buckets because %s...",
+            // pendingWritesCache
+            // .size(), (actualTree ? "writing top level tree" : "there are "
+            // + pendingWritesCache.size() + " pending bucket writes"));
+            // Stopwatch sw = new Stopwatch().start();
             db.putAll(pendingWritesCache.values().iterator());
             pendingWritesCache.clear();
+            // System.err.printf("done in %s.\n", sw);
         }
         this.initialSize = unnamedTree.size();
         this.initialNumTrees = unnamedTree.numTrees();
@@ -328,7 +335,18 @@ public class RevTreeBuilder {
                 } else {
                     final Bucket currBucket = this.bucketTreesByBucket.get(bucketIndex);
                     if (currBucket == null || !currBucket.id().equals(modifiedBucketTree.getId())) {
-                        this.pendingWritesCache.put(modifiedBucketTree.getId(), modifiedBucketTree);
+                        // have it on the pending writes set only if its not a leaf tree. Non bucket
+                        // trees may be too large and cause OOM
+                        if (null != pendingWritesCache.remove(currentBucketTree.getId())) {
+                            System.err.printf(" ---> removed bucket %s from list\n",
+                                    currentBucketTree.getId());
+                        }
+                        if (modifiedBucketTree.buckets().isPresent()) {
+                            pendingWritesCache.put(modifiedBucketTree.getId(), modifiedBucketTree);
+                        } else {
+                            // System.err.println("saving " + modifiedBucketTree);
+                            boolean isNew = db.put(modifiedBucketTree);
+                        }
                         Envelope bucketBounds = SpatialOps.boundsOf(modifiedBucketTree);
                         Bucket bucket = Bucket.create(modifiedBucketTree.getId(), bucketBounds);
                         bucketTreesByBucket.put(bucketIndex, bucket);

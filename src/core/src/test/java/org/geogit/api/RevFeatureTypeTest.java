@@ -1,7 +1,6 @@
 package org.geogit.api;
 
 import java.util.ArrayList;
-import java.util.Collections;
 
 import org.geogit.test.integration.RepositoryTestCase;
 import org.junit.Test;
@@ -28,7 +27,7 @@ public class RevFeatureTypeTest extends RepositoryTestCase {
         assertEquals(linesType.getName(), featureType.getName());
 
         ArrayList<PropertyDescriptor> descriptors = Lists.newArrayList(linesType.getDescriptors());
-        Collections.sort(descriptors, RevFeatureType.PROPERTY_ORDER);
+        // Collections.sort(descriptors, RevFeatureType.PROPERTY_ORDER);
         assertEquals(descriptors, featureType.sortedDescriptors());
     }
 
@@ -39,6 +38,6 @@ public class RevFeatureTypeTest extends RepositoryTestCase {
         String featureTypeString = featureType.toString();
 
         assertEquals("FeatureType[" + featureType.getId().toString() + "; "
-                + "ip: Integer, pp: LineString, sp: String]", featureTypeString);
+                + "sp: String, ip: Integer, pp: LineString]", featureTypeString);
     }
 }
