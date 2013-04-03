@@ -105,7 +105,7 @@ public class Checkout extends AbstractCommand implements CLICommand {
             case LOCAL_CHANGES_NOT_COMMITTED:
                 cli.getConsole()
                         .println(
-                                "Doing a checkout without a clean working tree and index is currently unsupported.");
+                                "Working tree and index are not clean. To overwrite local changes, use the --force option");
                 break;
             case UNMERGED_PATHS:
                 cli.getConsole().println(e.getMessage());
