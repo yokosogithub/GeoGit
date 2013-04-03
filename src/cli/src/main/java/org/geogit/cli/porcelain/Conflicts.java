@@ -45,22 +45,18 @@ import com.google.common.collect.Lists;
 
 // Currently it just print conflict descriptions, so they can be used by another tool instead.
 
-@Parameters(commandNames = "mergetool", commandDescription = "Starts the merge tool to resolve merge conflicts")
-public class MergeTool extends AbstractCommand implements CLICommand {
+@Parameters(commandNames = "conflicts", commandDescription = "Shows existing conflicts")
+public class Conflicts extends AbstractCommand implements CLICommand {
 
     @Parameter(description = "<path> [<path>...]")
     private List<String> paths = Lists.newArrayList();
 
-    @Parameter(names = { "--preview" }, description = "Show conflicts to merge instead of starting the merge tool")
-    private boolean preview;
-
-    @Parameter(names = { "--preview-diff" }, description = "Show conflicts to merge instead of starting the merge tool. Show diffs instead of full element descriptions")
+    @Parameter(names = { "--diff" }, description = "Show diffs instead of full element descriptions")
     private boolean previewDiff;
 
     @Override
     public void runInternal(GeogitCLI cli) throws Exception {
         checkState(cli.getGeogit() != null, "Not a geogit repository: " + cli.getPlatform().pwd());
-        checkState(!(preview && previewDiff), "Cannot use both preview modes at the same time");
 
         GeoGIT geogit = cli.getGeogit();
         List<Conflict> conflicts = geogit.command(ConflictsReadOp.class).call();
@@ -74,10 +70,8 @@ public class MergeTool extends AbstractCommand implements CLICommand {
 
                 if (previewDiff) {
                     printConflictDiff(conflict, cli.getConsole(), geogit);
-                } else if (preview) {
-                    printConflict(conflict, cli.getConsole(), geogit);
                 } else {
-                    // start merge tool
+                    printConflict(conflict, cli.getConsole(), geogit);
                 }
             }
         }
