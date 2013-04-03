@@ -61,6 +61,6 @@ Using the ``--alter`` option instead, you will end up with the tree containing t
 - ``ycoord: 10``
 - ``name: point.1``
 
-The feature that was already in the tree has been changed to adapt to the feature type of the newly imported feature. That feature type is now the defautl feature type of the tree.
+The feature that was already in the tree has been changed to adapt to the feature type of the newly imported feature. That feature type is now the default feature type of the tree.
 
 When importing from a database, if the "--all" option is selected and a destination path is supplied, the ``--add`` option is automatically added. Otherwise, importing each table would overwrite the features imported previously, and only features from the last table would appear on the selected path after importing. The ``--alter`` and ``--add`` options cannot be used simultaneously

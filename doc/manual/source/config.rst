@@ -38,8 +38,8 @@ To set the global value of a parameter, use the ``--global`` option.
 
 ::
 
-	$geogit config user.name "volaya"
-	$geogit config user.email "volaya@opengeo.org"
+	$geogit config --global user.name "volaya"
+	$geogit config --gloabl user.email "volaya@opengeo.org"
 
 You can use it as well for listing all currently set global variables.
 

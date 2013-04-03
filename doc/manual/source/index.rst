@@ -24,6 +24,7 @@ Contents:
   diffs  
   branches
   checkout
+  history
   merging
   rebase
   remotes
