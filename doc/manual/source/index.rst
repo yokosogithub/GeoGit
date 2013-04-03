@@ -28,6 +28,7 @@ Contents:
   history
   merging
   picking
+  reverting
   remotes
   modifying
   patches
