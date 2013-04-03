@@ -43,7 +43,7 @@ Feature: "checkout" command
      When I run the command "checkout newBranch"
       And I have unstaged "points2"
       And I run the command "checkout master"
-     Then the response should contain "Doing a checkout without a clean working tree and index is currently unsupported."
+     Then the response should contain "Working tree and index are not clean. To overwrite local changes, use the --force option"
       
   Scenario: Try to make a change but don't commit and then checkout a different branch with forcing
     Given I have a repository
