@@ -179,7 +179,9 @@ public class Apply extends AbstractCommand {
                 continue;
             }
             RevFeature feature = (RevFeature) obj.get();
-            DepthSearch depthSearch = new DepthSearch(geogit.getRepository().getObjectDatabase());
+
+            DepthSearch depthSearch = new DepthSearch(geogit.getRepository().getIndex()
+                    .getDatabase());
             Optional<NodeRef> noderef = depthSearch.find(geogit.getRepository().getWorkingTree()
                     .getTree(), path);
             RevFeatureType featureType = geogit.command(RevObjectParse.class)
@@ -247,8 +249,8 @@ public class Apply extends AbstractCommand {
                         feature.getFeatureType());
             } else {
                 RevFeature revFeature = (RevFeature) obj.get();
-                DepthSearch depthSearch = new DepthSearch(geogit.getRepository()
-                        .getObjectDatabase());
+                DepthSearch depthSearch = new DepthSearch(geogit.getRepository().getIndex()
+                        .getDatabase());
                 Optional<NodeRef> noderef = depthSearch.find(geogit.getRepository()
                         .getWorkingTree().getTree(), feature.getPath());
                 RevFeatureType revFeatureType = geogit.command(RevObjectParse.class)
