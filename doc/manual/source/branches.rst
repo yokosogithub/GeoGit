@@ -7,7 +7,7 @@ The following figure shows the difference between the linear workflow we have be
 
 .. figure:: branches.png
 
-Branches are useful if you want to work on your data and version your changes, but you do not want to mix your new work with the rest of the data until a certain point, usually when it reaches a given completion state. For instance, imagine that you have a rather large dataset and you want to edit it by adding new attributes to its features. That might take some time of work, and if you keep using a linear model, during that time the updated features will coexist with the original unedited ones, which might cause problems for users of the repository. You can do all your work and not commit anything until you have finished, but that is less convenient, since you cannot publish your data and keep versions of it as you work. Instead, creating a branch gives you a new context where you can work, not interfering with the main branch. Once you have finished you work and it is ready to replace the old feature from where you started your work, you can pass your changes to the main branch, as we will see in an upcoming section.
+Branches are useful if you want to work on your data and version your changes, but you do not want to mix your new work with the rest of the data until a certain point, usually when it reaches a given completion state. For instance, imagine that you have a rather large dataset and you want to edit it by adding new attributes to its features. That might take some time of work, and if you keep using a linear model, during that time the updated features will coexist with the original unedited ones, which might cause problems for users of the repository. You can do all your work and not commit anything until you have finished, but that is less convenient, since you cannot publish your data and keep versions of it as you work. Instead, creating a branch gives you a new context where you can work, not interfering with the main branch. Once you have finished your work and it is ready to replace the old feature from where you started your work, you can pass your changes to the main branch, as we will see in an upcoming section.
 
 Each branch has a name that is given to it when it is created. The "central" branch that is created when you initialize the repository, in which we have been working until now, it is called ``master``.
 
@@ -34,7 +34,7 @@ You can start working and creating new commits, and they will be added on top of
 
 ..figure:: work_on_branch.png
 
-You can go back to the ``master`` branch, just by checking it out. If you have done no work on ``master`` (by moving to it and making commits) since then, that will take you to the state that it had when you created the ``edits`` branch, and the working tree content will correspond to it. That is, your work on the ``edits`` branch is completely independent of the 
+You can go back to the ``master`` branch, just by checking it out. If you have done no work on ``master`` (by moving to it and making commits) since then, that will take you to the state that it had when you created the ``edits`` branch, and the working tree content will correspond to it. That is, your work on the ``edits`` branch is completely independent of the current contents of ``master``.
 
 You can consider that having branches is somehow like having several repositories in which you work in a linear fashion, but since everything is kept in the same repository, you can easily move between them.
 

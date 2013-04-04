@@ -31,14 +31,14 @@ The following command line will import all the features in a shapefile named ``p
 
 	$geogit shp import /home/shapefiles/parks.shp
 
-To import into a tree named "parks", the following command should be used:
+To import into a tree named "myparks", the following command should be used:
 
 ::
 
 	$geogit shp import /home/shapefiles/parks.shp -d myparks
 
 
-A tree in the GeoGit working tree is the equivalent of a folder in the filesystem. However, if you move into the ``.geogit`` folder where the working tree (and the rest of the GeoGit repository data) is stored, you will not see the folders that you might have created by importing data. The structure of the repository it is not visible in the filesystem, and the only way to explore it is to use additional GeoGit commands that we will see soon.
+A tree in the GeoGit working tree is the equivalent of a folder in the filesystem. However, if you move into the ``.geogit`` folder where the working tree (and the rest of the GeoGit repository data) is stored, you will not see the folders that you might have created by importing data. The structure of the repository is not visible in the filesystem, and the only way to explore it is to use additional GeoGit commands that we will see soon.
 
 When importing from a database, additional parameters can be supplied to configure the database connection. In the case of importing from a PostGIS database, the following options are available.
 
@@ -70,7 +70,7 @@ Since our repository had just been initialized, it was completely empty, and the
 
 Once the data is imported in the working tree, GeoGit can use it. The original file or database from which you imported it is still something that GeoGit cannot manage, so it is of no use for GeoGit. There is no link between your repository and the original file or data base, so you can literally remove it from your system and it would have no effect at all on GeoGit, which will work exclusively with the copy of the data that is now in the repository working tree.
 
-To see that the data is actually in the working tree, you can use the ``status`` commands. This commands gives you information about the data that you have in the working tree and the index, comparing between them and also with the repository database. This way, you can see which data has been modified but not added to the repository, or which data has been added but it is not yet versioned.
+To see that the data is actually in the working tree, you can use the ``status`` command. This command gives you information about the data that you have in the working tree and the index, comparing between them and also with the repository database. This way, you can see which data has been modified but not added to the repository, or which data has been added but has not yet been versioned.
 
 ::
 

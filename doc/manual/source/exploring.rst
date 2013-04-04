@@ -23,11 +23,11 @@ The ``[ref]:[path]`` parameter defines the path to be listed. If it contains no 
 	
 	$geogit ls-tree HEAD:parks
 
-The provided reference and path should define an element that can eventually resolved to a tree.  That does not include features. Since features do not contains other elements, their content cannot be listed with the ``ls-tree`` command, but with the ``cat`` and ``show`` commands.
+The provided reference and path should define an element that can eventually be resolved to a tree.  That does not include features. Since features do not contains other elements, their content cannot be listed with the ``ls-tree`` command, but with the ``cat`` and ``show`` commands.
 
 An object ID can be used directly instead of a ``[ref]:[path]``. That allows to use, for instance, the ID of a commit and list the content of the tree corresponding to that commit.
 
-The options available for the ``ls-tree`` command control how the list of elements under the given path is printed. Using the ``-v`` option will list not just the name of the object that are found, but also its ID and the ID of the corresponding feature type. The ``-r`` option causes the command to list also the content of subtrees recursively. The names of these subtrees is not shown in the listing, but you can tell GeoGit to add them by using the ``-t`` option along with ``-d``. Finally, if you want to show ID's in their abbreviated form, you can use the ``-a`` option followed by the number of digits to show. 
+The options available for the ``ls-tree`` command control how the list of elements under the given path is printed. Using the ``-v`` option will list not just the name of the object that are found, but also its ID and the ID of the corresponding feature type. The ``-r`` option causes the command to list also the content of subtrees recursively. The names of these subtrees are not shown in the listing, but you can tell GeoGit to add them by using the ``-t`` option along with ``-d``. Finally, if you want to show ID's in their abbreviated form, you can use the ``-a`` option followed by the number of digits to show. 
 
 Below you can find examples of the results obtained by using different options, to illustrate the above.
 

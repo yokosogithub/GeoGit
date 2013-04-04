@@ -3,7 +3,7 @@ Commiting changes
 
 Once the data is in the staging area, it has to be committed to be finally stored in the database of the GeoGit repository and to create a persistent version of that data.
 
-Commiting data from the staging area to the database is done using the ``commit`` command, as shown above
+Commiting data from the staging area to the database is done using the ``commit`` command, as shown below
 
 ::
 
@@ -29,7 +29,7 @@ The list of all commits made so far can be obtained by using the ``log`` command
 
 At this time, there is just one single commit, but as you create new ones, the log will get populated. Basically, the history of your repository is made of commits, each of them representing a set of changes and a new version.
 
-Each commit also holds a reference to its parent commits, so that allows to keep track of the changes and define the whole history and the order in which the changes were performed. Also, it allows to find out the differences between to given commits and the stages that might exist between them.
+Each commit also holds a reference to its parent commits, so that allows to keep track of the changes and define the whole history and the order in which the changes were performed. Also, it allows to find out the differences between the given commits and the stages that might exist between them.
 
 Right now, each commit has just one parent commit, which is the latest one that was made before it, but we will see how it is possible for a commit to have multiple parents. In the case above, since it is our first commit, it has a null parent. All other commits from this point will have a previous commit as parent.
 

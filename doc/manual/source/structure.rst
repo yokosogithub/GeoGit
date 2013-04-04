@@ -1,17 +1,17 @@
 Understanding the structure of a GeoGit repository
 ===================================================
 
-This section introduces the different types of elements that a GeoGit repository, so as to give you a better understanding of how it is structured and helping you work more efficiently.
+This section introduces the different types of elements of a GeoGit repository, so as to give you a better understanding of how it is structured and helping you work more efficiently.
 
 A GeoGit repository can contain the following elements:
 
 - Features. A feature represents a geographical element, and it contains a given set of attributes and at least a geometry. A feature is the equivalent to a shape in a shape file, or a single record in a spatial database.
 
-- Trees. A tree represent a subdivision, it is used to group features with a certain criteria. It might be seen as the equivalent of a shapefile or a table in a database  Trees can be nested (a tree within a tree), so they might also serve as folders.
+- Trees. A tree represent a subdivision, it is used to group features with a certain criteria. It might be seen as the equivalent of a shapefile or a table in a database. Trees can be nested (a tree within a tree), so they might also serve as folders.
 
-- Commits. A commit is generated each time some data is written (*committed*) from the staging area into the repository database. A commit points to the data after that commit (it points to a tree under which the data is found), so it represents a given version of the data. You can go back to you data as it was at a certain point, by going to the corresponding commit. 
+- Commits. A commit is generated each time some data is written (*committed*) from the staging area into the repository database. A commit points to the data after that commit (it points to a tree under which the data is found), so it represents a given version of the data. You can go back to your data as it was at a certain point, by going to the corresponding commit. 
 
-All these objects are stored in GeoGit and referenced by an ID, so you can use that ID to refer to the object anytime and in any of the commands available in GeoGit when that is needed. The ID is a 40 character string. For instance, ``509a481257c5791f50f5a35087e432247f9dc8b7`` is a valid valid IDs of a real GeoGit object.
+All these objects are stored in GeoGit and referenced by an ID, so you can use that ID to refer to the object anytime and in any of the commands available in GeoGit when that is needed. The ID is a 40 character string. For instance, ``509a481257c5791f50f5a35087e432247f9dc8b7`` is a valid ID of a real GeoGit object.
 
 All IDs are unique, so each of them is a reference to just one single object.
 

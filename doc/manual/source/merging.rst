@@ -50,7 +50,7 @@ The following is a list of situations that will cause a merge conflict:
 
 The following cases will not produce a merge conflict:
 
-- Both branches have a added the same feature at the same path.
+- Both branches have added the same feature at the same path.
 - Both branches have deleted the same feature.
 - Both branches have modified the same attribute in a feature, setting the same new value.
 - Both branches have set the same new default feature type for a path.

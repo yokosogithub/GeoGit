@@ -1,7 +1,7 @@
 Referencing a GeoGit element
 =============================
 
-Many commands in GeoGit need a reference to a repository element. For instance, if you want to list the contain of a tree, you need a reference to that tree (we will see how to do this soon). You can use the name of the tree (i.e. *roads*) in this case, but there are other ways of naming an element. 
+Many commands in GeoGit need a reference to a repository element. For instance, if you want to list the contents of a tree, you need a reference to that tree (we will see how to do this soon). You can use the name of the tree (i.e. *roads*) in this case, but there are other ways of naming an element. 
 
 Imagine that you want to list the content of a tree, but not in the current version, but in a previous one. Let's say you want the version represented by the command before the last one. How would you tell the corresponding command that you want that particular version?
 

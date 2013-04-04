@@ -30,7 +30,7 @@ You can get a listing of all configured values by using the ``-l`` option.
 
 The user identity has been correctly configured
 
-Now, whenever GeoGit needs to add user information to an operation, it will use this values.
+Now, whenever GeoGit needs to add user information to an operation, it will use these values.
 
 The variables we have set are valid just for the repository where you have configured them. If you have many repositories and you do not want to configure the same parameters for each one, you can configure *global* parameters as well. A global parameter value is used by GeoGit if the current repository does not have its own particular values for that parameter. This way, you can init a repository, and start working on it without any further configuration, since GeoGit will use your global settings.
 

@@ -1,7 +1,7 @@
 Showing differences
 ===================
 
-The differences between two entries in a GeoGit repository can be displayed using the ``diff`` command. In the most common case, this is used to show the differences between the working tree and the HEAD of the repository, so as to know which changes will be introduced if the current modifications in the current working tree are staged and committed. The HEAD will represent in this case the *old* version, while the working tree will represent the *old* version.
+The differences between two entries in a GeoGit repository can be displayed using the ``diff`` command. In the most common case, this is used to show the differences between the working tree and the HEAD of the repository, so as to know which changes will be introduced if the current modifications in the current working tree are staged and committed. The HEAD will represent in this case the *old* version, while the working tree will represent the *new* version.
 
 For this task, the most basic usage of the ``diff`` command requires no options at all
 

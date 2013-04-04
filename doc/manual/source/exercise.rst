@@ -76,7 +76,7 @@ We have committed the change to the ``master`` branch, since we had not created 
 
 Let's now put another player in the game. A new person joins our team of people working on our data. The first thing he has to do is to clone the central repository. Create a folder named ``repo_b`` in your repositories folder and clone it there.
 
-Since we had already pushed the changed made by the first collaborator in his repository (in the ``repo_a`` folder), this second collaborator will get them when he clones the central repository.
+Since we had already pushed the changes made by the first collaborator in his repository (in the ``repo_a`` folder), this second collaborator will get them when he clones the central repository.
 
 Suppose now that this new collaborator starts working on the repository data. Instead of working on the ``master`` branch, he creates a new branch named ``fixes``, in which he plans to correct some wrong data that he has found. Move to the ``repo_b`` folder and run the following command:
 
@@ -105,7 +105,7 @@ The ``parks_3.shp`` shapefile contains a modified version of the data, in which 
 	[ef0e5369e1dc90939b5e110232236c90cfa448f4] fixed minor error
 	Committed, counting objects...0 features added, 1 changed, 0 deleted.
 
-Now this commit has been added to the ``fixes`` branch. You can see the differences between this latest version and the latest one (which is to say, the differences between the ``parks_2.shp`` and ``parks_3.shp`` files), by running the ``diff`` command. We want the difference between the current ``HEAD`` and its ancestor, so we can use the following line:
+Now this commit has been added to the ``fixes`` branch. You can see the differences between this last version and the latest one (which is to say, the differences between the ``parks_2.shp`` and ``parks_3.shp`` files), by running the ``diff`` command. We want the difference between the current ``HEAD`` and its ancestor, so we can use the following line:
 
 ::
 

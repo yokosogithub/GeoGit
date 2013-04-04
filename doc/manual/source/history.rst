@@ -3,14 +3,14 @@ Exploring you history
 
 We have already seen how to explore the content of a a GeoGit repository. It is also interesting to explore its history, since it will show us what has happened since it was created. Exploring the history can answer questions such as "who has edited this feature?", "since when does this feature exist?" or "how many edits has a given person made during the last month?", just to name a few.
 
-The log command, which we have already seen, is used to browse the history of a GeoGit repository. In its most basic form, as we know, it just shows a list of all commits, ordered by its commit date.
+The log command, which we have already seen, is used to browse the history of a GeoGit repository. In its most basic form, as we know, it just shows a list of all commits, ordered by their commit date.
 
 ::
 
 	$git log
 
 
-We can change two things in the output of the log command: the amount of information displayed for each commit, and the commits that are printed out. In the fist case, we can tell GeoGit to just show one line for each commit or, if we want the full information, to display all the changes introduced by each commit. To select which commits which commits should be shown, we can request a restricted list of them by setting time constraints, the commits of a single author, or just the history of the current branch without merged branches, among other available options.
+We can change two things in the output of the log command: the amount of information displayed for each commit, and the commits that are printed out. In the fist case, we can tell GeoGit to just show one line for each commit or, if we want the full information, to display all the changes introduced by each commit. To select which commits should be shown, we can request a restricted list of them by setting time constraints, the commits of a single author, or just the history of the current branch without merged branches, among other available options.
 
 Setting how commits are displayed
 ----------------------------------
