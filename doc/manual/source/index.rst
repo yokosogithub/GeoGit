@@ -28,6 +28,7 @@ Contents:
   merging
   rebase
   remotes
+  modifying
   patches
   exercise
 

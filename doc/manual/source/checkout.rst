@@ -43,28 +43,3 @@ To reset to the commit 5 commits ago, use the following:
 
 That will update all 3 areas in GeoGit (working tree, staging area and database) to the specified commit. This is known as a hard commit. You can also perform a mixed reset (only updates the staging area and database, but not the working tree, with the ``--mixed`` option), or a soft reset (only updates the database, with the ``--soft`` option).
 
-
-Reverting a previous commit
----------------------------
-
-Apart from the methods described above, there is another way to bring your repository back to a previous state, by using the ``geogit revert`` command.
-
-Instead or discarding the commits that it receives as arguments, it creates new commits that cancel the changes introduced by the passed commits. The working tree and the index are changed accordingly. 
-
-To run this command, the working tree has to be clean, that is, there must be no difference between it and the current ``HEAD``-
-
-To run the command, just pass it a list of commit references. Most likely, this is used to cancel the last commit made. In that case, the following command would revert the last commit:
-
-::
-
-	$geogit revert HEAD
-
-Amending a commit
-------------------
-
-If the change you have in your index could be included in yout last commit (for instance, if they are something you forgot to commit but should have been part of the last commit), you can amend the last commit, so both that last commit and the current one are just kept as one single commit.
-
-To do so, use the ``--amend`` option when calling the ``commit`` command. That will put your commit not on top of the current ``HEAD``, but on top of the parent of the current ``HEAD``, so the last commit will be replaced by a new one that includes the changes of the commit being replaced, and the changes you are about to commit from your current index.
-
-When amending a commit, no message is needed, since the command will use the same message provided for the latest commit. However, you can provide a message in the usual way using the ``-m`` option, and the one from the previous commit will be discarded.
-
