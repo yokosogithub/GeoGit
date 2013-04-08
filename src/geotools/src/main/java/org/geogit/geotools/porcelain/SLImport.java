@@ -40,6 +40,19 @@ public class SLImport extends AbstractSLCommand implements CLICommand {
     public boolean all = false;
 
     /**
+     * do not replace or delete features
+     */
+    @Parameter(names = { "--add" }, description = "Do not replace or delete features on the destination path, but just add new ones")
+    boolean add;
+
+    /**
+     * Set the path default feature type to the the feature type of imported features, and modify
+     * existing features to match it
+     */
+    @Parameter(names = { "--alter" }, description = "Set the path default feature type to the the feature type of imported features, and modify existing features to match it")
+    boolean alter;
+
+    /**
      * Executes the import command using the provided options.
      * 
      * @param cli
@@ -66,8 +79,9 @@ public class SLImport extends AbstractSLCommand implements CLICommand {
             cli.getConsole().println("Importing from database " + commonArgs.database);
 
             ProgressListener progressListener = cli.getProgressListener();
-            cli.getGeogit().command(ImportOp.class).setAll(all).setTable(table)
-                    .setDataStore(dataStore).setProgressListener(progressListener).call();
+            cli.getGeogit().command(ImportOp.class).setAll(all).setTable(table).setAlter(alter)
+                    .setOverwrite(!add).setDataStore(dataStore)
+                    .setProgressListener(progressListener).call();
 
             cli.getConsole().println("Import successful.");
 
@@ -94,6 +108,10 @@ public class SLImport extends AbstractSLCommand implements CLICommand {
                 break;
             case UNABLE_TO_INSERT:
                 cli.getConsole().println("Unable to insert features into the working tree.");
+                break;
+            case ALTER_AND_ALL_DEFINED:
+                cli.getConsole().println(
+                        "Alter cannot be used with --all option and more than one table.");
                 break;
             default:
                 cli.getConsole().println("Import failed with exception: " + e.statusCode.name());

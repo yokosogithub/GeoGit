@@ -37,14 +37,14 @@ public class ShpImport extends AbstractShpCommand implements CLICommand {
     /**
      * do not replace or delete features
      */
-    @Parameter(names = { "-a", "--add" }, description = "Do not replace or delete features on the destination path, but just add new ones")
+    @Parameter(names = { "--add" }, description = "Do not replace or delete features on the destination path, but just add new ones")
     boolean add;
 
     /**
      * Set the path default feature type to the the feature type of imported features, and modify
      * existing features to match it
      */
-    @Parameter(names = { "-a", "--alter" }, description = "Set the path default feature type to the the feature type of imported features, and modify existing features to match it")
+    @Parameter(names = { "--alter" }, description = "Set the path default feature type to the the feature type of imported features, and modify existing features to match it")
     boolean alter;
 
     /**

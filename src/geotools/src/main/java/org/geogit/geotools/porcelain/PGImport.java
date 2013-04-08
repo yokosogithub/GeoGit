@@ -42,14 +42,14 @@ public class PGImport extends AbstractPGCommand implements CLICommand {
     /**
      * do not overwrite or delete features
      */
-    @Parameter(names = { "-a", "--add" }, description = "Do not replace or delete features in the destitnation path")
+    @Parameter(names = { "--add" }, description = "Do not replace or delete features in the destitnation path")
     boolean add;
 
     /**
      * Set the path default feature type to the the feature type of imported features, and modify
      * existing features to match it
      */
-    @Parameter(names = { "-a", "--alter" }, description = "Set the path default feature type to the the feature type of imported features, and modify existing features to match it")
+    @Parameter(names = { "--alter" }, description = "Set the path default feature type to the the feature type of imported features, and modify existing features to match it")
     boolean alter;
 
     /**
@@ -113,6 +113,10 @@ public class PGImport extends AbstractPGCommand implements CLICommand {
                 break;
             case UNABLE_TO_INSERT:
                 cli.getConsole().println("Unable to insert features into the working tree.");
+                break;
+            case ALTER_AND_ALL_DEFINED:
+                cli.getConsole().println(
+                        "Alter cannot be used with --all option and more than one table.");
                 break;
             default:
                 cli.getConsole().println("Import failed with exception: " + e.statusCode.name());

@@ -26,4 +26,9 @@ Feature: "sl import" command
   Scenario: Try to import without specifying table or -all
     Given I have a repository
      When I run the command "sl import" on the SpatiaLite database
-     Then the response should contain "No tables specified for import. Specify --all or --table <table>."    
+     Then the response should contain "No tables specified for import. Specify --all or --table <table>."
+     
+  Scenario: Try to import with table and -all
+    Given I have a repository
+     When I run the command "sl import --table Regions --all" on the PostGIS database
+     Then the response should contain "Specify --all or --table <table>, both cannot be set."  
