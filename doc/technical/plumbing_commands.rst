@@ -222,3 +222,25 @@ Feature type
 	area    DOUBLE    0    1    true
 	perimeter    DOUBLE    0    1    true
 
+blame
+-----
+
+The blame command has a ``--porcelain`` option that generates machine-readable output with the following format:
+
+::
+
+	<name_of_field> <blank_space> <commit_id> <blank_space> <committer_name> <blank_space> <commiter_email> <blank_space> <commit_timestamp> <blank_space> <commit_timezone_offset>
+
+
+The following is an example of the porcelain output of the ``blame`` command
+
+::
+
+	parktype 2d132099c2ede0c9ea2306317cfba4796a62abeb volaya volaya@opengeo.org 1367236628965 7200000
+	area 2d132099c2ede0c9ea2306317cfba4796a62abeb volaya volaya@opengeo.org 1367236628965 7200000
+	perimeter 2d132099c2ede0c9ea2306317cfba4796a62abeb volaya volaya@opengeo.org 1367236628965 7200000
+	the_geom 2d132099c2ede0c9ea2306317cfba4796a62abeb volaya volaya@opengeo.org 1367236628965 7200000
+	name 2d132099c2ede0c9ea2306317cfba4796a62abeb volaya volaya@opengeo.org 1367236628965 7200000
+	owner 2d132099c2ede0c9ea2306317cfba4796a62abeb volaya volaya@opengeo.org 1367236628965 7200000
+	usage a1d6e2c8d377ea90c7639b3834d7ece3ad161d91 volaya volaya@opengeo.org 1367236528690 7200000
+	agency 2d132099c2ede0c9ea2306317cfba4796a62abeb volaya volaya@opengeo.org 1367236628965 7200000

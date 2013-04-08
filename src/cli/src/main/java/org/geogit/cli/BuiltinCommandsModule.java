@@ -12,6 +12,7 @@ import org.geogit.cli.plumbing.RevParse;
 import org.geogit.cli.plumbing.ShowRef;
 import org.geogit.cli.porcelain.Add;
 import org.geogit.cli.porcelain.Apply;
+import org.geogit.cli.porcelain.Blame;
 import org.geogit.cli.porcelain.Branch;
 import org.geogit.cli.porcelain.Cat;
 import org.geogit.cli.porcelain.Checkout;
@@ -79,6 +80,7 @@ public class BuiltinCommandsModule extends AbstractModule implements CLIModule {
         bind(RevParse.class);
         bind(Add.class);
         bind(Apply.class);
+        bind(Blame.class);
         bind(Branch.class);
         bind(Cat.class);
         bind(Checkout.class);
