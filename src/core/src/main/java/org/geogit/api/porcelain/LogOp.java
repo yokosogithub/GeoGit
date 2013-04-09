@@ -1,5 +1,5 @@
-/* Copyright (c) 2013 OpenPlans. All rights reserved.
- * This code is licensed under the BSD New License, available at the root
+/* Copyright (c) 2011 TOPP - www.openplans.org. All rights reserved.
+ * This code is licensed under the LGPL 2.1 license, available at the root
  * application directory.
  */
 package org.geogit.api.porcelain;
@@ -17,9 +17,6 @@ import org.geogit.api.AbstractGeoGitOp;
 import org.geogit.api.ObjectId;
 import org.geogit.api.Ref;
 import org.geogit.api.RevCommit;
-import org.geogit.api.SymRef;
-import org.geogit.api.plumbing.ForEachRef;
-import org.geogit.api.plumbing.RefParse;
 import org.geogit.api.plumbing.RevParse;
 import org.geogit.api.plumbing.diff.DiffEntry;
 import org.geogit.di.CanRunDuringConflict;
@@ -33,7 +30,6 @@ import com.google.common.base.Predicate;
 import com.google.common.base.Throwables;
 import com.google.common.collect.AbstractIterator;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterators;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
@@ -82,11 +78,9 @@ public class LogOp extends AbstractGeoGitOp<Iterator<RevCommit>> {
 
     private boolean firstParent;
 
-    private boolean all;
-
     private GraphDatabase graphDb;
 
-    private String branch;
+    private List<ObjectId> commits = Lists.newArrayList();
 
     /**
      * Constructs a new {@code LogOp} with the given {@link Repository}.
@@ -169,25 +163,14 @@ public class LogOp extends AbstractGeoGitOp<Iterator<RevCommit>> {
     }
 
     /**
-     * Sets whether the log should list the history of all branches instead of just the current
-     * HEAD. If a branch is set using setBranch, that setting will be ignored
-     * 
-     * @param all true if it should show all branches
-     * @return {@code this}
-     */
-    public LogOp setAll(boolean all) {
-        this.all = all;
-        return this;
-    }
-
-    /**
-     * Sets the branch to show instead of the current HEAD
+     * Adds a commit to be used as starting point for computing history. If no commit is provided,
+     * HEAD is used, or the 'until' commit if provided
      * 
      * @param branch the branch to use
      * @return {@code this}
      */
-    public LogOp setBranch(String branch) {
-        this.branch = branch;
+    public LogOp addCommit(ObjectId commit) {
+        this.commits.add(commit);
         return this;
     }
 
@@ -265,10 +248,6 @@ public class LogOp extends AbstractGeoGitOp<Iterator<RevCommit>> {
                     throw new IllegalStateException("Provided 'until' commit id does not exist: "
                             + until.toString());
                 }
-                if (all) {
-                    throw new IllegalStateException(
-                            "Cannot specify 'until' commit if when listing all branches");
-                }
                 newestCommitId = this.until;
             }
             if (this.since == null) {
@@ -286,32 +265,13 @@ public class LogOp extends AbstractGeoGitOp<Iterator<RevCommit>> {
         if (firstParent) {
             history = new LinearHistoryIterator(newestCommitId, repository);
         } else {
-            List<ObjectId> list = Lists.newArrayList();
-            if (all) {
-                ImmutableSet<Ref> refs = command(ForEachRef.class).call();
-                for (Ref ref : refs) {
-                    list.add(ref.getObjectId());
-                }
-                Optional<Ref> head = command(RefParse.class).setName(Ref.HEAD).call();
-                if (head.isPresent()) {
-                    Ref ref = head.get();
-                    if (ref instanceof SymRef) {
-                        ObjectId id = ref.getObjectId();
-                        list.remove(id);
-                        list.add(id);// put the HEAD ref in the last position, to give it preference
-                    }
-                }
-            } else if (branch != null) {
-                Optional<Ref> ref = command(RefParse.class).setName(branch).call();
-                Preconditions.checkArgument(ref.isPresent(), "Wrong branch name: " + branch);
-                list.add(ref.get().getObjectId());
-            } else {
-                list.add(newestCommitId);
+            if (commits.isEmpty()) {
+                commits.add(newestCommitId);
             }
             if (topo) {
-                history = new TopologicalHistoryIterator(list, repository, graphDb);
+                history = new TopologicalHistoryIterator(commits, repository, graphDb);
             } else {
-                history = new ChronologicalHistoryIterator(list, repository);
+                history = new ChronologicalHistoryIterator(commits, repository);
             }
         }
         LogFilter filter = new LogFilter(oldestCommitId, timeRange, paths, author, commiter);
@@ -405,7 +365,7 @@ public class LogOp extends AbstractGeoGitOp<Iterator<RevCommit>> {
         /**
          * Constructs a new {@code LinearHistoryIterator} with the given parameters.
          * 
-         * @param tipList the first commits in the history
+         * @param tipsList the list of tips to start computing history from
          * @param repo the repository where the commits are stored.
          * @param graphDb
          */

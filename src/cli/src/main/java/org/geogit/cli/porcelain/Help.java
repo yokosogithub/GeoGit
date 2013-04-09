@@ -22,11 +22,14 @@ import com.beust.jcommander.Parameters;
  * <li> {@code geogit [--]help [<command>]}
  * </ul>
  */
-@Parameters(commandNames = { "help", "--help" }, commandDescription = "Print this help message, or provide a command name to get help for")
+@Parameters(commandNames = { "--help", "help" }, commandDescription = "Print this help message, or provide a command name to get help for")
 public class Help implements CLICommand {
 
     @Parameter
     private List<String> parameters = new ArrayList<String>();
+
+    @Parameter(names = { "-a" }, description = "Show all commands")
+    private boolean all;
 
     /**
      * Executes the help command.
@@ -39,11 +42,15 @@ public class Help implements CLICommand {
 
         JCommander jc = cli.newCommandParser();
 
-        if (parameters.isEmpty()) {
-            cli.printShortCommandList(jc);
+        if (all) {
+            cli.printCommandList(jc);
         } else {
-            String command = parameters.get(0);
-            jc.usage(command);
+            if (parameters.isEmpty()) {
+                cli.printShortCommandList(jc);
+            } else {
+                String command = parameters.get(0);
+                jc.usage(command);
+            }
         }
     }
 

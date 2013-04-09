@@ -4,9 +4,12 @@
  */
 package org.geogit.cli;
 
-import org.geogit.cli.plumbing.CatObject;
+import org.geogit.cli.plumbing.DiffTree;
 import org.geogit.cli.plumbing.LsTree;
+import org.geogit.cli.plumbing.MergeBase;
+import org.geogit.cli.plumbing.RevList;
 import org.geogit.cli.plumbing.RevParse;
+import org.geogit.cli.plumbing.ShowRef;
 import org.geogit.cli.porcelain.Add;
 import org.geogit.cli.porcelain.Apply;
 import org.geogit.cli.porcelain.Branch;
@@ -24,6 +27,7 @@ import org.geogit.cli.porcelain.FormatPatch;
 import org.geogit.cli.porcelain.Help;
 import org.geogit.cli.porcelain.Init;
 import org.geogit.cli.porcelain.Log;
+import org.geogit.cli.porcelain.Ls;
 import org.geogit.cli.porcelain.Merge;
 import org.geogit.cli.porcelain.Pull;
 import org.geogit.cli.porcelain.Push;
@@ -72,7 +76,6 @@ public class BuiltinCommandsModule extends AbstractModule implements CLIModule {
 
     @Override
     protected void configure() {
-        bind(CatObject.class);
         bind(RevParse.class);
         bind(Add.class);
         bind(Apply.class);
@@ -85,23 +88,29 @@ public class BuiltinCommandsModule extends AbstractModule implements CLIModule {
         bind(Config.class);
         bind(Conflicts.class);
         bind(Diff.class);
+        bind(DiffTree.class);
         bind(FormatPatch.class);
         bind(Help.class);
         bind(Init.class);
+        bind(Log.class);
+        bind(Ls.class);
+        bind(LsTree.class);
         bind(Merge.class);
         bind(Log.class);
+        bind(MergeBase.class);
         bind(RemoteExtension.class);
         bind(Remove.class);
         bind(Status.class);
         bind(Rebase.class);
         bind(Reset.class);
         bind(Revert.class);
+        bind(RevList.class);
         bind(Show.class);
+        bind(ShowRef.class);
         bind(Clone.class);
         bind(Fetch.class);
         bind(Push.class);
         bind(Pull.class);
-        bind(LsTree.class);
         bind(Tag.class);
     }
 

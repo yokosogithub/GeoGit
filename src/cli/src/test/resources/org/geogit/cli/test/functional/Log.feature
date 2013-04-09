@@ -101,7 +101,7 @@ Feature: "log" command
     Given I have a repository
       And I have several branches
      When I run the command "log --all HEAD..HEAD~1"
-     Then the response should contain "Cannot specify 'until' commit if when listing all branches"
+     Then the response should contain "Cannot specify 'until' commit when listing all branches"
   
   Scenario: Try to show a log of all branches with decoration
     Given I have a repository

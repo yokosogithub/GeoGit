@@ -23,6 +23,7 @@ import org.geogit.api.Platform;
 import org.geogit.api.Ref;
 import org.geogit.api.RevCommit;
 import org.geogit.api.RevPerson;
+import org.geogit.api.SymRef;
 import org.geogit.api.plumbing.ForEachRef;
 import org.geogit.api.plumbing.ParseTimestamp;
 import org.geogit.api.plumbing.RefParse;
@@ -38,6 +39,7 @@ import org.geotools.util.Range;
 
 import com.beust.jcommander.Parameters;
 import com.beust.jcommander.ParametersDelegate;
+import com.beust.jcommander.internal.Lists;
 import com.beust.jcommander.internal.Maps;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
@@ -99,7 +101,7 @@ public class Log extends AbstractCommand implements CLICommand {
         geogit = cli.getGeogit();
 
         LogOp op = geogit.command(LogOp.class).setTopoOrder(args.topo)
-                .setFirstParentOnly(args.firstParent).setAll(args.all);
+                .setFirstParentOnly(args.firstParent);
 
         refs = Maps.newHashMap();
         if (args.decoration) {
@@ -115,9 +117,30 @@ public class Log extends AbstractCommand implements CLICommand {
                 }
             }
         }
-        if (args.branch != null && !args.branch.isEmpty()) {
-            op.setBranch(args.branch);
+        if (args.all) {
+            ImmutableSet<Ref> refs = geogit.command(ForEachRef.class).call();
+            List<ObjectId> list = Lists.newArrayList();
+            for (Ref ref : refs) {
+                list.add(ref.getObjectId());
+            }
+            Optional<Ref> head = geogit.command(RefParse.class).setName(Ref.HEAD).call();
+            if (head.isPresent()) {
+                Ref ref = head.get();
+                if (ref instanceof SymRef) {
+                    ObjectId id = ref.getObjectId();
+                    list.remove(id);
+                    list.add(id);// put the HEAD ref in the last position, to give it preference
+                }
+            }
+            for (ObjectId id : list) {
+                op.addCommit(id);
+            }
+        } else if (args.branch != null) {
+            Optional<Ref> obj = geogit.command(RefParse.class).setName(args.branch).call();
+            Preconditions.checkArgument(obj.isPresent(), "Wrong branch name: " + args.branch);
+            op.addCommit(obj.get().getObjectId());
         }
+
         if (args.author != null && !args.author.isEmpty()) {
             op.setAuthor(args.author);
         }
@@ -138,6 +161,10 @@ public class Log extends AbstractCommand implements CLICommand {
             }
             if (args.until != null) {
                 until = new Date(geogit.command(ParseTimestamp.class).setString(args.until).call());
+                if (args.all) {
+                    throw new IllegalStateException(
+                            "Cannot specify 'until' commit when listing all branches");
+                }
             }
             op.setTimeRange(new Range<Date>(Date.class, since, until));
         }
@@ -166,6 +193,10 @@ public class Log extends AbstractCommand implements CLICommand {
                 op.setSince(since.get());
             }
             if (untilRefSpec != null) {
+                if (args.all) {
+                    throw new IllegalStateException(
+                            "Cannot specify 'until' commit when listing all branches");
+                }
                 Optional<ObjectId> until;
                 until = geogit.command(RevParse.class).setRefSpec(untilRefSpec).call();
                 Preconditions.checkArgument(until.isPresent(), "Object not found '%s'",
@@ -199,9 +230,7 @@ public class Log extends AbstractCommand implements CLICommand {
         }
 
         LogEntryPrinter printer;
-        if (args.raw) {
-            printer = new RawPrinter();
-        } else if (args.oneline) {
+        if (args.oneline) {
             printer = new OneLineConverter();
         } else {
             LOG_DETAIL detail;
@@ -349,52 +378,6 @@ public class Log extends AbstractCommand implements CLICommand {
                 }
             }
         }
-    }
-
-    private class RawPrinter implements LogEntryPrinter {
-
-        @Override
-        public void print(RevCommit commit) throws IOException {
-            Ansi ansi = AnsiDecorator.newAnsi(useColor);
-
-            ansi.fg(Color.YELLOW).a("commit ").a(commit.getId().toString()).reset().newline();
-            ansi.a("tree ").a(commit.getTreeId().toString()).newline();
-            for (ObjectId parentId : commit.getParentIds()) {
-                ansi.a("parent ").a(parentId.toString()).newline();
-            }
-            ansi.a("author ").a(format(commit.getAuthor())).newline();
-            ansi.a("committer ").a(format(commit.getCommitter())).newline();
-
-            ansi.newline();
-            if (commit.getMessage() != null) {
-                ansi.a("message ").a(commit.getMessage());
-                ansi.newline();
-            }
-            Iterator<DiffEntry> diff = geogit.command(DiffOp.class)
-                    .setOldVersion(commit.parentN(0).get()).setNewVersion(commit.getId()).call();
-            DiffEntry diffEntry;
-            while (diff.hasNext()) {
-                diffEntry = diff.next();
-                StringBuilder sb = new StringBuilder(diffEntry.changeType().toString()).append(" ")
-                        .append(diffEntry.oldObjectId().toString()).append(" -> ")
-                        .append(diffEntry.oldObjectId().toString());
-                ansi.a(sb.toString());
-            }
-            console.println(ansi.toString());
-        }
-
-        private String format(RevPerson p) {
-            StringBuilder sb = new StringBuilder();
-            if (p.getName().isPresent()) {
-                sb.append(p.getName().get()).append(' ');
-            }
-            if (p.getEmail().isPresent()) {
-                sb.append('<').append(p.getEmail().get()).append("> ");
-            }
-            sb.append(p.getTimestamp()).append(' ').append(p.getTimeZoneOffset());
-            return sb.toString();
-        }
-
     }
 
     /**
