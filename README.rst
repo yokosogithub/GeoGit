@@ -3,25 +3,27 @@ GeoGit - Geospatial Distributed Version Control System
 ######################################################
 
 Welcome to the GeoGit project, exploring the use of distributed management of spatial
-data.
+data. GeoGit draws inspiration from Git, but adapts its core concepts to handle versioning
+of geospatial data. Users are able to import raw geospatial data (currently from Shapefiles, 
+PostGIS or SpatiaLite) in to a repository where every change to the data is tracked. These
+changes can be viewed in a history, reverted to older versions, branched in to sandboxed
+areas, merged back in, and pushed to remote repositories.
 
-For background reading please review this GeoServer wiki page: `GeoGit approach <http://geoserver.org/display/GEOS/GeoGit+approach>`_
+For background reading see these two papers on the spatial distributed versioning 
+`Concept <http://opengeo.org/publications/distributedversioning/>`_ and 
+`Implementation <http://opengeo.org/publications/distributedversioningimplement/>`_.
 
 Details
 =======
 
 Project Lead: `Gabriel Roldan <https://github.com/groldan>`_
 
-Source files use the following header::
-   
-   /* Copyright (c) 2011 TOPP - www.openplans.org. All rights reserved.
-    * This code is licensed under the LGPL 2.1 license, available at the root
-    * application directory.
-    */
- 
-As indicated above the code is distributed under an `LGPL 2.1 <LICENSE.txt>`_ license.
+License: Currently LGPL 2.1, soon changing to BSD New. 
 
-Build
+Status: A 0.1 release is coming soon, with a full commandline 
+interface to import data and work with repositories. A web API and user interface is slated for 0.2.
+
+Building
 -----
 
 GeoGit is built using Maven::
@@ -46,6 +48,13 @@ Please carefully apply the code formatting options in the buld/eclipse/formatter
 Java formatting options with 100 character line length for both code and comments, and 4 spaces for indentation.
 It is also recommended to use the code templates from build/eclipse/codetemlates.xml.
 
+Running
+-------
+
+See: `QuickStart <https://github.com/opengeo/GeoGit/blob/master/doc/quickstart/quicsktart.rst>`_ and 
+`Manual <https://github.com/opengeo/GeoGit/tree/master/doc/manual/source>`_ (full doc builds coming soon).
+
+
 Participation
 =============
 
@@ -55,9 +64,16 @@ The project is hosted on github:
 
 Participation is encouraged using the github *fork* and *pull request* workflow::
 
-* file headers are described above
-* include test case demonstrating functionality
-* contributions are expected to pass test and not break the build
+* Include test case demonstrating functionality
+* Contributions are expected to pass all tests and not break the build
+* Include proper license headers on your contributed files
+
+Issues to help out on are at: https://github.com/opengeo/GeoGit/issues
+
+For those who can't code help on documentation is always appreciated, all docs can be found at 
+https://github.com/opengeo/GeoGit/tree/master/doc/ and contributed to by editing in ReStructuredText 
+and using standard GitHub workflows.
+
 
 Project resources:
 
