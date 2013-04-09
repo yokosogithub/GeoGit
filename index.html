@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset='utf-8'>
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <link href='https://fonts.googleapis.com/css?family=Architects+Daughter' rel='stylesheet' type='text/css'>
+    <link rel="stylesheet" type="text/css" href="stylesheets/stylesheet.css" media="screen" />
+    <link rel="stylesheet" type="text/css" href="stylesheets/pygment_trac.css" media="screen" />
+    <link rel="stylesheet" type="text/css" href="stylesheets/print.css" media="print" />
+
+    <!--[if lt IE 9]>
+    <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+
+    <title>GeoGit by opengeo</title>
+  </head>
+
+  <body>
+    <header>
+      <div class="inner">
+        <h1>GeoGit</h1>
+        <h2>Geospatial Distributed Version Control System</h2>
+        <a href="https://github.com/opengeo/GeoGit" class="button"><small>View project on</small>GitHub</a>
+      </div>
+    </header>
+
+    <div id="content-wrapper">
+      <div class="inner clearfix">
+        <section id="main-content">
+          <p>Welcome to the GeoGit project, exploring the use of distributed management of spatial
+data. GeoGit draws inspiration from Git, but adapts its core concepts to handle versioning
+of geospatial data. Users are able to import raw geospatial data (currently from Shapefiles, 
+PostGIS or SpatiaLite) in to a repository where every change to the data is tracked. These
+changes can be viewed in a history, reverted to older versions, branched in to sandboxed
+areas, merged back in, and pushed to remote repositories.</p>
+
+<p>For background reading see these two papers on the spatial distributed versioning <a href="http://opengeo.org/publications/distributedversioning/">Concept</a> and 
+<a href="http://opengeo.org/publications/distributedversioningimplement/">Implementation</a>.</p>
+
+<h1>Details</h1>
+
+<p>Project Lead: <a href="http://github.com/groldan">Gabriel Roldan</a></p>
+
+<p>License: Currently LGPL 2.1, soon changing to BSD New. </p>
+
+<p>Status: A 0.1 release is coming soon, with a full commandline 
+interface to import data and work with repositories. A web API and user interface is slated for 0.2.</p>
+
+<h2>Building</h2>
+
+<p>GeoGit is built using Maven</p>
+
+<pre><code>  cd src/parent
+  mvn clean install
+</code></pre>
+
+<p>Online tests, require a geogit endpoint, are available using::</p>
+
+<pre><code>mvn -Ponline
+</code></pre>
+
+<p>Cobertura is configured for a test coverage report::</p>
+
+<pre><code>mvn cobertura:cobertura
+open target/site/cobertura/index.html
+</code></pre>
+
+<p>Any additional build profiles are documented in the root pom.xml .</p>
+
+<p>Please carefully apply the code formatting options in the buld/eclipse/formatter.xml file. These are the standard
+Java formatting options with 100 character line length for both code and comments, and 4 spaces for indentation.
+It is also recommended to use the code templates from build/eclipse/codetemlates.xml.</p>
+
+<h2>Running</h2>
+
+<p>See: <a href="https://github.com/opengeo/GeoGit/blob/master/doc/quickstart/quicsktart.rst">QuickStart</a> and 
+<a href="https://github.com/opengeo/GeoGit/tree/master/doc/manual/source">Manual</a> (full doc builds coming soon).</p>
+
+<h1>Participation</h1>
+
+<p>The project is hosted on github:</p>
+
+<ul>
+<li><a href="https://github.com/opengeo/GeoGit">https://github.com/opengeo/GeoGit</a></li>
+</ul><p>Participation is encouraged using the github <em>fork</em> and <em>pull request</em> workflow::</p>
+
+<ul>
+<li>Include test case demonstrating functionality</li>
+<li>Contributions are expected to pass all tests and not break the build</li>
+<li>Include proper license headers on your contributed files</li>
+</ul><p>Issues to help out on are at: <a href="https://github.com/opengeo/GeoGit/issues">https://github.com/opengeo/GeoGit/issues</a></p>
+
+<p>For those who can't code help on documentation is always appreciated, all docs can be found at 
+<a href="https://github.com/opengeo/GeoGit/tree/master/doc/">https://github.com/opengeo/GeoGit/tree/master/doc/</a> and contributed to by editing in ReStructuredText 
+and using standard GitHub workflows.</p>
+
+<p>Project resources:</p>
+
+<ul>
+<li><a href="https://sites.google.com/a/opengeo.org/geogit-project-guide/">Full on-line project documentation</a></li>
+<li><a href="https://groups.google.com/a/opengeo.org/group/geogit/">GeoGit Discussion Group</a></li>
+<li>The build is <a href="http://hudson.opengeo.org/hudson/view/geogit/">actively monitored using hudson</a>
+</li>
+<li><a href="https://github.com/opengeo/GeoGit/issues">https://github.com/opengeo/GeoGit/issues</a></li>
+</ul>
+        </section>
+
+        <aside id="sidebar">
+          <a href="https://github.com/opengeo/GeoGit/zipball/master" class="button">
+            <small>Download</small>
+            .zip file
+          </a>
+          <a href="https://github.com/opengeo/GeoGit/tarball/master" class="button">
+            <small>Download</small>
+            .tar.gz file
+          </a>
+
+          <p class="repo-owner"><a href="https://github.com/opengeo/GeoGit"></a> is maintained by <a href="https://github.com/opengeo">opengeo</a>.</p>
+
+          <p>This page was generated by <a href="pages.github.com">GitHub Pages</a> using the Architect theme by <a href="http://twitter.com/jasonlong">Jason Long</a>.</p>
+        </aside>
+      </div>
+    </div>
+
+  
+  </body>
+</html>
