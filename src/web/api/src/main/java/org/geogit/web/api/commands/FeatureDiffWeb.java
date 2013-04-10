@@ -92,7 +92,10 @@ public class FeatureDiffWeb implements WebAPICommand {
 
         Optional<RevObject> object;
 
+        // need these to determine if the feature was added or removed so I can build the diffs
+        // myself until the FeatureDiff supports null values
         boolean removed = false;
+        boolean added = false;
 
         if (ref.isPresent()) {
             object = geogit.command(RevObjectParse.class).setObjectId(ref.get().getMetadataId())
@@ -131,15 +134,10 @@ public class FeatureDiffWeb implements WebAPICommand {
                     throw new CommandSpecException("Couldn't resolve oldCommit's feature");
                 }
             } else {
-                throw new CommandSpecException(
-                        "Couldn't resolve path to a node in the oldCommit's tree");
+                added = true;
             }
 
-            if (!removed) {
-                FeatureDiff diff = new FeatureDiff(path, newFeature, oldFeature, newFeatureType,
-                        oldFeatureType);
-                diffs = diff.getDiffs();
-            } else {
+            if (removed) {
                 Map<PropertyDescriptor, AttributeDiff> tempDiffs = new HashMap<PropertyDescriptor, AttributeDiff>();
                 ImmutableList<PropertyDescriptor> attributes = oldFeatureType.sortedDescriptors();
                 ImmutableList<Optional<Object>> values = oldFeature.getValues();
@@ -147,44 +145,58 @@ public class FeatureDiffWeb implements WebAPICommand {
                     Optional<Object> value = values.get(index);
                     if (Geometry.class.isAssignableFrom(attributes.get(index).getType()
                             .getBinding())) {
-                        tempDiffs.put(
-                                attributes.get(index),
-                                new GeometryAttributeDiff(Optional.fromNullable((Geometry) value
-                                        .orNull()), Optional.fromNullable((Geometry) null)));
+                        Optional<Geometry> temp = Optional.absent();
+                        if (value.isPresent()) {
+                            tempDiffs.put(
+                                    attributes.get(index),
+                                    new GeometryAttributeDiff(Optional
+                                            .fromNullable((Geometry) value.orNull()), temp));
+                        }
                     } else {
-                        tempDiffs.put(attributes.get(index), new GenericAttributeDiffImpl(value,
-                                null));
+                        if (value.isPresent()) {
+                            tempDiffs.put(attributes.get(index), new GenericAttributeDiffImpl(
+                                    value, Optional.absent()));
+                        }
                     }
                 }
                 diffs = tempDiffs;
+            } else if (added) {
+                Map<PropertyDescriptor, AttributeDiff> tempDiffs = new HashMap<PropertyDescriptor, AttributeDiff>();
+                ImmutableList<PropertyDescriptor> attributes = newFeatureType.sortedDescriptors();
+                ImmutableList<Optional<Object>> values = newFeature.getValues();
+                for (int index = 0; index < attributes.size(); index++) {
+                    Optional<Object> value = values.get(index);
+                    if (Geometry.class.isAssignableFrom(attributes.get(index).getType()
+                            .getBinding())) {
+                        Optional<Geometry> temp = Optional.absent();
+                        if (value.isPresent()) {
+                            tempDiffs.put(attributes.get(index), new GeometryAttributeDiff(temp,
+                                    Optional.fromNullable((Geometry) value.orNull())));
+                        }
+                    } else {
+                        if (value.isPresent()) {
+                            tempDiffs.put(attributes.get(index), new GenericAttributeDiffImpl(
+                                    Optional.absent(), value));
+                        }
+                    }
+                }
+                diffs = tempDiffs;
+            } else {
+                FeatureDiff diff = new FeatureDiff(path, newFeature, oldFeature, newFeatureType,
+                        oldFeatureType);
+                diffs = diff.getDiffs();
             }
 
-        } else {
-            Map<PropertyDescriptor, AttributeDiff> tempDiffs = new HashMap<PropertyDescriptor, AttributeDiff>();
-            ImmutableList<PropertyDescriptor> attributes = newFeatureType.sortedDescriptors();
-            ImmutableList<Optional<Object>> values = newFeature.getValues();
-            for (int index = 0; index < attributes.size(); index++) {
-                Optional<Object> value = values.get(index);
-                if (Geometry.class.isAssignableFrom(attributes.get(index).getType().getBinding())) {
-                    tempDiffs.put(attributes.get(index),
-                            new GeometryAttributeDiff(Optional.fromNullable((Geometry) null),
-                                    Optional.fromNullable((Geometry) value.orNull())));
-                } else {
-                    tempDiffs.put(attributes.get(index), new GenericAttributeDiffImpl(null, value));
+            context.setResponseContent(new CommandResponse() {
+
+                @Override
+                public void write(ResponseWriter out) throws Exception {
+                    out.start();
+                    out.writeFeatureDiffResponse(diffs);
+                    out.finish();
                 }
-            }
-            diffs = tempDiffs;
+            });
         }
 
-        context.setResponseContent(new CommandResponse() {
-
-            @Override
-            public void write(ResponseWriter out) throws Exception {
-                out.start();
-                out.writeFeatureDiffResponse(diffs);
-                out.finish();
-            }
-        });
     }
-
 }

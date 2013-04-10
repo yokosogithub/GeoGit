@@ -278,13 +278,22 @@ public class ResponseWriter {
 
     public void writeFeatureDiffResponse(Map<PropertyDescriptor, AttributeDiff> diffs)
             throws XMLStreamException {
-        out.writeStartElement("Diffs");
         Set<Entry<PropertyDescriptor, AttributeDiff>> entries = diffs.entrySet();
         Iterator<Entry<PropertyDescriptor, AttributeDiff>> iter = entries.iterator();
         while (iter.hasNext()) {
             Entry<PropertyDescriptor, AttributeDiff> entry = iter.next();
-            writeElement(entry.getKey().toString(), entry.getValue().asText());
+            out.writeStartElement("diff");
+            writeElement("attributename", entry.getKey().getName().toString());
+            writeElement("changetype", entry.getValue().getType().toString());
+            if (entry.getValue().getOldValue() != null
+                    && entry.getValue().getOldValue().isPresent()) {
+                writeElement("oldvalue", entry.getValue().getOldValue().get().toString());
+            }
+            if (entry.getValue().getNewValue() != null
+                    && entry.getValue().getNewValue().isPresent()) {
+                writeElement("newvalue", entry.getValue().getNewValue().get().toString());
+            }
+            out.writeEndElement();
         }
-        out.writeEndElement();
     }
 }

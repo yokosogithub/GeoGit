@@ -3,6 +3,7 @@ package org.geogit.api;
 import org.geogit.test.integration.RepositoryTestCase;
 import org.junit.Test;
 import org.opengis.feature.Feature;
+import org.opengis.feature.simple.SimpleFeature;
 
 public class FeatureBuilderTest extends RepositoryTestCase {
 
@@ -25,5 +26,11 @@ public class FeatureBuilderTest extends RepositoryTestCase {
         assertEquals(points1.getIdentifier(), test.getIdentifier());
         assertEquals(points1.getType(), test.getType());
         assertEquals(points1.getUserData(), test.getUserData());
+
+        RevFeature feature = revBuilder.build(test);
+        Feature test2 = builder.build(idP1, feature);
+
+        assertEquals(((SimpleFeature) test).getAttributes(),
+                ((SimpleFeature) test2).getAttributes());
     }
 }

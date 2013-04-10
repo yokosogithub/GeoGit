@@ -52,6 +52,16 @@ public interface AttributeDiff {
     public String asText();
 
     /**
+     * accessor for the old value
+     */
+    public Optional<?> getOldValue();
+
+    /**
+     * accessor for the new value
+     */
+    public Optional<?> getNewValue();
+
+    /**
      * Return true if the changes represented by AttributeDiff are in conflict with changes
      * represented by the passed one
      * 

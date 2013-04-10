@@ -18,8 +18,19 @@ public class GenericAttributeDiffImpl implements AttributeDiff {
 
     @Override
     public TYPE getType() {
-        TYPE type = newValue == null ? TYPE.REMOVED : oldValue == null ? TYPE.ADDED : TYPE.MODIFIED;
+        TYPE type = (newValue == null || !newValue.isPresent()) ? TYPE.REMOVED
+                : (oldValue == null || !oldValue.isPresent()) ? TYPE.ADDED : TYPE.MODIFIED;
         return type;
+    }
+
+    @Override
+    public Optional<?> getOldValue() {
+        return oldValue;
+    }
+
+    @Override
+    public Optional<?> getNewValue() {
+        return newValue;
     }
 
     public String toString() {

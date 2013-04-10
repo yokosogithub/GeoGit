@@ -26,9 +26,9 @@ public class GeometryAttributeDiff implements AttributeDiff {
         Preconditions.checkArgument(oldGeom != null || newGeom != null);
         oldGeometry = oldGeom;
         newGeometry = newGeom;
-        if (newGeom == null) {
+        if (newGeom == null || !newGeom.isPresent()) {
             type = TYPE.REMOVED;
-        } else if (oldGeom == null) {
+        } else if (oldGeom == null || !oldGeom.isPresent()) {
             type = TYPE.ADDED;
         } else {
             type = TYPE.MODIFIED;
@@ -61,6 +61,16 @@ public class GeometryAttributeDiff implements AttributeDiff {
             throw new IllegalArgumentException("Wrong difference definition:" + s);
         }
 
+    }
+
+    @Override
+    public Optional<?> getOldValue() {
+        return oldGeometry;
+    }
+
+    @Override
+    public Optional<?> getNewValue() {
+        return newGeometry;
     }
 
     @Override
