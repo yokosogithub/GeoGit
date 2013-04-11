@@ -51,7 +51,7 @@ import com.google.common.base.Optional;
 @Parameters(commandNames = "export", commandDescription = "Export to PostGIS")
 public class PGExport extends AbstractPGCommand implements CLICommand {
 
-    @Parameter(description = "<featureType path> <table>", arity = 2)
+    @Parameter(description = "<path> <table>", arity = 2)
     public List<String> args;
 
     @Parameter(names = { "--overwrite", "-o" }, description = "Overwrite output table")

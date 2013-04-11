@@ -40,6 +40,25 @@ public class PGImport extends AbstractPGCommand implements CLICommand {
     public boolean all = false;
 
     /**
+     * do not overwrite or delete features
+     */
+    @Parameter(names = { "--add" }, description = "Do not replace or delete features in the destitnation path")
+    boolean add;
+
+    /**
+     * Set the path default feature type to the the feature type of imported features, and modify
+     * existing features to match it
+     */
+    @Parameter(names = { "--alter" }, description = "Set the path default feature type to the the feature type of imported features, and modify existing features to match it")
+    boolean alter;
+
+    /**
+     * Destination path to add features to. Only allowed when importing a single table
+     */
+    @Parameter(names = { "-d", "--dest" }, description = "Path to import to")
+    String destTable;
+
+    /**
      * Executes the import command using the provided options.
      * 
      * @param cli
@@ -65,8 +84,9 @@ public class PGImport extends AbstractPGCommand implements CLICommand {
             cli.getConsole().println("Importing from database " + commonArgs.database);
 
             ProgressListener progressListener = cli.getProgressListener();
-            cli.getGeogit().command(ImportOp.class).setAll(all).setTable(table)
-                    .setDataStore(dataStore).setProgressListener(progressListener).call();
+            cli.getGeogit().command(ImportOp.class).setAll(all).setTable(table).setAlter(alter)
+                    .setDestinationPath(destTable).setOverwrite(!add).setDataStore(dataStore)
+                    .setProgressListener(progressListener).call();
 
             cli.getConsole().println("Import successful.");
 
@@ -93,6 +113,10 @@ public class PGImport extends AbstractPGCommand implements CLICommand {
                 break;
             case UNABLE_TO_INSERT:
                 cli.getConsole().println("Unable to insert features into the working tree.");
+                break;
+            case ALTER_AND_ALL_DEFINED:
+                cli.getConsole().println(
+                        "Alter cannot be used with --all option and more than one table.");
                 break;
             default:
                 cli.getConsole().println("Import failed with exception: " + e.statusCode.name());

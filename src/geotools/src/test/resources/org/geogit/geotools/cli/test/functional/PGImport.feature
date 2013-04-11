@@ -27,3 +27,8 @@ Feature: "pg import" command
     Given I have a repository
      When I run the command "pg import" on the PostGIS database
      Then the response should contain "No tables specified for import. Specify --all or --table <table>."     
+     
+  Scenario: Try to import with table and -all
+    Given I have a repository
+     When I run the command "pg import --table geogit_pg_test --all" on the PostGIS database
+     Then the response should contain "Specify --all or --table <table>, both cannot be set."       

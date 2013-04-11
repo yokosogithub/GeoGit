@@ -4,6 +4,7 @@
  */
 package org.geogit.geotools.porcelain;
 
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.Serializable;
 import java.util.Map;
@@ -73,14 +74,18 @@ public abstract class AbstractShpCommand implements CLICommand {
     /**
      * Constructs a new shapefile data store using the specified shapefile.
      * 
-     * @param shapefile the url of the shapefile to use in creating the data store
+     * @param shapefile the filepath of the shapefile to use in creating the data store
      * @return the constructed data store
      * @throws Exception
      * @see DataStore
      */
     protected DataStore getDataStore(String shapefile) throws Exception {
+        File file = new File(shapefile);
+        if (!file.exists()) {
+            throw new FileNotFoundException();
+        }
         Map<String, Serializable> params = Maps.newHashMap();
-        params.put(ShapefileDataStoreFactory.URLP.key, shapefile);
+        params.put(ShapefileDataStoreFactory.URLP.key, new File(shapefile).toURI().toURL());
         params.put(ShapefileDataStoreFactory.NAMESPACEP.key, "http://www.opengis.net/gml");
 
         if (!dataStoreFactory.canProcess(params)) {

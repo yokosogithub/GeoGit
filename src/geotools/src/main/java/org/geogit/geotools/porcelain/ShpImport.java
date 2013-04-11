@@ -35,6 +35,25 @@ public class ShpImport extends AbstractShpCommand implements CLICommand {
     List<String> shapeFile;
 
     /**
+     * do not replace or delete features
+     */
+    @Parameter(names = { "--add" }, description = "Do not replace or delete features on the destination path, but just add new ones")
+    boolean add;
+
+    /**
+     * Set the path default feature type to the the feature type of imported features, and modify
+     * existing features to match it
+     */
+    @Parameter(names = { "--alter" }, description = "Set the path default feature type to the the feature type of imported features, and modify existing features to match it")
+    boolean alter;
+
+    /**
+     * Destination path to add features to. Only allowed when importing a single table
+     */
+    @Parameter(names = { "-d", "--dest" }, description = "Path to import to")
+    String destTable;
+
+    /**
      * Executes the import command using the provided options.
      * 
      * @param cli
@@ -67,8 +86,9 @@ public class ShpImport extends AbstractShpCommand implements CLICommand {
                 cli.getConsole().println("Importing from shapefile " + shp);
 
                 ProgressListener progressListener = cli.getProgressListener();
-                cli.getGeogit().command(ImportOp.class).setAll(true).setTable(null)
-                        .setDataStore(dataStore).setProgressListener(progressListener).call();
+                cli.getGeogit().command(ImportOp.class).setAll(true).setTable(null).setAlter(alter)
+                        .setOverwrite(!add).setDestinationPath(destTable).setDataStore(dataStore)
+                        .setProgressListener(progressListener).call();
 
                 cli.getConsole().println(shp + " imported successfully.");
 
@@ -94,6 +114,7 @@ public class ShpImport extends AbstractShpCommand implements CLICommand {
                 dataStore.dispose();
                 cli.getConsole().flush();
             }
+
         }
     }
 }
