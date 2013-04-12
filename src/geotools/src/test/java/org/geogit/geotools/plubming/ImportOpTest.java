@@ -30,7 +30,6 @@ import org.geotools.referencing.CRS;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
-import org.junit.rules.TemporaryFolder;
 import org.opengis.feature.simple.SimpleFeature;
 import org.opengis.feature.simple.SimpleFeatureType;
 import org.opengis.feature.type.Name;
@@ -47,9 +46,6 @@ public class ImportOpTest extends RepositoryTestCase {
 
     @Rule
     public ExpectedException exception = ExpectedException.none();
-
-    @Rule
-    public TemporaryFolder tempFolder = new TemporaryFolder();
 
     @Test
     public void testNullDataStore() throws Exception {

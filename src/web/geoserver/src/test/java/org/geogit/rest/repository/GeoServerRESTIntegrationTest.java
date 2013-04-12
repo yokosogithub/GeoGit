@@ -78,12 +78,14 @@ public class GeoServerRESTIntegrationTest extends GeoServerSystemTestSupport {
                 configureGeogitDataStore();
             }
         };
+        helper.tempFolder.create();
         helper.setUp();
     }
 
     @AfterClass
     public static void oneTimeTearDown() throws Exception {
         if (helper != null) {
+            helper.tempFolder.delete();
             helper.tearDown();
         }
     }

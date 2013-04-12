@@ -20,13 +20,13 @@ import com.google.inject.util.Modules;
 
 public class JECommitOpTest extends org.geogit.test.integration.CommitOpTest {
     @Rule
-    public TemporaryFolder tempFolder = new TemporaryFolder();
+    public TemporaryFolder mockWorkingDirTempFolder = new TemporaryFolder();
 
     @Override
     protected Injector createInjector() {
         File workingDirectory;
         try {
-            workingDirectory = tempFolder.newFolder("mockWorkingDir");
+            workingDirectory = mockWorkingDirTempFolder.getRoot();
         } catch (Exception e) {
             throw Throwables.propagate(e);
         }

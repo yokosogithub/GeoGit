@@ -37,6 +37,8 @@ import org.geotools.util.logging.Logging;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.Rule;
+import org.junit.rules.TemporaryFolder;
 import org.opengis.feature.Feature;
 import org.opengis.feature.simple.SimpleFeatureType;
 import org.opengis.feature.type.GeometryDescriptor;
@@ -136,7 +138,10 @@ public abstract class RepositoryTestCase extends Assert {
 
     private static File envHome;
 
-    Injector injector;
+    private Injector injector;
+
+    @Rule
+    public TemporaryFolder tempFolder = new TemporaryFolder();
 
     @Before
     public final void setUp() throws Exception {
@@ -150,7 +155,7 @@ public abstract class RepositoryTestCase extends Assert {
     }
 
     protected final void doSetUp() throws IOException, SchemaException, ParseException, Exception {
-        envHome = new File(new File("target"), "testrepository");
+        envHome = tempFolder.getRoot();
 
         FileUtils.deleteDirectory(envHome);
         assertFalse(envHome.exists());
