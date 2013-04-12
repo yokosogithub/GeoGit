@@ -95,8 +95,8 @@
   </repositories>
 
   <properties>
-    <gt.version>9-SNAPSHOT</gt.version>
-    <gs.version>2.3-SNAPSHOT</gs.version>
+    <gt.version>9.0</gt.version>
+    <gs.version>2.3.0</gs.version>
     <guava.version>13.0.1</guava.version>
     <jsr305.version>1.3.7</jsr305.version>
     <bdbje.version>5.0.58</bdbje.version>
