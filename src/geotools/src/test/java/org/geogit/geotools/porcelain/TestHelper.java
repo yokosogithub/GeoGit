@@ -12,6 +12,7 @@ import org.geotools.data.AbstractDataStoreFactory;
 import org.geotools.data.memory.MemoryDataStore;
 import org.geotools.feature.simple.SimpleFeatureBuilder;
 import org.geotools.feature.simple.SimpleFeatureTypeBuilder;
+import org.geotools.referencing.CRS;
 import org.opengis.feature.simple.SimpleFeature;
 import org.opengis.feature.simple.SimpleFeatureType;
 
@@ -19,28 +20,33 @@ import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.geom.GeometryFactory;
 import com.vividsolutions.jts.geom.Point;
 
-
 public class TestHelper {
 
     public static AbstractDataStoreFactory createTestFactory() throws Exception {
 
         SimpleFeatureTypeBuilder builder = new SimpleFeatureTypeBuilder();
+        builder.setCRS(CRS.decode("EPSG:4326"));
         builder.add("geom", Point.class);
         builder.add("label", String.class);
         builder.setName("table1");
+
         SimpleFeatureType type = builder.buildFeatureType();
 
         SimpleFeatureTypeBuilder builder2 = new SimpleFeatureTypeBuilder();
+        builder2.setCRS(CRS.decode("EPSG:4326"));
         builder2.add("geom", Point.class);
         builder2.add("name", String.class);
         builder2.setName("table2");
+
         SimpleFeatureType type2 = builder2.buildFeatureType();
 
         SimpleFeatureTypeBuilder builder3 = new SimpleFeatureTypeBuilder();
+        builder3.setCRS(CRS.decode("EPSG:4326"));
         builder3.add("geom", Point.class);
         builder3.add("name", String.class);
         builder3.add("number", Long.class);
         builder3.setName("table3");
+
         SimpleFeatureType type3 = builder3.buildFeatureType();
 
         GeometryFactory gf = new GeometryFactory();
@@ -106,12 +112,14 @@ public class TestHelper {
     public static AbstractDataStoreFactory createFactoryWithGetFeatureSourceException()
             throws Exception {
         SimpleFeatureTypeBuilder builder = new SimpleFeatureTypeBuilder();
+        builder.setCRS(CRS.decode("EPSG:4326"));
         builder.add("geom", Point.class);
         builder.add("label", String.class);
         builder.setName("table1");
         SimpleFeatureType type = builder.buildFeatureType();
 
         SimpleFeatureTypeBuilder builder2 = new SimpleFeatureTypeBuilder();
+        builder2.setCRS(CRS.decode("EPSG:4326"));
         builder2.add("geom", Point.class);
         builder2.add("name", String.class);
         builder2.setName("table2");
