@@ -90,7 +90,10 @@ public final class ObjectId implements Comparable<ObjectId> {
      */
     @Override
     public int hashCode() {
-        return Arrays.hashCode(hashCode);
+        return (hashCode[0] & 0xFF)//
+                | ((hashCode[1] & 0xFF) << 8)//
+                | ((hashCode[2] & 0xFF) << 16)//
+                | ((hashCode[3] & 0xFF) << 24);
     }
 
     /**
