@@ -32,9 +32,9 @@ Pushing and pulling
 
 With the remote repositories already configured, you can now interact with them from your local repository. Basically, there are two things that you can do: *push* changes (apply them on a remote repository) or *pull* them (apply on your repository changes from another repository). The ``push`` and ``pull`` commands are used for this purpose.
 
-The following figure summarizes the above mechanism.
+The following figure, that we already saw in the introduction, summarizes the above mechanism.
 
-.. figure:: remotes.png
+.. figure:: ../img/geogit_workflow_remotes.png
 
 
 To push changes to a remote repository named ``origin``, the following line is used.
@@ -55,7 +55,7 @@ Retrieving the changes in a remote repository is done using the pull command, as
 
 That would bring all changes from the ``master`` branch in the ``origin`` repository into the current branch of the local repository. You can be in a branch other than ``master``. There is no need to specify the same branch as the current branch in the local repository. GeoGit will grab the commits that are missing in your local branch after comparing with the remote branch, and will merge them. Of course, this merge is not guaranteed to be clean, and conflicts might appear. They are solved in much the same way as a local merge conflict.
 
-If instead of a merge you want to perform a rebase, then you can use the ``--rebase`` option. It will rewind your ``HEAD`` to the point were it was before you synchronized it the last time with the remote repository, then apply all the new changes that might exist in the repository, and then re-apply all you local changes on top of the updated ``HEAD``
+If instead of a merge you want to perform a rebase, then you can use the ``--rebase`` option. It will rewind your ``HEAD`` to the point were it was before you synchronized it the last time with the remote repository, then apply all the new changes that might exist in the repository, and then re-apply all you local changes on top of the updated ``HEAD``. As in the case of a local rebase, conflict might also arise when pulling with the ``--rebase`` option.
 
 With this two commands, you can now interact with other repositories and set a collaboration model among them.
 
@@ -63,5 +63,8 @@ With this two commands, you can now interact with other repositories and set a c
 Using ``fetch``
 ---------------
 
-The ``pull`` operation is actually a compound of two operations: ``fetch`` and ``merge``.
+The ``pull`` operation is actually a compound of two operations: ``fetch`` and ``merge``. The ``fetch`` operation brings all the changes from the corresponding remote branch, setting a branch in your repo that contains them. Once this is done and the data is stored locally, the merge is performed.
+
+Using the ``fetch`` command independently allows you to track branches in a remote repository, and also to *bring* new branches into your repository if they have been created in the remote repository. When the corresponding local branches that contain the changes and data of their remote counterpart are created, you can use them as you would do with any other local branch. This gives you a more fine-grained functionality, which allows you to have more flexibility than jusst using the ``pull`` command.
+
 [To Be written]

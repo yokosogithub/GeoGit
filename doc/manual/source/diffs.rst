@@ -103,9 +103,9 @@ In case the difference includes new features added or old ones removed, the synt
 
 	6350a6... 000000... 6997bd... 000000...   R  parks/parks.23
 
-Removals are just indicated with the header line and no additional information. Notice the null ID of the new object.
+Removals are just indicated with the header line and no additional information. Notice the null Id of the new object.
 
-Adittions are described with the full printing of the object added, represented as a list of ``(attribute_name, attribute_value)`` pairs, similar to the one produced by the ``show`` command. A raw description of the feature and its feature type can be obtained using the ``cat`` command and the feature and feature type Id's provided by the ``diff`` command. Notice that, in this case, the old object has null Id's for both the feature and feature type. The one corresponding to the feature type, however, doesn't have to be necessarily null, as it might already exist another feature with that feature type in the repository, prior to adding the one described by this ``diff`` output.
+Additions are described with the full printing of the object added, represented as a list of ``(attribute_name, attribute_value)`` pairs, similar to the one produced by the ``show`` command. A raw description of the feature and its feature type can be obtained using the ``cat`` command and the feature and feature type Id's provided by the ``diff`` command. Notice that, in this case, the old object has null Id's for both the feature and feature type. The one corresponding to the feature type, however, doesn't have to be necessarily null, as it might already exist another feature with that feature type in the repository, prior to adding the one described by this ``diff`` output.
 
 A summary mode is available, by using the ``--summary`` option. When used, only the header line of each modification will be shown.
 
@@ -120,7 +120,7 @@ The default behaviour of the diff command is to take the working tree as the new
 	$geogit diff b2a780d7c0 HEAD
 	6350a6... 000000... 6997bd... 000000...   R  parks/parks.23
 
-This will compare a previous commit (with the id specified as the first reference) with the current head of the repository. Id's used with this syntax must resolve to a commit.
+This will compare a previous commit (with the Id specified as the first reference) with the current head of the repository. Id's used with this syntax must resolve to a commit.
 
 The first entered Id is used as the Id of the old version. Reversing the order of the references will describe the inverse difference.
 
