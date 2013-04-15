@@ -10,7 +10,8 @@ Contents:
 
 .. toctree::
 
-  intro   
+  intro  
+  installing 
   init
   config
   import
@@ -26,11 +27,9 @@ Contents:
   checkout
   history
   merging
-  rebase
   remotes
   modifying
   patches
-  exercise
 
 
 

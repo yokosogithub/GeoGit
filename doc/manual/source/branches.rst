@@ -3,9 +3,13 @@ Creating branches
 
 Up to this point, we have worked in a linear fashion, adding new commits one after another. In some circumstances, it might be interesting to have several histories in our repository, creating a tree-like structure. GeoGit allows that, by creating so-called branches.
 
-The following figure shows the difference between the linear workflow we have been describing until now and a branch-based one.
+The following figure shows a branch-based workflow.
 
-.. figure:: branches.png
+.. figure:: ../img/branched.png
+
+The linear workflow we have been describing was just a sucession of commits, each one with a single parent and child, like the one shown next.
+
+.. figure:: ../img/linear.png
 
 Branches are useful if you want to work on your data and version your changes, but you do not want to mix your new work with the rest of the data until a certain point, usually when it reaches a given completion state. For instance, imagine that you have a rather large dataset and you want to edit it by adding new attributes to its features. That might take some time of work, and if you keep using a linear model, during that time the updated features will coexist with the original unedited ones, which might cause problems for users of the repository. You can do all your work and not commit anything until you have finished, but that is less convenient, since you cannot publish your data and keep versions of it as you work. Instead, creating a branch gives you a new context where you can work, not interfering with the main branch. Once you have finished your work and it is ready to replace the old feature from where you started your work, you can pass your changes to the main branch, as we will see in an upcoming section.
 
