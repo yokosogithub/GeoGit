@@ -429,7 +429,7 @@ Past versions can be exported by prefixing the tree name with a commit ID and a 
 
 	$geogit shp export HEAD~1:parks parks.shp
 
-HEAD~1 refers to the previous commit, not of the first version we created, so this will export the example tree as it was in that first version.
+HEAD~1 refers to the previous commit, not the one corresponding to the last version we created, so this will export the example tree as it was just before the last commit.
 
 
 

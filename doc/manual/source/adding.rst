@@ -16,7 +16,7 @@ To add all unstaged features in the working tree, just use the ``add`` command w
 	3 features staged for commit
 	0 features not staged for commit
 
-.. note:: ``goegit add`` is equivalent to ``git add .`` (notice the dot)
+.. note:: ``geogit add`` is equivalent to ``git add .`` (notice the dot)
 
 That will cause all new features to be added to the staging area, and also all those ones that were already in the staging area, but were modified in the index  (that is, the versions in the working index and staging area are not the same). Since this is the first data we work with, all features are new, and we have no modified ones in this case.
 

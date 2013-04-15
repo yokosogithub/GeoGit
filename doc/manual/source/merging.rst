@@ -3,7 +3,9 @@ Merging branches
 
 When you work on a new branch, eventually you will want to put the data on that branch into the master branch. You might also want to combine the work done on two separate branches. Whatever the case, it's common in a normal GeoGit workflow to merge the content of two or more branches. Graphically, this is what happens to a GeoGit repository after you merge two branches.
 
-.. figure:: merge.png
+.. todo:: figure
+
+.. figure:: ../img/merged.png
 
 
 Merging is usually done when you have finished working on a given branch and you think the modifications that you have made are ready to become part of the main ``master`` branch. In that case, you will apply all the same changes that you have made to the features and trees in a that branch onto the features and trees in the ``master`` branch, and the ``master`` branch will end up having both the changes that were introduced in it since the creation of the branch to merge, and the changes indeendently made in that branch to merge.
@@ -12,7 +14,7 @@ Merging is done using the ``geogit merge`` commmand. If you are on the destinati
 
 ::
 
-	geogit merge mybranch
+	$geogit merge mybranch
 
 That will add new commits to the current branch, which will include the changes in the ``mybranch`` branch.
 
@@ -20,7 +22,7 @@ Once you have merged your changes, you can delete the branch by calling
 
 ::
 
-	geogit branch -d mybranch
+	$geogit branch -d mybranch
 
 
 Solving merge conflicts
@@ -32,6 +34,7 @@ When a merge operation finds conflicts and it cannot automatically merge all the
 
 ::
 
+	$geogit merge mybranch
 	CONFLICT: Merge conflict in parks/parks.2
 	CONFLICT: Merge conflict in parks/parks.3
 	CONFLICT: Merge conflict in parks/parks.1
@@ -63,7 +66,8 @@ When a conflict arises, the merge operation is interrupted. Conflicted elements 
 You can check which elements are conflicted by running the ``geogit status`` command. The result will be similar to the one shown next:
 
 ::
-
+	
+	$geogit status
 	# On branch master
 	# Unmerged paths:
 	#   (use "geogit add/rm <path/to/fid>..." as appropriate to mark resolution
@@ -133,7 +137,8 @@ The descriptions of the involved elements are the same ones that would be obtain
 A representation with diff-like syntax instead of full descriptions can be obtained using the ``--preview-diff`` option. For the same unmerged feature described above, the resulting output would look like this:
 
 ::
-
+	
+	$geogit conflicts --diff
 	---parks/parks.2---
 	Ours
 	number_fac: 0 -> 5
@@ -173,16 +178,8 @@ When you run the ``commit`` command, you usually must supply a commit message us
 Aborting the merge operation
 -----------------------------
 
-You can abort the merge operation and restore it to the original state it had before you invoked the ``merge`` command. You have the following alternatives, which will cause the same result [NOTE: this is not like git, the --abort here is just a reset op, but not in git]
+You can abort the merge operation and restore it to the original state it had before you invoked the ``merge`` command. You have the following alternatives, which will cause the same result 
 
 - ``geogit reset --hard ORIG_HEAD``
 - ``geogit merge --abort``
-
-
-Solving using the merge tool
-------------------------------
-
-The most practical way to solve the merge conflicts is using the merge tool.
-
-[To Be Written]
 

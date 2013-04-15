@@ -9,16 +9,16 @@ Since a GeoGit repository keeps all the history of your data, it requires a nami
 
 The ``ref`` part of the full reference can be specified in several different ways, including the following.
 
-- An object ID refering to an object that eventually resolves to a tree
+- An object Id refering to an object that eventually resolves to a tree
 - The name of a ref object (i.e. ``WORK_HEAD, HEAD``)
-- The n-th parent of a commit denoted with its ID. This is denoted as ``ID^n``. For instance, ``509a481257c5791f50f5a35087e432247f9dc8b7^2``
-- The n-th historical ancestor of an element denoted with its ID, by first parent. For instance, to refer to the ancestor of the current HEAD (the element the current HEAD pointed before the last change), ``HEAD~1`` should be used.
+- The n-th parent of a commit denoted with its Id. This is denoted as ``ID^n``. For instance, ``509a481257c5791f50f5a35087e432247f9dc8b7^2``
+- The n-th historical ancestor of an element denoted with its Id, by first parent. For instance, to refer to the ancestor of the current HEAD (the element the current HEAD pointed before the last change), ``HEAD~1`` should be used.
 
-The ID of an element can be abbreviated and denoted with just the first 7 digits instead of all 40. In the (unlikely) case of collision (more than one ID starting with those 7 digits), GeoGit will show you a warning message and prompt you to use the full, unambiguous, ID.
+The ID of an element can be abbreviated and denoted with just the first 7 digits instead of all 40. In the (unlikely) case of collision (more than one Id starting with those 7 digits), GeoGit will show you a warning message and prompt you to use the full, unambiguous, ID.
 
 If the full syntax is used, the first part of the reference has to resolve to a tree, and the second one must be a valid path under that tree. In some cases, you might in the end want to refer to a tree, so just the first part (the ``ref`` part) is needed, and any of the above alternatives can be used. In some other cases, the command might assume that you are referring to an element in the current working tree, so it will expect just the path, or, in case it is missing, assume that you are referring to the working tree (that is, it will automatically prepend ``WORK_HEAD`` to the parameter you specified). Check the documentation of each command to see what it actually expects.
 
-Going back to the proposed example of referencing a given path in a previous commit, there are several ways we can do it. One of them, in case we know the ID of the commit, would be to use ``ID:path``. When you make a commit using the ``geogit commit`` command, GeoGit will show you the ID of the commit, as it is shown next:
+Going back to the proposed example of referencing a given path in a previous commit, there are several ways we can do it. One of them, in case we know the ID of the commit, would be to use ``ID:path``. When you make a commit using the ``geogit commit`` command, GeoGit will show you the Id of the commit, as it is shown next:
 
 ::
 
@@ -27,7 +27,7 @@ Going back to the proposed example of referencing a given path in a previous com
 	Committed, counting objects...0 features added, 3 changed, 0 deleted.
 
 
-If, as it happens in this case, you want to refer not to the last commit, but to a commit whose ID you do not know, remember that the ``geogit log`` command allows you to explore the history of the latest commits in your repository. Let's say it gives you an output like this:
+If, as it happens in this case, you want to refer not to the last commit, but to a commit whose Id you do not know, remember that the ``geogit log`` command allows you to explore the history of the latest commits in your repository. Let's say it gives you an output like this:
 
 ::
 
