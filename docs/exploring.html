@@ -1,0 +1,275 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Exploring a repository &mdash; GeoGit documentation 0.1 documentation</title>
+    
+    <link rel="stylesheet" href="_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '',
+        VERSION:     '0.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="GeoGit documentation 0.1 documentation" href="index.html" />
+    <link rel="next" title="Updating the repository data." href="updating.html" />
+    <link rel="prev" title="Referencing a GeoGit element" href="referencing.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="updating.html" title="Updating the repository data."
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="referencing.html" title="Referencing a GeoGit element"
+             accesskey="P">previous</a> |</li>
+        <li><a href="index.html">GeoGit documentation 0.1 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="exploring-a-repository">
+<h1>Exploring a repository<a class="headerlink" href="#exploring-a-repository" title="Permalink to this headline">¶</a></h1>
+<p>The content of a GeoGit repository is stored in the <tt class="docutils literal"><span class="pre">.geogit</span></tt> folder. Unlike a version control system like <em>git</em>, the content of the current working tree cannot be explored directly as a normal folder containing files, since there is not an equivalence between features and files, and they are stored instead in a database which hold the complete structure of the repository.</p>
+<p>Exploring the content of a GeoGit repository is done using GeoGit commands that allow to list and describe the different elements it contains. The main command used for this task are the following ones:</p>
+<ul class="simple">
+<li><tt class="docutils literal"><span class="pre">ls-tree</span></tt>: lists the content of a tree</li>
+<li><tt class="docutils literal"><span class="pre">cat</span></tt>: prints a raw text version of an element of the repository</li>
+<li><tt class="docutils literal"><span class="pre">show</span></tt>: prints a formatted version of an element of the repository</li>
+</ul>
+<p>The ls-tree command has the following syntax:</p>
+<div class="highlight-python"><pre>geogit ls-tree  &lt;[ref]:[path]&gt; [--verbose] [--abbrev num_digits] [-t] [-d] [-r]</pre>
+</div>
+<p>The <tt class="docutils literal"><span class="pre">[ref]:[path]</span></tt> parameter defines the path to be listed. If it contains no <tt class="docutils literal"><span class="pre">ref</span></tt> part, it will list the given path in the current working tree. that is, <tt class="docutils literal"><span class="pre">mypath</span></tt> has the same effect as <tt class="docutils literal"><span class="pre">WORK_HEAD:mypath</span></tt>. To list the same path in a different reference, a full reference can be provided. For instance, to list the content of <tt class="docutils literal"><span class="pre">parks</span></tt> in the current HEAD, the following line should be used:</p>
+<div class="highlight-python"><pre>$geogit ls-tree HEAD:parks</pre>
+</div>
+<p>The provided reference and path should define an element that can eventually be resolved to a tree.  That does not include features. Since features do not contains other elements, their content cannot be listed with the <tt class="docutils literal"><span class="pre">ls-tree</span></tt> command, but with the <tt class="docutils literal"><span class="pre">cat</span></tt> and <tt class="docutils literal"><span class="pre">show</span></tt> commands.</p>
+<p>An object ID can be used directly instead of a <tt class="docutils literal"><span class="pre">[ref]:[path]</span></tt>. That allows to use, for instance, the ID of a commit and list the content of the tree corresponding to that commit.</p>
+<p>The options available for the <tt class="docutils literal"><span class="pre">ls-tree</span></tt> command control how the list of elements under the given path is printed. Using the <tt class="docutils literal"><span class="pre">-v</span></tt> option will list not just the name of the object that are found, but also its ID and the ID of the corresponding feature type. The <tt class="docutils literal"><span class="pre">-r</span></tt> option causes the command to list also the content of subtrees recursively. The names of these subtrees are not shown in the listing, but you can tell GeoGit to add them by using the <tt class="docutils literal"><span class="pre">-t</span></tt> option along with <tt class="docutils literal"><span class="pre">-d</span></tt>. Finally, if you want to show ID&#8217;s in their abbreviated form, you can use the <tt class="docutils literal"><span class="pre">-a</span></tt> option followed by the number of digits to show.</p>
+<p>Below you can find examples of the results obtained by using different options, to illustrate the above.</p>
+<div class="highlight-python"><pre>$geogit ls-tree -v parks
+6350a6955b124119850f5a6906f70dc02ebb31c9 feature d8cc931603603bd64506880dc1760b372808ef2d parks.2
+6350a6955b124119850f5a6906f70dc02ebb31c9 feature 8761a24800cdc1c11b6c3c1483a8c9069f657f1f parks.3
+6350a6955b124119850f5a6906f70dc02ebb31c9 feature ff51bfc2a36d02a3a51d72eef3e7f44de9c4e231 parks.1
+
+$geogit ls-tree -v -r
+6350a6955b124119850f5a6906f70dc02ebb31c9 feature d8cc931603603bd64506880dc1760b372808ef2d parks/parks.2
+6350a6955b124119850f5a6906f70dc02ebb31c9 feature 8761a24800cdc1c11b6c3c1483a8c9069f657f1f parks/parks.3
+6350a6955b124119850f5a6906f70dc02ebb31c9 feature ff51bfc2a36d02a3a51d72eef3e7f44de9c4e231 parks/parks.1
+
+$geogit ls-tree -v -r -t
+6350a6955b124119850f5a6906f70dc02ebb31c9 tree ad21258c0bade71a879180daf156e1ad1a0c3279 parks
+6350a6955b124119850f5a6906f70dc02ebb31c9 feature d8cc931603603bd64506880dc1760b372808ef2d parks/parks.2
+6350a6955b124119850f5a6906f70dc02ebb31c9 feature 8761a24800cdc1c11b6c3c1483a8c9069f657f1f parks/parks.3
+6350a6955b124119850f5a6906f70dc02ebb31c9 feature ff51bfc2a36d02a3a51d72eef3e7f44de9c4e231 parks/parks.1
+
+$geogit ls-tree -r -t
+parks
+parks/parks.2
+parks/parks.3
+parks/parks.1
+
+$geogit ls-tree -v -r -t -a 7
+6350a69 tree ad21258 parks
+6350a69 feature d8cc931 parks/parks.2
+6350a69 feature 8761a24 parks/parks.3
+6350a69 feature ff51bfc parks/parks.1</pre>
+</div>
+<p>Two commands are available to describe an element in a repository: <tt class="docutils literal"><span class="pre">cat</span></tt> and <tt class="docutils literal"><span class="pre">show</span></tt>. Both of them can be used to describe any type of objects, so the object doesn&#8217;t have to resolve to a tree, as in the case of the <tt class="docutils literal"><span class="pre">ls-tree</span></tt> command. Trees can also be describe using <tt class="docutils literal"><span class="pre">cat</span></tt> ad <tt class="docutils literal"><span class="pre">show</span></tt>, but their description does not include just the listing of the elements under it, but also other properties of the tree, as we will see.</p>
+<p>The <tt class="docutils literal"><span class="pre">cat</span></tt> command prints an unformatted text version of a given element. This text can be used to serialize the element, since it contains all the information needed to store it. This kind of representation is used by some other GeoGit commands, such as the ones used to create patches.</p>
+<p>The <tt class="docutils literal"><span class="pre">show</span></tt> command prints a formatted description of a given element. This description is a human-readable version of the element, which does not contain all the information needed to serialize it.</p>
+<p>Both commands just take as input a string that defines the object to describe. All supported notations are allowed for both commands, as they are described in <a href="#id1"><span class="problematic" id="id2">`Referencing a GeoGit element`_</span></a>.</p>
+<p>Below you can find the output of the <tt class="docutils literal"><span class="pre">cat</span></tt> and <tt class="docutils literal"><span class="pre">show</span></tt> command for certain types of objects.</p>
+<p>As it can be seen in the following first example, when the specified string points to a tree, the <tt class="docutils literal"><span class="pre">cat</span></tt> command output includes a listing of features or other trees under it. The <tt class="docutils literal"><span class="pre">show</span></tt> command summarizes that information and also prints the definition of the default feature type associated with that tree.</p>
+<div class="highlight-python"><pre>$geogit show parks
+TREE ID:  0bbed3603377adfbd3b32afce4d36c2c2e59d9d4
+SIZE:  50
+NUMBER Of SUBTREES:  0
+DEFAULT FEATURE TYPE ID:  6350a6955b124119850f5a6906f70dc02ebb31c9
+
+DEFAULT FEATURE TYPE ATTRIBUTES
+--------------------------------
+agency: &lt;STRING&gt;
+area: &lt;DOUBLE&gt;
+len: &lt;DOUBLE&gt;
+name: &lt;STRING&gt;
+number_fac: &lt;Long&gt;
+owner: &lt;STRING&gt;
+parktype: &lt;STRING&gt;
+the_geom: &lt;MULTIPOLYGON&gt;
+usage: &lt;STRING&gt;
+
+$geogit cat parks
+id    0bbed3603377adfbd3b32afce4d36c2c2e59d9d4
+TREE
+size    50
+numtrees    0
+REF    FEATURE    parks.34    38cadc88ef6dad9f38871d704523ee77f69a7f1d    6350a6955b124119850f5a6906f70dc02ebb31c9    -122.86117933535783;-122.854350067846;42.31833119598368;42.32102693871578;EPSG:4326
+REF    FEATURE    parks.13    b734bc70a8061966e15502c7a0399df61b884dc4    6350a6955b124119850f5a6906f70dc02ebb31c9    -122.86880014388446;-122.86561021610196;42.34400227832745;42.34567119406094;EPSG:4326
+REF    FEATURE    parks.42    eef727418a6cd64960eee0a4e54325e284174218    6350a6955b124119850f5a6906f70dc02ebb31c9    -122.85186496040123;-122.85030419922936;42.3158100546772;42.317125842793224;EPSG:4326
+.
+.
+.</pre>
+</div>
+<p>You can see that the <tt class="docutils literal"><span class="pre">cat</span></tt> object includes the bounding box and SRS of the feature, and also the IDs corresponding to the feature itself and its feature type.</p>
+<p>In the case of specifying a single feature, the output of the <tt class="docutils literal"><span class="pre">cat</span></tt> command contains just the feature data, while the <tt class="docutils literal"><span class="pre">show</span></tt> command also prints the names of the corresponding fields, taken from the associated feature type.</p>
+<div class="highlight-python"><pre>$geogit cat HEAD:parks/parks.1
+id    ff51bfc2a36d02a3a51d72eef3e7f44de9c4e231
+FEATURE
+STRING    Medford School District
+DOUBLE    636382.400857
+DOUBLE    3818.6667552
+STRING    Abraham Lincoln Elementary
+LONG    4
+STRING    Medford School District
+STRING    School Field
+MULTIPOLYGON    MULTIPOLYGON (((-122.83646412838807 42.36016644633764, -122.83706843181271 42.36018038487805, -122.83740062537728 42.360187694790284, -122.83773129525122 42.36019528458837, -122.83795404148778 42.36020136945975, -122.83819236923999 42.36020660256662, -122.83846546872873 42.360518040102995, -122.83876233613934 42.36084768643743, -122.83979986790222 42.361999744796655, -122.83876583032126 42.36206395843249, -122.8387666181915 42.36241475445113, -122.8350544594257 42.362400655348836, -122.83505311158638 42.36190072779918, -122.8352814492704 42.36189781560542, -122.83546514962634 42.36183970799634, -122.8355995051357 42.361675638841625, -122.83649163970789 42.36166473464665, -122.83646412838807 42.36016644633764)))
+java.lang.String    Public
+
+
+$geogit show HEAD:parks/parks.1
+
+ID:  ff51bfc2a36d02a3a51d72eef3e7f44de9c4e231
+
+ATTRIBUTES
+----------
+agency: Medford School District
+area: 636382.400857
+len: 3818.6667552
+name: Abraham Lincoln Elementary
+number_fac: 4
+owner: Medford School District
+parktype: School Field
+the_geom: MULTIPOLYGON (((-122.83646412838807 42.36016644633764, -122.83706843181271 42.36018038487805, -122.83740062537728 42.360187694790284, -122.83773129525122 42.36019528458837, -122.83795404148778 42.36020136945975, -122.83819236923999 42.36020660256662, -122.83846546872873 42.360518040102995, -122.83876233613934 42.36084768643743, -122.83979986790222 42.361999744796655, -122.83876583032126 42.36206395843249, -122.8387666181915 42.36241475445113, -122.8350544594257 42.362400655348836, -122.83505311158638 42.36190072779918, -122.8352814492704 42.36189781560542, -122.83546514962634 42.36183970799634, -122.8355995051357 42.361675638841625, -122.83649163970789 42.36166473464665, -122.83646412838807 42.36016644633764)))
+usage: Public</pre>
+</div>
+<p>Finally, the following example shows the output of both commands for a commit reference.</p>
+<div class="highlight-python"><pre>$geogit show 509a481257c5791f50f5a35087e432247f9dc8b7
+Commit:        509a481257c5791f50f5a35087e432247f9dc8b7
+Author:        volaya &lt;volaya@opengeo.org&gt;
+Committer:     volaya &lt;volaya@opengeo.org&gt;
+Author date:   (3 hours ago) Mon Jan 21 13:58:55 CET 2013
+Committer date:(3 hours ago) Mon Jan 21 13:58:55 CET 2013
+Subject:       Updated geometry</pre>
+</div>
+<div class="highlight-python"><pre>$geogit cat 509a481257c5791f50f5a35087e432247f9dc8b7
+id    509a481257c5791f50f5a35087e432247f9dc8b7
+COMMIT
+tree    6bc0644ba38372860254c61a62009448ebd8c1e0
+parents    8c08469ffc54f6cc9132855f0415c79cf3fc7785
+author    volaya    volaya@opengeo.org    1358773135891    3600000
+committer    volaya    volaya@opengeo.org    1358773135891    3600000
+message    Updated geometry</pre>
+</div>
+<p>You can check that, as we mentioned in the <a href="#id3"><span class="problematic" id="id4">`Understanding the structure of a GeoGit repository`_</span></a> section, the <tt class="docutils literal"><span class="pre">HEAD</span></tt> reference points to the latest commit, by describing both <tt class="docutils literal"><span class="pre">HEAD</span></tt> and the ID of the latest commit. You can use the <tt class="docutils literal"><span class="pre">log</span></tt> command to get the ID of the latest commit. Both descriptions should be identical.</p>
+<div class="highlight-python"><pre>$geogit show 509a481257c5791f50f5a35087e432247f9dc8b7
+Commit:        509a481257c5791f50f5a35087e432247f9dc8b7
+Author:        volaya &lt;volaya@opengeo.org&gt;
+Committer:     volaya &lt;volaya@opengeo.org&gt;
+Author date:   (3 hours ago) Mon Jan 21 13:58:55 CET 2013
+Committer date:(3 hours ago) Mon Jan 21 13:58:55 CET 2013
+Subject:       Updated geometry
+
+$geogit show HEAD
+Commit:        509a481257c5791f50f5a35087e432247f9dc8b7
+Author:        volaya &lt;volaya@opengeo.org&gt;
+Committer:     volaya &lt;volaya@opengeo.org&gt;
+Author date:   (3 hours ago) Mon Jan 21 13:58:55 CET 2013
+Committer date:(3 hours ago) Mon Jan 21 13:58:55 CET 2013
+Subject:       Updated geometry</pre>
+</div>
+<div class="section" id="globbing">
+<h2>Globbing<a class="headerlink" href="#globbing" title="Permalink to this headline">¶</a></h2>
+<p>Some commands in GeoGit, such as the ones used to describe objects shown above, support using wildcards. This way, you can more easily select a set of objects without having to type the name of each of them.</p>
+<p>GeoGit uses an ant-like globbing notation, supporting the most common wildcards, namely <tt class="docutils literal"><span class="pre">*</span></tt>, <tt class="docutils literal"><span class="pre">?</span></tt> and <tt class="docutils literal"><span class="pre">**</span></tt>. The <tt class="docutils literal"><span class="pre">*</span></tt> character can be any string of any length (including zero characters), while <tt class="docutils literal"><span class="pre">?</span></tt> represents a single character. The <tt class="docutils literal"><span class="pre">**</span></tt> string is used to indicate any path, so it will cause the command to recursively search into a given path. For instance, the string <tt class="docutils literal"><span class="pre">roads/**/???</span></tt> will return all features with a name of just three characters, in any path under <tt class="docutils literal"><span class="pre">roads</span></tt>. that includes <tt class="docutils literal"><span class="pre">roads/N501</span></tt>, and also <tt class="docutils literal"><span class="pre">roads/spain/madrid/N501</span></tt></p>
+<p>Please, check the <a class="reference external" href="http://ant.apache.org/manual/dirtasks.html">section about directory-based tasks in the ant manual</a> for more information.</p>
+<p>Since objects are not stored in the filesystem, but in the repository database, the expansion of wildcards is not (and should not be) performed by the command-line interpreter, but by the GeoGit interpreter itself.</p>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Exploring a repository</a><ul>
+<li><a class="reference internal" href="#globbing">Globbing</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="referencing.html"
+                        title="previous chapter">Referencing a GeoGit element</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="updating.html"
+                        title="next chapter">Updating the repository data.</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="_sources/exploring.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="updating.html" title="Updating the repository data."
+             >next</a> |</li>
+        <li class="right" >
+          <a href="referencing.html" title="Referencing a GeoGit element"
+             >previous</a> |</li>
+        <li><a href="index.html">GeoGit documentation 0.1 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013, OpenGeo.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

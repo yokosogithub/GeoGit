@@ -1,0 +1,164 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Import data &mdash; GeoGit documentation 0.1 documentation</title>
+    
+    <link rel="stylesheet" href="_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '',
+        VERSION:     '0.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="GeoGit documentation 0.1 documentation" href="index.html" />
+    <link rel="next" title="Staging data" href="adding.html" />
+    <link rel="prev" title="Configuring a GeoGit repository" href="config.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="adding.html" title="Staging data"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="config.html" title="Configuring a GeoGit repository"
+             accesskey="P">previous</a> |</li>
+        <li><a href="index.html">GeoGit documentation 0.1 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="import-data">
+<h1>Import data<a class="headerlink" href="#import-data" title="Permalink to this headline">¶</a></h1>
+<p>The first step to add data to a GeoGit repository, so it can be versioned, is to import it from a file or database. Data stored in a file or a database cannot be versioned by GeoGit, so it has to be converted to the native GeoGit format, and imported into the working tree. From there, we can start working with it and follow the typical workflow of editing, updating and sharing whatever changes we make to that data.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">As we already mentioned, the working tree of GeoGit is not the filesystem. That means that, to make data available to GeoGit so it can be added to the index and commited , you cannot just copy the file to be versioned into a repository folder or create it there. It&#8217;s necessary to import your data into the working tree, so it gets stored in the native format used by GeoGit. This adds an extra step if compared to VCS&#8217;s oriented to work with source code files, but allows GeoGit to have a more powerful handling of spatial data.</p>
+</div>
+<p>Importing data into the working tree of a GeoGit repository is done using GeoGit commands which read a given data source and add all or part of its content to the repository. Data can also be exported from the repository into common formats that can be then used in other applications such as a desktop GIS. That provides the necessary tools to work against a GeoGit repository and make it independent of the tools used to actually edit the data.</p>
+<p>Currently, data can be imported/exported from/to shapefiles, PostGIS databases and SpatiaLite databases. Depending on the type of data source, a different command should be used. For these supported data sources, the general syntax is as follows:</p>
+<div class="highlight-python"><pre>$geogit &lt;shp|pg|sl&gt; &lt;import|export&gt; &lt;specific_parameters&gt;</pre>
+</div>
+<p>In the case     of importing data, the following syntax is used</p>
+<div class="highlight-python"><pre>$geogit &lt;shp|pg|sl&gt; import &lt;source&gt;[-d &lt;destination_path&gt;] [--no-overwrite] &lt;specific_parameters&gt;</pre>
+</div>
+<p>Data can be imported in a given path defined using the <tt class="docutils literal"><span class="pre">-d</span></tt> option. If it is not used, the destination path will be defined automatically based on the data source. For instance, in the case of using a shapefile, the destination path is defined using the name of the shapefile.</p>
+<p>The <tt class="docutils literal"><span class="pre">source</span></tt> argument is the filepath of the file to import, in case of using shapefiles, or the name of the table to import in case of importing from a PostGIS database.</p>
+<p>The following command line will import all the features in a shapefile named <tt class="docutils literal"><span class="pre">parks.shp</span></tt> into the <tt class="docutils literal"><span class="pre">parks</span></tt> tree in the working tree of the GeoGit repository.</p>
+<div class="highlight-python"><pre>$geogit shp import /home/shapefiles/parks.shp</pre>
+</div>
+<p>To import into a tree named &#8220;myparks&#8221;, the following command should be used:</p>
+<div class="highlight-python"><pre>$geogit shp import /home/shapefiles/parks.shp -d myparks</pre>
+</div>
+<p>A tree in the GeoGit working tree is the equivalent of a folder in the filesystem. However, if you move into the <tt class="docutils literal"><span class="pre">.geogit</span></tt> folder where the working tree (and the rest of the GeoGit repository data) is stored, you will not see the folders that you might have created by importing data. The structure of the repository is not visible in the filesystem, and the only way to explore it is to use additional GeoGit commands that we will see soon.</p>
+<p>When importing from a database, additional parameters can be supplied to configure the database connection. In the case of importing from a PostGIS database, the following options are available.</p>
+<ul class="simple">
+<li><tt class="docutils literal"><span class="pre">--host</span></tt>: Machine name or IP address to connect to. Default: localhost</li>
+<li><tt class="docutils literal"><span class="pre">--port</span></tt>: Port number to connect to.  Default: 5432</li>
+<li><tt class="docutils literal"><span class="pre">--schema</span></tt>: The database schema to access.  Default: public</li>
+<li><tt class="docutils literal"><span class="pre">--database</span></tt>: The database to connect to.  Default: database</li>
+<li><tt class="docutils literal"><span class="pre">--user</span></tt>: User name.  Default: postgres</li>
+<li><tt class="docutils literal"><span class="pre">--password</span></tt>: Password.  Default: &lt;no password&gt;</li>
+</ul>
+<p>When importing from a database, all tables can be imported with one single command. To do so, do not enter the name of a table as data source, but use the <tt class="docutils literal"><span class="pre">--all</span></tt> option instead, as in the following example:</p>
+<div class="highlight-python"><pre>$geogit pg import --all</pre>
+</div>
+<p>If a destination path is supplied and the <tt class="docutils literal"><span class="pre">--all</span></tt> option used, all tables will be imported into the same path.</p>
+<p>A listing of all available tables for a given database connection can be obtained using the <tt class="docutils literal"><span class="pre">list</span></tt> command, as shown below.</p>
+<div class="highlight-python"><pre>$geogit pg list</pre>
+</div>
+<p>Since our repository had just been initialized, it was completely empty, and there is no way that the data we have imported can conflict with data that already existed in the repository. However, importing new data (or a different version of that same data) later can cause conflicts and it might require a different approach than just using the plain import command as we have done now. We will deal with these cases later, but for now it is enough to know that our repository contains some spatial data in its working tree.</p>
+<p>Once the data is imported in the working tree, GeoGit can use it. The original file or database from which you imported it is still something that GeoGit cannot manage, so it is of no use for GeoGit. There is no link between your repository and the original file or data base, so you can literally remove it from your system and it would have no effect at all on GeoGit, which will work exclusively with the copy of the data that is now in the repository working tree.</p>
+<p>To see that the data is actually in the working tree, you can use the <tt class="docutils literal"><span class="pre">status</span></tt> command. This command gives you information about the data that you have in the working tree and the index, comparing between them and also with the repository database. This way, you can see which data has been modified but not added to the repository, or which data has been added but has not yet been versioned.</p>
+<div class="highlight-python"><pre>$geogit status
+# On branch master
+# Changes not staged for commit:
+#   (use "geogit add &lt;path/to/fid&gt;..." to update what will be committed
+#   (use "geogit checkout -- &lt;path/to/fid&gt;..." to discard changes in working directory
+#
+#      added  parks/parks.2
+#      added  parks/parks.3
+#      added  parks/parks.1
+# 3 total.</pre>
+</div>
+<p>There were 3 features in the imported shapefile, and now they are in the working tree. They are still unversioned, and they have to be added to the staging area before they can be committed from there into the repository database, creating a new snapshot of the repository data.</p>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="config.html"
+                        title="previous chapter">Configuring a GeoGit repository</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="adding.html"
+                        title="next chapter">Staging data</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="_sources/import.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="adding.html" title="Staging data"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="config.html" title="Configuring a GeoGit repository"
+             >previous</a> |</li>
+        <li><a href="index.html">GeoGit documentation 0.1 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013, OpenGeo.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

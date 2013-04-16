@@ -1,0 +1,142 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Checking out a previous version &mdash; GeoGit documentation 0.1 documentation</title>
+    
+    <link rel="stylesheet" href="_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '',
+        VERSION:     '0.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="GeoGit documentation 0.1 documentation" href="index.html" />
+    <link rel="next" title="Exploring you history" href="history.html" />
+    <link rel="prev" title="Creating branches" href="branches.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="history.html" title="Exploring you history"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="branches.html" title="Creating branches"
+             accesskey="P">previous</a> |</li>
+        <li><a href="index.html">GeoGit documentation 0.1 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="checking-out-a-previous-version">
+<h1>Checking out a previous version<a class="headerlink" href="#checking-out-a-previous-version" title="Permalink to this headline">¶</a></h1>
+<p>All the versions stored in a GeoGit repository are available and can be used. We already know how to refer to an object from a previous version, by using the reference syntax explained in <a href="#id1"><span class="problematic" id="id2">`Referencing a GeoGit element`_</span></a>. That allows us to describe that element or to use it for a certain operation.</p>
+<p>A different way of recovering a given version of the data kept in the repository is to bring all the changes to the working tree, so we can actually work on that data. Notice that this could be used, for instance, to export it and make that version of the repository available for an external application. However, you can export from a given commit without having to checkout and then export from the working tree, as it was explained in the <a href="#id3"><span class="problematic" id="id4">`Exporting from a GeoGit repository`_</span></a> section.</p>
+<p>The <tt class="docutils literal"><span class="pre">add</span></tt> and <tt class="docutils literal"><span class="pre">commit</span></tt> commands <em>move</em> the data from the working tree into the staging area, and from there into the repository database. That same data can go the opposite way, from the repository database to the working tree. In that direction, the index is skipped and the working tree is updated directly from the repository database.</p>
+<p>To checkout a past version of the repository data, the <tt class="docutils literal"><span class="pre">checkout</span></tt> command is used, just in the same way as we use it to move from one branch to another. Instead of a branch name, you must supply the name of a commit (its ID), and data corresponding to that commit will be put in the working tree. Since the data in the working tree will be overwritten, this command cannot be run when the working tree has unstaged changes.</p>
+<p>The following is a valid command that will update the version in the working tree from the current one to the snapshot corresponding to 5 commits ago.</p>
+<div class="highlight-python"><pre>$geogit checkout HEAD~5</pre>
+</div>
+<p>Apart from updating the working tree, the <tt class="docutils literal"><span class="pre">checkout</span></tt> command updates the HEAD <tt class="docutils literal"><span class="pre">reference</span></tt>, which will now point to the commit from where the data to update the working tree was taken.</p>
+<p>You can now export the current working tree to a shapefile, and external applications will be able to use the old version of the data, which you have exported and is now in that shapefile.</p>
+<p>To go back to the most recent state, where you were before checking out the previous version,  you have to checkout the latest commit on the current branch. Notice that <tt class="docutils literal"><span class="pre">HEAD</span></tt> is not pointing now to that commit, so you will have to use the name of the current branch. Assuming you are in the <tt class="docutils literal"><span class="pre">master</span></tt> branch, the following will update the working tree to the latest version, and change the <tt class="docutils literal"><span class="pre">HEAD</span></tt> reference to the corresponding commit.</p>
+<div class="highlight-python"><pre>$geogit checkout master</pre>
+</div>
+<div class="section" id="reseting-to-a-previous-commit">
+<h2>Reseting to a previous commit<a class="headerlink" href="#reseting-to-a-previous-commit" title="Permalink to this headline">¶</a></h2>
+<p>When you perform a checkout using a commit, the <tt class="docutils literal"><span class="pre">HEAD</span></tt> reference points directly to the commit. Usually, <tt class="docutils literal"><span class="pre">HEAD</span></tt> is itself a symbolic reference, and it point to the tip of a given branch. If we are in <tt class="docutils literal"><span class="pre">master</span></tt>, then <tt class="docutils literal"><span class="pre">HEAD</span></tt> points to wherever <tt class="docutils literal"><span class="pre">master</span></tt> is pointing. If there is a commit, the tip of the branch changes, and <tt class="docutils literal"><span class="pre">HEAD</span></tt> changes automatically.</p>
+<p>When <tt class="docutils literal"><span class="pre">HEAD</span></tt> is pointing to a commit directly, it is said to be in a <em>detached</em> state. You should not make commits in that state, because they will not be added to the tip of you current branch.</p>
+<p>If what you want to do is to revert to a previous snapshot of the current branch and start working from there, then you should use the command <tt class="docutils literal"><span class="pre">reset</span></tt> instead of checkout. The <tt class="docutils literal"><span class="pre">reset</span></tt> command will move the tip of the current branch (the <tt class="docutils literal"><span class="pre">master</span></tt> reference in this case) back to an specified commit, and <tt class="docutils literal"><span class="pre">HEAD</span></tt> will move along. Now you can start your work, which will be added on top of the commit to which you have reset the branch.</p>
+<p>To reset to the commit 5 commits ago, use the following:</p>
+<div class="highlight-python"><pre>$geogit reset HEAD~5 --hard</pre>
+</div>
+<p>That will update all 3 areas in GeoGit (working tree, staging area and database) to the specified commit. This is known as a hard commit. You can also perform a mixed reset (only updates the staging area and database, but not the working tree, with the <tt class="docutils literal"><span class="pre">--mixed</span></tt> option), or a soft reset (only updates the database, with the <tt class="docutils literal"><span class="pre">--soft</span></tt> option).</p>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Checking out a previous version</a><ul>
+<li><a class="reference internal" href="#reseting-to-a-previous-commit">Reseting to a previous commit</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="branches.html"
+                        title="previous chapter">Creating branches</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="history.html"
+                        title="next chapter">Exploring you history</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="_sources/checkout.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="history.html" title="Exploring you history"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="branches.html" title="Creating branches"
+             >previous</a> |</li>
+        <li><a href="index.html">GeoGit documentation 0.1 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013, OpenGeo.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

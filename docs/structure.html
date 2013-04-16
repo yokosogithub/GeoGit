@@ -1,0 +1,152 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Understanding the structure of a GeoGit repository &mdash; GeoGit documentation 0.1 documentation</title>
+    
+    <link rel="stylesheet" href="_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '',
+        VERSION:     '0.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="GeoGit documentation 0.1 documentation" href="index.html" />
+    <link rel="next" title="Referencing a GeoGit element" href="referencing.html" />
+    <link rel="prev" title="Commiting changes" href="commiting.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="referencing.html" title="Referencing a GeoGit element"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="commiting.html" title="Commiting changes"
+             accesskey="P">previous</a> |</li>
+        <li><a href="index.html">GeoGit documentation 0.1 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="understanding-the-structure-of-a-geogit-repository">
+<h1>Understanding the structure of a GeoGit repository<a class="headerlink" href="#understanding-the-structure-of-a-geogit-repository" title="Permalink to this headline">¶</a></h1>
+<p>This section introduces the different types of elements of a GeoGit repository, so as to give you a better understanding of how it is structured and helping you work more efficiently.</p>
+<p>A GeoGit repository can contain the following elements:</p>
+<ul class="simple">
+<li>Features. A feature represents a geographical element, and it contains a given set of attributes and at least a geometry. A feature is the equivalent to a shape in a shape file, or a single record in a spatial database.</li>
+<li>Trees. A tree represent a subdivision, it is used to group features with a certain criteria. It might be seen as the equivalent of a shapefile or a table in a database. Trees can be nested (a tree within a tree), so they might also serve as folders.</li>
+<li>Commits. A commit is generated each time some data is written (<em>committed</em>) from the staging area into the repository database. A commit points to the data after that commit (it points to a tree under which the data is found), so it represents a given version of the data. You can go back to your data as it was at a certain point, by going to the corresponding commit.</li>
+</ul>
+<p>All these objects are stored in GeoGit and referenced by an Id, so you can use that Id to refer to the object anytime and in any of the commands available in GeoGit when that is needed. The Id is a 40 character string. For instance, <tt class="docutils literal"><span class="pre">509a481257c5791f50f5a35087e432247f9dc8b7</span></tt> is a valid Id of a real GeoGit object.</p>
+<p>All Id&#8217;s are unique, so each of them is a reference to just one single object.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">In GeoGit, even in the working tree, objects are hashed and stored like that.</p>
+</div>
+<p>We will use object Id&#8217;s frequently in the following sections, as we describe the different commands used to work on a GeoGit repository.</p>
+<p>Another element that is found in a GeoGit repository is a <em>ref</em>. A <em>ref</em> is a short string that references a given element in the GeoGit repository, which can be an object of any of the types described above. Think about it as the GeoGit equivalent of a UNIX symbolic link, or a Windows shortcut.</p>
+<p>There are three main <em>refs</em> that you might use often:</p>
+<ul class="simple">
+<li><tt class="docutils literal"><span class="pre">WORK_HEAD</span></tt>: References the working tree</li>
+<li><tt class="docutils literal"><span class="pre">STAGE_HEAD</span></tt>: References the staging area</li>
+<li><tt class="docutils literal"><span class="pre">HEAD</span></tt>: References the current state of the GeoGit repository.</li>
+</ul>
+<p>As you see, they just correspond to the three areas in GeoGit.</p>
+<p>Whenever you make a commit and add new data to the GeoGit repository, the <tt class="docutils literal"><span class="pre">HEAD</span></tt> reference is changed and it will be a reference to the latest commit.</p>
+<p>Note: The <tt class="docutils literal"><span class="pre">HEAD</span></tt> reference can have a different behavior to that, an most of the time it actually points to another reference (it is an indirect reference), but for now, you can think of it as pointing the latest commit in the repository.</p>
+<p>Some GeoGit commands create other references as part of the operations they perform. We will see them in detail as we explain the corresponding commands.</p>
+<div class="section" id="about-the-organization-of-trees-and-features">
+<h2>About the organization of trees and features<a class="headerlink" href="#about-the-organization-of-trees-and-features" title="Permalink to this headline">¶</a></h2>
+<p>A tree in a GeoGit repository can only contain features or other trees. A feature in a GeoGit repository can be seen as a rough equivalent of a file in a filesystem.</p>
+<p>A feature contains a set of attributes, and these attributes must correspond to a given feature type, also stored in the GeoGit repository. For this reason features are stored along with the ID pointing to their feature type.</p>
+<p>All trees have an associated feature type, and in the most common case, all features under a tree share the same feature type, particularly the same one of the parent tree. That is, the ID of the feature type for all features under the tree is the same ID that the tree&#8217;s feature type. However, features with a different feature type can be added to a tree. You can even have a tree with a given feature type and all of its children features having a different feature type. The tree&#8217;s feature type is considered to be the default type of the features under the tree, but features are not restricted to it.</p>
+<p>When we later see how features can be described, we will see that this information about feature types is presented for both features and trees and it can be used for different tasks. It is important to understand that, although that is the most common case, a tree is not the same thing as a feature type. Both trees and features have an associated feature type, and feature types are stored independently.</p>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Understanding the structure of a GeoGit repository</a><ul>
+<li><a class="reference internal" href="#about-the-organization-of-trees-and-features">About the organization of trees and features</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="commiting.html"
+                        title="previous chapter">Commiting changes</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="referencing.html"
+                        title="next chapter">Referencing a GeoGit element</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="_sources/structure.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="referencing.html" title="Referencing a GeoGit element"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="commiting.html" title="Commiting changes"
+             >previous</a> |</li>
+        <li><a href="index.html">GeoGit documentation 0.1 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013, OpenGeo.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

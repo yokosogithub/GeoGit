@@ -1,0 +1,139 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Commiting changes &mdash; GeoGit documentation 0.1 documentation</title>
+    
+    <link rel="stylesheet" href="_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '',
+        VERSION:     '0.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="GeoGit documentation 0.1 documentation" href="index.html" />
+    <link rel="next" title="Understanding the structure of a GeoGit repository" href="structure.html" />
+    <link rel="prev" title="Staging data" href="adding.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="structure.html" title="Understanding the structure of a GeoGit repository"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="adding.html" title="Staging data"
+             accesskey="P">previous</a> |</li>
+        <li><a href="index.html">GeoGit documentation 0.1 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="commiting-changes">
+<h1>Commiting changes<a class="headerlink" href="#commiting-changes" title="Permalink to this headline">¶</a></h1>
+<p>Once the data is in the staging area, it has to be committed to be finally stored in the database of the GeoGit repository and to create a persistent version of that data.</p>
+<p>Commiting data from the staging area to the database is done using the <tt class="docutils literal"><span class="pre">commit</span></tt> command, as shown below</p>
+<div class="highlight-python"><pre>$geogit commit -m "First commit"
+100%
+[5852e6949ba71039fded67e7f4980af4f8773869] First commit
+Committed, counting objects...3 features added, 0 changed, 0 deleted.</pre>
+</div>
+<p>The <tt class="docutils literal"><span class="pre">-m</span></tt> option tells geogit that the string following it is to be used as the commit message. All commits must have a message that describe which kind of modifications you are commiting, so as to describe the difference that will exist between the new version you are creating and the latest one.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">The <tt class="docutils literal"><span class="pre">-m</span></tt> option is mandatory. If not provided, GeoGit will not show the default editor, as <em>git</em> does, but complain and tell you to provide a message instead.</p>
+</div>
+<p>The list of all commits made so far can be obtained by using the <tt class="docutils literal"><span class="pre">log</span></tt> command.</p>
+<div class="highlight-python"><pre>$geogit log
+Commit:  5852e6949ba71039fded67e7f4980af4f8773869
+Author:  volaya &lt;volaya@opengeo.org&gt;
+Date:    (1 day ago) 2013-02-25 15:31:24 +0100
+Subject: First commit</pre>
+</div>
+<p>At this time, there is just one single commit, but as you create new ones, the log will get populated. Basically, the history of your repository is made of commits, each of them representing a set of changes and a new version.</p>
+<p>Each commit also holds a reference to its parent commits, so that allows to keep track of the changes and define the whole history and the order in which the changes were performed. Also, it allows to find out the differences between the given commits and the stages that might exist between them.</p>
+<p>Right now, each commit has just one parent commit, which is the latest one that was made before it, but we will see how it is possible for a commit to have multiple parents. In the case above, since it is our first commit, it has a null parent. All other commits from this point will have a previous commit as parent.</p>
+<p>If, after having committed your changes, you run the <tt class="docutils literal"><span class="pre">status</span></tt> command again, now you will see that you have no changes waiting to be committed and no unstaged objects. All three areas (working tree, staging area and repository database) have no differences between them.</p>
+<div class="highlight-python"><pre>$gegoit status
+# On branch master
+nothing to commit (working directory clean)</pre>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="adding.html"
+                        title="previous chapter">Staging data</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="structure.html"
+                        title="next chapter">Understanding the structure of a GeoGit repository</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="_sources/commiting.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="structure.html" title="Understanding the structure of a GeoGit repository"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="adding.html" title="Staging data"
+             >previous</a> |</li>
+        <li><a href="index.html">GeoGit documentation 0.1 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013, OpenGeo.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

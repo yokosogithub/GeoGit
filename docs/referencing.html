@@ -1,0 +1,153 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Referencing a GeoGit element &mdash; GeoGit documentation 0.1 documentation</title>
+    
+    <link rel="stylesheet" href="_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '',
+        VERSION:     '0.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="GeoGit documentation 0.1 documentation" href="index.html" />
+    <link rel="next" title="Exploring a repository" href="exploring.html" />
+    <link rel="prev" title="Understanding the structure of a GeoGit repository" href="structure.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="exploring.html" title="Exploring a repository"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="structure.html" title="Understanding the structure of a GeoGit repository"
+             accesskey="P">previous</a> |</li>
+        <li><a href="index.html">GeoGit documentation 0.1 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="referencing-a-geogit-element">
+<h1>Referencing a GeoGit element<a class="headerlink" href="#referencing-a-geogit-element" title="Permalink to this headline">¶</a></h1>
+<p>Many commands in GeoGit need a reference to a repository element. For instance, if you want to list the contents of a tree, you need a reference to that tree (we will see how to do this soon). You can use the name of the tree (i.e. <em>roads</em>) in this case, but there are other ways of naming an element.</p>
+<p>Imagine that you want to list the content of a tree, but not in the current version, but in a previous one. Let&#8217;s say you want the version represented by the command before the last one. How would you tell the corresponding command that you want that particular version?</p>
+<p>Since a GeoGit repository keeps all the history of your data, it requires a naming scheme that supports referencing an element and a given version. This is done with a notation in the form <tt class="docutils literal"><span class="pre">[ref]:[path]</span></tt>, where <tt class="docutils literal"><span class="pre">ref</span></tt> denotes the snapshot of the repository we want to refer to (that is, a given version), and <tt class="docutils literal"><span class="pre">path</span></tt> the path to the element. Think about it as adding an extra dimension to the common way of referring to an element in a filesystem using its path.</p>
+<p>The <tt class="docutils literal"><span class="pre">ref</span></tt> part of the full reference can be specified in several different ways, including the following.</p>
+<ul class="simple">
+<li>An object Id refering to an object that eventually resolves to a tree</li>
+<li>The name of a ref object (i.e. <tt class="docutils literal"><span class="pre">WORK_HEAD,</span> <span class="pre">HEAD</span></tt>)</li>
+<li>The n-th parent of a commit denoted with its Id. This is denoted as <tt class="docutils literal"><span class="pre">ID^n</span></tt>. For instance, <tt class="docutils literal"><span class="pre">509a481257c5791f50f5a35087e432247f9dc8b7^2</span></tt></li>
+<li>The n-th historical ancestor of an element denoted with its Id, by first parent. For instance, to refer to the ancestor of the current HEAD (the element the current HEAD pointed before the last change), <tt class="docutils literal"><span class="pre">HEAD~1</span></tt> should be used.</li>
+</ul>
+<p>The ID of an element can be abbreviated and denoted with just the first 7 digits instead of all 40. In the (unlikely) case of collision (more than one Id starting with those 7 digits), GeoGit will show you a warning message and prompt you to use the full, unambiguous, ID.</p>
+<p>If the full syntax is used, the first part of the reference has to resolve to a tree, and the second one must be a valid path under that tree. In some cases, you might in the end want to refer to a tree, so just the first part (the <tt class="docutils literal"><span class="pre">ref</span></tt> part) is needed, and any of the above alternatives can be used. In some other cases, the command might assume that you are referring to an element in the current working tree, so it will expect just the path, or, in case it is missing, assume that you are referring to the working tree (that is, it will automatically prepend <tt class="docutils literal"><span class="pre">WORK_HEAD</span></tt> to the parameter you specified). Check the documentation of each command to see what it actually expects.</p>
+<p>Going back to the proposed example of referencing a given path in a previous commit, there are several ways we can do it. One of them, in case we know the ID of the commit, would be to use <tt class="docutils literal"><span class="pre">ID:path</span></tt>. When you make a commit using the <tt class="docutils literal"><span class="pre">geogit</span> <span class="pre">commit</span></tt> command, GeoGit will show you the Id of the commit, as it is shown next:</p>
+<div class="highlight-python"><pre>$commit -m "modified parks"
+[c3bf45d6539a0d946a9f61e5ec17474d39529bb5] modified parks
+Committed, counting objects...0 features added, 3 changed, 0 deleted.</pre>
+</div>
+<p>If, as it happens in this case, you want to refer not to the last commit, but to a commit whose Id you do not know, remember that the <tt class="docutils literal"><span class="pre">geogit</span> <span class="pre">log</span></tt> command allows you to explore the history of the latest commits in your repository. Let&#8217;s say it gives you an output like this:</p>
+<div class="highlight-python"><pre>$geogit log
+Commit:  c3bf45d6539a0d946a9f61e5ec17474d39529bb5
+Author:  volaya &lt;volaya@opengeo.org&gt;
+Date:    (43 seconds ago) 2013-02-25 15:31:41 +0100
+Subject: modified parks
+
+Commit:  955e67d93d230029b748dac2939c76ced6c28bc2
+Author:  volaya &lt;volaya@opengeo.org&gt;
+Date:    (1 day ago) 2013-02-25 15:31:24 +0100
+Subject: first commit</pre>
+</div>
+<p>The latest commit (<tt class="docutils literal"><span class="pre">c3bf45d6539a0d946a9f61e5ec17474d39529bb5</span></tt>) is the current one, and the <tt class="docutils literal"><span class="pre">HEAD</span></tt> of the repository is pointing at it, so the following 3 alternatives reference the same element:</p>
+<ul class="simple">
+<li><tt class="docutils literal"><span class="pre">c3bf45d6539a0d946a9f61e5ec17474d39529bb5:parks</span></tt></li>
+<li><tt class="docutils literal"><span class="pre">c3bf45d:parks</span></tt></li>
+<li><tt class="docutils literal"><span class="pre">HEAD:parks</span></tt></li>
+</ul>
+<p>The previous commit (<tt class="docutils literal"><span class="pre">955e67d93d230029b748dac2939c76ced6c28bc2</span></tt>) is the one we are interested in, so we can make a reference to the <tt class="docutils literal"><span class="pre">parks</span></tt> tree corresponding to that commit by using any of the next alternatives:</p>
+<ul class="simple">
+<li><tt class="docutils literal"><span class="pre">955e67d93d230029b748dac2939c76ced6c28bc2:parks</span></tt></li>
+<li><tt class="docutils literal"><span class="pre">955e67d:parks</span></tt></li>
+</ul>
+<p>Since this commit is the ancestor of the one that the current HEAD is pointing to, we can also use <tt class="docutils literal"><span class="pre">HEAD~1:parks</span></tt>.</p>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="structure.html"
+                        title="previous chapter">Understanding the structure of a GeoGit repository</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="exploring.html"
+                        title="next chapter">Exploring a repository</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="_sources/referencing.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="exploring.html" title="Exploring a repository"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="structure.html" title="Understanding the structure of a GeoGit repository"
+             >previous</a> |</li>
+        <li><a href="index.html">GeoGit documentation 0.1 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013, OpenGeo.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>
