@@ -1,6 +1,7 @@
 package org.geogit.web.api;
 
 import java.util.Iterator;
+import java.util.List;
 
 import javax.annotation.Nullable;
 import javax.xml.stream.XMLStreamException;
@@ -10,8 +11,10 @@ import org.codehaus.jettison.AbstractXMLStreamWriter;
 import org.geogit.api.NodeRef;
 import org.geogit.api.ObjectId;
 import org.geogit.api.Ref;
+import org.geogit.api.Remote;
 import org.geogit.api.RevCommit;
 import org.geogit.api.RevPerson;
+import org.geogit.api.RevTag;
 import org.geogit.api.SymRef;
 import org.geogit.api.plumbing.DiffIndex;
 import org.geogit.api.plumbing.DiffWorkTree;
@@ -225,6 +228,38 @@ public class ResponseWriter {
 
     public void writeEmptyRefResponse() throws XMLStreamException {
         out.writeStartElement("RefNotFound");
+        out.writeEndElement();
+    }
+
+    public void writeBranchListResponse(List<Ref> localBranches, List<Ref> remoteBranches)
+            throws XMLStreamException {
+        out.writeStartElement("Branches");
+        out.writeStartElement("Local");
+        for (Ref branch : localBranches) {
+            writeElement("name", branch.localName());
+        }
+        out.writeEndElement();
+        out.writeStartElement("Remote");
+        for (Ref branch : remoteBranches) {
+            writeElement("name", branch.localName());
+        }
+        out.writeEndElement();
+        out.writeEndElement();
+    }
+
+    public void writeRemoteListResponse(List<Remote> remotes) throws XMLStreamException {
+        out.writeStartElement("Remotes");
+        for (Remote remote : remotes) {
+            writeElement("name", remote.getName());
+        }
+        out.writeEndElement();
+    }
+
+    public void writeTagListResponse(List<RevTag> tags) throws XMLStreamException {
+        out.writeStartElement("Tags");
+        for (RevTag tag : tags) {
+            writeElement("name", tag.getName());
+        }
         out.writeEndElement();
     }
 }

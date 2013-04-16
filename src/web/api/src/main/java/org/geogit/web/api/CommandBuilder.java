@@ -3,13 +3,16 @@ package org.geogit.web.api;
 import java.util.Arrays;
 
 import org.geogit.api.ObjectId;
+import org.geogit.web.api.commands.BranchWebOp;
 import org.geogit.web.api.commands.Commit;
 import org.geogit.web.api.commands.Diff;
 import org.geogit.web.api.commands.Log;
 import org.geogit.web.api.commands.LsTree;
-import org.geogit.web.api.commands.Status;
-import org.geogit.web.api.commands.UpdateRefWeb;
 import org.geogit.web.api.commands.RefParseWeb;
+import org.geogit.web.api.commands.RemoteWebOp;
+import org.geogit.web.api.commands.Status;
+import org.geogit.web.api.commands.TagWebOp;
+import org.geogit.web.api.commands.UpdateRefWeb;
 
 /**
  *
@@ -33,6 +36,12 @@ public class CommandBuilder {
             command = buildDiff(options);
         } else if ("refparse".equalsIgnoreCase(commandName)) {
             command = buildRefParse(options);
+        } else if ("branch".equalsIgnoreCase(commandName)) {
+            command = buildBranch(options);
+        } else if ("remote".equalsIgnoreCase(commandName)) {
+            command = buildRemote(options);
+        } else if ("tag".equalsIgnoreCase(commandName)) {
+            command = buildTag(options);
         } else {
             throw new CommandSpecException("'" + commandName + "' is not a geogit command");
         }
@@ -102,10 +111,28 @@ public class CommandBuilder {
         command.setPathFilter(options.getFirstValue("pathFilter", null));
         return command;
     }
-    
+
     static RefParseWeb buildRefParse(ParameterSet options) {
         RefParseWeb command = new RefParseWeb();
         command.setName(options.getFirstValue("name", null));
+        return command;
+    }
+
+    static BranchWebOp buildBranch(ParameterSet options) {
+        BranchWebOp command = new BranchWebOp();
+        command.setList(Boolean.valueOf(options.getFirstValue("list", "false")));
+        return command;
+    }
+
+    static RemoteWebOp buildRemote(ParameterSet options) {
+        RemoteWebOp command = new RemoteWebOp();
+        command.setList(Boolean.valueOf(options.getFirstValue("list", "false")));
+        return command;
+    }
+
+    static TagWebOp buildTag(ParameterSet options) {
+        TagWebOp command = new TagWebOp();
+        command.setList(Boolean.valueOf(options.getFirstValue("list", "false")));
         return command;
     }
 }
