@@ -18,7 +18,7 @@ Details
 
 Project Lead: `Gabriel Roldan <https://github.com/groldan>`_
 
-License: all source code is licensed under the `BSD New License`, available at the root project folder,
+License: all source code is licensed under the `BSD New License <LICENSE.txt>`_,
 except for the GeoServer plugin which is available under the GPL 2.0 License. 
 
 Status: A 0.1 release is coming soon, with a full commandline 
