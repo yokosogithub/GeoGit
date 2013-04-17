@@ -6,12 +6,14 @@ import java.util.Map;
 import org.geogit.api.GeoGIT;
 import org.geogit.api.NodeRef;
 import org.geogit.api.ObjectId;
+import org.geogit.api.Ref;
 import org.geogit.api.RevCommit;
 import org.geogit.api.RevFeature;
 import org.geogit.api.RevFeatureType;
 import org.geogit.api.RevObject;
 import org.geogit.api.RevTree;
 import org.geogit.api.plumbing.FindTreeChild;
+import org.geogit.api.plumbing.ResolveTreeish;
 import org.geogit.api.plumbing.RevObjectParse;
 import org.geogit.api.plumbing.diff.AttributeDiff;
 import org.geogit.api.plumbing.diff.FeatureDiff;
@@ -71,14 +73,23 @@ public class FeatureDiffWeb implements WebAPICommand {
     public void run(CommandContext context) {
         if (path == null || path.trim().isEmpty()) {
             throw new CommandSpecException("No path for feature name specifed");
-        } else if (newCommitId.equals(ObjectId.NULL.toString()) || newCommitId.trim().isEmpty()) {
-            throw new CommandSpecException("No newCommitId specified");
         }
 
-        ObjectId newId = ObjectId.valueOf(newCommitId);
-        ObjectId oldId = ObjectId.valueOf(oldCommitId);
-
+        ObjectId newId = null;
         final GeoGIT geogit = context.getGeoGIT();
+
+        if (newCommitId.equals(ObjectId.NULL.toString()) || newCommitId.trim().isEmpty()) {
+            Optional<ObjectId> oid = geogit.command(ResolveTreeish.class).setTreeish(Ref.HEAD)
+                    .call();
+            if (oid.isPresent()) {
+                newId = oid.get();
+            } else {
+                throw new CommandSpecException("Something went wrong, couldn't resolve HEAD");
+            }
+        } else {
+            newId = ObjectId.valueOf(newCommitId);
+        }
+        ObjectId oldId = ObjectId.valueOf(oldCommitId);
 
         RevFeature newFeature = null;
         RevFeatureType newFeatureType = null;
@@ -136,67 +147,66 @@ public class FeatureDiffWeb implements WebAPICommand {
             } else {
                 added = true;
             }
-
-            if (removed) {
-                Map<PropertyDescriptor, AttributeDiff> tempDiffs = new HashMap<PropertyDescriptor, AttributeDiff>();
-                ImmutableList<PropertyDescriptor> attributes = oldFeatureType.sortedDescriptors();
-                ImmutableList<Optional<Object>> values = oldFeature.getValues();
-                for (int index = 0; index < attributes.size(); index++) {
-                    Optional<Object> value = values.get(index);
-                    if (Geometry.class.isAssignableFrom(attributes.get(index).getType()
-                            .getBinding())) {
-                        Optional<Geometry> temp = Optional.absent();
-                        if (value.isPresent()) {
-                            tempDiffs.put(
-                                    attributes.get(index),
-                                    new GeometryAttributeDiff(Optional
-                                            .fromNullable((Geometry) value.orNull()), temp));
-                        }
-                    } else {
-                        if (value.isPresent()) {
-                            tempDiffs.put(attributes.get(index), new GenericAttributeDiffImpl(
-                                    value, Optional.absent()));
-                        }
-                    }
-                }
-                diffs = tempDiffs;
-            } else if (added) {
-                Map<PropertyDescriptor, AttributeDiff> tempDiffs = new HashMap<PropertyDescriptor, AttributeDiff>();
-                ImmutableList<PropertyDescriptor> attributes = newFeatureType.sortedDescriptors();
-                ImmutableList<Optional<Object>> values = newFeature.getValues();
-                for (int index = 0; index < attributes.size(); index++) {
-                    Optional<Object> value = values.get(index);
-                    if (Geometry.class.isAssignableFrom(attributes.get(index).getType()
-                            .getBinding())) {
-                        Optional<Geometry> temp = Optional.absent();
-                        if (value.isPresent()) {
-                            tempDiffs.put(attributes.get(index), new GeometryAttributeDiff(temp,
-                                    Optional.fromNullable((Geometry) value.orNull())));
-                        }
-                    } else {
-                        if (value.isPresent()) {
-                            tempDiffs.put(attributes.get(index), new GenericAttributeDiffImpl(
-                                    Optional.absent(), value));
-                        }
-                    }
-                }
-                diffs = tempDiffs;
-            } else {
-                FeatureDiff diff = new FeatureDiff(path, newFeature, oldFeature, newFeatureType,
-                        oldFeatureType);
-                diffs = diff.getDiffs();
-            }
-
-            context.setResponseContent(new CommandResponse() {
-
-                @Override
-                public void write(ResponseWriter out) throws Exception {
-                    out.start();
-                    out.writeFeatureDiffResponse(diffs);
-                    out.finish();
-                }
-            });
+        } else {
+            added = true;
         }
 
+        if (removed) {
+            Map<PropertyDescriptor, AttributeDiff> tempDiffs = new HashMap<PropertyDescriptor, AttributeDiff>();
+            ImmutableList<PropertyDescriptor> attributes = oldFeatureType.sortedDescriptors();
+            ImmutableList<Optional<Object>> values = oldFeature.getValues();
+            for (int index = 0; index < attributes.size(); index++) {
+                Optional<Object> value = values.get(index);
+                if (Geometry.class.isAssignableFrom(attributes.get(index).getType().getBinding())) {
+                    Optional<Geometry> temp = Optional.absent();
+                    if (value.isPresent()) {
+                        tempDiffs.put(
+                                attributes.get(index),
+                                new GeometryAttributeDiff(Optional.fromNullable((Geometry) value
+                                        .orNull()), temp));
+                    }
+                } else {
+                    if (value.isPresent()) {
+                        tempDiffs.put(attributes.get(index), new GenericAttributeDiffImpl(value,
+                                Optional.absent()));
+                    }
+                }
+            }
+            diffs = tempDiffs;
+        } else if (added) {
+            Map<PropertyDescriptor, AttributeDiff> tempDiffs = new HashMap<PropertyDescriptor, AttributeDiff>();
+            ImmutableList<PropertyDescriptor> attributes = newFeatureType.sortedDescriptors();
+            ImmutableList<Optional<Object>> values = newFeature.getValues();
+            for (int index = 0; index < attributes.size(); index++) {
+                Optional<Object> value = values.get(index);
+                if (Geometry.class.isAssignableFrom(attributes.get(index).getType().getBinding())) {
+                    Optional<Geometry> temp = Optional.absent();
+                    if (value.isPresent()) {
+                        tempDiffs.put(attributes.get(index), new GeometryAttributeDiff(temp,
+                                Optional.fromNullable((Geometry) value.orNull())));
+                    }
+                } else {
+                    if (value.isPresent()) {
+                        tempDiffs.put(attributes.get(index),
+                                new GenericAttributeDiffImpl(Optional.absent(), value));
+                    }
+                }
+            }
+            diffs = tempDiffs;
+        } else {
+            FeatureDiff diff = new FeatureDiff(path, newFeature, oldFeature, newFeatureType,
+                    oldFeatureType);
+            diffs = diff.getDiffs();
+        }
+
+        context.setResponseContent(new CommandResponse() {
+
+            @Override
+            public void write(ResponseWriter out) throws Exception {
+                out.start();
+                out.writeFeatureDiffResponse(diffs);
+                out.finish();
+            }
+        });
     }
 }
