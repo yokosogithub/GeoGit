@@ -4,7 +4,7 @@
   <head>
     <meta charset='utf-8' />
     <meta http-equiv="X-UA-Compatible" content="chrome=1" />
-    <meta name="description" content="GeoGit : Geospatial Distributed Version Control System" />
+    <meta name="description" content="GeoGit : Distributed Version Control System for Geospatial Data" />
 
     <link rel="stylesheet" type="text/css" media="screen" href="stylesheets/stylesheet.css">
 
@@ -19,7 +19,7 @@
           <a id="forkme_banner" href="https://github.com/opengeo/GeoGit">View on GitHub</a>
 
           <h1 id="project_title">GeoGit</h1>
-          <h2 id="project_tagline">Geospatial Distributed Version Control System</h2>
+          <h2 id="project_tagline">Distributed Version Control System for Geospatial Data</h2>
 
             <section id="downloads">
               <a class="zip_download_link" href="https://github.com/opengeo/GeoGit/zipball/master">Download this project as a .zip file</a>
@@ -32,53 +32,30 @@
     <div id="main_content_wrap" class="outer">
       <section id="main_content" class="inner">
         <p>Welcome to the GeoGit project, exploring the use of distributed management of spatial
-data. GeoGit draws inspiration from Git, but adapts its core concepts to handle versioning
+data. GeoGit draws inspiration from <a href="http://git-scm.com/">Git</a>, but adapts its core concepts to handle versioning
 of geospatial data. Users are able to import raw geospatial data (currently from Shapefiles, 
 PostGIS or SpatiaLite) in to a repository where every change to the data is tracked. These
 changes can be viewed in a history, reverted to older versions, branched in to sandboxed
-areas, merged back in, and pushed to remote repositories.</p>
+areas, merged back in, and pushed to remote repositories. GeoGit is written in Java, available
+under the <a href="https://github.com/opengeo/GeoGit/blob/master/LICENSE.txt">BSD License</a>.</p>
 
 <p>For background reading see these two papers on the spatial distributed versioning <a href="http://opengeo.org/publications/distributedversioning/">Concept</a> and 
 <a href="http://opengeo.org/publications/distributedversioningimplement/">Implementation</a>.</p>
 
-<h1>Details</h1>
+<p>We are firmly in 'alpha' mode, working to release early and often, so please join us. Testing, documentation, ideas and patches are all greatly appreciated. Don't hesitate to <a href="https://groups.google.com/a/opengeo.org/group/geogit/">get in touch</a> with any issues, feedback or encouragement.</p>
 
-<p>Project Lead: <a href="http://github.com/groldan">Gabriel Roldan</a></p>
+<h2>Download</h2>
 
-<p>License: <a href="https://github.com/opengeo/GeoGit/blob/master/LICENSE.txt">BSD</a> </p>
+<p><a href="http://sourceforge.net/projects/geogit/files/geogit-0.1.0/geogit-cli-app-0.1.0.zip/download">Version 0.1.0</a> from SourceForge. 
+Documentation available for <a href="http://sourceforge.net/projects/geogit/files/geogit-0.1.0/geogit_user_manual-0.1.tgz/download">download</a> and <a href="docs/index.html">online</a>.</p>
 
-<p>Status: A 0.1 release is coming soon, with a full commandline 
-interface to import data and work with repositories. A web API and user interface is slated for 0.2.</p>
+<h2>Installation</h2>
 
-<h2>Building</h2>
-
-<p>GeoGit is built using Maven</p>
-
-<pre><code>  cd src/parent
-  mvn clean install
-</code></pre>
-
-<p>Online tests, require a geogit endpoint, are available using::</p>
-
-<pre><code>mvn -Ponline
-</code></pre>
-
-<p>Cobertura is configured for a test coverage report::</p>
-
-<pre><code>mvn cobertura:cobertura
-open target/site/cobertura/index.html
-</code></pre>
-
-<p>Any additional build profiles are documented in the root pom.xml .</p>
-
-<p>Please carefully apply the code formatting options in the buld/eclipse/formatter.xml file. These are the standard
-Java formatting options with 100 character line length for both code and comments, and 4 spaces for indentation.
-It is also recommended to use the code templates from build/eclipse/codetemlates.xml.</p>
+<p>Unzip the <em>geogit-cli-app-0.1.0.zip</em> to an applications directory, and then add the unzipped <code>geogit/bin/</code> folder to your <strong>PATH</strong>.</p>
 
 <h2>Running</h2>
 
-<p>See: <a href="https://github.com/opengeo/GeoGit/blob/master/doc/quickstart/quicsktart.rst">QuickStart</a> and 
-<a href="https://github.com/opengeo/GeoGit/tree/master/doc/manual/source">Manual</a> (full doc builds coming soon).</p>
+<p>See the <a href="docs/quickstart.html">QuickStart</a> guide for an introduction to GeoGit. Additional information available at the full <a href="docs/index.html">Manual</a>.</p>
 
 <h1>Participation</h1>
 
@@ -86,27 +63,25 @@ It is also recommended to use the code templates from build/eclipse/codetemlates
 
 <ul>
 <li><a href="https://github.com/opengeo/GeoGit">https://github.com/opengeo/GeoGit</a></li>
-</ul><p>Participation is encouraged using the github <em>fork</em> and <em>pull request</em> workflow::</p>
+</ul><p>Discussion takes place on our <a href="https://groups.google.com/a/opengeo.org/group/geogit/">geogit google group</a>. Please join and introduce yourself, we'd love to help, and to figure out ways for you to get involved.</p>
 
+<p>Participation is encouraged using the github <em>fork</em> and <em>pull request</em> workflow:</p>
+
+<blockquote>
 <ul>
 <li>Include test case demonstrating functionality</li>
 <li>Contributions are expected to pass all tests and not break the build</li>
 <li>Include proper license headers on your contributed files</li>
-</ul><p>Issues to help out on are at: <a href="https://github.com/opengeo/GeoGit/issues">https://github.com/opengeo/GeoGit/issues</a></p>
+</ul>
+</blockquote>
+
+<p>Issues to help out on are at our <a href="https://github.com/opengeo/GeoGit/issues">issue tracker</a>.</p>
 
 <p>For those who can't code help on documentation is always appreciated, all docs can be found at 
 <a href="https://github.com/opengeo/GeoGit/tree/master/doc/">https://github.com/opengeo/GeoGit/tree/master/doc/</a> and contributed to by editing in ReStructuredText 
 and using standard GitHub workflows.</p>
 
-<p>Project resources:</p>
-
-<ul>
-<li><a href="https://sites.google.com/a/opengeo.org/geogit-project-guide/">Full on-line project documentation</a></li>
-<li><a href="https://groups.google.com/a/opengeo.org/group/geogit/">GeoGit Discussion Group</a></li>
-<li>The build is <a href="http://hudson.opengeo.org/hudson/view/geogit/">actively monitored using hudson</a>
-</li>
-<li><a href="https://github.com/opengeo/GeoGit/issues">https://github.com/opengeo/GeoGit/issues</a></li>
-</ul>
+<p>Our build is <a href="http://hudson.opengeo.org/hudson/view/geogit/">actively monitored using hudson</a>.</p>
       </section>
     </div>
 
