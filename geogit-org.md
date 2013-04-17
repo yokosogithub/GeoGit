@@ -7,20 +7,22 @@ data. GeoGit draws inspiration from Git, but adapts its core concepts to handle 
 of geospatial data. Users are able to import raw geospatial data (currently from Shapefiles, 
 PostGIS or SpatiaLite) in to a repository where every change to the data is tracked. These
 changes can be viewed in a history, reverted to older versions, branched in to sandboxed
-areas, merged back in, and pushed to remote repositories.
+areas, merged back in, and pushed to remote repositories. GeoGit is written in Java, available
+under the [BSD License](https://github.com/opengeo/GeoGit/blob/master/LICENSE.txt).
 
 For background reading see these two papers on the spatial distributed versioning [Concept](http://opengeo.org/publications/distributedversioning/) and 
-[Implementation] (http://opengeo.org/publications/distributedversioningimplement/).
+[Implementation](http://opengeo.org/publications/distributedversioningimplement/).
 
-Details
-=======
+Download
+--------
 
-Project Lead: [Gabriel Roldan] (http://github.com/groldan)
+[Version 0.1.0](http://sourceforge.net/projects/geogit/files/geogit-0.1.0/) from SourceForge
 
-License: Currently LGPL 2.1, soon changing to BSD New. 
+Running
+-------
 
-Status: A 0.1 release is coming soon, with a full commandline 
-interface to import data and work with repositories. A web API and user interface is slated for 0.2.
+See: [QuickStart] (docs/quickstart.html) to get started and the full [Manual] (docs/index.html) for more.
+
 
 Building
 -----
@@ -47,13 +49,6 @@ Any additional build profiles are documented in the root pom.xml .
 Please carefully apply the code formatting options in the buld/eclipse/formatter.xml file. These are the standard
 Java formatting options with 100 character line length for both code and comments, and 4 spaces for indentation.
 It is also recommended to use the code templates from build/eclipse/codetemlates.xml.
-
-Running
--------
-
-See: [QuickStart] (https://github.com/opengeo/GeoGit/blob/master/doc/quickstart/quicsktart.rst) and 
-[Manual] (https://github.com/opengeo/GeoGit/tree/master/doc/manual/source) (full doc builds coming soon).
-
 
 Participation
 =============
