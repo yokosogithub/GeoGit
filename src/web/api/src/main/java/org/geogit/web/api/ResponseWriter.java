@@ -233,33 +233,41 @@ public class ResponseWriter {
 
     public void writeBranchListResponse(List<Ref> localBranches, List<Ref> remoteBranches)
             throws XMLStreamException {
-        out.writeStartElement("Branches");
+
         out.writeStartElement("Local");
         for (Ref branch : localBranches) {
+            out.writeStartElement("Branch");
             writeElement("name", branch.localName());
+            out.writeEndElement();
         }
         out.writeEndElement();
+
         out.writeStartElement("Remote");
         for (Ref branch : remoteBranches) {
-            writeElement("name", branch.localName());
+            if (!(branch instanceof SymRef)) {
+                out.writeStartElement("Branch");
+                writeElement("remoteName", branch.namespace().replace(Ref.REMOTES_PREFIX + "/", ""));
+                writeElement("name", branch.localName());
+                out.writeEndElement();
+            }
         }
         out.writeEndElement();
-        out.writeEndElement();
+
     }
 
     public void writeRemoteListResponse(List<Remote> remotes) throws XMLStreamException {
-        out.writeStartElement("Remotes");
         for (Remote remote : remotes) {
+            out.writeStartElement("Remote");
             writeElement("name", remote.getName());
+            out.writeEndElement();
         }
-        out.writeEndElement();
     }
 
     public void writeTagListResponse(List<RevTag> tags) throws XMLStreamException {
-        out.writeStartElement("Tags");
         for (RevTag tag : tags) {
+            out.writeStartElement("Tag");
             writeElement("name", tag.getName());
+            out.writeEndElement();
         }
-        out.writeEndElement();
     }
 }

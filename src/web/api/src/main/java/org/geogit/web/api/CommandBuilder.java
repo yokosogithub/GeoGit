@@ -121,6 +121,7 @@ public class CommandBuilder {
     static BranchWebOp buildBranch(ParameterSet options) {
         BranchWebOp command = new BranchWebOp();
         command.setList(Boolean.valueOf(options.getFirstValue("list", "false")));
+        command.setRemotes(Boolean.valueOf(options.getFirstValue("remotes", "false")));
         return command;
     }
 
