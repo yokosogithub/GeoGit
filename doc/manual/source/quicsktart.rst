@@ -17,29 +17,11 @@ This document is a short introduction to the main ideas and elements of GeoGit. 
 Installation
 -------------
 
-No packaged versions are currently available for GeoGit, and it has to be build from sources. To build GeoGit and have an executable binary that you can run, follow these steps.
+Download `Version 0.1.0 <http://sourceforge.net/projects/geogit/files/geogit-0.1.0/geogit-cli-app-0.1.0.zip/download>`_ from SourceForge. Full documentation is available for download and online.
 
-- Clone the GeoGit source code repository. To do so, create a new folder where you want the GeoGit source code to be kept, open a console and move to that folder. Now type the following in a console.
+To install unzip the *geogit-cli-app-0.1.0.zip* to an applications directory, and then add the unzipped geogit/bin/ folder to your ``PATH``.
 
-::
-
-	$git clone http://github.com/opengeo/GeoGit.git
-
-- Install the software needed to build GeoGit (you can skip one or both of the steps below in case you have Java and/or Maven already installed in your system)
-
-	- Install Java following these instructions.
-
-	- Install Maven following these instructions.
-
-- Move to the ``src/parent`` folder under the folder where you have cloned the GeoGit source code, and type the following.
-
-::
-
-	$mvn clean install
-
-- GeoGit should now be built, and scripts ready to be run should be available in the src/cli-app/target/geogit/bin folder. Add that folders to your PATH environment variable, so your system can find it and you can call GeoGit from the console.
-
--To test that GeoGit is ready to be used, open a console and type ``geogit help``. You should see a list of available commands like the one shown below.
+To test that GeoGit is ready to be used, open a console and type ``geogit help``. You should see a list of available commands like the one shown below.
 
 ::
 
@@ -90,7 +72,7 @@ Importing data
 
 To version a dataset, it has to be imported into the repository. Data in different formats can be imported into GeoGit. 
 
-Download the data in this zip file. It contains several folders, each of them with a snapshot of the dataset. We will use them to create our geogit repository, simulating the edition and creation of all the versions it contains. 
+Download the data in `this zip file <https://github.com/opengeo/GeoGit/blob/0.1.0/doc/quickstart/quickstart_data.zip?raw=true>`_. It contains several folders, each of them with a snapshot of the dataset. We will use them to create our GeoGit repository, simulating the edition and creation of all the versions it contains. 
 
 We will start by importing the ``snapshot1/parks.shp`` shapefile, using the following command:
 
