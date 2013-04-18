@@ -313,7 +313,14 @@ public class ResponseWriter {
             out.writeStartElement("Feature");
             writeElement("change", change.toString());
             writeElement("id", feature.getID().toString());
-            writeElement("geometry", ((Geometry) feature.getDefaultGeometry()).toText());
+            List<Object> attributes = feature.getAttributes();
+            for (Object attribute : attributes) {
+                if (attribute instanceof Geometry) {
+                    writeElement("geometry", ((Geometry) attribute).toText());
+                    break;
+                }
+            }
+
             out.writeEndElement();
         }
 
