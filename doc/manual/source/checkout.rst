@@ -1,9 +1,11 @@
+.. _checking_out:
+
 Checking out a previous version
 =================================
 
-All the versions stored in a GeoGit repository are available and can be used. We already know how to refer to an object from a previous version, by using the reference syntax explained in `Referencing a GeoGit element`_. That allows us to describe that element or to use it for a certain operation.
+All the versions stored in a GeoGit repository are available and can be used. We already know how to refer to an object from a previous version, by using the reference syntax explained in :ref:`referencing`. That allows us to describe that element or to use it for a certain operation.
 
-A different way of recovering a given version of the data kept in the repository is to bring all the changes to the working tree, so we can actually work on that data. Notice that this could be used, for instance, to export it and make that version of the repository available for an external application. However, you can export from a given commit without having to checkout and then export from the working tree, as it was explained in the `Exporting from a GeoGit repository`_ section.
+A different way of recovering a given version of the data kept in the repository is to bring all the changes to the working tree, so we can actually work on that data. Notice that this could be used, for instance, to export it and make that version of the repository available for an external application. However, you can export from a given commit without having to checkout and then export from the working tree, as it was explained in the :ref:`exporting` section.
 
 The ``add`` and ``commit`` commands *move* the data from the working tree into the staging area, and from there into the repository database. That same data can go the opposite way, from the repository database to the working tree. In that direction, the index is skipped and the working tree is updated directly from the repository database.
 

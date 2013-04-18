@@ -1,3 +1,5 @@
+.. _commiting:
+
 Commiting changes
 ==================
 

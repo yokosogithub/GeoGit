@@ -1,3 +1,5 @@
+.. _configuring:
+
 Configuring a GeoGit repository
 ================================
 

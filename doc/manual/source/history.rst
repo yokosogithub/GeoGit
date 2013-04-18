@@ -1,3 +1,5 @@
+.. _history:
+
 Exploring you history
 ======================
 

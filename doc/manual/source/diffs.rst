@@ -1,3 +1,5 @@
+.. _differences:
+
 Showing differences
 ===================
 

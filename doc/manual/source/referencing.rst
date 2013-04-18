@@ -1,3 +1,5 @@
+.. _referencing:
+
 Referencing a GeoGit element
 =============================
 

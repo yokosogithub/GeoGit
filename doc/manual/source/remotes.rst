@@ -1,3 +1,5 @@
+.. _remotes:
+
 Interacting with remote repositories
 =====================================
 

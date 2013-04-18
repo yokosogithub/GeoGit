@@ -1,3 +1,5 @@
+.. _init:
+
 Creating a GeoGit repository
 =============================
 

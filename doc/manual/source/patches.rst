@@ -1,3 +1,5 @@
+.. _patches:
+
 Creating and applying patches
 ==============================
 

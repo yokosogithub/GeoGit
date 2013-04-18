@@ -1,3 +1,5 @@
+.. _modifying_history:
+
 Modifying history
 ==================
 

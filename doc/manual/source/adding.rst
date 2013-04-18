@@ -1,3 +1,5 @@
+.. _staging_data:
+
 Staging data
 =============
 

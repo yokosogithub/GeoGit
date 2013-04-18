@@ -1,3 +1,5 @@
+.. _exporting:
+
 Exporting from a GeoGit repository
 ===================================
 
