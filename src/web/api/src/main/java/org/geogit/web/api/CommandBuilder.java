@@ -17,10 +17,19 @@ import org.geogit.web.api.commands.TagWebOp;
 import org.geogit.web.api.commands.UpdateRefWeb;
 
 /**
- *
+ * Builds {@link WebAPICommand}s by parsing a given command name and uses a given parameter set to
+ * fill out their variables.
  */
 public class CommandBuilder {
 
+    /**
+     * Builds the {@link WebAPICommand}.
+     * 
+     * @param commandName the name of the command
+     * @param options the parameter set
+     * @return the command that was built
+     * @throws CommandSpecException
+     */
     public static WebAPICommand build(String commandName, ParameterSet options)
             throws CommandSpecException {
         WebAPICommand command = null;
@@ -54,6 +63,15 @@ public class CommandBuilder {
         return command;
     }
 
+    /**
+     * Parses a string to an Integer, using a default value if the was not found in the parameter
+     * set.
+     * 
+     * @param form the parameter set
+     * @param key the attribute key
+     * @param defaultValue the default value
+     * @return the parsed integer
+     */
     static Integer parseInt(ParameterSet form, String key, Integer defaultValue) {
         String val = form.getFirstValue(key);
         Integer retval = defaultValue;
@@ -68,6 +86,15 @@ public class CommandBuilder {
         return retval;
     }
 
+    /**
+     * Parses a string to a Double, using a default value if the key was not found in the parameter
+     * set.
+     * 
+     * @param form the parameter set
+     * @param key the attribute key
+     * @param defaultValue the default value
+     * @return the parsed double
+     */
     static Double parseDouble(ParameterSet form, String key, Double defaultValue) {
         String val = form.getFirstValue(key);
         Double retval = defaultValue;
@@ -82,6 +109,12 @@ public class CommandBuilder {
         return retval;
     }
 
+    /**
+     * Builds the {@link Status} command.
+     * 
+     * @param options the parameter set
+     * @return the built command
+     */
     static Status buildStatus(ParameterSet options) {
         Status command = new Status();
         command.setLimit(parseInt(options, "limit", 50));
@@ -89,6 +122,12 @@ public class CommandBuilder {
         return command;
     }
 
+    /**
+     * Builds the {@link Log} command.
+     * 
+     * @param options the parameter set
+     * @return the built command
+     */
     static Log buildLog(ParameterSet options) {
         Log command = new Log();
         command.setLimit(parseInt(options, "limit", 50));
@@ -101,6 +140,12 @@ public class CommandBuilder {
         return command;
     }
 
+    /**
+     * Builds the {@link Commit} command.
+     * 
+     * @param options the parameter set
+     * @return the built command
+     */
     static Commit buildCommit(ParameterSet options) {
         Commit commit = new Commit();
         commit.setAll(Boolean.valueOf(options.getFirstValue("all", "false")));
@@ -108,6 +153,12 @@ public class CommandBuilder {
         return commit;
     }
 
+    /**
+     * Builds the {@link LsTree} command.
+     * 
+     * @param options the parameter set
+     * @return the built command
+     */
     static LsTree buildLsTree(ParameterSet options) {
         LsTree lsTree = new LsTree();
         lsTree.setIncludeTrees(Boolean.valueOf(options.getFirstValue("showTree", "false")));
@@ -118,6 +169,12 @@ public class CommandBuilder {
         return lsTree;
     }
 
+    /**
+     * Builds the {@link UpdateRefWeb} command.
+     * 
+     * @param options the parameter set
+     * @return the built command
+     */
     static UpdateRefWeb buildUpdateRef(ParameterSet options) {
         UpdateRefWeb command = new UpdateRefWeb();
         command.setName(options.getFirstValue("name", null));
@@ -126,6 +183,12 @@ public class CommandBuilder {
         return command;
     }
 
+    /**
+     * Builds the {@link Diff} command.
+     * 
+     * @param options the parameter set
+     * @return the built command
+     */
     static Diff buildDiff(ParameterSet options) {
         Diff command = new Diff();
         command.setOldRefSpec(options.getFirstValue("oldRefSpec", null));
@@ -139,12 +202,24 @@ public class CommandBuilder {
         return command;
     }
 
+    /**
+     * Builds the {@link RefParseWeb} command.
+     * 
+     * @param options the parameter set
+     * @return the built command
+     */
     static RefParseWeb buildRefParse(ParameterSet options) {
         RefParseWeb command = new RefParseWeb();
         command.setName(options.getFirstValue("name", null));
         return command;
     }
 
+    /**
+     * Builds the {@link BranchWebOp} command.
+     * 
+     * @param options the parameter set
+     * @return the built command
+     */
     static BranchWebOp buildBranch(ParameterSet options) {
         BranchWebOp command = new BranchWebOp();
         command.setList(Boolean.valueOf(options.getFirstValue("list", "false")));
@@ -152,18 +227,36 @@ public class CommandBuilder {
         return command;
     }
 
+    /**
+     * Builds the {@link RemoteWebOp} command.
+     * 
+     * @param options the parameter set
+     * @return the built command
+     */
     static RemoteWebOp buildRemote(ParameterSet options) {
         RemoteWebOp command = new RemoteWebOp();
         command.setList(Boolean.valueOf(options.getFirstValue("list", "false")));
         return command;
     }
 
+    /**
+     * Builds the {@link TagWebOp} command.
+     * 
+     * @param options the parameter set
+     * @return the built command
+     */
     static TagWebOp buildTag(ParameterSet options) {
         TagWebOp command = new TagWebOp();
         command.setList(Boolean.valueOf(options.getFirstValue("list", "false")));
         return command;
     }
 
+    /**
+     * Builds the {@link FeatureDiffWeb} command.
+     * 
+     * @param options the parameter set
+     * @return the built command
+     */
     static FeatureDiffWeb buildFeatureDiff(ParameterSet options) {
         FeatureDiffWeb command = new FeatureDiffWeb();
         command.setPath(options.getFirstValue("path", null));
@@ -172,6 +265,12 @@ public class CommandBuilder {
         return command;
     }
 
+    /**
+     * Builds the {@link GetCommitGraph} command.
+     * 
+     * @param options the parameter set
+     * @return the built command
+     */
     static GetCommitGraph buildGetCommitGraph(ParameterSet options) {
         GetCommitGraph command = new GetCommitGraph();
         command.setDepth(parseInt(options, "depth", 0));
