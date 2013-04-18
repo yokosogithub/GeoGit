@@ -1,37 +1,34 @@
 <!DOCTYPE html>
 <html>
-
   <head>
-    <meta charset='utf-8' />
-    <meta http-equiv="X-UA-Compatible" content="chrome=1" />
-    <meta name="description" content="GeoGit : Distributed Version Control for Geospatial Data" />
+    <meta charset='utf-8'>
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <link href='https://fonts.googleapis.com/css?family=Architects+Daughter' rel='stylesheet' type='text/css'>
+    <link rel="stylesheet" type="text/css" href="stylesheets/stylesheet.css" media="screen" />
+    <link rel="stylesheet" type="text/css" href="stylesheets/pygment_trac.css" media="screen" />
+    <link rel="stylesheet" type="text/css" href="stylesheets/print.css" media="print" />
 
-    <link rel="stylesheet" type="text/css" media="screen" href="stylesheets/stylesheet.css">
+    <!--[if lt IE 9]>
+    <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
 
-    <title>GeoGit</title>
+    <title>GeoGit by opengeo</title>
   </head>
 
   <body>
+    <header>
+      <div class="inner">
+        <h1>GeoGit</h1>
+        <h2>Distributed Version Control for Geospatial Data</h2>
+        <a href="https://github.com/opengeo/GeoGit" class="button"><small>View project on</small>GitHub</a>
+      </div>
+    </header>
 
-    <!-- HEADER -->
-    <div id="header_wrap" class="outer">
-        <header class="inner">
-          <a id="forkme_banner" href="https://github.com/opengeo/GeoGit">View on GitHub</a>
-
-          <h1 id="project_title">GeoGit</h1>
-          <h2 id="project_tagline">Distributed Version Control for Geospatial Data</h2>
-
-            <section id="downloads">
-              <a class="zip_download_link" href="https://github.com/opengeo/GeoGit/zipball/master">Download this project as a .zip file</a>
-              <a class="tar_download_link" href="https://github.com/opengeo/GeoGit/tarball/master">Download this project as a tar.gz file</a>
-            </section>
-        </header>
-    </div>
-
-    <!-- MAIN CONTENT -->
-    <div id="main_content_wrap" class="outer">
-      <section id="main_content" class="inner">
-        <p>Welcome to the GeoGit project, exploring distributed management of spatial
+    <div id="content-wrapper">
+      <div class="inner clearfix">
+        <section id="main-content">
+          <p>Welcome to the GeoGit project, exploring the use of distributed management of spatial
 data. GeoGit draws inspiration from <a href="http://git-scm.com/">Git</a>, but adapts its core concepts to handle versioning
 of geospatial data. Users are able to import raw geospatial data (currently from Shapefiles, 
 PostGIS or SpatiaLite) in to a repository where every change to the data is tracked. These
@@ -42,7 +39,9 @@ under the <a href="https://github.com/opengeo/GeoGit/blob/master/LICENSE.txt">BS
 <p>For background reading see these two papers on the spatial distributed versioning <a href="http://opengeo.org/publications/distributedversioning/">Concept</a> and 
 <a href="http://opengeo.org/publications/distributedversioningimplement/">Implementation</a>.</p>
 
-<p>We are firmly in 'alpha' mode, working to release early and often, so please join us. Testing, documentation, ideas and patches are all greatly appreciated. Don't hesitate to <a href="https://groups.google.com/a/opengeo.org/group/geogit/">get in touch</a> with any issues, feedback or encouragement.</p>
+<p>We are firmly in 'alpha' mode, working to release early and often, so please join us. Testing, 
+documentation, ideas and patches are all greatly appreciated. Don't hesitate to 
+<a href="https://groups.google.com/a/opengeo.org/group/geogit/">get in touch</a> with any issues, feedback or encouragement.</p>
 
 <h2>Download</h2>
 
@@ -55,7 +54,8 @@ Documentation available for <a href="http://sourceforge.net/projects/geogit/file
 
 <h2>Running</h2>
 
-<p>See the <a href="docs/quickstart.html">QuickStart</a> guide for an introduction to GeoGit. Additional information available at the full <a href="docs/index.html">Manual</a>.</p>
+<p>See the <a href="docs/quickstart.html">QuickStart</a> guide for an introduction to GeoGit. Additional 
+information available at the full <a href="docs/index.html">Manual</a>.</p>
 
 <h1>Participation</h1>
 
@@ -63,37 +63,41 @@ Documentation available for <a href="http://sourceforge.net/projects/geogit/file
 
 <ul>
 <li><a href="https://github.com/opengeo/GeoGit">https://github.com/opengeo/GeoGit</a></li>
-</ul><p>Discussion takes place on our <a href="https://groups.google.com/a/opengeo.org/group/geogit/">geogit google group</a>. Please join and introduce yourself, we'd love to help, and to figure out ways for you to get involved.</p>
+</ul><p>Discussion takes place on our <a href="https://groups.google.com/a/opengeo.org/group/geogit/">geogit google group</a>. 
+Please join and introduce yourself, we'd love to help, and to figure out ways for you to get involved.</p>
 
 <p>Participation is encouraged using the github <em>fork</em> and <em>pull request</em> workflow:</p>
 
-<blockquote>
 <ul>
 <li>Include test case demonstrating functionality</li>
 <li>Contributions are expected to pass all tests and not break the build</li>
 <li>Include proper license headers on your contributed files</li>
-</ul>
-</blockquote>
-
-<p>Issues to help out on are at our <a href="https://github.com/opengeo/GeoGit/issues">issue tracker</a>.</p>
+</ul><p>Issues to help out on are at our <a href="https://github.com/opengeo/GeoGit/issues">issue tracker</a>.</p>
 
 <p>For those who can't code help on documentation is always appreciated, all docs can be found at 
 <a href="https://github.com/opengeo/GeoGit/tree/master/doc/">https://github.com/opengeo/GeoGit/tree/master/doc/</a> and contributed to by editing in ReStructuredText 
 and using standard GitHub workflows.</p>
 
 <p>Our build is <a href="http://hudson.opengeo.org/hudson/view/geogit/">actively monitored using hudson</a>.</p>
-      </section>
+        </section>
+
+        <aside id="sidebar">
+          <a href="https://github.com/opengeo/GeoGit/zipball/master" class="button">
+            <small>Download</small>
+            .zip file
+          </a>
+          <a href="https://github.com/opengeo/GeoGit/tarball/master" class="button">
+            <small>Download</small>
+            .tar.gz file
+          </a>
+
+          <p class="repo-owner"><a href="https://github.com/opengeo/GeoGit"></a> is maintained by <a href="https://github.com/opengeo">opengeo</a>.</p>
+
+          <p>This page was generated by <a href="pages.github.com">GitHub Pages</a> using the Architect theme by <a href="http://twitter.com/jasonlong">Jason Long</a>.</p>
+        </aside>
+      </div>
     </div>
 
-    <!-- FOOTER  -->
-    <div id="footer_wrap" class="outer">
-      <footer class="inner">
-        <p class="copyright">GeoGit maintained by <a href="https://github.com/opengeo">opengeo</a></p>
-        <p>Published with <a href="http://pages.github.com">GitHub Pages</a></p>
-      </footer>
-    </div>
-
-    
-
+  
   </body>
 </html>
