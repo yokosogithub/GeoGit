@@ -246,6 +246,47 @@ public class FetchOpTest extends RemoteRepositoryTestCase {
     }
 
     @Test
+    public void testFetchNewCommitsWithShallowClone2() throws Exception {
+        insertAndAdd(remoteGeogit.geogit, points1);
+        RevCommit commit = remoteGeogit.geogit.command(CommitOp.class).setMessage("1").call();
+        insertAndAdd(remoteGeogit.geogit, points2);
+        commit = remoteGeogit.geogit.command(CommitOp.class).setMessage("2").call();
+        insertAndAdd(remoteGeogit.geogit, points3);
+        commit = remoteGeogit.geogit.command(CommitOp.class).setMessage("3").call();
+
+        // clone the repository
+        CloneOp clone = clone();
+        clone.setDepth(2);
+        clone.setRepositoryURL(remoteGeogit.envHome.getCanonicalPath()).call();
+
+        // Checkout master and commit some changes
+        remoteGeogit.geogit.command(CheckoutOp.class).setSource("master").call();
+
+        insertAndAdd(remoteGeogit.geogit, lines1);
+        commit = remoteGeogit.geogit.command(CommitOp.class).setMessage("4").call();
+        insertAndAdd(remoteGeogit.geogit, points1_modified);
+        commit = remoteGeogit.geogit.command(CommitOp.class).setMessage("5").call();
+        insertAndAdd(remoteGeogit.geogit, lines2);
+        commit = remoteGeogit.geogit.command(CommitOp.class).setMessage("6").call();
+        insertAndAdd(remoteGeogit.geogit, lines3);
+        commit = remoteGeogit.geogit.command(CommitOp.class).setMessage("7").call();
+
+        FetchOp fetch = fetch();
+        // fetch.setDepth(2);
+        fetch.call();
+
+        localGeogit.geogit.command(CheckoutOp.class).setSource("refs/remotes/origin/master").call();
+        Iterator<RevCommit> logs = localGeogit.geogit.command(LogOp.class).call();
+        List<RevCommit> logged = new ArrayList<RevCommit>();
+        for (; logs.hasNext();) {
+            logged.add(logs.next());
+        }
+
+        assertEquals(3, logged.size());
+
+    }
+
+    @Test
     public void testFetchNewRefWithShallowClone() throws Exception {
         // Commit several features to the remote
 

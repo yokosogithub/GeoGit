@@ -31,4 +31,5 @@ Contents:
   remotes
   modifying
   patches
+  partial_cloning
 
