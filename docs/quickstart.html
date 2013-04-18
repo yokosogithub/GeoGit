@@ -83,7 +83,7 @@ diff            Show changes between commits, commit and working tree, etc
 <h2>Configuration<a class="headerlink" href="#configuration" title="Permalink to this headline">¶</a></h2>
 <p>GeoGit needs some information about you, since it will use it when you create a new snapshot, to identify its author. Before we start working with geospatial data in GeoGit, you have to provide GeoGit with an user name and email, using the <tt class="docutils literal"><span class="pre">config</span></tt> command as follows:</p>
 <div class="highlight-python"><pre>$geogit config --global user.name "myname"
-$geogit config --gloabl user.email "myemail@address.com"</pre>
+$geogit config --global user.email "myemail@address.com"</pre>
 </div>
 <p>Replace the above data with your preferred name and email.</p>
 </div>
@@ -97,7 +97,7 @@ $geogit config --gloabl user.email "myemail@address.com"</pre>
 <div class="section" id="importing-data">
 <h2>Importing data<a class="headerlink" href="#importing-data" title="Permalink to this headline">¶</a></h2>
 <p>To version a dataset, it has to be imported into the repository. Data in different formats can be imported into GeoGit.</p>
-<p>Download the data in this zip file. It contains several folders, each of them with a snapshot of the dataset. We will use them to create our geogit repository, simulating the edition and creation of all the versions it contains.</p>
+<p>Download the data in this <a href='https://github.com/opengeo/GeoGit/blob/0.1.0/doc/quickstart/quickstart_data.zip?raw=true'>zip file</a>. It contains several folders, each of them with a snapshot of the dataset. We will use them to create our geogit repository, simulating the edition and creation of all the versions it contains.</p>
 <p>We will start by importing the <tt class="docutils literal"><span class="pre">snapshot1/parks.shp</span></tt> shapefile, using the following command:</p>
 <div class="highlight-python"><pre>$geogit shp import snapshot1/parks.shp
 Importing from shapefile snapshot1\parks.shp
