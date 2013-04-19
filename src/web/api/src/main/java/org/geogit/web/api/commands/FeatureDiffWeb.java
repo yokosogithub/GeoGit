@@ -30,6 +30,14 @@ import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.vividsolutions.jts.geom.Geometry;
 
+/**
+ * This is the interface for the FeatureDiff command. It is used by passing a path to a feature, an
+ * oldCommitId and a newCommitId. It returns the differences in the attributes of a feature between
+ * the two supplied commits.
+ * 
+ * Web interface for {@link FeatureDiff}
+ */
+
 public class FeatureDiffWeb implements WebAPICommand {
 
     private String path;
@@ -38,18 +46,43 @@ public class FeatureDiffWeb implements WebAPICommand {
 
     private String oldCommitId;
 
+    /**
+     * Mutator of the path variable
+     * 
+     * @param path - the path to the feature
+     */
     public void setPath(String path) {
         this.path = path;
     }
 
+    /**
+     * Mutator for the newCommitId
+     * 
+     * @param newCommitId - the id of the newer commit
+     */
     public void setNewCommitId(String newCommitId) {
         this.newCommitId = newCommitId;
     }
 
+    /**
+     * Mutator for the oldCommitId
+     * 
+     * @param oldCommitId - the id of the older commit
+     */
     public void setOldCommitId(String oldCommitId) {
         this.oldCommitId = oldCommitId;
     }
 
+    /**
+     * Helper function to parse the given commit id's feature information
+     * 
+     * @param id - the id to parse out
+     * @param geogit - an instance of geogit to run commands with
+     * @return (Optional)NodeRef - the NodeRef that contains the metadata id and id needed to get
+     *         the feature and featuretype
+     * 
+     * @throws CommandSpecException - if the commit or treeid couldn't be resolved
+     */
     private Optional<NodeRef> parseID(ObjectId id, GeoGIT geogit) {
         Optional<RevObject> object = geogit.command(RevObjectParse.class).setObjectId(id).call();
         RevCommit commit = null;
@@ -69,6 +102,11 @@ public class FeatureDiffWeb implements WebAPICommand {
         }
     }
 
+    /**
+     * Runs the command and builds the appropriate response
+     * 
+     * @throws CommandSpecException
+     */
     @Override
     public void run(CommandContext context) {
         if (path == null || path.trim().isEmpty()) {

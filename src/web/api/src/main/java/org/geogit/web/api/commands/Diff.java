@@ -18,14 +18,15 @@ import org.geogit.web.api.CommandResponse;
 import org.geogit.web.api.CommandSpecException;
 import org.geogit.web.api.ResponseWriter;
 import org.geogit.web.api.WebAPICommand;
-import org.geotools.geometry.jts.ReferencedEnvelope;
-import org.geotools.referencing.CRS;
-import org.opengis.geometry.BoundingBox;
-import org.opengis.referencing.crs.CoordinateReferenceSystem;
-import org.opengis.referencing.operation.TransformException;
 
 import com.google.common.base.Optional;
 import com.google.common.collect.Lists;
+
+/**
+ * Interface for the Diff operation in GeoGit.
+ * 
+ * Web interface for {@link DiffOp}
+ */
 
 public class Diff implements WebAPICommand {
     private String oldRefSpec;
@@ -34,66 +35,44 @@ public class Diff implements WebAPICommand {
 
     private String pathFilter;
 
-    private String crs;
-
-    private Double xMax;
-
-    private Double xMin;
-
-    private Double yMax;
-
-    private Double yMin;
-
+    /**
+     * Mutator for the oldRefSpec variable
+     * 
+     * @param oldRefSpec - the old ref spec to diff against
+     */
     public void setOldRefSpec(String oldRefSpec) {
         this.oldRefSpec = oldRefSpec;
     }
 
+    /**
+     * Mutator for the newRefSpec variable
+     * 
+     * @param newRefSpec - the new ref spec to diff against
+     */
     public void setNewRefSpec(String newRefSpec) {
         this.newRefSpec = newRefSpec;
     }
 
+    /**
+     * Mutator for the pathFilter variable
+     * 
+     * @param pathFilter - a path to filter the diff by
+     */
     public void setPathFilter(String pathFilter) {
         this.pathFilter = pathFilter;
     }
 
-    public void setCRS(String crs) {
-        this.crs = crs;
-    }
-
-    public void setXMax(Double xMax) {
-        this.xMax = xMax;
-    }
-
-    public void setXMin(Double xMin) {
-        this.xMin = xMin;
-    }
-
-    public void setYMax(Double yMax) {
-        this.yMax = yMax;
-    }
-
-    public void setYMin(Double yMin) {
-        this.yMin = yMin;
-    }
-
+    /**
+     * Runs the command and builds the appropriate response
+     * 
+     * @param context - the context to use for this command
+     * 
+     * @throws CommandSpecException
+     */
     @Override
     public void run(CommandContext context) {
         if (oldRefSpec == null || oldRefSpec.trim().isEmpty()) {
             throw new CommandSpecException("No old ref spec");
-        }
-
-        BoundingBox bbox = null;
-
-        if (xMax != null && xMin != null && yMax != null && yMin != null && crs != null) {
-            CoordinateReferenceSystem rs;
-            try {
-                rs = CRS.decode(crs);
-            } catch (Exception e) {
-                throw new CommandSpecException("Invalid Coordinate Reference System: "
-                        + e.getMessage());
-            }
-            bbox = new ReferencedEnvelope(xMax.intValue(), yMax.intValue(), xMin.intValue(),
-                    yMin.intValue(), rs);
         }
 
         final GeoGIT geogit = context.getGeoGIT();
@@ -125,25 +104,6 @@ public class Diff implements WebAPICommand {
                 FeatureBuilder builder = new FeatureBuilder((RevFeatureType) type.get());
                 GeogitSimpleFeature simpleFeature = (GeogitSimpleFeature) builder.build(revFeature
                         .getId().toString(), revFeature);
-                if (bbox != null) {
-                    BoundingBox featureBBox = simpleFeature.getBounds();
-                    if (!bbox.getCoordinateReferenceSystem().equals(
-                            featureBBox.getCoordinateReferenceSystem())) {
-                        try {
-                            featureBBox = featureBBox.toBounds(bbox.getCoordinateReferenceSystem());
-                        } catch (TransformException e) {
-                            throw new CommandSpecException(
-                                    "Problem transforming feature bounding box from "
-                                            + featureBBox.getCoordinateReferenceSystem().toString()
-                                            + " to "
-                                            + bbox.getCoordinateReferenceSystem().toString() + ": "
-                                            + e.getMessage());
-                        }
-                    }
-                    if (!featureBBox.intersects(bbox)) {
-                        continue;
-                    }
-                }
                 features.add(simpleFeature);
                 changes.add(diffEntry.changeType());
             }

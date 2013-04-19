@@ -14,7 +14,10 @@ import org.geogit.web.api.WebAPICommand;
 import com.google.common.base.Optional;
 
 /**
- *
+ * Web version of the Status operation in GeoGit's CLI. Lists the current branch as well as the
+ * current staged and unstaged changes.
+ * 
+ * Web implementation of {@link Status}
  */
 public class Status implements WebAPICommand {
 
@@ -22,14 +25,29 @@ public class Status implements WebAPICommand {
 
     int limit = -1;
 
+    /**
+     * Mutator for the offset variable
+     * 
+     * @param offset - the offset to start listing staged and unstaged changes
+     */
     public void setOffset(int offset) {
         this.offset = offset;
     }
 
+    /**
+     * Mutator for the limit variable
+     * 
+     * @param limit - the number of staged and unstaged changes to make
+     */
     public void setLimit(int limit) {
         this.limit = limit;
     }
 
+    /**
+     * Runs the command builds the appropriate command
+     * 
+     * @param context - the context to use for this command
+     */
     @Override
     public void run(CommandContext context) {
         final GeoGIT geogit = context.getGeoGIT();

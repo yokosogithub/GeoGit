@@ -12,20 +12,42 @@ import org.geogit.web.api.WebAPICommand;
 
 import com.google.common.collect.Lists;
 
+/**
+ * The interface for the Branch operations in GeoGit. Currently only supports listing of local and
+ * remote branches.
+ * 
+ * Web interface for {@link BranchListOp}
+ */
+
 public class BranchWebOp implements WebAPICommand {
 
     private boolean list;
 
     private boolean remotes;
 
+    /**
+     * Mutator for the list option
+     * 
+     * @param list - true if you want to list any branches
+     */
     public void setList(boolean list) {
         this.list = list;
     }
 
+    /**
+     * Mutator for the remote option
+     * 
+     * @param remotes - true if you want to list remote branches
+     */
     public void setRemotes(boolean remotes) {
         this.remotes = remotes;
     }
 
+    /**
+     * Runs the command and builds the appropriate response
+     * 
+     * @param context - the context to use for this command
+     */
     @Override
     public void run(CommandContext context) {
         if (list) {

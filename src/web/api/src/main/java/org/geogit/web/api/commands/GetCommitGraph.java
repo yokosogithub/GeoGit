@@ -13,6 +13,11 @@ import org.geogit.web.api.WebAPICommand;
 
 import com.google.common.collect.Lists;
 
+/**
+ * Lists all commits from a given commitId through to a certain depth.
+ * 
+ */
+
 public class GetCommitGraph implements WebAPICommand {
 
     private String commitId;
@@ -23,22 +28,49 @@ public class GetCommitGraph implements WebAPICommand {
 
     private int elementsPerPage;
 
+    /**
+     * Mutator for the commitId variable
+     * 
+     * @param commitId - the id of the commit to start at
+     */
     public void setCommitId(String commitId) {
         this.commitId = commitId;
     }
 
+    /**
+     * Mutator for the depth variable
+     * 
+     * @param depth - the depth to search to
+     */
     public void setDepth(int depth) {
         this.depth = depth;
     }
 
+    /**
+     * Mutator for the page variable
+     * 
+     * @param page - the page number to build in the response
+     */
     public void setPage(int page) {
         this.page = page;
     }
 
+    /**
+     * Mutator for the elementsPerPage variable
+     * 
+     * @param elementsPerPage - the number of elements to list per page
+     */
     public void setElementsPerPage(int elementsPerPage) {
         this.elementsPerPage = elementsPerPage;
     }
 
+    /**
+     * Runs the command and builds the appropriate response.
+     * 
+     * @param context - the context to use for this command
+     * 
+     * @throws CommandSpecException
+     */
     @Override
     public void run(CommandContext context) {
         if (commitId.equals(ObjectId.NULL.toString())) {
@@ -75,6 +107,10 @@ public class GetCommitGraph implements WebAPICommand {
         });
     }
 
+    /**
+     * Private helper class to store the information needed to traverse the commit graph properly.
+     * 
+     */
     private class CommitNode {
         public RevCommit commit;
 
