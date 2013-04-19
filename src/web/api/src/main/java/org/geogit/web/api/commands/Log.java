@@ -17,7 +17,9 @@ import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 
 /**
- *
+ * Interface for the Log operation in GeoGit.
+ * 
+ * Web interface for {@link LogOp}
  */
 public class Log implements WebAPICommand {
 
@@ -31,26 +33,80 @@ public class Log implements WebAPICommand {
 
     List<String> paths;
 
+    private int page;
+
+    private int elementsPerPage;
+
+    /**
+     * Mutator for the limit variable
+     * 
+     * @param limit - the number of commits to print
+     */
     public void setLimit(Integer limit) {
         this.limit = limit;
     }
 
+    /**
+     * Mutator for the offset variable
+     * 
+     * @param offset - the offset to start listing at
+     */
     public void setOffset(Integer offset) {
         this.skip = offset;
     }
 
+    /**
+     * Mutator for the since variable
+     * 
+     * @param since - the start place to list commits
+     */
     public void setSince(String since) {
         this.since = since;
     }
 
+    /**
+     * Mutator for the until variable
+     * 
+     * @param until - the end place for listing commits
+     */
     public void setUntil(String until) {
         this.until = until;
     }
 
+    /**
+     * Mutator for the paths variable
+     * 
+     * @param paths - list of paths to filter commits by
+     */
     public void setPaths(List<String> paths) {
         this.paths = paths;
     }
 
+    /**
+     * Mutator for the page variable
+     * 
+     * @param page - the page number to build the response
+     */
+    public void setPage(int page) {
+        this.page = page;
+    }
+
+    /**
+     * Mutator for the elementsPerPage variable
+     * 
+     * @param elementsPerPage - the number of elements to display in the response per page
+     */
+    public void setElementsPerPage(int elementsPerPage) {
+        this.elementsPerPage = elementsPerPage;
+    }
+
+    /**
+     * Runs the command and builds the appropriate response
+     * 
+     * @param context - the context to use for this command
+     * 
+     * @throws IllegalArgumentException
+     */
     @Override
     public void run(CommandContext context) {
         final GeoGIT geogit = context.getGeoGIT();
@@ -87,7 +143,7 @@ public class Log implements WebAPICommand {
             @Override
             public void write(ResponseWriter out) throws Exception {
                 out.start();
-                out.writeCommits(log);
+                out.writeCommits(log, page, elementsPerPage);
                 out.finish();
             }
         });

@@ -49,7 +49,7 @@ import com.vividsolutions.jts.geom.Geometry;
 
 /**
  */
-class GeogitSimpleFeature implements SimpleFeature {
+public class GeogitSimpleFeature implements SimpleFeature {
 
     private final FeatureId id;
 

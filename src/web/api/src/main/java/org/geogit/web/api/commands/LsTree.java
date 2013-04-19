@@ -11,7 +11,9 @@ import org.geogit.web.api.ResponseWriter;
 import org.geogit.web.api.WebAPICommand;
 
 /**
- *
+ * Interface for the Ls-Tree operation in GeoGit
+ * 
+ * Web interface for {@link LsTreeOp}
  */
 public class LsTree implements WebAPICommand {
 
@@ -25,26 +27,56 @@ public class LsTree implements WebAPICommand {
 
     List<String> refList;
 
+    /**
+     * Mutator for the includeTrees variable
+     * 
+     * @param includeTrees - true to display trees in the response
+     */
     public void setIncludeTrees(boolean includeTrees) {
         this.includeTrees = includeTrees;
     }
 
+    /**
+     * Mutator for the onlyTrees variable
+     * 
+     * @param onlyTrees - true to display only trees in the response
+     */
     public void setOnlyTrees(boolean onlyTrees) {
         this.onlyTrees = onlyTrees;
     }
 
+    /**
+     * Mutator for the recursive variable
+     * 
+     * @param recursive - true to recurse through the trees
+     */
     public void setRecursive(boolean recursive) {
         this.recursive = recursive;
     }
 
+    /**
+     * Mutator for the verbose variable
+     * 
+     * @param verbose - true to print out the type, metadataId and Id of the object
+     */
     public void setVerbose(boolean verbose) {
         this.verbose = verbose;
     }
 
+    /**
+     * Mutator for the refList variable (Should this really be a list?)
+     * 
+     * @param refList - reference to start at
+     */
     public void setRefList(List<String> refList) {
         this.refList = refList;
     }
 
+    /**
+     * Runs the command and builds the appropriate response
+     * 
+     * @param context - the context to use for this command
+     */
     @Override
     public void run(CommandContext context) {
         String ref = null;

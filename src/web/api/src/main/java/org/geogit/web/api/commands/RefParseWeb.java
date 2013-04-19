@@ -11,14 +11,32 @@ import org.geogit.web.api.WebAPICommand;
 
 import com.google.common.base.Optional;
 
+/**
+ * Interface for the RefParse command in GeoGit
+ * 
+ * Web interface for {@link RefParse}
+ */
+
 public class RefParseWeb implements WebAPICommand {
 
     private String refSpec;
 
+    /**
+     * Mutator for the refSpec variable
+     * 
+     * @param name - the refSpec to parse
+     */
     public void setName(String name) {
         this.refSpec = name;
     }
 
+    /**
+     * Runs the command and builds the appropriate response
+     * 
+     * @param context - the context to use for this command
+     * 
+     * @throws CommandSpecException
+     */
     @Override
     public void run(CommandContext context) {
         if (refSpec == null) {

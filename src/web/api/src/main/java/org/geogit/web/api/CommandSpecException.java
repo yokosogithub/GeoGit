@@ -7,6 +7,11 @@ package org.geogit.web.api;
 @SuppressWarnings("serial")
 public class CommandSpecException extends IllegalArgumentException {
 
+    /**
+     * Constructs a new {code CommandSpecException} with the given message.
+     * 
+     * @param message the message
+     */
     public CommandSpecException(String message) {
         super(message);
     }

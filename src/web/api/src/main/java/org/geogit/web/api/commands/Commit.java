@@ -16,7 +16,9 @@ import org.geogit.web.api.ResponseWriter;
 import org.geogit.web.api.WebAPICommand;
 
 /**
- *
+ * Interface for the Commit operation in GeoGit.
+ * 
+ * Web interface for {@link CommitOp}
  */
 public class Commit implements WebAPICommand {
 
@@ -24,14 +26,30 @@ public class Commit implements WebAPICommand {
 
     boolean all;
 
+    /**
+     * Mutator for the message variable
+     * 
+     * @param message - the message for this commit
+     */
     public void setMessage(String message) {
         this.message = message;
     }
 
+    /**
+     * Mutator for the all option
+     * 
+     * @param all - true to the commit everything in the working tree
+     */
     public void setAll(boolean all) {
         this.all = all;
     }
 
+    /**
+     * Runs the command and builds the appropriate response
+     * 
+     * @param context - the context to use for this command
+     * @throws CommandSpecException
+     */
     @Override
     public void run(CommandContext context) {
         if (message == null || message.trim().isEmpty()) {

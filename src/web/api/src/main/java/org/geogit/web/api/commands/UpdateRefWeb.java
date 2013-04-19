@@ -16,6 +16,12 @@ import org.geogit.web.api.WebAPICommand;
 
 import com.google.common.base.Optional;
 
+/**
+ * Interface for the UpdateRef operation in the GeoGit.
+ * 
+ * Web interface for {@link UpdateRef}, {@link UpdateSymRef}
+ */
+
 public class UpdateRefWeb implements WebAPICommand {
 
     private String name;
@@ -24,18 +30,40 @@ public class UpdateRefWeb implements WebAPICommand {
 
     private boolean delete;
 
+    /**
+     * Mutator for the name variable
+     * 
+     * @param name - the name of the ref to update
+     */
     public void setName(String name) {
         this.name = name;
     }
 
+    /**
+     * Mutator for the newValue variable
+     * 
+     * @param newValue - the new value to change the ref to
+     */
     public void setNewValue(String newValue) {
         this.newValue = newValue;
     }
 
+    /**
+     * Mutator for the delete variable
+     * 
+     * @param delete - true to delete the ref
+     */
     public void setDelete(boolean delete) {
         this.delete = delete;
     }
 
+    /**
+     * Runs the command and builds the appropriate response.
+     * 
+     * @param context - the context to use for this command
+     * 
+     * @throws CommandSpecException
+     */
     @Override
     public void run(CommandContext context) {
         if (name == null) {
