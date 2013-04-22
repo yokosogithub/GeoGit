@@ -171,6 +171,8 @@ public class CommandBuilder {
         command.setOldRefSpec(options.getFirstValue("oldRefSpec", null));
         command.setNewRefSpec(options.getFirstValue("newRefSpec", null));
         command.setPathFilter(options.getFirstValue("pathFilter", null));
+        command.setShowGeometryChanges(Boolean.parseBoolean(options.getFirstValue(
+                "showGeometryChanges", "false")));
         return command;
     }
 
