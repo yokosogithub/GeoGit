@@ -135,7 +135,7 @@ public class InitSteps extends AbstractGeogitFunctionalTest {
         if (location.startsWith("Error:")) {
             fail(location);
         }
-        File repoDir = new File(new URI(location));
+        File repoDir = new File(location);
         assertTrue("Repository directory not found: " + repoDir.getAbsolutePath(), repoDir.exists());
     }
 
