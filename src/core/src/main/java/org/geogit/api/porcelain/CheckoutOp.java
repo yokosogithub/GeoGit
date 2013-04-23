@@ -22,6 +22,7 @@ import org.geogit.api.RevCommit;
 import org.geogit.api.RevObject.TYPE;
 import org.geogit.api.RevTree;
 import org.geogit.api.RevTreeBuilder;
+import org.geogit.api.SymRef;
 import org.geogit.api.plumbing.FindTreeChild;
 import org.geogit.api.plumbing.RefParse;
 import org.geogit.api.plumbing.ResolveTreeish;
@@ -285,7 +286,13 @@ public class CheckoutOp extends AbstractGeoGitOp<CheckoutResult> {
                 result.setNewTree(treeId);
                 if (targetRef.isPresent()) {
                     // update HEAD
-                    String refName = targetRef.get().getName();
+                    Ref target = targetRef.get();
+                    String refName;
+                    if (target instanceof SymRef) {// beware of cyclic refs, peel symrefs
+                        refName = ((SymRef) target).getTarget();
+                    } else {
+                        refName = target.getName();
+                    }
                     command(UpdateSymRef.class).setName(Ref.HEAD).setNewValue(refName).call();
                     result.setNewRef(targetRef.get());
                     result.setOid(targetCommitId.get());
