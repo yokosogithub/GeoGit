@@ -107,7 +107,7 @@ public class RevParse extends AbstractCommand {
             File currDir = geogit.getPlatform().pwd();
             console.println("Error: not a geogit dir '"
                     + currDir.getCanonicalFile().getAbsolutePath() + "'");
-        } else if ("file:".equals(repoUrl.getProtocol())) {
+        } else if ("file".equals(repoUrl.getProtocol())) {
             console.println(new File(repoUrl.toURI()).getCanonicalFile().getAbsolutePath());
         } else {
             console.println(repoUrl.toExternalForm());
