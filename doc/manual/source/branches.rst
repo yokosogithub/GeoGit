@@ -21,7 +21,7 @@ To create a new branch named ``edits`` use the following command:
 
 ::
 
-	$geogit branch mybranch
+	$ geogit branch mybranch
 	Created branch refs/heads/edits
 
 This creates a new branch, but does not put you into it. To change to that branch you have to perform a *checkout*. You can do it using the ``checkout`` command followed by the name of the branch, or by adding the ``-c`` option when creating the branch.
@@ -30,7 +30,7 @@ Let's move to our ``edits`` branch
 
 ::
 
-	$geogit checkout edits
+	$ geogit checkout edits
 
 When you checkout a branch, GeoGit puts the data from the tip of that branch (its latest commit) in you working tree. For this reason, your working tree has to be clean, with no unstaged changes, before doing a checkout. 
 
@@ -48,7 +48,7 @@ The name of the branch is a valid reference just like the ones you already know 
 
 ::
 
-	$geogit show edits:parks/parks.1
+	$ geogit show edits:parks/parks.1
 
 As we mentioned, the first part of the reference (the part before the colon), has to eventually resolve to a tree. The ``edits`` reference points to a commit (the latest one on that branch), and a commit points to a tree as we already know, which makes ``edits`` a valid string to use for creating a full reference.
 

@@ -3,19 +3,19 @@
 Introduction
 ============
 
-GeoGit is a Distributed Version Control System (DVCS) specially designed to handle geospatial data efficiently. It takes inspiration from the source code versioning system *git*, but has a different approach, best suited to the different nature of the data it manages. Users familiar with *git* should find it easy to use GeoGit, but reading this documentation is recommended, since some commands and ideas differ from the corresponding *git* ones. For users new to versioning systems, this document provides a complete description, and it does not assume the reader is familiar with any of such systems. Although this type of software, and particularly *git*, is originally used by programmers to manage their source code, this document is not targeted at programmers, and does not assume the reader has programming experience.
+GeoGit is a Distributed Version Control System (DVCS) specially designed to handle geospatial data efficiently. It takes inspiration from the source code versioning system Git, but has a different approach, best suited to the different nature of the data it manages. Users familiar with Git should find it easy to use GeoGit, but reading this documentation is recommended, since some commands and ideas differ from the corresponding Git ones. For users new to versioning systems, this document provides a complete description, and it does not assume the reader is familiar with any of such systems. Although this type of software, and particularly Git, is originally used by programmers to manage their source code, this document is not targeted at programmers, and does not assume the reader has programming experience.
 
-For those readers familiar with *git*, there are notes along the text that compare *git* and GeoGit and that will help you better understand the differences between both softwares. They look something like this:
+For those readers familiar with Git, there are notes along the text that compare Git and GeoGit and that will help you better understand the differences between both softwares. They look something like this:
 
-.. note:: This is a note for *git* users
+.. note:: This is a note for Git users
 
-Users not familiar with *git* should skip notes like the one above.
+Users not familiar with Git should skip notes like the one above.
 
 This user guide does not cover all possible uses of each GeoGit command, but just introduces the most common cases and the operations used by the great majority of users. Once you understand the concepts explained here, feel free to explore the GeoGit man pages to learn more about other options not covered here.
 
 All GeoGit commands accept a ``help`` option that will display the available options and their usage. Use it when you have questions about how to use the command, or to find out which other possibilities exist apart from the one described here.
 
-.. note:: Geogit is still being developed, and some functionality might change or not be fully usable yet. This documentation reflects most of the planned functionality that should be available once a stable version is released. While almost everything described here is already implemented and functioning, you might find some commands or options that are not completely in the state described in this documentation, or that might have a different behaviour. Eventually, those commands should work as described here, but at certain points, the documentation might be ahead of the actual implementation.
+.. note:: GeoGit is still being developed, and some functionality might change or not be fully usable yet. This documentation reflects most of the planned functionality that should be available once a stable version is released. While almost everything described here is already implemented and functioning, you might find some commands or options that are not completely in the state described in this documentation, or that might have a different behaviour. Eventually, those commands should work as described here, but at certain points, the documentation might be ahead of the actual implementation.
 
 
 How does GeoGit work

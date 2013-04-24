@@ -16,7 +16,7 @@ Merging is done using the ``geogit merge`` commmand. If you are on the destinati
 
 ::
 
-	$geogit merge mybranch
+	$ geogit merge mybranch
 
 That will add new commits to the current branch, which will include the changes in the ``mybranch`` branch.
 
@@ -24,7 +24,7 @@ Once you have merged your changes, you can delete the branch by calling
 
 ::
 
-	$geogit branch -d mybranch
+	$ geogit branch -d mybranch
 
 
 Solving merge conflicts
@@ -36,7 +36,7 @@ When a merge operation finds conflicts and it cannot automatically merge all the
 
 ::
 
-	$geogit merge mybranch
+	$ geogit merge mybranch
 	CONFLICT: Merge conflict in parks/parks.2
 	CONFLICT: Merge conflict in parks/parks.3
 	CONFLICT: Merge conflict in parks/parks.1
@@ -69,7 +69,7 @@ You can check which elements are conflicted by running the ``geogit status`` com
 
 ::
 	
-	$geogit status
+	$ geogit status
 	# On branch master
 	# Unmerged paths:
 	#   (use "geogit add/rm <path/to/fid>..." as appropriate to mark resolution
@@ -90,7 +90,7 @@ The ``conflicts`` command can also be used to describe the current unmerged elem
 
 ::
 	
-	$geogit conflicts
+	$ geogit conflicts
 	parks/parks.2
 
 	Ancestor    27207309879802a99d161b063b8f958d179be3b0
@@ -140,7 +140,7 @@ A representation with diff-like syntax instead of full descriptions can be obtai
 
 ::
 	
-	$geogit conflicts --diff
+	$ geogit conflicts --diff
 	---parks/parks.2---
 	Ours
 	number_fac: 0 -> 5

@@ -9,7 +9,7 @@ For this task, the most basic usage of the ``diff`` command requires no options 
 
 ::
 
-	$geogit diff
+	$ geogit diff
 
 
 This will produce something like the output shown in the example below.
@@ -76,7 +76,7 @@ The above example will look as shown next.
 
 ::
 
-	$geogit diff --nogeom
+	$ geogit diff --nogeom
 	6350a6... 6350a6... 37d757... e0c9ec...   M  parks/parks.22
 	the_geom: 0 point(s) deleted, 1 new point(s) added, 3 point(s) moved
 	parktype: "Garden" -> "Park"
@@ -91,7 +91,7 @@ In case the difference includes new features added or old ones removed, the synt
 
 ::
 
-	$geogit diff
+	$ geogit diff
 	000000... 6350a6... 000000... 95677d...   A  parks/parks.49
 	agency    "City Of Medford"
 	area    362583.12247
@@ -119,7 +119,7 @@ The default behaviour of the diff command is to take the working tree as the new
 
 ::
 
-	$geogit diff b2a780d7c0 HEAD
+	$ geogit diff b2a780d7c0 HEAD
 	6350a6... 000000... 6997bd... 000000...   R  parks/parks.23
 
 This will compare a previous commit (with the Id specified as the first reference) with the current head of the repository. Id's used with this syntax must resolve to a commit.
@@ -128,7 +128,7 @@ The first entered Id is used as the Id of the old version. Reversing the order o
 
 ::
 
-	$geogit diff HEAD b2a780d7c0
+	$ geogit diff HEAD b2a780d7c0
 	000000... 6350a6... 000000... 6997bd...   A  parks/parks.23
 	agency    "City Of Medford"
 	area    44498.3268449
@@ -151,7 +151,7 @@ By default, all the differences between the specified commits (or the working tr
 
 ::
 
-	$geogit diff -- parks
+	$ geogit diff -- parks
 
 This will just list the differences in the ``parks`` path.
 
@@ -159,7 +159,7 @@ The path can point to a single feature, as in the command line below
 
 ::
 
-	$geogit diff -- parks/parks.1
+	$ geogit diff -- parks/parks.1
 
 
 Notice that, in this case, GeoGit will not complain if the path does not resolve to anything. It will tell you that there are no differences between the selected versions to compare, since the specified feature is missing in both of them.

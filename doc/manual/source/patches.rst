@@ -9,7 +9,7 @@ GeoGit patches are created using the ``format-patch`` command. The syntax of thi
 
 ::
 
-	$geogit format-patch -f changes.patch
+	$ geogit format-patch -f changes.patch
 
 This will create a patch file named ``changes.patch``, which contains the differences between the index and the current working tree.
 
@@ -23,7 +23,7 @@ Once the patch is created, it can be applied using the ``apply`` command. To app
 
 ::
 
-	$geogit apply changes.patch
+	$ geogit apply changes.patch
 
 If the patch can be applied, the working tree will be changed according to the differences stored in the patch. If not, GeoGit will inform the user that the patch cannot be applied.
 
@@ -40,14 +40,14 @@ Before applying the patch, we can check that it can be applied on the current in
 
 ::
 	
-	$geogit apply --check changes.path
+	$ geogit apply --check changes.path
 
 
 If the patch cannot be applied, GeoGit will show a list of conflicting changes, along with those ones the can be safely applied, like the one shown next.
 
 ::
 
-	$geogit apply --check changes.patch
+	$ geogit apply --check changes.patch
 	Error: Patch cannot be applied
 
 	Applicable entries:
@@ -73,7 +73,7 @@ The ``--reverse`` option is compatible with other options of the ``apply`` comma
 
 ::
 
-	$geogit --reverse --summary changes.patch
+	$ geogit --reverse --summary changes.patch
 	
 
 Difference between patch files and output of ``diff`` command

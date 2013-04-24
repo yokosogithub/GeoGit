@@ -51,8 +51,8 @@ GeoGit needs some information about you, since it will use it when you create a 
 
 ::
 
-	$geogit config --global user.name "myname"
-	$geogit config --gloabl user.email "myemail@address.com"
+	$ geogit config --global user.name "myname"
+	$ geogit config --gloabl user.email "myemail@address.com"
 
 Replace the above data with your preferred name and email.
 
@@ -63,7 +63,7 @@ Unless you are getting your data from another GeoGit repository (which we will s
 
 ::
 
-	$geogit init
+	$ geogit init
 
 Now your GeoGit repository is ready to hold your geospatial data and manage different versions of it.
 
@@ -78,7 +78,7 @@ We will start by importing the ``snapshot1/parks.shp`` shapefile, using the foll
 
 ::
 
-	$geogit shp import snapshot1/parks.shp
+	$ geogit shp import snapshot1/parks.shp
 	Importing from shapefile snapshot1\parks.shp
 	Importing parks            (1/1)... 100%
 	snapshot1\parks.shp imported successfully.
@@ -91,7 +91,7 @@ Run the following command to see that your data is actually in the working tree.
 
 ::
 
-	$geogit ls-tree -r
+	$ geogit ls-tree -r
 	parks/parks.2
 	parks/parks.3
 	parks/parks.1
@@ -102,7 +102,7 @@ Running the ``status`` command will give you information about the data you have
 
 ::
 
-	$geogit status
+	$ geogit status
 	# On branch master
 	# Changes not staged for commit:
 	#   (use "geogit add <path/to/fid>..." to update what will be committed
@@ -121,7 +121,7 @@ To tell GeoGit that you want to version the data in the working tree, you have t
 
 ::
 
-	$geogit add
+	$ geogit add
 	Counting unstaged features...3
 	Staging changes...
 	100%
@@ -134,7 +134,7 @@ If you now run the ``status``, command, you will see a different output, since y
 
 ::
 
-	$geogit status
+	$ geogit status
 	# On branch master
 	# Changes to be committed:
 	#   (use "geogit reset HEAD <path/to/fid>..." to unstage)
@@ -156,7 +156,7 @@ Type the following command:
 
 ::
 
-	$geogit commit -m "first version"
+	$ geogit commit -m "first version"
 	100%
 	[592006f6b541557a203279be7b4a127fb9dbb2d9] first version
 	Committed, counting objects...3 features added, 0 changed, 0 deleted.
@@ -174,7 +174,7 @@ If you run the ``status`` command after importing (and before adding), you will 
 
 ::
 
-	$geogit status
+	$ geogit status
 	# On branch master
 	# Changes not staged for commit:
 	#   (use "geogit add <path/to/fid>..." to update what will be committed
@@ -189,14 +189,14 @@ Add the new feature and commit to create a new version
 
 ::
 
-	$geogit add
+	$ geogit add
 	Counting unstaged features...1
 	Staging changes...
 	100%
 	1 features staged for commit
 	0 features not staged for commit
 
-	$geogit commit -m "first modification"
+	$ geogit commit -m "first modification"
 	100%
 	[7b6e36db759da8d09b5b1bb726009b3d2c5ca5f7] first modification
 	Committed, counting objects...1 features added, 0 changed, 0 deleted.
@@ -208,7 +208,7 @@ You can use the ``log`` command to see the history of your repository. The histo
 
 ::
 
-	$geogit log
+	$ geogit log
 	Commit:  7b6e36db759da8d09b5b1bb726009b3d2c5ca5f7
 	Author:  volaya <volaya@opengeo.org>
 	Date:    (19 minutes ago) 2013-04-11 15:24:10 +0300
@@ -228,7 +228,7 @@ Data editing can be done on the main history line of the repository, but also on
 To create a new branch named *myedits*, run the following command.
 
 ::
-	$geogit branch myedits -c
+	$ geogit branch myedits -c
 	Created branch refs/heads/myedits
 
 The ``-c`` option tells GeoGit to switch your repository to that branch. Everything you do now will be added to this new history line, not the main one, as it was the case before.
@@ -239,7 +239,7 @@ The ``log`` command will now show you a history like the one shown below:
 
 ::
 
-	$geogit log
+	$ geogit log
 
 	Commit:  c04d0a968696744bdc32bf865f9675a2e55bf447
 	Author:  volaya <volaya@opengeo.org>
@@ -268,14 +268,14 @@ First move to the branch where you want to move changes to, in this case *master
 
 ::
 
-	$geogit checkout master
+	$ geogit checkout master
 	Switched to branch 'master'
 
 The ``log`` command will now show the following history (we are producing a less verbose version of the history, by adding the ``--oneline`` option):
 
 ::
 	
-	$geogit log --oneline
+	$ geogit log --oneline
 	7b6e36db759da8d09b5b1bb726009b3d2c5ca5f7 first modification
 	592006f6b541557a203279be7b4a127fb9dbb2d9 first version
 
@@ -286,7 +286,7 @@ To merge the work done in the *myedits* branch into the current *master* branch,
 
 ::
 
-	$geogit merge myedits
+	$ geogit merge myedits
 	100%
 	[c04d0a968696744bdc32bf865f9675a2e55bf447] added new feature
 	Committed, counting objects...1 features added, 0 changed, 0 deleted.
@@ -296,7 +296,7 @@ Now the commit introduced in the branch is already present in the main history, 
 
 ::
 
-	$geogit log	--oneline
+	$ geogit log	--oneline
 	c04d0a968696744bdc32bf865f9675a2e55bf447 added new feature
 	7b6e36db759da8d09b5b1bb726009b3d2c5ca5f7 first modification
 	592006f6b541557a203279be7b4a127fb9dbb2d9 first version
@@ -315,7 +315,7 @@ If you now try to merge, GeoGit cannot automatically resolve that merge, since y
 
 ::
 
-	$geogit merge fix
+	$ geogit merge fix
 	100%
 	CONFLICT: Merge conflict in parks/parks.5
 	Automatic merge failed. Fix conflicts and then commit the result.
@@ -324,7 +324,7 @@ You can see that there is a conflict by running the ``status`` command
 
 ::
 
-	$geogit status
+	$ geogit status
 	# On branch master
 	# Changes to be committed:
 	#   (use "geogit reset HEAD <path/to/fid>..." to unstage)
@@ -346,7 +346,7 @@ An unmerged path represents a conflicted element
 You can get more details about the conflict by running the ``conflicts`` command
 
 ::
-	$geogit conflicts --diff
+	$ geogit conflicts --diff
 	---parks/parks.5---
 	Ours
 	area: 15297.503295898438 -> 15246.59765625
@@ -364,19 +364,19 @@ Let's assume we want to use the changed feature in the branch, not the one in *m
 
 ::
 
-	$geogit checkout --theirs
+	$ geogit checkout --theirs
 
 That puts the branch version in the working tree, overwriting the previous one. Add it and that will remove the conflict.
 
 ::
 
-	$geogit add
+	$ geogit add
 
 And now commit it. There is no need to add a commit message, since that is created automatically when you are in a merge operation
 
 ::
 
-	$geogit commit
+	$ geogit commit
 
 
 Tagging a version
@@ -388,7 +388,7 @@ To do so, use the ``tag`` command like this:
 
 ::
 
-	$geogit tag "First official version"
+	$ geogit tag "First official version"
 
 Now you can refer to the current version with that name.
 
@@ -401,7 +401,7 @@ To export a given tree to a shapefile, use the ``shp export`` command.
 
 ::
 
-	$geogit shp export parks parks.shp
+	$ geogit shp export parks parks.shp
 
 That will create a file named ``parks.shp`` with the content of the ``parks`` tree.
 
@@ -409,7 +409,7 @@ Past versions can be exported by prefixing the tree name with a commit ID and a 
 
 ::
 
-	$geogit shp export HEAD~1:parks parks.shp
+	$ geogit shp export HEAD~1:parks parks.shp
 
 HEAD~1 refers to the previous commit, not the one corresponding to the last version we created, so this will export the example tree as it was just before the last commit.
 
@@ -426,7 +426,7 @@ Let's clone the repository we have been working on until now. Create a new empty
 
 ::
 
-	$geogit clone /path/to/repo
+	$ geogit clone /path/to/repo
 
 Now you can start working on this new repository as usual, and you changes will be put on top of the changes that already exist in there, which were cloned from the original repository.
 
@@ -434,7 +434,7 @@ You can bring changes from the so-called ``origin`` repository, by using the ``p
 
 ::
 
-	$geogit pull origin
+	$ geogit pull origin
 
 This will update the current branch with changes that have been made on that branch in the remote repository since the last time both repositories were synchronized.
 
@@ -442,4 +442,4 @@ To move your changes from your repository and into the remote ``origin`` one, yo
 
 ::
 
-	$geogit push
+	$ geogit push

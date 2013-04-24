@@ -10,7 +10,7 @@ GeoGit supports the same formats for exporting than it does for importing. That 
 
 ::
 
-	$geogit <shp|pg|sl> export <path_to_export> <destination> [-overwrite]
+	$ geogit <shp|pg|sl> export <path_to_export> <destination> [-overwrite]
 
 
 The ``destination`` option is the filepath in the case of exporting to a shapefile, or the table name in case of exporting to a database. In both cases, the element designated by the ``destination`` parameter should not exist. If it exists, GeoGit will not perform the export operation. If you want GeoGit to overwrite, you must explicitly tell it to do so, by using the ``--overwrite`` option.
@@ -19,7 +19,7 @@ The ``path_to_export`` refers by default to the working tree. Thus, the path ``r
 
 ::
 
-	$geogit shp export HEAD:roads exported.shp
+	$ geogit shp export HEAD:roads exported.shp
 
 When exporting to a database, the same options used to configure the database connection that are available for the import operation are also available for exporting.
 

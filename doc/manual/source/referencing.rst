@@ -33,7 +33,7 @@ If, as it happens in this case, you want to refer not to the last commit, but to
 
 ::
 
-	$geogit log
+	$ geogit log
 	Commit:  c3bf45d6539a0d946a9f61e5ec17474d39529bb5
 	Author:  volaya <volaya@opengeo.org>
 	Date:    (43 seconds ago) 2013-02-25 15:31:41 +0100

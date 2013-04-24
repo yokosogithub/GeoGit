@@ -9,19 +9,19 @@ The first thing to start working is to create a GeoGit repository, import some d
 
 ::
 
-	$geogit init
+	$ geogit init
 	Initialized empty Geogit repository in ~/geogit_repos/central_repo
 	Importing from shapefile ~/geogit_data/parks_1.shp
 	Importing parks            (1/1)... 100%
 	~/geogit_data/parks_1.shp imported successfully.
-	$geogit add
+	$ geogit add
 	Counting unstaged features...4
 	Staging changes...
 	100%
 	4 features staged for commit
 	0 features not staged for commit
 	100%
-	$geogit commit -m "First commit"
+	$ geogit commit -m "First commit"
 	[b4ffc26570362cbf913d79e243e821dad22b2bf0] First commit
 	Committed, counting objects...4 features added, 0 changed, 0 deleted.
 
@@ -30,7 +30,7 @@ Let's check that the data is in the working tree and that it has also been commi
 
 ::
 
-	$geogit ls-tree
+	$ geogit ls-tree
 
 
 We will now leave that repository and will not work directly on it anymore, since that is the central repository. Instead, create a folder named ``repo_a`` and clone the central repository in there. That will represent the repository of an external collaborator.
@@ -38,7 +38,7 @@ We will now leave that repository and will not work directly on it anymore, sinc
 ::
 
 	$cd repo_a
-	$geogit clone ~/geogit_repos/central_repo
+	$ geogit clone ~/geogit_repos/central_repo
 
 The repository is not empty, but contains the same history and data as the original one that we have cloned. So we can work on its data and then push the changes we make back into the original repository, in case we want to change them.
 
@@ -46,7 +46,7 @@ Now let's make some changes to our working tree. The data it contains (the data 
 
 ::
 
-	$geogit shp import ~/home/geogit_data/parks_2.shp parks
+	$ geogit shp import ~/home/geogit_data/parks_2.shp parks
 	Importing from shapefile ~/geogit_data/parks_2.shp
 	Importing parks            (1/1)... 100%
 	~/geogit_data/parks_2.shp imported successfully.
@@ -56,14 +56,14 @@ And once the new data is in the working tree, stage it and make a new commit.
 
 :: 
 
-	$geogit add		
+	$ geogit add		
 	Counting unstaged features...5
 	Staging changes...
 	100%
 	5 features staged for commit
 	0 features not staged for commit
 	100%
-	$geogit commit -m "Added feature"
+	$ geogit commit -m "Added feature"
 	[4d761f56d61e21f06e6a0ede54654377053738ee] added feature
 	Committed, counting objects...1 features added, 0 changed, 0 deleted.
 	
@@ -83,24 +83,24 @@ Suppose now that this new collaborator starts working on the repository data. In
 
 ::
 
-	$geogit branch fixes -c
+	$ geogit branch fixes -c
 	Created branch refs/heads/fixes
 
 The ``parks_3.shp`` shapefile contains a modified version of the data, in which an attribute has been modified and a point in a geometry has been moved. Import it into the working tree of the ``rebo_b`` repository, and then stage and commit the changes.
 
 ::
 
-	$geogit shp import ~/home/geogit_data/parks_3.shp parks
+	$ geogit shp import ~/home/geogit_data/parks_3.shp parks
 	Importing from shapefile ~/home/geogit_data/parks_3.shp
 	Importing parks            (1/1)... 100%
 	~/home/geogit_data/parks_3.shp imported successfully.
-	$geogit add
+	$ geogit add
 	Counting unstaged features...1
 	Staging changes...
 	100%
 	1 features staged for commit
 	0 features not staged for commit
-	$geogit commit -m "fixed minor error"
+	$ geogit commit -m "fixed minor error"
 	100%
 	[ef0e5369e1dc90939b5e110232236c90cfa448f4] fixed minor error
 	Committed, counting objects...0 features added, 1 changed, 0 deleted.
@@ -109,7 +109,7 @@ Now this commit has been added to the ``fixes`` branch. You can see the differen
 
 ::
 
-	$geogit diff HEAD HEAD~1
+	$ geogit diff HEAD HEAD~1
 	49852c... 49852c... 14ca94... 9e3da2...   M  parks/parks.5
 	the_geom: MultiPolygon -122.8559991285487,42.3325881068491 -122.85599502570052,42.33258714736789 -122.8555527064439,42.332583529914544 -122.8555547256435,42.332720688578576 -122.8555550824813,42.332745029854586 -122.85509985857445,42.332745552581905 -122.85499037285732,42.33264794481705 -122.85494140418146,42.332648464841405 -122.85480580923854,42.33213439963994 -122.85481284656451,42.33122907675051 -122.85553321700381,42.33122736814138 [-122.8559877370252,42.33122815590696] (-122.8559029952351,42.331228422464314) -122.85598889427041,42.33135716537447 -122.85599263311514,42.33177278813245 -122.85599750841081,42.33231457227876 -122.85599997275685,42.33258811539997 -122.8559991285487,42.3325881068491
 	area: 15297.503295898438 -> 15246.59765625
@@ -120,8 +120,8 @@ Considering that this modification is finished, the second collaborator merges t
 
 ::
 
-	$geogit checkout master
-	$geogit merge fixes
+	$ geogit checkout master
+	$ geogit merge fixes
 	100%
 	[ef0e5369e1dc90939b5e110232236c90cfa448f4] fixed minor error
 	Committed, counting objects...0 features added, 1 changed, 0 deleted.
@@ -130,7 +130,7 @@ and pushes the changes to the central repository
 
 ::
 
-	$geogit push origin
+	$ geogit push origin
 
 The first collaborator also has started working on the data in his repository. He has also created a new branch named ``cleanup``, in which he wants to remove some data. He has removed some redundant points in a couple of polygons, and also he has changed the values of a the *area* attribute, so now they are expressed in square feet instead of square meters. 
 
@@ -139,11 +139,11 @@ The corresponding modified data can be found on the ``parks_4.shp``, and the wor
 ::
 
 	$cd repo_a
-	$geogit branch -c cleanup
+	$ geogit branch -c cleanup
 	Created branch refs/heads/cleanup
-	$geogit shp import ~/home/geogit_data/parks_4.shp parks
-	$geogit add
-	$geogit commit -m "Removed redundant data and changed units area"
+	$ geogit shp import ~/home/geogit_data/parks_4.shp parks
+	$ geogit add
+	$ geogit commit -m "Removed redundant data and changed units area"
 
 Now the first collaborator wants to merge his changes into the ``master`` branch, but first he fetches changes from the master ``branch`` in the central repository, in case someone else has done some extra work. He does so by running the pull command.
 
@@ -155,8 +155,8 @@ By doing so, he receives the changes introduced by the second collaborator, and 
 
 ::
 
-	$geogit checkout master
-	$geogit merge cleanup
+	$ geogit checkout master
+	$ geogit merge cleanup
 	100%
 	CONFLICT: Merge conflict in parks/parks.5
 	Automatic merge failed. Fix conflicts and then commit the result.

@@ -11,7 +11,7 @@ To add all unstaged features in the working tree, just use the ``add`` command w
 
 ::
 
-	$geogit add	
+	$ geogit add	
 	Counting unstaged features...3
 	Staging changes...
 	100%
@@ -26,7 +26,7 @@ If you just want to stage modified features but not add the new ones, you can us
 
 ::
 
-	$geogit add --update
+	$ geogit add --update
 
 In the above case of our just-created repository, that would have no effect, since there are no modified features.
 
@@ -34,7 +34,7 @@ For a more fine grained selection of which objects to stage, you can directly sp
 
 ::
 
-	$geogit add parks/parks.1 roads/roads.3
+	$ geogit add parks/parks.1 roads/roads.3
 
 After staging, you can run the ``status`` command to check that the 3 features that we imported in the working tree are now also in the staging area, ready to be committed to the repository database.
 

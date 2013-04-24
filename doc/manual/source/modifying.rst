@@ -15,7 +15,7 @@ You can create a second commit with it, but it would be much better to have both
 
 ::
 
-	$geogit commit --amend
+	$ geogit commit --amend
 
 As you can see, there is no need to add a commit message, since the commit command will use the one from the previous commit. It will replace the previous commit with a new one that include the extra changes that you might have introduced, but keep the same message.
 
@@ -31,7 +31,7 @@ You can squash commits by using the ``squash`` command and providing it with a r
 
 ::
 
-	$geogit squash HEAD~2 HEAD
+	$ geogit squash HEAD~2 HEAD
 
 The message is taken from the oldest commit of all the ones being squashed, in this case HEAD~2.
 
@@ -39,13 +39,13 @@ The set of commits to squash, doesn't have to be at the tip of the current branc
 
 ::
 
-	$geogit squash HEAD~5 HEAD~2
+	$ geogit squash HEAD~5 HEAD~2
 
 A message is not needed, but it can be supplied if needed, using the ``-m`` option.
 
 ::
 
-	$geogit squash HEAD~5 HEAD~2 -m "Cleaned up small polygons"
+	$ geogit squash HEAD~5 HEAD~2 -m "Cleaned up small polygons"
 
 
 When performing a rebase operation, the commits that are rebased can be squashed into one automatically, by adding the ``--squash`` option, as we saw in the corresponding chapter.
@@ -62,7 +62,7 @@ The opposite case to what we have just seen is also common: splitting an already
 
 ::
 
-	$geogit reset --soft HEAD~1
+	$ geogit reset --soft HEAD~1
 
 That will put your HEAD one commit behind, discarding that last commit. However, your working tree and index will not be affected, so they will be left unchanged. You can now commit the changes they have, but doing it in as many commits as you need, which will replace the larger commit that you have just discarded.
 

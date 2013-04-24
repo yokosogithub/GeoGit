@@ -3,7 +3,7 @@
 Exploring a repository
 =======================
 
-The content of a GeoGit repository is stored in the ``.geogit`` folder. Unlike a version control system like *git*, the content of the current working tree cannot be explored directly as a normal folder containing files, since there is not an equivalence between features and files, and they are stored instead in a database which hold the complete structure of the repository.
+The content of a GeoGit repository is stored in the ``.geogit`` folder. Unlike a version control system like Git, the content of the current working tree cannot be explored directly as a normal folder containing files, since there is not an equivalence between features and files, and they are stored instead in a database which hold the complete structure of the repository.
 
 Exploring the content of a GeoGit repository is done using GeoGit commands that allow to list and describe the different elements it contains. The main command used for this task are the following ones:
 
@@ -23,7 +23,7 @@ The ``[ref]:[path]`` parameter defines the path to be listed. If it contains no 
 
 ::
 	
-	$geogit ls-tree HEAD:parks
+	$ geogit ls-tree HEAD:parks
 
 The provided reference and path should define an element that can eventually be resolved to a tree.  That does not include features. Since features do not contains other elements, their content cannot be listed with the ``ls-tree`` command, but with the ``cat`` and ``show`` commands.
 
@@ -36,29 +36,29 @@ Below you can find examples of the results obtained by using different options, 
 
 ::
 
-	$geogit ls-tree -v parks
+	$ geogit ls-tree -v parks
 	6350a6955b124119850f5a6906f70dc02ebb31c9 feature d8cc931603603bd64506880dc1760b372808ef2d parks.2
 	6350a6955b124119850f5a6906f70dc02ebb31c9 feature 8761a24800cdc1c11b6c3c1483a8c9069f657f1f parks.3
 	6350a6955b124119850f5a6906f70dc02ebb31c9 feature ff51bfc2a36d02a3a51d72eef3e7f44de9c4e231 parks.1
 
-	$geogit ls-tree -v -r
+	$ geogit ls-tree -v -r
 	6350a6955b124119850f5a6906f70dc02ebb31c9 feature d8cc931603603bd64506880dc1760b372808ef2d parks/parks.2
 	6350a6955b124119850f5a6906f70dc02ebb31c9 feature 8761a24800cdc1c11b6c3c1483a8c9069f657f1f parks/parks.3
 	6350a6955b124119850f5a6906f70dc02ebb31c9 feature ff51bfc2a36d02a3a51d72eef3e7f44de9c4e231 parks/parks.1
 
-	$geogit ls-tree -v -r -t
+	$ geogit ls-tree -v -r -t
 	6350a6955b124119850f5a6906f70dc02ebb31c9 tree ad21258c0bade71a879180daf156e1ad1a0c3279 parks
 	6350a6955b124119850f5a6906f70dc02ebb31c9 feature d8cc931603603bd64506880dc1760b372808ef2d parks/parks.2
 	6350a6955b124119850f5a6906f70dc02ebb31c9 feature 8761a24800cdc1c11b6c3c1483a8c9069f657f1f parks/parks.3
 	6350a6955b124119850f5a6906f70dc02ebb31c9 feature ff51bfc2a36d02a3a51d72eef3e7f44de9c4e231 parks/parks.1
 
-	$geogit ls-tree -r -t
+	$ geogit ls-tree -r -t
 	parks
 	parks/parks.2
 	parks/parks.3
 	parks/parks.1
 
-	$geogit ls-tree -v -r -t -a 7
+	$ geogit ls-tree -v -r -t -a 7
 	6350a69 tree ad21258 parks
 	6350a69 feature d8cc931 parks/parks.2
 	6350a69 feature 8761a24 parks/parks.3
@@ -79,7 +79,7 @@ As it can be seen in the following first example, when the specified string poin
 
 ::
 
-	$geogit show parks
+	$ geogit show parks
 	TREE ID:  0bbed3603377adfbd3b32afce4d36c2c2e59d9d4
 	SIZE:  50
 	NUMBER Of SUBTREES:  0
@@ -97,7 +97,7 @@ As it can be seen in the following first example, when the specified string poin
 	the_geom: <MULTIPOLYGON>
 	usage: <STRING>
 
-	$geogit cat parks 
+	$ geogit cat parks 
 	id    0bbed3603377adfbd3b32afce4d36c2c2e59d9d4
 	TREE	
 	size    50
@@ -109,14 +109,14 @@ As it can be seen in the following first example, when the specified string poin
 	.
 	.
 
-You can see that the ``cat`` object includes the bounding box and SRS of the feature, and also the IDs corresponding to the feature itself and its feature type.
+You can see that the ``cat`` object includes the bounding box and SRS of the feature, and also the Id's corresponding to the feature itself and its feature type.
 
 
 In the case of specifying a single feature, the output of the ``cat`` command contains just the feature data, while the ``show`` command also prints the names of the corresponding fields, taken from the associated feature type.
 
 ::
 
-	$geogit cat HEAD:parks/parks.1
+	$ geogit cat HEAD:parks/parks.1
 	id    ff51bfc2a36d02a3a51d72eef3e7f44de9c4e231
 	FEATURE
 	STRING    Medford School District
@@ -130,7 +130,7 @@ In the case of specifying a single feature, the output of the ``cat`` command co
 	java.lang.String    Public
 
 
-	$geogit show HEAD:parks/parks.1
+	$ geogit show HEAD:parks/parks.1
 
 	ID:  ff51bfc2a36d02a3a51d72eef3e7f44de9c4e231
 
@@ -151,7 +151,7 @@ Finally, the following example shows the output of both commands for a commit re
 
 ::
 
-	$geogit show 509a481257c5791f50f5a35087e432247f9dc8b7
+	$ geogit show 509a481257c5791f50f5a35087e432247f9dc8b7
 	Commit:        509a481257c5791f50f5a35087e432247f9dc8b7
 	Author:        volaya <volaya@opengeo.org>
 	Committer:     volaya <volaya@opengeo.org>
@@ -161,7 +161,7 @@ Finally, the following example shows the output of both commands for a commit re
 
 ::
 
-	$geogit cat 509a481257c5791f50f5a35087e432247f9dc8b7
+	$ geogit cat 509a481257c5791f50f5a35087e432247f9dc8b7
 	id    509a481257c5791f50f5a35087e432247f9dc8b7
 	COMMIT	
 	tree    6bc0644ba38372860254c61a62009448ebd8c1e0
@@ -170,11 +170,11 @@ Finally, the following example shows the output of both commands for a commit re
 	committer    volaya    volaya@opengeo.org    1358773135891    3600000
 	message    Updated geometry
 
-You can check that, as we mentioned in the :ref:`structure` section, the ``HEAD`` reference points to the latest commit, by describing both ``HEAD`` and the ID of the latest commit. You can use the ``log`` command to get the ID of the latest commit. Both descriptions should be identical.
+You can check that, as we mentioned in the :ref:`structure` section, the ``HEAD`` reference points to the latest commit, by describing both ``HEAD`` and the ID of the latest commit. You can use the ``log`` command to get the Id of the latest commit. Both descriptions should be identical.
 
 ::
 	
-	$geogit show 509a481257c5791f50f5a35087e432247f9dc8b7
+	$ geogit show 509a481257c5791f50f5a35087e432247f9dc8b7
 	Commit:        509a481257c5791f50f5a35087e432247f9dc8b7
 	Author:        volaya <volaya@opengeo.org>
 	Committer:     volaya <volaya@opengeo.org>
@@ -182,7 +182,7 @@ You can check that, as we mentioned in the :ref:`structure` section, the ``HEAD`
 	Committer date:(3 hours ago) Mon Jan 21 13:58:55 CET 2013
 	Subject:       Updated geometry
 
-	$geogit show HEAD
+	$ geogit show HEAD
 	Commit:        509a481257c5791f50f5a35087e432247f9dc8b7
 	Author:        volaya <volaya@opengeo.org>
 	Committer:     volaya <volaya@opengeo.org>

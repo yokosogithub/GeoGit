@@ -15,7 +15,7 @@ Here is the command line to be used to clone a repository at ``http://myoriginal
 
 ::
 
-	$geogit clone http://myoriginalrepo.com repo
+	$ geogit clone http://myoriginalrepo.com repo
 
 
 Once the repository is cloned, both copies are identical, and you can start working on your copy independently, following the usual GeoGit workflow. There is no need to use the original repository, but that doesn't mean that it cannot be done. In fact, it is interesting to keep repositories connected, since that way they can share their changes. From your repository, you can connect to any number of repositories that version the same data, get their changes and also include you changes in them if you have write access. That bidirectional communication between repositories makes it easy to have a flexible and effective collaboration model.
@@ -26,7 +26,7 @@ Remotes are added using the ``geogit remote`` command, as in the following examp
 
 ::
 
-	$geogit remote add origin https://myoriginalrepo.com
+	$ geogit remote add origin https://myoriginalrepo.com
 
 
 Pushing and pulling
@@ -43,7 +43,7 @@ To push changes to a remote repository named ``origin``, the following line is u
 
 ::
 
-	$geogit push origin
+	$ geogit push origin
 
 Of course, you must have write access to that repository. The command will push the current branch you are in. 
 
@@ -53,7 +53,7 @@ Retrieving the changes in a remote repository is done using the pull command, as
 
 ::
 
-	$geogit pull origin master
+	$ geogit pull origin master
 
 That would bring all changes from the ``master`` branch in the ``origin`` repository into the current branch of the local repository. You can be in a branch other than ``master``. There is no need to specify the same branch as the current branch in the local repository. GeoGit will grab the commits that are missing in your local branch after comparing with the remote branch, and will merge them. Of course, this merge is not guaranteed to be clean, and conflicts might appear. They are solved in much the same way as a local merge conflict.
 

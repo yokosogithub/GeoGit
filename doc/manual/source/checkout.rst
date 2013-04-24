@@ -15,7 +15,7 @@ The following is a valid command that will update the version in the working tre
 
 ::
 
-	$geogit checkout HEAD~5
+	$ geogit checkout HEAD~5
 
 
 Apart from updating the working tree, the ``checkout`` command updates the HEAD ``reference``, which will now point to the commit from where the data to update the working tree was taken. 
@@ -26,7 +26,7 @@ To go back to the most recent state, where you were before checking out the prev
 
 ::
 
-	$geogit checkout master
+	$ geogit checkout master
 
 Reseting to a previous commit
 ------------------------------
@@ -41,7 +41,7 @@ To reset to the commit 5 commits ago, use the following:
 
 ::
 
-	$geogit reset HEAD~5 --hard
+	$ geogit reset HEAD~5 --hard
 
 That will update all 3 areas in GeoGit (working tree, staging area and database) to the specified commit. This is known as a hard commit. You can also perform a mixed reset (only updates the staging area and database, but not the working tree, with the ``--mixed`` option), or a soft reset (only updates the database, with the ``--soft`` option).
 
