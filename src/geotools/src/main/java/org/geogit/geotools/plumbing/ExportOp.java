@@ -6,12 +6,14 @@
 package org.geogit.geotools.plumbing;
 
 import java.io.IOException;
+import java.util.List;
 
 import org.geogit.api.AbstractGeoGitOp;
 import org.geogit.api.FeatureBuilder;
 import org.geogit.api.NodeRef;
 import org.geogit.api.ObjectId;
 import org.geogit.api.RevFeature;
+import org.geogit.api.RevFeatureBuilder;
 import org.geogit.api.RevFeatureType;
 import org.geogit.api.RevObject;
 import org.geogit.api.RevObject.TYPE;
@@ -32,6 +34,7 @@ import org.geotools.feature.DefaultFeatureCollection;
 import org.opengis.feature.Feature;
 import org.opengis.feature.simple.SimpleFeature;
 import org.opengis.feature.type.FeatureType;
+import org.opengis.feature.type.PropertyDescriptor;
 
 import com.google.common.base.Function;
 import com.google.common.base.Functions;
@@ -39,6 +42,8 @@ import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 
 /**
@@ -47,13 +52,19 @@ import com.google.inject.Inject;
  */
 public class ExportOp extends AbstractGeoGitOp<SimpleFeatureStore> {
 
-    private String featureTypeName;
+    private String path;
 
     private Supplier<SimpleFeatureStore> featureStore;
 
     private ObjectDatabase database;
 
     private Function<Feature, Feature> function = Functions.identity();
+
+    private ObjectId featureTypeId;
+
+    private boolean forceExportDefaultFeatureType;
+
+    private boolean alter;
 
     /**
      * Constructs a new export operation.
@@ -83,12 +94,11 @@ public class ExportOp extends AbstractGeoGitOp<SimpleFeatureStore> {
         }
 
         final String refspec;
-        if (featureTypeName.contains(":")) {
-            refspec = featureTypeName;
+        if (path.contains(":")) {
+            refspec = path;
         } else {
-            refspec = "WORK_HEAD:" + featureTypeName;
+            refspec = "WORK_HEAD:" + path;
         }
-        // final String spec = refspec.substring(0, refspec.indexOf(':'));
         final String treePath = refspec.substring(refspec.indexOf(':') + 1);
 
         Optional<ObjectId> tree = command(ResolveTreeish.class).setTreeish(
@@ -110,6 +120,10 @@ public class ExportOp extends AbstractGeoGitOp<SimpleFeatureStore> {
             parentMetadataId = typeTreeRef.get().getMetadataId();
         }
 
+        if (forceExportDefaultFeatureType || (alter && featureTypeId == null)) {
+            featureTypeId = parentMetadataId;
+        }
+
         Optional<RevObject> revObject = command(RevObjectParse.class).setRefSpec(refspec).call(
                 RevObject.class);
 
@@ -123,23 +137,40 @@ public class ExportOp extends AbstractGeoGitOp<SimpleFeatureStore> {
         // Create a FeatureCollection
 
         getProgressListener().started();
-        getProgressListener().setDescription("Exporting " + featureTypeName + "... ");
+        getProgressListener().setDescription("Exporting " + path + "... ");
         DefaultFeatureCollection features = new DefaultFeatureCollection();
 
+        boolean featureTypeWasSpecified = featureTypeId != null;
+        featureTypeId = featureTypeId == null ? parentMetadataId : featureTypeId;
         FeatureBuilder featureBuilder = null;
         FeatureType featureType = null;
         int i = 1;
         while (iter.hasNext()) {
             NodeRef nodeRef = iter.next();
             if (nodeRef.getType() == TYPE.FEATURE) {
+                RevFeature revFeature = command(RevObjectParse.class)
+                        .setObjectId(nodeRef.objectId()).call(RevFeature.class).get();
+                if (!nodeRef.getMetadataId().equals(featureTypeId)) {
+                    // we skip features with a different feature type, but only if a featuretype was
+                    // specified. If alter is used, then we convert them
+                    if (!featureTypeWasSpecified) {
+                        throw new GeoToolsOpException(StatusCode.MIXED_FEATURE_TYPES);
+                    } else if (alter) {
+                        RevFeatureType revFeatureType = command(RevObjectParse.class)
+                                .setObjectId(featureTypeId).call(RevFeatureType.class).get();
+                        featureType = revFeatureType.type();
+                        featureBuilder = new FeatureBuilder(revFeatureType);
+                        revFeature = new RevFeatureBuilder().build(alter(nodeRef, revFeatureType));
+                    } else {
+                        continue;
+                    }
+                }
                 if (featureBuilder == null) {
                     RevFeatureType revFeatureType = command(RevObjectParse.class)
-                            .setObjectId(nodeRef.getMetadataId()).call(RevFeatureType.class).get();
+                            .setObjectId(featureTypeId).call(RevFeatureType.class).get();
                     featureType = revFeatureType.type();
                     featureBuilder = new FeatureBuilder(revFeatureType);
                 }
-                RevFeature revFeature = command(RevObjectParse.class)
-                        .setObjectId(nodeRef.objectId()).call(RevFeature.class).get();
                 Feature feature = featureBuilder.build(nodeRef.getNode().getName(), revFeature);
                 feature.getUserData().put(Hints.USE_PROVIDED_FID, true);
                 Feature validFeature = function.apply(feature);
@@ -178,6 +209,41 @@ public class ExportOp extends AbstractGeoGitOp<SimpleFeatureStore> {
     }
 
     /**
+     * Translates a feature pointed by a node from its original feature type to a given one, using
+     * values from those attributes that exist in both original and destination feature type. New
+     * attributes are populated with null values
+     * 
+     * @param node The node that points to the feature. No checking is performed to ensure the node
+     *        points to a feature instead of other type
+     * @param featureType the destination feature type
+     * @return a feature with the passed feature type and data taken from the input feature
+     */
+    private Feature alter(NodeRef node, RevFeatureType featureType) {
+        RevFeature oldFeature = command(RevObjectParse.class).setObjectId(node.objectId())
+                .call(RevFeature.class).get();
+        RevFeatureType oldFeatureType;
+        oldFeatureType = command(RevObjectParse.class).setObjectId(node.getMetadataId())
+                .call(RevFeatureType.class).get();
+        ImmutableList<PropertyDescriptor> oldAttributes = oldFeatureType.sortedDescriptors();
+        ImmutableList<PropertyDescriptor> newAttributes = featureType.sortedDescriptors();
+        ImmutableList<Optional<Object>> oldValues = oldFeature.getValues();
+        List<Optional<Object>> newValues = Lists.newArrayList();
+        for (int i = 0; i < newAttributes.size(); i++) {
+            int idx = oldAttributes.indexOf(newAttributes.get(i));
+            if (idx != -1) {
+                Optional<Object> oldValue = oldValues.get(idx);
+                newValues.add(oldValue);
+            } else {
+                newValues.add(Optional.absent());
+            }
+        }
+        RevFeature newFeature = RevFeature.build(ImmutableList.copyOf(newValues));
+        FeatureBuilder featureBuilder = new FeatureBuilder(featureType);
+        Feature feature = featureBuilder.build(node.name(), newFeature);
+        return feature;
+    }
+
+    /**
      * 
      * @param featureStore a supplier that resolves to the feature store to use for exporting
      * @return
@@ -198,12 +264,51 @@ public class ExportOp extends AbstractGeoGitOp<SimpleFeatureStore> {
     }
 
     /**
-     * @param featureType the name of the featureType to export. Supports the [refspec]:[path]
-     *        syntax
+     * @param path the path to export Supports the [refspec]:[path] syntax
      * @return {@code this}
      */
-    public ExportOp setFeatureTypeName(String featureType) {
-        this.featureTypeName = featureType;
+    public ExportOp setPath(String path) {
+        this.path = path;
+        return this;
+    }
+
+    /**
+     * @param featureType the Id of the featureType of the features to export. If this is provided,
+     *        only features with this feature type will be exported. If this is not provided and the
+     *        path to export contains features with several different feature types, an exception
+     *        will be throw to warn about it
+     * @return {@code this}
+     */
+    public ExportOp setFeatureTypeId(ObjectId featureTypeId) {
+        this.featureTypeId = featureTypeId;
+        return this;
+    }
+
+    /**
+     * If set to true, all features will be exported, even if they do not have
+     * 
+     * @param alter whther to alter features before exporting, if they do not have the output
+     *        feature type
+     * @return
+     */
+    public ExportOp setAlter(boolean alter) {
+        this.alter = alter;
+        return this;
+    }
+
+    /**
+     * Calling this method causes the export operation to be performed in case the features in the
+     * specified path have several different feature types, without throwing an exception. Only
+     * features with the default feature type of the path will be exported. This has the same effect
+     * as calling the setFeatureType method with the Id of the default feature type of the path to
+     * export
+     * 
+     * If both this method and setFeatureId are used, this one will have priority
+     * 
+     * @return {@code this}
+     */
+    public ExportOp exportDefaultFeatureType() {
+        this.forceExportDefaultFeatureType = true;
         return this;
     }
 

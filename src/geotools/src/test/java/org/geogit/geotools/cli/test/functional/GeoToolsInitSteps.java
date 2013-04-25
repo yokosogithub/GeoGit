@@ -174,6 +174,20 @@ public class GeoToolsInitSteps extends AbstractGeoToolsFunctionalTest {
         runCommand(("commit -m Commit3").split(" "));
         insertAndAdd(points1_modified);
         runCommand(("commit -m Commit4").split(" "));
-
     }
+
+    @Given("^I have several feature types in a path")
+    public void I_hav_several_feature_types_in_a_path() throws Throwable {
+        insertAndAdd(points2);
+        runCommand(("commit -m Commit1").split(" "));
+        insertAndAdd(points1_FTmodified);
+        runCommand(("commit -m Commit2").split(" "));
+        insertAndAdd(points3);
+        insertAndAdd(lines1);
+        runCommand(("commit -m Commit3").split(" "));
+        insertAndAdd(lines2);
+        insertAndAdd(lines3);
+        runCommand(("commit -m Commit4").split(" "));
+    }
+
 }
