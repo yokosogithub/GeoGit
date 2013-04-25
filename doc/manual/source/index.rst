@@ -30,4 +30,5 @@ Contents:
   remotes
   modifying
   patches
+  console
 
