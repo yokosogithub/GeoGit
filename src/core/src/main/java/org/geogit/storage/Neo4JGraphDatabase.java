@@ -160,6 +160,21 @@ public class Neo4JGraphDatabase extends AbstractGraphDatabase {
     }
 
     @Override
+    public ImmutableList<ObjectId> getChildren(ObjectId commitId) throws IllegalArgumentException {
+        Index<Node> idIndex = graphDB.index().forNodes("identifiers");
+        Node node = idIndex.get("id", commitId.toString()).getSingle();
+
+        Builder<ObjectId> listBuilder = new ImmutableList.Builder<ObjectId>();
+
+        for (Relationship child : node.getRelationships(Direction.INCOMING,
+                CommitRelationshipTypes.PARENT)) {
+            Node childNode = child.getOtherNode(node);
+            listBuilder.add(ObjectId.valueOf((String) childNode.getProperty("id")));
+        }
+        return listBuilder.build();
+    }
+
+    @Override
     public boolean put(ObjectId commitId, ImmutableList<ObjectId> parentIds) {
         Transaction tx = graphDB.beginTx();
 

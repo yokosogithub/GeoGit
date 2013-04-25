@@ -33,7 +33,15 @@ public class LogArgs {
     @Nullable
     public String until;
 
-    @Parameter(names = "--oneline", description = "Print only commit id and message on a sinlge line per commit")
+    @Parameter(names = "--author", description = "Return only commits by authors with names maching the passed regular expression")
+    @Nullable
+    public String author;
+
+    @Parameter(names = "--committer", description = "Return only commits by committer with names maching the passed regular expression")
+    @Nullable
+    public String committer;
+
+    @Parameter(names = "--oneline", description = "Print only commit id and message on a single line per commit")
     public boolean oneline;
 
     @Parameter(description = "[[<until>]|[<since>..<until>]], arity = 1")
@@ -49,4 +57,41 @@ public class LogArgs {
     @Parameter(names = "--raw", description = "Show raw contents for commits")
     @Nullable
     public boolean raw;
+
+    @Parameter(names = "--summary", description = "Show summary of changes for each commit")
+    @Nullable
+    public boolean summary;
+
+    @Parameter(names = "--stats", description = "Show stats of changes for each commit")
+    @Nullable
+    public boolean stats;
+
+    @Parameter(names = "--names-only", description = "Show names of changed elements")
+    @Nullable
+    public boolean names;
+
+    @Parameter(names = "--topo-order", description = "Avoid showing commits on multiple lines of history intermixed")
+    @Nullable
+    public boolean topo;
+
+    @Parameter(names = "--first-parent", description = "Use only the first parent of each commit, showing a linear history")
+    @Nullable
+    public boolean firstParent;
+
+    @Parameter(names = "--all", description = "Show history of all branches")
+    @Nullable
+    public boolean all;
+
+    @Parameter(names = "--branch", description = "Show history of selected branch")
+    @Nullable
+    public String branch;
+
+    @Parameter(names = "--abbrev-commit", description = "Show abbreviate commit IDs")
+    @Nullable
+    public boolean abbrev;
+
+    @Parameter(names = "--decoration", description = "Show reference names")
+    @Nullable
+    public boolean decoration;
+
 }

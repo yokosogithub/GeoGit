@@ -8,7 +8,7 @@ Feature: "merge" command
       And I have several branches
      When I run the command "merge branch1 -m MergeMessage"
      Then the response should contain "2 features added"
-     When I run the command "log"
+     When I run the command "log --first-parent"
      Then the response should contain "MergeMessage"
       And the response should contain "Commit5"
       And the response should contain "Commit1"
