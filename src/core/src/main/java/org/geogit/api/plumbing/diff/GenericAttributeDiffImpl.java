@@ -18,8 +18,19 @@ public class GenericAttributeDiffImpl implements AttributeDiff {
 
     @Override
     public TYPE getType() {
-        TYPE type = (newValue == null || !newValue.isPresent()) ? TYPE.REMOVED
-                : (oldValue == null || !oldValue.isPresent()) ? TYPE.ADDED : TYPE.MODIFIED;
+        TYPE type;
+        if ((newValue == null || !newValue.isPresent())
+                && (oldValue == null || !oldValue.isPresent())) {
+            type = TYPE.NO_CHANGE;
+        } else if (newValue == null || !newValue.isPresent()) {
+            type = TYPE.REMOVED;
+        } else if (oldValue == null || !oldValue.isPresent()) {
+            type = TYPE.ADDED;
+        } else if (oldValue.equals(newValue)) {
+            type = TYPE.NO_CHANGE;
+        } else {
+            type = TYPE.MODIFIED;
+        }
         return type;
     }
 
@@ -38,10 +49,11 @@ public class GenericAttributeDiffImpl implements AttributeDiff {
             return attributeValueAsString(oldValue) + " -> " + attributeValueAsString(newValue);
         } else if (getType().equals(TYPE.ADDED)) {
             return "[MISSING] -> " + attributeValueAsString(newValue);
-        } else {
+        } else if (getType().equals(TYPE.REMOVED)) {
             return attributeValueAsString(oldValue) + " -> [MISSING]";
+        } else {
+            return "[NO CHANGE] -> " + attributeValueAsString(oldValue);
         }
-
     }
 
     private CharSequence attributeValueAsString(Optional<?> value) {

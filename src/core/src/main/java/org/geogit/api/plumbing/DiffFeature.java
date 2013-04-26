@@ -104,7 +104,7 @@ public class DiffFeature extends AbstractGeoGitOp<FeatureDiff> {
             RevFeatureType oldRevFeatureType, RevFeatureType newRevFeatureType) {
 
         return new FeatureDiff(oldNodeRef.path(), newRevFeature, oldRevFeature, newRevFeatureType,
-                oldRevFeatureType);
+                oldRevFeatureType, false);
     }
 
 }

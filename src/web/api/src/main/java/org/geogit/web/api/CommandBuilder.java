@@ -236,6 +236,7 @@ public class CommandBuilder {
         command.setPath(options.getFirstValue("path", null));
         command.setOldCommitId(options.getFirstValue("oldCommitId", ObjectId.NULL.toString()));
         command.setNewCommitId(options.getFirstValue("newCommitId", ObjectId.NULL.toString()));
+        command.setAll(Boolean.valueOf(options.getFirstValue("all", "false")));
         return command;
     }
 

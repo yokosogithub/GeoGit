@@ -29,8 +29,15 @@ import org.geogit.api.plumbing.DiffIndex;
 import org.geogit.api.plumbing.DiffWorkTree;
 import org.geogit.api.plumbing.RevObjectParse;
 import org.geogit.api.plumbing.diff.AttributeDiff;
+import org.geogit.api.plumbing.diff.AttributeDiff.TYPE;
 import org.geogit.api.plumbing.diff.DiffEntry;
 import org.geogit.api.plumbing.diff.DiffEntry.ChangeType;
+import org.geogit.web.api.commands.BranchWebOp;
+import org.geogit.web.api.commands.LsTree;
+import org.geogit.web.api.commands.RefParseWeb;
+import org.geogit.web.api.commands.RemoteWebOp;
+import org.geogit.web.api.commands.TagWebOp;
+import org.geogit.web.api.commands.UpdateRefWeb;
 import org.opengis.feature.type.PropertyDescriptor;
 
 import com.google.common.base.Function;
@@ -447,7 +454,8 @@ public class ResponseWriter {
                 writeElement("oldvalue", entry.getValue().getOldValue().get().toString());
             }
             if (entry.getValue().getNewValue() != null
-                    && entry.getValue().getNewValue().isPresent()) {
+                    && entry.getValue().getNewValue().isPresent()
+                    && !entry.getValue().getType().equals(TYPE.NO_CHANGE)) {
                 writeElement("newvalue", entry.getValue().getNewValue().get().toString());
             }
             out.writeEndElement();
@@ -470,6 +478,7 @@ public class ResponseWriter {
                     public GeometryChange apply(DiffEntry input) {
                         Optional<RevObject> feature = Optional.absent();
                         Optional<RevObject> type = Optional.absent();
+                        String path = null;
                         GeometryChange change = null;
                         if (input.changeType() == ChangeType.ADDED
                                 || input.changeType() == ChangeType.MODIFIED) {
@@ -477,11 +486,14 @@ public class ResponseWriter {
                                     .setObjectId(input.newObjectId()).call();
                             type = geogit.command(RevObjectParse.class)
                                     .setObjectId(input.getNewObject().getMetadataId()).call();
+                            path = input.getNewObject().path();
+
                         } else if (input.changeType() == ChangeType.REMOVED) {
                             feature = geogit.command(RevObjectParse.class)
                                     .setObjectId(input.oldObjectId()).call();
                             type = geogit.command(RevObjectParse.class)
                                     .setObjectId(input.getOldObject().getMetadataId()).call();
+                            path = input.getOldObject().path();
                         }
                         if (feature.isPresent() && feature.get() instanceof RevFeature
                                 && type.isPresent() && type.get() instanceof RevFeatureType) {
@@ -489,7 +501,7 @@ public class ResponseWriter {
                             FeatureBuilder builder = new FeatureBuilder((RevFeatureType) type.get());
                             GeogitSimpleFeature simpleFeature = (GeogitSimpleFeature) builder
                                     .build(revFeature.getId().toString(), revFeature);
-                            change = new GeometryChange(simpleFeature, input.changeType());
+                            change = new GeometryChange(simpleFeature, input.changeType(), path);
                         }
                         return change;
                     }
@@ -502,7 +514,7 @@ public class ResponseWriter {
                 ChangeType change = next.getChangeType();
                 out.writeStartElement("Feature");
                 writeElement("change", change.toString());
-                writeElement("id", feature.getID().toString());
+                writeElement("id", next.getPath());
                 List<Object> attributes = feature.getAttributes();
                 for (Object attribute : attributes) {
                     if (attribute instanceof Geometry) {
@@ -521,9 +533,12 @@ public class ResponseWriter {
 
         private ChangeType changeType;
 
-        public GeometryChange(GeogitSimpleFeature feature, ChangeType changeType) {
+        private String path;
+
+        public GeometryChange(GeogitSimpleFeature feature, ChangeType changeType, String path) {
             this.feature = feature;
             this.changeType = changeType;
+            this.path = path;
         }
 
         public GeogitSimpleFeature getFeature() {
@@ -532,6 +547,10 @@ public class ResponseWriter {
 
         public ChangeType getChangeType() {
             return changeType;
+        }
+
+        public String getPath() {
+            return path;
         }
     }
 }

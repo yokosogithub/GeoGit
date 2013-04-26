@@ -11,7 +11,7 @@ import com.google.common.base.Optional;
 public interface AttributeDiff {
 
     public enum TYPE {
-        MODIFIED, REMOVED, ADDED
+        MODIFIED, REMOVED, ADDED, NO_CHANGE
     }
 
     /**
