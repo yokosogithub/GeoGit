@@ -7,16 +7,24 @@ package org.geogit.api.porcelain;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Set;
+import java.util.Stack;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.geogit.api.AbstractGeoGitOp;
 import org.geogit.api.ObjectId;
 import org.geogit.api.Ref;
 import org.geogit.api.RevCommit;
+import org.geogit.api.SymRef;
+import org.geogit.api.plumbing.ForEachRef;
+import org.geogit.api.plumbing.RefParse;
 import org.geogit.api.plumbing.RevParse;
 import org.geogit.api.plumbing.diff.DiffEntry;
 import org.geogit.di.CanRunDuringConflict;
 import org.geogit.repository.Repository;
+import org.geogit.storage.GraphDatabase;
 import org.geotools.util.Range;
 
 import com.google.common.base.Optional;
@@ -24,7 +32,11 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.base.Throwables;
 import com.google.common.collect.AbstractIterator;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterators;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 
 /**
@@ -62,14 +74,29 @@ public class LogOp extends AbstractGeoGitOp<Iterator<RevCommit>> {
 
     private Repository repository;
 
+    private Pattern author;
+
+    private Pattern commiter;
+
+    private boolean topo;
+
+    private boolean firstParent;
+
+    private boolean all;
+
+    private GraphDatabase graphDb;
+
+    private String branch;
+
     /**
      * Constructs a new {@code LogOp} with the given {@link Repository}.
      * 
      * @param repository the repository to log commits from
      */
     @Inject
-    public LogOp(final Repository repository) {
+    public LogOp(final Repository repository, GraphDatabase graphDb) {
         this.repository = repository;
+        this.graphDb = graphDb;
         timeRange = ALWAYS;
     }
 
@@ -114,6 +141,75 @@ public class LogOp extends AbstractGeoGitOp<Iterator<RevCommit>> {
      */
     public LogOp setUntil(ObjectId until) {
         this.until = until;
+        return this;
+    }
+
+    /**
+     * Sets whether commits should be ordered not according to its date, but to is structure in the
+     * history branches
+     * 
+     * @param topo true if commits should be ordered not according to its date, but to is structure
+     *        in the history branches
+     * @return {@code this}
+     */
+    public LogOp setTopoOrder(boolean topo) {
+        this.topo = topo;
+        return this;
+    }
+
+    /**
+     * Sets whether the log should list the first parent of each commit
+     * 
+     * @param firstParent true if it should show only the first parent
+     * @return {@code this}
+     */
+    public LogOp setFirstParentOnly(boolean firstParent) {
+        this.firstParent = firstParent;
+        return this;
+    }
+
+    /**
+     * Sets whether the log should list the history of all branches instead of just the current
+     * HEAD. If a branch is set using setBranch, that setting will be ignored
+     * 
+     * @param all true if it should show all branches
+     * @return {@code this}
+     */
+    public LogOp setAll(boolean all) {
+        this.all = all;
+        return this;
+    }
+
+    /**
+     * Sets the branch to show instead of the current HEAD
+     * 
+     * @param branch the branch to use
+     * @return {@code this}
+     */
+    public LogOp setBranch(String branch) {
+        this.branch = branch;
+        return this;
+    }
+
+    /**
+     * Sets the regexp to filter out author names
+     * 
+     * @param the regexp to use for filtering author names
+     * @return {@code this}
+     */
+    public LogOp setAuthor(String author) {
+        this.author = Pattern.compile(author);
+        return this;
+    }
+
+    /**
+     * Sets the regexp to filter out commiter names
+     * 
+     * @param the regexp to use for filtering commiter names
+     * @return {@code this}
+     */
+    public LogOp setCommiter(String commiter) {
+        this.commiter = Pattern.compile(commiter);
         return this;
     }
 
@@ -169,6 +265,10 @@ public class LogOp extends AbstractGeoGitOp<Iterator<RevCommit>> {
                     throw new IllegalStateException("Provided 'until' commit id does not exist: "
                             + until.toString());
                 }
+                if (all) {
+                    throw new IllegalStateException(
+                            "Cannot specify 'until' commit if when listing all branches");
+                }
                 newestCommitId = this.until;
             }
             if (this.since == null) {
@@ -182,9 +282,40 @@ public class LogOp extends AbstractGeoGitOp<Iterator<RevCommit>> {
             }
         }
 
-        Iterator<RevCommit> linearHistory = new LinearHistoryIterator(newestCommitId, repository);
-        LogFilter filter = new LogFilter(oldestCommitId, timeRange, paths);
-        Iterator<RevCommit> filteredCommits = Iterators.filter(linearHistory, filter);
+        Iterator<RevCommit> history;
+        if (firstParent) {
+            history = new LinearHistoryIterator(newestCommitId, repository);
+        } else {
+            List<ObjectId> list = Lists.newArrayList();
+            if (all) {
+                ImmutableSet<Ref> refs = command(ForEachRef.class).call();
+                for (Ref ref : refs) {
+                    list.add(ref.getObjectId());
+                }
+                Optional<Ref> head = command(RefParse.class).setName(Ref.HEAD).call();
+                if (head.isPresent()) {
+                    Ref ref = head.get();
+                    if (ref instanceof SymRef) {
+                        ObjectId id = ref.getObjectId();
+                        list.remove(id);
+                        list.add(id);// put the HEAD ref in the last position, to give it preference
+                    }
+                }
+            } else if (branch != null) {
+                Optional<Ref> ref = command(RefParse.class).setName(branch).call();
+                Preconditions.checkArgument(ref.isPresent(), "Wrong branch name: " + branch);
+                list.add(ref.get().getObjectId());
+            } else {
+                list.add(newestCommitId);
+            }
+            if (topo) {
+                history = new TopologicalHistoryIterator(list, repository, graphDb);
+            } else {
+                history = new ChronologicalHistoryIterator(list, repository);
+            }
+        }
+        LogFilter filter = new LogFilter(oldestCommitId, timeRange, paths, author, commiter);
+        Iterator<RevCommit> filteredCommits = Iterators.filter(history, filter);
         if (skip != null) {
             Iterators.advance(filteredCommits, skip.intValue());
         }
@@ -195,7 +326,144 @@ public class LogOp extends AbstractGeoGitOp<Iterator<RevCommit>> {
     }
 
     /**
-     * Iterator that traverses the commit history backwards starting from the provided commmit
+     * Iterator that traverses the commit history backwards starting from the provided commit, in
+     * chronological order. It performs a reverse breadth-first search
+     * 
+     */
+    private static class ChronologicalHistoryIterator extends AbstractIterator<RevCommit> {
+
+        private final Repository repo;
+
+        private Set<RevCommit> parents;
+
+        /**
+         * Constructs a new {@code LinearHistoryIterator} with the given parameters.
+         * 
+         * @param tip the first commit in the history
+         * @param repo the repository where the commits are stored.
+         */
+        public ChronologicalHistoryIterator(final List<ObjectId> tips, final Repository repo) {
+            parents = Sets.newHashSet();
+            for (ObjectId tip : tips) {
+                if (!tip.isNull()) {
+                    final RevCommit commit = repo.getCommit(tip);
+                    parents.add(commit);
+                }
+            }
+            this.repo = repo;
+        }
+
+        /**
+         * Calculates the next commit in the history.
+         * 
+         * @return the next {@link RevCommit commit} in the history
+         */
+        @Override
+        protected RevCommit computeNext() {
+            if (parents.isEmpty()) {
+                return endOfData();
+            } else {
+                Iterator<RevCommit> iter = parents.iterator();
+                // TODO: Maybe we should make RevCommit implement Comparable?
+                RevCommit mostRecent = iter.next();
+                while (iter.hasNext()) {
+                    RevCommit commit = iter.next();
+                    if (mostRecent.getCommitter().getTimestamp() < commit.getCommitter()
+                            .getTimestamp()) {
+                        mostRecent = commit;
+                    }
+                }
+                parents.remove(mostRecent);
+                RevCommit commit;
+                for (ObjectId parent : mostRecent.getParentIds()) {
+                    commit = repo.getCommit(parent);
+                    parents.add(commit);
+                }
+                return mostRecent;
+            }
+
+        }
+    }
+
+    /**
+     * Iterator that traverses the commit history backwards starting from the provided commit, in
+     * topological order. It performs a reverse depth-first search
+     * 
+     */
+    private static class TopologicalHistoryIterator extends AbstractIterator<RevCommit> {
+
+        private final Repository repo;
+
+        private Stack<RevCommit> tips;
+
+        private RevCommit lastCommit;
+
+        private List<ObjectId> stopPoints;
+
+        private GraphDatabase graphDb;
+
+        /**
+         * Constructs a new {@code LinearHistoryIterator} with the given parameters.
+         * 
+         * @param tipList the first commits in the history
+         * @param repo the repository where the commits are stored.
+         * @param graphDb
+         */
+        public TopologicalHistoryIterator(final List<ObjectId> tipsList, final Repository repo,
+                GraphDatabase graphDb) {
+            this.graphDb = graphDb;
+            tips = new Stack<RevCommit>();
+            stopPoints = Lists.newArrayList();
+            for (ObjectId tip : tipsList) {
+                if (!tip.isNull()) {
+                    final RevCommit commit = repo.getCommit(tip);
+                    tips.add(commit);
+                    stopPoints.add(tip);
+                }
+            }
+            this.repo = repo;
+            // this.lastCommit = tips.pop();
+        }
+
+        /**
+         * Calculates the next commit in the history.
+         * 
+         * @return the next {@link RevCommit commit} in the history
+         */
+        @Override
+        protected RevCommit computeNext() {
+            if (lastCommit == null) {
+                lastCommit = tips.pop();
+                return lastCommit;
+            }
+            Optional<ObjectId> parent = lastCommit.parentN(0);
+            if (!parent.isPresent() || parent.get().isNull() || stopPoints.contains(parent.get())) {
+                // move to the next tip and start traversing it
+                if (tips.isEmpty()) {
+                    return endOfData();
+                } else {
+                    lastCommit = tips.pop();
+                }
+            } else {
+                List<ObjectId> parents = lastCommit.getParentIds();
+                for (int i = 1; i < parents.size(); i++) {
+                    final RevCommit commit = repo.getCommit(parents.get(i));
+                    tips.push(commit);
+                }
+                lastCommit = repo.getCommit(parent.get());
+                ImmutableList<ObjectId> children = this.graphDb.getChildren(parent.get());
+                if (children.size() > 1) {
+                    stopPoints.add(parent.get());
+                }
+            }
+
+            return lastCommit;
+        }
+    }
+
+    /**
+     * Iterator that traverses the commit history backwards starting from the provided commit, using
+     * only the first parent of each commit
      * 
      */
     private static class LinearHistoryIterator extends AbstractIterator<RevCommit> {
@@ -249,6 +517,10 @@ public class LogOp extends AbstractGeoGitOp<Iterator<RevCommit>> {
 
         private final Set<String> paths;
 
+        private Pattern author;
+
+        private Pattern committer;
+
         /**
          * Constructs a new {@code LogFilter} with the given parameters.
          * 
@@ -256,14 +528,18 @@ public class LogOp extends AbstractGeoGitOp<Iterator<RevCommit>> {
          * @param timeRange extra time range filter besides oldest commit
          * @param paths extra filter on content, indicates to return only commits that affected any
          *        of the provided paths
+         * @param commiter the regexp pattern to filter author names
+         * @param author the regexp pattern to filter commiter names
          */
         public LogFilter(final ObjectId oldestCommitId, final Range<Long> timeRange,
-                final Set<String> paths) {
+                final Set<String> paths, Pattern author, Pattern commiter) {
             Preconditions.checkNotNull(oldestCommitId);
             Preconditions.checkNotNull(timeRange);
             this.oldestCommitId = oldestCommitId;
             this.timeRange = timeRange;
             this.paths = paths;
+            this.author = author;
+            this.committer = commiter;
         }
 
         /**
@@ -278,6 +554,20 @@ public class LogOp extends AbstractGeoGitOp<Iterator<RevCommit>> {
             if (oldestCommitId.equals(commit.getId())) {
                 toReached = true;
                 return false;
+            }
+            Optional<String> authorName = commit.getAuthor().getName();
+            if (author != null && authorName.isPresent()) {
+                Matcher authorMatcher = author.matcher(authorName.get());
+                if (!authorMatcher.matches()) {
+                    return false;
+                }
+            }
+            Optional<String> committerName = commit.getCommitter().getName();
+            if (committer != null && committerName.isPresent()) {
+                Matcher committerMatcher = committer.matcher(committerName.get());
+                if (!committerMatcher.matches()) {
+                    return false;
+                }
             }
             boolean applies = timeRange
                     .contains(Long.valueOf(commit.getCommitter().getTimestamp()));
@@ -306,4 +596,5 @@ public class LogOp extends AbstractGeoGitOp<Iterator<RevCommit>> {
             return applies;
         }
     }
+
 }

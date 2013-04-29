@@ -46,6 +46,8 @@ public interface GraphDatabase {
      */
     public ImmutableList<ObjectId> getParents(ObjectId commitId) throws IllegalArgumentException;
 
+    public ImmutableList<ObjectId> getChildren(ObjectId commitId) throws IllegalArgumentException;
+
     /**
      * Adds a commit to the database with the given parents. If a commit with the same id already
      * exists, it will not be inserted.
@@ -65,4 +67,5 @@ public interface GraphDatabase {
      *         {@link Optional#absent()} if a common ancestor could not be found.
      */
     public Optional<ObjectId> findLowestCommonAncestor(ObjectId leftId, ObjectId rightId);
+
 }

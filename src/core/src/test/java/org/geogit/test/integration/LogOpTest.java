@@ -14,15 +14,21 @@ import java.util.List;
 
 import org.geogit.api.NodeRef;
 import org.geogit.api.ObjectId;
+import org.geogit.api.Ref;
 import org.geogit.api.RevCommit;
+import org.geogit.api.plumbing.RefParse;
+import org.geogit.api.porcelain.BranchCreateOp;
+import org.geogit.api.porcelain.CheckoutOp;
 import org.geogit.api.porcelain.CommitOp;
 import org.geogit.api.porcelain.LogOp;
+import org.geogit.api.porcelain.MergeOp;
 import org.geotools.util.Range;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.opengis.feature.Feature;
 
+import com.google.common.base.Suppliers;
 import com.google.common.collect.Iterators;
 import com.google.common.collect.Lists;
 
@@ -313,4 +319,207 @@ public class LogOpTest extends RepositoryTestCase {
         expected = Arrays.asList(commit2_1, commit1_2, commit1_1);
         assertEquals(expected, logs);
     }
+
+    @Test
+    public void testMerged() throws Exception {
+        // Create the following revision graph
+        // o
+        // |
+        // o - Points 1 added
+        // |\
+        // | o - branch1 - Points 2 added
+        // |
+        // o - Points 3 added
+        // |
+        // o - master - HEAD - Lines 1 added
+        insertAndAdd(points1);
+        final RevCommit c1 = geogit.command(CommitOp.class).setMessage("commit for " + idP1).call();
+
+        // create branch1 and checkout
+        geogit.command(BranchCreateOp.class).setAutoCheckout(true).setName("branch1").call();
+        insertAndAdd(points2);
+        final RevCommit c2 = geogit.command(CommitOp.class).setMessage("commit for " + idP2).call();
+
+        // checkout master
+        geogit.command(CheckoutOp.class).setSource("master").call();
+        insertAndAdd(points3);
+        final RevCommit c3 = geogit.command(CommitOp.class).setMessage("commit for " + idP3).call();
+        insertAndAdd(lines1);
+        final RevCommit c4 = geogit.command(CommitOp.class).setMessage("commit for " + idL1).call();
+
+        // Merge branch1 into master to create the following revision graph
+        // o
+        // |
+        // o - Points 1 added
+        // |\
+        // | o - branch1 - Points 2 added
+        // | |
+        // o | - Points 3 added
+        // | |
+        // o | - Lines 1 added
+        // |/
+        // o - master - HEAD - Merge commit
+
+        Ref branch1 = geogit.command(RefParse.class).setName("branch1").call().get();
+        RevCommit mergeCommit = geogit.command(MergeOp.class)
+                .addCommit(Suppliers.ofInstance(branch1.getObjectId()))
+                .setMessage("My merge message.").call();
+
+        Iterator<RevCommit> iterator = logOp.call();
+        assertNotNull(iterator);
+        assertTrue(iterator.hasNext());
+        assertEquals(mergeCommit, iterator.next());
+        assertTrue(iterator.hasNext());
+        assertEquals(c4, iterator.next());
+        assertTrue(iterator.hasNext());
+        assertEquals(c3, iterator.next());
+        assertTrue(iterator.hasNext());
+        assertEquals(c2, iterator.next());
+        assertTrue(iterator.hasNext());
+        assertEquals(c1, iterator.next());
+
+        // test log using first parent only. It should not contain commit 2)
+        LogOp op = geogit.command(LogOp.class).setFirstParentOnly(true);
+        iterator = op.call();
+        assertNotNull(iterator);
+        assertTrue(iterator.hasNext());
+        assertEquals(mergeCommit, iterator.next());
+        assertTrue(iterator.hasNext());
+        assertEquals(c4, iterator.next());
+        assertTrue(iterator.hasNext());
+        assertEquals(c3, iterator.next());
+        assertTrue(iterator.hasNext());
+        assertEquals(c1, iterator.next());
+        assertFalse(iterator.hasNext());
+
+        // Test topological order
+        op = geogit.command(LogOp.class).setTopoOrder(true);
+        iterator = op.call();
+        assertNotNull(iterator);
+        assertTrue(iterator.hasNext());
+        assertEquals(mergeCommit, iterator.next());
+        assertTrue(iterator.hasNext());
+        assertEquals(c4, iterator.next());
+        assertTrue(iterator.hasNext());
+        assertEquals(c3, iterator.next());
+        assertTrue(iterator.hasNext());
+        assertEquals(c1, iterator.next());
+        assertTrue(iterator.hasNext());
+        assertEquals(c2, iterator.next());
+        assertFalse(iterator.hasNext());
+
+    }
+
+    @Test
+    public void testAll() throws Exception {
+        // Create the following revision graph
+        // o
+        // |
+        // o - Points 1 added
+        // |\
+        // | o - branch1 - Points 2 added
+        // |
+        // o - Points 3 added
+        // |
+        // o - master - HEAD - Lines 1 added
+        insertAndAdd(points1);
+        final RevCommit c1 = geogit.command(CommitOp.class).setMessage("commit for " + idP1).call();
+
+        // create branch1 and checkout
+        geogit.command(BranchCreateOp.class).setAutoCheckout(true).setName("branch1").call();
+        insertAndAdd(points2);
+        final RevCommit c2 = geogit.command(CommitOp.class).setMessage("commit for " + idP2).call();
+
+        // checkout master
+        geogit.command(CheckoutOp.class).setSource("master").call();
+        insertAndAdd(points3);
+        final RevCommit c3 = geogit.command(CommitOp.class).setMessage("commit for " + idP3).call();
+        insertAndAdd(lines1);
+        final RevCommit c4 = geogit.command(CommitOp.class).setMessage("commit for " + idL1).call();
+
+        LogOp op = geogit.command(LogOp.class).setAll(true);
+        Iterator<RevCommit> iterator = op.call();
+        assertNotNull(iterator);
+        assertTrue(iterator.hasNext());
+        assertEquals(c4, iterator.next());
+        assertTrue(iterator.hasNext());
+        assertEquals(c3, iterator.next());
+        assertTrue(iterator.hasNext());
+        assertEquals(c2, iterator.next());
+        assertTrue(iterator.hasNext());
+        assertEquals(c1, iterator.next());
+        assertFalse(iterator.hasNext());
+    }
+
+    @Test
+    public void testBranch() throws Exception {
+        // Create the following revision graph
+        // o
+        // |
+        // o - Points 1 added
+        // |\
+        // | o - branch1 - Points 2 added
+        // |
+        // o - Points 3 added
+        // |
+        // o - master - HEAD - Lines 1 added
+        insertAndAdd(points1);
+        final RevCommit c1 = geogit.command(CommitOp.class).setMessage("commit for " + idP1).call();
+
+        // create branch1 and checkout
+        geogit.command(BranchCreateOp.class).setAutoCheckout(true).setName("branch1").call();
+        insertAndAdd(points2);
+        final RevCommit c2 = geogit.command(CommitOp.class).setMessage("commit for " + idP2).call();
+
+        // checkout master
+        geogit.command(CheckoutOp.class).setSource("master").call();
+        insertAndAdd(points3);
+        final RevCommit c3 = geogit.command(CommitOp.class).setMessage("commit for " + idP3).call();
+        insertAndAdd(lines1);
+        final RevCommit c4 = geogit.command(CommitOp.class).setMessage("commit for " + idL1).call();
+
+        LogOp op = geogit.command(LogOp.class).setBranch("branch1");
+        Iterator<RevCommit> iterator = op.call();
+        assertNotNull(iterator);
+        assertTrue(iterator.hasNext());
+        assertEquals(c2, iterator.next());
+        assertTrue(iterator.hasNext());
+        assertEquals(c1, iterator.next());
+        assertFalse(iterator.hasNext());
+    }
+
+    @Test
+    public void testAuthorFilter() throws Exception {
+        insertAndAdd(points1);
+        final RevCommit firstCommit = geogit.command(CommitOp.class)
+                .setAuthor("firstauthor", "firstauthor@opengeo.org").call();
+
+        insertAndAdd(lines1);
+        final RevCommit secondCommit = geogit.command(CommitOp.class)
+                .setAuthor("secondauthor", "secondauthor@opengeo.org").call();
+
+        Iterator<RevCommit> iterator = logOp.setAuthor("firstauthor").call();
+        assertNotNull(iterator);
+        assertTrue(iterator.hasNext());
+        assertEquals(firstCommit, iterator.next());
+        assertFalse(iterator.hasNext());
+    }
+
+    @Test
+    public void testCommitterFilter() throws Exception {
+        insertAndAdd(points1);
+        final RevCommit firstCommit = geogit.command(CommitOp.class)
+                .setCommitter("firstcommitter", "firstcommitter@opengeo.org").call();
+
+        insertAndAdd(lines1);
+        final RevCommit secondCommit = geogit.command(CommitOp.class)
+                .setAuthor("secondcommitter", "secondcommitter@opengeo.org").call();
+
+        Iterator<RevCommit> iterator = logOp.setAuthor("firstcommitter").call();
+        assertNotNull(iterator);
+        assertTrue(iterator.hasNext());
+        assertEquals(firstCommit, iterator.next());
+        assertFalse(iterator.hasNext());
+    }
+
 }

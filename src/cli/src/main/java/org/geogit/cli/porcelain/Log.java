@@ -6,10 +6,11 @@
 package org.geogit.cli.porcelain;
 
 import java.io.IOException;
-import java.text.DateFormat;
 import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 
 import jline.Terminal;
 import jline.console.ConsoleReader;
@@ -19,24 +20,31 @@ import org.fusesource.jansi.Ansi.Color;
 import org.geogit.api.GeoGIT;
 import org.geogit.api.ObjectId;
 import org.geogit.api.Platform;
+import org.geogit.api.Ref;
 import org.geogit.api.RevCommit;
 import org.geogit.api.RevPerson;
+import org.geogit.api.plumbing.ForEachRef;
+import org.geogit.api.plumbing.ParseTimestamp;
+import org.geogit.api.plumbing.RefParse;
 import org.geogit.api.plumbing.RevParse;
+import org.geogit.api.plumbing.diff.DiffEntry;
+import org.geogit.api.porcelain.DiffOp;
 import org.geogit.api.porcelain.LogOp;
 import org.geogit.cli.AbstractCommand;
 import org.geogit.cli.AnsiDecorator;
 import org.geogit.cli.CLICommand;
 import org.geogit.cli.GeogitCLI;
+import org.geotools.util.Range;
 
 import com.beust.jcommander.Parameters;
 import com.beust.jcommander.ParametersDelegate;
-import com.google.common.base.Function;
+import com.beust.jcommander.internal.Maps;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Iterators;
+import com.google.common.collect.ImmutableSet;
 
 /**
  * Shows the commit logs.
@@ -53,8 +61,20 @@ import com.google.common.collect.Iterators;
 @Parameters(commandNames = "log", commandDescription = "Show commit logs")
 public class Log extends AbstractCommand implements CLICommand {
 
+    public enum LOG_DETAIL {
+        SUMMARY, NAMES_ONLY, STATS, NOTHING
+    };
+
     @ParametersDelegate
     public final LogArgs args = new LogArgs();
+
+    private Map<ObjectId, String> refs;
+
+    private GeoGIT geogit;
+
+    private ConsoleReader console;
+
+    private boolean useColor;
 
     /**
      * Executes the log command using the provided options.
@@ -69,15 +89,57 @@ public class Log extends AbstractCommand implements CLICommand {
         Preconditions.checkState(cli.getGeogit() != null, "Not a geogit repository: "
                 + platform.pwd().getAbsolutePath());
 
-        final GeoGIT geogit = cli.getGeogit();
+        Preconditions.checkArgument(!(args.summary && args.oneline),
+                "--summary and --oneline cannot be used together");
+        Preconditions.checkArgument(!(args.stats && args.oneline),
+                "--stats and --oneline cannot be used together");
+        Preconditions.checkArgument(!(args.stats && args.oneline),
+                "--name-only and --oneline cannot be used together");
 
-        LogOp op = geogit.command(LogOp.class);
+        geogit = cli.getGeogit();
 
+        LogOp op = geogit.command(LogOp.class).setTopoOrder(args.topo)
+                .setFirstParentOnly(args.firstParent).setAll(args.all);
+
+        refs = Maps.newHashMap();
+        if (args.decoration) {
+            Optional<Ref> head = geogit.command(RefParse.class).setName(Ref.HEAD).call();
+            refs.put(head.get().getObjectId(), Ref.HEAD);
+            ImmutableSet<Ref> set = geogit.command(ForEachRef.class).call();
+            for (Ref ref : set) {
+                ObjectId id = ref.getObjectId();
+                if (refs.containsKey(id)) {
+                    refs.put(id, refs.get(id) + ", " + ref.getName());
+                } else {
+                    refs.put(id, ref.getName());
+                }
+            }
+        }
+        if (args.branch != null && !args.branch.isEmpty()) {
+            op.setBranch(args.branch);
+        }
+        if (args.author != null && !args.author.isEmpty()) {
+            op.setAuthor(args.author);
+        }
+        if (args.committer != null && !args.committer.isEmpty()) {
+            op.setCommiter(args.committer);
+        }
         if (args.skip != null) {
             op.setSkip(args.skip.intValue());
         }
         if (args.limit != null) {
             op.setLimit(args.limit.intValue());
+        }
+        if (args.since != null || args.until != null) {
+            Date since = new Date(0);
+            Date until = new Date();
+            if (args.since != null) {
+                since = new Date(geogit.command(ParseTimestamp.class).setString(args.since).call());
+            }
+            if (args.until != null) {
+                until = new Date(geogit.command(ParseTimestamp.class).setString(args.until).call());
+            }
+            op.setTimeRange(new Range<Date>(Date.class, since, until));
         }
         if (!args.sinceUntilPaths.isEmpty()) {
             List<String> sinceUntil = ImmutableList.copyOf((Splitter.on("..")
@@ -117,9 +179,8 @@ public class Log extends AbstractCommand implements CLICommand {
             }
         }
         Iterator<RevCommit> log = op.call();
-        ConsoleReader console = cli.getConsole();
+        console = cli.getConsole();
         Terminal terminal = console.getTerminal();
-        final boolean useColor;
         switch (args.color) {
         case never:
             useColor = false;
@@ -137,116 +198,207 @@ public class Log extends AbstractCommand implements CLICommand {
             return;
         }
 
-        Function<RevCommit, CharSequence> printFunction;
+        LogEntryPrinter printer;
         if (args.raw) {
-            printFunction = rawConverter(useColor);
+            printer = new RawPrinter();
         } else if (args.oneline) {
-            printFunction = oneLineConverter(useColor);
+            printer = new OneLineConverter();
         } else {
-            printFunction = standardConverter(useColor, geogit.getPlatform());
+            LOG_DETAIL detail;
+            if (args.summary) {
+                detail = LOG_DETAIL.SUMMARY;
+            } else if (args.names) {
+                detail = LOG_DETAIL.NAMES_ONLY;
+            } else if (args.stats) {
+                detail = LOG_DETAIL.STATS;
+            } else {
+                detail = LOG_DETAIL.NOTHING;
+            }
+
+            printer = new StandardConverter(detail, geogit.getPlatform());
         }
 
-        Iterator<CharSequence> formattedLog = Iterators.transform(log, printFunction);
-        while (formattedLog.hasNext()) {
-            CharSequence formattedCommit = formattedLog.next();
-            console.println(formattedCommit);
+        while (log.hasNext()) {
+            printer.print(log.next());
             console.flush();
         }
     }
 
-    /**
-     * @param useColor
-     * @return
-     */
-    private Function<RevCommit, CharSequence> oneLineConverter(final boolean useColor) {
-        return new Function<RevCommit, CharSequence>() {
+    interface LogEntryPrinter {
 
-            @Override
-            public CharSequence apply(RevCommit commit) {
-                Ansi ansi = AnsiDecorator.newAnsi(useColor);
-                ansi.fg(Color.YELLOW).a(commit.getId().toString()).reset();
-                String message = Strings.nullToEmpty(commit.getMessage());
-                String title = Splitter.on('\n').split(message).iterator().next();
-                ansi.a(" ").a(title);
-                return ansi.toString();
-            }
-        };
+        /**
+         * @param geogit
+         * @param console
+         * @param entry
+         * @throws IOException
+         */
+        void print(RevCommit commit) throws IOException;
+
+    }
+
+    private class OneLineConverter implements LogEntryPrinter {
+
+        @Override
+        public void print(RevCommit commit) throws IOException {
+            Ansi ansi = AnsiDecorator.newAnsi(useColor);
+            ansi.fg(Color.YELLOW).a(getIdAsString(commit.getId())).reset();
+            String message = Strings.nullToEmpty(commit.getMessage());
+            String title = Splitter.on('\n').split(message).iterator().next();
+            ansi.a(" ").a(title);
+            console.println(ansi.toString());
+        }
+
     }
 
     /**
      * @param useColor
+     * @param showSummary
      * @return
      */
-    private Function<RevCommit, CharSequence> standardConverter(final boolean useColor,
-            final Platform platform) {
-        return new Function<RevCommit, CharSequence>() {
+    private class StandardConverter implements LogEntryPrinter {
 
-            private final long now = platform.currentTimeMillis();
+        private SimpleDateFormat DATE_FORMAT;
 
-            private final DateFormat DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss Z");
+        private long now;
 
-            @Override
-            public CharSequence apply(RevCommit commit) {
-                Ansi ansi = AnsiDecorator.newAnsi(useColor);
+        private LOG_DETAIL detail;
 
-                ansi.a("Commit:  ").fg(Color.YELLOW).a(commit.getId().toString()).reset().newline();
-                ansi.a("Author:  ").fg(Color.GREEN).a(formatPerson(commit.getAuthor())).reset()
-                        .newline();
+        public StandardConverter(final LOG_DETAIL detail, final Platform platform) {
+            now = platform.currentTimeMillis();
+            DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss Z");
+            this.detail = detail;
+        }
 
-                final long timestamp = commit.getAuthor().getTimestamp();
-                final int timeZoneOffset = commit.getAuthor().getTimeZoneOffset();
+        @Override
+        public void print(RevCommit commit) throws IOException {
+            Ansi ansi = AnsiDecorator.newAnsi(useColor);
 
-                String friendlyString = estimateSince(now, timestamp);
-                DATE_FORMAT.getCalendar().getTimeZone().setRawOffset(timeZoneOffset);
-                String formattedDate = DATE_FORMAT.format(timestamp);
-
-                ansi.a("Date:    (").fg(Color.RED).a(friendlyString).reset().a(") ")
-                        .a(formattedDate).newline();
-                ansi.a("Subject: ").a(commit.getMessage()).newline();
-                return ansi.toString();
-            }
-        };
-    }
-
-    private Function<RevCommit, CharSequence> rawConverter(final boolean useColor) {
-
-        return new Function<RevCommit, CharSequence>() {
-            @Override
-            public CharSequence apply(RevCommit commit) {
-                Ansi ansi = AnsiDecorator.newAnsi(useColor);
-
-                ansi.fg(Color.YELLOW).a("commit ").a(commit.getId().toString()).reset().newline();
-                ansi.a("tree ").a(commit.getTreeId().toString()).newline();
-                for (ObjectId parentId : commit.getParentIds()) {
-                    ansi.a("parent ").a(parentId.toString()).newline();
+            ansi.a("Commit:  ").fg(Color.YELLOW).a(getIdAsString(commit.getId())).reset().newline();
+            if (commit.getParentIds().size() > 1) {
+                ansi.a("Merge: ");
+                for (ObjectId parent : commit.getParentIds()) {
+                    ansi.a(parent.toString().substring(0, 7)).a(" ");
                 }
-                ansi.a("author ").a(format(commit.getAuthor())).newline();
-                ansi.a("committer ").a(format(commit.getCommitter())).newline();
-
                 ansi.newline();
-                if (commit.getMessage() != null) {
-                    ansi.a(commit.getMessage());
-                    ansi.newline();
+            }
+            ansi.a("Author:  ").fg(Color.GREEN).a(formatPerson(commit.getAuthor())).reset()
+                    .newline();
+
+            final long timestamp = commit.getAuthor().getTimestamp();
+            final int timeZoneOffset = commit.getAuthor().getTimeZoneOffset();
+
+            String friendlyString = estimateSince(now, timestamp);
+            DATE_FORMAT.getCalendar().getTimeZone().setRawOffset(timeZoneOffset);
+            String formattedDate = DATE_FORMAT.format(timestamp);
+
+            ansi.a("Date:    (").fg(Color.RED).a(friendlyString).reset().a(") ").a(formattedDate)
+                    .newline();
+            ansi.a("Subject: ").a(commit.getMessage()).newline();
+            if ((detail.equals(LOG_DETAIL.NAMES_ONLY)) && commit.getParentIds().size() == 1) {
+                ansi.a("Affected paths:").newline();
+                Iterator<DiffEntry> diff = geogit.command(DiffOp.class)
+                        .setOldVersion(commit.parentN(0).get()).setNewVersion(commit.getId())
+                        .call();
+                DiffEntry diffEntry;
+                while (diff.hasNext()) {
+                    diffEntry = diff.next();
+                    ansi.a("\t" + diffEntry.newPath()).newline();
                 }
-                return ansi.toString();
+            }
+            if (detail.equals(LOG_DETAIL.STATS) && commit.getParentIds().size() == 1) {
+
+                Iterator<DiffEntry> diff = geogit.command(DiffOp.class)
+                        .setOldVersion(commit.parentN(0).get()).setNewVersion(commit.getId())
+                        .call();
+                int adds = 0, deletes = 0, changes = 0;
+                DiffEntry diffEntry;
+                while (diff.hasNext()) {
+                    diffEntry = diff.next();
+                    switch (diffEntry.changeType()) {
+                    case ADDED:
+                        ++adds;
+                        break;
+                    case REMOVED:
+                        ++deletes;
+                        break;
+                    case MODIFIED:
+                        ++changes;
+                        break;
+                    }
+                }
+
+                ansi.a("Changes:");
+                ansi.fg(Color.GREEN).a(adds).reset().a(" features added, ").fg(Color.YELLOW)
+                        .a(changes).reset().a(" changed, ").fg(Color.RED).a(deletes).reset()
+                        .a(" deleted.").reset().newline();
             }
 
-            private String format(RevPerson p) {
-                StringBuilder sb = new StringBuilder();
-                if (p.getName().isPresent()) {
-                    sb.append(p.getName().get()).append(' ');
+            console.println(ansi.toString());
+            if (detail.equals(LOG_DETAIL.SUMMARY) && commit.getParentIds().size() == 1) {
+                ansi.a("Changes:").newline();
+                Iterator<DiffEntry> diff = geogit.command(DiffOp.class)
+                        .setOldVersion(commit.parentN(0).get()).setNewVersion(commit.getId())
+                        .call();
+                DiffEntry diffEntry;
+                while (diff.hasNext()) {
+                    diffEntry = diff.next();
+                    if (detail.equals(LOG_DETAIL.SUMMARY)) {
+                        new FullDiffPrinter(true, false).print(geogit, console, diffEntry);
+                    }
+
                 }
-                if (p.getEmail().isPresent()) {
-                    sb.append('<').append(p.getEmail().get()).append(" ");
-                }
-                sb.append(p.getTimestamp()).append(' ').append(p.getTimeZoneOffset());
-                return sb.toString();
             }
-        };
+        }
+    }
+
+    private class RawPrinter implements LogEntryPrinter {
+
+        @Override
+        public void print(RevCommit commit) throws IOException {
+            Ansi ansi = AnsiDecorator.newAnsi(useColor);
+
+            ansi.fg(Color.YELLOW).a("commit ").a(commit.getId().toString()).reset().newline();
+            ansi.a("tree ").a(commit.getTreeId().toString()).newline();
+            for (ObjectId parentId : commit.getParentIds()) {
+                ansi.a("parent ").a(parentId.toString()).newline();
+            }
+            ansi.a("author ").a(format(commit.getAuthor())).newline();
+            ansi.a("committer ").a(format(commit.getCommitter())).newline();
+
+            ansi.newline();
+            if (commit.getMessage() != null) {
+                ansi.a("message ").a(commit.getMessage());
+                ansi.newline();
+            }
+            Iterator<DiffEntry> diff = geogit.command(DiffOp.class)
+                    .setOldVersion(commit.parentN(0).get()).setNewVersion(commit.getId()).call();
+            DiffEntry diffEntry;
+            while (diff.hasNext()) {
+                diffEntry = diff.next();
+                StringBuilder sb = new StringBuilder(diffEntry.changeType().toString()).append(" ")
+                        .append(diffEntry.oldObjectId().toString()).append(" -> ")
+                        .append(diffEntry.oldObjectId().toString());
+                ansi.a(sb.toString());
+            }
+            console.println(ansi.toString());
+        }
+
+        private String format(RevPerson p) {
+            StringBuilder sb = new StringBuilder();
+            if (p.getName().isPresent()) {
+                sb.append(p.getName().get()).append(' ');
+            }
+            if (p.getEmail().isPresent()) {
+                sb.append('<').append(p.getEmail().get()).append("> ");
+            }
+            sb.append(p.getTimestamp()).append(' ').append(p.getTimeZoneOffset());
+            return sb.toString();
+        }
+
     }
 
     /**
-     * Converts a RevPersion for into a readable string.
+     * Converts a RevPerson for into a readable string.
      * 
      * @param person the person to format.
      * @return the formatted string
@@ -302,5 +454,27 @@ public class Log extends AbstractCommand implements CLICommand {
             return diff / seconds + " seconds ago";
         }
         return "just now";
+    }
+
+    /**
+     * Returns an Id as a string, decorating or abbreviating it if needed
+     * 
+     * @param id
+     * @return
+     */
+    private String getIdAsString(ObjectId id) {
+        StringBuilder sb = new StringBuilder();
+        if (args.abbrev) {
+            sb.append(id.toString().substring(0, 7));
+        } else {
+            sb.append(id.toString());
+        }
+        if (refs.containsKey(id)) {
+            sb.append(" (");
+            sb.append(refs.get(id));
+            sb.append(")");
+        }
+
+        return sb.toString();
     }
 }

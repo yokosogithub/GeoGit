@@ -2,7 +2,6 @@ Feature: "log" command
     In order to know the history of commits on a repository
     As a Geogit User
     I want to log them to the console
-
   Scenario: Try to show a log of a repository with a single commit.
     Given I have a repository
       And I have staged "points1"
@@ -77,4 +76,89 @@ Feature: "log" command
     Given I am in an empty directory
      When I run the command "log"
      Then the response should start with "Not a geogit repository"
+
+  Scenario: Try to show a log of all branches
+    Given I have a repository
+      And I have several branches
+     When I run the command "log --all"
+     Then the response should contain "Commit1"
+      And the response should contain "Commit2"
+      And the response should contain "Commit3"
+      And the response should contain "Commit4"
+      And the response should contain "Commit5"    
       
+  Scenario: Try to show a log of a single branch
+    Given I have a repository
+      And I have several branches
+     When I run the command "log --branch branch1"
+     Then the response should contain "Commit1"
+      And the response should contain "Commit2"
+      And the response should contain "Commit3"
+      And the response should not contain "Commit4"
+      And the response should not contain "Commit5"          
+       
+  Scenario: Try to show a log of all branches specifying the 'until' commit
+    Given I have a repository
+      And I have several branches
+     When I run the command "log --all HEAD..HEAD~1"
+     Then the response should contain "Cannot specify 'until' commit if when listing all branches"
+  
+  Scenario: Try to show a log of all branches with decoration
+    Given I have a repository
+      And I have several branches
+     When I run the command "log --all --decoration"
+     Then the response should contain "Commit1"
+      And the response should contain "Commit2"
+      And the response should contain "Commit3"
+      And the response should contain "Commit4"
+      And the response should contain "Commit5"
+     Then the response should contain "HEAD"
+     Then the response should contain "master"    
+  
+  Scenario: Try to show a log of a repository with a single commit.
+    Given I have a repository
+      And I have staged "points1"
+      And I have staged "points2"
+      And I have staged "lines1"
+     When I run the command "commit -m TestCommit"
+     Then the response should contain "3 features added"
+     When I run the command "log --oneline"
+     Then the response should contain 1 lines
+      And the response should contain "TestCommit"
+     
+  Scenario: Try to show a log of a repository with a single commit and decoration
+    Given I have a repository
+      And I have staged "points1"
+      And I have staged "points2"
+      And I have staged "lines1"
+     When I run the command "commit -m TestCommit"
+     Then the response should contain "3 features added"
+     When I run the command "log --oneline --decoration"
+     Then the response should contain 1 lines
+      And the response should contain "(HEAD, refs/heads/master) TestCommit"     
+      
+  Scenario: Try to show a log of a repository showing only names of affected elements
+    Given I have a repository
+      And I have staged "points1"
+      And I run the command "commit -m TestCommit"
+      And I have staged "points2"
+      And I have staged "points3"
+      And I have staged "lines1"
+      And I run the command "commit -m TestCommit"
+     When I run the command "log --names-only"
+     Then the response should contain 13 lines
+      And the response should contain "Points.2"
+      And the response should contain "Points.3"
+      And the response should contain "Lines.1"   
+      
+Scenario: Try to show a log of a repository showing full descriptions of affected elements
+    Given I have a repository
+      And I have staged "points1"
+      And I run the command "commit -m TestCommit"
+      And I have staged "points2"
+      And I have staged "points3"
+      And I have staged "lines1"
+      And I run the command "commit -m TestCommit"
+     When I run the command "log --summary"
+     Then the response should contain 24 lines
+ 
