@@ -30,6 +30,13 @@ Feature: "commit" command
      When I run the command "commit"
      Then it should answer "No commit message provided"
      
+  Scenario: Try to commit using a previous commit
+    Given I have a repository
+      And I have several commits
+      And I have staged "points1"      
+     When I run the command "commit -c HEAD~1"
+     Then the response should not contain "No commit message provided"     
+     
   Scenario: Try to commit from an empty directory
     Given I am in an empty directory
      When I run the command "commit -m Test"

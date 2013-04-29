@@ -10,9 +10,13 @@ import java.util.Map.Entry;
 import java.util.Set;
 
 import org.geogit.api.AbstractGeoGitOp;
+import org.geogit.api.FeatureInfo;
 import org.geogit.api.NodeRef;
 import org.geogit.api.ObjectId;
 import org.geogit.api.RevCommit;
+import org.geogit.api.RevFeature;
+import org.geogit.api.RevFeatureBuilder;
+import org.geogit.api.RevFeatureType;
 import org.geogit.api.RevObject.TYPE;
 import org.geogit.api.RevTree;
 import org.geogit.api.plumbing.DiffFeature;
@@ -22,10 +26,10 @@ import org.geogit.api.plumbing.FindTreeChild;
 import org.geogit.api.plumbing.ResolveObjectType;
 import org.geogit.api.plumbing.RevObjectParse;
 import org.geogit.api.plumbing.RevParse;
-import org.geogit.api.plumbing.diff.ConflictsReport;
 import org.geogit.api.plumbing.diff.DiffEntry;
 import org.geogit.api.plumbing.diff.DiffEntry.ChangeType;
 import org.geogit.api.plumbing.diff.FeatureDiff;
+import org.opengis.feature.Feature;
 
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
@@ -39,20 +43,20 @@ import com.google.inject.Inject;
  * commit, classified according to whether they can or not be safely applied onto the reference
  * commit. Changes that will have no effect on the target commit are not included as unconflicted.
  */
-public class ReportMergeConflictsOp extends AbstractGeoGitOp<ConflictsReport> {
+public class ReportMergeScenarioOp extends AbstractGeoGitOp<MergeScenarioReport> {
 
     private RevCommit toMerge;
 
     private RevCommit mergeInto;
 
     @Inject
-    public ReportMergeConflictsOp() {
+    public ReportMergeScenarioOp() {
     }
 
     /**
      * @param toMerge the commit with the changes to apply {@link RevCommit}
      */
-    public ReportMergeConflictsOp setToMergeCommit(RevCommit toMerge) {
+    public ReportMergeScenarioOp setToMergeCommit(RevCommit toMerge) {
         this.toMerge = toMerge;
         return this;
     }
@@ -60,20 +64,20 @@ public class ReportMergeConflictsOp extends AbstractGeoGitOp<ConflictsReport> {
     /**
      * @param mergeInto the commit into which changes are to be merged {@link RevCommit}
      */
-    public ReportMergeConflictsOp setMergeIntoCommit(RevCommit mergeInto) {
+    public ReportMergeScenarioOp setMergeIntoCommit(RevCommit mergeInto) {
         this.mergeInto = mergeInto;
         return this;
     }
 
     @Override
-    public ConflictsReport call() {
+    public MergeScenarioReport call() {
 
         Optional<RevCommit> ancestor = command(FindCommonAncestor.class).setLeft(toMerge)
                 .setRight(mergeInto).call();
         Preconditions.checkState(ancestor.isPresent(), "No ancestor commit could be found.");
 
         Map<String, DiffEntry> mergeIntoDiffs = Maps.newHashMap();
-        ConflictsReport report = new ConflictsReport();
+        MergeScenarioReport report = new MergeScenarioReport();
 
         Iterator<DiffEntry> diffs = command(DiffTree.class).setOldTree(ancestor.get().getId())
                 .setReportTrees(true).setNewTree(mergeInto.getId()).call();
@@ -109,7 +113,7 @@ public class ReportMergeConflictsOp extends AbstractGeoGitOp<ConflictsReport> {
                 switch (toMergeDiff.changeType()) {
                 case ADDED:
                     if (toMergeDiff.getNewObject().equals(mergeIntoDiff.getNewObject())) {
-                        // report.addUnconflicted(toMergeDiff);
+                        // already added in current branch, no need to do anything
                     } else {
                         TYPE type = command(ResolveObjectType.class).setObjectId(
                                 toMergeDiff.getNewObject().objectId()).call();
@@ -128,16 +132,15 @@ public class ReportMergeConflictsOp extends AbstractGeoGitOp<ConflictsReport> {
                             // if the metadata ids match, it means both branches have added the same
                             // tree, maybe with different content, but there is no need to do
                             // anything. The correct tree is already there and the merge can be run
-                            // safely, so we do not added neither as a conflicted change nor as an
-                            // unconflicted on
+                            // safely, so we do not add it neither as a conflicted change nor as an
+                            // unconflicted one
                         } else {
                             report.addConflict(new Conflict(path, ancestorVersionId, ours, theirs));
                         }
                     }
                     break;
                 case REMOVED:
-                    // removed by both histories => no conflict
-                    // report.addUnconflicted(toMergeDiff);
+                    // removed by both histories => no conflict and no need to do anything
                     break;
                 case MODIFIED:
                     TYPE type = command(ResolveObjectType.class).setObjectId(
@@ -165,8 +168,33 @@ public class ReportMergeConflictsOp extends AbstractGeoGitOp<ConflictsReport> {
                         if (toMergeFeatureDiff.conflicts(mergeIntoFeatureDiff)) {
                             report.addConflict(new Conflict(path, ancestorVersionId, ours, theirs));
                         } else {
-                            if (!toMergeFeatureDiff.equals(mergeIntoFeatureDiff)) {
-                                report.addUnconflicted(toMergeDiff);
+                            // if the feature types are different we report a conflict and do not
+                            // try to perform automerge
+                            if (!toMergeDiff.getNewObject().getMetadataId()
+                                    .equals(mergeIntoDiff.getNewObject().getMetadataId())) {
+                                report.addConflict(new Conflict(path, ancestorVersionId, ours,
+                                        theirs));
+                            } else if (!toMergeFeatureDiff.equals(mergeIntoFeatureDiff)) {
+                                Feature mergedFeature = command(MergeFeaturesOp.class)
+                                        .setFirstFeature(mergeIntoDiff.getNewObject())
+                                        .setSecondFeature(toMergeDiff.getNewObject())
+                                        .setAncestorFeature(mergeIntoDiff.getOldObject()).call();
+                                RevFeature revFeature = new RevFeatureBuilder()
+                                        .build(mergedFeature);
+                                if (revFeature.getId().equals(toMergeDiff.newObjectId())) {
+                                    // the resulting merged feature equals the feature to merge from
+                                    // the branch, which means that it exists in the repo and there
+                                    // is no need to add it
+                                    report.addUnconflicted(toMergeDiff);
+                                } else {
+                                    RevFeatureType featureType = command(RevObjectParse.class)
+                                            .setObjectId(
+                                                    mergeIntoDiff.getNewObject().getMetadataId())
+                                            .call(RevFeatureType.class).get();
+                                    FeatureInfo merged = new FeatureInfo(mergedFeature,
+                                            featureType, path);
+                                    report.addMerged(merged);
+                                }
                             }
                         }
                     }

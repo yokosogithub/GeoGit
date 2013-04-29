@@ -11,6 +11,7 @@ import java.util.Map.Entry;
 import java.util.Set;
 
 import org.geogit.api.AbstractGeoGitOp;
+import org.geogit.api.FeatureInfo;
 import org.geogit.api.NodeRef;
 import org.geogit.api.ObjectId;
 import org.geogit.api.Ref;
@@ -24,7 +25,6 @@ import org.geogit.api.plumbing.diff.AttributeDiff.TYPE;
 import org.geogit.api.plumbing.diff.FeatureDiff;
 import org.geogit.api.plumbing.diff.FeatureTypeDiff;
 import org.geogit.api.plumbing.diff.Patch;
-import org.geogit.api.plumbing.diff.PatchFeature;
 import org.geogit.repository.DepthSearch;
 import org.geogit.repository.WorkingTree;
 import org.geogit.storage.StagingDatabase;
@@ -153,13 +153,13 @@ public class ApplyPatchOp extends AbstractGeoGitOp<Patch> {
             patch = patch.reversed();
         }
 
-        List<PatchFeature> removed = patch.getRemovedFeatures();
-        for (PatchFeature feature : removed) {
+        List<FeatureInfo> removed = patch.getRemovedFeatures();
+        for (FeatureInfo feature : removed) {
             workTree.delete(NodeRef.parentPath(feature.getPath()),
                     NodeRef.nodeFromPath(feature.getPath()));
         }
-        List<PatchFeature> added = patch.getAddedFeatures();
-        for (PatchFeature feature : added) {
+        List<FeatureInfo> added = patch.getAddedFeatures();
+        for (FeatureInfo feature : added) {
             workTree.insert(NodeRef.parentPath(feature.getPath()), feature.getFeature());
         }
         List<FeatureDiff> diffs = patch.getModifiedFeatures();
@@ -295,8 +295,8 @@ public class ApplyPatchOp extends AbstractGeoGitOp<Patch> {
                 toApply.addModifiedFeature(diff);
             }
         }
-        List<PatchFeature> added = patch.getAddedFeatures();
-        for (PatchFeature feature : added) {
+        List<FeatureInfo> added = patch.getAddedFeatures();
+        for (FeatureInfo feature : added) {
             String refSpec = Ref.WORK_HEAD + ":" + feature.getPath();
             obj = command(RevObjectParse.class).setRefSpec(refSpec).call();
             if (obj.isPresent()) {
@@ -308,8 +308,8 @@ public class ApplyPatchOp extends AbstractGeoGitOp<Patch> {
             }
 
         }
-        List<PatchFeature> removed = patch.getRemovedFeatures();
-        for (PatchFeature feature : removed) {
+        List<FeatureInfo> removed = patch.getRemovedFeatures();
+        for (FeatureInfo feature : removed) {
             String refSpec = Ref.WORK_HEAD + ":" + feature.getPath();
             obj = command(RevObjectParse.class).setRefSpec(refSpec).call();
             if (!obj.isPresent()) {

@@ -13,19 +13,26 @@ import java.util.List;
 import jline.console.ConsoleReader;
 
 import org.geogit.api.GeoGIT;
+import org.geogit.api.Node;
 import org.geogit.api.NodeRef;
 import org.geogit.api.ObjectId;
 import org.geogit.api.Ref;
 import org.geogit.api.RevCommit;
+import org.geogit.api.RevFeature;
+import org.geogit.api.RevFeatureType;
 import org.geogit.api.RevObject;
+import org.geogit.api.RevObject.TYPE;
+import org.geogit.api.RevTree;
 import org.geogit.api.plumbing.CatObject;
-import org.geogit.api.plumbing.FeatureNodeRefFromRefspec;
 import org.geogit.api.plumbing.FindCommonAncestor;
+import org.geogit.api.plumbing.FindTreeChild;
 import org.geogit.api.plumbing.RefParse;
+import org.geogit.api.plumbing.ResolveTreeish;
 import org.geogit.api.plumbing.RevObjectParse;
 import org.geogit.api.plumbing.diff.DiffEntry;
 import org.geogit.api.plumbing.merge.Conflict;
 import org.geogit.api.plumbing.merge.ConflictsReadOp;
+import org.geogit.api.porcelain.FeatureNodeRefFromRefspec;
 import org.geogit.api.porcelain.MergeOp;
 import org.geogit.cli.AbstractCommand;
 import org.geogit.cli.CLICommand;
@@ -34,11 +41,12 @@ import org.geogit.cli.GeogitCLI;
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.Parameters;
 import com.google.common.base.Optional;
+import com.google.common.base.Preconditions;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.Lists;
 
 /**
- * Starts the merge tool to resolve conflicts
+ * Show existing conflicts
  * 
  * @see MergeOp
  */
@@ -54,11 +62,13 @@ public class Conflicts extends AbstractCommand implements CLICommand {
     @Parameter(names = { "--diff" }, description = "Show diffs instead of full element descriptions")
     private boolean previewDiff;
 
+    private GeoGIT geogit;
+
     @Override
     public void runInternal(GeogitCLI cli) throws Exception {
         checkState(cli.getGeogit() != null, "Not a geogit repository: " + cli.getPlatform().pwd());
 
-        GeoGIT geogit = cli.getGeogit();
+        geogit = cli.getGeogit();
         List<Conflict> conflicts = geogit.command(ConflictsReadOp.class).call();
 
         if (conflicts.isEmpty()) {
@@ -67,7 +77,6 @@ public class Conflicts extends AbstractCommand implements CLICommand {
         }
         for (Conflict conflict : conflicts) {
             if (paths.isEmpty() || paths.contains(conflict.getPath())) {
-
                 if (previewDiff) {
                     printConflictDiff(conflict, cli.getConsole(), geogit);
                 } else {
@@ -92,18 +101,18 @@ public class Conflicts extends AbstractCommand implements CLICommand {
         Optional<RevCommit> commonAncestor = geogit.command(FindCommonAncestor.class)
                 .setLeft(mergeHead.get()).setRight(origHead.get()).call();
         String ancestorPath = commonAncestor.get().getId().toString() + ":" + conflict.getPath();
-        NodeRef ancestorNodeRef = geogit.command(FeatureNodeRefFromRefspec.class)
+        Optional<NodeRef> ancestorNodeRef = geogit.command(FeatureNodeRefFromRefspec.class)
                 .setRefspec(ancestorPath).call();
         String path = Ref.ORIG_HEAD + ":" + conflict.getPath();
-        NodeRef oursNodeRef = geogit.command(FeatureNodeRefFromRefspec.class).setRefspec(path)
-                .call();
-        DiffEntry diffEntry = new DiffEntry(ancestorNodeRef, oursNodeRef);
+        Optional<NodeRef> oursNodeRef = geogit.command(FeatureNodeRefFromRefspec.class)
+                .setRefspec(path).call();
+        DiffEntry diffEntry = new DiffEntry(ancestorNodeRef.orNull(), oursNodeRef.orNull());
         console.println("Ours");
         diffPrinter.print(geogit, console, diffEntry);
         path = Ref.MERGE_HEAD + ":" + conflict.getPath();
-        NodeRef theirsNodeRef = geogit.command(FeatureNodeRefFromRefspec.class).setRefspec(path)
-                .call();
-        diffEntry = new DiffEntry(ancestorNodeRef, theirsNodeRef);
+        Optional<NodeRef> theirsNodeRef = geogit.command(FeatureNodeRefFromRefspec.class)
+                .setRefspec(path).call();
+        diffEntry = new DiffEntry(ancestorNodeRef.orNull(), theirsNodeRef.orNull());
         console.println("Theirs");
         diffPrinter.print(geogit, console, diffEntry);
 
@@ -132,6 +141,69 @@ public class Conflicts extends AbstractCommand implements CLICommand {
             CharSequence s = geogit.command(CatObject.class)
                     .setObject(Suppliers.ofInstance(obj.get())).call();
             console.println(s);
+        }
+
+    }
+
+    private RevFeatureType getFeatureTypeFromRefSpec(String ref) {
+
+        String featureTypeRef = NodeRef.parentPath(ref);
+
+        String treeRef = featureTypeRef.split(":")[0];
+        String path = featureTypeRef.split(":")[1];
+        ObjectId revTreeId = geogit.command(ResolveTreeish.class).setTreeish(treeRef).call().get();
+        RevTree revTree = geogit.command(RevObjectParse.class).setObjectId(revTreeId)
+                .call(RevTree.class).get();
+
+        Optional<NodeRef> nodeRef = geogit.command(FindTreeChild.class).setParent(revTree)
+                .setChildPath(path).call();
+        Preconditions.checkArgument(nodeRef.isPresent(), "Invalid reference: %s", ref);
+
+        RevFeatureType revFeatureType = geogit.command(RevObjectParse.class)
+                .setObjectId(nodeRef.get().getMetadataId()).call(RevFeatureType.class).get();
+        return revFeatureType;
+
+    }
+
+    private Optional<RevFeature> getFeatureFromRefSpec(String ref) {
+
+        Optional<RevObject> revObject = geogit.command(RevObjectParse.class).setRefSpec(ref)
+                .call(RevObject.class);
+
+        if (!revObject.isPresent()) { // let's try to see if it is a feature in the working tree
+            NodeRef.checkValidPath(ref);
+            Optional<NodeRef> elementRef = geogit.command(FindTreeChild.class)
+                    .setParent(geogit.getRepository().getWorkingTree().getTree()).setChildPath(ref)
+                    .call();
+            Preconditions.checkArgument(elementRef.isPresent(), "Invalid reference: %s", ref);
+            ObjectId id = elementRef.get().getNode().getObjectId();
+            revObject = geogit.command(RevObjectParse.class).setObjectId(id).call(RevObject.class);
+        }
+
+        if (revObject.isPresent()) {
+            Preconditions.checkArgument(TYPE.FEATURE.equals(revObject.get().getType()),
+                    "%s does not resolve to a feature", ref);
+            return Optional.of(RevFeature.class.cast(revObject.get()));
+        } else {
+            return Optional.absent();
+        }
+    }
+
+    private NodeRef nodeRefFromRefSpecPath(String ref) {
+
+        Optional<RevFeature> feature = getFeatureFromRefSpec(ref);
+
+        if (feature.isPresent()) {
+            RevFeatureType featureType = getFeatureTypeFromRefSpec(ref);
+            RevFeature feat = feature.get();
+            return new NodeRef(Node.create(NodeRef.nodeFromPath(ref), feat.getId(),
+                    featureType.getId(), TYPE.FEATURE), NodeRef.parentPath(ref),
+                    featureType.getId());
+
+        } else {
+            // return new NodeRef(Node.create("", ObjectId.NULL, ObjectId.NULL, TYPE.FEATURE), "",
+            // ObjectId.NULL);
+            return null;
         }
 
     }

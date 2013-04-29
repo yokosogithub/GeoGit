@@ -17,6 +17,7 @@ import org.geogit.cli.porcelain.Clean;
 import org.geogit.cli.porcelain.Clone;
 import org.geogit.cli.porcelain.Commit;
 import org.geogit.cli.porcelain.Config;
+import org.geogit.cli.porcelain.Conflicts;
 import org.geogit.cli.porcelain.Diff;
 import org.geogit.cli.porcelain.Fetch;
 import org.geogit.cli.porcelain.FormatPatch;
@@ -24,7 +25,6 @@ import org.geogit.cli.porcelain.Help;
 import org.geogit.cli.porcelain.Init;
 import org.geogit.cli.porcelain.Log;
 import org.geogit.cli.porcelain.Merge;
-import org.geogit.cli.porcelain.Conflicts;
 import org.geogit.cli.porcelain.Pull;
 import org.geogit.cli.porcelain.Push;
 import org.geogit.cli.porcelain.Rebase;
@@ -50,6 +50,7 @@ import com.google.inject.AbstractModule;
  * @see Clean
  * @see Commit
  * @see Config
+ * @see Conflicts
  * @see Diff
  * @see FormatPatch
  * @see Help
@@ -82,12 +83,12 @@ public class BuiltinCommandsModule extends AbstractModule implements CLIModule {
         bind(Clean.class);
         bind(Commit.class);
         bind(Config.class);
+        bind(Conflicts.class);
         bind(Diff.class);
         bind(FormatPatch.class);
         bind(Help.class);
         bind(Init.class);
         bind(Merge.class);
-        bind(Conflicts.class);
         bind(Log.class);
         bind(RemoteExtension.class);
         bind(Remove.class);

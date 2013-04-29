@@ -9,6 +9,8 @@ import java.util.Iterator;
 import java.util.List;
 
 import org.geogit.api.AbstractGeoGitOp;
+import org.geogit.api.FeatureInfo;
+import org.geogit.api.NodeRef;
 import org.geogit.api.ObjectId;
 import org.geogit.api.Ref;
 import org.geogit.api.RevCommit;
@@ -19,13 +21,12 @@ import org.geogit.api.plumbing.RefParse;
 import org.geogit.api.plumbing.ResolveBranchId;
 import org.geogit.api.plumbing.UpdateRef;
 import org.geogit.api.plumbing.UpdateSymRef;
-import org.geogit.api.plumbing.diff.ConflictsReport;
 import org.geogit.api.plumbing.diff.DiffEntry;
-import org.geogit.api.plumbing.merge.CheckMergeConflictsOp;
+import org.geogit.api.plumbing.merge.CheckMergeScenarioOp;
 import org.geogit.api.plumbing.merge.Conflict;
 import org.geogit.api.plumbing.merge.ConflictsWriteOp;
-import org.geogit.api.plumbing.merge.MergeConflictsException;
-import org.geogit.api.plumbing.merge.ReportMergeConflictsOp;
+import org.geogit.api.plumbing.merge.MergeScenarioReport;
+import org.geogit.api.plumbing.merge.ReportMergeScenarioOp;
 import org.geogit.api.plumbing.merge.SaveMergeCommitMessageOp;
 import org.geogit.repository.Repository;
 import org.geotools.util.SubProgressListener;
@@ -142,7 +143,7 @@ public class MergeOp extends AbstractGeoGitOp<RevCommit> {
         boolean fastForward = true;
         boolean changed = false;
 
-        boolean hasConflicts;
+        boolean hasConflictsOrAutomerge;
         List<RevCommit> revCommits = Lists.newArrayList();
         if (!ObjectId.NULL.equals(headRef.getObjectId())) {
             revCommits.add(repository.getCommit(headRef.getObjectId()));
@@ -150,69 +151,78 @@ public class MergeOp extends AbstractGeoGitOp<RevCommit> {
         for (ObjectId commitId : commits) {
             revCommits.add(repository.getCommit(commitId));
         }
-        hasConflicts = command(CheckMergeConflictsOp.class).setCommits(revCommits).call()
+        hasConflictsOrAutomerge = command(CheckMergeScenarioOp.class).setCommits(revCommits).call()
                 .booleanValue();
 
-        if (hasConflicts && !theirs) {
-            if (commits.size() > 1) {
-                throw new CannotMergeException(
-                        "Conflicted merge.\nCannot merge more than two commits when conflicts exist");
-            } else {
-                RevCommit headCommit = repository.getCommit(headRef.getObjectId());
-                ObjectId commitId = commits.get(0);
-                Preconditions.checkArgument(!ObjectId.NULL.equals(commitId),
-                        "Cannot merge a NULL commit.");
-                Preconditions.checkArgument(repository.commitExists(commitId),
-                        "Not a valid commit: " + commitId.toString());
+        if (hasConflictsOrAutomerge && !theirs) {
+            Preconditions.checkState(commits.size() < 2,
+                    "Conflicted merge.\nCannot merge more than two commits when conflicts exist"
+                            + " or features have been modified in several histories");
 
-                final RevCommit targetCommit = repository.getCommit(commitId);
-                ConflictsReport conflicts = command(ReportMergeConflictsOp.class)
-                        .setMergeIntoCommit(headCommit).setToMergeCommit(targetCommit).call();
+            RevCommit headCommit = repository.getCommit(headRef.getObjectId());
+            ObjectId commitId = commits.get(0);
+            Preconditions.checkArgument(!ObjectId.NULL.equals(commitId),
+                    "Cannot merge a NULL commit.");
+            Preconditions.checkArgument(repository.commitExists(commitId), "Not a valid commit: "
+                    + commitId.toString());
 
-                List<DiffEntry> unconflicting = conflicts.getUnconflicted();
-                if (!unconflicting.isEmpty()) {
-                    getIndex().stage(getProgressListener(), unconflicting.iterator(), 0);
-                    changed = true;
-                    fastForward = false;
+            final RevCommit targetCommit = repository.getCommit(commitId);
+            MergeScenarioReport mergeScenario = command(ReportMergeScenarioOp.class)
+                    .setMergeIntoCommit(headCommit).setToMergeCommit(targetCommit).call();
+
+            List<FeatureInfo> merged = mergeScenario.getMerged();
+            for (FeatureInfo feature : merged) {
+                this.getWorkTree().insert(NodeRef.parentPath(feature.getPath()),
+                        feature.getFeature());
+                Iterator<DiffEntry> unstaged = getWorkTree().getUnstaged(null);
+                getIndex().stage(getProgressListener(), unstaged, 0);
+                changed = true;
+                fastForward = false;
+            }
+            List<DiffEntry> unconflicting = mergeScenario.getUnconflicted();
+            if (!unconflicting.isEmpty()) {
+                getIndex().stage(getProgressListener(), unconflicting.iterator(), 0);
+                changed = true;
+                fastForward = false;
+            }
+
+            getWorkTree().updateWorkHead(getIndex().getTree().getId());
+
+            List<Conflict> conflicts = mergeScenario.getConflicts();
+            if (!ours && !conflicts.isEmpty()) {
+                // In case we use the "ours" strategy, we do nothing. We ignore conflicting
+                // changes and leave the current elements
+                command(UpdateRef.class).setName(Ref.MERGE_HEAD).setNewValue(commitId).call();
+                command(UpdateRef.class).setName(Ref.ORIG_HEAD).setNewValue(headCommit.getId())
+                        .call();
+                command(ConflictsWriteOp.class).setConflicts(conflicts).call();
+
+                StringBuilder msg = new StringBuilder();
+                Optional<Ref> ref = command(ResolveBranchId.class).setObjectId(commitId).call();
+                if (ref.isPresent()) {
+                    msg.append("Merge branch " + ref.get().getName());
+                } else {
+                    msg.append("Merge commit '" + commitId.toString() + "'. ");
                 }
-                getWorkTree().updateWorkHead(getIndex().getTree().getId());
-
-                if (!ours) {
-                    // In case we use the "ours" strategy, we do nothing. We ignore conflicting
-                    // changes and leave the current elements
-
-                    command(UpdateRef.class).setName(Ref.MERGE_HEAD).setNewValue(commitId).call();
-                    command(UpdateRef.class).setName(Ref.ORIG_HEAD).setNewValue(headCommit.getId())
-                            .call();
-                    command(ConflictsWriteOp.class).setConflicts(conflicts.getConflicts()).call();
-
-                    StringBuilder msg = new StringBuilder();
-                    Optional<Ref> ref = command(ResolveBranchId.class).setObjectId(commitId).call();
-                    if (ref.isPresent()) {
-                        msg.append("Merge branch " + ref.get().getName());
-                    } else {
-                        msg.append("Merge commit '" + commitId.toString() + "'. ");
-                    }
-                    msg.append("\n\nConflicts:\n");
-                    for (Conflict conflict : conflicts.getConflicts()) {
-                        msg.append("\t" + conflict.getPath() + "\n");
-                    }
-
-                    command(SaveMergeCommitMessageOp.class).setMessage(msg.toString()).call();
-
-                    StringBuilder sb = new StringBuilder();
-                    for (Conflict conflict : conflicts.getConflicts()) {
-                        sb.append("CONFLICT: Merge conflict in " + conflict.getPath() + "\n");
-                    }
-                    sb.append("Automatic merge failed. Fix conflicts and then commit the result.\n");
-                    throw new MergeConflictsException(sb.toString());
+                msg.append("\n\nConflicts:\n");
+                for (Conflict conflict : mergeScenario.getConflicts()) {
+                    msg.append("\t" + conflict.getPath() + "\n");
                 }
+
+                command(SaveMergeCommitMessageOp.class).setMessage(msg.toString()).call();
+
+                StringBuilder sb = new StringBuilder();
+                for (Conflict conflict : conflicts) {
+                    sb.append("CONFLICT: Merge conflict in " + conflict.getPath() + "\n");
+                }
+                sb.append("Automatic merge failed. Fix conflicts and then commit the result.\n");
+                throw new IllegalStateException(sb.toString());
+
             }
         } else {
-            if (hasConflicts && commits.size() > 1) {
-                throw new CannotMergeException(
-                        "Conflicted merge.\nCannot merge more than two commits when conflicts exist");
-            }
+            Preconditions.checkState(!hasConflictsOrAutomerge || commits.size() < 2,
+                    "Conflicted merge.\nCannot merge more than two commits when conflicts exist"
+                            + " or features have been modified in several histories");
             for (ObjectId commitId : commits) {
                 ProgressListener subProgress = subProgress(100.f / commits.size());
 
@@ -316,8 +326,8 @@ public class MergeOp extends AbstractGeoGitOp<RevCommit> {
                 mergeCommit = headCommit;
                 command(SaveMergeCommitMessageOp.class).setMessage(commitMessage).call();
             } else {
-                mergeCommit = command(CommitOp.class).setAllowEmpty(true).setMessage(commitMessage).addParents(commits)
-                        .call();
+                mergeCommit = command(CommitOp.class).setAllowEmpty(true).setMessage(commitMessage)
+                        .addParents(commits).call();
             }
         }
 

@@ -1,14 +1,30 @@
+/* Copyright (c) 2013 OpenPlans. All rights reserved.
+ * This code is licensed under the BSD New License, available at the root
+ * application directory.
+ */
+
 package org.geogit.api.plumbing.diff;
 
 import org.geogit.storage.text.TextValueSerializer;
 
+import com.google.common.base.Objects;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 
+/**
+ * Generic implementation of a difference between two values for a given attribute
+ * 
+ */
 public class GenericAttributeDiffImpl implements AttributeDiff {
 
+    /**
+     * The new value. Null if it does not exist (the attribute has been removed)
+     */
     private Optional<?> newValue;
 
+    /**
+     * The old value. Null if it did not exist (the attribute has been added)
+     */
     private Optional<?> oldValue;
 
     public GenericAttributeDiffImpl(Optional<?> oldValue, Optional<?> newValue) {
@@ -76,7 +92,7 @@ public class GenericAttributeDiffImpl implements AttributeDiff {
         if (obj == null) {
             return oldValue == null;
         }
-        return obj.equals(oldValue);
+        return obj.equals(oldValue) || obj.equals(newValue);
     }
 
     @Override
@@ -105,7 +121,7 @@ public class GenericAttributeDiffImpl implements AttributeDiff {
     public boolean conflicts(AttributeDiff ad) {
         if (ad instanceof GenericAttributeDiffImpl) {
             GenericAttributeDiffImpl gad = (GenericAttributeDiffImpl) ad;
-            return !gad.newValue.equals(newValue);
+            return !Objects.equal(gad.newValue, newValue);
         } else {
             return true;
         }

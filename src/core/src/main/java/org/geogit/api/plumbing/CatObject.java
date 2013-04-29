@@ -38,7 +38,7 @@ public class CatObject extends AbstractGeoGitOp<CharSequence> {
         TextSerializationFactory factory = new TextSerializationFactory();
         ObjectWriter<RevObject> writer = factory.createObjectWriter(revObject.getType());
         ByteArrayOutputStream output = new ByteArrayOutputStream();
-        String s = "id " + revObject.getId().toString() + "\n";
+        String s = "id\t" + revObject.getId().toString() + "\n";
         OutputStreamWriter streamWriter = new OutputStreamWriter(output, Charsets.UTF_8);
         try {
             streamWriter.write(s);

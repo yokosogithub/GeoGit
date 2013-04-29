@@ -51,6 +51,7 @@ The following is a list of situations that will cause a merge conflict:
 - Both branches have modified the default feature type for a given path, setting different values.
 - Both branches have modified the geometry of a feature, and there is no way of applying both changes, for instance, if both have modified the same point in a polygon.
 - One branch has deleted a tree, while the other one has added or modified a feature under that tree.
+- Both branches have modified a feature and at least one of them has changed its feature type, and the resulting feature types are not the same.
 
 
 The following cases will not produce a merge conflict:
@@ -62,6 +63,8 @@ The following cases will not produce a merge conflict:
 - Both branches have edited the same feature, but modifying different attributes.
 - Both branches have modified the geometry of a feature, but changes are compatible and can be both incorporated, for instance if each one has moved a different point in a polygon, leaving the remaining points unchanged.
 - Both branches have made the same modification to a feature geometry.
+
+If an uncommon merge situation (mostly likely to happen when feature types have been modified) not among the above ones is found, GeoGit will consider it a conflict and report it as such. In general, whenever the situation doesn't have a clear way of being solved, GeoGit will report a conflict in sake of safety, letting the user do a manual merge.
 	
 When a conflict arises, the merge operation is interrupted. Conflicted elements are marked in the index and the user should solve them manually before committing to complete the merge operation.
 
@@ -89,8 +92,31 @@ Showing conflicts
 The ``conflicts`` command can also be used to describe the current unmerged elements. There are two ways of displaying conflicts: the first uses no options and it prints the full description of the three versions involved in the conflict (the common ancestor, 'ours' and 'theirs'). It looks like the example shown next, corresponding to a single unmerged feature.
 
 ::
-	
+
+	Merge branch refs/heads/b1
+
+	Conflicts:
+		parks/parks.2
+		parks/parks.3
+		parks/parks.1
+
+
+Aborting the merge operation
+-----------------------------
+
+You can abort the merge operation and restore it to the original state it had before you invoked the ``merge`` command. You have the following alternatives, which will cause the same result [NOTE: this is not like git, the --abort here is just a reset op, but not in git]
+
+- ``geogit reset --hard ORIG_HEAD``
+- ``geogit merge --abort``
+
+Showing conflicts
+-------------------
+
+The ``conflicts`` command can be used to describe the current unmerged elements. There are two ways of displaying conflicts: the first is the deafult one it prints the full description of the three versions involved in the conflict (the common ancestor, 'ours' and 'theirs'). It looks like the example shown next, corresponding to a single unmerged feature.
+
+::
 	$ geogit conflicts
+	$geogit conflicts
 	parks/parks.2
 
 	Ancestor    27207309879802a99d161b063b8f958d179be3b0
@@ -136,11 +162,12 @@ The ``conflicts`` command can also be used to describe the current unmerged elem
 
 The descriptions of the involved elements are the same ones that would be obtained by calling the GeoGit ``cat`` command on each of them.
 
-A representation with diff-like syntax instead of full descriptions can be obtained using the ``--preview-diff`` option. For the same unmerged feature described above, the resulting output would look like this:
+A representation with diff-like syntax instead of full descriptions can be obtained using the ``--diff`` option. For the same unmerged feature described above, the resulting output would look like this:
 
 ::
 	
 	$ geogit conflicts --diff
+	$geogit conflicts --diff
 	---parks/parks.2---
 	Ours
 	number_fac: 0 -> 5
@@ -150,6 +177,28 @@ A representation with diff-like syntax instead of full descriptions can be obtai
 	the_geom: MultiPolygon [-122.84163143974176,42.35985624789982 -122.84146965654989,42.35985609227347 -122.84117673733482,42.35985565827537 -122.8409230724077,42.35985528171881 -122.84062434545373,42.35985483812396 -122.84034728245699,42.35985442523742 -122.8403468719201,42.35943411552068 -122.84163015984652,42.35942328456196 -122.8416300075414,42.359625066567794 -122.84163143974176,42.35985624789982] (-122.8434107328942,42.36043884831257 -122.84324894970233,42.360438692686216 -122.84295603048726,42.36043825868812 -122.84270236556014,42.360437882131556 -122.84240363860617,42.36043743853671 -122.84212657560943,42.36043702565017 -122.84212616507254,42.360016715933426 -122.84340945299896,42.36000588497471 -122.84340930069384,42.36020766698054 -122.8434107328942,42.36043884831257)
 
 It uses the same syntax as the ``diff`` command, which is described in the :ref:`differences`  section. This makes it easier to see why the conflict arises and how to solve it.
+
+
+Solving using the merge tool
+------------------------------
+
+The most practical way to solve the merge conflicts is using the merge tool.
+
+[To Be Written]
+
+
+Merging more than two branches
+-------------------------------
+
+The ``merge`` command accepts more than one single branch name as entry. If several branch names are provided, it will perform what is know as an *octopus merge*. There is no limit to the number of branches than can be merged that way, but some functionalities are not available for more than two branches. The following situations will cause GeoGit not to start the merge process if it involves more than two branches being merged:
+
+- A conflict on any type exist, whether it is a conflict between two branches or between many of them at the same time.
+- A feature has been edited by at least two branches, and the changes introduced are not identical. Even if the changes are compatible (for instance, if branches have edited values for different attributes), GeoGit will not perform an automerge in this case, and the merge operation won't be executed.
+
+If you are in one of the above cases, you will have to merge branches individually, solving conflicts for each of them before merging the next branch. Notice that, as it was mentioned, this might be the case even if there are no conflicts but the same feature has been modified by several branches.
+
+Notice that, in the case of an octopus merge, the merge process is not even started, so non-conflicting changes are not added, and there will be no unmerged elements in the index. The check is performed before the actual merge operation starts, and the current scenario has some of the situations mentioned above, GeoGit stops and tells the user that the operation should be run separately for each branch.
+It uses the same syntax as the ``diff`` command, which is described in the `Showing differences`_  section. This makes it easier to see why the conflict arises and how to solve it.
 
 
 Staging a merged version of an unmerged (conflicted) element. 

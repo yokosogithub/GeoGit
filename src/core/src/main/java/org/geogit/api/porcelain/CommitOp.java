@@ -73,10 +73,6 @@ public class CommitOp extends AbstractGeoGitOp<RevCommit> {
 
     private Integer authorTimeZoneOffset;
 
-    /**
-     * This commit's parents. Will be the current HEAD, but when we support merges it should include
-     * the equivalent to git's .git/MERGE_HEAD
-     */
     private List<ObjectId> parents = new LinkedList<ObjectId>();
 
     // like the -a option in git commit
@@ -87,6 +83,8 @@ public class CommitOp extends AbstractGeoGitOp<RevCommit> {
     private String committerName;
 
     private String committerEmail;
+
+    private RevCommit commit;
 
     private final List<String> pathFilters = Lists.newLinkedList();
 
@@ -99,6 +97,18 @@ public class CommitOp extends AbstractGeoGitOp<RevCommit> {
     public CommitOp(final ObjectDatabase objectDb, final Platform platform) {
         this.objectDb = objectDb;
         this.platform = platform;
+    }
+
+    /**
+     * If set, ignores other information for creating a commit and uses the passed one.
+     * 
+     * @param commit the commit to use
+     * 
+     * @return {@code this}
+     */
+    public CommitOp setCommit(final RevCommit commit) {
+        this.commit = commit;
+        return this;
     }
 
     /**
@@ -292,7 +302,7 @@ public class CommitOp extends AbstractGeoGitOp<RevCommit> {
         }
 
         final RevCommit commit;
-        {
+        if (this.commit == null) {
             CommitBuilder cb = new CommitBuilder();
             cb.setAuthor(author);
             cb.setAuthorEmail(authorEmail);
@@ -306,13 +316,22 @@ public class CommitOp extends AbstractGeoGitOp<RevCommit> {
             cb.setCommitterTimeZoneOffset(committerTimeZoneOffset);
             cb.setAuthorTimeZoneOffset(authorTimeZoneOffset);
             // cb.setBounds(bounds);
-
-            if (getProgressListener().isCanceled()) {
-                return null;
+            commit = cb.build();
+        } else {
+            CommitBuilder cb = new CommitBuilder(this.commit);
+            cb.setParentIds(parents);
+            cb.setTreeId(newTreeId);
+            cb.setCommitterTimestamp(committerTime);
+            cb.setCommitterTimeZoneOffset(committerTimeZoneOffset);
+            if (message != null) {
+                cb.setMessage(message);
             }
             commit = cb.build();
-            objectDb.put(commit);
         }
+        if (getProgressListener().isCanceled()) {
+            return null;
+        }
+        objectDb.put(commit);
         // set the HEAD pointing to the new commit
         final Optional<Ref> branchHead = command(UpdateRef.class).setName(currentBranch)
                 .setNewValue(commit.getId()).call();
@@ -331,8 +350,15 @@ public class CommitOp extends AbstractGeoGitOp<RevCommit> {
         getProgressListener().progress(100f);
         getProgressListener().complete();
 
+        // TODO: maybe all this "heads cleaning" should be put in an independent operation
         if (mergeHead.isPresent()) {
             command(UpdateRef.class).setDelete(true).setName(Ref.MERGE_HEAD).call();
+            command(UpdateRef.class).setDelete(true).setName(Ref.ORIG_HEAD).call();
+        }
+        final Optional<Ref> cherrypickHead = command(RefParse.class).setName(Ref.CHERRY_PICK_HEAD)
+                .call();
+        if (cherrypickHead.isPresent()) {
+            command(UpdateRef.class).setDelete(true).setName(Ref.CHERRY_PICK_HEAD).call();
             command(UpdateRef.class).setDelete(true).setName(Ref.ORIG_HEAD).call();
         }
 

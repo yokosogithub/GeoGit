@@ -23,11 +23,9 @@ import org.geogit.api.plumbing.UpdateRef;
 import org.geogit.api.plumbing.UpdateSymRef;
 import org.geogit.api.plumbing.merge.Conflict;
 import org.geogit.api.plumbing.merge.ConflictsReadOp;
-import org.geogit.api.plumbing.merge.MergeConflictsException;
 import org.geogit.api.plumbing.merge.ReadMergeCommitMessageOp;
 import org.geogit.api.porcelain.AddOp;
 import org.geogit.api.porcelain.BranchCreateOp;
-import org.geogit.api.porcelain.CannotMergeException;
 import org.geogit.api.porcelain.CheckoutOp;
 import org.geogit.api.porcelain.CommitOp;
 import org.geogit.api.porcelain.ConfigOp;
@@ -557,8 +555,8 @@ public class MergeOpTest extends RepositoryTestCase {
             geogit.command(MergeOp.class).addCommit(Suppliers.ofInstance(branch.getObjectId()))
                     .call();
             fail();
-        } catch (MergeConflictsException e) {
-            assertTrue(true);
+        } catch (IllegalStateException e) {
+            assertTrue(e.getMessage().contains("conflict"));
         }
 
         Optional<Ref> ref = geogit.command(RefParse.class).setName(Ref.ORIG_HEAD).call();
@@ -662,8 +660,9 @@ public class MergeOpTest extends RepositoryTestCase {
         try {
             mergeOp.call();
             fail();
-        } catch (CannotMergeException e) {
-            assertTrue(true);
+        } catch (IllegalStateException e) {
+            assertTrue(e.getMessage().contains(
+                    "Cannot merge more than two commits when conflicts exist"));
         }
 
     }
@@ -849,8 +848,8 @@ public class MergeOpTest extends RepositoryTestCase {
             geogit.command(MergeOp.class).addCommit(Suppliers.ofInstance(branch.getObjectId()))
                     .call();
             fail();
-        } catch (MergeConflictsException e) {
-            assertTrue(true);
+        } catch (IllegalStateException e) {
+            assertTrue(e.getMessage().contains("conflict"));
         }
 
         try {
@@ -859,6 +858,50 @@ public class MergeOpTest extends RepositoryTestCase {
         } catch (IllegalStateException e) {
             assertEquals(e.getMessage(), "Cannot run operation while merge conflicts exist.");
         }
+
+    }
+
+    @Test
+    public void testMergeWithFeatureMerge() throws Exception {
+        // Create the following revision graph
+        // o
+        // |
+        // o - Points 1 added
+        // |\
+        // | o - TestBranch - Points 1 modified and points 2 added
+        // |
+        // o - master - HEAD - Points 1 modifiedB
+        insertAndAdd(points1);
+        geogit.command(CommitOp.class).call();
+        geogit.command(BranchCreateOp.class).setName("TestBranch").call();
+        Feature points1Modified = feature(pointsType, idP1, "StringProp1_2", new Integer(1000),
+                "POINT(1 1)");
+        insertAndAdd(points1Modified);
+        geogit.command(CommitOp.class).call();
+        geogit.command(CheckoutOp.class).setSource("TestBranch").call();
+        Feature points1ModifiedB = feature(pointsType, idP1, "StringProp1_1", new Integer(2000),
+                "POINT(1 1)");
+        insertAndAdd(points1ModifiedB);
+        insertAndAdd(points2);
+        geogit.command(CommitOp.class).call();
+
+        geogit.command(CheckoutOp.class).setSource("master").call();
+        Ref branch = geogit.command(RefParse.class).setName("TestBranch").call().get();
+        RevCommit mergeCommit = geogit.command(MergeOp.class)
+                .addCommit(Suppliers.ofInstance(branch.getObjectId())).call();
+
+        String path = appendChild(pointsName, points1.getIdentifier().getID());
+
+        Optional<RevFeature> feature = repo.command(RevObjectParse.class)
+                .setRefSpec(/*
+                             * mergeCommit. getId ().toString () + ":" +
+                             */"WORK_HEAD" + ":" + path).call(RevFeature.class);
+        assertTrue(feature.isPresent());
+
+        Feature mergedFeature = feature(pointsType, idP1, "StringProp1_2", new Integer(2000),
+                "POINT(1 1)");
+        RevFeature expected = new RevFeatureBuilder().build(mergedFeature);
+        assertEquals(expected, feature.get());
 
     }
 
@@ -957,4 +1000,85 @@ public class MergeOpTest extends RepositoryTestCase {
 
         assertFalse(log.hasNext());
     }
+
+    @Test
+    public void testOctopusMergeWithAutomerge() throws Exception {
+        insertAndAdd(points1);
+        geogit.command(CommitOp.class).call();
+        geogit.command(BranchCreateOp.class).setName("branch1").call();
+        geogit.command(BranchCreateOp.class).setName("branch2").call();
+        geogit.command(BranchCreateOp.class).setName("branch3").call();
+        geogit.command(BranchCreateOp.class).setName("branch4").call();
+        geogit.command(BranchCreateOp.class).setName("branch5").call();
+        geogit.command(BranchCreateOp.class).setName("branch6").call();
+        Feature points1Modified = feature(pointsType, idP1, "StringProp1_2", new Integer(1000),
+                "POINT(1 1)");
+        insertAndAdd(points1Modified);
+        geogit.command(CommitOp.class).call();
+        geogit.command(CheckoutOp.class).setSource("branch1").call();
+        insertAndAdd(points2);
+        RevCommit branch1 = geogit.command(CommitOp.class).call();
+        geogit.command(CheckoutOp.class).setSource("branch2").call();
+        insertAndAdd(points3);
+        RevCommit branch2 = geogit.command(CommitOp.class).call();
+        geogit.command(CheckoutOp.class).setSource("branch3").call();
+        insertAndAdd(lines1);
+        RevCommit branch3 = geogit.command(CommitOp.class).call();
+        geogit.command(CheckoutOp.class).setSource("branch4").call();
+        insertAndAdd(lines2);
+        RevCommit branch4 = geogit.command(CommitOp.class).call();
+        geogit.command(CheckoutOp.class).setSource("branch5").call();
+        insertAndAdd(lines3);
+        RevCommit branch5 = geogit.command(CommitOp.class).call();
+        geogit.command(CheckoutOp.class).setSource("branch6").call();
+        Feature points1ModifiedB = feature(pointsType, idP1, "StringProp1_3", new Integer(2000),
+                "POINT(1 1)");
+        insertAndAdd(points1ModifiedB);
+        RevCommit branch6 = geogit.command(CommitOp.class).call();
+        geogit.command(CheckoutOp.class).setSource("master").call();
+        MergeOp mergeOp = geogit.command(MergeOp.class)
+                .addCommit(Suppliers.ofInstance(branch1.getId()))
+                .addCommit(Suppliers.ofInstance(branch2.getId()))
+                .addCommit(Suppliers.ofInstance(branch3.getId()))
+                .addCommit(Suppliers.ofInstance(branch4.getId()))
+                .addCommit(Suppliers.ofInstance(branch5.getId()))
+                .addCommit(Suppliers.ofInstance(branch6.getId()));
+        try {
+            mergeOp.call();
+            fail();
+        } catch (IllegalStateException e) {
+            assertTrue(e.getMessage().contains(
+                    "Cannot merge more than two commits when conflicts exist"));
+        }
+    }
+
+    @Test
+    public void testOctopusMergeSameFeatureChanges() throws Exception {
+        insertAndAdd(points1);
+        geogit.command(CommitOp.class).call();
+        geogit.command(BranchCreateOp.class).setName("branch1").call();
+        geogit.command(BranchCreateOp.class).setName("branch2").call();
+        geogit.command(BranchCreateOp.class).setName("branch3").call();
+        insertAndAdd(points1_modified);
+        geogit.command(CommitOp.class).call();
+        geogit.command(CheckoutOp.class).setSource("branch1").call();
+        insertAndAdd(points2);
+        RevCommit branch1 = geogit.command(CommitOp.class).call();
+        geogit.command(CheckoutOp.class).setSource("branch2").call();
+        insertAndAdd(points3);
+        RevCommit branch2 = geogit.command(CommitOp.class).call();
+        geogit.command(CheckoutOp.class).setSource("branch3").call();
+        insertAndAdd(points1_modified);
+        RevCommit branch3 = geogit.command(CommitOp.class).call();
+        geogit.command(CheckoutOp.class).setSource("master").call();
+        geogit.command(MergeOp.class).addCommit(Suppliers.ofInstance(branch1.getId()))
+                .addCommit(Suppliers.ofInstance(branch2.getId()))
+                .addCommit(Suppliers.ofInstance(branch3.getId())).call();
+        String path = NodeRef.appendChild(pointsName, idP1);
+        Optional<RevFeature> revFeature = geogit.command(RevObjectParse.class)
+                .setRefSpec(Ref.HEAD + ":" + path).call(RevFeature.class);
+        assertTrue(revFeature.isPresent());
+        assertEquals(new RevFeatureBuilder().build(points1_modified), revFeature.get());
+    }
+
 }

@@ -27,6 +27,7 @@ Contents:
   checkout
   history
   merging
+  picking
   remotes
   modifying
   patches

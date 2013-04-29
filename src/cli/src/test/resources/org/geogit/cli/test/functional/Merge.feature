@@ -30,10 +30,10 @@ Feature: "merge" command
      When I run the command "merge -m MergeMessage"
      Then it should answer "No commits provided to merge."
       
-  Scenario: Try to merge a nonexistant branch
+  Scenario: Try to merge a nonexistent branch
     Given I have a repository
       And I have several branches
-     When I run the command "merge nonexistant"
+     When I run the command "merge nonexistent"
      Then the response should start with "Commit not found"
      
   Scenario: Try to merge from an empty directory
@@ -43,25 +43,38 @@ Feature: "merge" command
 
   Scenario: Try to merge two conflicting branches
     Given I have a repository
-      And I have two conflicting branches
+      And I have conflicting branches
      When I run the command "merge branch1"
      Then the response should contain "CONFLICT: Merge conflict in Points/Points.1"     
-     
+
+  Scenario: Try to perform an octopus merge with conflicts
+    Given I have a repository
+      And I have conflicting branches
+     When I run the command "merge branch1 branch2"
+     Then the response should contain "Cannot merge more than two commits when conflicts exist" 
+  
+  Scenario: Try to perform an octopus merge
+    Given I have a repository
+      And I have several branches
+     When I run the command "merge branch1 branch2"
+     Then the response should contain "Merge branch refs/heads/branch1"
+     Then the response should contain "Merge branch refs/heads/branch2"
+        
   Scenario: Try to merge two conflicting branches using --ours strategy
     Given I have a repository
-      And I have two conflicting branches
+      And I have conflicting branches
      When I run the command "merge branch1 --ours"
      Then the response should contain "Merge branch refs/heads/branch1"   
-
+        
   Scenario: Try to merge two conflicting branches using --ours and --theirs strategy
     Given I have a repository
-      And I have two conflicting branches
+      And I have conflicting branches
      When I run the command "merge branch1 --ours --theirs"
      Then the response should contain "Cannot use both --ours and --theirs" 
      
   Scenario: Try to merge two conflicting branches using --theirs strategy
     Given I have a repository
-      And I have two conflicting branches
+      And I have conflicting branches
      When I run the command "merge branch1 --theirs"
      Then the response should contain "Merge branch refs/heads/branch1"     
      

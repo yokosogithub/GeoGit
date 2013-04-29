@@ -1,3 +1,7 @@
+/* Copyright (c) 2013 OpenPlans. All rights reserved.
+ * This code is licensed under the BSD New License, available at the root
+ * application directory.
+ */
 package org.geogit.api.plumbing.diff;
 
 import java.io.ByteArrayOutputStream;
@@ -5,6 +9,7 @@ import java.io.IOException;
 import java.util.BitSet;
 import java.util.List;
 
+import org.geogit.api.FeatureInfo;
 import org.geogit.api.ObjectId;
 import org.geogit.api.RevFeature;
 import org.geogit.api.RevFeatureBuilder;
@@ -42,12 +47,12 @@ public class Patch {
     /**
      * features that have been added.
      */
-    private List<PatchFeature> addedFeatures;
+    private List<FeatureInfo> addedFeatures;
 
     /**
      * features that have been removed
      */
-    private List<PatchFeature> removedFeatures;
+    private List<FeatureInfo> removedFeatures;
 
     public Patch() {
         modifiedFeatures = Lists.newArrayList();
@@ -71,7 +76,7 @@ public class Patch {
      * 
      * @return
      */
-    public List<PatchFeature> getAddedFeatures() {
+    public List<FeatureInfo> getAddedFeatures() {
         return ImmutableList.copyOf(addedFeatures);
     }
 
@@ -80,7 +85,7 @@ public class Patch {
      * 
      * @return
      */
-    public List<PatchFeature> getRemovedFeatures() {
+    public List<FeatureInfo> getRemovedFeatures() {
         return ImmutableList.copyOf(removedFeatures);
     }
 
@@ -92,7 +97,7 @@ public class Patch {
      * @param featureType the feature type of the added feature
      */
     public void addAddedFeature(String path, Feature feature, RevFeatureType featureType) {
-        addedFeatures.add(new PatchFeature(feature, featureType, path));
+        addedFeatures.add(new FeatureInfo(feature, featureType, path));
         addFeatureType(featureType);
     }
 
@@ -104,7 +109,7 @@ public class Patch {
      * @param featureType the feature type of the removed feature
      */
     public void addRemovedFeature(String path, Feature feature, RevFeatureType featureType) {
-        removedFeatures.add(new PatchFeature(feature, featureType, path));
+        removedFeatures.add(new FeatureInfo(feature, featureType, path));
         addFeatureType(featureType);
     }
 
@@ -200,7 +205,7 @@ public class Patch {
     public String toString() {
         TextSerializationFactory factory = new TextSerializationFactory();
         StringBuilder sb = new StringBuilder();
-        for (PatchFeature feature : addedFeatures) {
+        for (FeatureInfo feature : addedFeatures) {
             String path = feature.getPath();
             sb.append("A\t" + path + "\t" + feature.getFeatureType().getId() + "\n");
             ObjectWriter<RevObject> writer = factory.createObjectWriter(TYPE.FEATURE);
@@ -213,7 +218,7 @@ public class Patch {
             sb.append(output.toString());
             sb.append("\n");
         }
-        for (PatchFeature feature : removedFeatures) {
+        for (FeatureInfo feature : removedFeatures) {
             String path = feature.getPath();
             sb.append("R\t" + path + "\t" + feature.getFeatureType().getId() + "\n");
             ObjectWriter<RevObject> writer = factory.createObjectWriter(TYPE.FEATURE);

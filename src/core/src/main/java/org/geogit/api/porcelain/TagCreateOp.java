@@ -22,6 +22,10 @@ import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 
+/**
+ * Creates a new tag
+ * 
+ */
 public class TagCreateOp extends AbstractGeoGitOp<RevTag> {
 
     private final ObjectDatabase objectDb;

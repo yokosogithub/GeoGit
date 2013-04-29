@@ -24,7 +24,7 @@ Scenario: Check if a patch can be applied twice
       And I have a patch file
      When I run the command "apply ${currentdir}/test.patch"
       And I run the command "apply --check ${currentdir}/test.patch"
-     Then the response should contain "Patch cannot be applied"     
+     Then the response should contain "Patch can be applied"       
      
 Scenario: Apply a correct patch
     Given I have a repository
@@ -50,8 +50,7 @@ Scenario: Try to partially apply a wrong patch
      When I run the command "apply --reject ${currentdir}/test.patch"
      Then the response should contain "Patch applied only partially"
       And the response should contain "0 changes were applied"
-      And the response should contain "1 changes were rejected" 
-      
+      And the response should contain "1 changes were rejected"       
             
 Scenario: Try to apply an inexistent patch
     Given I have a repository
@@ -67,11 +66,11 @@ Scenario: List the content of a patch
      Then the response should contain "Points/Points.1"      
      
 Scenario: Apply a reversed patch that cannot be applied
-	Given I have a repository
-      And I have 6 unstaged features
+  Given I have a repository
+      And I have unstaged "points1_modified"
       And I have a patch file
      When I run the command "apply --reverse ${currentdir}/test.patch"
-     Then the response should contain "Conflicting"      
+     Then the response should contain "Conflicting"     
      
 Scenario: Apply a path and then the reverse version of that patch
 	Given I have a repository

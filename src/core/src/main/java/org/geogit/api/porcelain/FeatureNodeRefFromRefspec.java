@@ -1,4 +1,8 @@
-package org.geogit.api.plumbing;
+/* Copyright (c) 2013 OpenPlans. All rights reserved.
+ * This code is licensed under the BSD New License, available at the root
+ * application directory.
+ */
+package org.geogit.api.porcelain;
 
 import org.geogit.api.AbstractGeoGitOp;
 import org.geogit.api.Node;
@@ -9,13 +13,23 @@ import org.geogit.api.RevFeatureType;
 import org.geogit.api.RevObject;
 import org.geogit.api.RevObject.TYPE;
 import org.geogit.api.RevTree;
+import org.geogit.api.plumbing.FindTreeChild;
+import org.geogit.api.plumbing.ResolveTreeish;
+import org.geogit.api.plumbing.RevObjectParse;
+import org.geogit.di.CanRunDuringConflict;
 import org.geogit.repository.WorkingTree;
 
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 
-public class FeatureNodeRefFromRefspec extends AbstractGeoGitOp<NodeRef> {
+/**
+ * Returns the NodeRef corresponding to a given refspec, if available.
+ */
+// The annotation is here to allow this being run from the 'conflicts' command.
+// Other than that, there is no reason for this to be restricted to non-conflicting scenarios
+@CanRunDuringConflict
+public class FeatureNodeRefFromRefspec extends AbstractGeoGitOp<Optional<NodeRef>> {
 
     private WorkingTree workTree;
 
@@ -81,22 +95,24 @@ public class FeatureNodeRefFromRefspec extends AbstractGeoGitOp<NodeRef> {
     }
 
     @Override
-    public NodeRef call() {
+    public Optional<NodeRef> call() {
 
         Optional<RevFeature> feature = getFeatureFromRefSpec();
 
         if (feature.isPresent()) {
             RevFeatureType featureType = getFeatureTypeFromRefSpec();
             RevFeature feat = feature.get();
-            return new NodeRef(Node.create(NodeRef.nodeFromPath(ref), feat.getId(),
-                    featureType.getId(), TYPE.FEATURE), NodeRef.parentPath(ref),
-                    featureType.getId());
+            return Optional.of(new NodeRef(Node.create(NodeRef.nodeFromPath(ref), feat.getId(),
+                    featureType.getId(), TYPE.FEATURE), NodeRef.parentPath(ref), featureType
+                    .getId()));
 
         } else {
-            return new NodeRef(Node.create("", ObjectId.NULL, ObjectId.NULL, TYPE.FEATURE), "",
-                    ObjectId.NULL);
+            return Optional.absent();
+            /*
+             * new NodeRef(Node.create("", ObjectId.NULL, ObjectId.NULL, TYPE.FEATURE), "",
+             * ObjectId.NULL);
+             */
         }
 
     }
-
 }

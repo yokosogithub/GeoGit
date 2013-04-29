@@ -12,32 +12,31 @@ import org.geogit.api.RevObject;
 import org.geogit.api.RevTag;
 import org.geogit.api.plumbing.RevObjectParse;
 import org.geogit.api.plumbing.UpdateRef;
-import org.geogit.storage.ObjectDatabase;
 
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 
+/**
+ * Removes a tag
+ * 
+ */
 public class TagRemoveOp extends AbstractGeoGitOp<RevTag> {
-
-    private final ObjectDatabase objectDb;
 
     private String name;
 
     /**
-     * Constructs a new {@code TagCreateOp} with the given parameters.
-     * 
-     * @param platform the current platform
+     * Constructs a new {@code TagRemoveOp}
      */
     @Inject
-    public TagRemoveOp(final ObjectDatabase objectDb) {
-        this.objectDb = objectDb;
+    public TagRemoveOp() {
+
     }
 
     /**
-     * Executes the tag creation operation.
+     * Executes the tag removal operation.
      * 
-     * @return the created tag
+     * @return the tag to remove
      * 
      */
     public RevTag call() throws RuntimeException {

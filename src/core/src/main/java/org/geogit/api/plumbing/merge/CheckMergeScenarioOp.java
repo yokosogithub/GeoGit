@@ -13,37 +13,45 @@ import java.util.Set;
 import org.geogit.api.AbstractGeoGitOp;
 import org.geogit.api.RevCommit;
 import org.geogit.api.RevObject.TYPE;
-import org.geogit.api.plumbing.DiffFeature;
 import org.geogit.api.plumbing.DiffTree;
 import org.geogit.api.plumbing.FindCommonAncestor;
 import org.geogit.api.plumbing.ResolveObjectType;
 import org.geogit.api.plumbing.diff.DiffEntry;
 import org.geogit.api.plumbing.diff.DiffEntry.ChangeType;
-import org.geogit.api.plumbing.diff.FeatureDiff;
 
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Suppliers;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 
 /**
- * Checks for conflicts between changes introduced by different histories.
+ * Checks for conflicts between changes introduced by different histories, or features that have to
+ * be merged.
+ * 
+ * This operation analyzes a merge scenario and returns true if there are conflicts or some features
+ * have to be merged. This last case happens when a feature has been edited by more than one branch,
+ * and the changes introduced are not the same in all of them. This usually implies creating a
+ * feature not already contained in the repo, but not necessarily.
+ * 
+ * This return value indicates an scenario where the merge operation has to be handled differently.
+ * 
+ * It returns false in case there are no such issues, and the branches to be merged are completely
+ * independent in their edits.
  */
-public class CheckMergeConflictsOp extends AbstractGeoGitOp<Boolean> {
+public class CheckMergeScenarioOp extends AbstractGeoGitOp<Boolean> {
 
     private List<RevCommit> commits;
 
     @Inject
-    public CheckMergeConflictsOp() {
+    public CheckMergeScenarioOp() {
     }
 
     /**
      * @param commits the commits to check {@link RevCommit}
      */
-    public CheckMergeConflictsOp setCommits(List<RevCommit> commits) {
+    public CheckMergeScenarioOp setCommits(List<RevCommit> commits) {
         this.commits = commits;
         return this;
     }
@@ -53,7 +61,6 @@ public class CheckMergeConflictsOp extends AbstractGeoGitOp<Boolean> {
         if (commits.size() < 2) {
             return Boolean.FALSE;
         }
-        // Preconditions.checkArgument(commits.size() > 1, "At least two commits are needed");
         Optional<RevCommit> ancestor = command(FindCommonAncestor.class).setLeft(commits.get(0))
                 .setRight(commits.get(1)).call();
         Preconditions.checkState(ancestor.isPresent(), "No ancestor commit could be found.");
@@ -66,6 +73,7 @@ public class CheckMergeConflictsOp extends AbstractGeoGitOp<Boolean> {
         Map<String, List<DiffEntry>> diffs = Maps.newHashMap();
         Set<String> removedPaths = Sets.newTreeSet();
 
+        // we organize the changes made for each path
         for (RevCommit commit : commits) {
             Iterator<DiffEntry> toMergeDiffs = command(DiffTree.class).setReportTrees(true)
                     .setOldTree(ancestor.get().getId()).setNewTree(commit.getId()).call();
@@ -83,6 +91,7 @@ public class CheckMergeConflictsOp extends AbstractGeoGitOp<Boolean> {
             }
         }
 
+        // now we check that, for any path, changes are compatible
         Collection<List<DiffEntry>> values = diffs.values();
         for (List<DiffEntry> list : values) {
             for (int i = 0; i < list.size(); i++) {
@@ -125,15 +134,22 @@ public class CheckMergeConflictsOp extends AbstractGeoGitOp<Boolean> {
                 return !diff.getNewObject().getMetadataId()
                         .equals(diff2.getNewObject().getMetadataId());
             } else {
-                FeatureDiff toMergeFeatureDiff = command(DiffFeature.class)
-                        .setOldVersion(Suppliers.ofInstance(diff.getOldObject()))
-                        .setNewVersion(Suppliers.ofInstance(diff.getNewObject())).call();
-                FeatureDiff mergeIntoFeatureDiff = command(DiffFeature.class)
-                        .setOldVersion(Suppliers.ofInstance(diff2.getOldObject()))
-                        .setNewVersion(Suppliers.ofInstance(diff2.getNewObject())).call();
-                if (toMergeFeatureDiff.conflicts(mergeIntoFeatureDiff)) {
-                    return true;
-                }
+                // FeatureDiff toMergeFeatureDiff = command(DiffFeature.class)
+                // .setOldVersion(Suppliers.ofInstance(diff.getOldObject()))
+                // .setNewVersion(Suppliers.ofInstance(diff.getNewObject())).call();
+                // FeatureDiff mergeIntoFeatureDiff = command(DiffFeature.class)
+                // .setOldVersion(Suppliers.ofInstance(diff2.getOldObject()))
+                // .setNewVersion(Suppliers.ofInstance(diff2.getNewObject())).call();
+                // if (toMergeFeatureDiff.conflicts(mergeIntoFeatureDiff)) {
+                // return true;
+                // } else {
+                // // if the feature types are different we report a conflict and do not try to
+                // // perform automerge
+                // return !diff.getNewObject().getMetadataId()
+                // .equals(diff2.getNewObject().getMetadataId());
+                // }
+                return !diff.newObjectId().equals(diff2.newObjectId());
+
             }
         }
         return false;

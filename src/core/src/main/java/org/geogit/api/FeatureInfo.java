@@ -1,13 +1,18 @@
-package org.geogit.api.plumbing.diff;
+/* Copyright (c) 2013 OpenPlans. All rights reserved.
+ * This code is licensed under the BSD New License, available at the root
+ * application directory.
+ */
+package org.geogit.api;
 
-import org.geogit.api.RevFeatureType;
 import org.opengis.feature.Feature;
 
 /**
- * A class to store the information about a feature included in a patch, to be added or removed
+ * A class to compactly store information about a feature, including its path and feature type. This
+ * is to be used in the context of applying patches or performing a merge operation, where this type
+ * of information is needed.
  * 
  */
-public class PatchFeature {
+public class FeatureInfo {
 
     private Feature feature;
 
@@ -15,7 +20,7 @@ public class PatchFeature {
 
     private String path;
 
-    public PatchFeature(Feature feature, RevFeatureType featureType, String path) {
+    public FeatureInfo(Feature feature, RevFeatureType featureType, String path) {
         this.path = path;
         this.feature = feature;
         this.featureType = featureType;
