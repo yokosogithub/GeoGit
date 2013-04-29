@@ -15,12 +15,17 @@ import org.geogit.api.Platform;
 import org.geogit.api.plumbing.ResolveGeogitDir;
 import org.geogit.di.GeogitModule;
 import org.geogit.storage.bdbje.JEStorageModule;
-import org.geogit.web.api.commands.PushManager;
+import org.geogit.web.api.repo.AffectedFeaturesResource;
+import org.geogit.web.api.repo.ApplyChangesResource;
 import org.geogit.web.api.repo.BeginPush;
+import org.geogit.web.api.repo.DepthResource;
 import org.geogit.web.api.repo.EndPush;
+import org.geogit.web.api.repo.FilteredChangesResource;
 import org.geogit.web.api.repo.ManifestResource;
 import org.geogit.web.api.repo.ObjectExistsResource;
+import org.geogit.web.api.repo.BatchedObjectResource;
 import org.geogit.web.api.repo.ObjectResource;
+import org.geogit.web.api.repo.ParentResource;
 import org.geogit.web.api.repo.SendObjectResource;
 import org.restlet.Application;
 import org.restlet.Component;
@@ -101,10 +106,16 @@ public class Main extends Application {
         Router router = new Router();
         router.attach("/manifest", ManifestResource.class);
         router.attach("/objects/{id}", new ObjectResource());
+        router.attach("/batchobjects", BatchedObjectResource.class);
         router.attach("/sendobject", SendObjectResource.class);
         router.attach("/exists", ObjectExistsResource.class);
         router.attach("/beginpush", BeginPush.class);
         router.attach("/endpush", EndPush.class);
+        router.attach("/getdepth", DepthResource.class);
+        router.attach("/getparents", ParentResource.class);
+        router.attach("/affectedfeatures", AffectedFeaturesResource.class);
+        router.attach("/filteredchanges", FilteredChangesResource.class);
+        router.attach("/applychanges", ApplyChangesResource.class);
         return router;
     }
 

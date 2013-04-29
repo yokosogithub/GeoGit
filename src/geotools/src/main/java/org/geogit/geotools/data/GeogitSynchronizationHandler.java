@@ -15,7 +15,7 @@ import org.geogit.api.Remote;
 import org.geogit.api.plumbing.TransactionBegin;
 import org.geogit.api.porcelain.CheckoutOp;
 import org.geogit.api.porcelain.PullOp;
-import org.geogit.api.porcelain.PushException;
+import org.geogit.api.porcelain.SynchronizationException;
 import org.geogit.api.porcelain.PushOp;
 import org.geogit.api.porcelain.RemoteListOp;
 
@@ -89,7 +89,7 @@ public class GeogitSynchronizationHandler {
                         }
                         try {
                             push.call();
-                        } catch (PushException e) {
+                        } catch (SynchronizationException e) {
                             // Do nothing
                         }
 

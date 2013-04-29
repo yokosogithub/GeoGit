@@ -9,6 +9,7 @@ import java.io.File;
 import java.net.URI;
 
 import org.geogit.api.Remote;
+import org.geogit.repository.Repository;
 
 import com.google.common.base.Optional;
 import com.google.common.base.Throwables;
@@ -24,10 +25,12 @@ public class RemoteUtils {
      * 
      * @param injector a Guice injector for the new repository
      * @param remoteConfig the remote to connect to
+     * @param localRepository the local repository
      * @return an {@link Optional} of the interface to the remote repository, or
      *         {@link Optional#absent()} if a connection to the remote could not be established.
      */
-    public static Optional<IRemoteRepo> newRemote(Injector injector, Remote remoteConfig) {
+    public static Optional<IRemoteRepo> newRemote(Injector injector, Remote remoteConfig,
+            Repository localRepository) {
 
         try {
             URI fetchURI = URI.create(remoteConfig.getFetchURL());
@@ -35,9 +38,19 @@ public class RemoteUtils {
 
             IRemoteRepo remoteRepo = null;
             if (protocol == null || protocol.equals("file")) {
-                remoteRepo = new LocalRemoteRepo(injector, new File(remoteConfig.getFetchURL()));
+                if (remoteConfig.getMapped()) {
+                    remoteRepo = new LocalMappedRemoteRepo(injector, new File(
+                            remoteConfig.getFetchURL()), localRepository);
+                } else {
+                    remoteRepo = new LocalRemoteRepo(injector,
+                            new File(remoteConfig.getFetchURL()), localRepository);
+                }
             } else if (protocol.equals("http")) {
-                remoteRepo = new HttpRemoteRepo(fetchURI.toURL());
+                if (remoteConfig.getMapped()) {
+                    remoteRepo = new HttpMappedRemoteRepo(fetchURI.toURL(), localRepository);
+                } else {
+                    remoteRepo = new HttpRemoteRepo(fetchURI.toURL(), localRepository);
+                }
             } else {
                 throw new UnsupportedOperationException(
                         "Only file and http remotes are currently supported.");

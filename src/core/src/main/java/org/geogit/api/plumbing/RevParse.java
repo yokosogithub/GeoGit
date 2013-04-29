@@ -234,7 +234,16 @@ public class RevParse extends AbstractGeoGitOp<Optional<ObjectId>> {
     }
 
     private Optional<ObjectId> resolveAncestor(ObjectId objectId, int ancestorN) {
-        RevCommit commit = resolveCommit(objectId);
+        RevCommit commit;
+        try {
+            commit = resolveCommit(objectId);
+        } catch (IllegalArgumentException e) {
+            // This is throw when an ancestor exist, but is not in the repo in the case of a shallow
+            // clone. We capture the eexception and return an Absent value, to have the same
+            // behaviour
+            // as in the case of parsing an ancestor that doesn't really exist.
+            return Optional.absent();
+        }
         if (ancestorN == 0) {
             return Optional.of(commit.getId());
         }

@@ -225,11 +225,7 @@ public class Branch extends AbstractCommand implements CLICommand {
                 ansi.a("  ");
             }
             // print unqualified names for local branches
-            String branchName = branchRefName.startsWith(Ref.HEADS_PREFIX) ? branchRefName
-                    .substring(Ref.HEADS_PREFIX.length()) : branchRefName;
-            if (branchRef instanceof SymRef) {
-                branchName += " -> " + Ref.localName(((SymRef) branchRef).getTarget());
-            }
+            String branchName = refDisplayString(branchRef);
             ansi.a(branchName);
             ansi.reset();
 
@@ -277,8 +273,23 @@ public class Branch extends AbstractCommand implements CLICommand {
     private int largestLenght(ImmutableList<Ref> branches) {
         int len = 0;
         for (Ref ref : branches) {
-            len = Math.max(len, ref.getName().length());
+            len = Math.max(len, refDisplayString(ref).length());
+
         }
         return len;
+    }
+
+    private String refDisplayString(Ref ref) {
+
+        String branchName = ref.getName();
+        if (branchName.startsWith(Ref.HEADS_PREFIX)) {
+            branchName = ref.localName();
+        } else if (branchName.startsWith(Ref.REMOTES_PREFIX)) {
+            branchName = branchName.substring(Ref.REMOTES_PREFIX.length());
+        }
+        if (ref instanceof SymRef) {
+            branchName += " -> " + Ref.localName(((SymRef) ref).getTarget());
+        }
+        return branchName;
     }
 }

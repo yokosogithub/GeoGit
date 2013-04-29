@@ -6,18 +6,27 @@
 package org.geogit.cli.porcelain;
 
 import static com.google.common.base.Preconditions.checkState;
+import static com.google.common.base.Preconditions.checkArgument;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.net.URI;
+import java.net.URISyntaxException;
+import java.net.URL;
 import java.util.List;
 
 import org.geogit.api.GeoGIT;
+import org.geogit.api.plumbing.ResolveGeogitDir;
 import org.geogit.api.porcelain.CloneOp;
+import org.geogit.api.porcelain.ConfigOp;
+import org.geogit.api.porcelain.ConfigOp.ConfigAction;
+import org.geogit.api.porcelain.ConfigOp.ConfigScope;
 import org.geogit.api.porcelain.InitOp;
 import org.geogit.cli.AbstractCommand;
 import org.geogit.cli.CLICommand;
 import org.geogit.cli.GeogitCLI;
 import org.geogit.repository.Repository;
+import org.neo4j.kernel.impl.util.FileUtils;
 
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.Parameters;
@@ -54,6 +63,9 @@ public class Clone extends AbstractCommand implements CLICommand {
     @Parameter(names = { "--depth" }, description = "Depth of the clone.  If depth is less than 1, a full clone will be performed.")
     private int depth = 0;
 
+    @Parameter(names = { "--filter" }, description = "XML filter file.  This will create a sparse clone.")
+    private String filterFile;
+
     @Parameter(description = "<repository> [<directory>]")
     private List<String> args;
 
@@ -67,6 +79,10 @@ public class Clone extends AbstractCommand implements CLICommand {
     public void runInternal(GeogitCLI cli) throws Exception {
         checkState(args != null && args.size() > 0, "You must specify a repository to clone.");
         checkState(args.size() < 3, "Too many arguments provided.");
+        if (filterFile != null) {
+            checkArgument(branch != null,
+                    "Sparse Clone: You must explicitly specify a remote branch to clone by using '--branch <branch>'.");
+        }
 
         String repoURL = args.get(0);
 
@@ -114,7 +130,53 @@ public class Clone extends AbstractCommand implements CLICommand {
             throw Throwables.propagate(e);
         }
 
-        cli.getConsole().println("Cloning into '" + cli.getPlatform().pwd().getName() + "'...");
+        boolean sparse = false;
+
+        if (filterFile != null) {
+            try {
+                final String FILTER_FILE = "filter.ini";
+
+                File oldFilterFile = new File(filterFile);
+                if (!oldFilterFile.exists()) {
+                    throw new FileNotFoundException("No filter file found at " + filterFile + ".");
+                }
+
+                URL envHome = new ResolveGeogitDir(cli.getPlatform()).call();
+                if (envHome == null) {
+                    throw new IllegalStateException("Not inside a geogit directory");
+                }
+                if (!"file".equals(envHome.getProtocol())) {
+                    throw new UnsupportedOperationException(
+                            "Sparse clone works only against file system repositories. "
+                                    + "Repository location: " + envHome.toExternalForm());
+                }
+                File repoDir;
+                try {
+                    repoDir = new File(envHome.toURI());
+                } catch (URISyntaxException e) {
+                    throw Throwables.propagate(e);
+                }
+                File newFilterFile = new File(repoDir, FILTER_FILE);
+
+                FileUtils.copyFile(oldFilterFile, newFilterFile);
+                cli.getGeogit().command(ConfigOp.class).setAction(ConfigAction.CONFIG_SET)
+                        .setName("sparse.filter").setValue(FILTER_FILE).setScope(ConfigScope.LOCAL)
+                        .call();
+                sparse = true;
+            } catch (Exception e) {
+                throw new IllegalStateException("Unable to copy filter file at path " + filterFile
+                        + " to the new repository.", e);
+            }
+        }
+
+        if (sparse) {
+            cli.getConsole()
+                    .println(
+                            "Performing a sparse clone into '" + cli.getPlatform().pwd().getName()
+                                    + "'...");
+        } else {
+            cli.getConsole().println("Cloning into '" + cli.getPlatform().pwd().getName() + "'...");
+        }
 
         CloneOp clone = cli.getGeogit().command(CloneOp.class);
         clone.setProgressListener(cli.getProgressListener());

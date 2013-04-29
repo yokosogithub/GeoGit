@@ -16,6 +16,7 @@ import java.util.TreeMap;
 
 import org.geogit.api.Bucket;
 import org.geogit.api.Node;
+import org.geogit.api.NodeRef;
 import org.geogit.api.ObjectId;
 import org.geogit.api.RevCommit;
 import org.geogit.api.RevFeature;
@@ -25,6 +26,7 @@ import org.geogit.api.RevPerson;
 import org.geogit.api.RevTag;
 import org.geogit.api.RevTree;
 import org.geogit.api.RevTreeImpl;
+import org.geogit.api.plumbing.diff.DiffEntry;
 import org.geogit.storage.FieldType;
 import org.geotools.feature.NameImpl;
 import org.geotools.feature.simple.SimpleFeatureTypeBuilder;
@@ -238,6 +240,29 @@ public class FormatCommon {
         return node;
     }
 
+    public static DiffEntry readDiff(DataInput in) throws IOException {
+        boolean oldNode = in.readBoolean();
+        NodeRef oldNodeRef = null;
+        if (oldNode) {
+            oldNodeRef = readNodeRef(in);
+        }
+        boolean newNode = in.readBoolean();
+        NodeRef newNodeRef = null;
+        if (newNode) {
+            newNodeRef = readNodeRef(in);
+        }
+
+        return new DiffEntry(oldNodeRef, newNodeRef);
+    }
+
+    public static NodeRef readNodeRef(DataInput in) throws IOException {
+        Node node = readNode(in);
+        final byte[] metadataId = new byte[20];
+        in.readFully(metadataId);
+        String parentPath = in.readUTF();
+        return new NodeRef(node, parentPath, new ObjectId(metadataId));
+    }
+
     public static final Bucket readBucket(DataInput in) throws IOException {
         final byte[] hash = new byte[20];
         in.readFully(hash);
@@ -368,5 +393,26 @@ public class FormatCommon {
         Envelope envelope = new Envelope();
         node.expand(envelope);
         writeBoundingBox(envelope, data);
+    }
+
+    public static void writeDiff(DiffEntry diff, DataOutput data) throws IOException {
+        if (diff.getOldObject() == null) {
+            data.writeBoolean(false);
+        } else {
+            data.writeBoolean(true);
+            writeNodeRef(diff.getOldObject(), data);
+        }
+        if (diff.getNewObject() == null) {
+            data.writeBoolean(false);
+        } else {
+            data.writeBoolean(true);
+            writeNodeRef(diff.getNewObject(), data);
+        }
+    }
+
+    public static void writeNodeRef(NodeRef nodeRef, DataOutput data) throws IOException {
+        writeNode(nodeRef.getNode(), data);
+        data.write(nodeRef.getMetadataId().getRawValue());
+        data.writeUTF(nodeRef.getParentPath());
     }
 }

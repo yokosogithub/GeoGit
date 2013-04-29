@@ -6,7 +6,6 @@
 package org.geogit.api.plumbing;
 
 import java.util.Iterator;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -63,6 +62,8 @@ public class WriteTree extends AbstractGeoGitOp<ObjectId> {
 
     private final List<String> pathFilters = Lists.newLinkedList();
 
+    private Supplier<Iterator<DiffEntry>> diffSupplier = null;
+
     /**
      * Creates a new {@code WriteTree} operation using the specified parameters.
      * 
@@ -102,6 +103,11 @@ public class WriteTree extends AbstractGeoGitOp<ObjectId> {
         return this;
     }
 
+    public WriteTree setDiffSupplier(@Nullable Supplier<Iterator<DiffEntry>> diffSupplier) {
+        this.diffSupplier = diffSupplier;
+        return this;
+    }
+
     /**
      * Executes the write tree operation.
      * 
@@ -113,8 +119,16 @@ public class WriteTree extends AbstractGeoGitOp<ObjectId> {
 
         final RevTree oldRootTree = resolveRootTree();
 
-        Iterator<DiffEntry> staged = getIndex().getStaged(pathFilters);
-        if (!staged.hasNext()) {
+        Iterator<DiffEntry> diffs = null;
+        long numChanges = 0;
+        if (diffSupplier == null) {
+            diffs = getIndex().getStaged(pathFilters);
+            numChanges = getIndex().countStaged(pathFilters);
+        } else {
+            diffs = diffSupplier.get();
+        }
+
+        if (!diffs.hasNext()) {
             return oldRootTree.getId();
         }
         if (progress.isCanceled()) {
@@ -127,14 +141,15 @@ public class WriteTree extends AbstractGeoGitOp<ObjectId> {
         Set<String> deletedTrees = Sets.newHashSet();
         NodeRef ref;
         int i = 0;
-        final long numChanges = getIndex().countStaged(pathFilters);
-        while (staged.hasNext()) {
-            progress.progress((float) (++i * 100) / numChanges);
+        while (diffs.hasNext()) {
+            if (numChanges != 0) {
+                progress.progress((float) (++i * 100) / numChanges);
+            }
             if (progress.isCanceled()) {
                 return null;
             }
 
-            DiffEntry diff = staged.next();
+            DiffEntry diff = diffs.next();
             // ignore the root entry
             if (NodeRef.ROOT.equals(diff.newName()) || NodeRef.ROOT.equals(diff.oldName())) {
                 continue;
@@ -154,7 +169,12 @@ public class WriteTree extends AbstractGeoGitOp<ObjectId> {
                 continue;
             }
             RevTreeBuilder parentTree = resolveTargetTree(oldRootTree, parentPath,
-                    repositoryChangedTrees, changedTreesMetadataId);
+                    repositoryChangedTrees, changedTreesMetadataId, ObjectId.NULL);
+            if (type == TYPE.TREE && !isDelete) {
+                // cache the tree
+                resolveTargetTree(oldRootTree, ref.name(), repositoryChangedTrees,
+                        changedTreesMetadataId, ref.getMetadataId());
+            }
 
             resolveSourceTreeRef(parentPath, indexChangedTrees, changedTreesMetadataId);
 
@@ -248,7 +268,8 @@ public class WriteTree extends AbstractGeoGitOp<ObjectId> {
      * @return
      */
     private RevTreeBuilder resolveTargetTree(final RevTree root, String treePath,
-            Map<String, RevTreeBuilder> treeCache, Map<String, ObjectId> metadataCache) {
+            Map<String, RevTreeBuilder> treeCache, Map<String, ObjectId> metadataCache,
+            ObjectId fallbackMetadataId) {
 
         RevTreeBuilder treeBuilder = treeCache.get(treePath);
         if (treeBuilder == null) {
@@ -263,7 +284,7 @@ public class WriteTree extends AbstractGeoGitOp<ObjectId> {
                             .setObjectId(treeRef.get().objectId()).call(RevTree.class).get()
                             .builder(repositoryDatabase);
                 } else {
-                    metadataCache.put(treePath, ObjectId.NULL);
+                    metadataCache.put(treePath, fallbackMetadataId);
                     treeBuilder = new RevTreeBuilder(repositoryDatabase);
                 }
             }

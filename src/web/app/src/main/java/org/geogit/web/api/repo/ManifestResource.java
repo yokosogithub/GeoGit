@@ -17,11 +17,11 @@ import com.google.common.collect.ImmutableList;
 
 public class ManifestResource extends ServerResource {
     {
-        getVariants().add(new ManifestRepresentation());
+        getVariants().add(new TextRepresentation());
     }
 
-    private class ManifestRepresentation extends WriterRepresentation {
-        public ManifestRepresentation() {
+    private class TextRepresentation extends WriterRepresentation {
+        public TextRepresentation() {
             super(MediaType.TEXT_PLAIN);
         }
 

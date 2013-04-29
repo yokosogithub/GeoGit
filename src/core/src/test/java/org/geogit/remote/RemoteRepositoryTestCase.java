@@ -2,7 +2,7 @@
  * This code is licensed under the BSD New License, available at the root
  * application directory.
  */
-package org.geogit.test.integration;
+package org.geogit.remote;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -42,6 +42,7 @@ import org.geogit.remote.IRemoteRepo;
 import org.geogit.remote.LocalRemoteRepo;
 import org.geogit.repository.Repository;
 import org.geogit.repository.WorkingTree;
+import org.geogit.test.integration.TestInjectorBuilder;
 import org.geotools.data.DataUtilities;
 import org.geotools.feature.NameImpl;
 import org.geotools.feature.SchemaException;
@@ -184,7 +185,7 @@ public abstract class RemoteRepositoryTestCase {
         remoteGeogit = new GeogitContainer("remotetestrepository");
 
         LocalRemoteRepo remoteRepo = spy(new LocalRemoteRepo(remoteGeogit.createInjectorBuilder()
-                .build(), remoteGeogit.envHome.getCanonicalFile()));
+                .build(), remoteGeogit.envHome.getCanonicalFile(), localGeogit.repo));
 
         doNothing().when(remoteRepo).close();
 

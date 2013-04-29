@@ -8,8 +8,7 @@ package org.geogit.remote;
 import java.io.IOException;
 
 import org.geogit.api.Ref;
-import org.geogit.api.porcelain.PushException;
-import org.geogit.repository.Repository;
+import org.geogit.api.porcelain.SynchronizationException;
 
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableSet;
@@ -50,29 +49,25 @@ public interface IRemoteRepo {
     /**
      * Fetch all new objects from the specified {@link Ref} from the remote.
      * 
-     * @param localRepository the repository to add new objects to
      * @param ref the remote ref that points to new commit data
      * @param fetchLimit the maximum depth to fetch
      */
-    public void fetchNewData(Repository localRepository, Ref ref, Optional<Integer> fetchLimit);
+    public void fetchNewData(Ref ref, Optional<Integer> fetchLimit);
 
     /**
      * Push all new objects from the specified {@link Ref} to the remote.
      * 
-     * @param localRepository the repository to get new objects from
      * @param ref the local ref that points to new commit data
      */
-    public void pushNewData(Repository localRepository, Ref ref) throws PushException;
+    public void pushNewData(Ref ref) throws SynchronizationException;
 
     /**
      * Push all new objects from the specified {@link Ref} to the given refspec.
      * 
-     * @param localRepository the repository to get new objects from
      * @param ref the local ref that points to new commit data
      * @param refspec the refspec to push to
      */
-    public void pushNewData(Repository localRepository, Ref ref, String refspec)
-            throws PushException;
+    public void pushNewData(Ref ref, String refspec) throws SynchronizationException;
 
     /**
      * Delete the given refspec from the remote repository.
@@ -80,4 +75,11 @@ public interface IRemoteRepo {
      * @param refspec the refspec to delete
      */
     public void deleteRef(String refspec);
+
+    /**
+     * @return the depth of the repository, or {@link Optional#absent} if the repository is not
+     *         shallow
+     */
+    public Optional<Integer> getDepth();
+
 }

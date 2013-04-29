@@ -23,6 +23,7 @@ import org.geogit.api.porcelain.CloneOp;
 import org.geogit.api.porcelain.CommitOp;
 import org.geogit.api.porcelain.LogOp;
 import org.geogit.api.porcelain.PullOp;
+import org.geogit.remote.RemoteRepositoryTestCase;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;

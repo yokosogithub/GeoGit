@@ -24,6 +24,8 @@ public class RemoteAddOp extends AbstractGeoGitOp<Remote> {
 
     private String branch;
 
+    private boolean mapped = false;
+
     final private ConfigDatabase config;
 
     /**
@@ -64,8 +66,12 @@ public class RemoteAddOp extends AbstractGeoGitOp<Remote> {
 
         config.put(configSection + ".url", url);
         config.put(configSection + ".fetch", fetch);
+        if (mapped) {
+            config.put(configSection + ".mapped", "true");
+            config.put(configSection + ".mappedBranch", branch);
+        }
 
-        return new Remote(name, url, url, fetch);
+        return new Remote(name, url, url, fetch, mapped, branch);
     }
 
     /**
@@ -92,6 +98,15 @@ public class RemoteAddOp extends AbstractGeoGitOp<Remote> {
      */
     public RemoteAddOp setBranch(String branch) {
         this.branch = branch;
+        return this;
+    }
+
+    /**
+     * @param mapped whether or not this is a mapped remote
+     * @return {@code this}
+     */
+    public RemoteAddOp setMapped(boolean mapped) {
+        this.mapped = mapped;
         return this;
     }
 

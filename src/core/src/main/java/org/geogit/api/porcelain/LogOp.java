@@ -336,8 +336,10 @@ public class LogOp extends AbstractGeoGitOp<Iterator<RevCommit>> {
                 parents.remove(mostRecent);
                 RevCommit commit;
                 for (ObjectId parent : mostRecent.getParentIds()) {
-                    commit = repo.getCommit(parent);
-                    parents.add(commit);
+                    if (repo.commitExists(parent)) {
+                        commit = repo.getCommit(parent);
+                        parents.add(commit);
+                    }
                 }
                 return mostRecent;
             }
@@ -396,7 +398,15 @@ public class LogOp extends AbstractGeoGitOp<Iterator<RevCommit>> {
                 lastCommit = tips.pop();
                 return lastCommit;
             }
-            Optional<ObjectId> parent = lastCommit.parentN(0);
+            Optional<ObjectId> parent = Optional.absent();
+            int index = 0;
+            for (ObjectId parentId : lastCommit.getParentIds()) {
+                if (repo.commitExists(parentId)) {
+                    parent = Optional.of(parentId);
+                    break;
+                }
+                index++;
+            }
             if (!parent.isPresent() || parent.get().isNull() || stopPoints.contains(parent.get())) {
                 // move to the next tip and start traversing it
                 if (tips.isEmpty()) {
@@ -406,9 +416,11 @@ public class LogOp extends AbstractGeoGitOp<Iterator<RevCommit>> {
                 }
             } else {
                 List<ObjectId> parents = lastCommit.getParentIds();
-                for (int i = 1; i < parents.size(); i++) {
-                    final RevCommit commit = repo.getCommit(parents.get(i));
-                    tips.push(commit);
+                for (int i = index + 1; i < parents.size(); i++) {
+                    if (repo.commitExists(parents.get(i))) {
+                        final RevCommit commit = repo.getCommit(parents.get(i));
+                        tips.push(commit);
+                    }
                 }
                 lastCommit = repo.getCommit(parent.get());
                 ImmutableList<ObjectId> children = this.graphDb.getChildren(parent.get());
@@ -453,7 +465,7 @@ public class LogOp extends AbstractGeoGitOp<Iterator<RevCommit>> {
         @Override
         protected RevCommit computeNext() {
             if (nextCommitId.isPresent()) {
-                final RevCommit commit = repo.getCommit(nextCommitId.get());
+                RevCommit commit = repo.getCommit(nextCommitId.get());
                 nextCommitId = commit.parentN(0);
                 if (nextCommitId.isPresent() && !repo.commitExists(nextCommitId.get())) {
                     nextCommitId = Optional.absent();
@@ -542,6 +554,11 @@ public class LogOp extends AbstractGeoGitOp<Iterator<RevCommit>> {
                 for (String path : paths) {
                     DiffOp diff = command(DiffOp.class);
                     ObjectId parentId = commit.parentN(0).or(ObjectId.NULL);
+                    if (!parentId.equals(ObjectId.NULL) && !repository.commitExists(parentId)) {
+                        // we have reached the bottom of a shallow clone. We "fake" it and pretend
+                        // it is the real first commit of the repo
+                        parentId = ObjectId.NULL;
+                    }
                     Iterator<DiffEntry> diffResult;
                     try {
                         diff.setOldVersion(parentId).setNewVersion(commit.getId()).setFilter(path);

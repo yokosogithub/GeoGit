@@ -10,6 +10,7 @@ import org.geogit.cli.plumbing.MergeBase;
 import org.geogit.cli.plumbing.RevList;
 import org.geogit.cli.plumbing.RevParse;
 import org.geogit.cli.plumbing.ShowRef;
+import org.geogit.cli.plumbing.WalkGraph;
 import org.geogit.cli.porcelain.Add;
 import org.geogit.cli.porcelain.Apply;
 import org.geogit.cli.porcelain.Blame;
@@ -114,6 +115,7 @@ public class BuiltinCommandsModule extends AbstractModule implements CLIModule {
         bind(Push.class);
         bind(Pull.class);
         bind(Tag.class);
+        bind(WalkGraph.class);
     }
 
 }

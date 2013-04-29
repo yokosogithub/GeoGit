@@ -13,6 +13,8 @@ import com.google.common.collect.ImmutableList;
 @Beta
 public interface GraphDatabase {
 
+    public static final String SPARSE_FLAG = "sparse";
+
     /**
      * Initializes/opens the databse. It's safe to call this method multiple times, and only the
      * first call shall take effect.
@@ -59,6 +61,22 @@ public interface GraphDatabase {
     public boolean put(final ObjectId commitId, ImmutableList<ObjectId> parentIds);
 
     /**
+     * Maps a commit to another original commit. This is used in sparse repositories.
+     * 
+     * @param mapped the id of the mapped commit
+     * @param original the commit to map to
+     */
+    public void map(final ObjectId mapped, final ObjectId original);
+
+    /**
+     * Gets the id of the commit that this commit is mapped to.
+     * 
+     * @param commitId the commit to find the mapping of
+     * @return the mapped commit id
+     */
+    public ObjectId getMapping(final ObjectId commitId);
+
+    /**
      * Gets the number of ancestors of the commit until it reaches one with no parents, for example
      * the root or an orphaned commit.
      * 
@@ -77,4 +95,20 @@ public interface GraphDatabase {
      */
     public Optional<ObjectId> findLowestCommonAncestor(ObjectId leftId, ObjectId rightId);
 
+    /**
+     * Set a property on the provided commit node.
+     * 
+     * @param commitId the id of the commit
+     */
+    public void setProperty(ObjectId commitId, String propertyName, String propertyValue);
+
+    /**
+     * Determines if there are any sparse commits between the start commit and the end commit, not
+     * including the end commit.
+     * 
+     * @param start the start commit
+     * @param end the end commit
+     * @return true if there are any sparse commits between start and end
+     */
+    public boolean isSparsePath(ObjectId start, ObjectId end);
 }

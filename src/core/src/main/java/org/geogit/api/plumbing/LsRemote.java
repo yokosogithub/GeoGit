@@ -13,6 +13,7 @@ import org.geogit.api.Ref;
 import org.geogit.api.Remote;
 import org.geogit.remote.IRemoteRepo;
 import org.geogit.remote.RemoteUtils;
+import org.geogit.repository.Repository;
 
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
@@ -37,15 +38,18 @@ public class LsRemote extends AbstractGeoGitOp<ImmutableSet<Ref>> {
 
     private boolean local;
 
+    private Repository localRepository;
+
     /**
      * Constructs a new {@code LsRemote}.
      */
     @Inject
-    public LsRemote() {
+    public LsRemote(Repository repository) {
         Optional<Remote> abstent = Optional.absent();
         this.remote = Suppliers.ofInstance(abstent);
         this.getHeads = true;
         this.getTags = true;
+        this.localRepository = repository;
     }
 
     /**
@@ -129,7 +133,8 @@ public class LsRemote extends AbstractGeoGitOp<ImmutableSet<Ref>> {
      * @return an interface for the remote repository
      */
     public Optional<IRemoteRepo> getRemoteRepo(Remote remote) {
-        return RemoteUtils.newRemote(GlobalInjectorBuilder.builder.build(), remote);
+        return RemoteUtils
+                .newRemote(GlobalInjectorBuilder.builder.build(), remote, localRepository);
     }
 
     /**

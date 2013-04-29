@@ -8,6 +8,7 @@ import org.geogit.api.porcelain.BranchListOp;
 import org.geogit.api.porcelain.CheckoutOp;
 import org.geogit.api.porcelain.CloneOp;
 import org.geogit.api.porcelain.CommitOp;
+import org.geogit.remote.RemoteRepositoryTestCase;
 import org.junit.Test;
 
 import com.google.common.collect.ImmutableList;

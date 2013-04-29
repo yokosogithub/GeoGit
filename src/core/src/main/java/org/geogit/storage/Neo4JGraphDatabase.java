@@ -8,6 +8,7 @@ import java.io.File;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -19,6 +20,8 @@ import java.util.concurrent.ConcurrentHashMap;
 import org.geogit.api.ObjectId;
 import org.geogit.api.Platform;
 import org.geogit.api.plumbing.ResolveGeogitDir;
+import org.neo4j.graphalgo.GraphAlgoFactory;
+import org.neo4j.graphalgo.PathFinder;
 import org.neo4j.graphdb.Direction;
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Node;
@@ -51,7 +54,7 @@ public class Neo4JGraphDatabase extends AbstractGraphDatabase {
     private final Platform platform;
 
     private enum CommitRelationshipTypes implements RelationshipType {
-        TOROOT, PARENT
+        TOROOT, PARENT, MAPPED_TO
     }
 
     /**
@@ -167,6 +170,18 @@ public class Neo4JGraphDatabase extends AbstractGraphDatabase {
         return listBuilder.build();
     }
 
+    public ImmutableList<Node> getParentNodes(final Node commitNode) {
+        Builder<Node> listBuilder = new ImmutableList.Builder<Node>();
+
+        if (commitNode != null) {
+            for (Relationship parent : commitNode.getRelationships(Direction.OUTGOING,
+                    CommitRelationshipTypes.PARENT)) {
+                listBuilder.add(parent.getOtherNode(commitNode));
+            }
+        }
+        return listBuilder.build();
+    }
+
     @Override
     public ImmutableList<ObjectId> getChildren(ObjectId commitId) throws IllegalArgumentException {
         Index<Node> idIndex = graphDB.index().forNodes("identifiers");
@@ -222,6 +237,70 @@ public class Neo4JGraphDatabase extends AbstractGraphDatabase {
     }
 
     /**
+     * Maps a commit to another original commit. This is used in sparse repositories.
+     * 
+     * @param mapped the id of the mapped commit
+     * @param original the commit to map to
+     */
+    @Override
+    public void map(final ObjectId mapped, final ObjectId original) {
+        Transaction tx = graphDB.beginTx();
+
+        Node commitNode = null;
+        try {
+            // See if it already exists
+            commitNode = getOrAddNode(mapped);
+
+            if (commitNode.getRelationships(Direction.OUTGOING, CommitRelationshipTypes.MAPPED_TO)
+                    .iterator().hasNext()) {
+                // Remove old mapping
+                commitNode.getRelationships(Direction.OUTGOING, CommitRelationshipTypes.MAPPED_TO)
+                        .iterator().next().delete();
+            }
+
+            // Don't make relationships if they have been created already
+            Node originalNode = getOrAddNode(original);
+            commitNode.createRelationshipTo(originalNode, CommitRelationshipTypes.MAPPED_TO);
+
+            tx.success();
+        } catch (Exception e) {
+            tx.failure();
+            throw Throwables.propagate(e);
+        } finally {
+            tx.finish();
+        }
+    }
+
+    /**
+     * Gets the id of the commit that this commit is mapped to.
+     * 
+     * @param commitId the commit to find the mapping of
+     * @return the mapped commit id
+     */
+    public ObjectId getMapping(final ObjectId commitId) {
+        Index<Node> idIndex = graphDB.index().forNodes("identifiers");
+        Node node = idIndex.get("id", commitId.toString()).getSingle();
+
+        ObjectId mapped = ObjectId.NULL;
+        Node mappedNode = getMappedNode(node);
+        if (mappedNode != null) {
+            mapped = ObjectId.valueOf((String) mappedNode.getProperty("id"));
+        }
+        return mapped;
+    }
+
+    private Node getMappedNode(final Node commitNode) {
+        if (commitNode != null) {
+            Iterator<Relationship> mappings = commitNode.getRelationships(Direction.OUTGOING,
+                    CommitRelationshipTypes.MAPPED_TO).iterator();
+            if (mappings.hasNext()) {
+                return mappings.next().getOtherNode(commitNode);
+            }
+        }
+        return null;
+    }
+
+    /**
      * Gets a node or adds it if it doesn't exist. Note, this must be called within a
      * {@link Transaction}.
      * 
@@ -255,7 +334,9 @@ public class Neo4JGraphDatabase extends AbstractGraphDatabase {
                 .evaluator(new Evaluator() {
                     @Override
                     public Evaluation evaluate(Path path) {
-                        if (!path.endNode().hasRelationship(Direction.OUTGOING)) {
+                        if (!path.endNode().hasRelationship(Direction.OUTGOING)
+                                || path.endNode().hasRelationship(CommitRelationshipTypes.TOROOT)) {
+
                             return Evaluation.INCLUDE_AND_PRUNE;
                         }
                         return Evaluation.EXCLUDE_AND_CONTINUE;
@@ -317,6 +398,61 @@ public class Neo4JGraphDatabase extends AbstractGraphDatabase {
                     .getProperty("id")));
         }
         return ancestor;
+    }
+
+    public boolean isSparsePath(ObjectId start, ObjectId end) {
+        Index<Node> idIndex = graphDB.index().forNodes("identifiers");
+        Node startNode = idIndex.get("id", start.toString()).getSingle();
+        Node endNode = idIndex.get("id", end.toString()).getSingle();
+        PathFinder<Path> finder = GraphAlgoFactory.shortestPath(
+                Traversal.expanderForTypes(CommitRelationshipTypes.PARENT, Direction.OUTGOING),
+                Integer.MAX_VALUE);
+
+        Iterable<Path> paths = finder.findAllPaths(startNode, endNode);
+
+        for (Path path : paths) {
+            Node lastNode = path.lastRelationship().getOtherNode(path.endNode());
+            Node mappedNode = getMappedNode(lastNode);
+            if (mappedNode != null) {
+                ImmutableList<Node> parentNodes = getParentNodes(mappedNode);
+                for (Node parentNode : parentNodes) {
+                    // If these nodes aren't represented, they were excluded and the path is sparse
+                    Node mappedParentNode = getMappedNode(parentNode);
+                    if (getMappedNode(mappedParentNode).getId() != parentNode.getId()) {
+                        return true;
+                    }
+                }
+            }
+            for (Node node : path.nodes()) {
+                if (!node.equals(endNode) && node.hasProperty(SPARSE_FLAG)) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Set a property on the provided commit node.
+     * 
+     * @param commitId the id of the commit
+     */
+    public void setProperty(ObjectId commitId, String propertyName, String propertyValue) {
+        Index<Node> idIndex = graphDB.index().forNodes("identifiers");
+
+        Transaction tx = graphDB.beginTx();
+        try {
+            Node commitNode = idIndex.get("id", commitId.toString()).getSingle();
+            commitNode.setProperty(propertyName, propertyValue);
+
+            tx.success();
+        } catch (Exception e) {
+            tx.failure();
+            throw Throwables.propagate(e);
+        } finally {
+            tx.finish();
+        }
+
     }
 
     private boolean processCommit(Node commit, Queue<Node> myQueue, Set<Node> mySet,

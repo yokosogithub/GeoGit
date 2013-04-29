@@ -1,5 +1,9 @@
 package org.geogit.api;
 
+import javax.annotation.Nullable;
+
+import com.google.common.base.Optional;
+
 /**
  * Internal representation of a GeoGit remote repository.
  * 
@@ -13,6 +17,10 @@ public class Remote {
 
     private String fetch;
 
+    private String mappedBranch;
+
+    private boolean mapped;
+
     /**
      * Constructs a new remote with the given parameters.
      * 
@@ -20,12 +28,17 @@ public class Remote {
      * @param fetchurl the fetch URL of the remote
      * @param pushurl the push URL of the remote
      * @param fetch the fetch string of the remote
+     * @param mapped whether or not this remote is mapped
+     * @param mappedBranch the branch the remote is mapped to
      */
-    public Remote(String name, String fetchurl, String pushurl, String fetch) {
+    public Remote(String name, String fetchurl, String pushurl, String fetch, boolean mapped,
+            @Nullable String mappedBranch) {
         this.name = name;
         this.fetchurl = fetchurl.replace("\\", "/");
         this.pushurl = pushurl.replace("\\", "/");
         this.fetch = fetch;
+        this.mapped = mapped;
+        this.mappedBranch = Optional.fromNullable(mappedBranch).or("*");
     }
 
     /**
@@ -57,6 +70,20 @@ public class Remote {
     }
 
     /**
+     * @return whether or not this remote is mapped
+     */
+    public boolean getMapped() {
+        return mapped;
+    }
+
+    /**
+     * @return the branch the remote is mapped to
+     */
+    public String getMappedBranch() {
+        return mappedBranch;
+    }
+
+    /**
      * Determines if this Remote is the same as the given Remote.
      * 
      * @param o the remote to compare against
@@ -71,6 +98,7 @@ public class Remote {
         }
         Remote r = (Remote) o;
         return fetch.equals(r.fetch) && fetchurl.equals(r.fetchurl) && pushurl.equals(r.pushurl)
-                && name.equals(r.name);
+                && name.equals(r.name) && (mapped == r.mapped)
+                && mappedBranch.equals(r.mappedBranch);
     }
 }

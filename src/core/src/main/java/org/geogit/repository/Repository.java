@@ -106,18 +106,18 @@ public class Repository implements CommandLocator {
     }
 
     /**
+     * @return the {@link GraphDatabase} for this repository
+     */
+    public GraphDatabase getGraphDatabase() {
+        return graphDatabase;
+    }
+
+    /**
      * @return the {@link StagingArea} for this repository
      */
     @Override
     public StagingArea getIndex() {
         return index;
-    }
-
-    /**
-     * @return the {@link GraphDatabase} for this repository
-     */
-    public GraphDatabase getGraphDatabase() {
-        return graphDatabase;
     }
 
     /**
@@ -333,5 +333,16 @@ public class Repository implements CommandLocator {
             return Optional.absent();
         }
         return Optional.of(repoDepth);
+    }
+
+    /**
+     * Gets the depth of the repository, or {@link Optional#absent} if this is not a shallow clone.
+     * 
+     * @return the depth
+     */
+    public boolean isSparse() {
+        Optional<Map<String, String>> sparseResult = command(ConfigOp.class)
+                .setAction(ConfigAction.CONFIG_GET).setName("sparse.filter").call();
+        return sparseResult.isPresent();
     }
 }

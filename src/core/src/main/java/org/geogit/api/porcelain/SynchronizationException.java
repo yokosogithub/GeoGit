@@ -5,7 +5,7 @@ package org.geogit.api.porcelain;
  * 
  */
 @SuppressWarnings("serial")
-public class PushException extends RuntimeException {
+public class SynchronizationException extends RuntimeException {
     /**
      * Possible status codes for Push exceptions.
      */
@@ -20,7 +20,7 @@ public class PushException extends RuntimeException {
      * 
      * @param statusCode the status code for this exception
      */
-    public PushException(StatusCode statusCode) {
+    public SynchronizationException(StatusCode statusCode) {
         this(null, statusCode);
     }
 
@@ -30,7 +30,7 @@ public class PushException extends RuntimeException {
      * @param e the cause of this exception
      * @param statusCode the status code for this exception
      */
-    public PushException(Exception e, StatusCode statusCode) {
+    public SynchronizationException(Exception e, StatusCode statusCode) {
         super(e);
         this.statusCode = statusCode;
     }

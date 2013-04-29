@@ -7,9 +7,9 @@ package org.geogit.remote;
 
 import java.util.LinkedList;
 import java.util.Queue;
+import java.util.Stack;
 
 import org.geogit.api.ObjectId;
-import org.geogit.storage.GraphDatabase;
 
 import com.google.common.collect.ImmutableList;
 
@@ -21,7 +21,7 @@ abstract class CommitTraverser {
 
     private Queue<CommitNode> commitQueue;
 
-    private GraphDatabase graphDb;
+    public Stack<ObjectId> commits;
 
     /**
      * Traversal node that stores information about the ObjectId of the commit and it's depth from
@@ -62,12 +62,10 @@ abstract class CommitTraverser {
     };
 
     /**
-     * Constructs a new {@code CommitTraverser} backed by a {@link GraphDatabase}.
-     * 
-     * @param graphDb the graph database that contains the commit graph to traverse
+     * Constructs a new {@code CommitTraverser}.
      */
-    public CommitTraverser(GraphDatabase graphDb) {
-        this.graphDb = graphDb;
+    public CommitTraverser() {
+        commits = new Stack<ObjectId>();
     }
 
     /**
@@ -84,7 +82,14 @@ abstract class CommitTraverser {
      * 
      * @param commitNode the commit to apply
      */
-    protected abstract void apply(CommitNode commitNode);
+    protected void apply(CommitNode commitNode) {
+        // If the commit stack already has this commit, we need to move it to the top so it will be
+        // processed earlier.
+        if (commits.contains(commitNode.getObjectId())) {
+            commits.remove(commitNode.getObjectId());
+        }
+        commits.add(commitNode.getObjectId());
+    }
 
     /**
      * Traverse the commit graph from the given starting point.
@@ -121,10 +126,18 @@ abstract class CommitTraverser {
      * @param commitNode the commit whose parents need to be added
      */
     private void addParents(CommitNode commitNode) {
-        ImmutableList<ObjectId> parents = graphDb.getParents(commitNode.getObjectId());
+        ImmutableList<ObjectId> parents = getParents(commitNode.getObjectId());
         for (ObjectId parent : parents) {
             commitQueue.add(new CommitNode(parent, commitNode.getDepth() + 1));
         }
     }
+
+    /**
+     * Gets the parents of the provided commit.
+     * 
+     * @param commitId the id of the commit whose parents need to be retrieved
+     * @return the list of parents
+     */
+    protected abstract ImmutableList<ObjectId> getParents(ObjectId commitId);
 
 }

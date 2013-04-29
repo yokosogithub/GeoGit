@@ -151,7 +151,7 @@ public class PushOp extends AbstractGeoGitOp<Void> {
                                     headRef.getTarget()).call();
                             Preconditions.checkState(targetRef.isPresent());
 
-                            remoteRepo.get().pushNewData(localRepository, targetRef.get());
+                            remoteRepo.get().pushNewData(targetRef.get());
                         }
                     } else {
                         Optional<Ref> localRef = command(RefParse.class).setName(localrefspec)
@@ -159,8 +159,7 @@ public class PushOp extends AbstractGeoGitOp<Void> {
                         Preconditions.checkArgument(localRef.isPresent(),
                                 "Local ref could not be resolved.");
                         // push the localref branch to the remoteref branch
-                        remoteRepo.get()
-                                .pushNewData(localRepository, localRef.get(), remoterefspec);
+                        remoteRepo.get().pushNewData(localRef.get(), remoterefspec);
                     }
 
                 }
@@ -191,7 +190,7 @@ public class PushOp extends AbstractGeoGitOp<Void> {
                 }
 
                 for (Ref ref : refsToPush) {
-                    remoteRepo.get().pushNewData(localRepository, ref);
+                    remoteRepo.get().pushNewData(ref);
                 }
             }
 
@@ -213,6 +212,7 @@ public class PushOp extends AbstractGeoGitOp<Void> {
      * @return an interface for the remote repository
      */
     public Optional<IRemoteRepo> getRemoteRepo(Remote remote) {
-        return RemoteUtils.newRemote(GlobalInjectorBuilder.builder.build(), remote);
+        return RemoteUtils
+                .newRemote(GlobalInjectorBuilder.builder.build(), remote, localRepository);
     }
 }

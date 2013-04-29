@@ -4,9 +4,12 @@
  */
 package org.geogit.api.porcelain;
 
+import java.io.IOException;
+
 import javax.annotation.Nullable;
 
 import org.geogit.api.AbstractGeoGitOp;
+import org.geogit.api.GlobalInjectorBuilder;
 import org.geogit.api.Ref;
 import org.geogit.api.Remote;
 import org.geogit.api.SymRef;
@@ -15,11 +18,14 @@ import org.geogit.api.plumbing.RefParse;
 import org.geogit.api.plumbing.UpdateRef;
 import org.geogit.api.porcelain.ConfigOp.ConfigAction;
 import org.geogit.api.porcelain.ConfigOp.ConfigScope;
+import org.geogit.remote.IRemoteRepo;
+import org.geogit.remote.RemoteUtils;
 import org.geogit.repository.Repository;
 
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Suppliers;
+import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableSet;
 import com.google.inject.Inject;
 
@@ -35,11 +41,14 @@ public class CloneOp extends AbstractGeoGitOp<Void> {
 
     private Optional<Integer> depth = Optional.absent();
 
+    private Repository repository;
+
     /**
      * Constructs a new {@code CloneOp}.
      */
     @Inject
-    public CloneOp() {
+    public CloneOp(final Repository repository) {
+        this.repository = repository;
     }
 
     /**
@@ -85,18 +94,41 @@ public class CloneOp extends AbstractGeoGitOp<Void> {
         getProgressListener().progress(0.f);
 
         // Set up origin
-        Remote remote = command(RemoteAddOp.class).setName("origin").setURL(repositoryURL).call();
+        Remote remote = command(RemoteAddOp.class).setName("origin").setURL(repositoryURL)
+                .setMapped(repository.isSparse())
+                .setBranch(repository.isSparse() ? branch.get() : null).call();
+
+        if (!depth.isPresent()) {
+            // See if we are cloning a shallow clone. If so, a depth must be specified.
+            Optional<IRemoteRepo> remoteRepo = RemoteUtils.newRemote(
+                    GlobalInjectorBuilder.builder.build(), remote, repository);
+
+            Preconditions.checkState(remoteRepo.isPresent(), "Failed to connect to the remote.");
+            try {
+                remoteRepo.get().open();
+            } catch (IOException e) {
+                Throwables.propagate(e);
+            }
+            depth = remoteRepo.get().getDepth();
+            try {
+                remoteRepo.get().close();
+            } catch (IOException e) {
+                Throwables.propagate(e);
+            }
+        }
 
         if (depth.isPresent()) {
             command(ConfigOp.class).setAction(ConfigAction.CONFIG_SET).setScope(ConfigScope.LOCAL)
                     .setName(Repository.DEPTH_CONFIG_KEY).setValue(depth.get().toString()).call();
         }
+
         // Fetch remote data
         command(FetchOp.class).setDepth(depth.or(0)).setProgressListener(subProgress(90.f)).call();
 
         // Set up remote tracking branches
-        final ImmutableSet<Ref> remoteRefs = command(LsRemote.class).setRemote(
-                Suppliers.ofInstance(Optional.of(remote))).call();
+        final ImmutableSet<Ref> remoteRefs = command(LsRemote.class)
+                .setRemote(Suppliers.ofInstance(Optional.of(remote))).retrieveLocalRefs(true)
+                .call();
 
         boolean emptyRepo = true;
 
@@ -105,11 +137,15 @@ public class CloneOp extends AbstractGeoGitOp<Void> {
                 emptyRepo = false;
             }
             String branchName = remoteRef.localName();
-            if (!command(RefParse.class).setName(remoteRef.getName()).call().isPresent()) {
+            if (remoteRef instanceof SymRef) {
+                continue;
+            }
+            if (!command(RefParse.class).setName(Ref.HEADS_PREFIX + remoteRef.localName()).call()
+                    .isPresent()) {
                 command(BranchCreateOp.class).setName(branchName)
                         .setSource(remoteRef.getObjectId().toString()).call();
             } else {
-                command(UpdateRef.class).setName(remoteRef.getName())
+                command(UpdateRef.class).setName(Ref.HEADS_PREFIX + remoteRef.localName())
                         .setNewValue(remoteRef.getObjectId()).call();
             }
 
@@ -118,8 +154,8 @@ public class CloneOp extends AbstractGeoGitOp<Void> {
                     .call();
 
             command(ConfigOp.class).setAction(ConfigAction.CONFIG_SET).setScope(ConfigScope.LOCAL)
-                    .setName("branches." + branchName + ".merge").setValue(remoteRef.getName())
-                    .call();
+                    .setName("branches." + branchName + ".merge")
+                    .setValue(Ref.HEADS_PREFIX + remoteRef.localName()).call();
         }
         getProgressListener().progress(95.f);
 

@@ -36,7 +36,7 @@ public class FunctionalTestModule extends AbstractModule {
         }
 
         // Use the testing neo4j graph db, otherwise functional tests are extremely slow
-        bind(GraphDatabase.class).to(TestNeo4JGraphDatabase.class).in(Scopes.SINGLETON);
+        // bind(GraphDatabase.class).to(TestNeo4JGraphDatabase.class).in(Scopes.SINGLETON);
     }
 
 }

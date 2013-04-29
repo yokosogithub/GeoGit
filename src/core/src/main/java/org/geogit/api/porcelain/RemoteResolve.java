@@ -61,11 +61,14 @@ public class RemoteResolve extends AbstractGeoGitOp<Optional<Remote>> implements
             String remoteSection = "remote." + name;
             Optional<String> remoteFetchURL = config.get(remoteSection + ".url");
             Optional<String> remoteFetch = config.get(remoteSection + ".fetch");
+            Optional<String> remoteMapped = config.get(remoteSection + ".mapped");
+            Optional<String> remoteMappedBranch = config.get(remoteSection + ".mappedBranch");
             if (remoteFetchURL.isPresent() && remoteFetch.isPresent()) {
                 Optional<String> remotePushURL = config.get(remoteSection + ".pushurl");
 
                 Remote remote = new Remote(name, remoteFetchURL.get(),
-                        remotePushURL.or(remoteFetchURL.get()), remoteFetch.get());
+                        remotePushURL.or(remoteFetchURL.get()), remoteFetch.get(), remoteMapped.or(
+                                "false").equals("true"), remoteMappedBranch.orNull());
                 result = Optional.of(remote);
             }
         }

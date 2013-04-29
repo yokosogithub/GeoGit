@@ -10,6 +10,7 @@ import java.util.List;
 
 import org.geogit.api.AbstractGeoGitOp;
 import org.geogit.api.GlobalInjectorBuilder;
+import org.geogit.api.ObjectId;
 import org.geogit.api.Ref;
 import org.geogit.api.Remote;
 import org.geogit.api.SymRef;
@@ -227,7 +228,7 @@ public class FetchOp extends AbstractGeoGitOp<FetchResult> {
                         newFetchLimit = repoDepth;
                     }
                     // Fetch updated data from this ref
-                    remoteRepo.get().fetchNewData(localRepository, ref.getNewRef(), newFetchLimit);
+                    remoteRepo.get().fetchNewData(ref.getNewRef(), newFetchLimit);
 
                     if (repoDepth.isPresent()) {
                         // Update the repository depth if it is deeper than before.
@@ -244,7 +245,8 @@ public class FetchOp extends AbstractGeoGitOp<FetchResult> {
                     }
 
                     // Update the ref
-                    updateLocalRef(ref.getNewRef(), remote, localRemoteRefs);
+                    Ref updatedRef = updateLocalRef(ref.getNewRef(), remote, localRemoteRefs);
+                    ref.setNewRef(updatedRef);
                 }
             }
 
@@ -253,9 +255,11 @@ public class FetchOp extends AbstractGeoGitOp<FetchResult> {
             }
 
             // Update HEAD ref
-            Ref remoteHead = remoteRepo.get().headRef();
+            if (!remote.getMapped()) {
+                Ref remoteHead = remoteRepo.get().headRef();
 
-            updateLocalRef(remoteHead, remote, localRemoteRefs);
+                updateLocalRef(remoteHead, remote, localRemoteRefs);
+            }
 
             try {
                 remoteRepo.get().close();
@@ -281,18 +285,29 @@ public class FetchOp extends AbstractGeoGitOp<FetchResult> {
      * @return an interface for the remote repository
      */
     public Optional<IRemoteRepo> getRemoteRepo(Remote remote) {
-        return RemoteUtils.newRemote(GlobalInjectorBuilder.builder.build(), remote);
+        return RemoteUtils
+                .newRemote(GlobalInjectorBuilder.builder.build(), remote, localRepository);
     }
 
-    private void updateLocalRef(Ref remoteRef, Remote remote, ImmutableSet<Ref> localRemoteRefs) {
+    private Ref updateLocalRef(Ref remoteRef, Remote remote, ImmutableSet<Ref> localRemoteRefs) {
         final String refName = Ref.REMOTES_PREFIX + remote.getName() + "/" + remoteRef.localName();
+        Ref updatedRef = remoteRef;
         if (remoteRef instanceof SymRef) {
             String targetBranch = Ref.localName(((SymRef) remoteRef).getTarget());
             String newTarget = Ref.REMOTES_PREFIX + remote.getName() + "/" + targetBranch;
             command(UpdateSymRef.class).setName(refName).setNewValue(newTarget).call();
         } else {
-            command(UpdateRef.class).setName(refName).setNewValue(remoteRef.getObjectId()).call();
+            if (remote.getMapped() && !localRepository.commitExists(remoteRef.getObjectId())) {
+                ObjectId mappedId = localRepository.getGraphDatabase().getMapping(
+                        remoteRef.getObjectId());
+                command(UpdateRef.class).setName(refName).setNewValue(mappedId).call();
+                updatedRef = new Ref(remoteRef.getName(), mappedId, remoteRef.getType());
+            } else {
+                command(UpdateRef.class).setName(refName).setNewValue(remoteRef.getObjectId())
+                        .call();
+            }
         }
+        return updatedRef;
     }
 
     /**
@@ -306,6 +321,11 @@ public class FetchOp extends AbstractGeoGitOp<FetchResult> {
 
         for (Ref remoteRef : remoteRefs) {// refs/heads/xxx or refs/tags/yyy, though we don't handle
                                           // tags yet
+            if (remote.getMapped()
+                    && !remoteRef.localName().equals(Ref.localName(remote.getMappedBranch()))) {
+                // for a mapped remote, we are only interested in the branch we are mapped to
+                continue;
+            }
             Optional<Ref> local = findLocal(remoteRef, localRemoteRefs);
             if (local.isPresent()) {
                 if (!local.get().getObjectId().equals(remoteRef.getObjectId())) {

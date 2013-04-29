@@ -133,10 +133,11 @@ public class MergeOp extends AbstractGeoGitOp<RevCommit> {
 
         final Optional<Ref> currHead = command(RefParse.class).setName(Ref.HEAD).call();
         Preconditions.checkState(currHead.isPresent(), "Repository has no HEAD, can't rebase.");
-        Preconditions.checkState(currHead.get() instanceof SymRef,
-                "Can't rebase from detached HEAD");
-        SymRef headRef = (SymRef) currHead.get();
-        final String currentBranch = headRef.getTarget();
+        Ref headRef = currHead.get();
+        // Preconditions.checkState(currHead.get() instanceof SymRef,
+        // "Can't rebase from detached HEAD");
+        // SymRef headRef = (SymRef) currHead.get();
+        // final String currentBranch = headRef.getTarget();
 
         getProgressListener().started();
 
@@ -234,9 +235,16 @@ public class MergeOp extends AbstractGeoGitOp<RevCommit> {
                 subProgress.started();
                 if (ObjectId.NULL.equals(headRef.getObjectId())) {
                     // Fast-forward
-                    command(UpdateRef.class).setName(currentBranch).setNewValue(commitId).call();
-                    headRef = (SymRef) command(UpdateSymRef.class).setName(Ref.HEAD)
-                            .setNewValue(currentBranch).call().get();
+                    if (headRef instanceof SymRef) {
+                        final String currentBranch = ((SymRef) headRef).getTarget();
+                        command(UpdateRef.class).setName(currentBranch).setNewValue(commitId)
+                                .call();
+                        headRef = (SymRef) command(UpdateSymRef.class).setName(Ref.HEAD)
+                                .setNewValue(currentBranch).call().get();
+                    } else {
+                        headRef = command(UpdateRef.class).setName(headRef.getName())
+                                .setNewValue(commitId).call().get();
+                    }
 
                     getWorkTree().updateWorkHead(commitId);
                     getIndex().updateStageHead(commitId);
@@ -257,10 +265,16 @@ public class MergeOp extends AbstractGeoGitOp<RevCommit> {
                 if (commits.size() == 1) {
                     if (ancestorCommit.get().getId().equals(headCommit.getId())) {
                         // Fast-forward
-                        command(UpdateRef.class).setName(currentBranch).setNewValue(commitId)
-                                .call();
-                        headRef = (SymRef) command(UpdateSymRef.class).setName(Ref.HEAD)
-                                .setNewValue(currentBranch).call().get();
+                        if (headRef instanceof SymRef) {
+                            final String currentBranch = ((SymRef) headRef).getTarget();
+                            command(UpdateRef.class).setName(currentBranch).setNewValue(commitId)
+                                    .call();
+                            headRef = (SymRef) command(UpdateSymRef.class).setName(Ref.HEAD)
+                                    .setNewValue(currentBranch).call().get();
+                        } else {
+                            headRef = command(UpdateRef.class).setName(headRef.getName())
+                                    .setNewValue(commitId).call().get();
+                        }
 
                         getWorkTree().updateWorkHead(commitId);
                         getIndex().updateStageHead(commitId);

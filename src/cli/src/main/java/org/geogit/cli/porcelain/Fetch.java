@@ -16,6 +16,7 @@ import org.geogit.api.porcelain.FetchOp;
 import org.geogit.api.porcelain.FetchResult;
 import org.geogit.api.porcelain.FetchResult.ChangedRef;
 import org.geogit.api.porcelain.FetchResult.ChangedRef.ChangeTypes;
+import org.geogit.api.porcelain.SynchronizationException;
 import org.geogit.cli.AbstractCommand;
 import org.geogit.cli.CLICommand;
 import org.geogit.cli.GeogitCLI;
@@ -85,32 +86,41 @@ public class Fetch extends AbstractCommand implements CLICommand {
             }
         }
 
-        FetchResult result = fetch.call();
-        ConsoleReader console = cli.getConsole();
-        if (result.getChangedRefs().entrySet().size() > 0) {
-            for (Entry<String, List<ChangedRef>> entry : result.getChangedRefs().entrySet()) {
-                console.println("From " + entry.getKey());
+        try {
+            FetchResult result = fetch.call();
+            ConsoleReader console = cli.getConsole();
+            if (result.getChangedRefs().entrySet().size() > 0) {
+                for (Entry<String, List<ChangedRef>> entry : result.getChangedRefs().entrySet()) {
+                    console.println("From " + entry.getKey());
 
-                for (ChangedRef ref : entry.getValue()) {
-                    String line;
-                    if (ref.getType() == ChangeTypes.CHANGED_REF) {
-                        line = "   " + ref.getOldRef().getObjectId().toString().substring(0, 7)
-                                + ".." + ref.getNewRef().getObjectId().toString().substring(0, 7)
-                                + "     " + ref.getOldRef().localName() + " -> "
-                                + ref.getOldRef().getName();
-                    } else if (ref.getType() == ChangeTypes.ADDED_REF) {
-                        line = " * [new branch]     " + ref.getNewRef().localName() + " -> "
-                                + ref.getNewRef().getName();
-                    } else if (ref.getType() == ChangeTypes.REMOVED_REF) {
-                        line = " x [deleted]        (none) -> " + ref.getOldRef().getName();
-                    } else {
-                        line = "   [deepened]       " + ref.getNewRef().localName();
+                    for (ChangedRef ref : entry.getValue()) {
+                        String line;
+                        if (ref.getType() == ChangeTypes.CHANGED_REF) {
+                            line = "   " + ref.getOldRef().getObjectId().toString().substring(0, 7)
+                                    + ".."
+                                    + ref.getNewRef().getObjectId().toString().substring(0, 7)
+                                    + "     " + ref.getOldRef().localName() + " -> "
+                                    + ref.getOldRef().getName();
+                        } else if (ref.getType() == ChangeTypes.ADDED_REF) {
+                            line = " * [new branch]     " + ref.getNewRef().localName() + " -> "
+                                    + ref.getNewRef().getName();
+                        } else if (ref.getType() == ChangeTypes.REMOVED_REF) {
+                            line = " x [deleted]        (none) -> " + ref.getOldRef().getName();
+                        } else {
+                            line = "   [deepened]       " + ref.getNewRef().localName();
+                        }
+                        console.println(line);
                     }
-                    console.println(line);
                 }
+            } else {
+                console.println("Already up to date.");
             }
-        } else {
-            console.println("Already up to date.");
+        } catch (SynchronizationException e) {
+            switch (e.statusCode) {
+            case HISTORY_TOO_SHALLOW:
+            default:
+                cli.getConsole().println("Unable to fetch, the remote history is shallow.");
+            }
         }
     }
 }

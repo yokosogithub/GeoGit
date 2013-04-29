@@ -11,12 +11,18 @@ import java.util.logging.Logger;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.geogit.rest.repository.AffectedFeaturesResource;
+import org.geogit.rest.repository.ApplyChangesResource;
+import org.geogit.rest.repository.BatchedObjectResource;
 import org.geogit.rest.repository.BeginPush;
 import org.geogit.rest.repository.CommandResource;
+import org.geogit.rest.repository.DepthResource;
 import org.geogit.rest.repository.EndPush;
+import org.geogit.rest.repository.FilteredChangesResource;
 import org.geogit.rest.repository.ManifestResource;
 import org.geogit.rest.repository.ObjectExistsResource;
 import org.geogit.rest.repository.ObjectFinder;
+import org.geogit.rest.repository.ParentResource;
 import org.geogit.rest.repository.RepositoryListResource;
 import org.geogit.rest.repository.RepositoryResource;
 import org.geogit.rest.repository.SendObjectResource;
@@ -99,10 +105,16 @@ public class GeogitDispatcher extends AbstractController {
         Router router = new Router();
         router.attach("/manifest", ManifestResource.class);
         router.attach("/objects/{id}", new ObjectFinder());
+        router.attach("/batchobjects", new BatchedObjectResource());
         router.attach("/sendobject", SendObjectResource.class);
         router.attach("/exists", ObjectExistsResource.class);
         router.attach("/beginpush", BeginPush.class);
         router.attach("/endpush", EndPush.class);
+        router.attach("/getdepth", DepthResource.class);
+        router.attach("/getparents", ParentResource.class);
+        router.attach("/affectedfeatures", AffectedFeaturesResource.class);
+        router.attach("/filteredchanges", new FilteredChangesResource());
+        router.attach("/applychanges", new ApplyChangesResource());
         return router;
     }
 
