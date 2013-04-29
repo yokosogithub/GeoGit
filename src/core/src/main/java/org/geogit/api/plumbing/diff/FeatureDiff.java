@@ -46,9 +46,10 @@ public class FeatureDiff {
      * @param oldRevFeature the old version of the feature
      * @param newRevFeatureType the new version of the feature type
      * @param oldRevFeatureType the old version of the feature type
+     * @param all - true if all attributes should be added regardless of change
      */
     public FeatureDiff(String path, RevFeature newRevFeature, RevFeature oldRevFeature,
-            RevFeatureType newRevFeatureType, RevFeatureType oldRevFeatureType) {
+            RevFeatureType newRevFeatureType, RevFeatureType oldRevFeatureType, boolean all) {
 
         this.path = path;
         this.newFeatureType = newRevFeatureType;
@@ -65,7 +66,7 @@ public class FeatureDiff {
             int idx = newAttributes.indexOf(oldAttributes.get(i));
             if (idx != -1) {
                 Optional<Object> newValue = newValues.get(idx);
-                if (!oldValue.equals(newValue)) {
+                if (!oldValue.equals(newValue) || all) {
                     if (Geometry.class
                             .isAssignableFrom(oldAttributes.get(i).getType().getBinding())) {
                         diffs.put(

@@ -11,23 +11,39 @@ import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamWriter;
 
 import org.codehaus.jettison.AbstractXMLStreamWriter;
+import org.geogit.api.FeatureBuilder;
+import org.geogit.api.GeoGIT;
 import org.geogit.api.GeogitSimpleFeature;
 import org.geogit.api.NodeRef;
 import org.geogit.api.ObjectId;
 import org.geogit.api.Ref;
 import org.geogit.api.Remote;
 import org.geogit.api.RevCommit;
+import org.geogit.api.RevFeature;
+import org.geogit.api.RevFeatureType;
+import org.geogit.api.RevObject;
 import org.geogit.api.RevPerson;
 import org.geogit.api.RevTag;
 import org.geogit.api.SymRef;
 import org.geogit.api.plumbing.DiffIndex;
 import org.geogit.api.plumbing.DiffWorkTree;
+import org.geogit.api.plumbing.RevObjectParse;
 import org.geogit.api.plumbing.diff.AttributeDiff;
+import org.geogit.api.plumbing.diff.AttributeDiff.TYPE;
 import org.geogit.api.plumbing.diff.DiffEntry;
 import org.geogit.api.plumbing.diff.DiffEntry.ChangeType;
+import org.geogit.web.api.commands.BranchWebOp;
+import org.geogit.web.api.commands.LsTree;
+import org.geogit.web.api.commands.RefParseWeb;
+import org.geogit.web.api.commands.RemoteWebOp;
+import org.geogit.web.api.commands.TagWebOp;
+import org.geogit.web.api.commands.UpdateRefWeb;
 import org.opengis.feature.type.PropertyDescriptor;
 
+import com.google.common.base.Function;
+import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Iterators;
 import com.vividsolutions.jts.geom.Geometry;
 
 /**
@@ -438,7 +454,8 @@ public class ResponseWriter {
                 writeElement("oldvalue", entry.getValue().getOldValue().get().toString());
             }
             if (entry.getValue().getNewValue() != null
-                    && entry.getValue().getNewValue().isPresent()) {
+                    && entry.getValue().getNewValue().isPresent()
+                    && !entry.getValue().getType().equals(TYPE.NO_CHANGE)) {
                 writeElement("newvalue", entry.getValue().getNewValue().get().toString());
             }
             out.writeEndElement();
@@ -452,25 +469,88 @@ public class ResponseWriter {
      * @param changes the change type of each feature
      * @throws XMLStreamException
      */
-    public void writeDiffResponse(Iterator<GeogitSimpleFeature> features,
-            Iterator<ChangeType> changes) throws XMLStreamException {
+    public void writeGeometryChanges(final GeoGIT geogit, Iterator<DiffEntry> diff)
+            throws XMLStreamException {
 
-        while (features.hasNext()) {
-            GeogitSimpleFeature feature = features.next();
-            ChangeType change = changes.next();
-            out.writeStartElement("Feature");
-            writeElement("change", change.toString());
-            writeElement("id", feature.getID().toString());
-            List<Object> attributes = feature.getAttributes();
-            for (Object attribute : attributes) {
-                if (attribute instanceof Geometry) {
-                    writeElement("geometry", ((Geometry) attribute).toText());
-                    break;
+        Iterator<GeometryChange> changeIterator = Iterators.transform(diff,
+                new Function<DiffEntry, GeometryChange>() {
+                    @Override
+                    public GeometryChange apply(DiffEntry input) {
+                        Optional<RevObject> feature = Optional.absent();
+                        Optional<RevObject> type = Optional.absent();
+                        String path = null;
+                        GeometryChange change = null;
+                        if (input.changeType() == ChangeType.ADDED
+                                || input.changeType() == ChangeType.MODIFIED) {
+                            feature = geogit.command(RevObjectParse.class)
+                                    .setObjectId(input.newObjectId()).call();
+                            type = geogit.command(RevObjectParse.class)
+                                    .setObjectId(input.getNewObject().getMetadataId()).call();
+                            path = input.getNewObject().path();
+
+                        } else if (input.changeType() == ChangeType.REMOVED) {
+                            feature = geogit.command(RevObjectParse.class)
+                                    .setObjectId(input.oldObjectId()).call();
+                            type = geogit.command(RevObjectParse.class)
+                                    .setObjectId(input.getOldObject().getMetadataId()).call();
+                            path = input.getOldObject().path();
+                        }
+                        if (feature.isPresent() && feature.get() instanceof RevFeature
+                                && type.isPresent() && type.get() instanceof RevFeatureType) {
+                            RevFeature revFeature = (RevFeature) feature.get();
+                            FeatureBuilder builder = new FeatureBuilder((RevFeatureType) type.get());
+                            GeogitSimpleFeature simpleFeature = (GeogitSimpleFeature) builder
+                                    .build(revFeature.getId().toString(), revFeature);
+                            change = new GeometryChange(simpleFeature, input.changeType(), path);
+                        }
+                        return change;
+                    }
+                });
+
+        while (changeIterator.hasNext()) {
+            GeometryChange next = changeIterator.next();
+            if (next != null) {
+                GeogitSimpleFeature feature = next.getFeature();
+                ChangeType change = next.getChangeType();
+                out.writeStartElement("Feature");
+                writeElement("change", change.toString());
+                writeElement("id", next.getPath());
+                List<Object> attributes = feature.getAttributes();
+                for (Object attribute : attributes) {
+                    if (attribute instanceof Geometry) {
+                        writeElement("geometry", ((Geometry) attribute).toText());
+                        break;
+                    }
                 }
+                out.writeEndElement();
             }
-
-            out.writeEndElement();
         }
 
+    }
+
+    private class GeometryChange {
+        private GeogitSimpleFeature feature;
+
+        private ChangeType changeType;
+
+        private String path;
+
+        public GeometryChange(GeogitSimpleFeature feature, ChangeType changeType, String path) {
+            this.feature = feature;
+            this.changeType = changeType;
+            this.path = path;
+        }
+
+        public GeogitSimpleFeature getFeature() {
+            return feature;
+        }
+
+        public ChangeType getChangeType() {
+            return changeType;
+        }
+
+        public String getPath() {
+            return path;
+        }
     }
 }

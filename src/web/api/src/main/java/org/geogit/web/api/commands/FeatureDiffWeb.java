@@ -46,6 +46,8 @@ public class FeatureDiffWeb implements WebAPICommand {
 
     private String oldCommitId;
 
+    private boolean all;
+
     /**
      * Mutator of the path variable
      * 
@@ -71,6 +73,15 @@ public class FeatureDiffWeb implements WebAPICommand {
      */
     public void setOldCommitId(String oldCommitId) {
         this.oldCommitId = oldCommitId;
+    }
+
+    /**
+     * Mutator for all attributes bool
+     * 
+     * @param all - true to show all attributes not just changed ones
+     */
+    public void setAll(boolean all) {
+        this.all = all;
     }
 
     /**
@@ -233,7 +244,7 @@ public class FeatureDiffWeb implements WebAPICommand {
             diffs = tempDiffs;
         } else {
             FeatureDiff diff = new FeatureDiff(path, newFeature, oldFeature, newFeatureType,
-                    oldFeatureType);
+                    oldFeatureType, all);
             diffs = diff.getDiffs();
         }
 

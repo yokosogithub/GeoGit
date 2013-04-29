@@ -30,6 +30,9 @@ public class GeometryAttributeDiff implements AttributeDiff {
             type = TYPE.REMOVED;
         } else if (oldGeom == null || !oldGeom.isPresent()) {
             type = TYPE.ADDED;
+        } else if (oldGeom.equals(newGeom)) {
+            type = TYPE.NO_CHANGE;
+            diff = new LCSGeometryDiffImpl(oldGeom, newGeom);
         } else {
             type = TYPE.MODIFIED;
             diff = new LCSGeometryDiffImpl(oldGeom, newGeom);

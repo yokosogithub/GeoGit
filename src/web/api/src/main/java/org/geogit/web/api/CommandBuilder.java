@@ -171,6 +171,8 @@ public class CommandBuilder {
         command.setOldRefSpec(options.getFirstValue("oldRefSpec", null));
         command.setNewRefSpec(options.getFirstValue("newRefSpec", null));
         command.setPathFilter(options.getFirstValue("pathFilter", null));
+        command.setShowGeometryChanges(Boolean.parseBoolean(options.getFirstValue(
+                "showGeometryChanges", "false")));
         return command;
     }
 
@@ -234,6 +236,7 @@ public class CommandBuilder {
         command.setPath(options.getFirstValue("path", null));
         command.setOldCommitId(options.getFirstValue("oldCommitId", ObjectId.NULL.toString()));
         command.setNewCommitId(options.getFirstValue("newCommitId", ObjectId.NULL.toString()));
+        command.setAll(Boolean.valueOf(options.getFirstValue("all", "false")));
         return command;
     }
 
