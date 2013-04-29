@@ -123,7 +123,7 @@ public class WriteTree extends AbstractGeoGitOp<ObjectId> {
         long numChanges = 0;
         if (diffSupplier == null) {
             diffs = getIndex().getStaged(pathFilters);
-            numChanges = getIndex().countStaged(pathFilters);
+            numChanges = getIndex().countStaged(pathFilters).getCount();
         } else {
             diffs = diffSupplier.get();
         }

@@ -14,9 +14,11 @@ import javax.annotation.Nullable;
 
 import org.geogit.api.AbstractGeoGitOp;
 import org.geogit.api.ObjectId;
+import org.geogit.api.RevObject.TYPE;
 import org.geogit.api.RevTree;
 import org.geogit.api.plumbing.diff.DiffCounter;
 import org.geogit.api.plumbing.diff.DiffEntry;
+import org.geogit.api.plumbing.diff.DiffObjectCount;
 import org.geogit.api.plumbing.diff.DiffTreeWalk;
 import org.geogit.storage.StagingDatabase;
 
@@ -30,7 +32,7 @@ import com.google.inject.Inject;
  * 
  * @see DiffCounter
  */
-public class DiffCount extends AbstractGeoGitOp<Long> {
+public class DiffCount extends AbstractGeoGitOp<DiffObjectCount> {
 
     private StagingDatabase index;
 
@@ -81,14 +83,14 @@ public class DiffCount extends AbstractGeoGitOp<Long> {
     }
 
     @Override
-    public Long call() {
+    public DiffObjectCount call() {
         checkState(oldRefSpec != null, "old ref spec not provided");
         checkState(newRefSpec != null, "new ref spec not provided");
 
         final RevTree oldTree = getTree(oldRefSpec);
         final RevTree newTree = getTree(newRefSpec);
 
-        Long diffCount;
+        DiffObjectCount diffCount;
         if (pathFilters.isEmpty()) {
             DiffCounter counter = new DiffCounter(index, oldTree, newTree);
             diffCount = counter.get();
@@ -100,12 +102,19 @@ public class DiffCount extends AbstractGeoGitOp<Long> {
 
             treeWalk.setReportTrees(reportTrees);
             Iterator<DiffEntry> iterator = treeWalk.get();
-            long count = 0;
+            long featureCount = 0;
+            long treeCount = 0;
             while (iterator.hasNext()) {
-                iterator.next();
-                count++;
+                DiffEntry diff = iterator.next();
+                TYPE type = diff.getNewObject() != null ? diff.getNewObject().getType() : diff
+                        .getOldObject().getType();
+                if (type.equals(TYPE.TREE)) {
+                    treeCount++;
+                } else {
+                    featureCount++;
+                }
             }
-            diffCount = Long.valueOf(count);
+            diffCount = new DiffObjectCount(treeCount, featureCount);
         }
         return diffCount;
     }

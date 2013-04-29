@@ -81,40 +81,43 @@ public class DiffCounterTest extends Assert {
         rootBuilder.put(childRef);
     }
 
-    private long count(RevTree left, RevTree right) {
+    private DiffObjectCount count(RevTree left, RevTree right) {
         DiffCounter counter = new DiffCounter(odb, left, right);
-        Long count = counter.get();
-        return count.longValue();
+        DiffObjectCount count = counter.get();
+        return count;
     }
 
     @Test
     public void testSameTree() {
-        assertEquals(0, count(childrenFeatureTree, childrenFeatureTree));
-        assertEquals(0, count(childrenFeatureTree, childrenFeatureTree));
+        DiffObjectCount count = count(childrenFeatureTree, childrenFeatureTree);
+        assertEquals(0, count.getFeaturesCount());
+        assertEquals(0, count.getTreesCount());
     }
 
     @Test
     public void testChildrenEmpty() {
-        assertEquals(childrenFeatureTree.size(), count(childrenFeatureTree, RevTree.EMPTY));
-        assertEquals(childrenFeatureTree.size(), count(RevTree.EMPTY, childrenFeatureTree));
+        assertEquals(childrenFeatureTree.size(), count(childrenFeatureTree, RevTree.EMPTY)
+                .getFeaturesCount());
+        assertEquals(childrenFeatureTree.size(), count(RevTree.EMPTY, childrenFeatureTree)
+                .getFeaturesCount());
     }
 
     @Test
     public void testChildrenChildren() {
         RevTreeBuilder builder = new RevTreeBuilder(odb, childrenFeatureTree);
         RevTree changed = builder.remove("3").build();
-        assertEquals(1, count(childrenFeatureTree, changed));
-        assertEquals(1, count(changed, childrenFeatureTree));
+        assertEquals(1, count(childrenFeatureTree, changed).getFeaturesCount());
+        assertEquals(1, count(changed, childrenFeatureTree).getFeaturesCount());
 
         changed = builder.put(Node.create("new", FAKE_FEATURE_ID, ObjectId.NULL, TYPE.FEATURE))
                 .build();
-        assertEquals(2, count(childrenFeatureTree, changed));
-        assertEquals(2, count(changed, childrenFeatureTree));
+        assertEquals(2, count(childrenFeatureTree, changed).getFeaturesCount());
+        assertEquals(2, count(changed, childrenFeatureTree).getFeaturesCount());
 
         changed = builder.put(
                 Node.create("1", FAKE_FEATURE_ID_CHANGED, ObjectId.NULL, TYPE.FEATURE)).build();
-        assertEquals(3, count(childrenFeatureTree, changed));
-        assertEquals(3, count(changed, childrenFeatureTree));
+        assertEquals(3, count(childrenFeatureTree, changed).getFeaturesCount());
+        assertEquals(3, count(changed, childrenFeatureTree).getFeaturesCount());
     }
 
     @Test
@@ -124,18 +127,18 @@ public class DiffCounterTest extends Assert {
         createFeatureTypesTree(rootBuilder, "tree1", childTree1);
         RevTree newRoot = rootBuilder.build();
 
-        assertEquals(1, count(childrenFeatureTypesTree, newRoot));
+        assertEquals(1, count(childrenFeatureTypesTree, newRoot).getFeaturesCount());
 
         childTree2.remove("tree2/2");
         createFeatureTypesTree(rootBuilder, "tree2", childTree2);
         newRoot = rootBuilder.build();
-        assertEquals(2, count(childrenFeatureTypesTree, newRoot));
+        assertEquals(2, count(childrenFeatureTypesTree, newRoot).getFeaturesCount());
 
         childTree2
                 .put(Node.create("tree2/1", FAKE_FEATURE_ID_CHANGED, ObjectId.NULL, TYPE.FEATURE));
         createFeatureTypesTree(rootBuilder, "tree2", childTree2);
         newRoot = rootBuilder.build();
-        assertEquals(3, count(childrenFeatureTypesTree, newRoot));
+        assertEquals(3, count(childrenFeatureTypesTree, newRoot).getFeaturesCount());
     }
 
     @Test
@@ -151,8 +154,8 @@ public class DiffCounterTest extends Assert {
         RevTree changed = builder.build();
         assertEquals(bucketsFeatureTree.size() + added, changed.size());
 
-        assertEquals(added, count(bucketsFeatureTree, changed));
-        assertEquals(added, count(changed, bucketsFeatureTree));
+        assertEquals(added, count(bucketsFeatureTree, changed).getFeaturesCount());
+        assertEquals(added, count(changed, bucketsFeatureTree).getFeaturesCount());
     }
 
     @Test
@@ -161,8 +164,8 @@ public class DiffCounterTest extends Assert {
 
         RevTree changed;
         changed = builder.remove("3").build();
-        assertEquals(1, count(bucketsFeatureTree, changed));
-        assertEquals(1, count(changed, bucketsFeatureTree));
+        assertEquals(1, count(bucketsFeatureTree, changed).getFeaturesCount());
+        assertEquals(1, count(changed, bucketsFeatureTree).getFeaturesCount());
 
         for (int i = 0; i < RevTree.NORMALIZED_SIZE_LIMIT - 1; i++) {
             builder.remove(String.valueOf(i));
@@ -171,8 +174,10 @@ public class DiffCounterTest extends Assert {
         assertEquals(RevTree.NORMALIZED_SIZE_LIMIT + 1, changed.size());
         assertTrue(changed.buckets().isPresent());
 
-        assertEquals(RevTree.NORMALIZED_SIZE_LIMIT - 1, count(bucketsFeatureTree, changed));
-        assertEquals(RevTree.NORMALIZED_SIZE_LIMIT - 1, count(changed, bucketsFeatureTree));
+        assertEquals(RevTree.NORMALIZED_SIZE_LIMIT - 1, count(bucketsFeatureTree, changed)
+                .getFeaturesCount());
+        assertEquals(RevTree.NORMALIZED_SIZE_LIMIT - 1, count(changed, bucketsFeatureTree)
+                .getFeaturesCount());
 
         builder.remove(String.valueOf(RevTree.NORMALIZED_SIZE_LIMIT + 1));
 
@@ -190,8 +195,12 @@ public class DiffCounterTest extends Assert {
 
         changed = builder.put(
                 Node.create("1023", FAKE_FEATURE_ID_CHANGED, ObjectId.NULL, TYPE.FEATURE)).build();
-        assertEquals(1, count(bucketsFeatureTree, changed));
-        assertEquals(1, count(changed, bucketsFeatureTree));
+        DiffObjectCount count = count(bucketsFeatureTree, changed);
+        assertEquals(1, count.getFeaturesCount());
+        assertEquals(0, count.getTreesCount());
+        count = count(changed, bucketsFeatureTree);
+        assertEquals(1, count.getFeaturesCount());
+        assertEquals(0, count.getTreesCount());
 
         builder = new RevTreeBuilder(odb, bucketsFeatureTree);
         int expected = 0;
@@ -202,8 +211,8 @@ public class DiffCounterTest extends Assert {
             expected++;
         }
         changed = builder.build();
-        assertEquals(expected, count(bucketsFeatureTree, changed));
-        assertEquals(expected, count(changed, bucketsFeatureTree));
+        assertEquals(expected, count(bucketsFeatureTree, changed).getFeaturesCount());
+        assertEquals(expected, count(changed, bucketsFeatureTree).getFeaturesCount());
     }
 
     @Test
@@ -217,8 +226,10 @@ public class DiffCounterTest extends Assert {
         assertEquals(RevTree.NORMALIZED_SIZE_LIMIT, changed.size());
         assertFalse(changed.buckets().isPresent());
 
-        assertEquals(RevTree.NORMALIZED_SIZE_LIMIT, count(bucketsFeatureTree, changed));
-        assertEquals(RevTree.NORMALIZED_SIZE_LIMIT, count(changed, bucketsFeatureTree));
+        assertEquals(RevTree.NORMALIZED_SIZE_LIMIT, count(bucketsFeatureTree, changed)
+                .getFeaturesCount());
+        assertEquals(RevTree.NORMALIZED_SIZE_LIMIT, count(changed, bucketsFeatureTree)
+                .getFeaturesCount());
     }
 
     @Test
@@ -251,8 +262,8 @@ public class DiffCounterTest extends Assert {
 
         final long expected = deepTree.size() - changed.size();
 
-        assertEquals(expected, count(deepTree, changed));
-        assertEquals(expected, count(changed, deepTree));
+        assertEquals(expected, count(deepTree, changed).getFeaturesCount());
+        assertEquals(expected, count(changed, deepTree).getFeaturesCount());
     }
 
     private int depth(RevTree deepTree, int currDepth) {

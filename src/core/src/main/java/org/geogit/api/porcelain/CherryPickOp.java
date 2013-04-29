@@ -79,10 +79,7 @@ public class CherryPickOp extends AbstractGeoGitOp<RevCommit> {
         final SymRef headRef = (SymRef) currHead.get();
         // final String currentBranch = headRef.getTarget();
 
-        // count staged and unstaged changes
-        long staged = getIndex().countStaged(null);
-        long unstaged = getWorkTree().countUnstaged(null);
-        Preconditions.checkState((staged == 0 && unstaged == 0),
+        Preconditions.checkState(getIndex().isClean() && getWorkTree().isClean(),
                 "You must have a clean working tree and index to perform a cherry pick.");
 
         getProgressListener().started();

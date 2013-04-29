@@ -286,4 +286,5 @@ public abstract class AbstractGeogitFunctionalTest {
         boolean existed = workTree.delete(localPart, id);
         return existed;
     }
+
 }

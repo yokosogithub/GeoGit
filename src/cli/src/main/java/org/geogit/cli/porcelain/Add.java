@@ -12,6 +12,7 @@ import java.util.List;
 
 import jline.console.ConsoleReader;
 
+import org.geogit.api.plumbing.diff.DiffObjectCount;
 import org.geogit.api.porcelain.AddOp;
 import org.geogit.cli.AbstractCommand;
 import org.geogit.cli.CLICommand;
@@ -76,14 +77,15 @@ public class Add extends AbstractCommand implements CLICommand {
             throw new UnsupportedOperationException("Only a single path is supported so far");
         }
 
-        console.print("Counting unstaged features...");
-        long unstaged = cli.getGeogit().getRepository().getWorkingTree().countUnstaged(pathFilter);
-        if (0 == unstaged) {
+        console.print("Counting unstaged elements...");
+        DiffObjectCount unstaged = cli.getGeogit().getRepository().getWorkingTree()
+                .countUnstaged(pathFilter);
+        if (0 == unstaged.getCount()) {
             console.println();
-            console.println("No unstaged features, exiting.");
+            console.println("No unstaged elements, exiting.");
             return;
         } else {
-            console.println(String.valueOf(unstaged));
+            console.println(String.valueOf(unstaged.getCount()));
         }
 
         console.println("Staging changes...");
@@ -97,11 +99,13 @@ public class Add extends AbstractCommand implements CLICommand {
         WorkingTree workTree = op.setUpdateOnly(updateOnly)
                 .setProgressListener(cli.getProgressListener()).call();
 
-        long staged = cli.getGeogit().getRepository().getIndex().countStaged(null);
+        DiffObjectCount staged = cli.getGeogit().getRepository().getIndex().countStaged(null);
         unstaged = workTree.countUnstaged(null);
 
-        console.println(staged + " features staged for commit");
-        console.println(unstaged + " features not staged for commit");
+        console.println(staged.getFeaturesCount() + " features and " + staged.getTreesCount()
+                + " trees staged for commit");
+        console.println(unstaged.getFeaturesCount() + " features and " + unstaged.getTreesCount()
+                + " trees not staged for commit");
     }
 
 }

@@ -272,10 +272,7 @@ public class CheckoutOp extends AbstractGeoGitOp<CheckoutResult> {
             }
             if (targetTreeId.isPresent()) {
                 if (!force) {
-                    // count staged and unstaged changes
-                    long staged = getIndex().countStaged(null);
-                    long unstaged = getWorkTree().countUnstaged(null);
-                    if (staged != 0 || unstaged != 0) {
+                    if (!getIndex().isClean() || !getWorkTree().isClean()) {
                         throw new CheckoutException(StatusCode.LOCAL_CHANGES_NOT_COMMITTED);
                     }
                 }

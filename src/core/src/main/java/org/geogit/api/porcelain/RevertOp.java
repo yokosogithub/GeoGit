@@ -111,10 +111,7 @@ public class RevertOp extends AbstractGeoGitOp<Boolean> {
                 "HEAD has no history.");
         final String currentBranch = headRef.getTarget();
 
-        // count staged and unstaged changes
-        long staged = index.countStaged(null);
-        long unstaged = workTree.countUnstaged(null);
-        Preconditions.checkState((staged == 0 && unstaged == 0),
+        Preconditions.checkState(getIndex().isClean() && getWorkTree().isClean(),
                 "You must have a clean working tree and index to perform a revert.");
 
         getProgressListener().started();
