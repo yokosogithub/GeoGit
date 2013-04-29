@@ -57,3 +57,14 @@ The previous commit (``955e67d93d230029b748dac2939c76ced6c28bc2``) is the one we
 
 Since this commit is the ancestor of the one that the current HEAD is pointing to, we can also use ``HEAD~1:parks``.
 
+One special ID in a GeoGit repository is the null Id, which represent the empty repository before any commits are made. It's an objectId with all digits equal to zero: ``0000000000000000000000000000000000000000``.
+
+You can use it whenever you need a reference to the empty repository. or instance, to know all the changes introduced from the very beginning of you history and up to 3 commits ago, the following command could be used.
+
+::
+
+	$ geogit diff HEAD~3 00000000
+
+You can aso abbreviate the null Id if needed.
+
+.. note:: the null Id used by Git ``4b825dc642cb6eb9a060e54bf8d69288fbee4904`` is not used by GeoGit to reference an empty repository.

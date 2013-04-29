@@ -332,6 +332,8 @@ public class RevParse extends AbstractGeoGitOp<Optional<ObjectId>> {
                 }
                 if (hashMatches.size() == 1) {
                     resolvedTo = hashMatches.get(0);
+                } else if (ObjectId.NULL.toString().startsWith(refSpec)) {
+                    resolvedTo = ObjectId.NULL;
                 }
             }
         }
