@@ -59,6 +59,15 @@ public interface GraphDatabase {
     public boolean put(final ObjectId commitId, ImmutableList<ObjectId> parentIds);
 
     /**
+     * Gets the number of ancestors of the commit until it reaches one with no parents, for example
+     * the root or an orphaned commit.
+     * 
+     * @param commitId the commit id to start from
+     * @return the depth of the commit
+     */
+    public int getDepth(final ObjectId commitId);
+
+    /**
      * Finds the lowest common ancestor of two commits.
      * 
      * @param leftId the commit id of the left commit

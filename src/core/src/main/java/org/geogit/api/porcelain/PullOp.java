@@ -31,9 +31,13 @@ public class PullOp extends AbstractGeoGitOp<PullResult> {
 
     private boolean rebase;
 
+    private boolean fullDepth = false;
+
     private Supplier<Optional<Remote>> remote;
 
     private List<String> refSpecs = new ArrayList<String>();
+
+    private Optional<Integer> depth = Optional.absent();
 
     /**
      * Constructs a new {@code PullOp}.
@@ -57,6 +61,31 @@ public class PullOp extends AbstractGeoGitOp<PullResult> {
      */
     public PullOp setRebase(final boolean rebase) {
         this.rebase = rebase;
+        return this;
+    }
+
+    /**
+     * If no depth is specified, fetch will pull all history from the specified ref(s). If the
+     * repository is shallow, it will maintain the existing depth.
+     * 
+     * @param depth maximum commit depth to pull
+     * @return {@code this}
+     */
+    public PullOp setDepth(final int depth) {
+        if (depth > 0) {
+            this.depth = Optional.of(depth);
+        }
+        return this;
+    }
+
+    /**
+     * If full depth is set on a shallow clone, then the full history will be pulled.
+     * 
+     * @param fulldepth whether or not to pull the full history
+     * @return {@code this}
+     */
+    public PullOp setFullDepth(boolean fullDepth) {
+        this.fullDepth = fullDepth;
         return this;
     }
 
@@ -108,8 +137,8 @@ public class PullOp extends AbstractGeoGitOp<PullResult> {
         Preconditions.checkArgument(remoteRepo.isPresent(), "Remote could not be resolved.");
         getProgressListener().started();
 
-        FetchResult fetchResult = command(FetchOp.class).addRemote(remote).setAll(all)
-                .setProgressListener(subProgress(80.f)).call();
+        FetchResult fetchResult = command(FetchOp.class).addRemote(remote).setDepth(depth.or(0))
+                .setFullDepth(fullDepth).setAll(all).setProgressListener(subProgress(80.f)).call();
 
         result.setFetchResult(fetchResult);
 

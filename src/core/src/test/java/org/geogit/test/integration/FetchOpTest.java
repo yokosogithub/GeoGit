@@ -37,10 +37,12 @@ public class FetchOpTest extends RemoteRepositoryTestCase {
     protected void setUpInternal() throws Exception {
     }
 
-    private void prepareForFetch() throws Exception {
-        // clone the repository
-        CloneOp clone = clone();
-        clone.setRepositoryURL(remoteGeogit.envHome.getCanonicalPath()).call();
+    private void prepareForFetch(boolean doClone) throws Exception {
+        if (doClone) {
+            // clone the repository
+            CloneOp clone = clone();
+            clone.setRepositoryURL(remoteGeogit.envHome.getCanonicalPath()).call();
+        }
 
         // Commit several features to the remote
 
@@ -140,7 +142,7 @@ public class FetchOpTest extends RemoteRepositoryTestCase {
     @Test
     public void testFetch() throws Exception {
 
-        prepareForFetch();
+        prepareForFetch(true);
 
         // fetch from the remote
         FetchOp fetch = fetch();
@@ -150,8 +152,211 @@ public class FetchOpTest extends RemoteRepositoryTestCase {
     }
 
     @Test
+    public void testFetchDepth() throws Exception {
+        prepareForFetch(false);
+
+        // clone the repository
+        CloneOp clone = clone();
+        clone.setDepth(2);
+        clone.setRepositoryURL(remoteGeogit.envHome.getCanonicalPath()).call();
+
+        FetchOp fetch = fetch();
+        fetch.setDepth(3);
+        fetch.call();
+
+        // Make sure the local repository got all of the commits from master
+        localGeogit.geogit.command(CheckoutOp.class).setSource("refs/remotes/origin/master").call();
+        Iterator<RevCommit> logs = localGeogit.geogit.command(LogOp.class).call();
+        List<RevCommit> logged = new ArrayList<RevCommit>();
+        for (; logs.hasNext();) {
+            logged.add(logs.next());
+        }
+
+        assertEquals(3, logged.size());
+
+        assertEquals(expectedMaster.get(0), logged.get(0));
+        assertEquals(expectedMaster.get(1), logged.get(1));
+        assertEquals(expectedMaster.get(2), logged.get(2));
+
+        // Make sure the local repository got all of the commits from Branch1
+        localGeogit.geogit.command(CheckoutOp.class).setSource("refs/remotes/origin/Branch1")
+                .call();
+        logs = localGeogit.geogit.command(LogOp.class).call();
+        logged = new ArrayList<RevCommit>();
+        for (; logs.hasNext();) {
+            logged.add(logs.next());
+        }
+
+        assertEquals(3, logged.size());
+
+        assertEquals(expectedBranch.get(0), logged.get(0));
+        assertEquals(expectedBranch.get(1), logged.get(1));
+        assertEquals(expectedBranch.get(2), logged.get(2));
+    }
+
+    @Test
+    public void testFetchFullDepth() throws Exception {
+        prepareForFetch(false);
+
+        // clone the repository
+        CloneOp clone = clone();
+        clone.setDepth(2);
+        clone.setRepositoryURL(remoteGeogit.envHome.getCanonicalPath()).call();
+
+        FetchOp fetch = fetch();
+        fetch.setFullDepth(true);
+        fetch.call();
+
+        verifyFetch();
+    }
+
+    @Test
+    public void testFetchNewCommitsWithShallowClone() throws Exception {
+        prepareForFetch(false);
+
+        // clone the repository
+        CloneOp clone = clone();
+        clone.setDepth(2);
+        clone.setRepositoryURL(remoteGeogit.envHome.getCanonicalPath()).call();
+
+        // Checkout master and commit some changes
+        remoteGeogit.geogit.command(CheckoutOp.class).setSource("master").call();
+
+        insertAndAdd(remoteGeogit.geogit, points1_modified);
+        RevCommit commit = remoteGeogit.geogit.command(CommitOp.class).call();
+        expectedMaster.addFirst(commit);
+
+        FetchOp fetch = fetch();
+        fetch.call();
+
+        // Make sure the local repository got all of the commits from master
+        localGeogit.geogit.command(CheckoutOp.class).setSource("refs/remotes/origin/master").call();
+        Iterator<RevCommit> logs = localGeogit.geogit.command(LogOp.class).call();
+        List<RevCommit> logged = new ArrayList<RevCommit>();
+        for (; logs.hasNext();) {
+            logged.add(logs.next());
+        }
+
+        assertEquals(3, logged.size());
+
+        assertEquals(expectedMaster.get(0), logged.get(0));
+        assertEquals(expectedMaster.get(1), logged.get(1));
+        assertEquals(expectedMaster.get(2), logged.get(2));
+    }
+
+    @Test
+    public void testFetchNewRefWithShallowClone() throws Exception {
+        // Commit several features to the remote
+
+        expectedMaster = new LinkedList<RevCommit>();
+        expectedBranch = new LinkedList<RevCommit>();
+
+        insertAndAdd(remoteGeogit.geogit, points1);
+        RevCommit commit = remoteGeogit.geogit.command(CommitOp.class).call();
+        RevCommit originCommit = commit;
+        expectedMaster.addFirst(commit);
+        expectedBranch.addFirst(commit);
+
+        insertAndAdd(remoteGeogit.geogit, lines1);
+        commit = remoteGeogit.geogit.command(CommitOp.class).call();
+        expectedMaster.addFirst(commit);
+
+        insertAndAdd(remoteGeogit.geogit, lines2);
+        commit = remoteGeogit.geogit.command(CommitOp.class).call();
+        expectedMaster.addFirst(commit);
+
+        // Make sure master has all of the commits
+        Iterator<RevCommit> logs = remoteGeogit.geogit.command(LogOp.class).call();
+        List<RevCommit> logged = new ArrayList<RevCommit>();
+        for (; logs.hasNext();) {
+            logged.add(logs.next());
+        }
+
+        assertEquals(expectedMaster, logged);
+
+        // clone the repository
+        CloneOp clone = clone();
+        clone.setDepth(2);
+        clone.setRepositoryURL(remoteGeogit.envHome.getCanonicalPath()).call();
+
+        // Create and checkout branch1
+        remoteGeogit.geogit.command(BranchCreateOp.class).setAutoCheckout(true).setName("Branch1")
+                .setSource(originCommit.getId().toString()).call();
+
+        // Commit some changes to branch1
+        insertAndAdd(remoteGeogit.geogit, points2);
+        commit = remoteGeogit.geogit.command(CommitOp.class).call();
+        expectedBranch.addFirst(commit);
+
+        insertAndAdd(remoteGeogit.geogit, points3);
+        commit = remoteGeogit.geogit.command(CommitOp.class).call();
+        expectedBranch.addFirst(commit);
+
+        // Make sure Branch1 has all of the commits
+        logs = remoteGeogit.geogit.command(LogOp.class).call();
+        logged = new ArrayList<RevCommit>();
+        for (; logs.hasNext();) {
+            logged.add(logs.next());
+        }
+
+        assertEquals(expectedBranch, logged);
+
+        FetchOp fetch = fetch();
+        fetch.call();
+
+        // Make sure the local repository got all of the commits from master
+        localGeogit.geogit.command(CheckoutOp.class).setSource("refs/remotes/origin/master").call();
+        logs = localGeogit.geogit.command(LogOp.class).call();
+        logged = new ArrayList<RevCommit>();
+        for (; logs.hasNext();) {
+            logged.add(logs.next());
+        }
+
+        assertEquals(2, logged.size());
+
+        assertEquals(expectedMaster.get(0), logged.get(0));
+        assertEquals(expectedMaster.get(1), logged.get(1));
+
+        // Make sure the local repository got all of the commits from Branch1
+        localGeogit.geogit.command(CheckoutOp.class).setSource("refs/remotes/origin/Branch1")
+                .call();
+        logs = localGeogit.geogit.command(LogOp.class).call();
+        logged = new ArrayList<RevCommit>();
+        for (; logs.hasNext();) {
+            logged.add(logs.next());
+        }
+
+        assertEquals(2, logged.size());
+
+        assertEquals(expectedBranch.get(0), logged.get(0));
+        assertEquals(expectedBranch.get(1), logged.get(1));
+    }
+
+    @Test
+    public void testFetchDepthWithFullRepo() throws Exception {
+        prepareForFetch(true);
+
+        FetchOp fetch = fetch();
+        fetch.setDepth(2);
+        fetch.call();
+
+        verifyFetch();
+    }
+
+    @Test
+    public void testFetchFullDepthWithFullRepo() throws Exception {
+        prepareForFetch(true);
+
+        FetchOp fetch = fetch();
+        fetch.setFullDepth(true);
+        fetch.call();
+
+        verifyFetch();
+    }
+
+    @Test
     public void testFetchAll() throws Exception {
-        prepareForFetch();
+        prepareForFetch(true);
 
         // fetch from the remote
         FetchOp fetch = fetch();
@@ -162,7 +367,7 @@ public class FetchOpTest extends RemoteRepositoryTestCase {
 
     @Test
     public void testFetchSpecificRemote() throws Exception {
-        prepareForFetch();
+        prepareForFetch(true);
 
         // fetch from the remote
         FetchOp fetch = fetch();
@@ -173,7 +378,7 @@ public class FetchOpTest extends RemoteRepositoryTestCase {
 
     @Test
     public void testFetchSpecificRemoteAndAll() throws Exception {
-        prepareForFetch();
+        prepareForFetch(true);
 
         // fetch from the remote
         FetchOp fetch = fetch();
@@ -191,7 +396,7 @@ public class FetchOpTest extends RemoteRepositoryTestCase {
 
     @Test
     public void testFetchNoChanges() throws Exception {
-        prepareForFetch();
+        prepareForFetch(true);
 
         // fetch from the remote
         FetchOp fetch = fetch();
@@ -207,7 +412,7 @@ public class FetchOpTest extends RemoteRepositoryTestCase {
 
     @Test
     public void testFetchWithPrune() throws Exception {
-        prepareForFetch();
+        prepareForFetch(true);
 
         // fetch from the remote
         FetchOp fetch = fetch();
@@ -227,7 +432,7 @@ public class FetchOpTest extends RemoteRepositoryTestCase {
 
     @Test
     public void testFetchWithPruneAndBranchAdded() throws Exception {
-        prepareForFetch();
+        prepareForFetch(true);
 
         // fetch from the remote
         FetchOp fetch = fetch();

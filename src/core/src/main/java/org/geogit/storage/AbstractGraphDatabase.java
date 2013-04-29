@@ -4,6 +4,11 @@
  */
 package org.geogit.storage;
 
+/**
+ * Provides a base implementation for different representations of the {@link GraphDatabase}.
+ * 
+ * @see GraphDatabase
+ */
 public abstract class AbstractGraphDatabase implements GraphDatabase {
 
 }

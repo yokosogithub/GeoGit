@@ -15,6 +15,6 @@ Feature: "push" command
      Then the response should contain "Cloning into 'localrepo'..."
       And the response should contain "Done."
      When I modify and add a feature
-      And I run the command "commit -m Commit5"
+      And I run the command "commit -m Commit6"
       And I run the command "push"
      Then it should answer ""

@@ -51,6 +51,9 @@ public class Clone extends AbstractCommand implements CLICommand {
     @Parameter(names = { "-b", "--branch" }, description = "Branch to checkout when clone is finished.")
     private String branch;
 
+    @Parameter(names = { "--depth" }, description = "Depth of the clone.  If depth is less than 1, a full clone will be performed.")
+    private int depth = 0;
+
     @Parameter(description = "<repository> [<directory>]")
     private List<String> args;
 
@@ -116,6 +119,7 @@ public class Clone extends AbstractCommand implements CLICommand {
         CloneOp clone = cli.getGeogit().command(CloneOp.class);
         clone.setProgressListener(cli.getProgressListener());
         clone.setBranch(branch).setRepositoryURL(repoURL);
+        clone.setDepth(depth);
 
         clone.call();
 

@@ -9,7 +9,6 @@ import java.io.IOException;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Queue;
 
 import org.geogit.api.Bucket;
 import org.geogit.api.GeoGIT;
@@ -44,15 +43,13 @@ import com.google.inject.Injector;
  * 
  * @see IRemoteRepo
  */
-public class LocalRemoteRepo implements IRemoteRepo {
+public class LocalRemoteRepo extends AbstractRemoteRepo {
 
     private GeoGIT remoteGeoGit;
 
     private Injector injector;
 
     private File workingDirectory;
-
-    private Queue<ObjectId> commitQueue;
 
     private List<ObjectId> touchedIds;
 
@@ -65,7 +62,6 @@ public class LocalRemoteRepo implements IRemoteRepo {
     public LocalRemoteRepo(Injector injector, File workingDirectory) {
         this.injector = injector;
         this.workingDirectory = workingDirectory;
-        this.commitQueue = new LinkedList<ObjectId>();
     }
 
     /**
@@ -137,22 +133,153 @@ public class LocalRemoteRepo implements IRemoteRepo {
     }
 
     /**
+     * CommitTraverser for pushes from a shallow clone. This works just like a normal push, but will
+     * throw an appropriate push exception when the history is not deep enough to perform the push.
+     */
+    private class ShallowPushTraverser extends CommitTraverser {
+
+        ObjectInserter objectInserter;
+
+        Repository source;
+
+        Repository destination;
+
+        public ShallowPushTraverser(Repository source, Repository destination) {
+            super(source.getGraphDatabase());
+            this.source = source;
+            this.destination = destination;
+            this.objectInserter = destination.newObjectInserter();
+            objectInserter = destination.newObjectInserter();
+        }
+
+        @Override
+        protected Evaluation evaluate(CommitNode commitNode) {
+
+            if (destination.getObjectDatabase().exists(commitNode.getObjectId())) {
+                return Evaluation.EXCLUDE_AND_PRUNE;
+            }
+
+            if (!commitNode.getObjectId().equals(ObjectId.NULL)
+                    && !source.getObjectDatabase().exists(commitNode.getObjectId())) {
+                // Source is too shallow
+                throw new PushException(StatusCode.HISTORY_TOO_SHALLOW);
+            }
+
+            return Evaluation.INCLUDE_AND_CONTINUE;
+        }
+
+        @Override
+        protected void apply(CommitNode commitNode) {
+            walkCommit(commitNode.getObjectId(), source, destination, objectInserter);
+        }
+    }
+
+    /**
+     * CommitTraverser for fetches from a shallow clone. This traverser will fetch data up to the
+     * fetch limit. If no fetch limit is defined, one will be calculated when a commit is fetched
+     * that I already have. The new fetch depth will be the depth from the starting commit to
+     * beginning of the orphaned branch.
+     */
+    private class ShallowFetchTraverser extends CommitTraverser {
+
+        ObjectInserter objectInserter;
+
+        Optional<Integer> fetchLimit;
+
+        Repository source;
+
+        Repository destination;
+
+        public ShallowFetchTraverser(Repository source, Repository destination,
+                Optional<Integer> fetchLimit) {
+            super(destination.getGraphDatabase());
+            this.source = source;
+            this.destination = destination;
+            this.objectInserter = destination.newObjectInserter();
+            this.fetchLimit = fetchLimit;
+        }
+
+        @Override
+        protected Evaluation evaluate(CommitNode commitNode) {
+            if (fetchLimit.isPresent() && commitNode.getDepth() > fetchLimit.get()) {
+                return Evaluation.EXCLUDE_AND_PRUNE;
+            }
+
+            if (!fetchLimit.isPresent()
+                    && destination.getObjectDatabase().exists(commitNode.getObjectId())) {
+                // calculate the new fetch limit
+                fetchLimit = Optional.of(destination.getGraphDatabase().getDepth(
+                        commitNode.getObjectId())
+                        + commitNode.getDepth() - 1);
+            }
+            return Evaluation.INCLUDE_AND_CONTINUE;
+        }
+
+        @Override
+        protected void apply(CommitNode commitNode) {
+            walkCommit(commitNode.getObjectId(), source, destination, objectInserter);
+        }
+    };
+
+    /**
+     * CommitTraverser for synchronizing data between a source and destination repository. The
+     * traverser will copy data from the source to the destination until there is nothing left to
+     * copy.
+     */
+    private class DeepCommitTraverser extends CommitTraverser {
+
+        ObjectInserter objectInserter;
+
+        Repository source;
+
+        Repository destination;
+
+        public DeepCommitTraverser(Repository source, Repository destination) {
+            super(destination.getGraphDatabase());
+            this.source = source;
+            this.destination = destination;
+            this.objectInserter = destination.newObjectInserter();
+        }
+
+        @Override
+        protected Evaluation evaluate(CommitNode commitNode) {
+            if (destination.getObjectDatabase().exists(commitNode.getObjectId())) {
+                return Evaluation.EXCLUDE_AND_PRUNE;
+            }
+            return Evaluation.INCLUDE_AND_CONTINUE;
+        }
+
+        @Override
+        protected void apply(CommitNode commitNode) {
+            walkCommit(commitNode.getObjectId(), source, destination, objectInserter);
+
+        }
+
+    };
+
+    /**
      * Fetch all new objects from the specified {@link Ref} from the remote.
      * 
      * @param localRepository the repository to add new objects to
      * @param ref the remote ref that points to new commit data
+     * @param fetchLimit the maximum depth to fetch
      */
     @Override
-    public void fetchNewData(Repository localRepository, Ref ref) {
+    public void fetchNewData(Repository localRepository, Ref ref, Optional<Integer> fetchLimit) {
+
         touchedIds = new LinkedList<ObjectId>();
-        ObjectInserter objectInserter = localRepository.newObjectInserter();
-        commitQueue.clear();
-        commitQueue.add(ref.getObjectId());
+
+        CommitTraverser traverser;
+        if (localRepository.getDepth().isPresent()) {
+            traverser = new ShallowFetchTraverser(remoteGeoGit.getRepository(), localRepository,
+                    fetchLimit);
+        } else {
+            traverser = new DeepCommitTraverser(remoteGeoGit.getRepository(), localRepository);
+        }
+
         try {
-            while (!commitQueue.isEmpty()) {
-                walkCommit(commitQueue.remove(), remoteGeoGit.getRepository(), localRepository,
-                        objectInserter);
-            }
+            traverser.traverse(ref.getObjectId());
+
         } catch (Exception e) {
             for (ObjectId oid : touchedIds) {
                 localRepository.getObjectDatabase().delete(oid);
@@ -186,15 +313,19 @@ public class LocalRemoteRepo implements IRemoteRepo {
     public void pushNewData(Repository localRepository, Ref ref, String refspec)
             throws PushException {
         checkPush(localRepository, ref, refspec);
+
         touchedIds = new LinkedList<ObjectId>();
-        ObjectInserter objectInserter = remoteGeoGit.getRepository().newObjectInserter();
-        commitQueue.clear();
-        commitQueue.add(ref.getObjectId());
+
+        CommitTraverser traverser;
+        if (localRepository.getDepth().isPresent()) {
+            traverser = new ShallowPushTraverser(localRepository, remoteGeoGit.getRepository());
+        } else {
+            traverser = new DeepCommitTraverser(localRepository, remoteGeoGit.getRepository());
+        }
+
         try {
-            while (!commitQueue.isEmpty()) {
-                walkCommit(commitQueue.remove(), localRepository, remoteGeoGit.getRepository(),
-                        objectInserter);
-            }
+            traverser.traverse(ref.getObjectId());
+
             Ref updatedRef = remoteGeoGit.command(UpdateRef.class).setName(refspec)
                     .setNewValue(ref.getObjectId()).call().get();
 
@@ -262,10 +393,6 @@ public class LocalRemoteRepo implements IRemoteRepo {
 
     private void walkCommit(ObjectId commitId, Repository from, Repository to,
             ObjectInserter objectInserter) {
-        // See if we already have it
-        if (to.getObjectDatabase().exists(commitId)) {
-            return;
-        }
 
         Optional<RevObject> object = from.command(RevObjectParse.class).setObjectId(commitId)
                 .call();
@@ -275,9 +402,6 @@ public class LocalRemoteRepo implements IRemoteRepo {
 
             objectInserter.insert(commit);
             touchedIds.add(commitId);
-            for (ObjectId parentCommit : commit.getParentIds()) {
-                commitQueue.add(parentCommit);
-            }
         }
     }
 

@@ -6,6 +6,7 @@ package org.geogit.repository;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Map;
 
 import org.geogit.api.AbstractGeoGitOp;
 import org.geogit.api.CommandLocator;
@@ -21,6 +22,8 @@ import org.geogit.api.plumbing.RefParse;
 import org.geogit.api.plumbing.ResolveTreeish;
 import org.geogit.api.plumbing.RevObjectParse;
 import org.geogit.api.plumbing.RevParse;
+import org.geogit.api.porcelain.ConfigOp;
+import org.geogit.api.porcelain.ConfigOp.ConfigAction;
 import org.geogit.storage.ConfigDatabase;
 import org.geogit.storage.GraphDatabase;
 import org.geogit.storage.ObjectDatabase;
@@ -65,6 +68,8 @@ public class Repository implements CommandLocator {
     @Inject
     private GraphDatabase graphDatabase;
 
+    public static final String DEPTH_CONFIG_KEY = "core.depth";
+
     /**
      * Creates the repository.
      */
@@ -106,6 +111,13 @@ public class Repository implements CommandLocator {
     @Override
     public StagingArea getIndex() {
         return index;
+    }
+
+    /**
+     * @return the {@link GraphDatabase} for this repository
+     */
+    public GraphDatabase getGraphDatabase() {
+        return graphDatabase;
     }
 
     /**
@@ -301,4 +313,25 @@ public class Repository implements CommandLocator {
         }
     }
 
+    /**
+     * Gets the depth of the repository, or {@link Optional#absent} if this is not a shallow clone.
+     * 
+     * @return the depth
+     */
+    public Optional<Integer> getDepth() {
+        int repoDepth = 0;
+        Optional<Map<String, String>> depthResult = command(ConfigOp.class)
+                .setAction(ConfigAction.CONFIG_GET).setName(DEPTH_CONFIG_KEY).call();
+        if (depthResult.isPresent()) {
+            String depthString = depthResult.get().get(DEPTH_CONFIG_KEY);
+            if (depthString != null) {
+                repoDepth = Integer.parseInt(depthString);
+            }
+        }
+
+        if (repoDepth == 0) {
+            return Optional.absent();
+        }
+        return Optional.of(repoDepth);
+    }
 }

@@ -22,11 +22,17 @@ import org.geogit.api.plumbing.ResolveGeogitDir;
 import org.neo4j.graphdb.Direction;
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Node;
+import org.neo4j.graphdb.Path;
 import org.neo4j.graphdb.Relationship;
 import org.neo4j.graphdb.RelationshipType;
 import org.neo4j.graphdb.Transaction;
 import org.neo4j.graphdb.factory.GraphDatabaseFactory;
 import org.neo4j.graphdb.index.Index;
+import org.neo4j.graphdb.traversal.Evaluation;
+import org.neo4j.graphdb.traversal.Evaluator;
+import org.neo4j.graphdb.traversal.TraversalDescription;
+import org.neo4j.graphdb.traversal.Traverser;
+import org.neo4j.kernel.Traversal;
 
 import com.google.common.base.Optional;
 import com.google.common.base.Throwables;
@@ -151,10 +157,12 @@ public class Neo4JGraphDatabase extends AbstractGraphDatabase {
 
         Builder<ObjectId> listBuilder = new ImmutableList.Builder<ObjectId>();
 
-        for (Relationship parent : node.getRelationships(Direction.OUTGOING,
-                CommitRelationshipTypes.PARENT)) {
-            Node parentNode = parent.getOtherNode(node);
-            listBuilder.add(ObjectId.valueOf((String) parentNode.getProperty("id")));
+        if (node != null) {
+            for (Relationship parent : node.getRelationships(Direction.OUTGOING,
+                    CommitRelationshipTypes.PARENT)) {
+                Node parentNode = parent.getOtherNode(node);
+                listBuilder.add(ObjectId.valueOf((String) parentNode.getProperty("id")));
+            }
         }
         return listBuilder.build();
     }
@@ -232,6 +240,41 @@ public class Neo4JGraphDatabase extends AbstractGraphDatabase {
         return node;
     }
 
+    /**
+     * Gets the number of ancestors of the commit until it reaches one with no parents, for example
+     * the root or an orphaned commit.
+     * 
+     * @param commitId the commit id to start from
+     * @return the depth of the commit
+     */
+    @Override
+    public int getDepth(final ObjectId commitId) {
+        Index<Node> idIndex = graphDB.index().forNodes("identifiers");
+        Node commitNode = idIndex.get("id", commitId.toString()).getSingle();
+        TraversalDescription traversalDescription = Traversal.description().breadthFirst()
+                .evaluator(new Evaluator() {
+                    @Override
+                    public Evaluation evaluate(Path path) {
+                        if (!path.endNode().hasRelationship(Direction.OUTGOING)) {
+                            return Evaluation.INCLUDE_AND_PRUNE;
+                        }
+                        return Evaluation.EXCLUDE_AND_CONTINUE;
+                    }
+
+                }).relationships(CommitRelationshipTypes.PARENT, Direction.OUTGOING);
+        Traverser traverser = traversalDescription.traverse(commitNode);
+
+        int min = Integer.MAX_VALUE;
+        for (Path path : traverser) {
+            int length = path.length();
+            if (length < min) {
+                min = length;
+            }
+        }
+
+        return min;
+    }
+
     @Override
     public Optional<ObjectId> findLowestCommonAncestor(ObjectId leftId, ObjectId rightId) {
         Index<Node> idIndex = graphDB.index().forNodes("identifiers");
@@ -240,9 +283,17 @@ public class Neo4JGraphDatabase extends AbstractGraphDatabase {
         Set<Node> rightSet = new HashSet<Node>();
 
         Queue<Node> leftQueue = new LinkedList<Node>();
-        leftQueue.add(idIndex.get("id", leftId.toString()).getSingle());
+        Node leftNode = idIndex.get("id", leftId.toString()).getSingle();
+        if (!leftNode.hasRelationship(Direction.OUTGOING)) {
+            return Optional.absent();
+        }
+        leftQueue.add(leftNode);
         Queue<Node> rightQueue = new LinkedList<Node>();
-        rightQueue.add(idIndex.get("id", rightId.toString()).getSingle());
+        Node rightNode = idIndex.get("id", rightId.toString()).getSingle();
+        if (!rightNode.hasRelationship(Direction.OUTGOING)) {
+            return Optional.absent();
+        }
+        rightQueue.add(rightNode);
         List<Node> potentialCommonAncestors = new LinkedList<Node>();
         while (!leftQueue.isEmpty() || !rightQueue.isEmpty()) {
             if (!leftQueue.isEmpty()) {
@@ -280,7 +331,9 @@ public class Neo4JGraphDatabase extends AbstractGraphDatabase {
             }
             for (Relationship parent : commit.getRelationships(Direction.OUTGOING,
                     CommitRelationshipTypes.PARENT)) {
-                myQueue.add(parent.getEndNode());
+                if (parent.getEndNode().hasRelationship(Direction.OUTGOING)) {
+                    myQueue.add(parent.getEndNode());
+                }
             }
         }
         return false;

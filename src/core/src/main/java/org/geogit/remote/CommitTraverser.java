@@ -1,0 +1,130 @@
+/* Copyright (c) 2011 TOPP - www.openplans.org. All rights reserved.
+ * This code is licensed under the LGPL 2.1 license, available at the root
+ * application directory.
+ */
+
+package org.geogit.remote;
+
+import java.util.LinkedList;
+import java.util.Queue;
+
+import org.geogit.api.ObjectId;
+import org.geogit.storage.GraphDatabase;
+
+import com.google.common.collect.ImmutableList;
+
+/**
+ * Provides a method of traversing the commit graph with overridable functions to determine when to
+ * prune the traversal, and when to process a commit node.
+ */
+abstract class CommitTraverser {
+
+    private Queue<CommitNode> commitQueue;
+
+    private GraphDatabase graphDb;
+
+    /**
+     * Traversal node that stores information about the ObjectId of the commit and it's depth from
+     * the starting node.
+     */
+    protected class CommitNode {
+        ObjectId objectId;
+
+        int depth;
+
+        public CommitNode(ObjectId objectId, int depth) {
+            this.objectId = objectId;
+            this.depth = depth;
+        }
+
+        public ObjectId getObjectId() {
+            return objectId;
+        }
+
+        public int getDepth() {
+            return depth;
+        }
+    }
+
+    /**
+     * Evaluation types to control the traversal.
+     * <p>
+     * INCLUDE - process the commit (apply)
+     * <p>
+     * EXCLUDE - do not process the commit
+     * <p>
+     * CONTINUE - continue traversal past this commit
+     * <p>
+     * PRUNE - do not traverse past this commit
+     */
+    protected enum Evaluation {
+        INCLUDE_AND_PRUNE, INCLUDE_AND_CONTINUE, EXCLUDE_AND_PRUNE, EXCLUDE_AND_CONTINUE
+    };
+
+    /**
+     * Constructs a new {@code CommitTraverser} backed by a {@link GraphDatabase}.
+     * 
+     * @param graphDb the graph database that contains the commit graph to traverse
+     */
+    public CommitTraverser(GraphDatabase graphDb) {
+        this.graphDb = graphDb;
+    }
+
+    /**
+     * Evaluate the commit node to determine if it should be applied, and if the traversal should
+     * continue through this commit's parents.
+     * 
+     * @param commitNode the commit to evaluate
+     * @return the {@link Evaluation} of the node
+     */
+    protected abstract Evaluation evaluate(CommitNode commitNode);
+
+    /**
+     * Process the accepted commit node.
+     * 
+     * @param commitNode the commit to apply
+     */
+    protected abstract void apply(CommitNode commitNode);
+
+    /**
+     * Traverse the commit graph from the given starting point.
+     * 
+     * @param startPoint the commit to start traversing from.
+     */
+    public final void traverse(ObjectId startPoint) {
+        this.commitQueue = new LinkedList<CommitNode>();
+        commitQueue.add(new CommitNode(startPoint, 1));
+        while (!commitQueue.isEmpty()) {
+            CommitNode node = commitQueue.remove();
+            Evaluation evaluation = evaluate(node);
+            switch (evaluation) {
+            case INCLUDE_AND_PRUNE:
+                apply(node);
+                break;
+            case INCLUDE_AND_CONTINUE:
+                apply(node);
+                addParents(node);
+                break;
+            case EXCLUDE_AND_PRUNE:
+                // Do nothing
+                break;
+            case EXCLUDE_AND_CONTINUE:
+                addParents(node);
+                break;
+            }
+        }
+    }
+
+    /**
+     * Add the given commit's parents to the traversal queue.
+     * 
+     * @param commitNode the commit whose parents need to be added
+     */
+    private void addParents(CommitNode commitNode) {
+        ImmutableList<ObjectId> parents = graphDb.getParents(commitNode.getObjectId());
+        for (ObjectId parent : parents) {
+            commitQueue.add(new CommitNode(parent, commitNode.getDepth() + 1));
+        }
+    }
+
+}

@@ -12,7 +12,6 @@ import java.net.URL;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Queue;
 
 import javax.annotation.Nullable;
 import javax.xml.stream.XMLInputFactory;
@@ -49,11 +48,9 @@ import com.google.common.io.Closeables;
  * 
  * @see IRemoteRepo
  */
-public class HttpRemoteRepo implements IRemoteRepo {
+public class HttpRemoteRepo extends AbstractRemoteRepo {
 
     private URL repositoryURL;
-
-    private Queue<ObjectId> commitQueue;
 
     private List<ObjectId> fetchedIds;
 
@@ -72,7 +69,6 @@ public class HttpRemoteRepo implements IRemoteRepo {
         } catch (MalformedURLException e) {
             this.repositoryURL = repositoryURL;
         }
-        commitQueue = new LinkedList<ObjectId>();
     }
 
     /**
@@ -234,20 +230,154 @@ public class HttpRemoteRepo implements IRemoteRepo {
     }
 
     /**
+     * CommitTraverser for pushes from a shallow clone. This works just like a normal push, but will
+     * throw an appropriate push exception when the history is not deep enough to perform the push.
+     */
+    private class ShallowPushTraverser extends CommitTraverser {
+
+        Repository source;
+
+        public ShallowPushTraverser(Repository source) {
+            super(source.getGraphDatabase());
+            this.source = source;
+        }
+
+        @Override
+        protected Evaluation evaluate(CommitNode commitNode) {
+
+            if (networkObjectExists(commitNode.getObjectId(), source)) {
+                return Evaluation.EXCLUDE_AND_PRUNE;
+            }
+
+            if (!commitNode.getObjectId().equals(ObjectId.NULL)
+                    && !source.getObjectDatabase().exists(commitNode.getObjectId())) {
+                // Source is too shallow
+                throw new PushException(StatusCode.HISTORY_TOO_SHALLOW);
+            }
+
+            return Evaluation.INCLUDE_AND_CONTINUE;
+        }
+
+        @Override
+        protected void apply(CommitNode commitNode) {
+            walkCommit(commitNode.getObjectId(), source, true);
+        }
+    }
+
+    /**
+     * CommitTraverser for fetches from a shallow clone. This traverser will fetch data up to the
+     * fetch limit. If no fetch limit is defined, one will be calculated when a commit is fetched
+     * that I already have. The new fetch depth will be the depth from the starting commit to
+     * beginning of the orphaned branch.
+     */
+    private class ShallowFetchTraverser extends CommitTraverser {
+
+        Optional<Integer> fetchLimit;
+
+        Repository destination;
+
+        public ShallowFetchTraverser(Repository destination, Optional<Integer> fetchLimit) {
+            super(destination.getGraphDatabase());
+            this.destination = destination;
+            this.fetchLimit = fetchLimit;
+        }
+
+        @Override
+        protected Evaluation evaluate(CommitNode commitNode) {
+            if (fetchLimit.isPresent() && commitNode.getDepth() > fetchLimit.get()) {
+                return Evaluation.EXCLUDE_AND_PRUNE;
+            }
+
+            if (!fetchLimit.isPresent()
+                    && destination.getObjectDatabase().exists(commitNode.getObjectId())) {
+                // calculate the new fetch limit
+                fetchLimit = Optional.of(destination.getGraphDatabase().getDepth(
+                        commitNode.getObjectId())
+                        + commitNode.getDepth() - 1);
+            }
+            return Evaluation.INCLUDE_AND_CONTINUE;
+        }
+
+        @Override
+        protected void apply(CommitNode commitNode) {
+            walkCommit(commitNode.getObjectId(), destination, false);
+        }
+    };
+
+    /**
+     * CommitTraverser for fetches in a full repository. This traverser will fetch data until the
+     * local repository is up to date.
+     */
+    private class DeepFetchTraverser extends CommitTraverser {
+
+        Repository destination;
+
+        public DeepFetchTraverser(Repository destination) {
+            super(destination.getGraphDatabase());
+            this.destination = destination;
+        }
+
+        @Override
+        protected Evaluation evaluate(CommitNode commitNode) {
+            if (destination.getObjectDatabase().exists(commitNode.getObjectId())) {
+                return Evaluation.EXCLUDE_AND_PRUNE;
+            }
+            return Evaluation.INCLUDE_AND_CONTINUE;
+        }
+
+        @Override
+        protected void apply(CommitNode commitNode) {
+            walkCommit(commitNode.getObjectId(), destination, false);
+        }
+    };
+
+    /**
+     * CommitTraverser for pushes from a full repository. This traverser will push all commits that
+     * are not already on the remote repository.
+     */
+    private class DeepPushTraverser extends CommitTraverser {
+
+        Repository source;
+
+        public DeepPushTraverser(Repository source) {
+            super(source.getGraphDatabase());
+            this.source = source;
+        }
+
+        @Override
+        protected Evaluation evaluate(CommitNode commitNode) {
+            if (networkObjectExists(commitNode.getObjectId(), source)) {
+                return Evaluation.EXCLUDE_AND_PRUNE;
+            }
+            return Evaluation.INCLUDE_AND_CONTINUE;
+        }
+
+        @Override
+        protected void apply(CommitNode commitNode) {
+            walkCommit(commitNode.getObjectId(), source, true);
+        }
+    };
+
+    /**
      * Fetch all new objects from the specified {@link Ref} from the remote.
      * 
      * @param localRepository the repository to add new objects to
      * @param ref the remote ref that points to new commit data
+     * @param fetchLimit the maximum depth to fetch
      */
     @Override
-    public void fetchNewData(Repository localRepository, Ref ref) {
+    public void fetchNewData(Repository localRepository, Ref ref, Optional<Integer> fetchLimit) {
         fetchedIds = new LinkedList<ObjectId>();
-        commitQueue.clear();
-        commitQueue.add(ref.getObjectId());
+
+        CommitTraverser traverser;
+        if (localRepository.getDepth().isPresent()) {
+            traverser = new ShallowFetchTraverser(localRepository, fetchLimit);
+        } else {
+            traverser = new DeepFetchTraverser(localRepository);
+        }
+
         try {
-            while (!commitQueue.isEmpty()) {
-                walkCommit(commitQueue.remove(), localRepository, false);
-            }
+            traverser.traverse(ref.getObjectId());
         } catch (Exception e) {
             for (ObjectId oid : fetchedIds) {
                 localRepository.getObjectDatabase().delete(oid);
@@ -282,30 +412,16 @@ public class HttpRemoteRepo implements IRemoteRepo {
             throws PushException {
         Optional<Ref> remoteRef = checkPush(localRepository, ref, refspec);
         beginPush();
-        commitQueue.clear();
-        commitQueue.add(ref.getObjectId());
-        while (!commitQueue.isEmpty()) {
-            ObjectId commitId = commitQueue.remove();
-            if (walkCommit(commitId, localRepository, true)) {
-                RevCommit oldCommit = localRepository.getCommit(commitId);
-                ObjectId parentId = oldCommit.getParentIds().get(0);
-                RevCommit parentCommit = localRepository.getCommit(parentId);
-                Iterator<DiffEntry> diff = localRepository.command(DiffTree.class)
-                        .setOldTree(parentCommit.getId()).setNewTree(oldCommit.getId()).call();
-                // Send the features that changed.
-                while (diff.hasNext()) {
-                    DiffEntry entry = diff.next();
-                    if (entry.getNewObject() != null) {
-                        NodeRef nodeRef = entry.getNewObject();
-                        moveObject(nodeRef.getNode().getObjectId(), localRepository, true);
-                        ObjectId metadataId = nodeRef.getMetadataId();
-                        if (!metadataId.isNull()) {
-                            moveObject(metadataId, localRepository, true);
-                        }
-                    }
-                }
-            }
+
+        CommitTraverser traverser;
+        if (localRepository.getDepth().isPresent()) {
+            traverser = new ShallowPushTraverser(localRepository);
+        } else {
+            traverser = new DeepPushTraverser(localRepository);
         }
+
+        traverser.traverse(ref.getObjectId());
+
         ObjectId originalRemoteRefValue = ObjectId.NULL;
         if (remoteRef.isPresent()) {
             originalRemoteRefValue = remoteRef.get().getObjectId();
@@ -521,27 +637,33 @@ public class HttpRemoteRepo implements IRemoteRepo {
         }
     }
 
-    private boolean walkCommit(ObjectId commitId, Repository localRepo, boolean sendObject) {
-        // See if we already have it
-        if (sendObject) {
-            if (networkObjectExists(commitId, localRepo)) {
-                return false;
-            }
-        } else if (localRepo.getObjectDatabase().exists(commitId)) {
-            return false;
-        }
-
+    private void walkCommit(ObjectId commitId, Repository localRepo, boolean sendObject) {
         Optional<RevObject> object = sendObject ? sendNetworkObject(commitId, localRepo)
                 : getNetworkObject(commitId, localRepo);
         if (object.isPresent() && object.get().getType().equals(TYPE.COMMIT)) {
             RevCommit commit = (RevCommit) object.get();
             walkTree(commit.getTreeId(), localRepo, sendObject);
 
-            for (ObjectId parentCommit : commit.getParentIds()) {
-                commitQueue.add(parentCommit);
+            if (sendObject) {
+                // Send the features that changed.
+                ObjectId parentId = commit.getParentIds().get(0);
+                RevCommit parentCommit = localRepo.getCommit(parentId);
+                Iterator<DiffEntry> diff = localRepo.command(DiffTree.class)
+                        .setOldTree(parentCommit.getId()).setNewTree(commit.getId()).call();
+
+                while (diff.hasNext()) {
+                    DiffEntry entry = diff.next();
+                    if (entry.getNewObject() != null) {
+                        NodeRef nodeRef = entry.getNewObject();
+                        moveObject(nodeRef.getNode().getObjectId(), localRepo, true);
+                        ObjectId metadataId = nodeRef.getMetadataId();
+                        if (!metadataId.isNull()) {
+                            moveObject(metadataId, localRepo, true);
+                        }
+                    }
+                }
             }
         }
-        return true;
     }
 
     private void walkTree(ObjectId treeId, Repository localRepo, boolean sendObject) {

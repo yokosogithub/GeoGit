@@ -53,6 +53,12 @@ public class Pull extends AbstractCommand implements CLICommand {
     @Parameter(names = "--rebase", description = "Rebase the current branch on top of the upstream branch after fetching.")
     private boolean rebase = false;
 
+    @Parameter(names = { "--depth" }, description = "Depth of the pull.")
+    private int depth = 0;
+
+    @Parameter(names = { "--fulldepth" }, description = "Pull the full history from the repository.")
+    private boolean fulldepth = false;
+
     @Parameter(description = "[<repository> [<refspec>...]]")
     private List<String> args;
 
@@ -65,10 +71,18 @@ public class Pull extends AbstractCommand implements CLICommand {
     @Override
     public void runInternal(GeogitCLI cli) throws Exception {
         checkState(cli.getGeogit() != null, "Not a geogit repository: " + cli.getPlatform().pwd());
+        checkState(depth > 0 ? !fulldepth : true,
+                "Cannot specify a depth and full depth.  Use --depth <depth> or --fulldepth.");
+
+        if (depth > 0 || fulldepth) {
+            checkState(cli.getGeogit().getRepository().getDepth().isPresent(),
+                    "Depth operations can only be used on a shallow clone.");
+        }
 
         PullOp pull = cli.getGeogit().command(PullOp.class);
         pull.setProgressListener(cli.getProgressListener());
-        pull.setAll(all).setRebase(rebase);
+        pull.setAll(all).setRebase(rebase).setFullDepth(fulldepth);
+        pull.setDepth(depth);
 
         if (args != null) {
             if (args.size() > 0) {
@@ -96,8 +110,10 @@ public class Pull extends AbstractCommand implements CLICommand {
                 } else if (ref.getType() == ChangeTypes.ADDED_REF) {
                     line = " * [new branch]     " + ref.getNewRef().localName() + " -> "
                             + ref.getNewRef().getName();
-                } else {
+                } else if (ref.getType() == ChangeTypes.REMOVED_REF) {
                     line = " x [deleted]        (none) -> " + ref.getOldRef().getName();
+                } else {
+                    line = "   [deepened]       " + ref.getNewRef().localName();
                 }
                 console.println(line);
             }

@@ -73,6 +73,9 @@ public class Push extends AbstractCommand implements CLICommand {
                         .println(
                                 "Push failed: The remote repository has changes that would be lost in the event of a push.");
                 break;
+            case HISTORY_TOO_SHALLOW:
+                cli.getConsole().println(
+                        "Push failed: There is not enough local history to complete the push.");
             }
         }
     }

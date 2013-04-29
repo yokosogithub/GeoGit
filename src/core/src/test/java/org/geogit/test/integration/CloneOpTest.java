@@ -66,6 +66,7 @@ public class CloneOpTest extends RemoteRepositoryTestCase {
 
         // clone from the remote
         CloneOp clone = clone();
+        clone.setDepth(0);
         clone.setRepositoryURL(remoteGeogit.envHome.getCanonicalPath()).call();
 
         // Make sure the local repository got all of the commits
@@ -76,6 +77,52 @@ public class CloneOpTest extends RemoteRepositoryTestCase {
         }
 
         assertEquals(expected, logged);
+    }
+
+    @Test
+    public void testShallowClone() throws Exception {
+        // Commit several features to the remote
+        List<Feature> features = Arrays.asList(points1, lines1, points2, lines2, points3, lines3);
+        LinkedList<RevCommit> expected = new LinkedList<RevCommit>();
+
+        for (Feature f : features) {
+            ObjectId oId = insertAndAdd(remoteGeogit.geogit, f);
+            final RevCommit commit = remoteGeogit.geogit.command(CommitOp.class).call();
+            expected.addFirst(commit);
+            Optional<RevObject> childObject = remoteGeogit.geogit.command(RevObjectParse.class)
+                    .setObjectId(oId).call();
+            assertTrue(childObject.isPresent());
+        }
+
+        // Make sure the remote has all of the commits
+        Iterator<RevCommit> logs = remoteGeogit.geogit.command(LogOp.class).call();
+        List<RevCommit> logged = new ArrayList<RevCommit>();
+        for (; logs.hasNext();) {
+            logged.add(logs.next());
+        }
+
+        assertEquals(expected, logged);
+
+        // Make sure the local repository has no commits prior to clone
+        logs = localGeogit.geogit.command(LogOp.class).call();
+        assertNotNull(logs);
+        assertFalse(logs.hasNext());
+
+        // clone from the remote
+        CloneOp clone = clone();
+        clone.setDepth(2);
+        clone.setRepositoryURL(remoteGeogit.envHome.getCanonicalPath()).call();
+
+        // Make sure the local repository got only 2 commits
+        logs = localGeogit.geogit.command(LogOp.class).call();
+        logged = new ArrayList<RevCommit>();
+        for (; logs.hasNext();) {
+            logged.add(logs.next());
+        }
+
+        assertEquals(2, logged.size());
+        assertEquals(expected.get(0), logged.get(0));
+        assertEquals(expected.get(1), logged.get(1));
     }
 
     @Test

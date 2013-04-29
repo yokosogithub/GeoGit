@@ -25,7 +25,7 @@ public class FetchResult {
 
     static public class ChangedRef {
         public enum ChangeTypes {
-            ADDED_REF, REMOVED_REF, CHANGED_REF
+            ADDED_REF, REMOVED_REF, CHANGED_REF, DEEPENED_REF
         }
 
         private Ref oldRef;

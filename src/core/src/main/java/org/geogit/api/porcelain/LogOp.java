@@ -455,6 +455,9 @@ public class LogOp extends AbstractGeoGitOp<Iterator<RevCommit>> {
             if (nextCommitId.isPresent()) {
                 final RevCommit commit = repo.getCommit(nextCommitId.get());
                 nextCommitId = commit.parentN(0);
+                if (nextCommitId.isPresent() && !repo.commitExists(nextCommitId.get())) {
+                    nextCommitId = Optional.absent();
+                }
                 return commit;
             }
             return endOfData();

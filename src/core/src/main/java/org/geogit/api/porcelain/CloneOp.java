@@ -15,6 +15,7 @@ import org.geogit.api.plumbing.RefParse;
 import org.geogit.api.plumbing.UpdateRef;
 import org.geogit.api.porcelain.ConfigOp.ConfigAction;
 import org.geogit.api.porcelain.ConfigOp.ConfigScope;
+import org.geogit.repository.Repository;
 
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
@@ -31,6 +32,8 @@ public class CloneOp extends AbstractGeoGitOp<Void> {
     private Optional<String> branch = Optional.absent();
 
     private String repositoryURL;
+
+    private Optional<Integer> depth = Optional.absent();
 
     /**
      * Constructs a new {@code CloneOp}.
@@ -58,6 +61,17 @@ public class CloneOp extends AbstractGeoGitOp<Void> {
     }
 
     /**
+     * @param depth the depth of the clone, if depth is < 1, then a full clone s performed
+     * @return {@code this}
+     */
+    public CloneOp setDepth(final int depth) {
+        if (depth > 0) {
+            this.depth = Optional.of(depth);
+        }
+        return this;
+    }
+
+    /**
      * Executes the clone operation.
      * 
      * @return {@code null}
@@ -73,8 +87,12 @@ public class CloneOp extends AbstractGeoGitOp<Void> {
         // Set up origin
         Remote remote = command(RemoteAddOp.class).setName("origin").setURL(repositoryURL).call();
 
+        if (depth.isPresent()) {
+            command(ConfigOp.class).setAction(ConfigAction.CONFIG_SET).setScope(ConfigScope.LOCAL)
+                    .setName(Repository.DEPTH_CONFIG_KEY).setValue(depth.get().toString()).call();
+        }
         // Fetch remote data
-        command(FetchOp.class).setProgressListener(subProgress(90.f)).call();
+        command(FetchOp.class).setDepth(depth.or(0)).setProgressListener(subProgress(90.f)).call();
 
         // Set up remote tracking branches
         final ImmutableSet<Ref> remoteRefs = command(LsRemote.class).setRemote(

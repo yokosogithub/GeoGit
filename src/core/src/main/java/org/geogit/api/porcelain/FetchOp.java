@@ -16,6 +16,8 @@ import org.geogit.api.SymRef;
 import org.geogit.api.plumbing.LsRemote;
 import org.geogit.api.plumbing.UpdateRef;
 import org.geogit.api.plumbing.UpdateSymRef;
+import org.geogit.api.porcelain.ConfigOp.ConfigAction;
+import org.geogit.api.porcelain.ConfigOp.ConfigScope;
 import org.geogit.api.porcelain.FetchResult.ChangedRef;
 import org.geogit.api.porcelain.FetchResult.ChangedRef.ChangeTypes;
 import org.geogit.remote.IRemoteRepo;
@@ -44,9 +46,13 @@ public class FetchOp extends AbstractGeoGitOp<FetchResult> {
 
     private boolean prune;
 
+    private boolean fullDepth = false;
+
     private List<Remote> remotes = new ArrayList<Remote>();
 
     private Repository localRepository;
+
+    private Optional<Integer> depth = Optional.absent();
 
     /**
      * Constructs a new {@code FetchOp}.
@@ -76,6 +82,31 @@ public class FetchOp extends AbstractGeoGitOp<FetchResult> {
     }
 
     /**
+     * If no depth is specified, fetch will pull all history from the specified ref(s). If the
+     * repository is shallow, it will maintain the existing depth.
+     * 
+     * @param depth maximum commit depth to fetch
+     * @return {@code this}
+     */
+    public FetchOp setDepth(final int depth) {
+        if (depth > 0) {
+            this.depth = Optional.of(depth);
+        }
+        return this;
+    }
+
+    /**
+     * If full depth is set on a shallow clone, then the full history will be fetched.
+     * 
+     * @param fulldepth whether or not to fetch the full history
+     * @return {@code this}
+     */
+    public FetchOp setFullDepth(boolean fullDepth) {
+        this.fullDepth = fullDepth;
+        return this;
+    }
+
+    /**
      * @param remoteName the name or URL of a remote repository to fetch from
      * @return {@code this}
      */
@@ -92,9 +123,7 @@ public class FetchOp extends AbstractGeoGitOp<FetchResult> {
         Preconditions.checkNotNull(remoteSupplier);
         Optional<Remote> remote = remoteSupplier.get();
         Preconditions.checkState(remote.isPresent(), "Remote could not be resolved.");
-        if (remote.isPresent()) {
-            remotes.add(remote.get());
-        }
+        remotes.add(remote.get());
 
         return this;
     }
@@ -118,10 +147,27 @@ public class FetchOp extends AbstractGeoGitOp<FetchResult> {
             // If no remotes are specified, default to the origin remote
             addRemote("origin");
         }
-        Preconditions.checkState(remotes.size() > 0,
-                "No remote repository specified.  Please specify a remote name to fetch from.");
 
         getProgressListener().started();
+
+        Optional<Integer> repoDepth = localRepository.getDepth();
+        if (repoDepth.isPresent()) {
+            if (fullDepth) {
+                depth = Optional.of(Integer.MAX_VALUE);
+            }
+            if (depth.isPresent()) {
+                if (depth.get() > repoDepth.get()) {
+                    command(ConfigOp.class).setAction(ConfigAction.CONFIG_SET)
+                            .setScope(ConfigScope.LOCAL).setName(Repository.DEPTH_CONFIG_KEY)
+                            .setValue(depth.get().toString()).call();
+                    repoDepth = depth;
+                }
+            }
+        } else if (depth.isPresent() || fullDepth) {
+            // Ignore depth, this is a full repository
+            depth = Optional.absent();
+            fullDepth = false;
+        }
 
         FetchResult result = new FetchResult();
 
@@ -133,8 +179,11 @@ public class FetchOp extends AbstractGeoGitOp<FetchResult> {
             final ImmutableSet<Ref> localRemoteRefs = command(LsRemote.class)
                     .retrieveLocalRefs(true).setRemote(Suppliers.ofInstance(Optional.of(remote)))
                     .call();
+
+            // If we have specified a depth to pull, we may have more history to pull from existing
+            // refs.
             List<ChangedRef> needUpdate = findOutdatedRefs(remote, remoteRemoteRefs,
-                    localRemoteRefs);
+                    localRemoteRefs, depth);
 
             if (prune) {
                 // Delete local refs that aren't in the remote
@@ -169,8 +218,30 @@ public class FetchOp extends AbstractGeoGitOp<FetchResult> {
                 if (ref.getType() != ChangeTypes.REMOVED_REF) {
                     refCount++;
                     subProgress.progress((refCount * 100.f) / needUpdate.size());
+
+                    Optional<Integer> newFetchLimit = depth;
+                    // If we haven't specified a depth, but this is a shallow repository, set the
+                    // fetch limit to the current repository depth.
+                    if (!newFetchLimit.isPresent() && repoDepth.isPresent()
+                            && ref.getType() == ChangeTypes.ADDED_REF) {
+                        newFetchLimit = repoDepth;
+                    }
                     // Fetch updated data from this ref
-                    remoteRepo.get().fetchNewData(localRepository, ref.getNewRef());
+                    remoteRepo.get().fetchNewData(localRepository, ref.getNewRef(), newFetchLimit);
+
+                    if (repoDepth.isPresent()) {
+                        // Update the repository depth if it is deeper than before.
+                        int newDepth = localRepository.getGraphDatabase().getDepth(
+                                ref.getNewRef().getObjectId());
+
+                        if (newDepth > repoDepth.get()) {
+                            command(ConfigOp.class).setAction(ConfigAction.CONFIG_SET)
+                                    .setScope(ConfigScope.LOCAL)
+                                    .setName(Repository.DEPTH_CONFIG_KEY)
+                                    .setValue(Integer.toString(newDepth)).call();
+                            repoDepth = Optional.of(newDepth);
+                        }
+                    }
 
                     // Update the ref
                     updateLocalRef(ref.getNewRef(), remote, localRemoteRefs);
@@ -193,6 +264,13 @@ public class FetchOp extends AbstractGeoGitOp<FetchResult> {
             }
             subProgress.complete();
         }
+
+        if (fullDepth) {
+            // The full history was fetched, this is no longer a shallow clone
+            command(ConfigOp.class).setAction(ConfigAction.CONFIG_UNSET)
+                    .setScope(ConfigScope.LOCAL).setName(Repository.DEPTH_CONFIG_KEY).call();
+        }
+
         getProgressListener().complete();
 
         return result;
@@ -222,7 +300,7 @@ public class FetchOp extends AbstractGeoGitOp<FetchResult> {
      * local repository
      */
     private List<ChangedRef> findOutdatedRefs(Remote remote, ImmutableSet<Ref> remoteRefs,
-            ImmutableSet<Ref> localRemoteRefs) {
+            ImmutableSet<Ref> localRemoteRefs, Optional<Integer> depth) {
 
         List<ChangedRef> changedRefs = Lists.newLinkedList();
 
@@ -234,6 +312,14 @@ public class FetchOp extends AbstractGeoGitOp<FetchResult> {
                     ChangedRef changedRef = new ChangedRef(local.get(), remoteRef,
                             ChangeTypes.CHANGED_REF);
                     changedRefs.add(changedRef);
+                } else if (depth.isPresent()) {
+                    int commitDepth = localRepository.getGraphDatabase().getDepth(
+                            local.get().getObjectId());
+                    if (depth.get() > commitDepth) {
+                        ChangedRef changedRef = new ChangedRef(local.get(), remoteRef,
+                                ChangeTypes.DEEPENED_REF);
+                        changedRefs.add(changedRef);
+                    }
                 }
             } else {
                 ChangedRef changedRef = new ChangedRef(null, remoteRef, ChangeTypes.ADDED_REF);

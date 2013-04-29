@@ -11,6 +11,7 @@ import org.geogit.api.Ref;
 import org.geogit.api.porcelain.PushException;
 import org.geogit.repository.Repository;
 
+import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableSet;
 
 /**
@@ -51,8 +52,9 @@ public interface IRemoteRepo {
      * 
      * @param localRepository the repository to add new objects to
      * @param ref the remote ref that points to new commit data
+     * @param fetchLimit the maximum depth to fetch
      */
-    public void fetchNewData(Repository localRepository, Ref ref);
+    public void fetchNewData(Repository localRepository, Ref ref, Optional<Integer> fetchLimit);
 
     /**
      * Push all new objects from the specified {@link Ref} to the remote.
