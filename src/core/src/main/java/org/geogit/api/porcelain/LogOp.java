@@ -342,7 +342,6 @@ public class LogOp extends AbstractGeoGitOp<Iterator<RevCommit>> {
          * @param tip the first commit in the history
          * @param repo the repository where the commits are stored.
          */
-        @SuppressWarnings("unchecked")
         public ChronologicalHistoryIterator(final List<ObjectId> tips, final Repository repo) {
             parents = Sets.newHashSet();
             for (ObjectId tip : tips) {
@@ -406,11 +405,10 @@ public class LogOp extends AbstractGeoGitOp<Iterator<RevCommit>> {
         /**
          * Constructs a new {@code LinearHistoryIterator} with the given parameters.
          * 
-         * @param tip the first commit in the history
+         * @param tipList the first commits in the history
          * @param repo the repository where the commits are stored.
          * @param graphDb
          */
-        @SuppressWarnings("unchecked")
         public TopologicalHistoryIterator(final List<ObjectId> tipsList, final Repository repo,
                 GraphDatabase graphDb) {
             this.graphDb = graphDb;

@@ -10,7 +10,7 @@ The log command, which we have already seen, is used to browse the history of a 
 	$geogit log
 
 
-We can change two things in the output of the log command: the amount of information displayed for each commit, and the commits that are printed out. In the fist case, we can tell GeoGit to just show one line for each commit or, if we want the full information, to display all the changes introduced by each commit. To select which commits which commits should be shown, we can request a restricted list of them by setting time constraints, the commits of a single author, or just the history of the current branch without merged branches, among other available options.
+We can change two things in the output of the log command: the amount of information displayed for each commit, and the commits that are printed out. In the fist case, we can tell GeoGit to just show one line for each commit or, if we want the full information, to display all the changes introduced by each commit. To select which commits should be shown, we can request a restricted list of them by setting time constraints, the commits of a single author, or just the history of the current branch without merged branches, among other available options.
 
 Setting how commits are displayed
 ----------------------------------

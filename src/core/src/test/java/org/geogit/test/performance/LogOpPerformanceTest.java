@@ -39,9 +39,10 @@ public class LogOpPerformanceTest extends RepositoryTestCase {
         // createAndLogMultipleCommits(1000 * 1000);
     }
 
+    @Ignore
     @Test
     public void testBranches() throws Exception {
-        createAndLogMultipleBranches(200, 100);
+        createAndLogMultipleBranches(200, 200);
     }
 
     private void createAndLogMultipleBranches(int numBranches, int numCommits) throws Exception {
