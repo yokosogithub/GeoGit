@@ -108,5 +108,5 @@ Scenario: Show a list from an empty directory
 Scenario: Run ls-tree on an empty repository
     Given I have a repository
      When I run the command "ls-tree -r"
-     Then the response should contain "The working tree is empty"
+     Then it should answer ""
          

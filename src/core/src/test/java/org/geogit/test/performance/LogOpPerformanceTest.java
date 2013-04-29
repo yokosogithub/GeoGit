@@ -6,8 +6,10 @@ package org.geogit.test.performance;
 
 import java.text.NumberFormat;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Locale;
 
+import org.geogit.api.ObjectId;
 import org.geogit.api.Ref;
 import org.geogit.api.RevCommit;
 import org.geogit.api.porcelain.BranchCreateOp;
@@ -19,6 +21,7 @@ import org.junit.Ignore;
 import org.junit.Test;
 
 import com.google.common.base.Stopwatch;
+import com.google.common.collect.Lists;
 
 public class LogOpPerformanceTest extends RepositoryTestCase {
 
@@ -53,24 +56,32 @@ public class LogOpPerformanceTest extends RepositoryTestCase {
                 + " branches with " + numberFormat.format(numCommits) + " commits each...");
 
         Stopwatch sw = new Stopwatch().start();
-        createBranches(numBranches, numCommits);
+        List<ObjectId> ids = createBranches(numBranches, numCommits);
         sw.stop();
         System.err.println(numberFormat.format(numBranches) + " branches with "
                 + numberFormat.format(numCommits) + " comits each created in " + sw.toString());
         System.err.flush();
 
+        LogOp op = geogit.command(LogOp.class);
+        for (ObjectId id : ids) {
+            op.addCommit(id);
+        }
         sw.reset().start();
-        Iterator<RevCommit> commits = geogit.command(LogOp.class).setAll(true).call();
+        Iterator<RevCommit> commits = op.call();
         sw.stop();
         System.err.println("LogOp took " + sw.toString());
 
         benchmarkIteration(commits);
 
+        op = geogit.command(LogOp.class).setTopoOrder(true);
+        for (ObjectId id : ids) {
+            op.addCommit(id);
+        }
         sw.reset().start();
-        commits = geogit.command(LogOp.class).setTopoOrder(true).setAll(true).call();
+        commits = op.call();
         sw.stop();
         System.err.println("LogOp using --topo-order took " + sw.toString());
-        // benchmarkIteration(commits);
+        benchmarkIteration(commits);
 
         super.tearDown();
     }
@@ -98,10 +109,11 @@ public class LogOpPerformanceTest extends RepositoryTestCase {
         super.tearDown();
     }
 
-    private void createCommits(int numCommits, String branchName) {
+    private RevCommit createCommits(int numCommits, String branchName) {
         int largeStep = numCommits / 10;
         int smallStep = numCommits / 100;
 
+        RevCommit commit = null;
         for (int i = 1; i <= numCommits; i++) {
             if (i % largeStep == 0) {
                 System.err.print(i);
@@ -110,13 +122,15 @@ public class LogOpPerformanceTest extends RepositoryTestCase {
                 System.err.print('.');
                 System.err.flush();
             }
-            geogit.command(CommitOp.class).setAllowEmpty(true)
+            commit = geogit.command(CommitOp.class).setAllowEmpty(true)
                     .setMessage("Commit " + i + " in branch " + branchName).call();
         }
         System.err.print('\n');
+        return commit;
     }
 
-    private void createBranches(int numBranches, int numCommits) {
+    private List<ObjectId> createBranches(int numBranches, int numCommits) {
+        List<ObjectId> list = Lists.newArrayList();
         for (int i = 1; i <= numBranches; i++) {
             String branchName = "branch" + Integer.toString(i);
             geogit.command(CommitOp.class).setAllowEmpty(true)
@@ -127,10 +141,12 @@ public class LogOpPerformanceTest extends RepositoryTestCase {
             geogit.command(CommitOp.class).setAllowEmpty(true)
                     .setMessage("Commit during " + branchName).call();
             geogit.command(CheckoutOp.class).setSource(branchName).call();
-            createCommits(numCommits / 2, branchName);
+            RevCommit lastCommit = createCommits(numCommits / 2, branchName);
             geogit.command(CheckoutOp.class).setSource(Ref.MASTER).call();
-            System.err.println("branch " + Integer.toString(i));
+            list.add(lastCommit.getId());
+            // System.err.println("branch " + Integer.toString(i));
         }
+        return list;
     }
 
     private void benchmarkIteration(Iterator<RevCommit> commits) {
@@ -140,8 +156,7 @@ public class LogOpPerformanceTest extends RepositoryTestCase {
         int c = 0;
         while (commits.hasNext()) {
             c++;
-            RevCommit commit = commits.next();
-            // System.err.println(commit.getMessage() + " " + commit.getCommitter().getTimestamp());
+            commits.next();
         }
         sw.stop();
         System.err.println("Iterated " + numberFormat.format(c) + " commits in " + sw.toString());

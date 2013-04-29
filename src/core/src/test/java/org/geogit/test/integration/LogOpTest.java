@@ -287,6 +287,7 @@ public class LogOpTest extends RepositoryTestCase {
         final RevCommit commit2_2 = geogit.command(CommitOp.class).call();
 
         try {
+            logOp = geogit.command(LogOp.class);
             logOp.setSince(oid1_1).call();
             fail("Expected ISE as since is not a commit");
         } catch (IllegalStateException e) {
@@ -294,6 +295,7 @@ public class LogOpTest extends RepositoryTestCase {
         }
 
         try {
+            logOp = geogit.command(LogOp.class);
             logOp.setSince(null).setUntil(oid2_2).call();
             fail("Expected ISE as until is not a commit");
         } catch (IllegalStateException e) {
@@ -303,18 +305,22 @@ public class LogOpTest extends RepositoryTestCase {
         List<RevCommit> logs;
         List<RevCommit> expected;
 
+        logOp = geogit.command(LogOp.class);
         logs = toList(logOp.setSince(commit1_2.getId()).setUntil(null).call());
         expected = Arrays.asList(commit2_2, commit2_1);
         assertEquals(expected, logs);
 
+        logOp = geogit.command(LogOp.class);
         logs = toList(logOp.setSince(commit2_2.getId()).setUntil(null).call());
         expected = Collections.emptyList();
         assertEquals(expected, logs);
 
+        logOp = geogit.command(LogOp.class);
         logs = toList(logOp.setSince(commit1_2.getId()).setUntil(commit2_1.getId()).call());
         expected = Arrays.asList(commit2_1);
         assertEquals(expected, logs);
 
+        logOp = geogit.command(LogOp.class);
         logs = toList(logOp.setSince(null).setUntil(commit2_1.getId()).call());
         expected = Arrays.asList(commit2_1, commit1_2, commit1_1);
         assertEquals(expected, logs);
@@ -437,7 +443,9 @@ public class LogOpTest extends RepositoryTestCase {
         insertAndAdd(lines1);
         final RevCommit c4 = geogit.command(CommitOp.class).setMessage("commit for " + idL1).call();
 
-        LogOp op = geogit.command(LogOp.class).setAll(true);
+        LogOp op = geogit.command(LogOp.class);
+        op.addCommit(c2.getId());
+        op.addCommit(c4.getId());
         Iterator<RevCommit> iterator = op.call();
         assertNotNull(iterator);
         assertTrue(iterator.hasNext());
@@ -474,11 +482,11 @@ public class LogOpTest extends RepositoryTestCase {
         // checkout master
         geogit.command(CheckoutOp.class).setSource("master").call();
         insertAndAdd(points3);
-        final RevCommit c3 = geogit.command(CommitOp.class).setMessage("commit for " + idP3).call();
+        geogit.command(CommitOp.class).setMessage("commit for " + idP3).call();
         insertAndAdd(lines1);
-        final RevCommit c4 = geogit.command(CommitOp.class).setMessage("commit for " + idL1).call();
+        geogit.command(CommitOp.class).setMessage("commit for " + idL1).call();
 
-        LogOp op = geogit.command(LogOp.class).setBranch("branch1");
+        LogOp op = geogit.command(LogOp.class).addCommit(c2.getId());
         Iterator<RevCommit> iterator = op.call();
         assertNotNull(iterator);
         assertTrue(iterator.hasNext());

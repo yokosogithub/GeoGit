@@ -262,7 +262,7 @@ public class GeogitCLI {
         try {
             execute(args);
         } catch (Exception e) {
-            exitCode = -1;
+            exitCode = -1;            
             try {
                 if (e instanceof ParameterException) {
                     consoleReader.println(e.getMessage() + ". See geogit --help.");
@@ -331,17 +331,25 @@ public class GeogitCLI {
         }
     }
 
-    /**
+    /*
+     * This prints out only porcelain commands
+     * 
      * @param mainCommander
+     * 
      * @throws IOException
      */
     public void printShortCommandList(JCommander mainCommander) {
         TreeSet<String> commandNames = Sets.newTreeSet();
-        int longesCommandLenght = 0;
+        int longestCommandLenght = 0;
         // do this to ignore aliases
         for (String name : mainCommander.getCommands().keySet()) {
-            commandNames.add(name);
-            longesCommandLenght = Math.max(longesCommandLenght, name.length());
+            JCommander command = mainCommander.getCommands().get(name);
+            Class<? extends Object> clazz = command.getObjects().get(0).getClass();
+            String packageName = clazz.getPackage().getName();
+            if (!packageName.startsWith("org.geogit.cli.plumbing")) {
+                commandNames.add(name);
+                longestCommandLenght = Math.max(longestCommandLenght, name.length());
+            }
         }
         ConsoleReader console = getConsole();
         try {
@@ -349,7 +357,7 @@ public class GeogitCLI {
             console.println();
             console.println("The most commonly used geogit commands are:");
             for (String cmd : commandNames) {
-                console.print(Strings.padEnd(cmd, longesCommandLenght, ' '));
+                console.print(Strings.padEnd(cmd, longestCommandLenght, ' '));
                 console.print("\t");
                 console.println(mainCommander.getCommandDescription(cmd));
             }
@@ -360,6 +368,42 @@ public class GeogitCLI {
     }
 
     /**
+     * This prints out all commands, including plumbing ones, without description
+     * 
+     * @param mainCommander
+     * @throws IOException
+     */
+    public void printCommandList(JCommander mainCommander) {
+        TreeSet<String> commandNames = Sets.newTreeSet();
+        int longestCommandLenght = 0;
+        // do this to ignore aliases
+        for (String name : mainCommander.getCommands().keySet()) {
+            commandNames.add(name);
+            longestCommandLenght = Math.max(longestCommandLenght, name.length());
+        }
+        ConsoleReader console = getConsole();
+        try {
+            console.println("usage: geogit <command> [<args>]");
+            console.println();
+            int i = 0;
+            for (String cmd : commandNames) {
+                console.print(Strings.padEnd(cmd, longestCommandLenght, ' '));
+                i++;
+                if (i % 3 == 0) {
+                    console.println();
+                } else {
+                    console.print("\t");
+                }
+            }
+            console.flush();
+        } catch (IOException e) {
+            throw Throwables.propagate(e);
+        }
+    }
+
+    /**
+     * /**
+     * 
      * @return the ProgressListener for the command line interface. If it doesn't exist, a new one
      *         will be constructed.
      * @see ProgressListener
