@@ -11,7 +11,6 @@ import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 
-import org.apache.commons.io.FileUtils;
 import org.geogit.api.GeoGIT;
 import org.geogit.api.GeogitTransaction;
 import org.geogit.api.GlobalInjectorBuilder;
@@ -141,7 +140,7 @@ public abstract class RepositoryTestCase extends Assert {
     private Injector injector;
 
     @Rule
-    public TemporaryFolder tempFolder = new TemporaryFolder();
+    public TemporaryFolder repositoryTempFolder = new TemporaryFolder();
 
     @Before
     public final void setUp() throws Exception {
@@ -155,11 +154,7 @@ public abstract class RepositoryTestCase extends Assert {
     }
 
     protected final void doSetUp() throws IOException, SchemaException, ParseException, Exception {
-        envHome = tempFolder.getRoot();
-
-        FileUtils.deleteDirectory(envHome);
-        assertFalse(envHome.exists());
-        assertTrue(envHome.mkdirs());
+        envHome = repositoryTempFolder.getRoot();
 
         injector = createInjector();
 
@@ -221,9 +216,6 @@ public abstract class RepositoryTestCase extends Assert {
         }
         repo = null;
         injector = null;
-        System.gc();
-        FileUtils.deleteDirectory(envHome);
-        assertFalse(envHome.exists());
     }
 
     /**

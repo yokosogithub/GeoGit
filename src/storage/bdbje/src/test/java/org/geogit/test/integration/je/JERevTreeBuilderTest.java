@@ -5,7 +5,6 @@
 package org.geogit.test.integration.je;
 
 import org.geogit.di.GeogitModule;
-import org.geogit.storage.bdbje.JEStorageModule;
 import org.junit.Test;
 
 import com.google.inject.Guice;
@@ -15,8 +14,8 @@ import com.google.inject.util.Modules;
 public class JERevTreeBuilderTest extends org.geogit.test.integration.RevTreeBuilderTest {
     @Override
     protected Injector createInjector() {
-        return Guice.createInjector(Modules.override(new GeogitModule())
-                .with(new JEStorageModule()));
+        return Guice.createInjector(Modules.override(new GeogitModule()).with(
+                new JETestStorageModule()));
     }
 
     @Test

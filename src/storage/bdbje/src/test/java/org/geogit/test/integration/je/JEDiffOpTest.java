@@ -5,7 +5,6 @@
 package org.geogit.test.integration.je;
 
 import org.geogit.di.GeogitModule;
-import org.geogit.storage.bdbje.JEStorageModule;
 
 import com.google.inject.Guice;
 import com.google.inject.Injector;
@@ -14,7 +13,7 @@ import com.google.inject.util.Modules;
 public class JEDiffOpTest extends org.geogit.test.integration.DiffOpTest {
     @Override
     protected Injector createInjector() {
-        return Guice.createInjector(Modules.override(new GeogitModule())
-                .with(new JEStorageModule()));
+        return Guice.createInjector(Modules.override(new GeogitModule()).with(
+                new JETestStorageModule()));
     }
 }

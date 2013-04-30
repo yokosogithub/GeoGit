@@ -9,7 +9,6 @@ import java.io.File;
 import org.geogit.api.Platform;
 import org.geogit.api.TestPlatform;
 import org.geogit.di.GeogitModule;
-import org.geogit.storage.bdbje.JEStorageModule;
 import org.junit.Rule;
 import org.junit.rules.TemporaryFolder;
 
@@ -32,7 +31,7 @@ public class JECommitOpTest extends org.geogit.test.integration.CommitOpTest {
         }
         Platform testPlatform = new TestPlatform(workingDirectory);
         return Guice.createInjector(Modules.override(new GeogitModule()).with(
-                new JEStorageModule(), new TestModule(testPlatform)));
+                new JETestStorageModule(), new TestModule(testPlatform)));
     }
 
 }

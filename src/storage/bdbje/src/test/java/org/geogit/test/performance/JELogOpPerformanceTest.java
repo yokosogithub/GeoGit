@@ -5,7 +5,7 @@
 package org.geogit.test.performance;
 
 import org.geogit.di.GeogitModule;
-import org.geogit.storage.bdbje.JEStorageModule;
+import org.geogit.test.integration.je.JETestStorageModule;
 
 import com.google.inject.Guice;
 import com.google.inject.Injector;
@@ -14,7 +14,7 @@ import com.google.inject.util.Modules;
 public class JELogOpPerformanceTest extends LogOpPerformanceTest {
     @Override
     protected Injector createInjector() {
-        return Guice.createInjector(Modules.override(new GeogitModule())
-                .with(new JEStorageModule()));
+        return Guice.createInjector(Modules.override(new GeogitModule()).with(
+                new JETestStorageModule()));
     }
 }
