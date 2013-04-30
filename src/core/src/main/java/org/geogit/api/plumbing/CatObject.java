@@ -45,8 +45,8 @@ public class CatObject extends AbstractGeoGitOp<CharSequence> {
             streamWriter.flush();
             writer.write(revObject, output);
         } catch (IOException e) {
-            throw new IllegalArgumentException("Cannot print object: "
-                    + revObject.getId().toString());
+            throw new IllegalStateException("Cannot print object: " + revObject.getId().toString(),
+                    e);
         }
         return output.toString();
     }

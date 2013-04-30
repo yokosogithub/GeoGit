@@ -315,7 +315,6 @@ public class CommitOp extends AbstractGeoGitOp<RevCommit> {
             cb.setAuthorTimestamp(authorTime);
             cb.setCommitterTimeZoneOffset(committerTimeZoneOffset);
             cb.setAuthorTimeZoneOffset(authorTimeZoneOffset);
-            // cb.setBounds(bounds);
             commit = cb.build();
         } else {
             CommitBuilder cb = new CommitBuilder(this.commit);

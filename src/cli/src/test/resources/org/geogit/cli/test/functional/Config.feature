@@ -7,16 +7,19 @@ Feature: "config" command
     Given I am in an empty directory
      When I run the command "config testing.key value"
      Then it should answer "The config location is invalid"
+      And it should exit with non-zero exit code
 
   Scenario: Try to get a local config value in the current empty directory
     Given I am in an empty directory
      When I run the command "config --get --local testing.key"
      Then it should answer "the config location is invalid"
+      And it should exit with non-zero exit code
 
   Scenario: Try to list local variables in the current empty directory
     Given I am in an empty directory
      When I run the command "config --list --local"
      Then it should answer "the config location is invalid"
+      And it should exit with non-zero exit code
      
   Scenario: Try to get a config value in the current empty directory
     Given I am in an empty directory
@@ -62,6 +65,7 @@ Feature: "config" command
      Then it should answer "No section or name was provided"
      When I run the command "config --local --get"
      Then it should answer "No section or name was provided"
+      And it should exit with non-zero exit code
      
   Scenario: Try to get a config value using malformed key
     Given I have a repository
@@ -71,6 +75,7 @@ Feature: "config" command
      Then it should answer "The section or key is invalid"
      When I run the command "config --local --get test"
      Then it should answer "The section or key is invalid"
+      And it should exit with non-zero exit code
      
   Scenario: Try to get a config value using the alternate syntax 
     Given I have a repository
@@ -117,6 +122,7 @@ Feature: "config" command
     Given I have a repository
      When I run the command "config --unset --get testing.local"
      Then it should answer "Tried to use more than one action at a time"
+      And it should exit with non-zero exit code
      
   Scenario: Remove a section from the current repository
     Given I have a repository
@@ -143,7 +149,8 @@ Feature: "config" command
      When I run the command "config --remove-section somerandomsection"
      Then it should answer "Could not find a section with the name provided"
      When I run the command "config --global --remove-section somerandomsection"
-     Then it should answer "Could not find a section with the name provided"  
+     Then it should answer "Could not find a section with the name provided"
+      And it should exit with non-zero exit code  
        
   Scenario: Add 2 config values and list them
     Given I have a repository

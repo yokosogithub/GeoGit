@@ -7,6 +7,7 @@ Feature: "fetch" command
     Given I am in an empty directory
      When I run the command "fetch origin"
      Then the response should start with "Not a geogit repository"
+      And it should exit with non-zero exit code
      
   Scenario: Try to fetch from origin
     Given I have a repository with a remote
@@ -54,6 +55,7 @@ Feature: "fetch" command
     Given I have a repository
      When I run the command "fetch origin"
      Then it should answer "Remote could not be resolved."
+      And it should exit with non-zero exit code
      
   Scenario: Try to fetch from origin with pruning
     Given I have a repository with a remote

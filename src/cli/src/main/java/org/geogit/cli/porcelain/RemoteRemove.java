@@ -13,6 +13,7 @@ import org.geogit.api.porcelain.RemoteException;
 import org.geogit.api.porcelain.RemoteRemoveOp;
 import org.geogit.cli.AbstractCommand;
 import org.geogit.cli.CLICommand;
+import org.geogit.cli.CommandFailedException;
 import org.geogit.cli.GeogitCLI;
 
 import com.beust.jcommander.Parameter;
@@ -49,7 +50,7 @@ public class RemoteRemove extends AbstractCommand implements CLICommand {
         checkState(cli.getGeogit() != null, "Not a geogit repository: " + cli.getPlatform().pwd());
         if (params == null || params.size() != 1) {
             printUsage();
-            return;
+            throw new CommandFailedException();
         }
 
         try {
@@ -57,10 +58,10 @@ public class RemoteRemove extends AbstractCommand implements CLICommand {
         } catch (RemoteException e) {
             switch (e.statusCode) {
             case REMOTE_NOT_FOUND:
-                cli.getConsole().println("Could not find a remote called '" + params.get(0) + "'.");
-                break;
+                throw new IllegalArgumentException("Could not find a remote called '"
+                        + params.get(0) + "'.", e);
             default:
-                break;
+                throw new IllegalArgumentException(e);
             }
         }
     }

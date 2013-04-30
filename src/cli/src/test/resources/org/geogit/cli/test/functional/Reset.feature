@@ -49,11 +49,13 @@ Feature: "reset" command
     Given I am in an empty directory
      When I run the command "reset"
      Then it should answer "Not in a geogit repository."
+      And it should exit with non-zero exit code
      
   Scenario: Try to reset with no commits
     Given I have a repository
      When I run the command "reset"
      Then it should answer "Commit could not be resolved."
+      And it should exit with non-zero exit code
      
   Scenario: Try to reset to a nonexistant commit
     Given I have a repository
@@ -65,6 +67,7 @@ Feature: "reset" command
      When I modify and add a feature
       And I run the command "reset nonexistant"
      Then it should answer "Commit could not be resolved."
+      And it should exit with non-zero exit code
      
   Scenario: Try to do a reset of a specific path
     Given I have a repository
@@ -134,4 +137,5 @@ Feature: "reset" command
      When I modify and add a feature
       And I run the command "reset --hard --path Lines"
      Then it should answer "Ambiguous call, cannot specify paths and reset mode."
+      And it should exit with non-zero exit code
      

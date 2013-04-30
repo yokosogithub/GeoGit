@@ -4,6 +4,8 @@
  */
 package org.geogit.cli.porcelain;
 
+import static com.google.common.base.Preconditions.checkState;
+
 import java.io.IOException;
 import java.util.Iterator;
 import java.util.List;
@@ -68,15 +70,9 @@ public class Status implements CLICommand {
      */
     @Override
     public void run(GeogitCLI cli) throws Exception {
-        if (cli.getGeogit() == null) {
-            cli.getConsole().println("Not a geogit repository: " + cli.getPlatform().pwd());
-            return;
-        }
+        checkState(cli.getGeogit() != null, "Not a geogit repository: " + cli.getPlatform().pwd());
 
-        if (limit < 0) {
-            cli.getConsole().println("Limit must be 0 or greater.");
-            return;
-        }
+        Preconditions.checkArgument(limit >= 0, "Limit must be 0 or greater.");
 
         ConsoleReader console = cli.getConsole();
         GeoGIT geogit = cli.getGeogit();

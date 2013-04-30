@@ -245,8 +245,8 @@ public class LogOp extends AbstractGeoGitOp<Iterator<RevCommit>> {
                 newestCommitId = command(RevParse.class).setRefSpec(Ref.HEAD).call().get();
             } else {
                 if (!repository.commitExists(this.until)) {
-                    throw new IllegalStateException("Provided 'until' commit id does not exist: "
-                            + until.toString());
+                    throw new IllegalArgumentException(
+                            "Provided 'until' commit id does not exist: " + until.toString());
                 }
                 newestCommitId = this.until;
             }
@@ -254,8 +254,8 @@ public class LogOp extends AbstractGeoGitOp<Iterator<RevCommit>> {
                 oldestCommitId = ObjectId.NULL;
             } else {
                 if (!repository.commitExists(this.since)) {
-                    throw new IllegalStateException("Provided 'since' commit id does not exist: "
-                            + since.toString());
+                    throw new IllegalArgumentException(
+                            "Provided 'since' commit id does not exist: " + since.toString());
                 }
                 oldestCommitId = this.since;
             }
@@ -384,7 +384,6 @@ public class LogOp extends AbstractGeoGitOp<Iterator<RevCommit>> {
                 }
             }
             this.repo = repo;
-            // this.lastCommit = tips.pop();
         }
 
         /**

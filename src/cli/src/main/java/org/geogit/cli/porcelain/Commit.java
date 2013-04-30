@@ -28,6 +28,7 @@ import org.geogit.api.porcelain.NothingToCommitException;
 import org.geogit.cli.AbstractCommand;
 import org.geogit.cli.AnsiDecorator;
 import org.geogit.cli.CLICommand;
+import org.geogit.cli.CommandFailedException;
 import org.geogit.cli.GeogitCLI;
 
 import com.beust.jcommander.Parameter;
@@ -100,7 +101,7 @@ public class Commit extends AbstractCommand implements CLICommand {
                     .setProgressListener(cli.getProgressListener()).call();
         } catch (NothingToCommitException noChanges) {
             console.println(ansi.fg(Color.RED).a(noChanges.getMessage()).reset().toString());
-            return;
+            throw new CommandFailedException();
         }
         final ObjectId parentId = commit.parentN(0).or(ObjectId.NULL);
 

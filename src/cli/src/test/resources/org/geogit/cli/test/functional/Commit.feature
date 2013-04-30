@@ -29,29 +29,33 @@ Feature: "commit" command
       And I have staged "lines1"
      When I run the command "commit"
      Then it should answer "No commit message provided"
+      And it should exit with non-zero exit code
      
   Scenario: Try to commit using a previous commit
     Given I have a repository
       And I have several commits
       And I have staged "points1"      
      When I run the command "commit -c HEAD~1"
-     Then the response should not contain "No commit message provided"     
+     Then the response should not contain "No commit message provided"          
      
   Scenario: Try to commit from an empty directory
     Given I am in an empty directory
      When I run the command "commit -m Test"
      Then the response should start with "Not a geogit repository"
+      And it should exit with non-zero exit code
      
   Scenario: Try to commit when no changes have been made
     Given I have a repository
      When I run the command "commit -m Test"
      Then the response should start with "Nothing to commit"
+      And it should exit with non-zero exit code
 
   Scenario: Try to commit when there is a merge conflict
     Given I have a repository
       And I have a merge conflict state
      When I run the command "commit -m Message"
      Then the response should contain "Cannot run operation while merge conflicts exist"
+      And it should exit with non-zero exit code
      
   Scenario: Try to commit without message while solving a merge conflict
     Given I have a repository

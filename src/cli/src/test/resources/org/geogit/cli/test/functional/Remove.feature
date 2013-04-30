@@ -38,6 +38,7 @@ Feature: "rm" command
       And I run the command "commit -m Test"
      When I run the command "rm Points"
      Then the response should contain "Cannot remove tree Points if -r is not specified"
+      And it should exit with non-zero exit code
      
   Scenario: Try to delete an inexistent feature
     Given I have a repository
@@ -46,5 +47,6 @@ Feature: "rm" command
       And I have staged "lines1"
       And I run the command "commit -m Test"
      When I run the command "rm Points/Wrong.1"
-     Then the response should contain "did not match any feature or tree"   
+     Then the response should contain "did not match any feature or tree"
+      And it should exit with non-zero exit code   
      

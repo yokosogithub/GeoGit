@@ -12,6 +12,7 @@ import static org.geogit.cli.test.functional.GlobalState.stdOut;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNotSame;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
@@ -62,6 +63,8 @@ public class InitSteps extends AbstractGeogitFunctionalTest {
 
     private static final String LINE_SEPARATOR = System.getProperty("line.separator");
 
+    private int exitCode;
+
     @Rule
     public TemporaryFolder tempFolder = new TemporaryFolder();
 
@@ -104,7 +107,17 @@ public class InitSteps extends AbstractGeogitFunctionalTest {
         for (int i = 0; i < args.length; i++) {
             args[i] = args[i].replace("${currentdir}", currentDirectory.getAbsolutePath());
         }
-        runCommand(args);
+        this.exitCode = runCommand(args);
+    }
+
+    @Then("^it should exit with non-zero exit code$")
+    public void it_should_exit_with_non_zero_exit_code() throws Throwable {
+        assertNotSame(exitCode, 0);
+    }
+
+    @Then("^it should exit with zero exit code$")
+    public void it_should_exit_with_zero_exit_code() throws Throwable {
+        assertEquals(exitCode, 0);
     }
 
     @Then("^it should answer \"([^\"]*)\"$")

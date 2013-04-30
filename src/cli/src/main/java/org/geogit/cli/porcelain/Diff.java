@@ -63,13 +63,11 @@ public class Diff extends AbstractCommand implements CLICommand {
     @Override
     protected void runInternal(GeogitCLI cli) throws Exception {
         if (refSpec.size() > 2) {
-            cli.getConsole().println("Commit list is too long :" + refSpec);
-            return;
+            throw new IllegalArgumentException("Commit list is too long :" + refSpec);
         }
 
         if (nogeom && summary) {
-            cli.getConsole().println("Only one printing mode allowed");
-            return;
+            throw new IllegalArgumentException("Only one printing mode allowed");
         }
 
         GeoGIT geogit = cli.getGeogit();

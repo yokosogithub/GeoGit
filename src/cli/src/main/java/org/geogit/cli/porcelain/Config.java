@@ -18,6 +18,7 @@ import org.geogit.api.porcelain.ConfigOp.ConfigAction;
 import org.geogit.api.porcelain.ConfigOp.ConfigScope;
 import org.geogit.cli.AbstractCommand;
 import org.geogit.cli.CLICommand;
+import org.geogit.cli.CommandFailedException;
 import org.geogit.cli.GeogitCLI;
 
 import com.beust.jcommander.Parameter;
@@ -97,11 +98,11 @@ public class Config extends AbstractCommand implements CLICommand {
 
             if (action == ConfigAction.CONFIG_NO_ACTION) {
                 printUsage();
-                return;
+                throw new CommandFailedException();
             }
             if (global && local) {
                 printUsage();
-                return;
+                throw new CommandFailedException();
             }
             ConfigScope scope = ConfigScope.DEFAULT;
 
@@ -139,39 +140,31 @@ public class Config extends AbstractCommand implements CLICommand {
             switch (e.statusCode) {
             case INVALID_LOCATION:
                 // TODO: This could probably be more descriptive.
-                cli.getConsole().println("The config location is invalid");
-                break;
+                throw new IllegalStateException("The config location is invalid", e);
             case CANNOT_WRITE:
-                cli.getConsole().println("Cannot write to the config");
-                break;
+                throw new IllegalStateException("Cannot write to the config", e);
             case SECTION_OR_NAME_NOT_PROVIDED:
-                cli.getConsole().println("No section or name was provided");
-                break;
+                throw new IllegalArgumentException("No section or name was provided", e);
             case SECTION_OR_KEY_INVALID:
-                cli.getConsole().println("The section or key is invalid");
-                break;
-            case OPTION_DOES_N0T_EXIST:
-                cli.getConsole().println("Tried to unset an option that does not exist");
-                break;
+                throw new IllegalArgumentException("The section or key is invalid", e);
+            case OPTION_DOES_NOT_EXIST:
+                throw new IllegalArgumentException("Tried to unset an option that does not exist",
+                        e);
             case MULTIPLE_OPTIONS_MATCH:
-                cli.getConsole().println(
-                        "Tried to unset/set an option for which multiple lines match");
-                break;
+                throw new IllegalArgumentException(
+                        "Tried to unset/set an option for which multiple lines match", e);
             case INVALID_REGEXP:
-                cli.getConsole().println("Tried to use an invalid regexp");
-                break;
+                throw new IllegalArgumentException("Tried to use an invalid regexp", e);
             case USERHOME_NOT_SET:
-                cli.getConsole().println("Used --global option without $HOME being properly set");
-                break;
+                throw new IllegalArgumentException(
+                        "Used --global option without $HOME being properly set", e);
             case TOO_MANY_ACTIONS:
-                cli.getConsole().println("Tried to use more than one action at a time");
-                break;
+                throw new IllegalArgumentException("Tried to use more than one action at a time", e);
             case MISSING_SECTION:
-                cli.getConsole().println("Could not find a section with the name provided");
-                break;
+                throw new IllegalArgumentException(
+                        "Could not find a section with the name provided", e);
             case TOO_MANY_ARGS:
-                cli.getConsole().println("Too many arguments provided.");
-                break;
+                throw new IllegalArgumentException("Too many arguments provided.", e);
             }
         }
     }
