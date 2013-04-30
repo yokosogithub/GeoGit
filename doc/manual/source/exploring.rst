@@ -79,7 +79,7 @@ Describing an element in a GeoGit repository is done using the ``show`` command.
 
 The ``show`` command prints a formatted description of a given element. This description is a human-readable version of the element, which does not contain all the information needed to serialize it. 
 
-The ``show`` command  just take as input a string that defines the object to describe. All supported notations are allowed for both commands, as they are described in `Referencing a GeoGit element`_.
+The ``show`` command  just take as input a string that defines the object to describe. All supported notations are allowed for both commands, as they are described in :ref:`referencing`_.
 
 Below you can find the output of the  ``show`` command for certain types of objects.
 

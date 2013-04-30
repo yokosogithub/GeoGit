@@ -197,3 +197,27 @@ Commits can also be filtered by author and committer, using the ``--author`` and
 	$ geogit log --author geogituser
 
 All the above options can be combined to filter the resulting list of commits according to several different criteria.	
+
+Exploring the history of a single feature
+------------------------------------------
+
+If instead of studying the history of the whole repository, you want to see who introduced changes in a certain feature, GeoGit provides an additional command. Using the ``blame`` command you will get a list of the commits that introduced the last change for each attribute, including the default geometry.
+
+The command takes a single parameter, which is the path to the feature to analyze. Its output is a list of all the attributes in the feature, each one with a description of the commit that was the last one to change it, as shown in the example below.
+
+::
+
+	$ geogit blame parks/parks.1
+	parktype: 2d13209 volaya volaya@opengeo.org 2013-12-29 03:57:08
+	area: ea7d536 volaya volaya@opengeo.org 2013-57-12 03:57:32
+	perimeter: 2d13209 volaya volaya@opengeo.org 2013-12-29 03:57:08
+	the_geom: 2d13209 volaya volaya@opengeo.org 2013-12-29 03:57:08
+	name: 2d13209 volaya volaya@opengeo.org 2013-12-29 05:22:16
+	owner: 2d13209 volaya volaya@opengeo.org 2013-12-29 03:57:08
+	usage: a1d6e2c volaya volaya@opengeo.org 2013-12-29 03:55:28
+	agency: 2d13209 volaya volaya@opengeo.org 2013-12-29 03:57:08
+
+You can see that, along with the commit ID, the information about the corresponding author and commit time is displayed.
+
+The list contains all attributes that currently exist in the feature. For attributes that might not exist because there were removed and a feature type change was introduced, no information is provided.
+
