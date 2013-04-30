@@ -1,5 +1,5 @@
-/* Copyright (c) 2011 TOPP - www.openplans.org. All rights reserved.
- * This code is licensed under the LGPL 2.1 license, available at the root
+/* Copyright (c) 2013 OpenPlans. All rights reserved.
+ * This code is licensed under the BSD New License, available at the root
  * application directory.
  */
 
@@ -12,7 +12,6 @@ import java.util.List;
 
 import jline.console.ConsoleReader;
 
-import org.geogit.api.ObjectId;
 import org.geogit.api.RevObject;
 import org.geogit.api.plumbing.WalkGraphOp;
 import org.geogit.cli.AbstractCommand;
@@ -46,12 +45,10 @@ public class WalkGraph extends AbstractCommand implements CLICommand {
         } else {
             ref = refList.get(0);
         }
-        Iterator<RevObject> iter = 
-            cli.getGeogit() //
-               .command(WalkGraphOp.class)
-               .setReference(ref) //
-               // .setStrategy(lsStrategy) //
-               .call();
+        Iterator<RevObject> iter = cli.getGeogit() //
+                .command(WalkGraphOp.class).setReference(ref) //
+                // .setStrategy(lsStrategy) //
+                .call();
 
         final ConsoleReader console = cli.getConsole();
         if (!iter.hasNext()) {

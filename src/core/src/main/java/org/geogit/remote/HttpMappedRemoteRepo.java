@@ -1,3 +1,7 @@
+/* Copyright (c) 2013 OpenPlans. All rights reserved.
+ * This code is licensed under the BSD New License, available at the root
+ * application directory.
+ */
 package org.geogit.remote;
 
 import java.io.BufferedReader;
@@ -13,11 +17,10 @@ import java.net.URL;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map.Entry;
 
 import org.geogit.api.ObjectId;
-import org.geogit.api.Pair;
 import org.geogit.api.Ref;
+import org.geogit.api.RepositoryFilter.FilterDescription;
 import org.geogit.api.RevCommit;
 import org.geogit.api.RevObject;
 import org.geogit.api.RevObject.TYPE;
@@ -265,12 +268,12 @@ class HttpMappedRemoteRepo extends AbstractMappedRemoteRepo {
         message.add("commitId", new JsonPrimitive(commitId.toString()));
         message.add("tracked", trackedArray);
         JsonArray filterArray = new JsonArray();
-        for (Entry<String, Pair<String, String>> entry : filter.readableRepositoryFilters
-                .entrySet()) {
+        ImmutableList<FilterDescription> repoFilters = filter.getFilterDescriptions();
+        for (FilterDescription description : repoFilters) {
             JsonObject typeFilter = new JsonObject();
-            typeFilter.add("featuretype", new JsonPrimitive(entry.getKey()));
-            typeFilter.add("type", new JsonPrimitive(entry.getValue().getFirst()));
-            typeFilter.add("filter", new JsonPrimitive(entry.getValue().getSecond()));
+            typeFilter.add("featuretype", new JsonPrimitive(description.getFeatureType()));
+            typeFilter.add("type", new JsonPrimitive(description.getFilterType()));
+            typeFilter.add("filter", new JsonPrimitive(description.getFilter()));
             filterArray.add(typeFilter);
         }
         message.add("filter", filterArray);
