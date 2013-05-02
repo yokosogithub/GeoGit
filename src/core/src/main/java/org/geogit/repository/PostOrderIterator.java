@@ -118,13 +118,14 @@ public class PostOrderIterator extends AbstractIterator<RevObject> {
                     final List<ObjectId> next = successors.findSuccessors(object);
                     toVisit.add(0, next);
                 } else {
-                    final ObjectId id = currentList.remove(0);
-                    if (successors.previsit(id)) {
-                        return database.get(id);
-                    }
                     // We just visited a node, so switch back to enqueuing mode in order to make
                     // sure the successors of the next one at this depth are visited. 
                     enqueue = true;
+                    final ObjectId id = currentList.remove(0);
+
+                    if (successors.previsit(id)) {
+                        return database.get(id);
+                    }
                 }
             }
         }
