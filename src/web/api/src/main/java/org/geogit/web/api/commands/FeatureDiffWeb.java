@@ -208,14 +208,14 @@ public class FeatureDiffWeb implements WebAPICommand {
                 Optional<Object> value = values.get(index);
                 if (Geometry.class.isAssignableFrom(attributes.get(index).getType().getBinding())) {
                     Optional<Geometry> temp = Optional.absent();
-                    if (value.isPresent()) {
+                    if (value.isPresent() || all) {
                         tempDiffs.put(
                                 attributes.get(index),
                                 new GeometryAttributeDiff(Optional.fromNullable((Geometry) value
                                         .orNull()), temp));
                     }
                 } else {
-                    if (value.isPresent()) {
+                    if (value.isPresent() || all) {
                         tempDiffs.put(attributes.get(index), new GenericAttributeDiffImpl(value,
                                 Optional.absent()));
                     }
@@ -230,12 +230,12 @@ public class FeatureDiffWeb implements WebAPICommand {
                 Optional<Object> value = values.get(index);
                 if (Geometry.class.isAssignableFrom(attributes.get(index).getType().getBinding())) {
                     Optional<Geometry> temp = Optional.absent();
-                    if (value.isPresent()) {
+                    if (value.isPresent() || all) {
                         tempDiffs.put(attributes.get(index), new GeometryAttributeDiff(temp,
                                 Optional.fromNullable((Geometry) value.orNull())));
                     }
                 } else {
-                    if (value.isPresent()) {
+                    if (value.isPresent() || all) {
                         tempDiffs.put(attributes.get(index),
                                 new GenericAttributeDiffImpl(Optional.absent(), value));
                     }
