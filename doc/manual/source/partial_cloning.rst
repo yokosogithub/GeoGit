@@ -124,6 +124,14 @@ If anytime you want to turn your shallow clone into a regular one that contains 
 That will get not only the new commits that might exist in the remote repository, but also the full history.
 
 
+to extend the shallow clone up to a certain number of commits, but not to its full history, a given depth can be specified using the ``--depth`` parameter. 
+
+For example, if the shallow clone has a depth of 2, the following call will turn it into a repository with a depth of 3:
+
+::
+
+	$ geogit fetch --depth 3
+
 
 Sparse cloning
 ---------------
@@ -150,7 +158,7 @@ The picture below depicts the original and sparse clone for this case.
 
 Numbers indicate the commits that affect each feature.
 
-In the cloned repo, the first commit (1) is replaced by a new one (1') that just adds one of the features. The second commit (2) is not applied at all, since none of the changes it introduces affect the cloned repository, so it is skipped. The third one (3) is replaced by a new commit (3') that just modifies the only feature in the cloned repository. In this case, the original commit could not be applied, since it modifies a feature that does not exist, making it impossible to apply the change. 
+In the cloned repo, the first commit (1) is replaced by a new one (1') that just adds one of the features. The second commit (2) is not applied at all, since none of the changes it introduces affect the cloned repository, so it is skipped. The third one (3) is replaced by a new commit (3') that just modifies the only feature in the cloned repository. In this case, the original commit could not be applied, and it also has to be modified. The original commit (3) changed both features that were in the database after commit 2, but in the sparse clone, only one of those features is found, since the other one was not added, as it falls outside the are of interest. Since comit 3 modifies a feature that does not exist in the sparse clone, it cannot be applied, and it is replaced by 3', which just contains the changes that affect the feature that is available.
 
 If your cloned repository was to be used just by itself and never had any interaction with the original repository from where it comes from, or with other cloned ones (whether partial or complete), then a partial clone could be created just creating new commits that resulted in a partial repository. However, since interaction is important, a partial clone has to keep track of commits in the original repository, because otherwise it wouldn't be able to interact with it. 
 
@@ -200,6 +208,7 @@ The picture below shows the mapping between the histories of the original and sp
 
 With that mapping, GeoGit knows that the second commit in your sparse clone (2') is related to a commit in the original remote repository (in this case, commit 2). Using that information, it will know how to handle the new commit that you have added, which has 2' as its parent, and which should have commit 2 as new parent when pushed to the remote repository.
 
+
 Much in the same way, if new commits are added in the remote repository, a pull operation would bring just those new commits and not the ones in the previous history, although their commit Id's are different. GeoGit can recognize that the head of your local repository, although having a different Id that is not found in the remote repository, actually corresponds to a given commit in the remote, so it will fetch only the new commits added after that commit.
 
 When a commit doesn't contain any changes that affect the cloned repository, as in the second commit of the second example above, we've seen that it is skipped and no commit is made in the local repository. That means that the original commit cannot be mapped to it's equivalent in the cloned repository, since there is no such equivalent. Instead, it's mapped to the previous commit that was actually applied on the cloned repository. The relation between original commits and commits in the sparse clone is not necesarilly a 1:1
@@ -208,7 +217,9 @@ The figure below shows the history mapping for the second example previously int
 
 .. figure:: ../img/partial_clone_mapping_2.png
 
-One exception to that situation happens when the empty commit is the last one at the tip of the branch. In that case, and to be able to synchronize new commits, it is necessary to map the last commit to an equivalent in the local repo. GeoGit will create a new empty commit that does not introduce any change but acts as a placeholder and guarantees a correct synchronization.
+GeoGit keeps not just a mapping that relates each original commit to a sparse commit, but also another one that maps each sparse commit to the original commit it comes from. This is done to avoid ambiguity in the case above, where several original commits are mapped to a single sparse comit. When pushing commits to a remote, GeoGit must know the single origin commit that each sparse commit comes from, and the *original-to-sparse* map might not be enough to resolve that single origin. By keeping an additional mapping, GeoGit can always find a single origin commit for each sparse commit in the sparse clone.
+
+One exception to the mapping strategy described above happens when the empty commit is the last one at the tip of the branch. In that case, and to be able to synchronize new commits, it is necessary to map the last commit to an equivalent in the local repo, and not the previous non-empty sparse commit. GeoGit will create a new empty commit that does not introduce any change but acts as a placeholder and guarantees a correct synchronization.
 
 The figure shows an example of this particular case.
 
@@ -216,11 +227,19 @@ The figure shows an example of this particular case.
 
 Pull operations from a sparse clone are also *sparse*, that meaning that new commits that are fetched from the repository will also be filtered, and a new commit will be generated based on them. That commit will be added to the mapping, and the relation between it and its original counterpart will be handled by GeoGit in the same way it handles the commits that were fetched during the initial clone operation.
 
+If new data is added in the remote repository, and it does not pass the filter of the sparse clone, a fetch operation will not bring that new data into the sparse clone.
+
+A particular case happens when tracked features that were inside the filter are are modified and moved outside of it. In this case, GeoGit will continue to fetch those features and track them.
+
 For instance, let's suppose that a new commit is introduced in our example remote repository with two commits, and that it moves one of the features that were inside the filter area to a new position outside of it.
 
 .. figure:: ../img/sparse_moving_out.png
 
-If we pull from our sparse clone, the new commit will be added, but the change it introduces will not be reported as a modification of the feature, but as a deletion instead. This is because, in the sparse clone, that feature will not be included, since it doesn't pass the filter that defines the repository.
+If we pull from our sparse clone, the new commit will be added, and that feature that is now outside will still be tracked and not deleted, even though it now falls outside the filter area. 
+
+The opposite case is also possible: a feature that was outside the filter area but has been modified and now falls within it. In this case, the feature will be tracked in the sparse clone starting from the commit that introduced the changed that put it into the filter area. Although that commit made a modification on a feature that already existed in the original remote, that same feature did not exist in the sparse clone. For this reason, the corresponding sparse commit to be applied to the sparse clone will not report a modification, but a new added feature instead.
+
+Import operations do not consider the filter of the sparse clone, so an import operation will work as usual, even if the imported data does not pass the filter that defines the sparse clone
 
 
 Creating a sparse clone
@@ -234,18 +253,26 @@ To create a sparse clone, the ``clone`` command is used with the ``--filter`` op
 
 	$geogit clone ../geogit-repo --filter myfilter.xml
 
-The filter file is an xml file which contains a CQL (Common Query Language) filter. You can find more information about the CQL syntax in the `this page <http://docs.geoserver.org/latest/en/user/tutorials/cql/cql_tutorial.html>`_ at the GeoServer website.
-
-The following is a very simple example of a CQL filter that restricts the interest area to the northern hemisphere.
+The filter file is an Ini file which contains filters to be applied to all features, or to specific feature types. Here you can see an example of the content of one of such files.
 
 ::
 
-	BBOX(geom, -180, 180, 0, 90)
+	[default]
+	type = CQL
+	filter = BBOX(way,-10002860,1438301,-9235433,1786854,'EPSG:900913')
+	[roads]
+	type = CQL
+	filter = BBOX(way,-9532345,1223411,-9325678,1632340,'EPSG:900913')
+
+There are two filters in this file. Both filters are CQL (Common Query Language) filters. The first one will be applied to all features, while the second one will only be appplied to features with the ``roads`` feature type.
+
+Notice that filtering is done based on attributes, in this case a geometry attribute named ``way``. In case you need more information, remember that you can run the ``show`` command passing a tree path as parameter, and you will get a description of the feature type of that tree, which includes information about its attributes. To know more, check the :ref:`exploring` section of this manual.
+
+You can find more information about the CQL syntax in the `this page <http://docs.geoserver.org/latest/en/user/tutorials/cql/cql_tutorial.html>`_ at the GeoServer website.
+
+To know more about Ini files, check the corresponding `Wikipedia entry <http://en.wikipedia.org/wiki/INI_file>`_.
 
 
-Notice that we are not providing a CRS (the ``BBOX`` function accepts one, but it is an optional parameter), so the filter computations will be done in the CRS of the features in the repository, which doesn't have to be the same for all of the features.
-
-Also notice that filtering is done based on attributes, in this case a geometry attribute named ``the_geom``. In case you need more information, remember that you can run the ``show`` command passing a tree path as parameter, and you will get a description of the feature type of that tree, which includes information about its attributes. To know more, check the :ref:`exploring` section of this manual.
 
 Limitations
 ~~~~~~~~~~~~
@@ -258,15 +285,13 @@ Here is a list of the main limitations of a sparse clone:
 
 - A sparse can can only track one branch from a remote repository. The name of the branch has to specified when creating the sparse clone, using the ``branch`` switch. If not specified, the ``master`` branch from the remote repository will be fetched.
 
-.. todo:: confirm this:  Additional branches from the remote repository can be fetched, but are cannot be tracked, that meaning that you cannot push or pull from that branch. Instead, the history of the branch is fetched and it can be used disconnected from the remote repository. To fetch a branch from the parent repository of a sparse clone use the following syntax: 
-
-XXXXXXXXXXXXXXX
+.. todo::  Currently there is no real way to fetch additional branches from the remote.  We'll have to add some kind of explicit way to do so.  Essentially when the remote is set up, it filters out all other refs, so if you try to fetch a different one, it won't do anything. [Extend this when it is ready]
 
 
 Interaction between partial clones
 ------------------------------------
 
-Partial clones can interact with the original repository from which the come from, pushing and pulling as it has been explained. They also can interact with other cloned repositories, although with certain limitations.
+Partial clones can interact with the original repository from which the come from, pushing and pulling as it has been explained.  However, a sparse clone cannot communicate with a full clone of the full repository it came from, since there must be changes in the full cloned repository that are not found in the original one. If sparse changes are pushed to a clone of the full repository, the sparse clone will be unable to synchronize with the original full repository until if fetches those changes from its clone, because the sparse repository does not have the *full commit* that was made and cannot provide it during synchronization. If the full repository and its clone for some reason do not directly communicate with each other, it could be a long time before synchronization is possible again.
 
 The figure below shows an example of an ecosystem of GeoGit repositories derived from an original one using regular and sparse clones, and how they can interact with each other.
 
@@ -278,10 +303,11 @@ Here are some notes about which operations are possible depending on the type of
 
 - In general, a sparse clone can act as a normal parent repository, and be cloned, whether fully and sparsely. It will behave with those cloned repositories like any other regular repository.
 - A full clone can do anything that its original remote repository can do, since it contains exactly the same data. That means that a full regular clone can also interact with all the clones of the original repository in the same way the original repository does. Sparse and shallow clones are not exactly like the original repository, but a regular clone is, literally, a clone of it, so it can replace the original repository in any situation.
-- Regular clones can synchronize with their remote repository without limitations, and parent repositories can do the same with all their clones. That is true if the original repository is a regular one (for instance, 3 being a full clone of 0) or a sparse one (for instance, 6 being a full clone of 2, which is itself sparse)
+- An exception to the above is the case of a full clone of a sparse clone. Although the clone contains exactly the same data as the original sparse clone, it does not contain the mappings. That means that it cannot synchronize with a parent repository in the same way as the original sparse clone does. For instance, 6 is a regular clone of 2, but, unlike 2, cannot synchronize with 0. The only possible synchronization is between 6 and 2, which needs no mapping at all, since both repositories contain the same data. 
+- Regular clones can synchronize with their remote repository without limitations, and parent repositories can do the same with all their regular clones. That is true if the original repository is a regular one (for instance, 3 being a full clone of 0) or a sparse one (for instance, 6 being a full clone of 2, which is itself sparse, as it was mentioned in the previous point)
 - Sparse clones can synchronize with their remote repositories. However, the remote repository cannot synchronize with a sparse clone of itself. This is because the original repository doesn't have the history mappings (they are created by the cloned repository), so it will understand a sparse clone as a different repo. No information is kept in a repository about other repositories cloned from it, so it is not aware of sparse clones and the relationship between sparse commits and original commits. All operations between a repository and a sparse clone created from it have to be run from the sparse clone, which is the only one that contains the additional information needed to correctly synchronize both original and sparse history.
 - Sparse clones cannot synchronize between them, as it was explained before.
-- In the figure above, 7 can pull and push from 4. However, that is only true if no additional history has been added in 4. Repository number 4 has to be identical to repository 6 when it was cloned into 7. Otherwise, althought they were both cloned from the same repository (2), they would be different and the sparse clone will not have mapping information for the new commits introduced in 4.
+- In most cases, a sparse clone cannot interact with a regular clone of its parent remote repository. for instance, in the diagram above, 7 can not pull and push from 4. This would be possible only if no additional history had been added in 4. Repository number 4 has to be identical to repository 6 when it was cloned into 7. Otherwise, althought they were both cloned from the same repository (2), they would be different and the sparse clone will not have mapping information for the new commits introduced in 4. Since this situation might work in a very limited context, and is likely to cause conflicting situations in most others, it is not recommended, and a sparse clone should be considered as not able to synchronize with regular clones or its parent repository, but just with the parent repository itself.
 
 Shallow clones are less limited than sparse clones, and they do not involve the same complexity, since they do not rewrite the history and use the original commits instead, like a regular clone does. Basically, you can create shallow clones of both regular and sparse repositories, and they will behave like regular clones of those repositories. That means that you will have the same types of interaction that are shown in the figure above for the case of regular clones.
 
