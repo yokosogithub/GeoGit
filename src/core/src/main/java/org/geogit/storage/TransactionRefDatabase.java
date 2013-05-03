@@ -266,7 +266,7 @@ public class TransactionRefDatabase implements RefDatabase {
             String val = origValue.substring("ref: ".length());
             if (val.startsWith(this.txNamespace)) {
                 val = val.substring(this.txNamespace.length());
-                if (val.startsWith("/")) {
+                if (val.length() > 0 && val.charAt(0) == '/') {
                     val = val.substring(1);
                 }
             }

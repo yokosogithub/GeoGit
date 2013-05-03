@@ -276,7 +276,7 @@ public class FileRefDatabase extends AbstractRefDatabase {
             if (f.isDirectory()) {
                 String namespace = append(prefix, f.getName());
                 addAll(f, namespace, target);
-            } else if (!f.getName().startsWith(".")) {
+            } else if (f.getName().length() == 0 || f.getName().charAt(0) != '.') {
                 String refName = append(prefix, f.getName());
                 String refValue = readRef(f);
                 target.put(refName, refValue);

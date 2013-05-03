@@ -159,7 +159,7 @@ public class PullOp extends AbstractGeoGitOp<PullResult> {
             Preconditions.checkArgument(refs.length < 3,
                     "Invalid refspec, please use [+]<remoteref>[:<localref>].");
 
-            boolean force = refspec.startsWith("+");
+            boolean force = refspec.length() > 0 && refspec.charAt(0) == '+';
             String remoteref = refs[0].substring(force ? 1 : 0);
             Optional<Ref> sourceRef = findRemoteRef(remoteref);
             Preconditions.checkState(sourceRef.isPresent(),

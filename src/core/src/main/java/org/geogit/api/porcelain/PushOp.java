@@ -129,7 +129,7 @@ public class PushOp extends AbstractGeoGitOp<Void> {
                     Preconditions.checkArgument(refs.length < 3,
                             "Invalid refspec, please use [+][<localref>][:][<remoteref>].");
 
-                    boolean force = refspec.startsWith("+");
+                    boolean force = refspec.length() > 0 && refspec.charAt(0) == '+';
                     String localrefspec = refs[0].substring(force ? 1 : 0);
 
                     String remoterefspec = (refs.length == 2 ? refs[1] : localrefspec);

@@ -224,7 +224,7 @@ public class Ref implements Comparable<Ref> {
         }
         sb.append(namespace);
 
-        if (child.startsWith("/")) {
+        if (child.length() > 0 && child.charAt(0) == '/') {
             child = child.substring(1);
         }
         if (child.endsWith("/")) {
@@ -245,7 +245,7 @@ public class Ref implements Comparable<Ref> {
     public static String child(String namespace, String ref) {
         Preconditions.checkState(ref.startsWith(namespace));
         String relative = ref.substring(namespace.length());
-        if (relative.startsWith("/")) {
+        if (relative.length() > 0 && relative.charAt(0) == '/') {
             relative = relative.substring(1);
         }
         return relative;

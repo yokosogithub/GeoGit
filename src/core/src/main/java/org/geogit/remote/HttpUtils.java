@@ -198,7 +198,7 @@ class HttpUtils {
                 String line = rd.readLine();
                 Preconditions.checkNotNull(line, "networkObjectExists returned no dat for %s",
                         expanded);
-                exists = line.startsWith("1");
+                exists = line.length() > 0 && line.charAt(0) == '1';
             } finally {
                 consumeAndCloseStream(is);
             }
