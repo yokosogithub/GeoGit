@@ -185,7 +185,7 @@ public class PGExport extends AbstractPGCommand implements CLICommand {
             refspec = "WORK_HEAD:" + path;
         }
 
-        checkArgument(refspec.endsWith(":") != true, "No path specified.");
+        checkArgument(!refspec.endsWith(":"), "No path specified.");
 
         final GeoGIT geogit = cli.getGeogit();
 

@@ -68,7 +68,7 @@ public class UpdateRefWeb implements WebAPICommand {
     public void run(CommandContext context) {
         if (name == null) {
             throw new CommandSpecException("No name was given.");
-        } else if (delete == false && newValue.equals(ObjectId.NULL)) {
+        } else if (!(delete) && newValue.equals(ObjectId.NULL)) {
             throw new CommandSpecException(
                     "Nothing specified to update with, must specify either deletion or new value to update to.");
         }

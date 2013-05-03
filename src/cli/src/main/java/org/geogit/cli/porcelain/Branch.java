@@ -190,7 +190,7 @@ public class Branch extends AbstractCommand implements CLICommand {
         final ConsoleReader console = cli.getConsole();
         final GeoGIT geogit = cli.getGeogit();
 
-        boolean local = all || remotes == false;
+        boolean local = all || !(remotes);
         boolean remote = all || remotes;
 
         ImmutableList<Ref> branches = geogit.command(BranchListOp.class).setLocal(local)

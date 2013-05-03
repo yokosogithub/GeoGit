@@ -88,11 +88,11 @@ public class ImportOp extends AbstractGeoGitOp<RevTree> {
             throw new GeoToolsOpException(StatusCode.DATASTORE_NOT_DEFINED);
         }
 
-        if ((table == null || table.isEmpty()) && all == false) {
+        if ((table == null || table.isEmpty()) && !(all)) {
             throw new GeoToolsOpException(StatusCode.TABLE_NOT_DEFINED);
         }
 
-        if (table != null && !table.isEmpty() && all == true) {
+        if (table != null && !table.isEmpty() && all) {
             throw new GeoToolsOpException(StatusCode.ALL_AND_TABLE_DEFINED);
         }
 
