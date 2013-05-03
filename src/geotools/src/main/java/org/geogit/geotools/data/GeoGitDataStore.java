@@ -227,11 +227,6 @@ public class GeoGitDataStore extends ContentDataStore implements DataStore {
     }
 
     @Override
-    public void dispose() {
-        super.dispose();
-    }
-
-    @Override
     protected ContentState createContentState(ContentEntry entry) {
         return new ContentState(entry);
     }

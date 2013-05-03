@@ -19,11 +19,13 @@ public class JERevTreeBuilderTest extends org.geogit.test.integration.RevTreeBui
     }
 
     @Test
+    // $codepro.audit.disable unnecessaryOverride
     public void testPutIterate() throws Exception {
         super.testPutIterate();
     }
 
     @Test
+    // $codepro.audit.disable unnecessaryOverride
     public void testPutRandomGet() throws Exception {
         super.testPutRandomGet();
     }

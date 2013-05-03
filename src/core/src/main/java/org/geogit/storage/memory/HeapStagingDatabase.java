@@ -56,22 +56,6 @@ public class HeapStagingDatabase extends HeapObjectDatabse implements StagingDat
     }
 
     // /////////////////////////////////////////
-    /**
-     * 
-     * @see org.geogit.storage.StagingDatabase#open()
-     */
-    @Override
-    public void open() {
-        super.open();
-    }
-
-    /**
-     * @see org.geogit.storage.StagingDatabase#close()
-     */
-    @Override
-    public void close() {
-        super.close();
-    }
 
     @Override
     public boolean exists(ObjectId id) {
