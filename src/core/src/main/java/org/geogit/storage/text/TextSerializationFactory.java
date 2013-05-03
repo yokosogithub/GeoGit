@@ -53,6 +53,7 @@ import org.opengis.feature.type.PropertyDescriptor;
 import org.opengis.feature.type.PropertyType;
 import org.opengis.filter.Filter;
 import org.opengis.referencing.FactoryException;
+import org.opengis.referencing.NoSuchAuthorityCodeException;
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
 import org.opengis.util.InternationalString;
 
@@ -417,6 +418,15 @@ public class TextSerializationFactory implements ObjectSerializingFactory {
                     String crsCode = CRS.toSRS(crs, codeOnly);
                     if (crsCode != null) {
                         srsName = (longitudeFirst ? "EPSG:" : "urn:ogc:def:crs:EPSG::") + crsCode;
+                        // check that what we are writing is actually a valid EPSG code and we will
+                        // be able to decode it later. If not, we will use WKT instead
+                        try {
+                            CRS.decode(srsName, longitudeFirst);
+                        } catch (NoSuchAuthorityCodeException e) {
+                            srsName = null;
+                        } catch (FactoryException e) {
+                            srsName = null;
+                        }
                     } else {
                         srsName = null;
                     }
