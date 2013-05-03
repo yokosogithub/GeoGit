@@ -96,7 +96,6 @@ public class ObjectIdTest extends TestCase {
     public void testCompareTo() {
         ObjectId oid = new ObjectId(new byte[] { (byte) 0xab, 01, 02, 03, (byte) 0xff, 0, 0, 0, 0,
                 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 });
-        ;
         ObjectId oid2 = new ObjectId(new byte[] { (byte) 0xba, 01, 02, 03, (byte) 0xff, 0, 0, 0, 0,
                 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 });
         assertTrue(oid.compareTo(oid2) < 0);

@@ -54,7 +54,6 @@ public class PGList extends AbstractPGCommand implements CLICommand {
 
             Optional<List<String>> features = cli.getGeogit().command(ListOp.class)
                     .setDataStore(dataStore).call();
-            ;
 
             if (features.isPresent()) {
                 for (String featureType : features.get()) {

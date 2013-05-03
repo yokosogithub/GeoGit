@@ -99,7 +99,7 @@ class HttpUtils {
             try {
                 // read the response body
                 while (stream.read() > -1) {
-                    ;
+                    ; // $codepro.audit.disable extraSemicolon
                 }
             } finally {
                 // close the errorstream

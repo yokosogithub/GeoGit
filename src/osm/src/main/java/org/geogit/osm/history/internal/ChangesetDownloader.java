@@ -265,7 +265,7 @@ class ChangesetDownloader {
             InputStream errorStream = ((HttpURLConnection) conn).getErrorStream();
             try {
                 while (errorStream != null && errorStream.read() != -1) {
-                    ;
+                    ; // $codepro.audit.disable extraSemicolon
                 }
             } catch (IOException e1) {
                 // ok, we tried

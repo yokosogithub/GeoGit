@@ -54,7 +54,6 @@ public class SLList extends AbstractSLCommand implements CLICommand {
 
             Optional<List<String>> features = cli.getGeogit().command(ListOp.class)
                     .setDataStore(dataStore).call();
-            ;
 
             if (features.isPresent()) {
                 for (String featureType : features.get()) {

@@ -60,7 +60,6 @@ public class MergeBase implements CLICommand {
         checkArgument(right.isPresent(), commits.get(0) + " does not resolve to any object.");
         checkArgument(right.get() instanceof RevCommit, commits.get(0)
                 + " does not resolve to a commit");
-        ;
         Optional<RevCommit> ancestor = geogit.command(FindCommonAncestor.class)
                 .setLeft((RevCommit) left.get()).setRight((RevCommit) right.get()).call();
         checkArgument(ancestor.isPresent(), "No common ancestor was found.");

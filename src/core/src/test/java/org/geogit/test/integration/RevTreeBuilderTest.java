@@ -114,7 +114,7 @@ public class RevTreeBuilderTest extends RepositoryTestCase {
             for (int i = 0; i < tree.size() / 2; i++) {
                 int random;
                 while (randomEdits.containsKey(random = randGen.nextInt(numEntries))) {
-                    ;
+                    ; // $codepro.audit.disable extraSemicolon
                 }
                 String name = "Feature." + random;
                 ObjectId newid = ObjectId.forString(name + "changed");
