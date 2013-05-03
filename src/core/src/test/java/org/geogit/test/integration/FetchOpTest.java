@@ -282,7 +282,8 @@ public class FetchOpTest extends RemoteRepositoryTestCase {
             logged.add(logs.next());
         }
 
-        assertEquals(3, logged.size());
+        // Should have the previous 2 commits, plus all 4 new commits.
+        assertEquals(6, logged.size());
 
     }
 
