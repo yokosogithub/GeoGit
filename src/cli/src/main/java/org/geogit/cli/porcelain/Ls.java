@@ -106,11 +106,11 @@ public class Ls extends AbstractCommand implements CLICommand {
                 int depth = path.split("/").length - rootDepth;
                 StringBuilder sb = new StringBuilder();
                 for (int i = 0; i < depth; i++) {
-                    sb.append("\t");
+                    sb.append('\t');
                 }
                 sb.append(input.getNode().getName());
                 if (input.getType().equals(TYPE.TREE)) {
-                    sb.append("/");
+                    sb.append('/');
                 }
                 if (verbose) {
                     sb.append(' ').append(abbrev(input.getMetadataId())).append(' ')

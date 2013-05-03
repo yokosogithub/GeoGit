@@ -216,7 +216,7 @@ public class Patch {
             } catch (IOException e) {
             }
             sb.append(output.toString());
-            sb.append("\n");
+            sb.append('\n');
         }
         for (FeatureInfo feature : removedFeatures) {
             String path = feature.getPath();
@@ -229,7 +229,7 @@ public class Patch {
             } catch (IOException e) {
             }
             sb.append(output.toString());
-            sb.append("\n");
+            sb.append('\n');
         }
         for (FeatureDiff diff : modifiedFeatures) {
             sb.append("M\t" + diff.getPath() /*

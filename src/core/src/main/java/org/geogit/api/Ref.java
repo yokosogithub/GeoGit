@@ -232,7 +232,7 @@ public class Ref implements Comparable<Ref> {
         }
         if (!child.isEmpty()) {
             if (!namespace.isEmpty()) {
-                sb.append("/");
+                sb.append('/');
             }
             sb.append(child);
         }

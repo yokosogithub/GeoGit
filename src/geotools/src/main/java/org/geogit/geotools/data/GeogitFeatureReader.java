@@ -93,10 +93,10 @@ class GeogitFeatureReader<T extends FeatureType, F extends Feature> implements F
         @Override
         public String toString() {
             StringBuilder sb = new StringBuilder("Hits/misses:\n");
-            sb.append("Trees: ").append(treeHits).append("/").append(treeMisses).append("\n");
-            sb.append("Features: ").append(featureHits).append("/").append(featureMisses)
-                    .append("\n");
-            sb.append("Buckets: ").append(bucketHits).append("/").append(bucketMisses).append("\n");
+            sb.append("Trees: ").append(treeHits).append('/').append(treeMisses).append('\n');
+            sb.append("Features: ").append(featureHits).append('/').append(featureMisses)
+                    .append('\n');
+            sb.append("Buckets: ").append(bucketHits).append('/').append(bucketMisses).append('\n');
             return sb.toString();
         }
 

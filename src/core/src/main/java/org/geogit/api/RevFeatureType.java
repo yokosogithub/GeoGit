@@ -114,7 +114,7 @@ public class RevFeatureType extends AbstractRevObject {
             builder.append(": ");
             builder.append(desc.getType().getBinding().getSimpleName());
         }
-        builder.append("]");
+        builder.append(']');
         return builder.toString();
     }
 }

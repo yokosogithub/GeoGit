@@ -166,7 +166,7 @@ public class PatchSerializer {
             ByteArrayOutputStream output = new ByteArrayOutputStream();
             writer.write(featureType, output);
             sb.append(output.toString());
-            sb.append("\n");
+            sb.append('\n');
         }
 
         TextSerializationFactory factory = new TextSerializationFactory();
@@ -181,7 +181,7 @@ public class PatchSerializer {
             } catch (IOException e) {
             }
             sb.append(output.toString());
-            sb.append("\n");
+            sb.append('\n');
         }
         for (FeatureInfo feature : patch.getRemovedFeatures()) {
             String path = feature.getPath();
@@ -194,7 +194,7 @@ public class PatchSerializer {
             } catch (IOException e) {
             }
             sb.append(output.toString());
-            sb.append("\n");
+            sb.append('\n');
         }
         for (FeatureDiff diff : patch.getModifiedFeatures()) {
             sb.append("M\t" + diff.getPath() + "\t" + diff.getOldFeatureType().getId().toString()

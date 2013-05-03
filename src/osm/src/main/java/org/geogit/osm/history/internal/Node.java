@@ -31,6 +31,6 @@ public class Node extends Primitive {
     @Override
     public String toString() {
         return new StringBuilder(super.toString()).append(",location:").append(location)
-                .append("]").toString();
+                .append(']').toString();
     }
 }

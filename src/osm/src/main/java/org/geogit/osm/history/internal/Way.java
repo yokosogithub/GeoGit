@@ -35,7 +35,7 @@ public class Way extends Primitive {
 
     @Override
     public String toString() {
-        return new StringBuilder(super.toString()).append(",nodes:").append(nodes).append("]")
+        return new StringBuilder(super.toString()).append(",nodes:").append(nodes).append(']')
                 .toString();
     }
 

@@ -142,7 +142,7 @@ class GeogitTransactionState implements State {
                 break;
             }
             if ((added + removed + modified) < 10) {
-                msg.append("\n ").append(entry.changeType().toString().toLowerCase()).append(" ")
+                msg.append("\n ").append(entry.changeType().toString().toLowerCase()).append(' ')
                         .append(entry.newPath() == null ? entry.oldName() : entry.newPath());
             }
         }

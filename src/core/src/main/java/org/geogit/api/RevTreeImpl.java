@@ -237,7 +237,7 @@ public abstract class RevTreeImpl extends AbstractRevObject implements RevTree {
         builder.append(nBuckets);
         builder.append(", features=");
         builder.append(nFeatures);
-        builder.append("]");
+        builder.append(']');
         return builder.toString();
     }
 }

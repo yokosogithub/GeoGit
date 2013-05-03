@@ -74,7 +74,7 @@ public class DiffTree extends AbstractCommand implements CLICommand {
             entry = entries.next();
             StringBuilder sb = new StringBuilder();
             String path = entry.newPath() != null ? entry.newPath() : entry.oldPath();
-            sb.append(path).append(" ").append(entry.oldObjectId().toString()).append(" ")
+            sb.append(path).append(' ').append(entry.oldObjectId().toString()).append(' ')
                     .append(entry.newObjectId().toString());
             cli.getConsole().println(sb.toString());
         }

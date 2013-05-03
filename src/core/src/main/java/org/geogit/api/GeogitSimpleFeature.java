@@ -457,7 +457,7 @@ public class GeogitSimpleFeature implements SimpleFeature {
     public String toString() {
         StringBuilder sb = new StringBuilder(getClass().getSimpleName());
         sb.append(getType().getName().getLocalPart());
-        sb.append("=");
+        sb.append('=');
         sb.append(getValue());
         return sb.toString();
     }
@@ -568,15 +568,15 @@ public class GeogitSimpleFeature implements SimpleFeature {
             if (!getDescriptor().getName().getLocalPart()
                     .equals(getDescriptor().getType().getName().getLocalPart())
                     || id != null) {
-                sb.append("<");
+                sb.append('<');
                 sb.append(getDescriptor().getType().getName().getLocalPart());
                 if (id != null) {
                     sb.append(" id=");
                     sb.append(id);
                 }
-                sb.append(">");
+                sb.append('>');
             }
-            sb.append("=");
+            sb.append('=');
             sb.append(getValue());
             return sb.toString();
         }

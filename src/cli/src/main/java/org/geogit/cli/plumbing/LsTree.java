@@ -82,7 +82,7 @@ public class LsTree extends AbstractCommand implements CLICommand {
                     return input.path();
                 }
                 StringBuilder sb = new StringBuilder();
-                sb.append(input.getMetadataId().toString()).append(" ")
+                sb.append(input.getMetadataId().toString()).append(' ')
                         .append(input.getType().toString().toLowerCase()).append(' ')
                         .append(input.objectId().toString()).append(' ').append(input.path());
                 return sb;

@@ -72,7 +72,7 @@ public class RevFeature extends AbstractRevObject {
             String valueString = value.get().toString();
             builder.append(valueString.substring(0, Math.min(10, valueString.length())));
         }
-        builder.append("]");
+        builder.append(']');
         return builder.toString();
     }
 }

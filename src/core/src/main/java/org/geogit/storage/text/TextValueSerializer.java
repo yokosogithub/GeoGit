@@ -272,7 +272,7 @@ public class TextValueSerializer {
             @Override
             public String toString(Object value) {
                 java.sql.Timestamp ts = (java.sql.Timestamp) value;
-                return new StringBuilder().append(ts.getTime()).append(" ").append(ts.getNanos())
+                return new StringBuilder().append(ts.getTime()).append(' ').append(ts.getNanos())
                         .toString();
             }
         });

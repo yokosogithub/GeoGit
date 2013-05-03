@@ -392,7 +392,7 @@ public class Log extends AbstractCommand implements CLICommand {
         sb.append(person.getName().or("<name not set>"));
 
         if (person.getEmail().isPresent()) {
-            sb.append(" <").append(person.getEmail().get()).append(">");
+            sb.append(" <").append(person.getEmail().get()).append('>');
         }
         return sb.toString();
     }
@@ -455,7 +455,7 @@ public class Log extends AbstractCommand implements CLICommand {
         if (refs.containsKey(id)) {
             sb.append(" (");
             sb.append(refs.get(id));
-            sb.append(")");
+            sb.append(')');
         }
 
         return sb.toString();

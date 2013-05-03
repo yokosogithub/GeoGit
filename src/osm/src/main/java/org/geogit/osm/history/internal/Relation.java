@@ -46,7 +46,7 @@ public class Relation extends Primitive {
         @Override
         public String toString() {
             return new StringBuilder("[type:").append(type).append(",ref:").append(ref)
-                    .append(",role:").append(role).append("]").toString();
+                    .append(",role:").append(role).append(']').toString();
         }
     }
 
@@ -70,7 +70,7 @@ public class Relation extends Primitive {
 
     @Override
     public String toString() {
-        return new StringBuilder(super.toString()).append(",members:").append(members).append("]")
+        return new StringBuilder(super.toString()).append(",members:").append(members).append(']')
                 .toString();
     }
 

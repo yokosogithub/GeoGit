@@ -121,20 +121,20 @@ public class RevList extends AbstractCommand implements CLICommand {
         public void print(RevCommit commit) throws IOException {
 
             StringBuilder sb = new StringBuilder();
-            sb.append("commit ").append(commit.getId().toString()).append("\n");
-            sb.append("tree ").append(commit.getTreeId().toString()).append("\n");
+            sb.append("commit ").append(commit.getId().toString()).append('\n');
+            sb.append("tree ").append(commit.getTreeId().toString()).append('\n');
             sb.append("parent");
             for (ObjectId parentId : commit.getParentIds()) {
-                sb.append(" ").append(parentId.toString());
+                sb.append(' ').append(parentId.toString());
             }
-            sb.append("\n");
-            sb.append("author ").append(format(commit.getAuthor())).append("\n");
-            sb.append("committer ").append(format(commit.getCommitter())).append("\n");
+            sb.append('\n');
+            sb.append("author ").append(format(commit.getAuthor())).append('\n');
+            sb.append("committer ").append(format(commit.getCommitter())).append('\n');
 
             if (commit.getMessage() != null) {
                 sb.append("message\n");
                 sb.append("\t" + commit.getMessage().replace("\n", "\n\t"));
-                sb.append("\n");
+                sb.append('\n');
             }
             if (showChanges) {
                 Iterator<DiffEntry> diff = geogit.command(DiffOp.class)
@@ -146,9 +146,9 @@ public class RevList extends AbstractCommand implements CLICommand {
                     diffEntry = diff.next();
                     String path = diffEntry.newPath() != null ? diffEntry.newPath() : diffEntry
                             .oldPath();
-                    sb.append("\t").append(path).append(" ")
-                            .append(diffEntry.oldObjectId().toString()).append(" ")
-                            .append(diffEntry.newObjectId().toString()).append("\n");
+                    sb.append('\t').append(path).append(' ')
+                            .append(diffEntry.oldObjectId().toString()).append(' ')
+                            .append(diffEntry.newObjectId().toString()).append('\n');
                 }
             }
             console.println(sb.toString());

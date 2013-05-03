@@ -1420,19 +1420,19 @@ public class diff_match_patch {
             switch (aDiff.operation) {
             case INSERT:
                 try {
-                    text.append("+")
+                    text.append('+')
                             .append(URLEncoder.encode(aDiff.text, "UTF-8").replace('+', ' '))
-                            .append("\t");
+                            .append('\t');
                 } catch (UnsupportedEncodingException e) {
                     // Not likely on modern system.
                     throw new Error("This system does not support UTF-8.", e);
                 }
                 break;
             case DELETE:
-                text.append("-").append(aDiff.text.length()).append("\t");
+                text.append('-').append(aDiff.text.length()).append('\t');
                 break;
             case EQUAL:
-                text.append("=").append(aDiff.text.length()).append("\t");
+                text.append('=').append(aDiff.text.length()).append('\t');
                 break;
             }
         }
@@ -2427,7 +2427,7 @@ public class diff_match_patch {
                 }
                 try {
                     text.append(URLEncoder.encode(aDiff.text, "UTF-8").replace('+', ' ')).append(
-                            "\n");
+                            '\n');
                 } catch (UnsupportedEncodingException e) {
                     // Not likely on modern system.
                     throw new Error("This system does not support UTF-8.", e);

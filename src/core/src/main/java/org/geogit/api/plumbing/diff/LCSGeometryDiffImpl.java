@@ -115,20 +115,20 @@ public class LCSGeometryDiffImpl {
             switch (diff.operation) {
             case INSERT:
                 text = text.replace(" " + SUBGEOM_SEPARATOR, ")" + SUBGEOM_SEPARATOR + "(");
-                sb.append("(");
+                sb.append('(');
                 sb.append(text);
                 sb.append(") ");
                 insertions += nCoords;
                 break;
             case DELETE:
-                sb.append("[");
+                sb.append('[');
                 sb.append(text);
                 sb.append("] ");
                 deletions += nCoords;
                 break;
             case EQUAL:
                 sb.append(text.trim());
-                sb.append(" ");
+                sb.append(' ');
                 replacings += Math.min(deletions, insertions);
                 totalDeletions += Math.max(deletions - insertions, 0);
                 totalInsertions += Math.max(insertions - deletions, 0);
@@ -256,11 +256,11 @@ public class LCSGeometryDiffImpl {
     public String asText() {
         StringBuilder sb = new StringBuilder();
         sb.append(Integer.toString(totalDeletions));
-        sb.append("/");
+        sb.append('/');
         sb.append(Integer.toString(totalInsertions));
-        sb.append("/");
+        sb.append('/');
         sb.append(Integer.toString(replacings));
-        sb.append("\t");
+        sb.append('\t');
         sb.append(diffMatchPatch.patch_toText(patches).replace("\n", "\\n"));
         return sb.toString();
     }

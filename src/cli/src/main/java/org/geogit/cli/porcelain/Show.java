@@ -150,7 +150,7 @@ public class Show implements CLICommand {
     private String formatPerson(RevPerson person) {
         StringBuilder sb = new StringBuilder();
         sb.append(person.getName().or("<name not set>"));
-        sb.append(" <").append(person.getEmail().or("")).append(">");
+        sb.append(" <").append(person.getEmail().or("")).append('>');
         return sb.toString();
     }
 

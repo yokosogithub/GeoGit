@@ -79,11 +79,11 @@ public class Blame implements CLICommand {
             Optional<?> value = valueAndCommit.value;
             if (porcelain) {
                 StringBuilder sb = new StringBuilder();
-                sb.append(attrib).append(" ");
-                sb.append(commit.getId().toString()).append(" ");
-                sb.append(commit.getAuthor().getName().or("")).append(" ");
-                sb.append(commit.getAuthor().getEmail().or("")).append(" ");
-                sb.append(Long.toString(commit.getAuthor().getTimestamp())).append(" ");
+                sb.append(attrib).append(' ');
+                sb.append(commit.getId().toString()).append(' ');
+                sb.append(commit.getAuthor().getName().or("")).append(' ');
+                sb.append(commit.getAuthor().getEmail().or("")).append(' ');
+                sb.append(Long.toString(commit.getAuthor().getTimestamp())).append(' ');
                 sb.append(Integer.toString(commit.getAuthor().getTimeZoneOffset()));
                 if (!noValues) {
                     sb.append(" ").append(

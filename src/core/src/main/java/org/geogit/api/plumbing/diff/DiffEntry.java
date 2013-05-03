@@ -158,7 +158,7 @@ public class DiffEntry {
     @Override
     public String toString() {
         return new StringBuilder(changeType().toString()).append(" [").append(oldObject)
-                .append("] -> [").append(newObject).append("]").toString();
+                .append("] -> [").append(newObject).append(']').toString();
     }
 
     /**

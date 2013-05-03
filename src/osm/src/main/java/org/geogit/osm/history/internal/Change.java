@@ -70,6 +70,6 @@ public class Change {
         return new StringBuilder(getClass().getSimpleName()).append("[type:").append(getType())
                 .append(", ")
                 .append(getNode().isPresent() ? node : (getWay().isPresent() ? way : relation))
-                .append("]").toString();
+                .append(']').toString();
     }
 }
