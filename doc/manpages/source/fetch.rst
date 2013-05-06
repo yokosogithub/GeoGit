@@ -2,13 +2,13 @@
 .. _geogit-fetch:
 
 geogit-fetch documentation
-#########################
+###########################
 
 
 
 SYNOPSIS
 ********
-geogit fetch [<options>] [<repository>...]
+geogit fetch [--depth <depth>] [--all] [--prune] [--fulldepth] [<repository>...]
 
 
 DESCRIPTION
@@ -16,14 +16,18 @@ DESCRIPTION
 
 Fetches named heads or tags from one or more other repositories, along with the objects necessary to complete them.
 
-geogit fetch can fetch from either a single named repository, or from several repositories at once.
+This command can fetch from either a single named repository, or from several repositories at once.
 
 OPTIONS
 *******
 
---all          Fetch all remotes.
+--all          			Fetch all remotes.
 
--p, --prune    After fetching, remove any remote-tracking branches which no longer exist on the remote.
+-p, --prune    			After fetching, remove any remote-tracking branches which no longer exist on the remote.
+
+--depth <depth>			In the case of a shallow clone, it fetches history only up to the specified depth
+
+--fulldepth 			In the case of a shallow clone, fetch the full history from the repository. This will turn the repository into a full clone.
 
 SEE ALSO
 ********

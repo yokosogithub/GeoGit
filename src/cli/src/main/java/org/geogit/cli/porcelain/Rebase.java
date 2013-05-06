@@ -67,7 +67,7 @@ public class Rebase extends AbstractCommand implements CLICommand {
     @Parameter(names = { "--continue" }, description = "Continue a conflicted rebase.")
     private boolean continueRebase;
 
-    @Parameter(names = { "--skip" }, description = "Continue a conflicted rebase.")
+    @Parameter(names = { "--skip" }, description = "Skip the current conflicting commit.")
     private boolean skip;
 
     @Parameter(names = { "--squash" }, description = "Squash commits instead of applying them one by one. A message has to be provided to use for the squashed commit")

@@ -4,6 +4,7 @@
  */
 package org.geogit.cli;
 
+import org.geogit.cli.plumbing.Cat;
 import org.geogit.cli.plumbing.DiffTree;
 import org.geogit.cli.plumbing.LsTree;
 import org.geogit.cli.plumbing.MergeBase;
@@ -15,7 +16,6 @@ import org.geogit.cli.porcelain.Add;
 import org.geogit.cli.porcelain.Apply;
 import org.geogit.cli.porcelain.Blame;
 import org.geogit.cli.porcelain.Branch;
-import org.geogit.cli.porcelain.Cat;
 import org.geogit.cli.porcelain.Checkout;
 import org.geogit.cli.porcelain.CherryPick;
 import org.geogit.cli.porcelain.Clean;

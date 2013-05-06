@@ -25,19 +25,19 @@ public class LogArgs {
     @Nullable
     public Integer skip;
 
-    @Parameter(names = "--since", description = "Maximum number of commits to log")
+    @Parameter(names = "--since", description = "Show only commits since the specified 'since' commit")
     @Nullable
     public String since;
 
-    @Parameter(names = "--until", description = "Maximum number of commits to log")
+    @Parameter(names = "--until", description = "Show only commits until the specified 'until' commit")
     @Nullable
     public String until;
 
-    @Parameter(names = "--author", description = "Return only commits by authors with names maching the passed regular expression")
+    @Parameter(names = "--author", description = "Show only commits by authors with names maching the passed regular expression")
     @Nullable
     public String author;
 
-    @Parameter(names = "--committer", description = "Return only commits by committer with names maching the passed regular expression")
+    @Parameter(names = "--committer", description = "Show only commits by committer with names maching the passed regular expression")
     @Nullable
     public String committer;
 

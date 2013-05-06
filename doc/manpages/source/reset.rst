@@ -2,15 +2,13 @@
 .. _geogit-reset:
 
 geogit-reset documentation
-#########################
+###########################
 
 
 
 SYNOPSIS
 ********
 geogit reset [<commit>] -p <path>... 
-.RS
-.RE
 geogit reset --(hard|soft|mixed) [<commit>]
 
 

@@ -23,9 +23,14 @@ Refspecs can be used to gain more control over the pull process.  The format of 
 OPTIONS
 *******
 
---all       Fetch all remotes.
+--all       			Fetch all remotes.
 
---rebase    Rebase the current branch on top of the upstream branch after fetching.
+--rebase    			Rebase the current branch on top of the upstream branch after fetching.
+
+--depth <depth>			In the case of a shallow clone, it fetches history only up to the specified depth
+
+--fulldepth 			In the case of a shallow clone, fetch the full history from the repository. This will turn the repository into a full clone.
+
 
 SEE ALSO
 ********

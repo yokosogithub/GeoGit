@@ -47,8 +47,8 @@ public class Show implements CLICommand {
     /**
      * The path to the element to display.
      */
-    @Parameter(description = "<path>")
-    private List<String> paths = new ArrayList<String>();
+    @Parameter(description = "<reference>")
+    private List<String> ref = new ArrayList<String>();
 
     /**
      * @param cli
@@ -57,13 +57,13 @@ public class Show implements CLICommand {
     @Override
     public void run(GeogitCLI cli) throws Exception {
         checkState(cli.getGeogit() != null, "Not a geogit repository: " + cli.getPlatform().pwd());
-        checkArgument(paths.size() < 2, "Only one refspec allowed");
-        checkArgument(!paths.isEmpty(), "A refspec must be specified");
+        checkArgument(ref.size() < 2, "Only one refspec allowed");
+        checkArgument(!ref.isEmpty(), "A refspec must be specified");
 
         ConsoleReader console = cli.getConsole();
         GeoGIT geogit = cli.getGeogit();
 
-        String path = paths.get(0);
+        String path = ref.get(0);
 
         Optional<RevObject> obj = geogit.command(RevObjectParse.class).setRefSpec(path).call();
         checkState(obj.isPresent(), "refspec did not resolve to any object.");

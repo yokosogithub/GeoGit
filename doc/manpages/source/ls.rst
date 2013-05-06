@@ -1,14 +1,14 @@
 
-.. _geogit-lstree:
+.. _geogit-ls:
 
-geogit-ls-tree documentation
+geogit-ls documentation
 #############################
 
 
 SYNOPSIS
 ********
 
-geogit ls-tree  <[refspec]:[path]> [--verbose] [--abbrev] [-t] [-d] [-r]
+geogit ls  <[refspec]:[path]> [--verbose] [--abbrev] [-t] [-d] [-r]
 
 
 DESCRIPTION

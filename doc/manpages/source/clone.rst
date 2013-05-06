@@ -8,7 +8,7 @@ geogit-clone documentation
 
 SYNOPSIS
 ********
-geogit clone [--branch <name>] <repository> [<directory>]
+geogit clone [--branch <name>] <repository> [<directory>] [--filter <file>] [--depth <depth>]
 
 
 DESCRIPTION
@@ -20,10 +20,16 @@ After the clone, a plain geogit fetch without arguments will update all the remo
 
 This default configuration is achieved by creating references to the remote branch heads under refs/remotes/origin and by initializing remote.origin.url and remote.origin.fetch configuration variables.
 
+Shallow and sparse clones can be created with this command as well. A shallow clone contains just a subset of the full history, not fetching commits at a distance larger than a given threshold from the branch tip. A sparse clone contains only features that pass a given filter, defined in an Ini file.
+
 OPTIONS
 *******
 
--b <name>, --branch <name>    Branch to checkout when clone is finished.
+-b <name>, --branch <name>		Branch to checkout when clone is finished.
+
+--depth <depth>  				The depth of the clone. This will create a shallow clone of depth ``depth``. If ``depth`` is less than 1, a full clone will be performed.
+    
+--filter <file>					Ini file containing the filter to be used to create a sparse clone.
 
 SEE ALSO
 ********

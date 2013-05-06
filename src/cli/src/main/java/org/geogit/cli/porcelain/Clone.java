@@ -5,8 +5,8 @@
 
 package org.geogit.cli.porcelain;
 
-import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkState;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -63,7 +63,7 @@ public class Clone extends AbstractCommand implements CLICommand {
     @Parameter(names = { "--depth" }, description = "Depth of the clone.  If depth is less than 1, a full clone will be performed.")
     private int depth = 0;
 
-    @Parameter(names = { "--filter" }, description = "XML filter file.  This will create a sparse clone.")
+    @Parameter(names = { "--filter" }, description = "Ini filter file.  This will create a sparse clone.")
     private String filterFile;
 
     @Parameter(description = "<repository> [<directory>]")

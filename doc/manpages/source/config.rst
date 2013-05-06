@@ -21,7 +21,7 @@ DESCRIPTION
 
 You can query/set/unset options with this command. The name is actually the section and the key separated by a dot, and the value will be escaped.
 
-By default, the config file of the current repository will be assumed.  If the --global option is set, the global .geogitconfig file will be used. If the --local option is set the config file of the current repository will be used if it exists.
+By default, the config file of the current repository will be assumed.  If the --global option is set, the global ``.geogitconfig`` file will be used. If the ``--local`` option is set the config file of the current repository will be used if it exists.
 
 OPTIONS
 *******

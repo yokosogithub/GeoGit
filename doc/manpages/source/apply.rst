@@ -5,7 +5,6 @@ geogit-apply documentation
 #############################
 
 
-
 SYNOPSIS
 ********
 geogit apply [<patch_file>] [--reject] [--summary] [--check]

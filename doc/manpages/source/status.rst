@@ -2,7 +2,7 @@
 .. _geogit-status:
 
 geogit-status documentation
-#########################
+############################
 
 
 
