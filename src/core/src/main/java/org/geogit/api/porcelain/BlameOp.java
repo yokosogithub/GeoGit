@@ -11,11 +11,13 @@ import org.geogit.api.AbstractGeoGitOp;
 import org.geogit.api.ObjectId;
 import org.geogit.api.Ref;
 import org.geogit.api.RevCommit;
+import org.geogit.api.RevFeature;
 import org.geogit.api.RevFeatureType;
 import org.geogit.api.RevObject.TYPE;
 import org.geogit.api.plumbing.DiffFeature;
 import org.geogit.api.plumbing.ResolveFeatureType;
 import org.geogit.api.plumbing.ResolveObjectType;
+import org.geogit.api.plumbing.RevObjectParse;
 import org.geogit.api.plumbing.RevParse;
 import org.geogit.api.plumbing.diff.AttributeDiff;
 import org.geogit.api.plumbing.diff.DiffEntry;
@@ -63,7 +65,10 @@ public class BlameOp extends AbstractGeoGitOp<BlameReport> {
 
         while (!report.isComplete()) {
             if (!log.hasNext()) {
-                report.setFirstCommit(commit);
+                String refSpec = commit.getId().toString() + ":" + path;
+                RevFeature feature = command(RevObjectParse.class).setRefSpec(refSpec)
+                        .call(RevFeature.class).get();
+                report.setFirstVersion(feature, commit);
                 break;
             }
             RevCommit commitB = log.next();
@@ -80,8 +85,9 @@ public class BlameOp extends AbstractGeoGitOp<BlameReport> {
                     Iterator<PropertyDescriptor> iter = attribDiffs.keySet().iterator();
                     while (iter.hasNext()) {
                         PropertyDescriptor key = iter.next();
+                        Optional<?> value = attribDiffs.get(key).getNewValue();
                         String attribute = key.getName().toString();
-                        report.addDiff(attribute, commit);
+                        report.addDiff(attribute, value, commit);
                     }
                 }
 

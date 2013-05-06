@@ -12,6 +12,7 @@ import org.geogit.api.RevCommit;
 import org.geogit.api.porcelain.BlameOp;
 import org.geogit.api.porcelain.BlameReport;
 import org.geogit.api.porcelain.CommitOp;
+import org.geogit.api.porcelain.ValueAndCommit;
 import org.junit.Test;
 import org.opengis.feature.Feature;
 
@@ -28,11 +29,11 @@ public class BlameOpTest extends RepositoryTestCase {
         RevCommit firstCommit = geogit.command(CommitOp.class).call();
         String path = NodeRef.appendChild(pointsName, idP1);
         BlameReport report = geogit.command(BlameOp.class).setPath(path).call();
-        Map<String, RevCommit> changes = report.getChanges();
+        Map<String, ValueAndCommit> changes = report.getChanges();
         assertEquals(3, changes.size());
-        Collection<RevCommit> commits = changes.values();
-        for (RevCommit commit : commits) {
-            assertEquals(firstCommit, commit);
+        Collection<ValueAndCommit> commits = changes.values();
+        for (ValueAndCommit valueAndCommit : commits) {
+            assertEquals(firstCommit, valueAndCommit.commit);
         }
     }
 
@@ -44,11 +45,11 @@ public class BlameOpTest extends RepositoryTestCase {
         RevCommit secondCommit = geogit.command(CommitOp.class).call();
         String path = NodeRef.appendChild(pointsName, idP1);
         BlameReport report = geogit.command(BlameOp.class).setPath(path).call();
-        Map<String, RevCommit> changes = report.getChanges();
+        Map<String, ValueAndCommit> changes = report.getChanges();
         assertEquals(3, changes.size());
-        Collection<RevCommit> commits = changes.values();
-        for (RevCommit commit : commits) {
-            assertEquals(secondCommit, commit);
+        Collection<ValueAndCommit> commits = changes.values();
+        for (ValueAndCommit valueAndCommit : commits) {
+            assertEquals(secondCommit, valueAndCommit.commit);
         }
     }
 
@@ -62,11 +63,14 @@ public class BlameOpTest extends RepositoryTestCase {
         RevCommit secondCommit = geogit.command(CommitOp.class).call();
         String path = NodeRef.appendChild(pointsName, idP1);
         BlameReport report = geogit.command(BlameOp.class).setPath(path).call();
-        Map<String, RevCommit> changes = report.getChanges();
+        Map<String, ValueAndCommit> changes = report.getChanges();
         assertEquals(3, changes.size());
-        assertEquals(changes.get("sp"), secondCommit);
-        assertEquals(changes.get("ip"), firstCommit);
-        assertEquals(changes.get("pp"), firstCommit);
+        assertEquals(changes.get("sp").commit, secondCommit);
+        assertEquals(changes.get("ip").commit, firstCommit);
+        assertEquals(changes.get("pp").commit, firstCommit);
+        assertEquals(changes.get("sp").value.get(), pointsModified.getProperty("sp").getValue());
+        assertEquals(changes.get("ip").value.get(), points1.getProperty("ip").getValue());
+        assertEquals(changes.get("pp").value.get(), points1.getProperty("ip").getValue());
     }
 
     @Test

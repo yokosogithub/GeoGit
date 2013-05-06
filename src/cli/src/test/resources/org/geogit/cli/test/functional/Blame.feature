@@ -13,7 +13,15 @@ Feature: "blame" command
     Given I have a repository
       And I have several commits
      When I run the command "blame --porcelain Points/Points.1"
-     Then the response should contain 3 lines    
+     Then the response should contain 3 lines  
+     And the response should contain "1001"  
+     
+  Scenario: Try to run blame with the --no-values switch
+    Given I have a repository
+      And I have several commits
+     When I run the command "blame --no-values Points/Points.1"
+     Then the response should contain 3 lines 
+      And the response should not contain "1001"         
            
   Scenario: Try to run blame with a wrong path
     Given I have a repository

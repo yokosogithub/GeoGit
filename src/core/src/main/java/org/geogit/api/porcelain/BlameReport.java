@@ -9,9 +9,12 @@ import java.util.List;
 import java.util.Map;
 
 import org.geogit.api.RevCommit;
+import org.geogit.api.RevFeature;
 import org.geogit.api.RevFeatureType;
 import org.opengis.feature.type.PropertyDescriptor;
 
+import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 
@@ -24,14 +27,14 @@ public class BlameReport {
 
     List<String> attributes;
 
-    private HashMap<String, RevCommit> changes;
+    private HashMap<String, ValueAndCommit> changes;
 
     public BlameReport(RevFeatureType featureType) {
         attributes = Lists.newArrayList();
         for (PropertyDescriptor attribute : featureType.sortedDescriptors()) {
             attributes.add(attribute.getName().getLocalPart().toString());
         }
-        this.changes = new HashMap<String, RevCommit>();
+        this.changes = new HashMap<String, ValueAndCommit>();
 
     }
 
@@ -50,12 +53,13 @@ public class BlameReport {
      * this method has no effect.
      * 
      * @param attribute the attribute changed
+     * @param the value of the attribute
      * @param commit the commit that changed the passed attribute
      */
-    public void addDiff(String attribute, RevCommit commit) {
+    public void addDiff(String attribute, Optional<?> value, RevCommit commit) {
         if (attributes.contains(attribute)) {
             if (!changes.containsKey(attribute)) {
-                changes.put(attribute, commit);
+                changes.put(attribute, new ValueAndCommit(value, commit));
             }
         }
     }
@@ -64,7 +68,7 @@ public class BlameReport {
      * Returns the map of changes
      * 
      */
-    public Map<String, RevCommit> getChanges() {
+    public Map<String, ValueAndCommit> getChanges() {
         return ImmutableMap.copyOf(changes);
     }
 
@@ -74,10 +78,13 @@ public class BlameReport {
      * 
      * @param commit
      */
-    public void setFirstCommit(RevCommit commit) {
+    public void setFirstVersion(RevFeature feature, RevCommit commit) {
+        ImmutableList<Optional<Object>> values = feature.getValues();
+        int i = 0;
         for (String attr : attributes) {
             if (!changes.containsKey(attr)) {
-                changes.put(attr, commit);
+                Optional<Object> value = values.get(i);
+                changes.put(attr, new ValueAndCommit(value, commit));
             }
         }
 

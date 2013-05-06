@@ -7,6 +7,7 @@ package org.geogit.cli.porcelain;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkState;
 import static org.fusesource.jansi.Ansi.Color.GREEN;
+import static org.fusesource.jansi.Ansi.Color.YELLOW;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -22,12 +23,15 @@ import org.geogit.api.GeoGIT;
 import org.geogit.api.RevCommit;
 import org.geogit.api.porcelain.BlameOp;
 import org.geogit.api.porcelain.BlameReport;
+import org.geogit.api.porcelain.ValueAndCommit;
 import org.geogit.cli.AnsiDecorator;
 import org.geogit.cli.CLICommand;
 import org.geogit.cli.GeogitCLI;
+import org.geogit.storage.text.TextValueSerializer;
 
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.Parameters;
+import com.google.common.base.Optional;
 
 /**
  * Shows information about the commits and authors that have modified the current attributes of a
@@ -46,6 +50,9 @@ public class Blame implements CLICommand {
     @Parameter(names = { "--porcelain" }, description = "Use porcelain output format")
     private boolean porcelain = false;
 
+    @Parameter(names = { "--no-values" }, description = "Do not show values, only attribute names")
+    private boolean noValues = false;
+
     /**
      * @param cli
      * @see org.geogit.cli.CLICommand#run(org.geogit.cli.GeogitCLI)
@@ -63,11 +70,13 @@ public class Blame implements CLICommand {
 
         BlameReport report = geogit.command(BlameOp.class).setPath(path).call();
 
-        Map<String, RevCommit> changes = report.getChanges();
+        Map<String, ValueAndCommit> changes = report.getChanges();
         Iterator<String> iter = changes.keySet().iterator();
         while (iter.hasNext()) {
             String attrib = iter.next();
-            RevCommit commit = changes.get(attrib);
+            ValueAndCommit valueAndCommit = changes.get(attrib);
+            RevCommit commit = valueAndCommit.commit;
+            Optional<?> value = valueAndCommit.value;
             if (porcelain) {
                 StringBuilder sb = new StringBuilder();
                 sb.append(attrib).append(" ");
@@ -76,10 +85,18 @@ public class Blame implements CLICommand {
                 sb.append(commit.getAuthor().getEmail().or("")).append(" ");
                 sb.append(Long.toString(commit.getAuthor().getTimestamp())).append(" ");
                 sb.append(Integer.toString(commit.getAuthor().getTimeZoneOffset()));
+                if (!noValues) {
+                    sb.append(" ").append(
+                            TextValueSerializer.asString(Optional.of((Object) value.orNull())));
+                }
                 console.println(sb.toString());
             } else {
                 Ansi ansi = AnsiDecorator.newAnsi(console.getTerminal().isAnsiSupported());
                 ansi.fg(GREEN).a(attrib + ": ").reset();
+                if (!noValues) {
+                    String s = value.isPresent() ? value.get().toString() : "NULL";
+                    ansi.fg(YELLOW).a(s).a(" ").reset();
+                }
                 ansi.a(commit.getId().toString().substring(0, 7)).a(" ");
                 ansi.a(commit.getAuthor().getName().or("")).a(" ");
                 ansi.a(commit.getAuthor().getEmail().or("")).a(" ");
