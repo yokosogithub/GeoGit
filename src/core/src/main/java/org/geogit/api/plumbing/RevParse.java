@@ -170,6 +170,9 @@ public class RevParse extends AbstractGeoGitOp<Optional<ObjectId>> {
             NodeRef.checkValidPath(path);
             Optional<ObjectId> treeId = command(ResolveTreeish.class).setTreeish(resolved.get())
                     .call();
+            if (!treeId.isPresent() || treeId.get().isNull()) {
+                return Optional.absent();
+            }
             Optional<RevTree> revTree = command(RevObjectParse.class).setObjectId(treeId.get())
                     .call(RevTree.class);
             Optional<NodeRef> ref = command(FindTreeChild.class).setParent(revTree.get())
