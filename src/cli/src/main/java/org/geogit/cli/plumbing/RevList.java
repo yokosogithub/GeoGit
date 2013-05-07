@@ -156,12 +156,8 @@ public class RevList extends AbstractCommand implements CLICommand {
 
         private String format(RevPerson p) {
             StringBuilder sb = new StringBuilder();
-            if (p.getName().isPresent()) {
-                sb.append(p.getName().get()).append(' ');
-            }
-            if (p.getEmail().isPresent()) {
-                sb.append(p.getEmail().get()).append(' ');
-            }
+            sb.append(p.getName().or("[unknown]")).append(' ');
+            sb.append(p.getEmail().or("[unknown]")).append(' ');
             sb.append(p.getTimestamp()).append(' ').append(p.getTimeZoneOffset());
             return sb.toString();
         }
