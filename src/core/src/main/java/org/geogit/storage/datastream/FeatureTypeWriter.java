@@ -21,6 +21,8 @@ import org.opengis.feature.type.GeometryType;
 import org.opengis.feature.type.Name;
 import org.opengis.feature.type.PropertyDescriptor;
 import org.opengis.feature.type.PropertyType;
+import org.opengis.referencing.FactoryException;
+import org.opengis.referencing.NoSuchAuthorityCodeException;
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
 
 public class FeatureTypeWriter implements ObjectWriter<RevFeatureType> {
@@ -48,7 +50,7 @@ public class FeatureTypeWriter implements ObjectWriter<RevFeatureType> {
         if (type instanceof GeometryType) {
             GeometryType gType = (GeometryType) type;
             CoordinateReferenceSystem crs = gType.getCoordinateReferenceSystem();
-            final String srsName;
+            String srsName;
             if (crs == null) {
                 srsName = "urn:ogc:def:crs:EPSG::0";
             } else {
@@ -57,6 +59,15 @@ public class FeatureTypeWriter implements ObjectWriter<RevFeatureType> {
                 String crsCode = CRS.toSRS(crs, codeOnly);
                 if (crsCode != null) {
                     srsName = (longitudeFirst ? "EPSG:" : "urn:ogc:def:crs:EPSG::") + crsCode;
+                    // check that what we are writing is actually a valid EPSG code and we will be
+                    // able to decode it later. If not, we will use WKT instead
+                    try {
+                        CRS.decode(srsName, longitudeFirst);
+                    } catch (NoSuchAuthorityCodeException e) {
+                        srsName = null;
+                    } catch (FactoryException e) {
+                        srsName = null;
+                    }
                 } else {
                     srsName = null;
                 }
