@@ -175,7 +175,7 @@ public class ReportMergeConflictsOpTest extends RepositoryTestCase {
         MergeScenarioReport conflicts = geogit.command(ReportMergeScenarioOp.class)
                 .setMergeIntoCommit(masterCommit).setToMergeCommit(branchCommit).call();
         assertEquals(1, conflicts.getConflicts().size());
-        assertEquals(0, conflicts.getUnconflicted().size());
+        assertEquals(1, conflicts.getUnconflicted().size());
         Boolean hasConflicts = geogit.command(CheckMergeScenarioOp.class)
                 .setCommits(Lists.newArrayList(masterCommit, branchCommit)).call();
         assertTrue(hasConflicts.booleanValue());

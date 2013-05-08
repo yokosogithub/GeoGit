@@ -70,7 +70,11 @@ public abstract class RevTreeImpl extends AbstractRevObject implements RevTree {
                 final ImmutableSortedMap<Integer, Bucket> innerTrees) {
             super(id, size);
             this.childTreeCount = childTreeCount;
-            this.buckets = Optional.of(innerTrees);
+            if (innerTrees.isEmpty()) {
+                this.buckets = Optional.absent();
+            } else {
+                this.buckets = Optional.of(innerTrees);
+            }
         }
 
         @Override
@@ -157,11 +161,11 @@ public abstract class RevTreeImpl extends AbstractRevObject implements RevTree {
 
     public static RevTreeImpl createNodeTree(final ObjectId id, final long size,
             final int childTreeCount, final Map<Integer, Bucket> bucketTrees) {
-        
+
         Preconditions.checkNotNull(id);
         Preconditions.checkNotNull(bucketTrees);
         Preconditions.checkArgument(bucketTrees.size() <= RevTree.MAX_BUCKETS);
-        
+
         ImmutableSortedMap<Integer, Bucket> innerTrees = ImmutableSortedMap.copyOf(bucketTrees);
 
         return new NodeTree(id, size, childTreeCount, innerTrees);
