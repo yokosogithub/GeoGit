@@ -239,6 +239,8 @@ public class ReportMergeScenarioOp extends AbstractGeoGitOp<MergeScenarioReport>
                         if (!conflict) {
                             report.addUnconflicted(toMergeDiff);
                         }
+                    } else {
+                        report.addUnconflicted(toMergeDiff);
                     }
                 } else {
                     report.addUnconflicted(toMergeDiff);
