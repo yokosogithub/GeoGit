@@ -56,7 +56,21 @@ public abstract class AbstractObjectDatabase implements ObjectDatabase {
 
         byte[] raw = ObjectId.toRaw(partialId);
 
-        return lookUpInternal(raw);
+        List<ObjectId> baseResults = lookUpInternal(raw);
+
+        // If the length of the partial string is odd, then the last character wasn't considered in
+        // the lookup, we need to filter the list further.
+        if (partialId.length() % 2 != 0) {
+            Iterator<ObjectId> listIterator = baseResults.iterator();
+            while (listIterator.hasNext()) {
+                ObjectId result = listIterator.next();
+                if (!result.toString().contains(partialId)) {
+                    listIterator.remove();
+                }
+            }
+        }
+
+        return baseResults;
     }
 
     /**
