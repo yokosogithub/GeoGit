@@ -15,9 +15,9 @@ import org.geogit.api.Remote;
 import org.geogit.api.plumbing.TransactionBegin;
 import org.geogit.api.porcelain.CheckoutOp;
 import org.geogit.api.porcelain.PullOp;
-import org.geogit.api.porcelain.SynchronizationException;
 import org.geogit.api.porcelain.PushOp;
 import org.geogit.api.porcelain.RemoteListOp;
+import org.geogit.api.porcelain.SynchronizationException;
 
 import com.google.common.base.Optional;
 import com.google.common.base.Suppliers;
@@ -105,38 +105,61 @@ public class GeogitSynchronizationHandler {
         }
     }
 
+    /**
+     * Provides a basic implementation for a pair object.
+     */
     private class Pair<F, S> {
 
         private final F first;
 
         private final S second;
 
+        /**
+         * Constructs a new {@code Pair} with the given objects.
+         * 
+         * @param first the first object
+         * @param second the second object
+         */
         public Pair(F first, S second) {
             this.first = first;
             this.second = second;
         }
 
+        /**
+         * @return the first object
+         */
         public F getFirst() {
             return first;
         }
 
+        /**
+         * @return the second object
+         */
         public S getSecond() {
             return second;
         }
 
+        /**
+         * @return the hash code for this pair
+         */
         @Override
         public int hashCode() {
             return first.hashCode() ^ second.hashCode();
         }
 
-        @SuppressWarnings("unchecked")
+        /**
+         * Compares this pair to another pair.
+         * 
+         * @param o the pair to compare to
+         * @return true if the pairs' objects are equal
+         */
         @Override
         public boolean equals(Object o) {
             if (o == null)
                 return false;
             if (!(o instanceof Pair))
                 return false;
-            Pair<F, S> pair = (Pair<F, S>) o;
+            Pair<?, ?> pair = (Pair<?, ?>) o;
             return this.first.equals(pair.getFirst()) && this.second.equals(pair.getSecond());
         }
 
