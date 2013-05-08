@@ -127,9 +127,11 @@ public class InitOpTest {
         verify(platform, atLeastOnce()).pwd();
 
         verify(mockUpdateRef, times(1)).setName(eq(Ref.MASTER));
-        verify(mockUpdateRef, times(1)).setNewValue(eq(ObjectId.NULL));
-        verify(mockUpdateRef, times(1)).setReason(anyString());
-        verify(mockUpdateRef, times(1)).call();
+        verify(mockUpdateRef, times(1)).setName(eq(Ref.WORK_HEAD));
+        verify(mockUpdateRef, times(1)).setName(eq(Ref.STAGE_HEAD));
+        verify(mockUpdateRef, times(3)).setNewValue(eq(ObjectId.NULL));
+        verify(mockUpdateRef, times(3)).setReason(anyString());
+        verify(mockUpdateRef, times(3)).call();
 
         verify(mockUpdateSymRef, times(1)).setName(eq(Ref.HEAD));
         verify(mockUpdateSymRef, times(1)).setNewValue(eq(Ref.MASTER));
@@ -145,7 +147,7 @@ public class InitOpTest {
         Repository created = init.call();
 
         assertSame(mockRepo, created);
-        verify(mockUpdateRef, times(1)).call();
+        verify(mockUpdateRef, times(3)).call();
         verify(mockUpdateSymRef, times(1)).call();
 
         assertTrue(new File(workingDir, ".geogit").exists());

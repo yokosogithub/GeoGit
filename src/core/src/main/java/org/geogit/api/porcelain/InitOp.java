@@ -109,10 +109,17 @@ public class InitOp extends AbstractGeoGitOp<Repository> {
         try {
             repository = injector.getInstance(Repository.class);
             repository.open();
-            createDefaultRefs();
         } catch (RuntimeException e) {
             throw new IllegalStateException("Can't access repository at '"
                     + envHome.getAbsolutePath() + "'", e);
+        }
+
+        if (!repoExisted) {
+            try {
+                createDefaultRefs();
+            } catch (IllegalStateException e) {
+                Throwables.propagate(e);
+            }
         }
 
         return repoExisted ? null : repository;
@@ -123,14 +130,26 @@ public class InitOp extends AbstractGeoGitOp<Repository> {
      */
     private void createDefaultRefs() {
         Optional<Ref> master = command(RefParse.class).setName(Ref.MASTER).call();
-        if (!master.isPresent()) {
-            master = command(UpdateRef.class).setName(Ref.MASTER).setNewValue(ObjectId.NULL)
-                    .setReason("Repository initialization").call();
-            Optional<Ref> head = command(RefParse.class).setName(Ref.HEAD).call();
-            if (!head.isPresent()) {
-                command(UpdateSymRef.class).setName(Ref.HEAD).setNewValue(Ref.MASTER)
-                        .setReason("Repository initialization").call();
-            }
-        }
+        Preconditions.checkState(!master.isPresent(), Ref.MASTER + " was already initialized.");
+        command(UpdateRef.class).setName(Ref.MASTER).setNewValue(ObjectId.NULL)
+                .setReason("Repository initialization").call();
+
+        Optional<Ref> head = command(RefParse.class).setName(Ref.HEAD).call();
+        Preconditions.checkState(!head.isPresent(), Ref.HEAD + " was already initialized.");
+        command(UpdateSymRef.class).setName(Ref.HEAD).setNewValue(Ref.MASTER)
+                .setReason("Repository initialization").call();
+
+        Optional<Ref> workhead = command(RefParse.class).setName(Ref.WORK_HEAD).call();
+        Preconditions
+                .checkState(!workhead.isPresent(), Ref.WORK_HEAD + " was already initialized.");
+        command(UpdateRef.class).setName(Ref.WORK_HEAD).setNewValue(ObjectId.NULL)
+                .setReason("Repository initialization").call();
+
+        Optional<Ref> stagehead = command(RefParse.class).setName(Ref.STAGE_HEAD).call();
+        Preconditions.checkState(!stagehead.isPresent(), Ref.STAGE_HEAD
+                + " was already initialized.");
+        command(UpdateRef.class).setName(Ref.STAGE_HEAD).setNewValue(ObjectId.NULL)
+                .setReason("Repository initialization").call();
+
     }
 }
