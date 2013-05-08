@@ -64,7 +64,7 @@ public abstract class AbstractObjectDatabase implements ObjectDatabase {
             Iterator<ObjectId> listIterator = baseResults.iterator();
             while (listIterator.hasNext()) {
                 ObjectId result = listIterator.next();
-                if (!result.toString().contains(partialId)) {
+                if (!result.toString().startsWith(partialId)) {
                     listIterator.remove();
                 }
             }
