@@ -3,15 +3,15 @@ package org.geogit.web.api.commands;
 import java.util.Iterator;
 import java.util.List;
 
-import org.geogit.api.GeoGIT;
+import org.geogit.api.CommandLocator;
 import org.geogit.api.ObjectId;
 import org.geogit.api.RevCommit;
 import org.geogit.api.plumbing.RevParse;
 import org.geogit.api.porcelain.LogOp;
+import org.geogit.web.api.AbstractWebAPICommand;
 import org.geogit.web.api.CommandContext;
 import org.geogit.web.api.CommandResponse;
 import org.geogit.web.api.ResponseWriter;
-import org.geogit.web.api.WebAPICommand;
 
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
@@ -21,7 +21,7 @@ import com.google.common.base.Preconditions;
  * 
  * Web interface for {@link LogOp}
  */
-public class Log implements WebAPICommand {
+public class Log extends AbstractWebAPICommand {
 
     Integer skip;
 
@@ -109,7 +109,7 @@ public class Log implements WebAPICommand {
      */
     @Override
     public void run(CommandContext context) {
-        final GeoGIT geogit = context.getGeoGIT();
+        final CommandLocator geogit = this.getCommandLocator(context);
 
         LogOp op = geogit.command(LogOp.class);
 

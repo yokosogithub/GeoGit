@@ -2,14 +2,14 @@ package org.geogit.web.api.commands;
 
 import java.util.Iterator;
 
-import org.geogit.api.GeoGIT;
+import org.geogit.api.CommandLocator;
 import org.geogit.api.plumbing.diff.DiffEntry;
 import org.geogit.api.porcelain.DiffOp;
+import org.geogit.web.api.AbstractWebAPICommand;
 import org.geogit.web.api.CommandContext;
 import org.geogit.web.api.CommandResponse;
 import org.geogit.web.api.CommandSpecException;
 import org.geogit.web.api.ResponseWriter;
-import org.geogit.web.api.WebAPICommand;
 
 /**
  * Interface for the Diff operation in GeoGit.
@@ -17,7 +17,7 @@ import org.geogit.web.api.WebAPICommand;
  * Web interface for {@link DiffOp}
  */
 
-public class Diff implements WebAPICommand {
+public class Diff extends AbstractWebAPICommand {
     private String oldRefSpec;
 
     private String newRefSpec;
@@ -75,7 +75,7 @@ public class Diff implements WebAPICommand {
             throw new CommandSpecException("No old ref spec");
         }
 
-        final GeoGIT geogit = context.getGeoGIT();
+        final CommandLocator geogit = this.getCommandLocator(context);
 
         final Iterator<DiffEntry> diff = geogit.command(DiffOp.class).setOldVersion(oldRefSpec)
                 .setNewVersion(newRefSpec).setFilter(pathFilter).call();

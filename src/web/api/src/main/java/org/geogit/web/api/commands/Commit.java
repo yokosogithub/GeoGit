@@ -2,25 +2,25 @@ package org.geogit.web.api.commands;
 
 import java.util.Iterator;
 
-import org.geogit.api.GeoGIT;
+import org.geogit.api.CommandLocator;
 import org.geogit.api.ObjectId;
 import org.geogit.api.RevCommit;
 import org.geogit.api.plumbing.diff.DiffEntry;
 import org.geogit.api.porcelain.CommitOp;
 import org.geogit.api.porcelain.DiffOp;
 import org.geogit.api.porcelain.NothingToCommitException;
+import org.geogit.web.api.AbstractWebAPICommand;
 import org.geogit.web.api.CommandContext;
 import org.geogit.web.api.CommandResponse;
 import org.geogit.web.api.CommandSpecException;
 import org.geogit.web.api.ResponseWriter;
-import org.geogit.web.api.WebAPICommand;
 
 /**
  * Interface for the Commit operation in GeoGit.
  * 
  * Web interface for {@link CommitOp}
  */
-public class Commit implements WebAPICommand {
+public class Commit extends AbstractWebAPICommand {
 
     String message;
 
@@ -55,7 +55,7 @@ public class Commit implements WebAPICommand {
         if (message == null || message.trim().isEmpty()) {
             throw new CommandSpecException("No commit message provided");
         }
-        final GeoGIT geogit = context.getGeoGIT();
+        final CommandLocator geogit = this.getCommandLocator(context);
         RevCommit commit;
         try {
             commit = geogit.command(CommitOp.class).setMessage(message).setAll(all).call();

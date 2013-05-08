@@ -5,14 +5,16 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
+import java.util.UUID;
 
 import javax.annotation.Nullable;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamWriter;
 
 import org.codehaus.jettison.AbstractXMLStreamWriter;
+import org.geogit.api.CommandLocator;
 import org.geogit.api.FeatureBuilder;
-import org.geogit.api.GeoGIT;
+import org.geogit.api.FeatureInfo;
 import org.geogit.api.GeogitSimpleFeature;
 import org.geogit.api.NodeRef;
 import org.geogit.api.ObjectId;
@@ -20,18 +22,23 @@ import org.geogit.api.Ref;
 import org.geogit.api.Remote;
 import org.geogit.api.RevCommit;
 import org.geogit.api.RevFeature;
+import org.geogit.api.RevFeatureBuilder;
 import org.geogit.api.RevFeatureType;
 import org.geogit.api.RevObject;
 import org.geogit.api.RevPerson;
 import org.geogit.api.RevTag;
+import org.geogit.api.RevTree;
 import org.geogit.api.SymRef;
 import org.geogit.api.plumbing.DiffIndex;
 import org.geogit.api.plumbing.DiffWorkTree;
+import org.geogit.api.plumbing.FindTreeChild;
 import org.geogit.api.plumbing.RevObjectParse;
 import org.geogit.api.plumbing.diff.AttributeDiff;
 import org.geogit.api.plumbing.diff.AttributeDiff.TYPE;
 import org.geogit.api.plumbing.diff.DiffEntry;
 import org.geogit.api.plumbing.diff.DiffEntry.ChangeType;
+import org.geogit.api.plumbing.merge.Conflict;
+import org.geogit.api.plumbing.merge.MergeScenarioReport;
 import org.geogit.web.api.commands.BranchWebOp;
 import org.geogit.web.api.commands.LsTree;
 import org.geogit.web.api.commands.RefParseWeb;
@@ -463,13 +470,13 @@ public class ResponseWriter {
     }
 
     /**
-     * Writes the response for all feature changes between two commits to the stream.
+     * Writes the response for a set of diffs while also supplying the geometry.
      * 
-     * @param features the features that changed
-     * @param changes the change type of each feature
+     * @param geogit - a CommandLocator to call commands from
+     * @param diff - a DiffEntry iterator to build the response from
      * @throws XMLStreamException
      */
-    public void writeGeometryChanges(final GeoGIT geogit, Iterator<DiffEntry> diff)
+    public void writeGeometryChanges(final CommandLocator geogit, Iterator<DiffEntry> diff)
             throws XMLStreamException {
 
         Iterator<GeometryChange> changeIterator = Iterators.transform(diff,
@@ -528,6 +535,198 @@ public class ResponseWriter {
 
     }
 
+    /**
+     * Writes the response for a set of conflicts while also supplying the geometry.
+     * 
+     * @param geogit - a CommandLocator to call commands from
+     * @param conflicts - a Conflict iterator to build the response from
+     * @throws XMLStreamException
+     */
+    public void writeConflicts(final CommandLocator geogit, Iterator<Conflict> conflicts)
+            throws XMLStreamException {
+        Iterator<GeometryConflict> conflictIterator = Iterators.transform(conflicts,
+                new Function<Conflict, GeometryConflict>() {
+                    @Override
+                    public GeometryConflict apply(Conflict input) {
+                        Optional<RevObject> object = geogit.command(RevObjectParse.class)
+                                .setObjectId(input.getOurs()).call();
+                        RevCommit commit = null;
+                        if (object.isPresent() && object.get() instanceof RevCommit) {
+                            commit = (RevCommit) object.get();
+                        } else {
+                            throw new CommandSpecException("Couldn't resolve id: "
+                                    + input.getOurs().toString() + " to a commit");
+                        }
+
+                        object = geogit.command(RevObjectParse.class)
+                                .setObjectId(commit.getTreeId()).call();
+                        Optional<NodeRef> node = Optional.absent();
+                        if (object.isPresent()) {
+                            RevTree tree = (RevTree) object.get();
+                            node = geogit.command(FindTreeChild.class).setParent(tree)
+                                    .setChildPath(input.getPath()).call();
+                        } else {
+                            throw new CommandSpecException("Couldn't resolve commit's treeId");
+                        }
+
+                        RevFeatureType type = null;
+                        RevFeature feature = null;
+
+                        if (node.isPresent()) {
+                            object = geogit.command(RevObjectParse.class)
+                                    .setObjectId(node.get().getMetadataId()).call();
+                            if (object.isPresent() && object.get() instanceof RevFeatureType) {
+                                type = (RevFeatureType) object.get();
+                            } else {
+                                throw new CommandSpecException(
+                                        "Couldn't resolve newCommit's featureType");
+                            }
+                            object = geogit.command(RevObjectParse.class)
+                                    .setObjectId(node.get().objectId()).call();
+                            if (object.isPresent() && object.get() instanceof RevFeature) {
+                                feature = (RevFeature) object.get();
+                            } else {
+                                throw new CommandSpecException(
+                                        "Couldn't resolve newCommit's feature");
+                            }
+                        }
+
+                        GeometryConflict conflict = null;
+
+                        if (feature != null && type != null) {
+                            RevFeature revFeature = feature;
+                            FeatureBuilder builder = new FeatureBuilder(type);
+                            GeogitSimpleFeature simpleFeature = (GeogitSimpleFeature) builder
+                                    .build(revFeature.getId().toString(), revFeature);
+                            conflict = new GeometryConflict(input, (Geometry) simpleFeature
+                                    .getDefaultGeometry());
+                        }
+                        return conflict;
+                    }
+                });
+
+        while (conflictIterator.hasNext()) {
+            GeometryConflict next = conflictIterator.next();
+            if (next != null) {
+                out.writeStartElement("Feature");
+                writeElement("change", "CONFLICT");
+                writeElement("id", next.getConflict().getPath());
+                writeElement("geometry", next.getGeometry().toText());
+                out.writeEndElement();
+            }
+        }
+    }
+
+    /**
+     * Writes the response for a set of merged features while also supplying the geometry.
+     * 
+     * @param geogit - a CommandLocator to call commands from
+     * @param features - a FeatureInfo iterator to build the response from
+     * @throws XMLStreamException
+     */
+    public void writeMerged(final CommandLocator geogit, Iterator<FeatureInfo> features)
+            throws XMLStreamException {
+        Iterator<GeometryChange> changeIterator = Iterators.transform(features,
+                new Function<FeatureInfo, GeometryChange>() {
+                    @Override
+                    public GeometryChange apply(FeatureInfo input) {
+                        GeometryChange change = null;
+                        RevFeatureBuilder revBuilder = new RevFeatureBuilder();
+                        RevFeature revFeature = revBuilder.build(input.getFeature());
+                        FeatureBuilder builder = new FeatureBuilder(input.getFeatureType());
+                        GeogitSimpleFeature simpleFeature = (GeogitSimpleFeature) builder.build(
+                                revFeature.getId().toString(), revFeature);
+                        change = new GeometryChange(simpleFeature, ChangeType.MODIFIED, input
+                                .getPath());
+                        return change;
+                    }
+                });
+
+        while (changeIterator.hasNext()) {
+            GeometryChange next = changeIterator.next();
+            if (next != null) {
+                GeogitSimpleFeature feature = next.getFeature();
+                ChangeType change = next.getChangeType();
+                out.writeStartElement("Feature");
+                writeElement("change", change.toString());
+                writeElement("id", next.getPath());
+                List<Object> attributes = feature.getAttributes();
+                for (Object attribute : attributes) {
+                    if (attribute instanceof Geometry) {
+                        writeElement("geometry", ((Geometry) attribute).toText());
+                        break;
+                    }
+                }
+                out.writeEndElement();
+            }
+        }
+    }
+
+    /**
+     * Writes the response for a merge dry-run, contains unconflicted, conflicted and merged
+     * features.
+     * 
+     * @param report - the MergeScenarioReport containing all the merge results
+     * @param transaction - a CommandLocator to call commands from
+     * @throws XMLStreamException
+     */
+    public void writeMergeDryRunResponse(MergeScenarioReport report, CommandLocator transaction,
+            ObjectId ours, ObjectId theirs, ObjectId ancestor) throws XMLStreamException {
+        out.writeStartElement("Merge");
+        writeElement("ours", ours.toString());
+        writeElement("theirs", theirs.toString());
+        writeElement("ancestor", ancestor.toString());
+        writeGeometryChanges(transaction, report.getUnconflicted().iterator());
+        writeConflicts(transaction, report.getConflicts().iterator());
+        writeMerged(transaction, report.getMerged().iterator());
+        out.writeEndElement();
+    }
+
+    /**
+     * Writes the response for a merge, it writes the merge commit information.
+     * 
+     * @param commit - the merge commit
+     * @throws XMLStreamException
+     */
+    public void writeMergeResponse(RevCommit commit) throws XMLStreamException {
+        out.writeStartElement("commit");
+        writeElement("id", commit.getId().toString());
+        writeElement("tree", commit.getTreeId().toString());
+
+        ImmutableList<ObjectId> parentIds = commit.getParentIds();
+        out.writeStartElement("parents");
+        for (ObjectId parentId : parentIds) {
+            writeElement("id", parentId.toString());
+        }
+        out.writeEndElement();
+
+        writePerson("author", commit.getAuthor());
+        writePerson("committer", commit.getCommitter());
+
+        out.writeStartElement("message");
+        if (commit.getMessage() != null) {
+            out.writeCData(commit.getMessage());
+        }
+        out.writeEndElement();
+
+        out.writeEndElement();
+    }
+
+    /**
+     * Writes the id of the transaction created or nothing if it was ended successfully.
+     * 
+     * @param transactionId - the id of the transaction or null if the transaction was closed
+     *        successfully
+     * @throws XMLStreamException
+     */
+    public void writeTransactionId(UUID transactionId) throws XMLStreamException {
+        out.writeStartElement("Transaction");
+        if (transactionId != null) {
+            writeElement("ID", transactionId.toString());
+        }
+        out.writeEndElement();
+    }
+
     private class GeometryChange {
         private GeogitSimpleFeature feature;
 
@@ -551,6 +750,25 @@ public class ResponseWriter {
 
         public String getPath() {
             return path;
+        }
+    }
+
+    private class GeometryConflict {
+        private Conflict conflict;
+
+        private Geometry geom;
+
+        public GeometryConflict(Conflict conflict, Geometry geom) {
+            this.conflict = conflict;
+            this.geom = geom;
+        }
+
+        public Conflict getConflict() {
+            return conflict;
+        }
+
+        public Geometry getGeometry() {
+            return geom;
         }
     }
 }

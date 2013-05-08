@@ -3,19 +3,20 @@ package org.geogit.web.api.commands;
 import java.util.Iterator;
 import java.util.List;
 
+import org.geogit.api.CommandLocator;
 import org.geogit.api.NodeRef;
 import org.geogit.api.plumbing.LsTreeOp;
+import org.geogit.web.api.AbstractWebAPICommand;
 import org.geogit.web.api.CommandContext;
 import org.geogit.web.api.CommandResponse;
 import org.geogit.web.api.ResponseWriter;
-import org.geogit.web.api.WebAPICommand;
 
 /**
  * Interface for the Ls-Tree operation in GeoGit
  * 
  * Web interface for {@link LsTreeOp}
  */
-public class LsTree implements WebAPICommand {
+public class LsTree extends AbstractWebAPICommand {
 
     boolean includeTrees;
 
@@ -98,8 +99,10 @@ public class LsTree implements WebAPICommand {
             }
         }
 
-        final Iterator<NodeRef> iter = context.getGeoGIT().command(LsTreeOp.class)
-                .setReference(ref).setStrategy(lsStrategy).call();
+        final CommandLocator geogit = this.getCommandLocator(context);
+
+        final Iterator<NodeRef> iter = geogit.command(LsTreeOp.class).setReference(ref)
+                .setStrategy(lsStrategy).call();
 
         context.setResponseContent(new CommandResponse() {
 
