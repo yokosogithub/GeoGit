@@ -85,7 +85,7 @@ public class UpdateRefWeb implements WebAPICommand {
 
             if (ref.get() instanceof SymRef) {
                 Optional<Ref> target = geogit.command(RefParse.class).setName(newValue).call();
-                if (target.isPresent() && target.get() instanceof Ref) {
+                if (target.isPresent() && !(target.get() instanceof SymRef)) {
                     ref = geogit.command(UpdateSymRef.class).setDelete(delete).setName(name)
                             .setNewValue(target.get().getName()).call();
                 } else {
