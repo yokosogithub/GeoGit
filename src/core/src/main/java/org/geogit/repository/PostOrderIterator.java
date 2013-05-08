@@ -115,7 +115,8 @@ public class PostOrderIterator extends AbstractIterator<RevObject> {
                     // objects from here to the front of the toVisit stack
                     final ObjectId id = currentList.get(0);
                     final RevObject object = database.get(id);
-                    final List<ObjectId> next = successors.findSuccessors(object);
+                    final List<ObjectId> next = new ArrayList<ObjectId>();
+                    successors.findSuccessors(object, next);
                     toVisit.add(0, next);
                 } else {
                     // We just visited a node, so switch back to enqueuing mode in order to make
@@ -145,9 +146,9 @@ public class PostOrderIterator extends AbstractIterator<RevObject> {
          * according to this policy.
          * 
          * @param object an object whose successor list should be calculated
-         * @return a List of the ObjectIds of objects that are reachable from the given object
+         * @param successors a List into which successors will be inserted
          */
-        public List<ObjectId> findSuccessors(RevObject object);
+        public void findSuccessors(RevObject object, List<ObjectId> successors);
 
         /**
          * Test an ObjectId before the object is visited. Implementors should return true if this
@@ -163,12 +164,10 @@ public class PostOrderIterator extends AbstractIterator<RevObject> {
      * A Successors strategy for traversing to the parents of commit nodes.
      */
     private final static Successors COMMIT_PARENTS = new Successors() {
-        public List<ObjectId> findSuccessors(final RevObject object) {
+        public void findSuccessors(final RevObject object, final List<ObjectId> successors) {
             if (object instanceof RevCommit) {
                 final RevCommit commit = (RevCommit) object;
-                return new ArrayList<ObjectId>(commit.getParentIds());
-            } else {
-                return new ArrayList<ObjectId>();
+                successors.addAll(commit.getParentIds());
             }
         }
 
@@ -182,15 +181,10 @@ public class PostOrderIterator extends AbstractIterator<RevObject> {
      * A Successors strategy for traversing to the single content tree from a commit node.
      */
     private final static Successors COMMIT_TREE = new Successors() {
-        public List<ObjectId> findSuccessors(final RevObject object) {
+        public void findSuccessors(final RevObject object, final List<ObjectId> successors) {
             if (object instanceof RevCommit) {
                 final RevCommit commit = (RevCommit) object;
-                final ObjectId tree = commit.getTreeId();
-                final List<ObjectId> results = new ArrayList<ObjectId>();
-                results.add(tree);
-                return results;
-            } else {
-                return new ArrayList<ObjectId>();
+                successors.add(commit.getTreeId());
             }
         }
 
@@ -204,28 +198,22 @@ public class PostOrderIterator extends AbstractIterator<RevObject> {
      * A Successors strategy for traversing to features from a tree node
      */
     private final static Successors TREE_FEATURES = new Successors() {
-        public List<ObjectId> findSuccessors(final RevObject object) {
+        public void findSuccessors(final RevObject object, final List<ObjectId> successors) {
             if (object instanceof RevTree) {
                 final RevTree tree = (RevTree) object;
                 if (tree.features().isPresent()) {
                     final Set<ObjectId> seen = new HashSet<ObjectId>();
-                    final List<ObjectId> results = new ArrayList<ObjectId>();
                     for (Node n : tree.features().get()) {
                         if (n.getMetadataId().isPresent()) {
                             if (seen.add(n.getMetadataId().get())) {
-                                results.add(n.getMetadataId().get());
+                                successors.add(n.getMetadataId().get());
                             }
                         }
                         if (seen.add(n.getObjectId())) {
-                            results.add(n.getObjectId());
+                            successors.add(n.getObjectId());
                         }
                     }
-                    return results;
-                } else {
-                    return new ArrayList<ObjectId>();
                 }
-            } else {
-                return new ArrayList<ObjectId>();
             }
         }
 
@@ -239,28 +227,22 @@ public class PostOrderIterator extends AbstractIterator<RevObject> {
      * A Successors strategy for traversing to subtrees from a tree node
      */
     private final static Successors TREE_SUBTREES = new Successors() {
-        public List<ObjectId> findSuccessors(final RevObject object) {
+        public void findSuccessors(final RevObject object, final List<ObjectId> successors) {
             if (object instanceof RevTree) {
                 final RevTree tree = (RevTree) object;
                 if (tree.trees().isPresent()) {
                     final Set<ObjectId> seen = new HashSet<ObjectId>();
-                    final List<ObjectId> results = new ArrayList<ObjectId>();
                     for (Node n : tree.trees().get()) {
                         if (n.getMetadataId().isPresent()) {
                             if (seen.add(n.getMetadataId().get())) {
-                                results.add(n.getMetadataId().get());
+                                successors.add(n.getMetadataId().get());
                             }
                         }
                         if (seen.add(n.getObjectId())) {
-                            results.add(n.getObjectId());
+                            successors.add(n.getObjectId());
                         }
                     }
-                    return results;
-                } else {
-                    return new ArrayList<ObjectId>();
                 }
-            } else {
-                return new ArrayList<ObjectId>();
             }
         }
 
@@ -274,21 +256,15 @@ public class PostOrderIterator extends AbstractIterator<RevObject> {
      * A Successors strategy for traversing to bucket contents from a tree node.
      */
     private final static Successors TREE_BUCKETS = new Successors() {
-        public List<ObjectId> findSuccessors(final RevObject object) {
+        public void findSuccessors(final RevObject object, final List<ObjectId> successors) {
             if (object instanceof RevTree) {
                 final RevTree tree = (RevTree) object;
                 if (tree.buckets().isPresent()) {
-                    final List<ObjectId> results = new ArrayList<ObjectId>();
                     for (Map.Entry<?, Bucket> entry : tree.buckets().get().entrySet()) {
                         final Bucket bucket = entry.getValue();
-                        results.add(bucket.id());
+                        successors.add(bucket.id());
                     }
-                    return results;
-                } else {
-                    return new ArrayList<ObjectId>();
                 }
-            } else {
-                return new ArrayList<ObjectId>();
             }
         }
 
@@ -308,12 +284,10 @@ public class PostOrderIterator extends AbstractIterator<RevObject> {
      */
     private final static Successors combine(final Successors... chained) {
         return new Successors() {
-            public List<ObjectId> findSuccessors(final RevObject object) {
-                final List<ObjectId> results = new ArrayList<ObjectId>();
+            public void findSuccessors(final RevObject object, final List<ObjectId> successors) {
                 for (Successors s : chained) {
-                    results.addAll(s.findSuccessors(object));
+                    s.findSuccessors(object, successors);
                 }
-                return results;
             }
 
             public boolean previsit(ObjectId id) {
@@ -338,13 +312,11 @@ public class PostOrderIterator extends AbstractIterator<RevObject> {
     private final static Successors unique(final Successors delegate) {
         final Set<ObjectId> seen = new HashSet<ObjectId>();
         return new Successors() {
-            public List<ObjectId> findSuccessors(final RevObject object) {
-                if (seen.contains(object.getId())) {
-                    return new ArrayList<ObjectId>();
-                } else {
-                    final List<ObjectId> results = delegate.findSuccessors(object);
-                    results.removeAll(seen);
-                    return results;
+            public void findSuccessors(final RevObject object, final List<ObjectId> successors) {
+                if (!seen.contains(object.getId())) {
+                    final int oldSize = successors.size();
+                    delegate.findSuccessors(object, successors);
+                    successors.subList(oldSize, successors.size()).removeAll(seen);
                 }
             }
 
@@ -366,15 +338,11 @@ public class PostOrderIterator extends AbstractIterator<RevObject> {
     private final static Successors blacklist(final Successors delegate, final List<ObjectId> base) {
         final Set<ObjectId> baseSet = new HashSet<ObjectId>(base);
         return new Successors() {
-            public List<ObjectId> findSuccessors(final RevObject object) {
-                if (baseSet.contains(object.getId())) {
-                    return new ArrayList<ObjectId>();
-                } else {
-                    List<ObjectId> results = delegate.findSuccessors(object);
-                    Set<ObjectId> removed = new HashSet<ObjectId>(baseSet);
-                    removed.retainAll(results);
-                    results.removeAll(baseSet);
-                    return results;
+            public void findSuccessors(final RevObject object, final List<ObjectId> successors) {
+                if (!baseSet.contains(object.getId())) {
+                    final int oldSize = successors.size();
+                    delegate.findSuccessors(object, successors);
+                    successors.subList(oldSize, successors.size()).removeAll(baseSet);
                 }
             }
 
