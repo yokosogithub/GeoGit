@@ -203,23 +203,6 @@
         <version>${bdbje.version}</version>
       </dependency>
 
-      <!-- dependency> <groupId>com.amazonaws</groupId> <artifactId>aws-java-sdk</artifactId> <version>1.0.002</version> 
-        </dependency -->
-
-      <dependency>
-        <!-- needed by aws-java-sdk, using the same version than geoserver -->
-        <groupId>commons-logging</groupId>
-        <artifactId>commons-logging</artifactId>
-        <version>1.1.1</version>
-      </dependency>
-
-      <dependency>
-        <!-- needed by aws-java-sdk, using the same version than geoserver -->
-        <groupId>commons-httpclient</groupId>
-        <artifactId>commons-httpclient</artifactId>
-        <version>3.1</version>
-      </dependency>
-
       <dependency>
         <!-- http://jcommander.org/ -->
         <groupId>com.beust</groupId>
@@ -236,21 +219,9 @@
  
       <!-- Test scope dependencies -->
       <dependency>
-        <groupId>commons-io</groupId>
-        <artifactId>commons-io</artifactId>
-        <version>1.2</version>
-        <scope>test</scope>
-      </dependency>
-      <dependency>
         <groupId>junit</groupId>
         <artifactId>junit</artifactId>
         <version>4.10</version>
-        <scope>test</scope>
-      </dependency>
-      <dependency>
-        <groupId>xmlunit</groupId>
-        <artifactId>xmlunit</artifactId>
-        <version>1.3</version>
         <scope>test</scope>
       </dependency>
       <dependency>
