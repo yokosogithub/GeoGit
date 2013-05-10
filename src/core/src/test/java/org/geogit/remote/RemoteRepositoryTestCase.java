@@ -4,8 +4,6 @@
  */
 package org.geogit.remote;
 
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
@@ -19,7 +17,6 @@ import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 
-import org.apache.commons.io.FileUtils;
 import org.geogit.api.GeoGIT;
 import org.geogit.api.GlobalInjectorBuilder;
 import org.geogit.api.InjectorBuilder;
@@ -38,8 +35,6 @@ import org.geogit.api.porcelain.ConfigOp.ConfigAction;
 import org.geogit.api.porcelain.FetchOp;
 import org.geogit.api.porcelain.PullOp;
 import org.geogit.api.porcelain.PushOp;
-import org.geogit.remote.IRemoteRepo;
-import org.geogit.remote.LocalRemoteRepo;
 import org.geogit.repository.Repository;
 import org.geogit.repository.WorkingTree;
 import org.geogit.test.integration.TestInjectorBuilder;
@@ -53,6 +48,8 @@ import org.geotools.referencing.CRS;
 import org.geotools.util.logging.Logging;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Rule;
+import org.junit.rules.TemporaryFolder;
 import org.opengis.feature.Feature;
 import org.opengis.feature.simple.SimpleFeatureType;
 import org.opengis.feature.type.GeometryDescriptor;
@@ -114,6 +111,9 @@ public abstract class RemoteRepositoryTestCase {
 
     protected Feature lines3;
 
+    @Rule
+    public final TemporaryFolder tempFolder = new TemporaryFolder();
+
     protected class GeogitContainer {
         public GeoGIT geogit;
 
@@ -123,13 +123,9 @@ public abstract class RemoteRepositoryTestCase {
 
         public Injector injector;
 
-        public GeogitContainer(String workingDirectory) throws IOException {
+        public GeogitContainer(final String workingDirectory) throws IOException {
 
-            envHome = new File(new File("target"), workingDirectory);
-
-            FileUtils.deleteDirectory(envHome);
-            assertFalse(envHome.exists());
-            assertTrue(envHome.mkdirs());
+            envHome = tempFolder.newFolder(workingDirectory);
 
             InjectorBuilder injectorBuilder = createInjectorBuilder();
             GlobalInjectorBuilder.builder = injectorBuilder;
@@ -150,8 +146,6 @@ public abstract class RemoteRepositoryTestCase {
             }
             repo = null;
             injector = null;
-            FileUtils.deleteDirectory(envHome);
-            assertFalse(envHome.exists());
         }
 
         protected InjectorBuilder createInjectorBuilder() {

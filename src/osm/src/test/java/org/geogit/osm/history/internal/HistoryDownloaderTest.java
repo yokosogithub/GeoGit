@@ -13,11 +13,12 @@ import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-import org.apache.commons.io.FileUtils;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Ignore;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.TemporaryFolder;
 
 import com.google.common.base.Optional;
 import com.google.common.collect.AbstractIterator;
@@ -33,6 +34,9 @@ public class HistoryDownloaderTest extends Assert {
 
     private ExecutorService executor;
 
+    @Rule
+    public TemporaryFolder tempFolder = new TemporaryFolder();
+
     private File downloadFolder;
 
     @Before
@@ -41,9 +45,7 @@ public class HistoryDownloaderTest extends Assert {
         long initialChangeset = 1;
         long finalChangeset = 10;
 
-        downloadFolder = new File("target", "downloads");
-        FileUtils.deleteDirectory(downloadFolder);
-        downloadFolder.mkdirs();
+        downloadFolder = tempFolder.newFolder("downloads");
 
         executor = Executors.newFixedThreadPool(6);
         localResourcesDownloader = new HistoryDownloader(osmAPIUrl, downloadFolder,

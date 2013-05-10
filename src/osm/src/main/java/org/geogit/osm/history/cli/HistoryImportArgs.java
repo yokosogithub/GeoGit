@@ -21,7 +21,7 @@ public class HistoryImportArgs {
 
     @Parameter(names = "--from", description = "initial changeset id.")
     public long startIndex = 1;
-    
+
     @Parameter(names = "--resume", description = "Resume import from last imported changeset on the current branch.")
     public boolean resume;
 

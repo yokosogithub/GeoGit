@@ -59,8 +59,8 @@ public class RevCommitTest extends RepositoryTestCase {
 
         assertEquals("Commit[" + id.toString() + ", '" + message + "']", commitString);
 
-        RevCommit commit2 = new RevCommit(ObjectId.forString("second commit"), treeId,
-                parentId, author, committer, message);
+        RevCommit commit2 = new RevCommit(ObjectId.forString("second commit"), treeId, parentId,
+                author, committer, message);
 
         assertTrue(commit.equals(commit2));
 

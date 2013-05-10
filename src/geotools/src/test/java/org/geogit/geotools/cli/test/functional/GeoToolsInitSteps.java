@@ -5,10 +5,8 @@
 package org.geogit.geotools.cli.test.functional;
 
 import static org.geogit.cli.test.functional.GlobalState.currentDirectory;
-import static org.geogit.cli.test.functional.GlobalState.homeDirectory;
 import static org.geogit.cli.test.functional.GlobalState.stdOut;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
@@ -17,12 +15,11 @@ import java.io.File;
 import java.io.IOException;
 import java.net.URI;
 import java.util.List;
-import java.util.Random;
 
-import org.apache.commons.io.FileUtils;
 import org.geogit.cli.test.functional.GlobalState;
+import org.junit.Rule;
+import org.junit.rules.TemporaryFolder;
 
-import cucumber.annotation.After;
 import cucumber.annotation.en.Given;
 import cucumber.annotation.en.Then;
 import cucumber.annotation.en.When;
@@ -32,11 +29,28 @@ import cucumber.annotation.en.When;
  */
 public class GeoToolsInitSteps extends AbstractGeoToolsFunctionalTest {
 
-    @After
+    @Rule
+    public TemporaryFolder tempFolder = new TemporaryFolder();
+
+    @cucumber.annotation.Before
+    public void before() throws IOException {
+        tempFolder.create();
+    }
+
+    @cucumber.annotation.After
     public void after() {
+        if (GlobalState.geogitCLI != null) {
+            GlobalState.geogitCLI.close();
+        }
         if (GlobalState.geogit != null) {
             GlobalState.geogit.close();
         }
+        tempFolder.delete();
+    }
+
+    private void setUpDirectories() throws IOException {
+        GlobalState.homeDirectory = tempFolder.newFolder("fakeHomeDir");
+        GlobalState.currentDirectory = tempFolder.newFolder("testrepo");
     }
 
     @Given("^I am in an empty directory$")
@@ -137,18 +151,6 @@ public class GeoToolsInitSteps extends AbstractGeoToolsFunctionalTest {
         }
         assertTrue(dir.mkdirs());
         currentDirectory = dir;
-    }
-
-    private void setUpDirectories() throws IOException {
-        homeDirectory = new File("target", "fakeHomeDir" + new Random().nextInt());
-        FileUtils.deleteDirectory(homeDirectory);
-        assertFalse(homeDirectory.exists());
-        assertTrue(homeDirectory.mkdirs());
-
-        currentDirectory = new File("target", "testrepo" + new Random().nextInt());
-        FileUtils.deleteDirectory(currentDirectory);
-        assertFalse(currentDirectory.exists());
-        assertTrue(currentDirectory.mkdirs());
     }
 
     @Given("^I have 6 unstaged features$")

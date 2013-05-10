@@ -30,8 +30,7 @@ public class JETestStorageModule extends AbstractModule {
         // this module's specific. Used by the JE*Databases to set up the db environment
         // A new instance of each db
         bind(EnvironmentBuilder.class).in(Scopes.NO_SCOPE);
-        
-        
+
         bind(GraphDatabase.class).to(TestNeo4JGraphDatabase.class).in(Scopes.SINGLETON);
     }
 

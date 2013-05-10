@@ -7,7 +7,6 @@ package org.geogit.cli.test.functional;
 import static org.geogit.cli.test.functional.GlobalState.currentDirectory;
 import static org.geogit.cli.test.functional.GlobalState.geogit;
 import static org.geogit.cli.test.functional.GlobalState.geogitCLI;
-import static org.geogit.cli.test.functional.GlobalState.homeDirectory;
 import static org.geogit.cli.test.functional.GlobalState.stdOut;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -18,12 +17,9 @@ import static org.junit.Assert.fail;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.IOException;
-import java.net.URI;
 import java.util.List;
 import java.util.Map;
-import java.util.Random;
 
-import org.apache.commons.io.FileUtils;
 import org.geogit.api.GeoGIT;
 import org.geogit.api.GlobalInjectorBuilder;
 import org.geogit.api.NodeRef;
@@ -41,6 +37,8 @@ import org.geogit.api.porcelain.BranchCreateOp;
 import org.geogit.api.porcelain.CheckoutOp;
 import org.geogit.api.porcelain.CommitOp;
 import org.geogit.api.porcelain.MergeOp;
+import org.junit.Rule;
+import org.junit.rules.TemporaryFolder;
 import org.opengis.feature.Feature;
 import org.opengis.feature.type.PropertyDescriptor;
 
@@ -62,6 +60,14 @@ public class InitSteps extends AbstractGeogitFunctionalTest {
 
     private static final String LINE_SEPARATOR = System.getProperty("line.separator");
 
+    @Rule
+    public TemporaryFolder tempFolder = new TemporaryFolder();
+
+    @cucumber.annotation.Before
+    public void before() throws IOException {
+        tempFolder.create();
+    }
+
     @cucumber.annotation.After
     public void after() {
         if (GlobalState.geogitCLI != null) {
@@ -70,8 +76,12 @@ public class InitSteps extends AbstractGeogitFunctionalTest {
         if (GlobalState.geogit != null) {
             GlobalState.geogit.close();
         }
+        tempFolder.delete();
+    }
 
-        deleteDirectories();
+    private void setUpDirectories() throws IOException {
+        GlobalState.homeDirectory = tempFolder.newFolder("fakeHomeDir");
+        GlobalState.currentDirectory = tempFolder.newFolder("testrepo");
     }
 
     @Given("^I am in an empty directory$")
@@ -256,30 +266,6 @@ public class InitSteps extends AbstractGeogitFunctionalTest {
         runCommand("config", "--global", "user.email", "JohnDoe@example.com");
 
         runCommand("remote", "add", "origin", currentDirectory + "/remoterepo");
-    }
-
-    private void setUpDirectories() throws IOException {
-        homeDirectory = new File("target", "fakeHomeDir" + new Random().nextInt());
-        FileUtils.deleteDirectory(homeDirectory);
-        assertFalse(homeDirectory.exists());
-        assertTrue(homeDirectory.mkdirs());
-
-        currentDirectory = new File("target", "testrepo" + new Random().nextInt());
-        FileUtils.deleteDirectory(currentDirectory);
-        assertFalse(currentDirectory.exists());
-        assertTrue(currentDirectory.mkdirs());
-    }
-
-    private void deleteDirectories() {
-        try {
-            FileUtils.deleteDirectory(homeDirectory);
-            assertFalse(homeDirectory.exists());
-
-            FileUtils.deleteDirectory(currentDirectory);
-            assertFalse(currentDirectory.exists());
-        } catch (IOException e) {
-
-        }
     }
 
     @Given("^I have staged \"([^\"]*)\"$")

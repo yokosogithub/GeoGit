@@ -26,22 +26,21 @@ public abstract class RevFeatureSerializationTest extends Assert {
 
     private String typeName1 = "TestType";
 
-    private String typeSpec1 =
-        "str:String," + //
-        "bool:Boolean," + //
-        "byte:java.lang.Byte," + //
-        "doub:Double," + //
-        "bdec:java.math.BigDecimal," + //
-        "flt:Float," + //
-        "int:Integer," + //
-        "bint:java.math.BigInteger," + //
-        "pp:Point:srid=4326," + //
-        "lng:java.lang.Long," + //
-        "datetime:java.util.Date," + //
-        "date:java.sql.Date," + //
-        "time:java.sql.Time," + //
-        "timestamp:java.sql.Timestamp," + //
-        "uuid:java.util.UUID";
+    private String typeSpec1 = "str:String," + //
+            "bool:Boolean," + //
+            "byte:java.lang.Byte," + //
+            "doub:Double," + //
+            "bdec:java.math.BigDecimal," + //
+            "flt:Float," + //
+            "int:Integer," + //
+            "bint:java.math.BigInteger," + //
+            "pp:Point:srid=4326," + //
+            "lng:java.lang.Long," + //
+            "datetime:java.util.Date," + //
+            "date:java.sql.Date," + //
+            "time:java.sql.Time," + //
+            "timestamp:java.sql.Timestamp," + //
+            "uuid:java.util.UUID";
 
     protected SimpleFeatureType featureType1;
 
@@ -55,27 +54,27 @@ public abstract class RevFeatureSerializationTest extends Assert {
     public void initializeFeatureAndFeatureType() throws Exception {
         /* now we will setup our feature types and test features. */
         featureType1 = DataUtilities.createType(namespace1, typeName1, typeSpec1);
-        // have to store timestamp in a variable since the nanos field is only accessible via setter and getter
+        // have to store timestamp in a variable since the nanos field is only accessible via setter
+        // and getter
         java.sql.Timestamp timestamp = new java.sql.Timestamp(1264396155228L);
         timestamp.setNanos(23456);
-        feature1_1 = feature(
-            featureType1, //
-            "TestType.feature.1", //
-            "StringProp1_1", //
-            Boolean.TRUE, //
-            Byte.valueOf("18"), //
-            new Double(100.01), //
-            new BigDecimal("1.89e1021"), //
-            new Float(12.5), //
-            new Integer(1000), //
-            new BigInteger("90000000"), //
-            "POINT(1 1)", //
-            new Long(800000), //
-            new java.util.Date(1264396155228L), //
-            new java.sql.Date(1364356800000L), //
-            new java.sql.Time(57355228L), //
-            timestamp, //
-            UUID.fromString("bd882d24-0fe9-11e1-a736-03b3c0d0d06d"));
+        feature1_1 = feature(featureType1, //
+                "TestType.feature.1", //
+                "StringProp1_1", //
+                Boolean.TRUE, //
+                Byte.valueOf("18"), //
+                new Double(100.01), //
+                new BigDecimal("1.89e1021"), //
+                new Float(12.5), //
+                new Integer(1000), //
+                new BigInteger("90000000"), //
+                "POINT(1 1)", //
+                new Long(800000), //
+                new java.util.Date(1264396155228L), //
+                new java.sql.Date(1364356800000L), //
+                new java.sql.Time(57355228L), //
+                timestamp, //
+                UUID.fromString("bd882d24-0fe9-11e1-a736-03b3c0d0d06d"));
     }
 
     @Test

@@ -16,7 +16,6 @@ import static org.junit.Assert.fail;
 import java.io.File;
 import java.io.IOException;
 
-import org.apache.commons.io.FileUtils;
 import org.geogit.api.GeoGIT;
 import org.geogit.api.MemoryModule;
 import org.geogit.api.Node;
@@ -34,7 +33,9 @@ import org.geogit.di.GeogitModule;
 import org.geogit.storage.ObjectDatabase;
 import org.geogit.storage.StagingDatabase;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.TemporaryFolder;
 
 import com.google.common.base.Optional;
 import com.google.inject.Guice;
@@ -45,6 +46,9 @@ import com.google.inject.util.Modules;
  *
  */
 public class DepthSearchTest {
+
+    @Rule
+    public final TemporaryFolder tempFolder = new TemporaryFolder();
 
     private GeoGIT fakeGeogit;
 
@@ -58,11 +62,7 @@ public class DepthSearchTest {
 
     @Before
     public void setUp() throws IOException {
-        File envHome = new File("target", "temprepo");
-        FileUtils.deleteDirectory(envHome);
-        assertFalse(envHome.exists());
-        assertTrue(envHome.mkdirs());
-
+        File envHome = tempFolder.getRoot();
         Platform testPlatform = new TestPlatform(envHome);
         Injector injector = Guice.createInjector(Modules.override(new GeogitModule()).with(
                 new MemoryModule(testPlatform)));

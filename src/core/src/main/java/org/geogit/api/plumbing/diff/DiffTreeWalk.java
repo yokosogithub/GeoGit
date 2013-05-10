@@ -62,12 +62,13 @@ public class DiffTreeWalk {
         }
     }
 
-    public void setFilter(@Nullable List<String> pathFitlers){
+    public void setFilter(@Nullable List<String> pathFitlers) {
         this.pathFilter.clear();
-        if(pathFitlers != null){
+        if (pathFitlers != null) {
             this.pathFilter.addAll(pathFitlers);
         }
     }
+
     /**
      * @param reportTrees tells the diff tree walk whether to report a {@link DiffEntry} for each
      *        changed tree or not, defaults to {@code false}

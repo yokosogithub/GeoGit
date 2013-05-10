@@ -22,7 +22,6 @@ import static org.mockito.Mockito.when;
 import java.io.File;
 import java.io.IOException;
 
-import org.apache.commons.io.FileUtils;
 import org.geogit.api.CommandLocator;
 import org.geogit.api.ObjectId;
 import org.geogit.api.Platform;
@@ -36,6 +35,7 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
+import org.junit.rules.TemporaryFolder;
 
 import com.google.common.base.Optional;
 import com.google.inject.Injector;
@@ -50,6 +50,9 @@ public class InitOpTest {
     private Injector injector;
 
     private InitOp init;
+
+    @Rule
+    public final TemporaryFolder tempFolder = new TemporaryFolder();
 
     private File workingDir;
 
@@ -96,9 +99,7 @@ public class InitOpTest {
 
         mockRepo = mock(Repository.class);
 
-        workingDir = new File("target", "inittest");
-        FileUtils.deleteDirectory(workingDir);
-        assertTrue(workingDir.mkdirs());
+        workingDir = tempFolder.getRoot();
 
         when(platform.pwd()).thenReturn(workingDir);
 

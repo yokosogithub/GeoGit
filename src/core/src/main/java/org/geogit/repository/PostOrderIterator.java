@@ -37,7 +37,7 @@ import com.google.common.collect.AbstractIterator;
  * are reachable via multiple paths (eg, features that are part of multiple commits.)
  */
 public class PostOrderIterator extends AbstractIterator<RevObject> {
-    
+
     /**
      * A traversal of all objects reachable from the given origin, with deduplication.
      */
@@ -120,7 +120,7 @@ public class PostOrderIterator extends AbstractIterator<RevObject> {
                     toVisit.add(0, next);
                 } else {
                     // We just visited a node, so switch back to enqueuing mode in order to make
-                    // sure the successors of the next one at this depth are visited. 
+                    // sure the successors of the next one at this depth are visited.
                     enqueue = true;
                     final ObjectId id = currentList.remove(0);
 

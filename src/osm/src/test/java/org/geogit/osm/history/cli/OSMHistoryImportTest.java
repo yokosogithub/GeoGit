@@ -11,7 +11,6 @@ import java.util.List;
 import jline.UnsupportedTerminal;
 import jline.console.ConsoleReader;
 
-import org.apache.commons.io.FileUtils;
 import org.geogit.api.GeoGIT;
 import org.geogit.api.Platform;
 import org.geogit.api.RevFeature;
@@ -23,9 +22,12 @@ import org.geogit.api.plumbing.diff.DiffEntry.ChangeType;
 import org.geogit.api.porcelain.DiffOp;
 import org.geogit.cli.GeogitCLI;
 import org.geotools.referencing.CRS;
+import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.TemporaryFolder;
 import org.opengis.feature.type.FeatureType;
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
 
@@ -41,6 +43,9 @@ public class OSMHistoryImportTest extends Assert {
 
     private String fakeOsmApiUrl;
 
+    @Rule
+    public TemporaryFolder tempFolder = new TemporaryFolder();
+
     @Before
     public void setUp() throws Exception {
         ConsoleReader consoleReader = new ConsoleReader(System.in, System.out,
@@ -48,13 +53,18 @@ public class OSMHistoryImportTest extends Assert {
         cli = new GeogitCLI(consoleReader);
         fakeOsmApiUrl = getClass().getResource("../internal/01_10").toExternalForm();
 
-        File workingDirectory = new File("target", "repo");
-        FileUtils.deleteDirectory(workingDirectory);
-        assertTrue(workingDirectory.mkdir());
+        File workingDirectory = tempFolder.getRoot();
         Platform platform = new TestPlatform(workingDirectory);
         cli.setPlatform(platform);
         cli.execute("init");
         assertTrue(new File(workingDirectory, ".geogit").exists());
+    }
+
+    @After
+    public void tearDown() {
+        if (cli != null) {
+            cli.close();
+        }
     }
 
     @Test
