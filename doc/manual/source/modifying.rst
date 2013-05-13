@@ -50,6 +50,8 @@ A message is not needed, but it can be supplied if needed, using the ``-m`` opti
 
 If the set of commits to be squashed contain merge commits, the resulting commit will have the secondary parents of those merge commits as their parents as well. The resulting commit will itself be a merge commit. If several merge commits are squashed, the resulting commit is the merge commit of an octopus merge.
 
+When a merge commit appears, the commits to squash must belong to the main branch. That is, the ``since`` commit must be reachable from the ``until`` commit descending in the history using just the first parent of each commit.
+
 Commits at the beginning of a branch (that is, commits when a branch was created, which have more that a single child) cannot be squashed. The squash operation rewrites the history after the squashef commits only in the current branch, and cannot squash that type of commits, since that would require rewriting the full history of the new branch.
 
 Also, if a new branch have been created in any of the commits after the squashed ones, the squash operation cannot run. As a rule of thumb, branches can start in the commits *before* the squashed ones, but not on them of after them

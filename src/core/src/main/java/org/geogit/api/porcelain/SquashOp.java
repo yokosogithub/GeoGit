@@ -6,9 +6,13 @@ package org.geogit.api.porcelain;
 
 import static com.google.common.base.Preconditions.checkState;
 
-import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
+
+import javax.annotation.Nullable;
 
 import org.geogit.api.AbstractGeoGitOp;
 import org.geogit.api.CommitBuilder;
@@ -26,12 +30,16 @@ import org.geogit.api.porcelain.ResetOp.ResetMode;
 import org.geogit.repository.Repository;
 import org.geogit.storage.GraphDatabase;
 
+import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Predicate;
 import com.google.common.base.Suppliers;
+import com.google.common.collect.Collections2;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.google.inject.Inject;
 
 /**
@@ -125,7 +133,7 @@ public class SquashOp extends AbstractGeoGitOp<ObjectId> {
         Optional<RevCommit> ancestor = command(FindCommonAncestor.class).setLeft(since)
                 .setRight(until).call();
         Preconditions.checkArgument(ancestor.isPresent(),
-                "'since' and 'until' command are not in the same branch");
+                "'since' and 'until' command do not have a common ancestor");
         Preconditions
                 .checkArgument(ancestor.get().equals(since), "Commits provided in wrong order");
 
@@ -137,36 +145,44 @@ public class SquashOp extends AbstractGeoGitOp<ObjectId> {
 
         ImmutableSet<Ref> refs = command(ForEachRef.class).setPrefixFilter("refs/heads").call();
 
-        // we create a list of all secondary parents of those squashed commits, in case they are
+        // we create a list of all parents of those squashed commits, in case they are
         // merge commits. The resulting commit will have all these parents
         //
         // While iterating the set of commits to squash, we check that there are no branch starting
         // points among them. Any commit with more than one child causes an exception to be thrown,
         // since the squash operation does not support squashing those commits
+
         Iterator<RevCommit> toSquash = command(LogOp.class).setSince(since.getParentIds().get(0))
                 .setUntil(until.getId()).setFirstParentOnly(true).call();
-        List<ObjectId> parents = Lists.newArrayList();
+        List<ObjectId> firstParents = Lists.newArrayList();
+        List<ObjectId> secondaryParents = Lists.newArrayList();
+        final List<ObjectId> squashedIds = Lists.newArrayList();
+        RevCommit commitToSquash = until;
         while (toSquash.hasNext()) {
-            RevCommit commit = toSquash.next();
+            commitToSquash = toSquash.next();
+            squashedIds.add(commitToSquash.getId());
             Preconditions
                     .checkArgument(
-                            graphDb.getChildren(commit.getId()).size() < 2,
+                            graphDb.getChildren(commitToSquash.getId()).size() < 2,
                             "The commits to squash include a branch starting point. Squashing that type of commit is not supported.");
             for (Ref ref : refs) {
                 // In case a branch has been created but no commit has been made on it and the
                 // starting commit has just one child
                 Preconditions
                         .checkArgument(
-                                !ref.getObjectId().equals(commit.getId())
+                                !ref.getObjectId().equals(commitToSquash.getId())
                                         || ref.getObjectId().equals(currHead.get().getObjectId())
-                                        || commit.getParentIds().size() > 1,
+                                        || commitToSquash.getParentIds().size() > 1,
                                 "The commits to squash include a branch starting point. Squashing that type of commit is not supported.");
             }
-            ImmutableList<ObjectId> parentIds = commit.getParentIds();
+            ImmutableList<ObjectId> parentIds = commitToSquash.getParentIds();
             for (int i = 1; i < parentIds.size(); i++) {
-                parents.add(parentIds.get(i));
+                secondaryParents.add(parentIds.get(i));
             }
+            firstParents.add(parentIds.get(0));
         }
+        Preconditions.checkArgument(since.equals(commitToSquash),
+                "Cannot reach 'since' from 'until' commit through first parentage");
 
         // We do the same check in the children commits
         for (RevCommit commit : commits) {
@@ -183,13 +199,7 @@ public class SquashOp extends AbstractGeoGitOp<ObjectId> {
                                         || commit.getParentIds().size() > 1,
                                 "The commits after the ones to squash include a branch starting point. This scenario is not supported.");
             }
-            ImmutableList<ObjectId> parentIds = commit.getParentIds();
-            for (int i = 1; i < parentIds.size(); i++) {
-                parents.add(parentIds.get(i));
-            }
         }
-
-        // In case a branch has been created but
 
         ObjectId newHead;
         // rewind the head
@@ -198,12 +208,24 @@ public class SquashOp extends AbstractGeoGitOp<ObjectId> {
                 .call();
 
         // add the current HEAD as first parent of the resulting commit
-        parents.add(0, newHead);
+        // parents.add(0, newHead);
 
         // Create new commit
+        List<ObjectId> parents = Lists.newArrayList();
+        parents.addAll(firstParents);
+        parents.addAll(secondaryParents);
         ObjectId endTree = until.getTreeId();
         CommitBuilder builder = new CommitBuilder(until);
-        builder.setParentIds(parents);
+        Collection<ObjectId> filteredParents = Collections2.filter(parents,
+                new Predicate<ObjectId>() {
+                    @Override
+                    public boolean apply(@Nullable ObjectId id) {
+                        return !squashedIds.contains(id);
+                    }
+
+                });
+
+        builder.setParentIds(Lists.newArrayList(filteredParents));
         builder.setTreeId(endTree);
         if (message == null) {
             message = since.getMessage();
@@ -235,16 +257,33 @@ public class SquashOp extends AbstractGeoGitOp<ObjectId> {
 
     }
 
-    private ObjectId addCommits(List<RevCommit> commits, String currentBranch, ObjectId head) {
+    private ObjectId addCommits(List<RevCommit> commits, String currentBranch,
+            final ObjectId squashedId) {
+        final Map<ObjectId, ObjectId> replacedCommits = Maps.newHashMap();
+        replacedCommits.put(until.getId(), squashedId);
+        ObjectId head = squashedId;
         for (RevCommit commit : commits) {
             CommitBuilder builder = new CommitBuilder(commit);
-            builder.setParentIds(Arrays.asList(head));
+            Collection<ObjectId> parents = Collections2.transform(commit.getParentIds(),
+                    new Function<ObjectId, ObjectId>() {
+                        @Override
+                        @Nullable
+                        public ObjectId apply(@Nullable ObjectId id) {
+                            if (replacedCommits.containsKey(id)) {
+                                return replacedCommits.get(id);
+                            } else {
+                                return id;
+                            }
+                        }
+                    });
+            builder.setParentIds(Lists.newArrayList(parents));
             builder.setTreeId(commit.getTreeId());
             long timestamp = platform.currentTimeMillis();
             builder.setCommitterTimestamp(timestamp);
             builder.setCommitterTimeZoneOffset(platform.timeZoneOffset(timestamp));
 
             RevCommit newCommit = builder.build();
+            replacedCommits.put(commit.getId(), newCommit.getId());
             repository.getObjectDatabase().put(newCommit);
             head = newCommit.getId();
             ObjectId newTreeId = newCommit.getTreeId();
@@ -262,6 +301,7 @@ public class SquashOp extends AbstractGeoGitOp<ObjectId> {
     private List<RevCommit> getCommitsAfterUntil() {
         Iterator<RevCommit> commitIterator = command(LogOp.class).setSince(until.getId()).call();
         List<RevCommit> commits = Lists.newArrayList(commitIterator);
+        Collections.reverse(commits);
         return commits;
     }
 

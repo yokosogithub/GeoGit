@@ -128,20 +128,38 @@ public class SquashOpTest extends RepositoryTestCase {
         List<RevCommit> commits = Lists.newArrayList();
         for (Feature f : features) {
             insertAndAdd(f);
-            final RevCommit commit = geogit.command(CommitOp.class).call();
+            final RevCommit commit = geogit.command(CommitOp.class)
+                    .setMessage(f.getIdentifier().getID()).call();
             commits.add(commit);
         }
-        geogit.command(SquashOp.class).setSince(commits.get(1)).setUntil(commits.get(1)).call();
+        geogit.command(SquashOp.class).setSince(commits.get(1)).setUntil(commits.get(1))
+                .setMessage("squashed").call();
         Iterator<RevCommit> log = geogit.command(LogOp.class).call();
         ArrayList<RevCommit> logentries = Lists.newArrayList(log);
         assertEquals(6, logentries.size());
         RevCommit squashedCommit = logentries.get(4);
         assertEquals(commits.get(1).getTreeId(), squashedCommit.getTreeId());
-        assertEquals(commits.get(1).getMessage(), squashedCommit.getMessage());
-        assertEquals(commits.get(1).getAuthor().getTimestamp(), squashedCommit.getAuthor()
-                .getTimestamp());
-        assertNotSame(commits.get(1).getCommitter().getTimestamp(), squashedCommit.getCommitter()
-                .getTimestamp());
+        assertEquals("squashed", squashedCommit.getMessage());
+    }
+
+    @Test
+    public void testSquash2() throws Exception {
+        List<Feature> features = Arrays.asList(points1, lines1, points2, lines2, points3, lines3);
+        List<RevCommit> commits = Lists.newArrayList();
+        for (Feature f : features) {
+            insertAndAdd(f);
+            final RevCommit commit = geogit.command(CommitOp.class)
+                    .setMessage(f.getIdentifier().getID()).call();
+            commits.add(commit);
+        }
+        geogit.command(SquashOp.class).setSince(commits.get(1)).setUntil(commits.get(2))
+                .setMessage("squashed").call();
+        Iterator<RevCommit> log = geogit.command(LogOp.class).call();
+        ArrayList<RevCommit> logentries = Lists.newArrayList(log);
+        assertEquals(5, logentries.size());
+        RevCommit squashedCommit = logentries.get(3);
+        assertEquals(commits.get(2).getTreeId(), squashedCommit.getTreeId());
+        assertEquals("squashed", squashedCommit.getMessage());
     }
 
     @Test
@@ -162,6 +180,85 @@ public class SquashOpTest extends RepositoryTestCase {
         insertAndAdd(points2);
         exception.expect(IllegalStateException.class);
         geogit.command(SquashOp.class).setSince(c1).setUntil(c1).call();
+    }
+
+    @Test
+    public void testSquashWithMergedBranch() throws Exception {
+        // Try to squash the commits marked (*) in this history
+        // o
+        // |
+        // o - Points 1 added
+        // |\
+        // | o - branch1 - Points 2 added
+        // | |
+        // o | - Points 3 added*
+        // | |
+        // o | - Lines 1 added*
+        // |/
+        // o - master - HEAD - Merge commit
+        insertAndAdd(points1);
+        final RevCommit c1 = geogit.command(CommitOp.class).setMessage("commit for " + idP1).call();
+        geogit.command(BranchCreateOp.class).setAutoCheckout(true).setName("branch1").call();
+        insertAndAdd(points2);
+        final RevCommit c2 = geogit.command(CommitOp.class).setMessage("commit for " + idP2).call();
+        geogit.command(CheckoutOp.class).setSource("master").call();
+        insertAndAdd(points3);
+        final RevCommit c3 = geogit.command(CommitOp.class).setMessage("commit for " + idP3).call();
+        insertAndAdd(lines1);
+        final RevCommit c4 = geogit.command(CommitOp.class).setMessage("commit for " + idL1).call();
+        Ref branch1 = geogit.command(RefParse.class).setName("branch1").call().get();
+        RevCommit mergeCommit = geogit.command(MergeOp.class)
+                .addCommit(Suppliers.ofInstance(branch1.getObjectId()))
+                .setMessage("My merge message.").call();
+        geogit.command(SquashOp.class).setSince(c3).setUntil(c4).setMessage("Squashed").call();
+        // check that the commit added after the squashed has all the parents
+        ArrayList<RevCommit> log = Lists.newArrayList(geogit.command(LogOp.class)
+                .setFirstParentOnly(true).call());
+        assertEquals(3, log.size());
+        ImmutableList<ObjectId> parents = log.get(0).getParentIds();
+        assertEquals(2, parents.size());
+        assertEquals("Squashed", log.get(1).getMessage());
+        assertEquals(log.get(1).getId(), parents.get(0));
+        assertEquals(c2.getId(), parents.get(1));
+
+    }
+
+    @Test
+    public void testSquashInMergedBranch() throws Exception {
+        // Try to squash the commits marked (*) in this history
+        // o
+        // |
+        // o - Points 1 added
+        // |\
+        // | o - branch1 - Points 2 added*
+        // | |
+        // | o - Points 3 added*
+        // | |
+        // o | - Lines 1 added
+        // |/
+        // o - master - HEAD - Merge commit*
+        insertAndAdd(points1);
+        final RevCommit c1 = geogit.command(CommitOp.class).setMessage("commit for " + idP1).call();
+        geogit.command(BranchCreateOp.class).setAutoCheckout(true).setName("branch1").call();
+        insertAndAdd(points2);
+        final RevCommit c2 = geogit.command(CommitOp.class).setMessage("commit for " + idP2).call();
+        insertAndAdd(points3);
+        final RevCommit c3 = geogit.command(CommitOp.class).setMessage("commit for " + idP3).call();
+        geogit.command(CheckoutOp.class).setSource("master").call();
+        insertAndAdd(lines1);
+        final RevCommit c4 = geogit.command(CommitOp.class).setMessage("commit for " + idL1).call();
+        Ref branch1 = geogit.command(RefParse.class).setName("branch1").call().get();
+        RevCommit mergeCommit = geogit.command(MergeOp.class)
+                .addCommit(Suppliers.ofInstance(branch1.getObjectId()))
+                .setMessage("My merge message.").call();
+        try {
+            geogit.command(SquashOp.class).setSince(c2).setUntil(mergeCommit)
+                    .setMessage("Squashed").call();
+        } catch (IllegalArgumentException e) {
+            assertTrue(e.getMessage().equals(
+                    "Cannot reach 'since' from 'until' commit through first parentage"));
+        }
+
     }
 
     @Test
