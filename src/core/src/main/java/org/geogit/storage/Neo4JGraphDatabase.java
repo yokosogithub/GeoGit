@@ -57,6 +57,24 @@ public class Neo4JGraphDatabase extends AbstractGraphDatabase {
         TOROOT, PARENT, MAPPED_TO
     }
 
+    static {
+        // Registers a shutdown hook for the Neo4j instance so that it
+        // shuts down nicely when the VM exits (even if you "Ctrl-C" the
+        // running example before it's completed)
+        Runtime.getRuntime().addShutdownHook(new Thread() {
+            @Override
+            public void run() {
+                for (Entry<String, GraphDatabaseService> entry : databaseServices.entrySet()) {
+                    File graphPath = new File(entry.getKey());
+                    if (graphPath.exists()) {
+                        entry.getValue().shutdown();
+                    }
+                }
+                databaseServices.clear();
+            }
+        });
+    }
+
     /**
      * Constructs a new {@code Neo4JGraphDatabase} using the given platform.
      * 
@@ -65,7 +83,6 @@ public class Neo4JGraphDatabase extends AbstractGraphDatabase {
     @Inject
     public Neo4JGraphDatabase(final Platform platform) {
         this.platform = platform;
-        registerShutdownHook();
     }
 
     @Override
@@ -108,24 +125,6 @@ public class Neo4JGraphDatabase extends AbstractGraphDatabase {
         GraphDatabaseService dbService = new GraphDatabaseFactory().newEmbeddedDatabase(dbPath);
         databaseServices.put(dbPath, dbService);
         return dbService;
-    }
-
-    private static void registerShutdownHook() {
-        // Registers a shutdown hook for the Neo4j instance so that it
-        // shuts down nicely when the VM exits (even if you "Ctrl-C" the
-        // running example before it's completed)
-        Runtime.getRuntime().addShutdownHook(new Thread() {
-            @Override
-            public void run() {
-                for (Entry<String, GraphDatabaseService> entry : databaseServices.entrySet()) {
-                    File graphPath = new File(entry.getKey());
-                    if (graphPath.exists()) {
-                        entry.getValue().shutdown();
-                    }
-                }
-                databaseServices.clear();
-            }
-        });
     }
 
     @Override
