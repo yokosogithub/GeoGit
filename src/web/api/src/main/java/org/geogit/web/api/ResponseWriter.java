@@ -542,20 +542,20 @@ public class ResponseWriter {
      * @param conflicts - a Conflict iterator to build the response from
      * @throws XMLStreamException
      */
-    public void writeConflicts(final CommandLocator geogit, Iterator<Conflict> conflicts)
-            throws XMLStreamException {
+    public void writeConflicts(final CommandLocator geogit, Iterator<Conflict> conflicts,
+            final ObjectId commitId) throws XMLStreamException {
         Iterator<GeometryConflict> conflictIterator = Iterators.transform(conflicts,
                 new Function<Conflict, GeometryConflict>() {
                     @Override
                     public GeometryConflict apply(Conflict input) {
                         Optional<RevObject> object = geogit.command(RevObjectParse.class)
-                                .setObjectId(input.getOurs()).call();
+                                .setObjectId(commitId).call();
                         RevCommit commit = null;
                         if (object.isPresent() && object.get() instanceof RevCommit) {
                             commit = (RevCommit) object.get();
                         } else {
                             throw new CommandSpecException("Couldn't resolve id: "
-                                    + input.getOurs().toString() + " to a commit");
+                                    + commitId.toString() + " to a commit");
                         }
 
                         object = geogit.command(RevObjectParse.class)
@@ -594,12 +594,18 @@ public class ResponseWriter {
                         GeometryConflict conflict = null;
 
                         if (feature != null && type != null) {
-                            RevFeature revFeature = feature;
                             FeatureBuilder builder = new FeatureBuilder(type);
                             GeogitSimpleFeature simpleFeature = (GeogitSimpleFeature) builder
-                                    .build(revFeature.getId().toString(), revFeature);
-                            conflict = new GeometryConflict(input, (Geometry) simpleFeature
-                                    .getDefaultGeometry());
+                                    .build(feature.getId().toString(), feature);
+                            Geometry geom = null;
+                            List<Object> attributes = simpleFeature.getAttributes();
+                            for (Object attribute : attributes) {
+                                if (attribute instanceof Geometry) {
+                                    geom = (Geometry) attribute;
+                                    break;
+                                }
+                            }
+                            conflict = new GeometryConflict(input, geom);
                         }
                         return conflict;
                     }
@@ -646,9 +652,8 @@ public class ResponseWriter {
             GeometryChange next = changeIterator.next();
             if (next != null) {
                 GeogitSimpleFeature feature = next.getFeature();
-                ChangeType change = next.getChangeType();
                 out.writeStartElement("Feature");
-                writeElement("change", change.toString());
+                writeElement("change", "MERGED");
                 writeElement("id", next.getPath());
                 List<Object> attributes = feature.getAttributes();
                 for (Object attribute : attributes) {
@@ -677,7 +682,7 @@ public class ResponseWriter {
         writeElement("theirs", theirs.toString());
         writeElement("ancestor", ancestor.toString());
         writeGeometryChanges(transaction, report.getUnconflicted().iterator());
-        writeConflicts(transaction, report.getConflicts().iterator());
+        writeConflicts(transaction, report.getConflicts().iterator(), ours);
         writeMerged(transaction, report.getMerged().iterator());
         out.writeEndElement();
     }
