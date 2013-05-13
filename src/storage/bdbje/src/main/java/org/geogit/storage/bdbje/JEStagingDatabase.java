@@ -30,12 +30,13 @@ import org.geogit.storage.StagingDatabase;
 
 import com.google.common.base.Charsets;
 import com.google.common.base.Optional;
+import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.io.Files;
 import com.google.common.io.LineProcessor;
 import com.google.inject.Inject;
-import com.sleepycat.je.DatabaseConfig;
 import com.sleepycat.je.Environment;
 
 /**
@@ -63,7 +64,17 @@ import com.sleepycat.je.Environment;
  */
 public class JEStagingDatabase implements ObjectDatabase, StagingDatabase {
 
+    /**
+     * do not use it for anything else than constructing the delegate JEObjectDatabase or it'll open
+     * a new environment for the same db each time
+     */
     private final EnvironmentBuilder envProvider;
+
+    /**
+     * The db environment, created at open(), nullified at close(), owned by the delegate
+     * JEObjectDatabase
+     */
+    private Environment environment;
 
     // /////////////////////////////////////////
     /**
@@ -104,16 +115,16 @@ public class JEStagingDatabase implements ObjectDatabase, StagingDatabase {
             return;
         }
         envProvider.setRelativePath("index");
-        Environment environment = envProvider.get();
+        environment = envProvider.get();
         stagingDb = new JEObjectDatabase(sfac, environment);
         stagingDb.open();
-        {
-            DatabaseConfig stagedDbConfig = new DatabaseConfig();
-            stagedDbConfig.setAllowCreate(true);
-            stagedDbConfig.setTransactional(environment.getConfig().getTransactional());
-            // stagedDbConfig.setDeferredWrite(true);
-            stagedDbConfig.setSortedDuplicates(false);
-        }
+        // {
+        // DatabaseConfig stagedDbConfig = new DatabaseConfig();
+        // stagedDbConfig.setAllowCreate(true);
+        // stagedDbConfig.setTransactional(environment.getConfig().getTransactional());
+        // // stagedDbConfig.setDeferredWrite(true);
+        // stagedDbConfig.setSortedDuplicates(false);
+        // }
     }
 
     @Override
@@ -121,6 +132,7 @@ public class JEStagingDatabase implements ObjectDatabase, StagingDatabase {
         if (stagingDb != null) {
             stagingDb.close();// this closes the environment since it took control over it
             stagingDb = null;
+            environment = null;
         }
     }
 
@@ -247,17 +259,12 @@ public class JEStagingDatabase implements ObjectDatabase, StagingDatabase {
 
     @Override
     public List<Conflict> getConflicts(final String pathFilter) {
+        Optional<File> conflictsFile = findOrCreateConflictsFile();
+        if (!conflictsFile.isPresent()) {
+            return ImmutableList.of();
+        }
+        File file = conflictsFile.get();
         List<Conflict> conflicts = Lists.newArrayList();
-        File file;
-        try {
-            file = envProvider.get().getHome();
-        } catch (IllegalStateException e) {
-            return conflicts;
-        }
-        file = new File(file, "conflicts");
-        if (!file.exists()) {
-            return conflicts;
-        }
         try {
             synchronized (file.getCanonicalPath().intern()) {
                 conflicts = Files.readLines(file, Charsets.UTF_8,
@@ -289,13 +296,10 @@ public class JEStagingDatabase implements ObjectDatabase, StagingDatabase {
 
     @Override
     public void addConflict(Conflict conflict) {
-        File file = envProvider.get().getHome();
-        file = new File(file, "conflicts");
+        Optional<File> file = findOrCreateConflictsFile();
+        Preconditions.checkState(file.isPresent());
         try {
-            if (!file.exists()) {
-                file.createNewFile();
-            }
-            Files.append(conflict.toString() + "\n", file, Charsets.UTF_8);
+            Files.append(conflict.toString() + "\n", file.get(), Charsets.UTF_8);
         } catch (IOException e) {
             throw Throwables.propagate(e);
         }
@@ -304,8 +308,9 @@ public class JEStagingDatabase implements ObjectDatabase, StagingDatabase {
     @Override
     public void removeConflict(String path) {
         List<Conflict> conflicts = getConflicts(null);
-        File file = envProvider.get().getHome();
-        file = new File(file, "conflicts");
+        Optional<File> file = findOrCreateConflictsFile();
+        Preconditions.checkState(file.isPresent());
+
         StringBuilder sb = new StringBuilder();
         try {
             for (Conflict conflict : conflicts) {
@@ -315,7 +320,7 @@ public class JEStagingDatabase implements ObjectDatabase, StagingDatabase {
             }
             String s = sb.toString();
             if (!s.isEmpty()) {
-                Files.append(s, file, Charsets.UTF_8);
+                Files.append(s, file.get(), Charsets.UTF_8);
             }
         } catch (IOException e) {
             throw Throwables.propagate(e);
@@ -324,33 +329,34 @@ public class JEStagingDatabase implements ObjectDatabase, StagingDatabase {
 
     @Override
     public Optional<Conflict> getConflict(final String path) {
-        File file = envProvider.get().getHome();
-        file = new File(file, "conflicts");
-        if (!file.exists()) {
+        Optional<File> file = findOrCreateConflictsFile();
+        if (!file.isPresent()) {
             return Optional.absent();
         }
         Conflict conflict = null;
         try {
-            synchronized (file.getCanonicalPath().intern()) {
-                conflict = Files.readLines(file, Charsets.UTF_8, new LineProcessor<Conflict>() {
-                    Conflict conflict = null;
+            File conflictsFile = file.get();
+            synchronized (conflictsFile.getCanonicalPath().intern()) {
+                conflict = Files.readLines(conflictsFile, Charsets.UTF_8,
+                        new LineProcessor<Conflict>() {
+                            Conflict conflict = null;
 
-                    @Override
-                    public Conflict getResult() {
-                        return conflict;
-                    }
+                            @Override
+                            public Conflict getResult() {
+                                return conflict;
+                            }
 
-                    @Override
-                    public boolean processLine(String s) throws IOException {
-                        Conflict c = Conflict.valueOf(s);
-                        if (c.getPath().equals(path)) {
-                            conflict = c;
-                            return false;
-                        } else {
-                            return true;
-                        }
-                    }
-                });
+                            @Override
+                            public boolean processLine(String s) throws IOException {
+                                Conflict c = Conflict.valueOf(s);
+                                if (c.getPath().equals(path)) {
+                                    conflict = c;
+                                    return false;
+                                } else {
+                                    return true;
+                                }
+                            }
+                        });
             }
         } catch (IOException e) {
             throw Throwables.propagate(e);
@@ -358,11 +364,29 @@ public class JEStagingDatabase implements ObjectDatabase, StagingDatabase {
         return Optional.fromNullable(conflict);
     }
 
+    private Optional<File> findOrCreateConflictsFile() {
+        Optional<File> conflicts = Optional.absent();
+        if (environment != null) {
+            File file = environment.getHome();
+            file = new File(file, "conflicts");
+            if (!file.exists()) {
+                try {
+                    file.createNewFile();
+                } catch (IOException e) {
+                    throw Throwables.propagate(e);
+                }
+            }
+            conflicts = Optional.of(file);
+        }
+        return conflicts;
+    }
+
     @Override
     public void removeConflicts() {
-        File file = envProvider.get().getHome();
-        file = new File(file, "conflicts");
-        file.delete();
+        Optional<File> file = findOrCreateConflictsFile();
+        if (file.isPresent()) {
+            file.get().delete();
+        }
     }
 
 }
