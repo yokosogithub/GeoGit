@@ -48,6 +48,14 @@ A message is not needed, but it can be supplied if needed, using the ``-m`` opti
 	$ geogit squash HEAD~5 HEAD~2 -m "Cleaned up small polygons"
 
 
+If the set of commits to be squashed contain merge commits, the resulting commit will have the secondary parents of those merge commits as their parents as well. The resulting commit will itself be a merge commit. If several merge commits are squashed, the resulting commit will resemble an octopus merge.
+
+When a merge commit appears, the commits to squash must belong to the main branch. That is, the ``since`` commit must be reachable from the ``until`` commit descending in the history using just the first parent of each commit.
+
+Commits at the beginning of a branch (that is, commits where a branch was created that have more that one child commit) cannot be squashed. Because the squash operation rewrites the history of the current branch after the squash commit, this type of commit cannot be squashed since it would require rewriting the history of other branches.
+
+Also, if a new branch has been created in any of the commits after the squashed ones, the squash operation cannot run. As a rule of thumb, branches can start in the commits *before* the squashed ones, but not on or after them
+
 When performing a rebase operation, the commits that are rebased can be squashed into one automatically, by adding the ``--squash`` option, as we saw in the corresponding chapter.
 
 .. note::

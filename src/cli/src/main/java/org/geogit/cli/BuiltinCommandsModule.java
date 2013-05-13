@@ -39,6 +39,7 @@ import org.geogit.cli.porcelain.Remove;
 import org.geogit.cli.porcelain.Reset;
 import org.geogit.cli.porcelain.Revert;
 import org.geogit.cli.porcelain.Show;
+import org.geogit.cli.porcelain.Squash;
 import org.geogit.cli.porcelain.Status;
 import org.geogit.cli.porcelain.Tag;
 
@@ -114,6 +115,7 @@ public class BuiltinCommandsModule extends AbstractModule implements CLIModule {
         bind(Fetch.class);
         bind(Push.class);
         bind(Pull.class);
+        bind(Squash.class);
         bind(Tag.class);
         bind(WalkGraph.class);
     }
