@@ -9,6 +9,7 @@ import java.util.Map;
 import org.geogit.api.AbstractGeoGitOp;
 import org.geogit.api.porcelain.ConfigOp.ConfigAction;
 import org.geogit.api.porcelain.ConfigOp.ConfigScope;
+import org.geogit.di.CanRunDuringConflict;
 
 import com.google.common.base.Optional;
 import com.google.inject.Inject;
@@ -22,6 +23,7 @@ import com.google.inject.Inject;
  * 
  * @see ConfigOp
  */
+@CanRunDuringConflict
 public class ConfigGet extends AbstractGeoGitOp<Optional<String>> {
 
     private boolean global;

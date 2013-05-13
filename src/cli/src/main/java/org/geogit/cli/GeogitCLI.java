@@ -12,6 +12,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.ServiceLoader;
 import java.util.TreeSet;
 
@@ -25,6 +26,8 @@ import org.geogit.api.GeoGIT;
 import org.geogit.api.GlobalInjectorBuilder;
 import org.geogit.api.Platform;
 import org.geogit.api.plumbing.ResolveGeogitDir;
+import org.geogit.api.porcelain.ConfigException;
+import org.geogit.api.porcelain.ConfigGet;
 import org.geotools.util.DefaultProgressListener;
 import org.geotools.util.logging.Logging;
 import org.opengis.util.ProgressListener;
@@ -32,8 +35,12 @@ import org.opengis.util.ProgressListener;
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.ParameterException;
 import com.google.common.base.Optional;
+import com.google.common.base.Predicate;
+import com.google.common.base.Splitter;
 import com.google.common.base.Strings;
 import com.google.common.base.Throwables;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.google.inject.Binding;
 import com.google.inject.Guice;
@@ -262,7 +269,7 @@ public class GeogitCLI {
         try {
             execute(args);
         } catch (Exception e) {
-            exitCode = -1;            
+            exitCode = -1;
             try {
                 if (e instanceof ParameterException) {
                     consoleReader.println(e.getMessage() + ". See geogit --help.");
@@ -295,10 +302,25 @@ public class GeogitCLI {
             return;
         }
         {
+            args = unalias(args);
             final String commandName = args[0];
             JCommander commandParser = mainCommander.getCommands().get(commandName);
+
             if (commandParser == null) {
-                mainCommander.parse(args);// make it fail with a reasonable error message
+                consoleReader.println(args[0] + " is not a geogit command. See geogit --help.");
+                // check for similar commands
+                Map<String, JCommander> candidates = spellCheck(mainCommander.getCommands(),
+                        commandName);
+                if (!candidates.isEmpty()) {
+                    String msg = candidates.size() == 1 ? "Did you mean this?"
+                            : "Did you mean one of these?";
+                    consoleReader.println();
+                    consoleReader.println(msg);
+                    for (String name : candidates.keySet()) {
+                        consoleReader.println("\t" + name);
+                    }
+                }
+                consoleReader.flush();
                 return;
             }
 
@@ -331,7 +353,80 @@ public class GeogitCLI {
         }
     }
 
-    /*
+    /**
+     * If the passed arguments contains an alias, it replaces it by the full command corresponding
+     * to that alias and returns anew set of arguments
+     * 
+     * IF not, it returns the passed arguments
+     * 
+     * @param args
+     * @return
+     */
+    private String[] unalias(String[] args) {
+        String configParam = "alias." + args[0];
+        if (geogit == null) { // in case the repo is not initialized yet
+            return args;
+        }
+        try {
+            Optional<String> unaliased = geogit.command(ConfigGet.class).setName(configParam)
+                    .call();
+            if (!unaliased.isPresent()) {
+                unaliased = geogit.command(ConfigGet.class).setGlobal(true).setName(configParam)
+                        .call();
+            }
+            if (!unaliased.isPresent()) {
+                return args;
+            }
+            Iterable<String> tokens = Splitter.on(" ").split(unaliased.get());
+            List<String> allArgs = Lists.newArrayList(tokens);
+            allArgs.addAll(Lists.newArrayList(Arrays.copyOfRange(args, 1, args.length)));
+            return allArgs.toArray(new String[0]);
+        } catch (ConfigException e) {
+            return args;
+        }
+    }
+
+    /**
+     * Return all commands with a command name at a levenshtein distance of less than 3, as
+     * potential candidates for a mistyped command
+     * 
+     * @param commands the list of all available commands
+     * @param commandName the command name
+     * @return a map filtered according to distance between command names
+     */
+    private Map<String, JCommander> spellCheck(Map<String, JCommander> commands,
+            final String commandName) {
+        Map<String, JCommander> candidates = Maps.filterEntries(commands,
+                new Predicate<Map.Entry<String, JCommander>>() {
+                    @Override
+                    public boolean apply(@Nullable Entry<String, JCommander> entry) {
+                        char[] s1 = entry.getKey().toCharArray();
+                        char[] s2 = commandName.toCharArray();
+                        int[] prev = new int[s2.length + 1];
+                        for (int j = 0; j < s2.length + 1; j++) {
+                            prev[j] = j;
+                        }
+                        for (int i = 1; i < s1.length + 1; i++) {
+                            int[] curr = new int[s2.length + 1];
+                            curr[0] = i;
+                            for (int j = 1; j < s2.length + 1; j++) {
+                                int d1 = prev[j] + 1;
+                                int d2 = curr[j - 1] + 1;
+                                int d3 = prev[j - 1];
+                                if (s1[i - 1] != s2[j - 1]) {
+                                    d3 += 1;
+                                }
+                                curr[j] = Math.min(Math.min(d1, d2), d3);
+                            }
+                            prev = curr;
+                        }
+                        return prev[s2.length] < 3;
+                    }
+                });
+        return candidates;
+    }
+
+    /**
      * This prints out only porcelain commands
      * 
      * @param mainCommander
