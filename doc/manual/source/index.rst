@@ -32,4 +32,5 @@ Contents:
   modifying
   patches
   partial_cloning
+  configuration
 
