@@ -47,9 +47,9 @@ public class Neo4JGraphDatabase extends AbstractGraphDatabase {
 
     protected GraphDatabaseService graphDB = null;
 
-    private String dbPath = null;
+    protected String dbPath;
 
-    private static Map<String, GraphDatabaseService> databaseServices = new ConcurrentHashMap<String, GraphDatabaseService>();
+    protected static Map<String, GraphDatabaseService> databaseServices = new ConcurrentHashMap<String, GraphDatabaseService>();
 
     private final Platform platform;
 
