@@ -66,6 +66,13 @@
       <scope>test</scope>
     </dependency>
     <dependency>
+      <groupId>org.geogit</groupId>
+      <artifactId>geogit-bdbje</artifactId>
+      <version>${project.version}</version>
+      <classifier>tests</classifier>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>
     </dependency>

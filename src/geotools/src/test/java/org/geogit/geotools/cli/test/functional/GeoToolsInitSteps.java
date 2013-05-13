@@ -5,6 +5,7 @@
 package org.geogit.geotools.cli.test.functional;
 
 import static org.geogit.cli.test.functional.GlobalState.currentDirectory;
+import static org.geogit.cli.test.functional.GlobalState.homeDirectory;
 import static org.geogit.cli.test.functional.GlobalState.stdOut;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -16,6 +17,8 @@ import java.io.IOException;
 import java.net.URI;
 import java.util.List;
 
+import org.geogit.api.InjectorBuilder;
+import org.geogit.cli.test.functional.CLITestInjectorBuilder;
 import org.geogit.cli.test.functional.GlobalState;
 import org.junit.Rule;
 import org.junit.rules.TemporaryFolder;
@@ -46,6 +49,11 @@ public class GeoToolsInitSteps extends AbstractGeoToolsFunctionalTest {
             GlobalState.geogit.close();
         }
         tempFolder.delete();
+    }
+
+    @Override
+    protected InjectorBuilder getInjectorBuilder() {
+        return new CLITestInjectorBuilder(currentDirectory, homeDirectory);
     }
 
     private void setUpDirectories() throws IOException {

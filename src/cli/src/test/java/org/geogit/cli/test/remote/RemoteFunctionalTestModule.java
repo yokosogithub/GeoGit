@@ -3,14 +3,12 @@
  * application directory.
  */
 
-package org.geogit.cli.test.functional;
+package org.geogit.cli.test.remote;
 
 import org.geogit.api.Platform;
-import org.geogit.storage.GraphDatabase;
-import org.geogit.storage.TestNeo4JGraphDatabase;
+import org.geogit.cli.test.functional.CLITestInjectorBuilder;
 
 import com.google.inject.AbstractModule;
-import com.google.inject.Scopes;
 
 /**
  * Guice module with tweaks to run functional tests on the target {@link Platform}'s working
@@ -18,14 +16,14 @@ import com.google.inject.Scopes;
  * 
  * @see CLITestInjectorBuilder
  */
-public class FunctionalTestModule extends AbstractModule {
+public class RemoteFunctionalTestModule extends AbstractModule {
 
     private Platform testPlatform;
 
     /**
      * @param testPlatform
      */
-    public FunctionalTestModule(Platform testPlatform) {
+    public RemoteFunctionalTestModule(Platform testPlatform) {
         this.testPlatform = testPlatform;
     }
 
@@ -34,9 +32,6 @@ public class FunctionalTestModule extends AbstractModule {
         if (testPlatform != null) {
             bind(Platform.class).toInstance(testPlatform);
         }
-
-        // Use the testing neo4j graph db, otherwise functional tests are extremely slow
-        bind(GraphDatabase.class).to(TestNeo4JGraphDatabase.class).in(Scopes.SINGLETON);
     }
 
 }

@@ -2,7 +2,7 @@
  * This code is licensed under the BSD New License, available at the root
  * application directory.
  */
-package org.geogit.cli.test.functional;
+package org.geogit.cli.test.remote;
 
 import static org.geogit.cli.test.functional.GlobalState.currentDirectory;
 import static org.geogit.cli.test.functional.GlobalState.geogit;
@@ -39,6 +39,8 @@ import org.geogit.api.porcelain.BranchCreateOp;
 import org.geogit.api.porcelain.CheckoutOp;
 import org.geogit.api.porcelain.CommitOp;
 import org.geogit.api.porcelain.MergeOp;
+import org.geogit.cli.test.functional.AbstractGeogitFunctionalTest;
+import org.geogit.cli.test.functional.GlobalState;
 import org.junit.Rule;
 import org.junit.rules.TemporaryFolder;
 import org.opengis.feature.Feature;
@@ -56,9 +58,11 @@ import cucumber.annotation.en.Then;
 import cucumber.annotation.en.When;
 
 /**
- *
+ * TODO: Find a way to remove this class. It is identical to InitSteps.java except for the
+ * InjectorBuilder that is provided. Cucumber does not allow you to inherit from a class with step
+ * definitions, so it's not as easy as overriding a method in InitSteps.
  */
-public class InitSteps extends AbstractGeogitFunctionalTest {
+public class RemoteInitSteps extends AbstractGeogitFunctionalTest {
 
     private static final String LINE_SEPARATOR = System.getProperty("line.separator");
 
@@ -83,7 +87,7 @@ public class InitSteps extends AbstractGeogitFunctionalTest {
 
     @Override
     protected InjectorBuilder getInjectorBuilder() {
-        return new CLITestInjectorBuilder(currentDirectory, homeDirectory);
+        return new CLIRemoteTestInjectorBuilder(currentDirectory, homeDirectory);
     }
 
     private void setUpDirectories() throws IOException {

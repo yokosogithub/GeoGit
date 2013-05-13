@@ -113,8 +113,7 @@ public abstract class AbstractGeogitFunctionalTest {
 
         ConsoleReader consoleReader = new ConsoleReader(stdIn, stdOut, new UnsupportedTerminal());
 
-        InjectorBuilder injectorBuilder = new CLITestInjectorBuilder(currentDirectory,
-                homeDirectory);
+        InjectorBuilder injectorBuilder = getInjectorBuilder();
         Injector injector = injectorBuilder.build();
 
         if (geogit != null) {
@@ -135,6 +134,11 @@ public abstract class AbstractGeogitFunctionalTest {
         }
         setupFeatures();
     }
+
+    /**
+     * @return the injector builder that should be used for this test
+     */
+    protected abstract InjectorBuilder getInjectorBuilder();
 
     /**
      * Runs the given command with its arguments and returns the command output as a list of
