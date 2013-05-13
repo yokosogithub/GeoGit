@@ -21,10 +21,17 @@ import jline.console.completer.ArgumentCompleter;
 import jline.console.completer.Completer;
 import jline.console.completer.StringsCompleter;
 
+import org.geogit.api.Ref;
+import org.geogit.api.SymRef;
+import org.geogit.api.plumbing.RefParse;
+
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.ParameterDescription;
 import com.beust.jcommander.ParameterException;
+import com.google.common.base.Charsets;
+import com.google.common.base.Optional;
 import com.google.common.base.Throwables;
+import com.google.common.io.Files;
 
 /**
  * Provides the ability to execute several commands in succession without re-initializing GeoGit or
@@ -45,12 +52,66 @@ public class GeogitConsole {
      */
     public static void main(String... args) {
         try {
-            new GeogitConsole().run();
+            if (args.length == 1) {
+                new GeogitConsole().runFile(args[0]);
+            } else if (args.length == 0) {
+                new GeogitConsole().run();
+            } else {
+                System.out.println("Too many arguments.\nUsage: geogit-console [batch_file]");
+            }
             System.exit(0);
         } catch (IOException e) {
             e.printStackTrace();
             System.exit(-1);
         }
+    }
+
+    private void runFile(String filename) throws IOException {
+        File file = new File(filename);
+        if (!file.exists()) {
+            System.out.println("The specified batch file does not exist");
+            return;
+        }
+        List<String> lines = Files.readLines(file, Charsets.UTF_8);
+
+        InputStream in = System.in;
+        OutputStream out = System.out;
+        ConsoleReader consoleReader = new ConsoleReader(in, out);
+        consoleReader.setAutoprintThreshold(20);
+        consoleReader.setPaginationEnabled(true);
+        // needed for CTRL+C not to let the console broken
+        consoleReader.getTerminal().setEchoEnabled(true);
+
+        final GeogitCLI cli = new GeogitCLI(consoleReader);
+        try {
+            for (String line : lines) {
+                try {
+                    if (line.trim().length() == 0) {
+                        continue;
+                    }
+                    String[] args = line.split(" ");
+                    cli.execute(args);
+                } catch (ParameterException pe) {
+                    consoleReader.print("Error: " + pe.getMessage());
+                    consoleReader.println();
+                } catch (Exception e) {
+                    throw Throwables.propagate(e);
+                }
+            }
+
+        } finally {
+            Terminal terminal = consoleReader.getTerminal();
+            try {
+                cli.close();
+            } finally {
+                try {
+                    terminal.restore();
+                } catch (Exception e) {
+                    throw Throwables.propagate(e);
+                }
+            }
+        }
+
     }
 
     /**
@@ -97,9 +158,7 @@ public class GeogitConsole {
         Completer completer = new AggregateCompleter(completers);
         consoleReader.addCompleter(completer);
 
-        String currentDir = new File(".").getCanonicalPath();
-        String prompt = "(geogit):" + currentDir + " $ ";
-        consoleReader.setPrompt(prompt);
+        setPrompt(cli);
 
         try {
             runInternal(cli);
@@ -115,6 +174,35 @@ public class GeogitConsole {
                 }
             }
         }
+    }
+
+    /**
+     * Sets the command prompt
+     * 
+     * @throws IOException
+     */
+    private void setPrompt(GeogitCLI cli) throws IOException {
+
+        String currentDir = new File(".").getCanonicalPath();
+        String currentHead = "";
+        if (cli.getGeogit() != null) {
+            Optional<Ref> ref = cli.getGeogit().command(RefParse.class).setName(Ref.HEAD).call();
+            if (ref.isPresent()) {
+                if (ref.get() instanceof SymRef) {
+                    currentHead = ((SymRef) ref.get()).getTarget();
+                    int idx = currentHead.lastIndexOf("/");
+                    if (idx != -1) {
+                        currentHead = currentHead.substring(idx + 1);
+                    }
+                } else {
+                    currentHead = ref.get().getObjectId().toString().substring(0, 7);
+                }
+                currentHead = " (" + currentHead + ")";
+            }
+        }
+        String prompt = "(geogit):" + currentDir + currentHead + " $ ";
+        cli.getConsole().setPrompt(prompt);
+
     }
 
     private void runInternal(final GeogitCLI cli) throws IOException {
@@ -139,8 +227,15 @@ public class GeogitConsole {
                 }
 
                 cli.execute(args);
+                setPrompt(cli);// in case HEAD has changed
             } catch (ParameterException pe) {
                 consoleReader.print("Error: " + pe.getMessage());
+                consoleReader.println();
+            } catch (IllegalArgumentException e) {
+                consoleReader.print(Optional.fromNullable(e.getMessage()).or("Uknown error"));
+                consoleReader.println();
+            } catch (IllegalStateException e) {
+                consoleReader.print(Optional.fromNullable(e.getMessage()).or("Uknown error"));
                 consoleReader.println();
             } catch (Exception e) {
                 throw Throwables.propagate(e);

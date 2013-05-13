@@ -33,4 +33,5 @@ Contents:
   patches
   partial_cloning
   configuration
+  console
 
