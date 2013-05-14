@@ -4,6 +4,7 @@ import java.util.List;
 
 import javax.annotation.Nullable;
 
+import org.geogit.api.RevFeatureType;
 import org.geogit.api.porcelain.AddOp;
 import org.geogit.api.porcelain.CommitOp;
 import org.geogit.geotools.plumbing.ExportOp;
@@ -40,8 +41,7 @@ public class ExportOpTest extends RepositoryTestCase {
         final String typeName = dataStore.getTypeNames()[0];
         SimpleFeatureSource featureSource = dataStore.getFeatureSource(typeName);
         SimpleFeatureStore featureStore = (SimpleFeatureStore) featureSource;
-        geogit.command(ExportOp.class).setFeatureStore(featureStore).setFeatureTypeName(pointsName)
-                .call();
+        geogit.command(ExportOp.class).setFeatureStore(featureStore).setPath(pointsName).call();
         featureSource = dataStore.getFeatureSource(typeName);
         featureStore = (SimpleFeatureStore) featureSource;
         SimpleFeatureCollection featureCollection = featureStore.getFeatures();
@@ -62,8 +62,8 @@ public class ExportOpTest extends RepositoryTestCase {
         final String typeName = dataStore.getTypeNames()[0];
         SimpleFeatureSource featureSource = dataStore.getFeatureSource(typeName);
         SimpleFeatureStore featureStore = (SimpleFeatureStore) featureSource;
-        geogit.command(ExportOp.class).setFeatureStore(featureStore)
-                .setFeatureTypeName("HEAD:" + pointsName).call();
+        geogit.command(ExportOp.class).setFeatureStore(featureStore).setPath("HEAD:" + pointsName)
+                .call();
         featureSource = dataStore.getFeatureSource(typeName);
         featureStore = (SimpleFeatureStore) featureSource;
         SimpleFeatureCollection featureCollection = featureStore.getFeatures();
@@ -114,7 +114,7 @@ public class ExportOpTest extends RepositoryTestCase {
         final String typeName = dataStore.getTypeNames()[0];
         SimpleFeatureSource featureSource = dataStore.getFeatureSource(typeName);
         SimpleFeatureStore featureStore = (SimpleFeatureStore) featureSource;
-        geogit.command(ExportOp.class).setFeatureStore(featureStore).setFeatureTypeName(pointsName)
+        geogit.command(ExportOp.class).setFeatureStore(featureStore).setPath(pointsName)
                 .setFeatureTypeConversionFunction(function).call();
         featureSource = dataStore.getFeatureSource(typeName);
         featureStore = (SimpleFeatureStore) featureSource;
@@ -140,9 +140,8 @@ public class ExportOpTest extends RepositoryTestCase {
                     return wrongFeatureBuilder.buildFeature(null);
                 }
             };
-            geogit.command(ExportOp.class).setFeatureStore(featureStore)
-                    .setFeatureTypeName(pointsName).setFeatureTypeConversionFunction(wrongFunction)
-                    .call();
+            geogit.command(ExportOp.class).setFeatureStore(featureStore).setPath(pointsName)
+                    .setFeatureTypeConversionFunction(wrongFunction).call();
             fail();
         } catch (GeoToolsOpException e) {
             assertEquals(e.statusCode, StatusCode.UNABLE_TO_ADD);
@@ -186,13 +185,139 @@ public class ExportOpTest extends RepositoryTestCase {
         SimpleFeatureSource featureSource = dataStore.getFeatureSource(typeName);
         SimpleFeatureStore featureStore = (SimpleFeatureStore) featureSource;
         try {
-            geogit.command(ExportOp.class).setFeatureStore(featureStore)
-                    .setFeatureTypeName(pointsName).call();
+            geogit.command(ExportOp.class).setFeatureStore(featureStore).setPath(pointsName).call();
             fail();
         } catch (IllegalArgumentException e) {
             assertTrue(true);
         }
 
+    }
+
+    @Test
+    public void testExportFromTreeWithSeveralFeatureTypesUsingDefaultFeatureType() throws Exception {
+        Feature[] points = new Feature[] { points2, points1B, points3 };
+        for (Feature feature : points) {
+            insert(feature);
+        }
+        Feature[] expectedPoints = new Feature[] { points2, points3 };
+        MemoryDataStore dataStore = new MemoryDataStore(pointsType);
+        final String typeName = dataStore.getTypeNames()[0];
+        SimpleFeatureSource featureSource = dataStore.getFeatureSource(typeName);
+        SimpleFeatureStore featureStore = (SimpleFeatureStore) featureSource;
+        geogit.command(ExportOp.class).setFeatureStore(featureStore).setPath(pointsName)
+                .exportDefaultFeatureType().call();
+        featureSource = dataStore.getFeatureSource(typeName);
+        featureStore = (SimpleFeatureStore) featureSource;
+        SimpleFeatureCollection featureCollection = featureStore.getFeatures();
+        assertEquals(featureCollection.size(), expectedPoints.length);
+        SimpleFeatureIterator features = featureCollection.features();
+        assertTrue(collectionsAreEqual(features, expectedPoints));
+    }
+
+    @Test
+    public void testExportWithAlterUsingDefaultFeatureType() throws Exception {
+        Feature[] points = new Feature[] { points2, points1B, points3 };
+        for (Feature feature : points) {
+            insert(feature);
+        }
+        MemoryDataStore dataStore = new MemoryDataStore(pointsType);
+        final String typeName = dataStore.getTypeNames()[0];
+        SimpleFeatureSource featureSource = dataStore.getFeatureSource(typeName);
+        SimpleFeatureStore featureStore = (SimpleFeatureStore) featureSource;
+        geogit.command(ExportOp.class).setFeatureStore(featureStore).setPath(pointsName)
+                .setAlter(true).call();
+        featureSource = dataStore.getFeatureSource(typeName);
+        featureStore = (SimpleFeatureStore) featureSource;
+        SimpleFeatureCollection featureCollection = featureStore.getFeatures();
+        assertEquals(featureCollection.size(), points.length);
+        SimpleFeatureIterator features = featureCollection.features();
+        assertTrue(collectionsAreEqual(features, points));
+    }
+
+    @Test
+    public void testExportWithAlterUsingFeatureTypeId() throws Exception {
+        Feature[] points = new Feature[] { points2, points1B, points3 };
+        for (Feature feature : points) {
+            insert(feature);
+        }
+        MemoryDataStore dataStore = new MemoryDataStore(modifiedPointsType);
+        final String typeName = dataStore.getTypeNames()[0];
+        SimpleFeatureSource featureSource = dataStore.getFeatureSource(typeName);
+        SimpleFeatureStore featureStore = (SimpleFeatureStore) featureSource;
+        geogit.command(ExportOp.class).setFeatureStore(featureStore).setPath(pointsName)
+                .setAlter(true).setFeatureTypeId(RevFeatureType.build(modifiedPointsType).getId())
+                .call();
+        featureSource = dataStore.getFeatureSource(typeName);
+        featureStore = (SimpleFeatureStore) featureSource;
+        SimpleFeatureCollection featureCollection = featureStore.getFeatures();
+        assertEquals(featureCollection.size(), points.length);
+        SimpleFeatureIterator features = featureCollection.features();
+        while (features.hasNext()) {
+            List<Object> attributes = features.next().getAttributes();
+            assertEquals(4, attributes.size());
+        }
+
+    }
+
+    @Test
+    public void testExportFromTreeWithSeveralFeatureTypesUsingFeatureTypeId() throws Exception {
+        Feature[] points = new Feature[] { points2, points1B, points3 };
+        for (Feature feature : points) {
+            insert(feature);
+        }
+        Feature[] expectedPoints = new Feature[] { points1B };
+        MemoryDataStore dataStore = new MemoryDataStore(pointsType);
+        final String typeName = dataStore.getTypeNames()[0];
+        SimpleFeatureSource featureSource = dataStore.getFeatureSource(typeName);
+        SimpleFeatureStore featureStore = (SimpleFeatureStore) featureSource;
+        geogit.command(ExportOp.class).setFeatureStore(featureStore).setPath(pointsName)
+                .setFeatureTypeId(RevFeatureType.build(modifiedPointsType).getId()).call();
+        featureSource = dataStore.getFeatureSource(typeName);
+        featureStore = (SimpleFeatureStore) featureSource;
+        SimpleFeatureCollection featureCollection = featureStore.getFeatures();
+        assertEquals(expectedPoints.length, featureCollection.size());
+        SimpleFeatureIterator features = featureCollection.features();
+        assertTrue(collectionsAreEqual(features, expectedPoints));
+    }
+
+    @Test
+    public void testExportFromTreeWithSeveralFeatureTypesUsingNonexistantTypeId() throws Exception {
+        Feature[] points = new Feature[] { points2, points1B, points3 };
+        for (Feature feature : points) {
+            insert(feature);
+        }
+        MemoryDataStore dataStore = new MemoryDataStore(pointsType);
+        final String typeName = dataStore.getTypeNames()[0];
+        SimpleFeatureSource featureSource = dataStore.getFeatureSource(typeName);
+        SimpleFeatureStore featureStore = (SimpleFeatureStore) featureSource;
+        try {
+            geogit.command(ExportOp.class).setFeatureStore(featureStore).setPath(pointsName)
+                    .setFeatureTypeId(RevFeatureType.build(linesType).getId()).call();
+            fail();
+        } catch (GeoToolsOpException e) {
+            assertEquals(GeoToolsOpException.StatusCode.UNABLE_TO_GET_FEATURES, e.statusCode);
+
+        }
+
+    }
+
+    @Test
+    public void testExportFromTreeWithSeveralFeatureTypes() throws Exception {
+        Feature[] points = new Feature[] { points2, points1B, points3 };
+        for (Feature feature : points) {
+            insert(feature);
+        }
+        MemoryDataStore dataStore = new MemoryDataStore(pointsType);
+        final String typeName = dataStore.getTypeNames()[0];
+        SimpleFeatureSource featureSource = dataStore.getFeatureSource(typeName);
+        SimpleFeatureStore featureStore = (SimpleFeatureStore) featureSource;
+        try {
+            geogit.command(ExportOp.class).setFeatureStore(featureStore).setPath(pointsName).call();
+            fail();
+        } catch (GeoToolsOpException e) {
+            assertEquals(GeoToolsOpException.StatusCode.MIXED_FEATURE_TYPES, e.statusCode);
+
+        }
     }
 
 }

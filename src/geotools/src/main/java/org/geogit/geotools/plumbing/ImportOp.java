@@ -273,7 +273,7 @@ public class ImportOp extends AbstractGeoGitOp<RevTree> {
         for (int i = 0; i < newAttributes.size(); i++) {
             int idx = oldAttributes.indexOf(newAttributes.get(i));
             if (idx != -1) {
-                Optional<Object> oldValue = oldValues.get(i);
+                Optional<Object> oldValue = oldValues.get(idx);
                 newValues.add(oldValue);
             } else {
                 newValues.add(Optional.absent());

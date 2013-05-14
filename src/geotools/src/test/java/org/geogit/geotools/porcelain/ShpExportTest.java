@@ -1,3 +1,8 @@
+/* Copyright (c) 2013 OpenPlans. All rights reserved.
+ * This code is licensed under the BSD New License, available at the root
+ * application directory.
+ */
+
 package org.geogit.geotools.porcelain;
 
 import java.io.File;
@@ -58,6 +63,19 @@ public class ShpExportTest extends RepositoryTestCase {
     }
 
     @Test
+    public void testExportWithDifferentFeatureTypes() throws Exception {
+        insertAndAdd(points1B);
+        geogit.command(CommitOp.class).call();
+        ShpExport exportCommand = new ShpExport();
+        String shapeFileName = "TestPoints";
+        exportCommand.args = Arrays.asList("Points", shapeFileName + ".shp");
+        exportCommand.dataStoreFactory = factory;
+        exportCommand.run(cli);
+
+        deleteShapeFile(shapeFileName);
+    }
+
+    @Test
     public void testExport() throws Exception {
         ShpExport exportCommand = new ShpExport();
         String shapeFileName = "TestPoints";
@@ -65,30 +83,7 @@ public class ShpExportTest extends RepositoryTestCase {
         exportCommand.dataStoreFactory = factory;
         exportCommand.run(cli);
 
-        File file = new File(shapeFileName + ".shp");
-        if (file.exists()) {
-            file.delete();
-        }
-        file = new File(shapeFileName + ".fix");
-        if (file.exists()) {
-            file.delete();
-        }
-        file = new File(shapeFileName + ".shx");
-        if (file.exists()) {
-            file.delete();
-        }
-        file = new File(shapeFileName + ".qix");
-        if (file.exists()) {
-            file.delete();
-        }
-        file = new File(shapeFileName + ".prj");
-        if (file.exists()) {
-            file.delete();
-        }
-        file = new File(shapeFileName + ".dbf");
-        if (file.exists()) {
-            file.delete();
-        }
+        deleteShapeFile(shapeFileName);
     }
 
     @Test
@@ -130,32 +125,10 @@ public class ShpExportTest extends RepositoryTestCase {
         exportCommand.run(cli);
 
         exportCommand.args = Arrays.asList("Lines", shapeFileName + ".shp");
+        exportCommand.overwrite = true;
         exportCommand.run(cli);
 
-        File file = new File(shapeFileName + ".shp");
-        if (file.exists()) {
-            file.delete();
-        }
-        file = new File(shapeFileName + ".fix");
-        if (file.exists()) {
-            file.delete();
-        }
-        file = new File(shapeFileName + ".shx");
-        if (file.exists()) {
-            file.delete();
-        }
-        file = new File(shapeFileName + ".qix");
-        if (file.exists()) {
-            file.delete();
-        }
-        file = new File(shapeFileName + ".prj");
-        if (file.exists()) {
-            file.delete();
-        }
-        file = new File(shapeFileName + ".dbf");
-        if (file.exists()) {
-            file.delete();
-        }
+        deleteShapeFile(shapeFileName);
     }
 
     @Test
@@ -178,6 +151,10 @@ public class ShpExportTest extends RepositoryTestCase {
         exportCommand.overwrite = true;
         exportCommand.run(cli);
 
+        deleteShapeFile(shapeFileName);
+    }
+
+    private void deleteShapeFile(String shapeFileName) {
         File file = new File(shapeFileName + ".shp");
         if (file.exists()) {
             file.delete();
@@ -203,4 +180,5 @@ public class ShpExportTest extends RepositoryTestCase {
             file.delete();
         }
     }
+
 }
