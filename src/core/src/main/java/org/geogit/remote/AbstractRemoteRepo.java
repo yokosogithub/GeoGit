@@ -69,6 +69,11 @@ abstract class AbstractRemoteRepo implements IRemoteRepo {
         protected ImmutableList<ObjectId> getParents(ObjectId commitId) {
             return source.getParents(commitId);
         }
+
+        @Override
+        protected boolean existsInDestination(ObjectId commitId) {
+            return destination.objectExists(commitId);
+        }
     }
 
     /**
@@ -117,6 +122,11 @@ abstract class AbstractRemoteRepo implements IRemoteRepo {
         protected ImmutableList<ObjectId> getParents(ObjectId commitId) {
             return source.getParents(commitId);
         }
+
+        @Override
+        protected boolean existsInDestination(ObjectId commitId) {
+            return destination.objectExists(commitId);
+        }
     };
 
     /**
@@ -147,6 +157,11 @@ abstract class AbstractRemoteRepo implements IRemoteRepo {
         @Override
         protected ImmutableList<ObjectId> getParents(ObjectId commitId) {
             return source.getParents(commitId);
+        }
+
+        @Override
+        protected boolean existsInDestination(ObjectId commitId) {
+            return destination.objectExists(commitId);
         }
 
     };

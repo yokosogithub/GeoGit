@@ -20,6 +20,7 @@ import org.geogit.api.RevTree;
 import org.geogit.storage.ObjectDatabase;
 
 import com.google.common.collect.AbstractIterator;
+import com.google.common.collect.ImmutableList;
 
 /**
  * The PostOrderIterator class provides utilities for traversing a GeoGit revision history graph in
@@ -56,6 +57,24 @@ public class PostOrderIterator extends AbstractIterator<RevObject> {
             ObjectDatabase database, boolean traverseCommits) {
         return new PostOrderIterator(new ArrayList<ObjectId>(start), database, //
                 unique(blacklist((traverseCommits ? ALL_SUCCESSORS : COMMIT_SUCCESSORS), base)));
+    }
+
+    /**
+     * A traversal of commit history (no content) with deduplication. 
+     * @param start
+     * @param base
+     * @param database
+     * @return
+     */
+    public static Iterator<RevObject> rangeOfCommits(List<ObjectId> start, List<ObjectId> base,
+            ObjectDatabase database) {
+        return new PostOrderIterator(new ArrayList<ObjectId>(start), database, unique(blacklist(
+                COMMIT_PARENTS, base)));
+    }
+
+    public static Iterator<RevObject> contentsOf(List<ObjectId> needsPrevisit,
+            ObjectDatabase database) {
+        return new PostOrderIterator(new ArrayList<ObjectId>(needsPrevisit), database, unique(COMMIT_SUCCESSORS));
     }
 
     /**
