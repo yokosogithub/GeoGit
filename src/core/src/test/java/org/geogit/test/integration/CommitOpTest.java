@@ -18,6 +18,7 @@ import org.geogit.api.NodeRef;
 import org.geogit.api.ObjectId;
 import org.geogit.api.Ref;
 import org.geogit.api.RevCommit;
+import org.geogit.api.RevFeatureType;
 import org.geogit.api.RevTree;
 import org.geogit.api.plumbing.FindTreeChild;
 import org.geogit.api.plumbing.RevObjectParse;
@@ -98,6 +99,17 @@ public class CommitOpTest extends RepositoryTestCase {
 
         ObjectId commitId = geogit.command(RevParse.class).setRefSpec(Ref.HEAD).call().get();
         assertEquals(commit.getId(), commitId);
+    }
+
+    @Test
+    public void testCommitAddsFeatureTypeToObjectDatabase() throws Exception {
+        insertAndAdd(points1);
+        ObjectId id = RevFeatureType.build(pointsType).getId();
+        geogit.command(AddOp.class).addPattern(".").call();
+        RevCommit commit = geogit.command(CommitOp.class).call();
+        assertNotNull(commit);
+        RevFeatureType type = geogit.getRepository().getObjectDatabase().getFeatureType(id);
+        assertEquals(id, type.getId());
     }
 
     @Test

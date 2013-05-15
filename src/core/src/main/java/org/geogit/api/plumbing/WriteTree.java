@@ -189,13 +189,13 @@ public class WriteTree extends AbstractGeoGitOp<ObjectId> {
             } else {
                 if (ref.getType().equals(TYPE.TREE)) {
                     RevTree tree = getIndex().getDatabase().getTree(ref.objectId());
+                    if (ref.getMetadataId() != null && !ref.getMetadataId().equals(ObjectId.NULL)) {
+                        repositoryDatabase.put(getIndex().getDatabase().getFeatureType(
+                                ref.getMetadataId()));
+                    }
                     if (tree.isEmpty()) {
                         repositoryDatabase.put(tree);
-                        if (ref.getMetadataId() != null
-                                && !ref.getMetadataId().equals(ObjectId.NULL)) {
-                            repositoryDatabase.put(getIndex().getDatabase().getFeatureType(
-                                    ref.getMetadataId()));
-                        }
+
                     } else {
                         continue;
                     }
