@@ -5,6 +5,7 @@ import java.util.Arrays;
 import org.geogit.api.ObjectId;
 import org.geogit.web.api.commands.BeginTransaction;
 import org.geogit.web.api.commands.BranchWebOp;
+import org.geogit.web.api.commands.CheckoutWebOp;
 import org.geogit.web.api.commands.Commit;
 import org.geogit.web.api.commands.Diff;
 import org.geogit.web.api.commands.EndTransaction;
@@ -62,6 +63,8 @@ public class CommandBuilder {
             command = buildGetCommitGraph(options);
         } else if ("merge".equalsIgnoreCase(commandName)) {
             command = buildMerge(options);
+        } else if ("checkout".equalsIgnoreCase(commandName)) {
+            command = buildCheckout(options);
         } else if ("beginTransaction".equalsIgnoreCase(commandName)) {
             command = buildBeginTransaction(options);
         } else if ("endTransaction".equalsIgnoreCase(commandName)) {
@@ -298,11 +301,20 @@ public class CommandBuilder {
      */
     static MergeWebOp buildMerge(ParameterSet options) {
         MergeWebOp command = new MergeWebOp();
-        command.setBaseRef(options.getFirstValue("baseRef", null));
-        command.setCheckConflicts(Boolean.valueOf(options.getFirstValue("checkConflicts", "false")));
-        command.setDryRun(Boolean.valueOf(options.getFirstValue("dryRun", "false")));
         command.setNoCommit(Boolean.valueOf(options.getFirstValue("noCommit", "false")));
         command.setCommit(options.getFirstValue("commit", null));
+        return command;
+    }
+
+    /**
+     * Builds the {@link CheckoutWebOp} command.
+     * 
+     * @param options the parameter set
+     * @return the built command
+     */
+    static CheckoutWebOp buildCheckout(ParameterSet options) {
+        CheckoutWebOp command = new CheckoutWebOp();
+        command.setName(options.getFirstValue("branch", null));
         return command;
     }
 }

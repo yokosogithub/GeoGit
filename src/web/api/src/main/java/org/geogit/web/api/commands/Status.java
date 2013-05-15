@@ -6,6 +6,7 @@ import org.geogit.api.SymRef;
 import org.geogit.api.plumbing.DiffIndex;
 import org.geogit.api.plumbing.DiffWorkTree;
 import org.geogit.api.plumbing.RefParse;
+import org.geogit.api.plumbing.merge.ConflictsReadOp;
 import org.geogit.web.api.AbstractWebAPICommand;
 import org.geogit.web.api.CommandContext;
 import org.geogit.web.api.CommandResponse;
@@ -72,6 +73,7 @@ public class Status extends AbstractWebAPICommand {
                         limit);
                 writer.writeUnstaged(geogit.command(DiffWorkTree.class).setFilter(pathFilter),
                         offset, limit);
+                writer.writeUnmerged(geogit.command(ConflictsReadOp.class).call(), offset, limit);
 
                 writer.finish();
             }

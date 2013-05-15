@@ -183,6 +183,26 @@ public class ResponseWriter {
         writeDiffEntries("unstaged", start, length, setFilter.call());
     }
 
+    public void writeUnmerged(List<Conflict> conflicts, int start, int length)
+            throws XMLStreamException {
+        Iterator<Conflict> entries = conflicts.iterator();
+
+        advance(entries, start);
+        if (length < 0) {
+            length = Integer.MAX_VALUE;
+        }
+        for (int i = 0; i < length && entries.hasNext(); i++) {
+            Conflict entry = entries.next();
+            out.writeStartElement("unmerged");
+            writeElement("changeType", "CONFLICT");
+            writeElement("path", entry.getPath());
+            writeElement("ours", entry.getOurs().toString());
+            writeElement("theirs", entry.getTheirs().toString());
+            writeElement("ancestor", entry.getAncestor().toString());
+            out.writeEndElement();
+        }
+    }
+
     @SuppressWarnings("rawtypes")
     private void advance(Iterator it, int cnt) {
         for (int i = 0; i < cnt && it.hasNext(); i++) {
@@ -543,11 +563,15 @@ public class ResponseWriter {
      * @throws XMLStreamException
      */
     public void writeConflicts(final CommandLocator geogit, Iterator<Conflict> conflicts,
-            final ObjectId commitId) throws XMLStreamException {
+            final ObjectId ours, final ObjectId theirs) throws XMLStreamException {
         Iterator<GeometryConflict> conflictIterator = Iterators.transform(conflicts,
                 new Function<Conflict, GeometryConflict>() {
                     @Override
                     public GeometryConflict apply(Conflict input) {
+                        ObjectId commitId = ours;
+                        if (input.getOurs().equals(ObjectId.NULL)) {
+                            commitId = theirs;
+                        }
                         Optional<RevObject> object = geogit.command(RevObjectParse.class)
                                 .setObjectId(commitId).call();
                         RevCommit commit = null;
@@ -675,45 +699,18 @@ public class ResponseWriter {
      * @param transaction - a CommandLocator to call commands from
      * @throws XMLStreamException
      */
-    public void writeMergeDryRunResponse(MergeScenarioReport report, CommandLocator transaction,
+    public void writeMergeResponse(MergeScenarioReport report, CommandLocator transaction,
             ObjectId ours, ObjectId theirs, ObjectId ancestor) throws XMLStreamException {
         out.writeStartElement("Merge");
         writeElement("ours", ours.toString());
         writeElement("theirs", theirs.toString());
         writeElement("ancestor", ancestor.toString());
+        if (report.getConflicts().size() > 0) {
+            writeElement("conflicts", Integer.toString(report.getConflicts().size()));
+        }
         writeGeometryChanges(transaction, report.getUnconflicted().iterator());
-        writeConflicts(transaction, report.getConflicts().iterator(), ours);
+        writeConflicts(transaction, report.getConflicts().iterator(), ours, theirs);
         writeMerged(transaction, report.getMerged().iterator());
-        out.writeEndElement();
-    }
-
-    /**
-     * Writes the response for a merge, it writes the merge commit information.
-     * 
-     * @param commit - the merge commit
-     * @throws XMLStreamException
-     */
-    public void writeMergeResponse(RevCommit commit) throws XMLStreamException {
-        out.writeStartElement("commit");
-        writeElement("id", commit.getId().toString());
-        writeElement("tree", commit.getTreeId().toString());
-
-        ImmutableList<ObjectId> parentIds = commit.getParentIds();
-        out.writeStartElement("parents");
-        for (ObjectId parentId : parentIds) {
-            writeElement("id", parentId.toString());
-        }
-        out.writeEndElement();
-
-        writePerson("author", commit.getAuthor());
-        writePerson("committer", commit.getCommitter());
-
-        out.writeStartElement("message");
-        if (commit.getMessage() != null) {
-            out.writeCData(commit.getMessage());
-        }
-        out.writeEndElement();
-
         out.writeEndElement();
     }
 
