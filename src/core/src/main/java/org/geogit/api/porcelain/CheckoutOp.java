@@ -114,7 +114,7 @@ public class CheckoutOp extends AbstractGeoGitOp<CheckoutResult> {
 
         CheckoutResult result = new CheckoutResult();
 
-        List<Conflict> conflicts = getIndex().getDatabase().getConflicts(null);
+        List<Conflict> conflicts = getIndex().getDatabase().getConflicts(null, null);
         if (!paths.isEmpty()) {
             result.setResult(CheckoutResult.Results.UPDATE_OBJECTS);
             Optional<RevTree> tree = Optional.absent();

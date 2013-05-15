@@ -88,7 +88,7 @@ public class Index implements StagingArea {
     @Override
     public void updateStageHead(ObjectId newTree) {
         commandLocator.command(UpdateRef.class).setName(Ref.STAGE_HEAD).setNewValue(newTree).call();
-        indexDatabase.removeConflicts();
+        indexDatabase.removeConflicts(null);
     }
 
     /**
@@ -212,7 +212,7 @@ public class Index implements StagingArea {
                 parentTree.put(node);
             }
 
-            indexDatabase.removeConflict(fullPath);
+            indexDatabase.removeConflict(null, fullPath);
         }
 
         ObjectId newRootTree = currentIndexHead.getId();
@@ -300,11 +300,11 @@ public class Index implements StagingArea {
 
     @Override
     public int countConflicted(String pathFilter) {
-        return indexDatabase.getConflicts(pathFilter).size();
+        return indexDatabase.getConflicts(null, pathFilter).size();
     }
 
     @Override
     public List<Conflict> getConflicted(@Nullable String pathFilter) {
-        return indexDatabase.getConflicts(pathFilter);
+        return indexDatabase.getConflicts(null, pathFilter);
     }
 }

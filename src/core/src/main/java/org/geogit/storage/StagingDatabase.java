@@ -18,14 +18,14 @@ import com.google.common.base.Optional;
  */
 public interface StagingDatabase extends ObjectDatabase {
 
-    public Optional<Conflict> getConflict(String st);
+    public Optional<Conflict> getConflict(@Nullable String namespace, String st);
 
-    public List<Conflict> getConflicts(@Nullable String pathFilter);
+    public List<Conflict> getConflicts(@Nullable String namespace, @Nullable String pathFilter);
 
-    public void addConflict(Conflict conflict);
+    public void addConflict(@Nullable String namespace, Conflict conflict);
 
-    public void removeConflict(String path);
+    public void removeConflict(@Nullable String namespace, String path);
 
-    public void removeConflicts();
+    public void removeConflicts(@Nullable String namespace);
 
 }

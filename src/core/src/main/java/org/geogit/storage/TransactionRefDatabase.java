@@ -46,8 +46,6 @@ import com.google.common.collect.Maps;
  */
 public class TransactionRefDatabase implements RefDatabase {
 
-    private static final String TRANSACTIONS_NAMESPACE = "transactions";
-
     private RefDatabase refDb;
 
     private final String txRootNamespace;
@@ -58,7 +56,8 @@ public class TransactionRefDatabase implements RefDatabase {
 
     public TransactionRefDatabase(final RefDatabase refDb, final UUID transactionId) {
         this.refDb = refDb;
-        this.txRootNamespace = append(TRANSACTIONS_NAMESPACE, transactionId.toString());
+        this.txRootNamespace = append(GeogitTransaction.TRANSACTIONS_NAMESPACE,
+                transactionId.toString());
         this.txNamespace = append(txRootNamespace, "changed");
         this.txOrigNamespace = append(txRootNamespace, "orig");
     }

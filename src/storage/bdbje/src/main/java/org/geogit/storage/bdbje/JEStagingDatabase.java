@@ -258,8 +258,8 @@ public class JEStagingDatabase implements ObjectDatabase, StagingDatabase {
     // *****************************************************************************************
 
     @Override
-    public List<Conflict> getConflicts(final String pathFilter) {
-        Optional<File> conflictsFile = findOrCreateConflictsFile();
+    public List<Conflict> getConflicts(@Nullable String namespace, final String pathFilter) {
+        Optional<File> conflictsFile = findOrCreateConflictsFile(namespace);
         if (!conflictsFile.isPresent()) {
             return ImmutableList.of();
         }
@@ -295,8 +295,8 @@ public class JEStagingDatabase implements ObjectDatabase, StagingDatabase {
     }
 
     @Override
-    public void addConflict(Conflict conflict) {
-        Optional<File> file = findOrCreateConflictsFile();
+    public void addConflict(@Nullable String namespace, Conflict conflict) {
+        Optional<File> file = findOrCreateConflictsFile(namespace);
         Preconditions.checkState(file.isPresent());
         try {
             Files.append(conflict.toString() + "\n", file.get(), Charsets.UTF_8);
@@ -306,9 +306,9 @@ public class JEStagingDatabase implements ObjectDatabase, StagingDatabase {
     }
 
     @Override
-    public void removeConflict(String path) {
-        List<Conflict> conflicts = getConflicts(null);
-        Optional<File> file = findOrCreateConflictsFile();
+    public void removeConflict(@Nullable String namespace, String path) {
+        List<Conflict> conflicts = getConflicts(namespace, null);
+        Optional<File> file = findOrCreateConflictsFile(namespace);
         Preconditions.checkState(file.isPresent());
 
         StringBuilder sb = new StringBuilder();
@@ -328,8 +328,8 @@ public class JEStagingDatabase implements ObjectDatabase, StagingDatabase {
     }
 
     @Override
-    public Optional<Conflict> getConflict(final String path) {
-        Optional<File> file = findOrCreateConflictsFile();
+    public Optional<Conflict> getConflict(@Nullable String namespace, final String path) {
+        Optional<File> file = findOrCreateConflictsFile(namespace);
         if (!file.isPresent()) {
             return Optional.absent();
         }
@@ -364,11 +364,14 @@ public class JEStagingDatabase implements ObjectDatabase, StagingDatabase {
         return Optional.fromNullable(conflict);
     }
 
-    private Optional<File> findOrCreateConflictsFile() {
+    private Optional<File> findOrCreateConflictsFile(@Nullable String namespace) {
+        if (namespace == null) {
+            namespace = "conflicts";
+        }
         Optional<File> conflicts = Optional.absent();
         if (environment != null) {
             File file = environment.getHome();
-            file = new File(file, "conflicts");
+            file = new File(file, namespace);
             if (!file.exists()) {
                 try {
                     file.createNewFile();
@@ -382,8 +385,8 @@ public class JEStagingDatabase implements ObjectDatabase, StagingDatabase {
     }
 
     @Override
-    public void removeConflicts() {
-        Optional<File> file = findOrCreateConflictsFile();
+    public void removeConflicts(@Nullable String namespace) {
+        Optional<File> file = findOrCreateConflictsFile(namespace);
         if (file.isPresent()) {
             file.get().delete();
         }
