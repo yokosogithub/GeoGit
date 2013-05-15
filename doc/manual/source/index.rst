@@ -34,4 +34,5 @@ Contents:
   partial_cloning
   configuration
   console
+  osm
 
