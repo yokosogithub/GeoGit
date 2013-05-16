@@ -7,6 +7,8 @@ package org.geogit.storage.bdbje;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URISyntaxException;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -16,12 +18,14 @@ import java.util.Set;
 import javax.annotation.Nullable;
 
 import org.geogit.api.ObjectId;
+import org.geogit.api.Platform;
 import org.geogit.api.RevCommit;
 import org.geogit.api.RevFeature;
 import org.geogit.api.RevFeatureType;
 import org.geogit.api.RevObject;
 import org.geogit.api.RevTag;
 import org.geogit.api.RevTree;
+import org.geogit.api.plumbing.ResolveGeogitDir;
 import org.geogit.api.plumbing.merge.Conflict;
 import org.geogit.storage.ObjectDatabase;
 import org.geogit.storage.ObjectInserter;
@@ -91,6 +95,8 @@ public class JEStagingDatabase implements ObjectDatabase, StagingDatabase {
 
     private ObjectSerializingFactory sfac;
 
+    private Platform platform;
+
     /**
      * @param referenceDatabase the repository reference database, used to get the head re
      * @param repoDb
@@ -98,10 +104,12 @@ public class JEStagingDatabase implements ObjectDatabase, StagingDatabase {
      */
     @Inject
     public JEStagingDatabase(final ObjectSerializingFactory sfac,
-            final ObjectDatabase repositoryDb, final EnvironmentBuilder envBuilder) {
+            final ObjectDatabase repositoryDb, final EnvironmentBuilder envBuilder,
+            final Platform platform) {
         this.sfac = sfac;
         this.repositoryDb = repositoryDb;
         this.envProvider = envBuilder;
+        this.platform = platform;
     }
 
     @Override
@@ -370,10 +378,17 @@ public class JEStagingDatabase implements ObjectDatabase, StagingDatabase {
         }
         Optional<File> conflicts = Optional.absent();
         if (environment != null) {
-            File file = environment.getHome();
+            URL repoPath = new ResolveGeogitDir(platform).call();
+            File file = null;
+            try {
+                file = new File(repoPath.toURI());
+            } catch (URISyntaxException e1) {
+                Throwables.propagate(e1);
+            }
             file = new File(file, namespace);
             if (!file.exists()) {
                 try {
+                    file.getParentFile().mkdirs();
                     file.createNewFile();
                 } catch (IOException e) {
                     throw Throwables.propagate(e);
