@@ -103,7 +103,7 @@ Here are some notes to help you get introduced in programming GeoGit
 		mvn cobertura:cobertura
 		open target/site/cobertura/index.html
 
-- Functional tests are available for the command-line interface. GeoGit uses the `cucumber-jvm <https://github.com/cucumber/cucumber-jvm>`_ framework for functional testing. The ``RunFunctionalTest`` class is a JUnit Runner that will run all cucumber functional tests. To run a single test from Eclipse, you can install the `cukes-jvm-eclipse plugin <https://github.com/mrpotes/cukes-jvm-eclipse-plugin/>`_. Once installed, you can right click on functional test files (which have the ``.feature`` extension) and run them individually. More information about runnign cucumber tests from eclipse can be found `here <https://github.com/cucumber/cucumber-jvm/wiki/IDE-support>`_.
+- Functional tests are available for the command-line interface. GeoGit uses the `cucumber-jvm <https://github.com/cucumber/cucumber-jvm>`_ framework for functional testing. The ``RunFunctionalTest`` class is a JUnit Runner that will run all cucumber functional tests. To run a single test from Eclipse, you can install the `cukes-jvm-eclipse plugin <https://github.com/mrpotes/cukes-jvm-eclipse-plugin/>`_. Once installed, you can right click on functional test files (which have the ``.feature`` extension) and run them individually. More information about running cucumber tests from eclipse can be found `here <https://github.com/cucumber/cucumber-jvm/wiki/IDE-support>`_.
 
 Tehcnical documentation
 -------------------------

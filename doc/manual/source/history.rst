@@ -1,6 +1,6 @@
 .. _history:
 
-Exploring you history
+Exploring your history
 ======================
 
 We have already seen how to explore the content of a a GeoGit repository. It is also interesting to explore its history, since it will show us what has happened since it was created. Exploring the history can answer questions such as "who has edited this feature?", "since when does this feature exist?" or "how many edits has a given person made during the last month?", just to name a few.
@@ -9,7 +9,7 @@ The log command, which we have already seen, is used to browse the history of a 
 
 ::
 
-	$git log
+	$geogit log
 
 
 We can change two things in the output of the log command: the amount of information displayed for each commit, and the commits that are printed out. In the fist case, we can tell GeoGit to just show one line for each commit or, if we want the full information, to display all the changes introduced by each commit. To select which commits should be shown, we can request a restricted list of them by setting time constraints, the commits of a single author, or just the history of the current branch without merged branches, among other available options.
@@ -25,7 +25,7 @@ Here you can see an example of the output that the ``log`` command produces when
 
 ::
 
-	$git log --oneline
+	$geogit log --oneline
 	6f250c0c74d9cb852405818f4a5e50aa971d543c Merged branch1
 	7aa528d3d3437ca8015f1dcfb8a61e197aa09dbe Changed unit in area field
 	da1534a4aae8a1b29974c040c9fb44be426c58f8 Added missing feature
@@ -38,7 +38,7 @@ The ``--stats`` option prints an additional line with the number of objects that
 
 ::
 
-	$git log --stats
+	$geogit log --stats
 	Commit:  6f250c0c74d9cb852405818f4a5e50aa971d543c
 	Merge: 7aa528dda1534a
 	Author:  volaya <volaya@opengeo.org>
@@ -74,7 +74,7 @@ If you actually want to know which elements have changed, the ``--summary`` will
 
 ::
 
-	$git log --summary
+	$geogit log --summary
 
 
 
