@@ -265,6 +265,13 @@ public class JEStagingDatabase implements ObjectDatabase, StagingDatabase {
     // conflict file in the index folder
     // *****************************************************************************************
 
+    /**
+     * Gets all conflicts that match the specified path filter.
+     * 
+     * @param namespace the namespace of the conflict
+     * @param pathFilter the path filter, if this is not defined, all conflicts will be returned
+     * @return the list of conflicts
+     */
     @Override
     public List<Conflict> getConflicts(@Nullable String namespace, final String pathFilter) {
         Optional<File> conflictsFile = findOrCreateConflictsFile(namespace);
@@ -302,6 +309,12 @@ public class JEStagingDatabase implements ObjectDatabase, StagingDatabase {
         return conflicts;
     }
 
+    /**
+     * Adds a conflict to the database.
+     * 
+     * @param namespace the namespace of the conflict
+     * @param conflict the conflict to add
+     */
     @Override
     public void addConflict(@Nullable String namespace, Conflict conflict) {
         Optional<File> file = findOrCreateConflictsFile(namespace);
@@ -313,6 +326,12 @@ public class JEStagingDatabase implements ObjectDatabase, StagingDatabase {
         }
     }
 
+    /**
+     * Removes a conflict from the database.
+     * 
+     * @param namespace the namespace of the conflict
+     * @param path the path of feature whose conflict should be removed
+     */
     @Override
     public void removeConflict(@Nullable String namespace, String path) {
         List<Conflict> conflicts = getConflicts(namespace, null);
@@ -335,6 +354,13 @@ public class JEStagingDatabase implements ObjectDatabase, StagingDatabase {
         }
     }
 
+    /**
+     * Gets the specified conflict from the database.
+     * 
+     * @param namespace the namespace of the conflict
+     * @param path the conflict to retrieve
+     * @return the conflict, or {@link Optional#absent()} if it was not found
+     */
     @Override
     public Optional<Conflict> getConflict(@Nullable String namespace, final String path) {
         Optional<File> file = findOrCreateConflictsFile(namespace);
@@ -399,6 +425,11 @@ public class JEStagingDatabase implements ObjectDatabase, StagingDatabase {
         return conflicts;
     }
 
+    /**
+     * Removes all conflicts from the database.
+     * 
+     * @param namespace the namespace of the conflicts to remove
+     */
     @Override
     public void removeConflicts(@Nullable String namespace) {
         Optional<File> file = findOrCreateConflictsFile(namespace);

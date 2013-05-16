@@ -188,6 +188,13 @@ public class HeapStagingDatabase extends HeapObjectDatabse implements StagingDat
 
     private Map<String, Map<String, Conflict>> conflicts = Maps.newHashMap();
 
+    /**
+     * Gets all conflicts that match the specified path filter.
+     * 
+     * @param namespace the namespace of the conflict
+     * @param pathFilter the path filter, if this is not defined, all conflicts will be returned
+     * @return the list of conflicts
+     */
     @Override
     public List<Conflict> getConflicts(@Nullable String namespace, @Nullable final String pathFilter) {
         if (namespace == null) {
@@ -211,6 +218,12 @@ public class HeapStagingDatabase extends HeapObjectDatabse implements StagingDat
         return ImmutableList.copyOf(filtered);
     }
 
+    /**
+     * Adds a conflict to the database.
+     * 
+     * @param namespace the namespace of the conflict
+     * @param conflict the conflict to add
+     */
     @Override
     public void addConflict(@Nullable String namespace, Conflict conflict) {
         if (namespace == null) {
@@ -225,6 +238,12 @@ public class HeapStagingDatabase extends HeapObjectDatabse implements StagingDat
 
     }
 
+    /**
+     * Removes a conflict from the database.
+     * 
+     * @param namespace the namespace of the conflict
+     * @param path the path of feature whose conflict should be removed
+     */
     @Override
     public void removeConflict(@Nullable String namespace, String path) {
         if (namespace == null) {
@@ -236,6 +255,13 @@ public class HeapStagingDatabase extends HeapObjectDatabse implements StagingDat
         }
     }
 
+    /**
+     * Gets the specified conflict from the database.
+     * 
+     * @param namespace the namespace of the conflict
+     * @param path the conflict to retrieve
+     * @return the conflict, or {@link Optional#absent()} if it was not found
+     */
     @Override
     public Optional<Conflict> getConflict(@Nullable String namespace, String path) {
         if (namespace == null) {
@@ -248,6 +274,11 @@ public class HeapStagingDatabase extends HeapObjectDatabse implements StagingDat
         return Optional.absent();
     }
 
+    /**
+     * Removes all conflicts from the database.
+     * 
+     * @param namespace the namespace of the conflicts to remove
+     */
     @Override
     public void removeConflicts(@Nullable String namespace) {
         if (namespace == null) {
