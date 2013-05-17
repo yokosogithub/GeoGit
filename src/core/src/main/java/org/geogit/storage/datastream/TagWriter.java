@@ -8,10 +8,10 @@ import java.io.DataOutput;
 import java.io.DataOutputStream;
 import java.io.OutputStream;
 
-import com.google.common.base.Throwables;
-
 import org.geogit.api.RevTag;
 import org.geogit.storage.ObjectWriter;
+
+import com.google.common.base.Throwables;
 
 public class TagWriter implements ObjectWriter<RevTag> {
     public void write(RevTag tag, OutputStream out) {

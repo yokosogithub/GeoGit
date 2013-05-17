@@ -16,7 +16,6 @@ import java.io.OutputStream;
 
 import org.geogit.api.ObjectId;
 import org.geogit.api.RevCommit;
-import org.geogit.api.RevPerson;
 import org.geogit.storage.ObjectWriter;
 
 public class CommitWriter implements ObjectWriter<RevCommit> {

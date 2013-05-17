@@ -8,11 +8,11 @@ import java.io.DataInput;
 import java.io.DataInputStream;
 import java.io.InputStream;
 
-import com.google.common.base.Throwables;
-
 import org.geogit.api.ObjectId;
 import org.geogit.api.RevTag;
 import org.geogit.storage.ObjectReader;
+
+import com.google.common.base.Throwables;
 
 public class TagReader implements ObjectReader<RevTag> {
     public RevTag read(ObjectId id, InputStream in) {

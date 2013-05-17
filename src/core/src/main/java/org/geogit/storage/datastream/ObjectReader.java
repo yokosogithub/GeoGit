@@ -8,8 +8,8 @@ import static org.geogit.storage.datastream.FormatCommon.NUL;
 import static org.geogit.storage.datastream.FormatCommon.readCommit;
 import static org.geogit.storage.datastream.FormatCommon.readFeature;
 import static org.geogit.storage.datastream.FormatCommon.readFeatureType;
-import static org.geogit.storage.datastream.FormatCommon.readToMarker;
 import static org.geogit.storage.datastream.FormatCommon.readTag;
+import static org.geogit.storage.datastream.FormatCommon.readToMarker;
 import static org.geogit.storage.datastream.FormatCommon.readTree;
 
 import java.io.DataInput;

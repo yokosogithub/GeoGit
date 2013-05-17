@@ -9,8 +9,8 @@ import static com.google.common.base.Preconditions.checkState;
 
 import java.util.List;
 
-import org.geogit.api.porcelain.SynchronizationException;
 import org.geogit.api.porcelain.PushOp;
+import org.geogit.api.porcelain.SynchronizationException;
 import org.geogit.cli.AbstractCommand;
 import org.geogit.cli.CLICommand;
 import org.geogit.cli.GeogitCLI;

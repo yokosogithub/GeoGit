@@ -7,7 +7,6 @@ package org.geogit.api.plumbing.diff;
 import static com.google.common.base.Preconditions.checkState;
 
 import java.util.Iterator;
-import java.util.LinkedList;
 import java.util.List;
 
 import javax.annotation.Nonnull;
