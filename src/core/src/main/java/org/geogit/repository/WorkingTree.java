@@ -447,7 +447,8 @@ public class WorkingTree {
             }
         }
 
-        final ObjectId metadataId = treeRef.getMetadataId();
+        final ObjectId defaultMetadataId = treeRef.getMetadataId();
+        final Map<Name, ObjectId> revFeatureTypes = Maps.newHashMap();
 
         final RevTreeBuilder typeTreeBuilder = commandLocator.command(FindOrCreateSubtree.class)
                 .setIndex(true).setParent(Suppliers.ofInstance(Optional.of(getTree())))
@@ -463,6 +464,18 @@ public class WorkingTree {
                     @Override
                     public RevFeature apply(Feature feature) {
                         final RevFeature revFeature = builder.build(feature);
+                        FeatureType featureType = feature.getType();
+                        ObjectId revFeatureTypeId = revFeatureTypes.get(featureType.getName());
+
+                        if (null == revFeatureTypeId) {
+                            RevFeatureType newFeatureType = RevFeatureType.build(featureType);
+                            revFeatureTypeId = newFeatureType.getId();
+                            indexDatabase.put(newFeatureType);
+                            revFeatureTypes.put(feature.getType().getName(), revFeatureTypeId);
+                        }
+
+                        ObjectId metadataId = defaultMetadataId.equals(revFeatureTypeId) ? ObjectId.NULL
+                                : revFeatureTypeId;
                         Node node = createNode(metadataId, feature, revFeature);
 
                         if (insertedTarget != null) {
