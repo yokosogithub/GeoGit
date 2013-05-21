@@ -26,7 +26,6 @@ import org.geogit.storage.ObjectDatabase;
 
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Stopwatch;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Maps;
@@ -42,7 +41,7 @@ public class RevTreeBuilder {
      * 
      * @todo make this configurable
      */
-    public static final int DEFAULT_NORMALIZATION_THRESHOLD = 1000 * 100;
+    public static final int DEFAULT_NORMALIZATION_THRESHOLD = 1000 * 1000;
 
     private final ObjectDatabase db;
 
