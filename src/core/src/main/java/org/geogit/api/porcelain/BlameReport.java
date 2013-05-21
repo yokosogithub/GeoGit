@@ -25,14 +25,14 @@ import com.google.common.collect.Lists;
  */
 public class BlameReport {
 
-    List<String> attributes;
+    private List<String> attributes;
 
     private HashMap<String, ValueAndCommit> changes;
 
     public BlameReport(RevFeatureType featureType) {
         attributes = Lists.newArrayList();
         for (PropertyDescriptor attribute : featureType.sortedDescriptors()) {
-            attributes.add(attribute.getName().getLocalPart().toString());
+            attributes.add(attribute.getName().getLocalPart());
         }
         this.changes = new HashMap<String, ValueAndCommit>();
 
@@ -80,8 +80,8 @@ public class BlameReport {
      */
     public void setFirstVersion(RevFeature feature, RevCommit commit) {
         ImmutableList<Optional<Object>> values = feature.getValues();
-        int i = 0;
-        for (String attr : attributes) {
+        for (int i = 0; i < attributes.size(); i++) {
+            String attr = attributes.get(i);
             if (!changes.containsKey(attr)) {
                 Optional<Object> value = values.get(i);
                 changes.put(attr, new ValueAndCommit(value, commit));

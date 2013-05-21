@@ -65,12 +65,12 @@ public class BlameOpTest extends RepositoryTestCase {
         BlameReport report = geogit.command(BlameOp.class).setPath(path).call();
         Map<String, ValueAndCommit> changes = report.getChanges();
         assertEquals(3, changes.size());
-        assertEquals(changes.get("sp").commit, secondCommit);
-        assertEquals(changes.get("ip").commit, firstCommit);
-        assertEquals(changes.get("pp").commit, firstCommit);
-        assertEquals(changes.get("sp").value.get(), pointsModified.getProperty("sp").getValue());
-        assertEquals(changes.get("ip").value.get(), points1.getProperty("ip").getValue());
-        assertEquals(changes.get("pp").value.get(), points1.getProperty("ip").getValue());
+        assertEquals(secondCommit, changes.get("sp").commit);
+        assertEquals(firstCommit, changes.get("ip").commit);
+        assertEquals(firstCommit, changes.get("pp").commit);
+        assertEquals(pointsModified.getProperty("sp").getValue(), changes.get("sp").value.get());
+        assertEquals(points1.getProperty("ip").getValue(), changes.get("ip").value.get());
+        assertEquals(points1.getProperty("pp").getValue(), changes.get("pp").value.get());
     }
 
     @Test
