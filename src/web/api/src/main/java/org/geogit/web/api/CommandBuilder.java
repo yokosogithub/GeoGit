@@ -129,6 +129,8 @@ public class CommandBuilder {
         command.setUntil(options.getFirstValue("until"));
         command.setPage(parseInt(options, "page", 0));
         command.setElementsPerPage(parseInt(options, "show", 30));
+        command.setFirstParentOnly(Boolean.valueOf(options
+                .getFirstValue("firstParentOnly", "false")));
         return command;
     }
 

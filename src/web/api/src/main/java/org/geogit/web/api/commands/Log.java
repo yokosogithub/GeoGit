@@ -37,6 +37,8 @@ public class Log extends AbstractWebAPICommand {
 
     private int elementsPerPage;
 
+    boolean firstParentOnly;
+
     /**
      * Mutator for the limit variable
      * 
@@ -101,6 +103,15 @@ public class Log extends AbstractWebAPICommand {
     }
 
     /**
+     * Mutator for the firstParentOnly variable
+     * 
+     * @param firstParentOnly - true to only show the first parent of a commit
+     */
+    public void setFirstParentOnly(boolean firstParentOnly) {
+        this.firstParentOnly = firstParentOnly;
+    }
+
+    /**
      * Runs the command and builds the appropriate response
      * 
      * @param context - the context to use for this command
@@ -111,7 +122,7 @@ public class Log extends AbstractWebAPICommand {
     public void run(CommandContext context) {
         final CommandLocator geogit = this.getCommandLocator(context);
 
-        LogOp op = geogit.command(LogOp.class);
+        LogOp op = geogit.command(LogOp.class).setFirstParentOnly(firstParentOnly);
 
         if (skip != null) {
             op.setSkip(skip.intValue());

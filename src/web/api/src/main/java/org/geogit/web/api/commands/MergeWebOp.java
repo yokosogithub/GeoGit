@@ -83,15 +83,7 @@ public class MergeWebOp extends AbstractWebAPICommand {
         final Optional<RevCommit> ancestor = transaction.command(FindCommonAncestor.class)
                 .setLeft(ours).setRight(theirs).call();
 
-        // Remove this after conflicts are fixed for transactions
-        final MergeScenarioReport preMergeReport = transaction.command(ReportMergeScenarioOp.class)
-                .setMergeIntoCommit(ours).setToMergeCommit(theirs).call();
-
         try {
-            // Temporary fix to abort merge if conflicts would arise
-            if (preMergeReport.getConflicts().size() > 0) {
-                throw new Exception();
-            }
             final MergeReport report = merge.setNoCommit(noCommit).call();
 
             context.setResponseContent(new CommandResponse() {
@@ -105,12 +97,14 @@ public class MergeWebOp extends AbstractWebAPICommand {
             });
         } catch (Exception e) {
             context.setResponseContent(new CommandResponse() {
+                final MergeScenarioReport report = transaction.command(ReportMergeScenarioOp.class)
+                        .setMergeIntoCommit(ours).setToMergeCommit(theirs).call();
 
                 @Override
                 public void write(ResponseWriter out) throws Exception {
                     out.start();
-                    out.writeMergeResponse(preMergeReport, transaction, ours.getId(),
-                            theirs.getId(), ancestor.get().getId());
+                    out.writeMergeResponse(report, transaction, ours.getId(), theirs.getId(),
+                            ancestor.get().getId());
                     out.finish();
                 }
             });
