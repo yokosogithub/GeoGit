@@ -23,7 +23,6 @@ import org.geogit.api.RevObject;
 import org.geogit.api.RevTag;
 import org.geogit.api.RevTree;
 import org.geogit.api.plumbing.merge.Conflict;
-import org.geogit.storage.ConfigDatabase;
 import org.geogit.storage.ObjectDatabase;
 import org.geogit.storage.ObjectInserter;
 import org.geogit.storage.ObjectSerializingFactory;
@@ -92,8 +91,6 @@ public class JEStagingDatabase implements ObjectDatabase, StagingDatabase {
 
     private ObjectSerializingFactory sfac;
 
-    private ConfigDatabase configDb;
-
     /**
      * @param referenceDatabase the repository reference database, used to get the head re
      * @param repoDb
@@ -101,12 +98,10 @@ public class JEStagingDatabase implements ObjectDatabase, StagingDatabase {
      */
     @Inject
     public JEStagingDatabase(final ObjectSerializingFactory sfac,
-            final ObjectDatabase repositoryDb, final EnvironmentBuilder envBuilder,
-            final ConfigDatabase configDb) {
+            final ObjectDatabase repositoryDb, final EnvironmentBuilder envBuilder) {
         this.sfac = sfac;
         this.repositoryDb = repositoryDb;
         this.envProvider = envBuilder;
-        this.configDb = configDb;
         this.envProvider.setIsStagingDatabase(true);
     }
 
@@ -122,7 +117,7 @@ public class JEStagingDatabase implements ObjectDatabase, StagingDatabase {
         }
         envProvider.setRelativePath("index");
         environment = envProvider.get();
-        stagingDb = new JEObjectDatabase(sfac, environment, configDb);
+        stagingDb = new JEObjectDatabase(sfac, environment);
         stagingDb.open();
         // {
         // DatabaseConfig stagedDbConfig = new DatabaseConfig();
