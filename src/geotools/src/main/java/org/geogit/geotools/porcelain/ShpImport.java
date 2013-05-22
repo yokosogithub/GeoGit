@@ -82,7 +82,6 @@ public class ShpImport extends AbstractShpCommand implements CLICommand {
             }
 
             try {
-
                 cli.getConsole().println("Importing from shapefile " + shp);
 
                 ProgressListener progressListener = cli.getProgressListener();
@@ -91,7 +90,6 @@ public class ShpImport extends AbstractShpCommand implements CLICommand {
                         .setProgressListener(progressListener).call();
 
                 cli.getConsole().println(shp + " imported successfully.");
-
             } catch (GeoToolsOpException e) {
                 switch (e.statusCode) {
                 case NO_FEATURES_FOUND:

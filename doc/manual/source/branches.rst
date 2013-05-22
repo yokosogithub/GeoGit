@@ -44,11 +44,11 @@ You can go back to the ``master`` branch, just by checking it out. If you have d
 
 You can consider that having branches is somehow like having several repositories in which you work in a linear fashion, but since everything is kept in the same repository, you can easily move between them.
 
-The name of the branch is a valid reference just like the ones you already know (``WORK_HEAD, STAGE_HEAD``, etc.). For this reason, you can use it to reference an object under that branch. For instance, to show a description of a feature named ``parks.1`` in a tree called ``parks``, in its version in the ``edits`` branch, you can use the following command:
+The name of the branch is a valid reference just like the ones you already know (``WORK_HEAD, STAGE_HEAD``, etc.). For this reason, you can use it to reference an object under that branch. For instance, to show a description of a feature named ``1`` in a tree called ``parks``, in its version in the ``edits`` branch, you can use the following command:
 
 ::
 
-	$ geogit show edits:parks/parks.1
+	$ geogit show edits:parks/1
 
 As we mentioned, the first part of the reference (the part before the colon), has to eventually resolve to a tree. The ``edits`` reference points to a commit (the latest one on that branch), and a commit points to a tree as we already know, which makes ``edits`` a valid string to use for creating a full reference.
 

@@ -23,9 +23,9 @@ As in the case of both the ``merge`` and ``rebase`` commands, ``cherry-pick`` ca
 ::
 
 	$geogit cherry-pick 5852e694
-	CONFLICT: conflict in Parks/Parks.1
+	CONFLICT: conflict in Parks/1
 
-Conflict arise whenever the changed for a given element might overwrite and additional changed introduced in the current branch. For instance, let's say the commit you are picking has changed the value of a given attribute in a given feture from "1" to "2". If in the current branch the value for that attribute and feature is "3", the cherry-picking operation will report that as a conflict. It could just change the value to "2", but that would discard the previous changes, since the original value is not the same. To avoid it, it will let you manually do the edit.
+Conflict arise whenever the changed for a given element might overwrite and additional changed introduced in the current branch. For instance, let's say the commit you are picking has changed the value of a given attribute in a given feature from "1" to "2". If in the current branch the value for that attribute and feature is "3", the cherry-picking operation will report that as a conflict. It could just change the value to "2", but that would discard the previous changes, since the original value is not the same. To avoid it, it will let you manually do the edit.
 
 Conflicts in the case of cherry-picking are very similar to those found when trying to apply a patch. Reading the corresponding section is recommended to understand this mechanism.
 

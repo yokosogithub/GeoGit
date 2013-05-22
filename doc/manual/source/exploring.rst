@@ -38,41 +38,41 @@ Below you can find examples of the results obtained by using different options, 
 	$geogit -v -r -t
 	Root tree/
 	    parks/ 
-	        parks.2 
-	        parks.3 
-	        parks.4 
-	        parks.1 
+	        2 
+	        3 
+	        4 
+	        1 
 
 	$geogit ls -v parks
 	parks/
-	    parks.2 49852c03b8dd3c93fcbda7137abda9ad53a9311a bfd1d4bb75e0a4419243ef0ba9d6e9793d31cdab
-	    parks.3 49852c03b8dd3c93fcbda7137abda9ad53a9311a 84150cc07326358ac70777d4141a8cfdd8038323
-	    parks.4 49852c03b8dd3c93fcbda7137abda9ad53a9311a 5347d1b1b5d828f83e4065e227dcb848b4371637
-	    parks.1 49852c03b8dd3c93fcbda7137abda9ad53a9311a ce3e836bcb64f1b647e3dc9dd97700c584063533
+	    2 49852c03b8dd3c93fcbda7137abda9ad53a9311a bfd1d4bb75e0a4419243ef0ba9d6e9793d31cdab
+	    3 49852c03b8dd3c93fcbda7137abda9ad53a9311a 84150cc07326358ac70777d4141a8cfdd8038323
+	    4 49852c03b8dd3c93fcbda7137abda9ad53a9311a 5347d1b1b5d828f83e4065e227dcb848b4371637
+	    1 49852c03b8dd3c93fcbda7137abda9ad53a9311a ce3e836bcb64f1b647e3dc9dd97700c584063533
 
 	$geogit ls -v -r
 	Root tree/
-        parks.2 49852c03b8dd3c93fcbda7137abda9ad53a9311a bfd1d4bb75e0a4419243ef0ba9d6e9793d31cdab
-        parks.3 49852c03b8dd3c93fcbda7137abda9ad53a9311a 84150cc07326358ac70777d4141a8cfdd8038323
-        parks.4 49852c03b8dd3c93fcbda7137abda9ad53a9311a 5347d1b1b5d828f83e4065e227dcb848b4371637
-        parks.1 49852c03b8dd3c93fcbda7137abda9ad53a9311a ce3e836bcb64f1b647e3dc9dd97700c584063533
+        2 49852c03b8dd3c93fcbda7137abda9ad53a9311a bfd1d4bb75e0a4419243ef0ba9d6e9793d31cdab
+        3 49852c03b8dd3c93fcbda7137abda9ad53a9311a 84150cc07326358ac70777d4141a8cfdd8038323
+        4 49852c03b8dd3c93fcbda7137abda9ad53a9311a 5347d1b1b5d828f83e4065e227dcb848b4371637
+        1 49852c03b8dd3c93fcbda7137abda9ad53a9311a ce3e836bcb64f1b647e3dc9dd97700c584063533
 
     $geogit ls -v -r -t
 	Root tree/
 	    parks/ 49852c03b8dd3c93fcbda7137abda9ad53a9311a 224f0086bc4e9b116e7b60dbc414e1cc8d829839
-	        parks.2 49852c03b8dd3c93fcbda7137abda9ad53a9311a bfd1d4bb75e0a4419243ef0ba9d6e9793d31cdab
-	        parks.3 49852c03b8dd3c93fcbda7137abda9ad53a9311a 84150cc07326358ac70777d4141a8cfdd8038323
-	        parks.4 49852c03b8dd3c93fcbda7137abda9ad53a9311a 5347d1b1b5d828f83e4065e227dcb848b4371637
-	        parks.1 49852c03b8dd3c93fcbda7137abda9ad53a9311a ce3e836bcb64f1b647e3dc9dd97700c584063533
+	        2 49852c03b8dd3c93fcbda7137abda9ad53a9311a bfd1d4bb75e0a4419243ef0ba9d6e9793d31cdab
+	        3 49852c03b8dd3c93fcbda7137abda9ad53a9311a 84150cc07326358ac70777d4141a8cfdd8038323
+	        4 49852c03b8dd3c93fcbda7137abda9ad53a9311a 5347d1b1b5d828f83e4065e227dcb848b4371637
+	        1 49852c03b8dd3c93fcbda7137abda9ad53a9311a ce3e836bcb64f1b647e3dc9dd97700c584063533
 
 
 	$geogit ls -v -r -t -a 7
 	Root tree/
 	    parks/ 49852c0 224f008
-	        parks.2 49852c0 bfd1d4b
-	        parks.3 49852c0 84150cc
-	        parks.4 49852c0 5347d1b
-	        parks.1 49852c0 ce3e836
+	        2 49852c0 bfd1d4b
+	        3 49852c0 84150cc
+	        4 49852c0 5347d1b
+	        1 49852c0 ce3e836
 
 
 Describing an element in a GeoGit repository is done using the ``show`` command. It can be used to describe any type of objects, so the object doesn't have to resolve to a tree, as in the case of the ``ls`` command. Trees can also be describe using ``show``, but their description does not include just the listing of the elements under it, but mainly properties of the tree, as we will see.
@@ -111,7 +111,7 @@ In the case of specifying a single feature, the ``show`` command prints the valu
 
 ::
 	
-	$ geogit show HEAD:parks/parks.1
+	$ geogit show HEAD:parks/1
 
 	ID:  ff51bfc2a36d02a3a51d72eef3e7f44de9c4e231
 
@@ -167,7 +167,7 @@ Globbing
 
 Some commands in GeoGit, such as the ones used to describe objects shown above, support using wildcards. This way, you can more easily select a set of objects without having to type the name of each of them.
 
-GeoGit uses an ant-like globbing notation, supporting the most common wildcards, namely ``*``, ``?`` and ``**``. The ``*`` character can be any string of any length (including zero characters), while ``?`` represents a single character. The ``**`` string is used to indicate any path, so it will cause the command to recursively search into a given path. For instance, the string ``roads/**/???`` will return all features with a name of just three characters, in any path under ``roads``. that includes ``roads/N501``, and also ``roads/spain/madrid/N501``
+GeoGit uses an ant-like globbing notation, supporting the most common wildcards, namely ``*``, ``?`` and ``**``. The ``*`` character can be any string of any length (including zero characters), while ``?`` represents a single character. The ``**`` string is used to indicate any path, so it will cause the command to recursively search into a given path. For instance, the string ``roads/**/???`` will return all features with a name of just three characters, in any path under ``roads``. That includes ``roads/N501``, and also ``roads/spain/madrid/N501``
 
 Please, check the `section about directory-based tasks in the ant manual <http://ant.apache.org/manual/dirtasks.html>`_ for more information.
 

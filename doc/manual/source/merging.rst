@@ -37,9 +37,9 @@ When a merge operation finds conflicts and it cannot automatically merge all the
 ::
 
 	$ geogit merge mybranch
-	CONFLICT: Merge conflict in parks/parks.2
-	CONFLICT: Merge conflict in parks/parks.3
-	CONFLICT: Merge conflict in parks/parks.1
+	CONFLICT: Merge conflict in parks/2
+	CONFLICT: Merge conflict in parks/3
+	CONFLICT: Merge conflict in parks/1
 	Automatic merge failed. Fix conflicts and then commit the result.
 
 The following is a list of situations that will cause a merge conflict:
@@ -77,9 +77,9 @@ You can check which elements are conflicted by running the ``geogit status`` com
 	# Unmerged paths:
 	#   (use "geogit add/rm <path/to/fid>..." as appropriate to mark resolution
 	#
-	#      unmerged  parks/parks.2
-	#      unmerged  parks/parks.3
-	#      unmerged  parks/parks.1
+	#      unmerged  parks/2
+	#      unmerged  parks/3
+	#      unmerged  parks/1
 	# 3 total.
 
 The above message shows a repository with just 3 conflicted features in its index. If there are unstaged elements, they will also be shown, as usual. Also, if the merge operation staged elements that did not cause any conflict, they will appear as ready to be committed. These elements will also be changed in the working tree, to reflect the same version that is stored in the index, which is the result of the automatic merge operation.
@@ -96,9 +96,9 @@ The ``conflicts`` command can also be used to describe the current unmerged elem
 	Merge branch refs/heads/b1
 
 	Conflicts:
-		parks/parks.2
-		parks/parks.3
-		parks/parks.1
+		parks/2
+		parks/3
+		parks/1
 
 
 Aborting the merge operation
@@ -117,7 +117,7 @@ The ``conflicts`` command can be used to describe the current unmerged elements.
 ::
 	$ geogit conflicts
 	$geogit conflicts
-	parks/parks.2
+	parks/2
 
 	Ancestor    27207309879802a99d161b063b8f958d179be3b0
 	FEATURE
@@ -221,9 +221,9 @@ When you run the ``commit`` command, you usually must supply a commit message us
 	Merge branch refs/heads/b1
 
 	Conflicts:
-		parks/parks.2
-		parks/parks.3
-		parks/parks.1
+		parks/2
+		parks/3
+		parks/1
 
 
 Aborting the merge operation

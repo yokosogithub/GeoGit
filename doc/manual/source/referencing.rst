@@ -59,7 +59,7 @@ Since this commit is the ancestor of the one that the current HEAD is pointing t
 
 One special ID in a GeoGit repository is the null Id, which represent the empty repository before any commits are made. It's an objectId with all digits equal to zero: ``0000000000000000000000000000000000000000``.
 
-You can use it whenever you need a reference to the empty repository. or instance, to know all the changes introduced from the very beginning of you history and up to 3 commits ago, the following command could be used.
+You can use it whenever you need a reference to the empty repository. For instance, to know all the changes introduced from the very beginning of you history and up to 3 commits ago, the following command could be used.
 
 ::
 

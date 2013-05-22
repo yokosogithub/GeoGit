@@ -23,10 +23,14 @@ import org.geotools.data.DataStore;
 import org.geotools.data.simple.SimpleFeatureCollection;
 import org.geotools.data.simple.SimpleFeatureIterator;
 import org.geotools.data.simple.SimpleFeatureSource;
+import org.geotools.feature.DecoratingFeature;
 import org.geotools.feature.NameImpl;
+import org.geotools.filter.identity.FeatureIdImpl;
 import org.opengis.feature.Feature;
+import org.opengis.feature.simple.SimpleFeature;
 import org.opengis.feature.type.Name;
 import org.opengis.feature.type.PropertyDescriptor;
+import org.opengis.filter.identity.FeatureId;
 import org.opengis.util.ProgressListener;
 
 import com.google.common.base.Function;
@@ -178,6 +182,7 @@ public class ImportOp extends AbstractGeoGitOp<RevTree> {
                     throw new GeoToolsOpException(e, StatusCode.UNABLE_TO_INSERT);
                 }
             }
+
             final SimpleFeatureIterator featureIterator = features.features();
             Iterator<Feature> iterator = new AbstractIterator<Feature>() {
                 @Override
@@ -188,6 +193,9 @@ public class ImportOp extends AbstractGeoGitOp<RevTree> {
                     return featureIterator.next();
                 }
             };
+            final String fidPrefix = featureType.getName().getLocalPart() + ".";
+            iterator = Iterators.transform(iterator, new FidReplacer(fidPrefix));
+
             Integer collectionSize = features.size();
             if (!alter) {
                 try {
@@ -330,6 +338,7 @@ public class ImportOp extends AbstractGeoGitOp<RevTree> {
      * 
      * @param destPath the path to import to to. If not provided, it will be taken from the feature
      *        type of the table to import.
+     * @return {@code this}
      */
     public ImportOp setDestinationPath(String destPath) {
         this.destPath = destPath;
@@ -345,4 +354,43 @@ public class ImportOp extends AbstractGeoGitOp<RevTree> {
         return this;
     }
 
+    /**
+     * Replaces the default geotools fid by removing the specified fidPrefix prefix from it.
+     * 
+     */
+    private static final class FidReplacer implements Function<Feature, Feature> {
+
+        private String fidPrefix;
+
+        public FidReplacer(String fidPrefix) {
+            this.fidPrefix = fidPrefix;
+        }
+
+        @Override
+        public Feature apply(final Feature input) {
+            String fid = ((SimpleFeature) input).getID().substring(fidPrefix.length());
+            return new FidOverrideFeature((SimpleFeature) input, fid);
+        }
+
+    }
+
+    private static final class FidOverrideFeature extends DecoratingFeature {
+
+        private String fid;
+
+        public FidOverrideFeature(SimpleFeature delegate, String fid) {
+            super(delegate);
+            this.fid = fid;
+        }
+
+        @Override
+        public String getID() {
+            return fid;
+        }
+
+        @Override
+        public FeatureId getIdentifier() {
+            return new FeatureIdImpl(fid);
+        }
+    }
 }

@@ -34,7 +34,7 @@ For a more fine grained selection of which objects to stage, you can directly sp
 
 ::
 
-	$ geogit add parks/parks.1 roads/roads.3
+	$ geogit add parks/1 roads/3
 
 After staging, you can run the ``status`` command to check that the 3 features that we imported in the working tree are now also in the staging area, ready to be committed to the repository database.
 
@@ -44,9 +44,9 @@ After staging, you can run the ``status`` command to check that the 3 features t
 	# Changes to be committed:
 	#   (use "geogit reset HEAD <path/to/fid>..." to unstage)
 	#
-	#      added  parks/parks.2
-	#      added  parks/parks.3
-	#      added  parks/parks.1
+	#      added  parks/2
+	#      added  parks/3
+	#      added  parks/1
 	# 3 total.
 	
 Changes after importing were "not staged for commit", while now they are "to be commited". The ``status`` command will show both unstaged and uncommited changes if they both exist at the same time in the repository. Since we have staged all changes (by using the ``add`` command without options), there are no unstaged files now.

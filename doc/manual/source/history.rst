@@ -207,7 +207,7 @@ The command takes a single parameter, which is the path to the feature to analyz
 
 ::
 
-	$ geogit blame parks/parks.1
+	$ geogit blame parks/1
 	parktype: 2d13209 volaya volaya@opengeo.org 2013-12-29 03:57:08
 	area: ea7d536 volaya volaya@opengeo.org 2013-57-12 03:57:32
 	perimeter: 2d13209 volaya volaya@opengeo.org 2013-12-29 03:57:08

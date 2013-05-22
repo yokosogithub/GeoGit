@@ -17,7 +17,7 @@ When a rebase cannot be finished cleanly due to conflicts, GeoGit will stop and 
 
 	$geogit rebase branch1
 	Error: could not apply 0b0e33b Changed units in area field 
-	CONFLICT: conflict in parks/parks.5
+	CONFLICT: conflict in parks/5
 
 	When you have fixed this conflicts, run 'geogit rebase --continue' to continue rebasing.
 	If you would prefer to skip this commit, instead run 'geogit rebase --skip.
