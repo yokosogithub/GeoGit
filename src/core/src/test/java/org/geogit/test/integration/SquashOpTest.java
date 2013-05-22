@@ -18,6 +18,7 @@ import org.geogit.api.porcelain.CheckoutOp;
 import org.geogit.api.porcelain.CommitOp;
 import org.geogit.api.porcelain.LogOp;
 import org.geogit.api.porcelain.MergeOp;
+import org.geogit.api.porcelain.MergeOp.MergeReport;
 import org.geogit.api.porcelain.SquashOp;
 import org.junit.Rule;
 import org.junit.Test;
@@ -207,8 +208,7 @@ public class SquashOpTest extends RepositoryTestCase {
         insertAndAdd(lines1);
         final RevCommit c4 = geogit.command(CommitOp.class).setMessage("commit for " + idL1).call();
         Ref branch1 = geogit.command(RefParse.class).setName("branch1").call().get();
-        RevCommit mergeCommit = geogit.command(MergeOp.class)
-                .addCommit(Suppliers.ofInstance(branch1.getObjectId()))
+        geogit.command(MergeOp.class).addCommit(Suppliers.ofInstance(branch1.getObjectId()))
                 .setMessage("My merge message.").call();
         geogit.command(SquashOp.class).setSince(c3).setUntil(c4).setMessage("Squashed").call();
         // check that the commit added after the squashed has all the parents
@@ -248,11 +248,11 @@ public class SquashOpTest extends RepositoryTestCase {
         insertAndAdd(lines1);
         final RevCommit c4 = geogit.command(CommitOp.class).setMessage("commit for " + idL1).call();
         Ref branch1 = geogit.command(RefParse.class).setName("branch1").call().get();
-        RevCommit mergeCommit = geogit.command(MergeOp.class)
+        MergeReport mergeReport = geogit.command(MergeOp.class)
                 .addCommit(Suppliers.ofInstance(branch1.getObjectId()))
                 .setMessage("My merge message.").call();
         try {
-            geogit.command(SquashOp.class).setSince(c2).setUntil(mergeCommit)
+            geogit.command(SquashOp.class).setSince(c2).setUntil(mergeReport.getMergeCommit())
                     .setMessage("Squashed").call();
         } catch (IllegalArgumentException e) {
             assertTrue(e.getMessage().equals(
@@ -286,11 +286,11 @@ public class SquashOpTest extends RepositoryTestCase {
         insertAndAdd(lines1);
         final RevCommit c4 = geogit.command(CommitOp.class).setMessage("commit for " + idL1).call();
         Ref branch1 = geogit.command(RefParse.class).setName("branch1").call().get();
-        RevCommit mergeCommit = geogit.command(MergeOp.class)
+        MergeReport mergeReport = geogit.command(MergeOp.class)
                 .addCommit(Suppliers.ofInstance(branch1.getObjectId()))
                 .setMessage("My merge message.").call();
-        geogit.command(SquashOp.class).setSince(c3).setUntil(mergeCommit).setMessage("Squashed")
-                .call();
+        geogit.command(SquashOp.class).setSince(c3).setUntil(mergeReport.getMergeCommit())
+                .setMessage("Squashed").call();
         ArrayList<RevCommit> log = Lists.newArrayList(geogit.command(LogOp.class)
                 .setFirstParentOnly(true).call());
         assertEquals(2, log.size());
@@ -329,11 +329,11 @@ public class SquashOpTest extends RepositoryTestCase {
         insertAndAdd(lines1);
         final RevCommit c4 = geogit.command(CommitOp.class).setMessage("commit for " + idL1).call();
         Ref branch1 = geogit.command(RefParse.class).setName("branch1").call().get();
-        RevCommit mergeCommit = geogit.command(MergeOp.class)
+        MergeReport mergeReport = geogit.command(MergeOp.class)
                 .addCommit(Suppliers.ofInstance(branch1.getObjectId()))
                 .setMessage("My merge message.").call();
         try {
-            geogit.command(SquashOp.class).setSince(c1).setUntil(mergeCommit)
+            geogit.command(SquashOp.class).setSince(c1).setUntil(mergeReport.getMergeCommit())
                     .setMessage("Squashed").call();
             fail();
         } catch (IllegalArgumentException e) {
