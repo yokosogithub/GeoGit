@@ -8,7 +8,6 @@ import java.util.Iterator;
 
 import org.geogit.api.AbstractGeoGitOp;
 import org.geogit.api.ObjectId;
-import org.geogit.api.Platform;
 import org.geogit.api.Ref;
 import org.geogit.api.RevCommit;
 import org.geogit.api.SymRef;
@@ -40,15 +39,12 @@ public class CherryPickOp extends AbstractGeoGitOp<RevCommit> {
 
     private Repository repository;
 
-    private Platform platform;
-
     /**
      * Constructs a new {@code CherryPickOp}.
      */
     @Inject
-    public CherryPickOp(Repository repository, Platform platform) {
+    public CherryPickOp(Repository repository) {
         this.repository = repository;
-        this.platform = platform;
     }
 
     /**
@@ -77,7 +73,6 @@ public class CherryPickOp extends AbstractGeoGitOp<RevCommit> {
         Preconditions.checkState(currHead.get() instanceof SymRef,
                 "Can't cherry pick from detached HEAD");
         final SymRef headRef = (SymRef) currHead.get();
-        // final String currentBranch = headRef.getTarget();
 
         // count staged and unstaged changes
         long staged = getIndex().countStaged(null);

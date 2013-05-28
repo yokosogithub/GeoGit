@@ -121,7 +121,7 @@ public class Branch extends AbstractCommand implements CLICommand {
 
         if (delete) {
             if (branchName.isEmpty()) {
-                console.println("no name specified for deletion");
+                throw new IllegalArgumentException("no name specified for deletion");
             }
             for (String br : branchName) {
                 Optional<? extends Ref> deletedBranch = geogit.command(BranchDeleteOp.class)
@@ -129,7 +129,7 @@ public class Branch extends AbstractCommand implements CLICommand {
                 if (deletedBranch.isPresent()) {
                     console.println("Deleted branch '" + br + "'.");
                 } else {
-                    console.println("No branch called '" + br + "'.");
+                    throw new IllegalArgumentException("No branch called '" + br + "'.");
                 }
             }
             return;
@@ -139,7 +139,7 @@ public class Branch extends AbstractCommand implements CLICommand {
 
         if (rename) {
             if (branchName.isEmpty()) {
-                console.println("You must specify a branch to rename.");
+                throw new IllegalArgumentException("You must specify a branch to rename.");
             } else if (branchName.size() == 1) {
                 Optional<Ref> headRef = geogit.command(RefParse.class).setName(Ref.HEAD).call();
                 geogit.command(BranchRenameOp.class).setNewName(branchName.get(0)).setForce(force)

@@ -19,6 +19,13 @@ Feature: "add" command
      When I run the command "add Points"
      Then the response should contain "2 features staged for commit"
      
+  Scenario: Try to add a using too many parameters
+    Given I have a repository
+      And I have unstaged "points1"      
+     When I run the command "add Points Lines"
+     Then the response should contain "Only a single path is supported so far"  
+      And it should exit with non-zero exit code  
+     
   Scenario: Try to add a specific feature to the index
     Given I have a repository
       And I have unstaged "points1"
@@ -26,11 +33,13 @@ Feature: "add" command
       And I have unstaged "lines1"
      When I run the command "add Points/Points.1"
      Then the response should contain "1 features staged for commit"
+     And it should exit with zero exit code
      
   Scenario: Try to add from an empty directory
     Given I am in an empty directory
      When I run the command "add"
      Then the response should start with "Not a geogit repository"
+     And it should exit with non-zero exit code
      
   Scenario: Try to add when no changes have been made
     Given I have a repository

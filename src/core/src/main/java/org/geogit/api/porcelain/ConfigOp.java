@@ -162,7 +162,7 @@ public class ConfigOp extends AbstractGeoGitOp<Optional<Map<String, String>>> {
             return Optional.of(results);
         }
         default:
-            throw new ConfigException(StatusCode.OPTION_DOES_N0T_EXIST);
+            throw new ConfigException(StatusCode.OPTION_DOES_NOT_EXIST);
         }
 
         return Optional.absent();

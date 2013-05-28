@@ -16,11 +16,13 @@ Feature: "checkout" command
   	Given I am in an empty directory
   	 When I run the command "checkout noBranch"
   	 Then the response should contain "not in a geogit repository."
+  	  And it should exit with non-zero exit code
   	 
   Scenario: Try to checkout without specifying a path
   	Given I have a repository
   	 When I run the command "checkout"
      Then the response should contain "no branch or paths specified"
+      And it should exit with non-zero exit code
      
   Scenario: Try to checkout multiple things at once
     Given I have a repository
@@ -28,11 +30,13 @@ Feature: "checkout" command
       And I run the command "branch noBranch"
       And I run the command "checkout noBranch newBranch"
      Then the response should contain "too many arguments"
+      And it should exit with non-zero exit code
      
   Scenario: Try to checkout a branch that doesn't exist
     Given I have a repository
      When I run the command "checkout noBranch"
      Then the response should contain "'noBranch' not found in repository"
+      And it should exit with non-zero exit code
      
   Scenario: Try to make a change but don't commit and then checkout a different branch without forcing
     Given I have a repository
@@ -44,6 +48,7 @@ Feature: "checkout" command
       And I have unstaged "points2"
       And I run the command "checkout master"
      Then the response should contain "Working tree and index are not clean. To overwrite local changes, use the --force option"
+      And it should exit with non-zero exit code
       
   Scenario: Try to make a change but don't commit and then checkout a different branch with forcing
     Given I have a repository
@@ -105,6 +110,7 @@ Feature: "checkout" command
     Given I have a repository           
       When I run the command "checkout -p Points/Points.1 --ours --theirs"
      Then the response should contain "Cannot use both --ours and --theirs"
+      And it should exit with non-zero exit code
      
   Scenario: Try to revert a feature where the version you want doesn't exist
     Given I have a repository
@@ -112,12 +118,14 @@ Feature: "checkout" command
      When I modify a feature
       And I run the command "checkout -p Points/Points.1"
      Then the response should contain "'Points/Points.1' didn't match a feature in the tree"
+      And it should exit with non-zero exit code
 
   Scenario: Try to revert an unmerged feature
     Given I have a repository
       And I have a merge conflict state
      When I run the command "checkout -p Points/Points.1"
-     Then the response should contain "path Points/Points.1 is unmerged" 
+     Then the response should contain "path Points/Points.1 is unmerged"
+      And it should exit with non-zero exit code 
           
   Scenario: Try to revert a feature to the --theirs version and fix the conflict
     Given I have a repository
@@ -125,4 +133,5 @@ Feature: "checkout" command
      When I run the command "checkout -p Points/Points.1 --theirs"
       And I run the command "add"
       And I run the command "commit -m Commit"
-     Then the response should contain "Committed"        
+     Then the response should contain "Committed"
+             

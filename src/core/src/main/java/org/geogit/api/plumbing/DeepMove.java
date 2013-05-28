@@ -82,7 +82,7 @@ public class DeepMove extends AbstractGeoGitOp<ObjectId> {
         ObjectDatabase to = toIndex ? index : odb;
         Node ref = objectRef.get();
         deepMove(ref, from, to);
-        return null;
+        return ref.getObjectId();
     }
 
     /**

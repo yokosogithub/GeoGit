@@ -7,11 +7,12 @@ Feature: "status" command
     Given I am in an empty directory
      When I run the command "status"
      Then the response should start with "Not a geogit repository"
+      And it should exit with non-zero exit code
      
   Scenario: Try to get the status of a repository with no changes
     Given I have a repository
      When I run the command "status"
-     Then the response should contain "nothing to commit"
+     Then the response should contain "nothing to commit"     
      
   Scenario: Try to get the status of a repository with unstaged changes without using a limit
     Given I have a repository
@@ -147,6 +148,7 @@ Feature: "status" command
     Given I have a repository
      When I run the command "status --limit -2"
      Then the response should contain "Limit must be 0 or greater"
+      And it should exit with non-zero exit code
      
    Scenario: Try the get the status of a repository with unmerged elements
     Given I have a repository

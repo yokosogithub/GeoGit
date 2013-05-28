@@ -134,16 +134,12 @@ public class Rebase extends AbstractCommand implements CLICommand {
         try {
             rebase.call();
         } catch (RebaseConflictsException e) {
-            cli.getConsole().println(e.getMessage());
-            cli.getConsole()
-                    .println(
-                            "When you have fixed this conflicts, run 'geogit rebase --continue' to continue rebasing.");
-            cli.getConsole().println(
-                    "If you would prefer to skip this commit, instead run 'geogit rebase --skip.");
-            cli.getConsole()
-                    .println(
-                            "To check out the original branch and stop rebasing, run 'geogit rebase --abort'");
-            return;
+            StringBuilder sb = new StringBuilder();
+            sb.append(e.getMessage() + "\n");
+            sb.append("When you have fixed this conflicts, run 'geogit rebase --continue' to continue rebasing.\n");
+            sb.append("If you would prefer to skip this commit, instead run 'geogit rebase --skip.\n");
+            sb.append("To check out the original branch and stop rebasing, run 'geogit rebase --abort'\n");
+            throw new IllegalStateException(sb.toString());
         }
 
         if (abort) {

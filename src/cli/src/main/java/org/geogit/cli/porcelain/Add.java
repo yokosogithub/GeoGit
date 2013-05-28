@@ -73,7 +73,7 @@ public class Add extends AbstractCommand implements CLICommand {
         if (patterns.size() == 1) {
             pathFilter = patterns.get(0);
         } else if (patterns.size() > 1) {
-            throw new UnsupportedOperationException("Only a single path is supported so far");
+            throw new IllegalArgumentException("Only a single path is supported so far");
         }
 
         console.print("Counting unstaged features...");
@@ -90,8 +90,6 @@ public class Add extends AbstractCommand implements CLICommand {
         AddOp op = cli.getGeogit().command(AddOp.class);
         if (patterns.size() == 1) {
             op.addPattern(patterns.get(0));
-        } else if (patterns.size() > 1) {
-            throw new UnsupportedOperationException("Only a single path is supported so far");
         }
 
         WorkingTree workTree = op.setUpdateOnly(updateOnly)

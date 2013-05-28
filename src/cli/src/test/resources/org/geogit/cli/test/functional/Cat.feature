@@ -20,6 +20,11 @@ Scenario: Try to show the content of a feature.
      Then the response should contain "1000"
       And the response should contain "POINT (1 1)"
       And the response should contain "StringProp1_1"
+   
+   Scenario: Try to show the content of a feature that does not exist
+    Given I have a repository           
+     When I run the command "cat WORK_HEAD:Points/Points.1"     
+     Then it should exit with non-zero exit code 
 
 Scenario: Try to show the content of a feature in the working tree.
     Given I have a repository

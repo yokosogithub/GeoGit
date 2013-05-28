@@ -7,11 +7,13 @@ Feature: "clone" command
     Given I am in an empty directory
      When I run the command "clone"
      Then it should answer "You must specify a repository to clone."
+      And it should exit with non-zero exit code
      
   Scenario: Try to clone with too many parameters
     Given I am in an empty directory
      When I run the command "clone repository directory extra"
      Then it should answer "Too many arguments provided."
+      And it should exit with non-zero exit code
      
   Scenario: Try to clone a remote repository
     Given I am in an empty directory

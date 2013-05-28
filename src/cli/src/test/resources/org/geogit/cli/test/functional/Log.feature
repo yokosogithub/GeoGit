@@ -76,6 +76,7 @@ Feature: "log" command
     Given I am in an empty directory
      When I run the command "log"
      Then the response should start with "Not a geogit repository"
+      And it should exit with non-zero exit code
 
   Scenario: Try to show a log of all branches
     Given I have a repository
@@ -102,6 +103,7 @@ Feature: "log" command
       And I have several branches
      When I run the command "log --all HEAD..HEAD~1"
      Then the response should contain "Cannot specify 'until' commit when listing all branches"
+      And it should exit with non-zero exit code
   
   Scenario: Try to show a log of all branches with decoration
     Given I have a repository

@@ -34,28 +34,33 @@ Feature: "tag" command
   	  And I have several commits
   	  And I run the command "tag mytag -m msg"
   	 When I run the command "tag -d wrongtag"
-  	 Then the response should contain "Wrong tag name: wrongtag"  	   	 
+  	 Then the response should contain "Wrong tag name: wrongtag"  
+  	  And it should exit with non-zero exit code	   	 
 
  Scenario: Try to create a tag with too many parameters provided
   	Given I have a repository
   	  And I have several commits  	  
   	 When I run the command "tag mytag HEAD^ extraparam -m msg"
   	 Then the response should contain "Too many parameters provided"  
+  	  And it should exit with non-zero exit code
  
  Scenario: Try to delete a tag with too many parameters provided
   	Given I have a repository
   	  And I have several commits  	  
   	 When I run the command "tag -d mytag HEAD^"
   	 Then the response should contain "Too many parameters provided"  
+  	  And it should exit with non-zero exit code
   	   	 
  Scenario: Try to create a tag with no message
   	Given I have a repository
   	  And I have several commits  	  
   	 When I run the command "tag mytag HEAD^"
-  	 Then the response should contain "No tag message provided"  
+  	 Then the response should contain "No tag message provided"
+  	  And it should exit with non-zero exit code  
   	   	   	   	   	   	 
  Scenario: Try to create a tag with a wrong commit ref
   	Given I have a repository
   	  And I have several commits  	  
   	 When I run the command "tag mytag aaaaaa -m msg"
-  	 Then the response should contain "Wrong reference: aaaaaa"  
+  	 Then the response should contain "Wrong reference: aaaaaa"
+  	  And it should exit with non-zero exit code  

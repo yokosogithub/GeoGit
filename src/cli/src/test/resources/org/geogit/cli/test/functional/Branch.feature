@@ -12,16 +12,19 @@ Feature: "branch" command
     Given I am in an empty directory
       And I run the command "branch --delete newBranch"
      Then the response should contain "not in a geogit repository."
+      And it should exit with non-zero exit code 
      
   Scenario: Try to list branches while not in a geogit repository
     Given I am in an empty directory
       And I run the command "branch"
      Then the response should contain "not in a geogit repository."
+      And it should exit with non-zero exit code 
      
   Scenario: Try to create a branch without having made any commits
     Given I have a repository
       And I run the command "branch newBranch"
-     Then the response should contain "no commits yet, branch cannot be created."   
+     Then the response should contain "no commits yet, branch cannot be created."
+      And it should exit with non-zero exit code    
      
   Scenario: Try to create a branch with a non-existent start point
     Given I have a repository
@@ -58,7 +61,8 @@ Feature: "branch" command
     Given I have a repository
       And I have several branches
      When I run the command "branch branch1"
-     Then the response should contain "A branch named 'branch1' already exists." 
+     Then the response should contain "A branch named 'branch1' already exists."
+      And it should exit with non-zero exit code  
      
   Scenario: Try to list local branches
     Given I have a repository
@@ -107,7 +111,8 @@ Feature: "branch" command
     Given I have a repository
       And I have several branches
      When I run the command "branch --delete"
-     Then the response should contain "no name specified for deletion"   
+     Then the response should contain "no name specified for deletion"  
+     And it should exit with non-zero exit code  
      
   Scenario: Try to delete multiple branches
     Given I have a repository
@@ -126,6 +131,7 @@ Feature: "branch" command
      When I run the command "checkout branch1"
       And I run the command "branch --delete branch1"
      Then the response should contain "Cannot delete the branch you are on" 
+      And it should exit with non-zero exit code 
       
   Scenario: Try to rename a branch
     Given I have a repository
@@ -175,6 +181,7 @@ Feature: "branch" command
       And I have several branches
      When I run the command "branch --rename"
      Then the response should contain "You must specify a branch to rename."
+      And it should exit with non-zero exit code 
      
   Scenario: Try to rename a branch to the same name
     Given I have a repository

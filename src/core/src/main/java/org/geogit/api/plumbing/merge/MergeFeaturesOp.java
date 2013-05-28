@@ -117,9 +117,6 @@ public class MergeFeaturesOp extends AbstractGeoGitOp<Feature> {
         }
         return featureBuilder.buildFeature(nodeRefA.name());
 
-        // SimpleFeature featureToInsert = featureBuilder.buildFeature(NodeRef.nodeFromPath(path));
-        // workTree.insert(NodeRef.parentPath(path), featureToInsert);
-
     }
 
     public MergeFeaturesOp setFirstFeature(NodeRef feature) {

@@ -45,6 +45,7 @@ Scenario: Try to get commits list without starting commit
       And I have several commits
       And I run the command "rev-list"     
      Then the response should contain "No starting commit provided"
+      And it should exit with non-zero exit code
       
   Scenario: Try to show the log, skipping the last 2 commits
     Given I have a repository
@@ -70,7 +71,8 @@ Scenario: Try to get commits list without starting commit
   Scenario: Try to show a log from an empty directory
     Given I am in an empty directory
      When I run the command "rev-list HEAD"
-     Then the response should start with "Not a geogit repository"              
+     Then the response should start with "Not a geogit repository"
+      And it should exit with non-zero exit code              
        
 
  

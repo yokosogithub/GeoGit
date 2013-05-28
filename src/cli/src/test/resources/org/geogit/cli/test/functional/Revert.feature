@@ -7,11 +7,13 @@ Feature: "revert" command
   	Given I am in an empty directory
   	  And I run the command "revert master"
   	 Then the response should contain "not in a geogit repository"
+  	  And it should exit with non-zero exit code
   	 
   Scenario: Try to revert with nothing specified for reverting
     Given I have a repository
       And I run the command "revert"
      Then the response should contain "nothing specified for reverting"
+      And it should exit with non-zero exit code
      
   Scenario: Try to revert one commit
     Given I have a repository
@@ -29,6 +31,7 @@ Feature: "revert" command
       And I have several commits
      When I run the command "revert doesntExist"
      Then the response should contain "Couldn't resolve 'doesntExist' to a commit, aborting revert"
+      And it should exit with non-zero exit code
      When I run the command "log"
      Then the response should contain "Subject: Commit1"
       And the response should contain "Subject: Commit2"
@@ -52,6 +55,7 @@ Feature: "revert" command
      And I have several commits
     When I run the command "revert master~1 blah"
     Then the response should contain "Couldn't resolve 'blah' to a commit, aborting revert"
+     And it should exit with non-zero exit code
     When I run the command "log"
     Then the response should contain "Subject: Commit1"
       And the response should contain "Subject: Commit2"

@@ -145,23 +145,17 @@ public abstract class AbstractGeogitFunctionalTest {
      * strings, one per line.
      */
     protected List<String> runAndParseCommand(String... command) throws Exception {
-
-        ByteArrayOutputStream out = runCommand(command);
+        runCommand(command);
         InputSupplier<InputStreamReader> readerSupplier = CharStreams.newReaderSupplier(
-                ByteStreams.newInputStreamSupplier(out.toByteArray()), Charset.forName("UTF-8"));
+                ByteStreams.newInputStreamSupplier(stdOut.toByteArray()), Charset.forName("UTF-8"));
         List<String> lines = CharStreams.readLines(readerSupplier);
         return lines;
     }
 
-    protected ByteArrayOutputStream runCommand(String... command) throws Exception {
-        // System.err.println("Running command " + Arrays.toString(command));
+    protected int runCommand(String... command) throws Exception {
         assertNotNull(geogitCLI);
-
         stdOut.reset();
-
-        geogitCLI.processCommand(command);
-
-        return stdOut;
+        return geogitCLI.processCommand(command);
     }
 
     protected void setupFeatures() throws Exception {

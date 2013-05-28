@@ -27,6 +27,7 @@ Feature: "remote" command
      When I run the command "remote add myremote http://myremote.com"
       And I run the command "remote add myremote http://myremote2.org"
      Then it should answer "Could not add, a remote called 'myremote' already exists."
+      And it should exit with non-zero exit code
      
   Scenario: Try to add a remote and list with verbose mode
     Given I have a repository
@@ -58,16 +59,18 @@ Feature: "remote" command
     Given I am in an empty directory
      When I run the command "remote rm myremote"
      Then the response should contain "Not a geogit repository"
+      And it should exit with non-zero exit code
      
   Scenario: Try to remove a remote that doesn't exist
     Given I have a repository
      When I run the command "remote rm myremote"
      Then it should answer "Could not find a remote called 'myremote'."
+     And it should exit with non-zero exit code
      
   Scenario: Try to list remotes from an empty repository
     Given I am in an empty directory
      When I run the command "remote list"
      Then the response should contain "Not a geogit repository"
-    
+      And it should exit with non-zero exit code 
     
      

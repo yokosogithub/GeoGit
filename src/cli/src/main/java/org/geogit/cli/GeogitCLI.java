@@ -276,11 +276,12 @@ public class GeogitCLI {
                     consoleReader.flush();
                 } else if (e instanceof IllegalArgumentException
                         || e instanceof IllegalStateException) {
-                    // e.printStackTrace();
                     consoleReader.println(Optional.fromNullable(e.getMessage()).or("Uknown error"));
                     consoleReader.flush();
-                } else {
-                    e.printStackTrace();
+                } else if (e instanceof CommandFailedException) {
+                    // do nothing here, this exception indicates a failure, but the corresponding
+                    // command throwing it should have taken care of outputting an error message or
+                    // providing user interaction
                 }
             } catch (IOException ioe) {
                 ioe.printStackTrace();

@@ -139,23 +139,24 @@ public class Apply extends AbstractCommand {
                         console.println("Patch applied succesfully");
                     } else {
                         int accepted = patch.count() - rejected.count();
+                        StringBuilder sb = new StringBuilder();
                         File file = new File(patchFile.getAbsolutePath() + ".rej");
-                        console.println("Patch applied only partially.");
-                        console.println(Integer.toString(accepted) + " changes were applied.");
-                        console.println(Integer.toString(rejected.count())
-                                + " changes were rejected.");
+                        sb.append("Patch applied only partially.\n");
+                        sb.append(Integer.toString(accepted) + " changes were applied.\n");
+                        sb.append(Integer.toString(rejected.count()) + " changes were rejected.\n");
                         BufferedWriter writer = Files.newWriter(file, Charsets.UTF_8);
                         PatchSerializer.write(writer, patch);
                         writer.flush();
                         writer.close();
-                        console.println("Patch file with rejected changes created at "
-                                + file.getAbsolutePath());
+                        sb.append("Patch file with rejected changes created at "
+                                + file.getAbsolutePath() + "\n");
+                        throw new IllegalArgumentException(sb.toString());
                     }
                 } else {
                     console.println("Patch applied succesfully");
                 }
             } catch (CannotApplyPatchException e) {
-                console.println(e.getMessage());
+                throw new IllegalArgumentException(e);
             }
 
         }
