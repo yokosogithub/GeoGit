@@ -295,6 +295,9 @@ public class ResponseWriter {
             out.writeEndElement();
             counter++;
         }
+        if (entries.hasNext()) {
+            writeElement("nextPage", "true");
+        }
     }
 
     /**
