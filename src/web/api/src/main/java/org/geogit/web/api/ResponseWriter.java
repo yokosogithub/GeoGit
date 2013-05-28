@@ -231,7 +231,8 @@ public class ResponseWriter {
         if (length < 0) {
             length = Integer.MAX_VALUE;
         }
-        for (int i = 0; i < length && entries.hasNext(); i++) {
+        int counter = 0;
+        while (entries.hasNext() && counter < length) {
             DiffEntry entry = entries.next();
             out.writeStartElement(name);
             writeElement("changeType", entry.changeType().toString());
@@ -252,9 +253,12 @@ public class ResponseWriter {
                 writeElement("newObjectId", newObject.objectId().toString());
                 writeElement("path", oldObject.path());
                 writeElement("oldObjectId", oldObject.objectId().toString());
-
             }
             out.writeEndElement();
+            counter++;
+        }
+        if (entries.hasNext()) {
+            writeElement("nextPage", "true");
         }
     }
 
@@ -505,8 +509,11 @@ public class ResponseWriter {
      * @param diff - a DiffEntry iterator to build the response from
      * @throws XMLStreamException
      */
-    public void writeGeometryChanges(final CommandLocator geogit, Iterator<DiffEntry> diff)
-            throws XMLStreamException {
+    public void writeGeometryChanges(final CommandLocator geogit, Iterator<DiffEntry> diff, int page,
+            int elementsPerPage) throws XMLStreamException {
+
+        advance(diff, page * elementsPerPage);
+        int counter = 0;
 
         Iterator<GeometryChange> changeIterator = Iterators.transform(diff,
                 new Function<DiffEntry, GeometryChange>() {
@@ -564,7 +571,7 @@ public class ResponseWriter {
                     }
                 });
 
-        while (changeIterator.hasNext()) {
+        while (changeIterator.hasNext() && (elementsPerPage == 0 || counter < elementsPerPage)) {
             GeometryChange next = changeIterator.next();
             if (next != null) {
                 GeogitSimpleFeature feature = next.getFeature();
@@ -583,9 +590,12 @@ public class ResponseWriter {
                     writeElement("crs", next.getCRS());
                 }
                 out.writeEndElement();
+                counter++;
             }
         }
-
+        if (changeIterator.hasNext()) {
+            writeElement("nextPage", "true");
+        }
     }
 
     /**
@@ -785,7 +795,7 @@ public class ResponseWriter {
         if (report.getConflicts().size() > 0) {
             writeElement("conflicts", Integer.toString(report.getConflicts().size()));
         }
-        writeGeometryChanges(transaction, report.getUnconflicted().iterator());
+        writeGeometryChanges(transaction, report.getUnconflicted().iterator(), 0, 0);
         writeConflicts(transaction, report.getConflicts().iterator(), ours, theirs);
         writeMerged(transaction, report.getMerged().iterator());
         out.writeEndElement();

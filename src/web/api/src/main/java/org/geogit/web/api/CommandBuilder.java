@@ -190,6 +190,8 @@ public class CommandBuilder {
         command.setPathFilter(options.getFirstValue("pathFilter", null));
         command.setShowGeometryChanges(Boolean.parseBoolean(options.getFirstValue(
                 "showGeometryChanges", "false")));
+        command.setPage(parseInt(options, "page", 0));
+        command.setElementsPerPage(parseInt(options, "show", 30));
         return command;
     }
 
