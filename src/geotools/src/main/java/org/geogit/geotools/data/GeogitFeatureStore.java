@@ -209,11 +209,13 @@ class GeogitFeatureStore extends ContentFeatureStore {
         }
 
         String path = delegate.getTypeTreePath();
+        WorkingTree wtree = getFeatureSource().getWorkingTree();
+
         GeoGitFeatureWriter writer;
         if ((flags | WRITER_ADD) == WRITER_ADD) {
-            writer = GeoGitFeatureWriter.createAppendable(features, path);
+            writer = GeoGitFeatureWriter.createAppendable(features, path, wtree);
         } else {
-            writer = GeoGitFeatureWriter.create(features, path);
+            writer = GeoGitFeatureWriter.create(features, path, wtree);
         }
         return writer;
     }
