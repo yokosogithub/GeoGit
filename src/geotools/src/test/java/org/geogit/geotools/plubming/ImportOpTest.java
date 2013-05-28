@@ -142,11 +142,11 @@ public class ImportOpTest extends RepositoryTestCase {
 
         RevTree newWorkingTree = importOp.call();
         Optional<NodeRef> ref = geogit.command(FindTreeChild.class).setParent(newWorkingTree)
-                .setChildPath("table1/table1.1").setIndex(true).call();
+                .setChildPath("table1/feature1").setIndex(true).call();
         assertTrue(ref.isPresent());
 
         ref = geogit.command(FindTreeChild.class).setParent(newWorkingTree)
-                .setChildPath("table1/table1.2").setIndex(true).call();
+                .setChildPath("table1/feature2").setIndex(true).call();
         assertTrue(ref.isPresent());
     }
 
@@ -158,15 +158,15 @@ public class ImportOpTest extends RepositoryTestCase {
 
         RevTree newWorkingTree = importOp.call();
         Optional<NodeRef> ref = geogit.command(FindTreeChild.class).setParent(newWorkingTree)
-                .setChildPath("table1/table1.1").setIndex(true).call();
+                .setChildPath("table1/feature1").setIndex(true).call();
         assertTrue(ref.isPresent());
 
         ref = geogit.command(FindTreeChild.class).setParent(newWorkingTree)
-                .setChildPath("table1/table1.2").setIndex(true).call();
+                .setChildPath("table1/feature2").setIndex(true).call();
         assertTrue(ref.isPresent());
 
         ref = geogit.command(FindTreeChild.class).setParent(newWorkingTree)
-                .setChildPath("table2/table2.1").setIndex(true).call();
+                .setChildPath("table2/feature3").setIndex(true).call();
         assertTrue(ref.isPresent());
     }
 
@@ -180,12 +180,12 @@ public class ImportOpTest extends RepositoryTestCase {
         Iterator<NodeRef> features = geogit.command(LsTreeOp.class)
                 .setStrategy(Strategy.DEPTHFIRST_ONLY_FEATURES).call();
         ArrayList<NodeRef> list = Lists.newArrayList(features);
-        assertEquals(3, list.size());
+        assertEquals(4, list.size());
         TreeSet<ObjectId> set = Sets.newTreeSet();
         for (NodeRef node : list) {
             set.add(node.getMetadataId());
         }
-        assertEquals(2, set.size());
+        assertEquals(3, set.size());
     }
 
     @Test
@@ -203,18 +203,17 @@ public class ImportOpTest extends RepositoryTestCase {
         ImportOp importOp = geogit.command(ImportOp.class);
         importOp.setDataStore(TestHelper.createTestFactory().createDataStore(null));
         importOp.setAll(true);
-        importOp.setOverwrite(false);
         importOp.setDestinationPath("dest");
         importOp.call();
         Iterator<NodeRef> features = geogit.command(LsTreeOp.class)
                 .setStrategy(Strategy.DEPTHFIRST_ONLY_FEATURES).call();
         ArrayList<NodeRef> list = Lists.newArrayList(features);
-        assertEquals(4, list.size());
+        assertEquals(5, list.size());
         TreeSet<ObjectId> set = Sets.newTreeSet();
         for (NodeRef node : list) {
             set.add(node.getMetadataId());
         }
-        assertEquals(2, set.size());
+        assertEquals(3, set.size());
     }
 
     @Test
@@ -253,7 +252,7 @@ public class ImportOpTest extends RepositoryTestCase {
         ArrayList<NodeRef> list = Lists.newArrayList(features);
         assertEquals(3, list.size());
         Optional<RevFeature> feature = geogit.command(RevObjectParse.class)
-                .setRefSpec("WORK_HEAD:table1/table1.1").call(RevFeature.class);
+                .setRefSpec("WORK_HEAD:table1/feature1").call(RevFeature.class);
         assertTrue(feature.isPresent());
         ImmutableList<Optional<Object>> values = feature.get().getValues();
         assertEquals(2, values.size());

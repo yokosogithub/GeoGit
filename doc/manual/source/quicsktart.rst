@@ -91,12 +91,16 @@ Run the following command to see that your data is actually in the working tree.
 
 ::
 
-	$ geogit ls-tree -r
-	parks/parks.2
-	parks/parks.3
-	parks/parks.1
+	$ geogit ls -r
+	Root tree/
+	        2
+	        4
+	        1
+	        3
 
-As you can see, features from the shapefile are added to the working tree under a tree named ``parks``. The name is taken from the filename of the shapefile. A tree in a GeoGit repository can be seen as the equivalent of a folder in a filesystem
+As you can see, features from the shapefile are added to the working tree under a tree named ``parks``. The name is taken from the filename of the shapefile. A tree in a GeoGit repository can be seen as the equivalent of a folder in a filesystem.
+
+Features are named with correlative numbers, reflecting the order in which they are found in the source shapefile. Notice that that is not necesarily the same order in which they are listed by the ``ls`` command
 
 Running the ``status`` command will give you information about the data you have that is not already versioned.
 
@@ -108,9 +112,9 @@ Running the ``status`` command will give you information about the data you have
 	#   (use "geogit add <path/to/fid>..." to update what will be committed
 	#   (use "geogit checkout -- <path/to/fid>..." to discard changes in working directory
 	#
-	#      added  parks/parks.2
-	#      added  parks/parks.3
-	#      added  parks/parks.1
+	#      added  parks/2
+	#      added  parks/3
+	#      added  parks/1
 	# 3 total.
 
 
@@ -139,9 +143,9 @@ If you now run the ``status``, command, you will see a different output, since y
 	# Changes to be committed:
 	#   (use "geogit reset HEAD <path/to/fid>..." to unstage)
 	#
-	#      added  parks/parks.2
-	#      added  parks/parks.3
-	#      added  parks/parks.1
+	#      added  parks/2
+	#      added  parks/3
+	#      added  parks/1
 	# 3 total.
 	#
 
@@ -180,7 +184,7 @@ If you run the ``status`` command after importing (and before adding), you will 
 	#   (use "geogit add <path/to/fid>..." to update what will be committed
 	#   (use "geogit checkout -- <path/to/fid>..." to discard changes in working directory
 	#
-	#      added  parks/parks.4
+	#      added  parks/4
 
 	# 4 total.
 
@@ -296,7 +300,7 @@ Now the commit introduced in the branch is already present in the main history, 
 
 ::
 
-	$ geogit log	--oneline
+	$ geogit log --oneline
 	c04d0a968696744bdc32bf865f9675a2e55bf447 added new feature
 	7b6e36db759da8d09b5b1bb726009b3d2c5ca5f7 first modification
 	592006f6b541557a203279be7b4a127fb9dbb2d9 first version
@@ -317,7 +321,7 @@ If you now try to merge, GeoGit cannot automatically resolve that merge, since y
 
 	$ geogit merge fix
 	100%
-	CONFLICT: Merge conflict in parks/parks.5
+	CONFLICT: Merge conflict in parks/5
 	Automatic merge failed. Fix conflicts and then commit the result.
 
 You can see that there is a conflict by running the ``status`` command
@@ -329,16 +333,16 @@ You can see that there is a conflict by running the ``status`` command
 	# Changes to be committed:
 	#   (use "geogit reset HEAD <path/to/fid>..." to unstage)
 	#
-	#      modified  parks/parks.2
-	#      modified  parks/parks.3
-	#      modified  parks/parks.4
-	#      modified  parks/parks.1
+	#      modified  parks/2
+	#      modified  parks/3
+	#      modified  parks/4
+	#      modified  parks/1
 	# 4 total.
 	#
 	# Unmerged paths:
 	#   (use "geogit add/rm <path/to/fid>..." as appropriate to mark resolution
 	#
-	#      unmerged  parks/parks.5
+	#      unmerged  parks/5
 	# 1 total.
 
 An unmerged path represents a conflicted element
@@ -347,7 +351,7 @@ You can get more details about the conflict by running the ``conflicts`` command
 
 ::
 	$ geogit conflicts --diff
-	---parks/parks.5---
+	---parks/5---
 	Ours
 	area: 15297.503295898438 -> 15246.59765625
 

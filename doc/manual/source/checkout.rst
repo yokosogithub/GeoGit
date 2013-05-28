@@ -43,5 +43,5 @@ To reset to the commit 5 commits ago, use the following:
 
 	$ geogit reset HEAD~5 --hard
 
-That will update all 3 areas in GeoGit (working tree, staging area and database) to the specified commit. This is known as a hard commit. You can also perform a mixed reset (only updates the staging area and database, but not the working tree, with the ``--mixed`` option), or a soft reset (only updates the database, with the ``--soft`` option).
+That will update all 3 areas in GeoGit (working tree, staging area and database) to the specified commit. This is known as a hard reset. You can also perform a mixed reset (only updates the staging area and database, but not the working tree, with the ``--mixed`` option), or a soft reset (only updates the database, with the ``--soft`` option).
 
