@@ -1,5 +1,6 @@
 package org.geogit.web.api;
 
+import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -39,13 +40,18 @@ import org.geogit.api.plumbing.diff.DiffEntry;
 import org.geogit.api.plumbing.diff.DiffEntry.ChangeType;
 import org.geogit.api.plumbing.merge.Conflict;
 import org.geogit.api.plumbing.merge.MergeScenarioReport;
+import org.geogit.storage.GtEntityType;
 import org.geogit.web.api.commands.BranchWebOp;
 import org.geogit.web.api.commands.LsTree;
 import org.geogit.web.api.commands.RefParseWeb;
 import org.geogit.web.api.commands.RemoteWebOp;
 import org.geogit.web.api.commands.TagWebOp;
 import org.geogit.web.api.commands.UpdateRefWeb;
+import org.geotools.referencing.CRS;
+import org.opengis.feature.type.GeometryType;
 import org.opengis.feature.type.PropertyDescriptor;
+import org.opengis.feature.type.PropertyType;
+import org.opengis.referencing.crs.CoordinateReferenceSystem;
 
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
@@ -506,6 +512,7 @@ public class ResponseWriter {
                         Optional<RevObject> feature = Optional.absent();
                         Optional<RevObject> type = Optional.absent();
                         String path = null;
+                        String crsCode = null;
                         GeometryChange change = null;
                         if (input.changeType() == ChangeType.ADDED
                                 || input.changeType() == ChangeType.MODIFIED) {
@@ -524,11 +531,31 @@ public class ResponseWriter {
                         }
                         if (feature.isPresent() && feature.get() instanceof RevFeature
                                 && type.isPresent() && type.get() instanceof RevFeatureType) {
+                            RevFeatureType featureType = (RevFeatureType) type.get();
+                            Collection<PropertyDescriptor> attribs = featureType.type()
+                                    .getDescriptors();
+
+                            for (PropertyDescriptor attrib : attribs) {
+                                PropertyType attrType = attrib.getType();
+                                GtEntityType entityType = GtEntityType.fromBinding(attrType
+                                        .getBinding());
+                                if (entityType.isGeometry() && attrType instanceof GeometryType) {
+                                    GeometryType gt = (GeometryType) attrType;
+                                    CoordinateReferenceSystem crs = gt
+                                            .getCoordinateReferenceSystem();
+                                    if (crs != null) {
+                                        crsCode = CRS.toSRS(crs);
+                                    }
+                                    break;
+                                }
+                            }
+
                             RevFeature revFeature = (RevFeature) feature.get();
-                            FeatureBuilder builder = new FeatureBuilder((RevFeatureType) type.get());
+                            FeatureBuilder builder = new FeatureBuilder(featureType);
                             GeogitSimpleFeature simpleFeature = (GeogitSimpleFeature) builder
                                     .build(revFeature.getId().toString(), revFeature);
-                            change = new GeometryChange(simpleFeature, input.changeType(), path);
+                            change = new GeometryChange(simpleFeature, input.changeType(), path,
+                                    crsCode);
                         }
                         return change;
                     }
@@ -548,6 +575,9 @@ public class ResponseWriter {
                         writeElement("geometry", ((Geometry) attribute).toText());
                         break;
                     }
+                }
+                if (next.getCRS() != null) {
+                    writeElement("crs", next.getCRS());
                 }
                 out.writeEndElement();
             }
@@ -618,6 +648,25 @@ public class ResponseWriter {
                         GeometryConflict conflict = null;
 
                         if (feature != null && type != null) {
+                            String crsCode = null;
+                            Collection<PropertyDescriptor> attribs = type.type().getDescriptors();
+
+                            for (PropertyDescriptor attrib : attribs) {
+                                PropertyType attrType = attrib.getType();
+                                GtEntityType entityType = GtEntityType.fromBinding(attrType
+                                        .getBinding());
+                                if (entityType.isGeometry() && attrType instanceof GeometryType) {
+                                    GeometryType gt = (GeometryType) attrType;
+                                    CoordinateReferenceSystem crs = gt
+                                            .getCoordinateReferenceSystem();
+
+                                    if (crs != null) {
+                                        crsCode = CRS.toSRS(crs);
+                                    }
+                                    break;
+                                }
+                            }
+
                             FeatureBuilder builder = new FeatureBuilder(type);
                             GeogitSimpleFeature simpleFeature = (GeogitSimpleFeature) builder
                                     .build(feature.getId().toString(), feature);
@@ -629,7 +678,7 @@ public class ResponseWriter {
                                     break;
                                 }
                             }
-                            conflict = new GeometryConflict(input, geom);
+                            conflict = new GeometryConflict(input, geom, crsCode);
                         }
                         return conflict;
                     }
@@ -642,6 +691,9 @@ public class ResponseWriter {
                 writeElement("change", "CONFLICT");
                 writeElement("id", next.getConflict().getPath());
                 writeElement("geometry", next.getGeometry().toText());
+                if (next.getCRS() != null) {
+                    writeElement("crs", next.getCRS());
+                }
                 out.writeEndElement();
             }
         }
@@ -663,11 +715,30 @@ public class ResponseWriter {
                         GeometryChange change = null;
                         RevFeatureBuilder revBuilder = new RevFeatureBuilder();
                         RevFeature revFeature = revBuilder.build(input.getFeature());
-                        FeatureBuilder builder = new FeatureBuilder(input.getFeatureType());
+                        RevFeatureType featureType = input.getFeatureType();
+                        Collection<PropertyDescriptor> attribs = featureType.type()
+                                .getDescriptors();
+                        String crsCode = null;
+
+                        for (PropertyDescriptor attrib : attribs) {
+                            PropertyType attrType = attrib.getType();
+                            GtEntityType entityType = GtEntityType.fromBinding(attrType
+                                    .getBinding());
+                            if (entityType.isGeometry() && attrType instanceof GeometryType) {
+                                GeometryType gt = (GeometryType) attrType;
+                                CoordinateReferenceSystem crs = gt.getCoordinateReferenceSystem();
+                                if (crs != null) {
+                                    crsCode = CRS.toSRS(crs);
+                                }
+                                break;
+                            }
+                        }
+
+                        FeatureBuilder builder = new FeatureBuilder(featureType);
                         GeogitSimpleFeature simpleFeature = (GeogitSimpleFeature) builder.build(
                                 revFeature.getId().toString(), revFeature);
                         change = new GeometryChange(simpleFeature, ChangeType.MODIFIED, input
-                                .getPath());
+                                .getPath(), crsCode);
                         return change;
                     }
                 });
@@ -685,6 +756,9 @@ public class ResponseWriter {
                         writeElement("geometry", ((Geometry) attribute).toText());
                         break;
                     }
+                }
+                if (next.getCRS() != null) {
+                    writeElement("crs", next.getCRS());
                 }
                 out.writeEndElement();
             }
@@ -736,10 +810,14 @@ public class ResponseWriter {
 
         private String path;
 
-        public GeometryChange(GeogitSimpleFeature feature, ChangeType changeType, String path) {
+        private String crs;
+
+        public GeometryChange(GeogitSimpleFeature feature, ChangeType changeType, String path,
+                String crs) {
             this.feature = feature;
             this.changeType = changeType;
             this.path = path;
+            this.crs = crs;
         }
 
         public GeogitSimpleFeature getFeature() {
@@ -753,6 +831,10 @@ public class ResponseWriter {
         public String getPath() {
             return path;
         }
+
+        public String getCRS() {
+            return crs;
+        }
     }
 
     private class GeometryConflict {
@@ -760,9 +842,12 @@ public class ResponseWriter {
 
         private Geometry geom;
 
-        public GeometryConflict(Conflict conflict, Geometry geom) {
+        private String crs;
+
+        public GeometryConflict(Conflict conflict, Geometry geom, String crs) {
             this.conflict = conflict;
             this.geom = geom;
+            this.crs = crs;
         }
 
         public Conflict getConflict() {
@@ -771,6 +856,10 @@ public class ResponseWriter {
 
         public Geometry getGeometry() {
             return geom;
+        }
+
+        public String getCRS() {
+            return crs;
         }
     }
 }
