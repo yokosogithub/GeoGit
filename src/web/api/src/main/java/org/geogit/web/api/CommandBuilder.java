@@ -10,10 +10,13 @@ import org.geogit.web.api.commands.Commit;
 import org.geogit.web.api.commands.Diff;
 import org.geogit.web.api.commands.EndTransaction;
 import org.geogit.web.api.commands.FeatureDiffWeb;
+import org.geogit.web.api.commands.FetchWebOp;
 import org.geogit.web.api.commands.GetCommitGraph;
 import org.geogit.web.api.commands.Log;
 import org.geogit.web.api.commands.LsTree;
 import org.geogit.web.api.commands.MergeWebOp;
+import org.geogit.web.api.commands.PullWebOp;
+import org.geogit.web.api.commands.PushWebOp;
 import org.geogit.web.api.commands.RefParseWeb;
 import org.geogit.web.api.commands.RemoteWebOp;
 import org.geogit.web.api.commands.Status;
@@ -55,6 +58,12 @@ public class CommandBuilder {
             command = buildBranch(options);
         } else if ("remote".equalsIgnoreCase(commandName)) {
             command = buildRemote(options);
+        } else if ("push".equalsIgnoreCase(commandName)) {
+            command = buildPush(options);
+        } else if ("pull".equalsIgnoreCase(commandName)) {
+            command = buildPull(options);
+        } else if ("fetch".equalsIgnoreCase(commandName)) {
+            command = buildFetch(options);
         } else if ("tag".equalsIgnoreCase(commandName)) {
             command = buildTag(options);
         } else if ("featurediff".equalsIgnoreCase(commandName)) {
@@ -227,6 +236,51 @@ public class CommandBuilder {
     static RemoteWebOp buildRemote(ParameterSet options) {
         RemoteWebOp command = new RemoteWebOp();
         command.setList(Boolean.valueOf(options.getFirstValue("list", "false")));
+        command.setRemove(Boolean.valueOf(options.getFirstValue("remove", "false")));
+        command.setRemoteName(options.getFirstValue("remoteName", null));
+        command.setRemoteURL(options.getFirstValue("remoteURL", null));
+        return command;
+    }
+
+    /**
+     * Builds the {@link PushWebOp} command.
+     * 
+     * @param options the parameter set
+     * @return the built command
+     */
+    static PushWebOp buildPush(ParameterSet options) {
+        PushWebOp command = new PushWebOp();
+        command.setPushAll(Boolean.valueOf(options.getFirstValue("all", "false")));
+        command.setRefSpecs(Arrays.asList(options.getValuesArray("ref")));
+        command.setRemoteName(options.getFirstValue("remoteName", null));
+        return command;
+    }
+
+    /**
+     * Builds the {@link PullWebOp} command.
+     * 
+     * @param options the parameter set
+     * @return the built command
+     */
+    static PullWebOp buildPull(ParameterSet options) {
+        PullWebOp command = new PullWebOp();
+        command.setFetchAll(Boolean.valueOf(options.getFirstValue("all", "false")));
+        command.setRefSpecs(Arrays.asList(options.getValuesArray("ref")));
+        command.setRemoteName(options.getFirstValue("remoteName", null));
+        return command;
+    }
+
+    /**
+     * Builds the {@link FetchWebOp} command.
+     * 
+     * @param options the parameter set
+     * @return the built command
+     */
+    static FetchWebOp buildFetch(ParameterSet options) {
+        FetchWebOp command = new FetchWebOp();
+        command.setFetchAll(Boolean.valueOf(options.getFirstValue("all", "false")));
+        command.setPrune(Boolean.valueOf(options.getFirstValue("prune", "false")));
+        command.setRemotes(Arrays.asList(options.getValuesArray("remote")));
         return command;
     }
 

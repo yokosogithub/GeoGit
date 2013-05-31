@@ -41,6 +41,9 @@ import org.geogit.api.plumbing.diff.DiffEntry.ChangeType;
 import org.geogit.api.plumbing.merge.Conflict;
 import org.geogit.api.plumbing.merge.MergeScenarioReport;
 import org.geogit.storage.GtEntityType;
+import org.geogit.api.porcelain.FetchResult;
+import org.geogit.api.porcelain.FetchResult.ChangedRef;
+import org.geogit.api.porcelain.PullResult;
 import org.geogit.web.api.commands.BranchWebOp;
 import org.geogit.web.api.commands.LsTree;
 import org.geogit.web.api.commands.RefParseWeb;
@@ -464,6 +467,54 @@ public class ResponseWriter {
             writeElement("name", tag.getName());
             out.writeEndElement();
         }
+    }
+
+    public void writeFetchResponse(FetchResult result) throws XMLStreamException {
+        out.writeStartElement("Fetch");
+        if (result.getChangedRefs().entrySet().size() > 0) {
+            for (Entry<String, List<ChangedRef>> entry : result.getChangedRefs().entrySet()) {
+                writeElement("Remote", entry.getKey());
+                for (ChangedRef ref : entry.getValue()) {
+                    writeElement("ChangeType", ref.getType().toString());
+                    if (ref.getOldRef() != null) {
+                        writeElement(ref.getOldRef().localName(), ref.getOldRef().getObjectId()
+                                .toString());
+                    }
+                    if (ref.getNewRef() != null) {
+                        writeElement(ref.getNewRef().localName(), ref.getNewRef().getObjectId()
+                                .toString());
+                    }
+                }
+            }
+        }
+        out.writeEndElement();
+    }
+
+    public void writePullResponse(PullResult result, Iterator<DiffEntry> iter)
+            throws XMLStreamException {
+        out.writeStartElement("Pull");
+        writeFetchResponse(result.getFetchResult());
+        if (iter != null) {
+            writeElement("Remote", result.getRemoteName());
+            writeElement("Ref", result.getNewRef().localName());
+            int added = 0;
+            int removed = 0;
+            int modified = 0;
+            while (iter.hasNext()) {
+                DiffEntry entry = iter.next();
+                if (entry.changeType() == ChangeType.ADDED) {
+                    added++;
+                } else if (entry.changeType() == ChangeType.MODIFIED) {
+                    modified++;
+                } else if (entry.changeType() == ChangeType.REMOVED) {
+                    removed++;
+                }
+            }
+            writeElement("Added", Integer.toString(added));
+            writeElement("Modified", Integer.toString(modified));
+            writeElement("Removed", Integer.toString(removed));
+        }
+        out.writeEndElement();
     }
 
     /**
