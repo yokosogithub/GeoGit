@@ -282,6 +282,7 @@ public class GeogitCLI {
                     // do nothing here, this exception indicates a failure, but the corresponding
                     // command throwing it should have taken care of outputting an error message or
                     // providing user interaction
+                    consoleReader.flush();
                 }
             } catch (IOException ioe) {
                 ioe.printStackTrace();
