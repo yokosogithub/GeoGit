@@ -88,13 +88,6 @@ public class GeoToolsInitSteps extends AbstractGeoToolsFunctionalTest {
         String[] args = commandSpec.split(" ");
         runCommand(args);
     }
-    
-    @When("^I run the command \"([^\"]*)\" on the Oracle database$")
-    public void I_run_the_command_X_on_the_oracle_database(String commandSpec) throws Throwable {
-        commandSpec += getOracleDatabaseParameters();
-        String[] args = commandSpec.split(" ");
-        runCommand(args);
-    }
 
     @Then("^it should answer \"([^\"]*)\"$")
     public void it_should_answer_exactly(String expected) throws Throwable {
