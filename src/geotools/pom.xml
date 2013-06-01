@@ -56,6 +56,12 @@
       <artifactId>gt-jdbc-spatialite</artifactId>
       <version>${gt.version}</version>
     </dependency>
+    
+    <dependency>
+      <groupId>org.geotools.jdbc</groupId>
+      <artifactId>gt-jdbc-oracle</artifactId>
+      <version>${gt.version}</version>
+    </dependency>
       
       <dependency>
           <groupId>org.xerial</groupId>
@@ -121,5 +127,18 @@
       <scope>test</scope>
     </dependency>
   </dependencies>
+
+  <profiles>
+    <profile>
+      <id>oracleDriver</id>
+      <dependencies>
+        <dependency>
+          <groupId>com.oracle</groupId>
+          <artifactId>ojdbc14</artifactId> 
+          <version>10.2.0.3.0</version>
+        </dependency>
+      </dependencies>
+    </profile>
+  </profiles>
 
 </project>
