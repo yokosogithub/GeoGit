@@ -5,6 +5,7 @@ import java.util.List;
 import org.geogit.api.CommandLocator;
 import org.geogit.api.Remote;
 import org.geogit.api.porcelain.RemoteAddOp;
+import org.geogit.api.porcelain.RemoteException;
 import org.geogit.api.porcelain.RemoteListOp;
 import org.geogit.api.porcelain.RemoteRemoveOp;
 import org.geogit.web.api.AbstractWebAPICommand;
@@ -91,9 +92,11 @@ public class RemoteWebOp extends AbstractWebAPICommand {
             final Remote remote;
             try {
                 remote = geogit.command(RemoteRemoveOp.class).setName(remoteName).call();
+            } catch (RemoteException e) {
+                context.setResponseContent(CommandResponse.error(e.statusCode.toString()));
+                return;
             } catch (Exception e) {
-                context.setResponseContent(CommandResponse.error("Aborting Remote Remove: "
-                        + e.getMessage()));
+                context.setResponseContent(CommandResponse.error("Aborting Remote Remove"));
                 return;
             }
             context.setResponseContent(new CommandResponse() {
@@ -114,9 +117,11 @@ public class RemoteWebOp extends AbstractWebAPICommand {
             try {
                 remote = geogit.command(RemoteAddOp.class).setName(remoteName).setURL(remoteURL)
                         .call();
+            } catch (RemoteException e) {
+                context.setResponseContent(CommandResponse.error(e.statusCode.toString()));
+                return;
             } catch (Exception e) {
-                context.setResponseContent(CommandResponse.error("Aborting Remote Add: "
-                        + e.getMessage()));
+                context.setResponseContent(CommandResponse.error("Aborting Remote Add"));
                 return;
             }
             context.setResponseContent(new CommandResponse() {
