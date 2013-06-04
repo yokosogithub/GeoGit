@@ -4,31 +4,18 @@
  */
 package org.geogit.api.plumbing.merge;
 
-import static com.google.common.base.Preconditions.checkNotNull;
-
 import java.util.List;
 
 import org.geogit.api.AbstractGeoGitOp;
-import org.geogit.storage.StagingDatabase;
-
-import com.google.inject.Inject;
 
 public class ConflictsWriteOp extends AbstractGeoGitOp<Void> {
 
     private List<Conflict> conflicts;
 
-    private StagingDatabase indexDatabase;
-
-    @Inject
-    public ConflictsWriteOp(StagingDatabase indexDatabase) {
-        checkNotNull(indexDatabase);
-        this.indexDatabase = indexDatabase;
-    }
-
     @Override
     public Void call() {
         for (Conflict conflict : conflicts) {
-            indexDatabase.addConflict(conflict);
+            getIndex().getDatabase().addConflict(null, conflict);
         }
         return null;
 

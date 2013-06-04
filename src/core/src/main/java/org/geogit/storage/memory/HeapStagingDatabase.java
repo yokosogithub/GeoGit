@@ -170,42 +170,105 @@ public class HeapStagingDatabase extends HeapObjectDatabse implements StagingDat
         return super.delete(objectId);
     }
 
-    private Map<String, Conflict> conflicts = Maps.newHashMap();
+    private Map<String, Map<String, Conflict>> conflicts = Maps.newHashMap();
 
+    /**
+     * Gets all conflicts that match the specified path filter.
+     * 
+     * @param namespace the namespace of the conflict
+     * @param pathFilter the path filter, if this is not defined, all conflicts will be returned
+     * @return the list of conflicts
+     */
     @Override
-    public List<Conflict> getConflicts(@Nullable final String pathFilter) {
-        if (pathFilter == null) {
-            return ImmutableList.copyOf(conflicts.values());
+    public List<Conflict> getConflicts(@Nullable String namespace, @Nullable final String pathFilter) {
+        if (namespace == null) {
+            namespace = "root";
         }
-        UnmodifiableIterator<Conflict> filtered = Iterators.filter(conflicts.values().iterator(),
-                new Predicate<Conflict>() {
-                    @Override
-                    public boolean apply(@Nullable Conflict c) {
-                        return (c.getPath().startsWith(pathFilter));
-                    }
 
-                });
+        if (conflicts.get(namespace) == null) {
+            return ImmutableList.of();
+        }
+        if (pathFilter == null) {
+            return ImmutableList.copyOf(conflicts.get(namespace).values());
+        }
+        UnmodifiableIterator<Conflict> filtered = Iterators.filter(conflicts.get(namespace)
+                .values().iterator(), new Predicate<Conflict>() {
+            @Override
+            public boolean apply(@Nullable Conflict c) {
+                return (c.getPath().startsWith(pathFilter));
+            }
+
+        });
         return ImmutableList.copyOf(filtered);
     }
 
+    /**
+     * Adds a conflict to the database.
+     * 
+     * @param namespace the namespace of the conflict
+     * @param conflict the conflict to add
+     */
     @Override
-    public void addConflict(Conflict conflict) {
-        conflicts.put(conflict.getPath(), conflict);
+    public void addConflict(@Nullable String namespace, Conflict conflict) {
+        if (namespace == null) {
+            namespace = "root";
+        }
+        Map<String, Conflict> conflictMap = conflicts.get(namespace);
+        if (conflictMap == null) {
+            conflictMap = Maps.newHashMap();
+            conflicts.put(namespace, conflictMap);
+        }
+        conflictMap.put(conflict.getPath(), conflict);
+
     }
 
+    /**
+     * Removes a conflict from the database.
+     * 
+     * @param namespace the namespace of the conflict
+     * @param path the path of feature whose conflict should be removed
+     */
     @Override
-    public void removeConflict(String path) {
-        conflicts.remove(path);
+    public void removeConflict(@Nullable String namespace, String path) {
+        if (namespace == null) {
+            namespace = "root";
+        }
+        Map<String, Conflict> conflictMap = conflicts.get(namespace);
+        if (conflictMap != null) {
+            conflictMap.remove(path);
+        }
     }
 
+    /**
+     * Gets the specified conflict from the database.
+     * 
+     * @param namespace the namespace of the conflict
+     * @param path the conflict to retrieve
+     * @return the conflict, or {@link Optional#absent()} if it was not found
+     */
     @Override
-    public Optional<Conflict> getConflict(String path) {
-        return Optional.fromNullable(conflicts.get(path));
+    public Optional<Conflict> getConflict(@Nullable String namespace, String path) {
+        if (namespace == null) {
+            namespace = "root";
+        }
+        Map<String, Conflict> conflictMap = conflicts.get(namespace);
+        if (conflictMap != null) {
+            return Optional.fromNullable(conflictMap.get(path));
+        }
+        return Optional.absent();
     }
 
+    /**
+     * Removes all conflicts from the database.
+     * 
+     * @param namespace the namespace of the conflicts to remove
+     */
     @Override
-    public void removeConflicts() {
-        conflicts.clear();
+    public void removeConflicts(@Nullable String namespace) {
+        if (namespace == null) {
+            namespace = "root";
+        }
+        conflicts.remove(namespace);
     }
 
 }

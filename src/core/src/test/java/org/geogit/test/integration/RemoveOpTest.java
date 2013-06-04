@@ -130,7 +130,7 @@ public class RemoveOpTest extends RepositoryTestCase {
         String path = NodeRef.appendChild(pointsName, idP1);
         geogit.command(RemoveOp.class).addPathToRemove(path).call();
         List<Conflict> conflicts = geogit.getRepository().getIndex().getDatabase()
-                .getConflicts(null);
+                .getConflicts(null, null);
         assertTrue(conflicts.isEmpty());
         geogit.command(CommitOp.class).call();
         Optional<Ref> ref = geogit.command(RefParse.class).setName(Ref.MERGE_HEAD).call();

@@ -9,6 +9,7 @@ import org.geogit.repository.StagingArea;
 import org.geogit.repository.WorkingTree;
 import org.geogit.storage.RefDatabase;
 import org.geogit.storage.TransactionRefDatabase;
+import org.geogit.storage.TransactionStagingArea;
 
 import com.google.common.base.Preconditions;
 
@@ -20,7 +21,9 @@ import com.google.common.base.Preconditions;
  */
 public class GeogitTransaction implements CommandLocator {
 
-    public static String TRANSACTIONS_DIR = "transactions/";
+    public static final String TRANSACTIONS_NAMESPACE = "transactions";
+
+    public static final String TRANSACTIONS_DIR = TRANSACTIONS_NAMESPACE + "/";
 
     private UUID transactionId;
 
@@ -43,7 +46,8 @@ public class GeogitTransaction implements CommandLocator {
         this.locator = locator;
         this.transactionId = transactionId;
 
-        transactionIndex = new Index(repository.getIndex().getDatabase(), this);
+        transactionIndex = new TransactionStagingArea(new Index(
+                repository.getIndex().getDatabase(), this), transactionId);
         transactionWorkTree = new WorkingTree(repository.getIndex().getDatabase(), this);
         transactionRefDatabase = new TransactionRefDatabase(repository.getRefDatabase(),
                 transactionId);
