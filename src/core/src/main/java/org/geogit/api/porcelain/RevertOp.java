@@ -6,12 +6,13 @@ package org.geogit.api.porcelain;
 
 import static com.google.common.base.Preconditions.checkState;
 
+import java.io.File;
+import java.io.IOException;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
-
-import javax.annotation.Nullable;
 
 import org.geogit.api.AbstractGeoGitOp;
 import org.geogit.api.CommitBuilder;
@@ -25,19 +26,26 @@ import org.geogit.api.SymRef;
 import org.geogit.api.plumbing.DiffTree;
 import org.geogit.api.plumbing.FindTreeChild;
 import org.geogit.api.plumbing.RefParse;
+import org.geogit.api.plumbing.ResolveGeogitDir;
 import org.geogit.api.plumbing.UpdateRef;
 import org.geogit.api.plumbing.UpdateSymRef;
 import org.geogit.api.plumbing.WriteTree;
 import org.geogit.api.plumbing.diff.DiffEntry;
+import org.geogit.api.plumbing.merge.Conflict;
+import org.geogit.api.plumbing.merge.ConflictsReadOp;
+import org.geogit.api.plumbing.merge.ConflictsWriteOp;
+import org.geogit.api.porcelain.ResetOp.ResetMode;
+import org.geogit.di.CanRunDuringConflict;
 import org.geogit.repository.Repository;
-import org.geogit.repository.StagingArea;
-import org.geogit.repository.WorkingTree;
 
+import com.google.common.base.Charsets;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Predicate;
 import com.google.common.base.Supplier;
+import com.google.common.base.Suppliers;
 import com.google.common.collect.Iterators;
+import com.google.common.collect.Lists;
+import com.google.common.io.Files;
 import com.google.inject.Inject;
 
 /**
@@ -45,21 +53,25 @@ import com.google.inject.Inject;
  * record some new commits that record them. This requires your working tree to be clean (no
  * modifications from the HEAD commit).
  * 
- * <b>NOTE:</b> so far we don't have the ability to merge non conflicting changes. Instead, the diff
- * list we get acts on whole objects, so this operation will not revert feature changes if that
- * feature has been modified on both branches.
  */
+@CanRunDuringConflict
 public class RevertOp extends AbstractGeoGitOp<Boolean> {
 
     private List<ObjectId> commits;
 
     private Repository repository;
 
-    private StagingArea index;
-
-    private WorkingTree workTree;
-
     private Platform platform;
+
+    private boolean createCommit = true;
+
+    private String currentBranch;
+
+    private ObjectId revertHead;
+
+    private boolean abort;
+
+    private boolean continueRevert;
 
     /**
      * Constructs a new {@code RevertOp} using the specified parameters.
@@ -70,11 +82,8 @@ public class RevertOp extends AbstractGeoGitOp<Boolean> {
      * @param platform the platform to use
      */
     @Inject
-    public RevertOp(Repository repository, StagingArea index, WorkingTree workTree,
-            Platform platform) {
+    public RevertOp(Repository repository, Platform platform) {
         this.repository = repository;
-        this.index = index;
-        this.workTree = workTree;
         this.platform = platform;
     }
 
@@ -95,6 +104,42 @@ public class RevertOp extends AbstractGeoGitOp<Boolean> {
     }
 
     /**
+     * Sets whether to abort the current revert operation
+     * 
+     * @param abort
+     * @return
+     */
+    public RevertOp setAbort(boolean abort) {
+        this.abort = abort;
+        return this;
+    }
+
+    /**
+     * Sets whether to continue a revert operation aborted due to conflicts
+     * 
+     * @param continueRevert
+     * @return {@code this}
+     */
+    public RevertOp setContinue(boolean continueRevert) {
+        this.continueRevert = continueRevert;
+        return this;
+    }
+
+    /**
+     * If true, creates a new commit with the changes from the reverted commit. Otherwise, it just
+     * adds the corresponding changes from the reverted commit to the index and working tree, but
+     * does not commit anything
+     * 
+     * @param createCommit whether to create a commit with reverted changes or not.
+     * @return {@code this}
+     */
+    public RevertOp setCreateCommit(boolean createCommit) {
+        this.createCommit = createCommit;
+        return this;
+
+    }
+
+    /**
      * Executes the revert operation.
      * 
      * @return always {@code true}
@@ -109,105 +154,238 @@ public class RevertOp extends AbstractGeoGitOp<Boolean> {
         final SymRef headRef = (SymRef) currHead.get();
         Preconditions.checkState(!headRef.getObjectId().equals(ObjectId.NULL),
                 "HEAD has no history.");
-        final String currentBranch = headRef.getTarget();
+        currentBranch = headRef.getTarget();
+        revertHead = currHead.get().getObjectId();
+
+        Preconditions.checkArgument(!(continueRevert && abort),
+                "Cannot continue and abort at the same time");
 
         // count staged and unstaged changes
-        long staged = index.countStaged(null);
-        long unstaged = workTree.countUnstaged(null);
-        Preconditions.checkState((staged == 0 && unstaged == 0),
+        long staged = getIndex().countStaged(null);
+        long unstaged = getWorkTree().countUnstaged(null);
+        Preconditions.checkState((staged == 0 && unstaged == 0) || abort || continueRevert,
                 "You must have a clean working tree and index to perform a revert.");
 
         getProgressListener().started();
 
-        ObjectId revertHead = headRef.getObjectId();
+        // Revert can only be run in a conflicted situation if the abort option is used
+        List<Conflict> conflicts = command(ConflictsReadOp.class).call();
+        Preconditions.checkState(conflicts.isEmpty() || abort,
+                "Cannot run operation while merge conflicts exist.");
 
-        for (ObjectId commitId : commits) {
-            Preconditions.checkState(repository.commitExists(commitId),
-                    "Commit was not found in the repsoitory: " + commitId.toString());
+        Optional<Ref> ref = command(RefParse.class).setName(Ref.ORIG_HEAD).call();
+        if (abort) {
+            Preconditions.checkState(ref.isPresent(),
+                    "Cannot abort. You are not in the middle of a revert process.");
+            command(ResetOp.class).setMode(ResetMode.HARD)
+                    .setCommit(Suppliers.ofInstance(ref.get().getObjectId())).call();
+            command(UpdateRef.class).setDelete(true).setName(Ref.ORIG_HEAD).call();
+            return true;
+        } else if (continueRevert) {
+            Preconditions.checkState(ref.isPresent(),
+                    "Cannot continue. You are not in the middle of a revert process.");
+            // Commit the manually-merged changes with the info of the commit that caused the
+            // conflict
+            applyNextCommit(false);
+            // Commit files should already be prepared, so we do nothing else
+        } else {
+            Preconditions
+                    .checkState(!ref.isPresent(),
+                            "You are currently in the middle of a merge or rebase operation <ORIG_HEAD is present>.");
 
-            final RevCommit headCommit = repository.getCommit(revertHead);
-            final RevCommit commit = repository.getCommit(commitId);
+            getProgressListener().started();
 
-            ObjectId parentCommitId = ObjectId.NULL;
-            if (commit.getParentIds().size() > 0) {
-                parentCommitId = commit.getParentIds().get(0);
+            command(UpdateRef.class).setName(Ref.ORIG_HEAD)
+                    .setNewValue(currHead.get().getObjectId()).call();
+
+            // Here we prepare the files with the info about the commits to apply in reverse
+            List<RevCommit> commitsToRevert = Lists.newArrayList();
+            for (ObjectId id : commits) {
+                Preconditions.checkArgument(repository.commitExists(id),
+                        "Commit was not found in the repository: " + id.toString());
+                RevCommit commit = repository.getCommit(id);
+                commitsToRevert.add(commit);
             }
-            ObjectId parentTreeId = ObjectId.NULL;
-            if (repository.commitExists(parentCommitId)) {
-                parentTreeId = repository.getCommit(parentCommitId).getTreeId();
-            }
-
-            // get changes (in reverse)
-            Iterator<DiffEntry> diff = command(DiffTree.class).setNewTree(parentTreeId)
-                    .setOldTree(commit.getTreeId()).setReportTrees(true).call();
-
-            final RevTree headTree = repository.getTree(headCommit.getTreeId());
-
-            // filter out features that were changed after the commit
-            final Iterator<DiffEntry> filtered = Iterators.filter(diff, new Predicate<DiffEntry>() {
-
-                @Override
-                public boolean apply(@Nullable DiffEntry input) {
-                    // Find the latest in the tree
-                    if (input.oldObjectId().equals(ObjectId.NULL)) {
-                        // Feature was deleted
-                        Optional<NodeRef> node = command(FindTreeChild.class)
-                                .setChildPath(input.newPath()).setIndex(true).setParent(headTree)
-                                .call();
-                        // make sure it is still deleted
-                        return !node.isPresent();
-                    } else {
-                        // Feature was added or modified
-                        Optional<NodeRef> node = command(FindTreeChild.class)
-                                .setChildPath(input.oldPath()).setIndex(true).setParent(headTree)
-                                .call();
-                        // Make sure it wasn't changed
-                        return node.isPresent()
-                                && node.get().getNode().getObjectId().equals(input.oldObjectId());
-
-                    }
-                }
-            });
-
-            // stage the reverted changes
-            index.stage(subProgress(1.f / commits.size()), filtered, 0);
-
-            // write new tree
-            ObjectId newTreeId = command(WriteTree.class).call();
-            long timestamp = platform.currentTimeMillis();
-            String committerName = resolveCommitter();
-            String committerEmail = resolveCommitterEmail();
-            // Create new commit
-            CommitBuilder builder = new CommitBuilder();
-            builder.setParentIds(Arrays.asList(headCommit.getId()));
-            builder.setTreeId(newTreeId);
-            builder.setCommitterTimestamp(timestamp);
-            builder.setMessage("Revert of commit '" + commitId.toString() + "'");
-            builder.setCommitter(committerName);
-            builder.setCommitterEmail(committerEmail);
-            builder.setAuthor(committerName);
-            builder.setAuthorEmail(committerEmail);
-            // builder.setCommitterTimestamp(timestamp);
-            // builder.setCommitterTimeZoneOffset(TimeZone.getDefault().getOffset(timestamp));
-            // builder.setAuthorTimestamp(timestamp);
-            // builder.setAuthorTimeZoneOffset(TimeZone.getDefault().getOffset(timestamp));
-
-            RevCommit newCommit = builder.build();
-            repository.getObjectDatabase().put(newCommit);
-
-            revertHead = newCommit.getId();
-
-            command(UpdateRef.class).setName(currentBranch).setNewValue(revertHead).call();
-            command(UpdateSymRef.class).setName(Ref.HEAD).setNewValue(currentBranch).call();
-
-            repository.getWorkingTree().updateWorkHead(newTreeId);
-            repository.getIndex().updateStageHead(newTreeId);
+            createRevertCommitsInfoFiles(commitsToRevert);
 
         }
+
+        boolean ret;
+        do {
+            ret = applyNextCommit(true);
+        } while (ret);
+
+        command(UpdateRef.class).setDelete(true).setName(Ref.ORIG_HEAD).call();
 
         getProgressListener().complete();
 
         return true;
+
+    }
+
+    private File getRevertFolder() {
+        URL dir = command(ResolveGeogitDir.class).call();
+        File revertFolder = new File(dir.getFile(), "revert");
+        if (!revertFolder.exists()) {
+            Preconditions.checkState(revertFolder.mkdirs(), "Cannot create 'revert' folder");
+        }
+        return revertFolder;
+    }
+
+    private void createRevertCommitsInfoFiles(List<RevCommit> commitsToRebase) {
+        File rebaseFolder = getRevertFolder();
+        for (int i = 0; i < commitsToRebase.size(); i++) {
+
+            File file = new File(rebaseFolder, Integer.toString(i + 1));
+            try {
+                Files.write(commitsToRebase.get(i).getId().toString(), file, Charsets.UTF_8);
+            } catch (IOException e) {
+                throw new IllegalStateException("Cannot create revert commits info files");
+            }
+        }
+        File nextFile = new File(rebaseFolder, "next");
+        try {
+            Files.write("1", nextFile, Charsets.UTF_8);
+        } catch (IOException e) {
+            throw new IllegalStateException("Cannot create next revert commit info file");
+        }
+
+    }
+
+    private boolean applyNextCommit(boolean useCommitChanges) {
+        File rebaseFolder = getRevertFolder();
+        File nextFile = new File(rebaseFolder, "next");
+        try {
+            String idx = Files.readFirstLine(nextFile, Charsets.UTF_8);
+            File commitFile = new File(rebaseFolder, idx);
+            if (commitFile.exists()) {
+                String commitId = Files.readFirstLine(commitFile, Charsets.UTF_8);
+                RevCommit commit = repository.getCommit(ObjectId.valueOf(commitId));
+                List<Conflict> conflicts = Lists.newArrayList();
+                if (useCommitChanges) {
+                    conflicts = applyRevertedChanges(commit);
+                }
+                if (createCommit && conflicts.isEmpty()) {
+                    createCommit(commit);
+                } else {
+                    getWorkTree().updateWorkHead(repository.getIndex().getTree().getId());
+                    if (!conflicts.isEmpty()) {
+                        // mark conflicted elements
+                        command(ConflictsWriteOp.class).setConflicts(conflicts).call();
+
+                        // created exception message
+                        StringBuilder msg = new StringBuilder();
+                        msg.append("error: could not apply ");
+                        msg.append(commit.getId().toString().substring(0, 7));
+                        msg.append(" " + commit.getMessage() + "\n");
+
+                        for (Conflict conflict : conflicts) {
+                            msg.append("CONFLICT: conflict in " + conflict.getPath() + "\n");
+                        }
+
+                        throw new RevertConflictsException(msg.toString());
+                    }
+                }
+                commitFile.delete();
+                int newIdx = Integer.parseInt(idx) + 1;
+                Files.write(Integer.toString(newIdx), nextFile, Charsets.UTF_8);
+                return true;
+            } else {
+                return false;
+            }
+        } catch (IOException e) {
+            throw new IllegalStateException("Cannot read/write revert commits index file");
+        }
+
+    }
+
+    private List<Conflict> applyRevertedChanges(RevCommit commit) {
+
+        ObjectId parentCommitId = ObjectId.NULL;
+        if (commit.getParentIds().size() > 0) {
+            parentCommitId = commit.getParentIds().get(0);
+        }
+        ObjectId parentTreeId = ObjectId.NULL;
+        if (repository.commitExists(parentCommitId)) {
+            parentTreeId = repository.getCommit(parentCommitId).getTreeId();
+        }
+
+        // get changes (in reverse)
+        Iterator<DiffEntry> diffs = command(DiffTree.class).setNewTree(parentTreeId)
+                .setOldTree(commit.getTreeId()).setReportTrees(true).call();
+
+        ObjectId headTreeId = repository.getCommit(revertHead).getTreeId();
+        final RevTree headTree = repository.getTree(headTreeId);
+
+        ArrayList<Conflict> conflicts = new ArrayList<Conflict>();
+        DiffEntry diff;
+        while (diffs.hasNext()) {
+            diff = diffs.next();
+            if (diff.oldObjectId().equals(ObjectId.NULL)) {
+                // Feature was deleted
+                Optional<NodeRef> node = command(FindTreeChild.class).setChildPath(diff.newPath())
+                        .setIndex(true).setParent(headTree).call();
+                // make sure it is still deleted
+                if (node.isPresent()) {
+                    conflicts.add(new Conflict(diff.newPath(), diff.oldObjectId(), node.get()
+                            .objectId(), diff.newObjectId()));
+                } else {
+                    getIndex().stage(getProgressListener(), Iterators.singletonIterator(diff), 1);
+                }
+            } else {
+                // Feature was added or modified
+                Optional<NodeRef> node = command(FindTreeChild.class).setChildPath(diff.oldPath())
+                        .setIndex(true).setParent(headTree).call();
+                ObjectId nodeId = node.get().getNode().getObjectId();
+                // Make sure it wasn't changed
+                if (node.isPresent() && nodeId.equals(diff.oldObjectId())) {
+                    getIndex().stage(getProgressListener(), Iterators.singletonIterator(diff), 1);
+                } else {
+                    // do not mark as conflict if reverting to the same feature currently in HEAD
+                    if (!nodeId.equals(diff.newObjectId())) {
+                        conflicts.add(new Conflict(diff.newPath(), diff.oldObjectId(), node.get()
+                                .objectId(), diff.newObjectId()));
+                    }
+                }
+
+            }
+
+        }
+
+        return conflicts;
+
+    }
+
+    private void createCommit(RevCommit commit) {
+
+        // write new tree
+        ObjectId newTreeId = command(WriteTree.class).call();
+        long timestamp = platform.currentTimeMillis();
+        String committerName = resolveCommitter();
+        String committerEmail = resolveCommitterEmail();
+        // Create new commit
+        CommitBuilder builder = new CommitBuilder();
+        builder.setParentIds(Arrays.asList(revertHead));
+        builder.setTreeId(newTreeId);
+        builder.setCommitterTimestamp(timestamp);
+        builder.setMessage("Revert '" + commit.getMessage() + "'\nThis reverts "
+                + commit.getId().toString());
+        builder.setCommitter(committerName);
+        builder.setCommitterEmail(committerEmail);
+        builder.setAuthor(committerName);
+        builder.setAuthorEmail(committerEmail);
+
+        RevCommit newCommit = builder.build();
+        repository.getObjectDatabase().put(newCommit);
+
+        revertHead = newCommit.getId();
+
+        command(UpdateRef.class).setName(currentBranch).setNewValue(revertHead).call();
+        command(UpdateSymRef.class).setName(Ref.HEAD).setNewValue(currentBranch).call();
+
+        getWorkTree().updateWorkHead(newTreeId);
+        getIndex().updateStageHead(newTreeId);
+
     }
 
     private String resolveCommitter() {

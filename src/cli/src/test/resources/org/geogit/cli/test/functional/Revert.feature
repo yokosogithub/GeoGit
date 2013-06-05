@@ -24,7 +24,7 @@ Feature: "revert" command
       And the response should contain "Subject: Commit2"
       And the response should contain "Subject: Commit3"
       And the response should contain "Subject: Commit4"
-      And the response should contain "Subject: Revert of commit"
+      And the response should contain "Subject: Revert 'Commit4'"
       
   Scenario: Try to revert a commit that doesn't exist
     Given I have a repository
@@ -37,7 +37,7 @@ Feature: "revert" command
       And the response should contain "Subject: Commit2"
       And the response should contain "Subject: Commit3"
       And the response should contain "Subject: Commit4"
-      And the response should not contain "Subject: Revert of commit"
+      And the response should not contain "Subject: Revert 'Commit4'"
      
   Scenario: Try to revert multiple commits
    Given I have a repository
@@ -48,7 +48,8 @@ Feature: "revert" command
       And the response should contain "Subject: Commit2"
       And the response should contain "Subject: Commit3"
       And the response should contain "Subject: Commit4"
-      And the response should contain "Subject: Revert of commit"
+      And the response should contain "Subject: Revert 'Commit2'"
+      And the response should contain "Subject: Revert 'Commit3'"
       
   Scenario: Try to revert multiple commits but with one nonexistant commit
    Given I have a repository
@@ -62,3 +63,32 @@ Feature: "revert" command
       And the response should contain "Subject: Commit3"
       And the response should contain "Subject: Commit4"
       And the response should not contain "Subject: Revert of commit"
+            	
+	
+  Scenario: Try to revert with conflict and abort
+   Given I have a repository
+     And I have several commits     
+    When I run the command "revert HEAD~3"
+    Then the response should contain "could not apply" 
+     And it should exit with non-zero exit code    
+    When I run the command "revert --abort"
+    Then the response should contain "aborted"
+    
+  Scenario: Try to revert without commiting
+   Given I have a repository
+     And I have several commits          
+     And I run the command "revert master --no-commit"        
+    When I run the command "log"
+    Then the response should not contain "Revert"    
+    
+  Scenario: Try to revert with conflict and continue
+   Given I have a repository
+     And I have several commits
+    When I run the command "revert HEAD~3"
+    Then the response should contain "could not apply"
+    And it should exit with non-zero exit code
+    When I have staged "points1"     
+    When I run the command "revert --continue"
+     And I run the command "log"
+    Then the response should contain "Revert"
+               

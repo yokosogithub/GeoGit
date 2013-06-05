@@ -342,7 +342,7 @@ public class RebaseOp extends AbstractGeoGitOp<Boolean> {
         }
 
         // clean up
-        File squashFile = new File(getRebaseFolder(), "branch");
+        File squashFile = new File(getRebaseFolder(), "squash");
         if (squashFile.exists()) {
             squashFile.delete();
         }
