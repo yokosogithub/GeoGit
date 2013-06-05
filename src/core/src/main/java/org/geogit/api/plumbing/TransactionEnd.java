@@ -156,7 +156,7 @@ public class TransactionEnd extends AbstractGeoGitOp<Boolean> {
     }
 
     private ImmutableSet<Ref> getChangedRefs() {
-        return transaction.command(ForEachRef.class).setPrefixFilter(Ref.HEADS_PREFIX).call();
+        return transaction.command(ForEachRef.class).setPrefixFilter(Ref.REFS_PREFIX).call();
     }
 
     private boolean repositoryChanged(Ref ref) {
