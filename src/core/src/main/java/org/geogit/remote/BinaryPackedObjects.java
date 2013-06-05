@@ -8,11 +8,14 @@ import java.io.EOFException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Set;
+
+import javax.annotation.Nullable;
 
 import org.geogit.api.ObjectId;
 import org.geogit.api.RevCommit;
@@ -27,7 +30,11 @@ import org.geogit.storage.ObjectSerializingFactory;
 import org.geogit.storage.ObjectWriter;
 import org.geogit.storage.datastream.DataStreamSerializationFactory;
 
+import com.google.common.base.Function;
 import com.google.common.base.Throwables;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Iterators;
 
 public final class BinaryPackedObjects {
     private final ObjectWriter<RevCommit> commitWriter;
@@ -68,9 +75,13 @@ public final class BinaryPackedObjects {
             }
         }
 
+        ImmutableList<ObjectId> needsPrevisit = traverseCommits ? scanForPrevisitList(want, have)
+                : ImmutableList.copyOf(have);
+        ImmutableList<ObjectId> previsitResults = reachableContentIds(needsPrevisit);
+
         int commitsSent = 0;
-        Iterator<RevObject> objects = PostOrderIterator
-                .range(want, have, database, traverseCommits);
+        Iterator<RevObject> objects = PostOrderIterator.range(want, new ArrayList<ObjectId>(
+                previsitResults), database, traverseCommits);
         while (objects.hasNext() && commitsSent < CAP) {
             RevObject object = objects.next();
 
@@ -89,6 +100,51 @@ public final class BinaryPackedObjects {
         }
 
         return state;
+    }
+
+    /**
+     * Find commits which should be previsited to avoid resending objects that are already on the
+     * receiving end. A commit should be previsited if:
+     * <ul>
+     * <li>It is not going to be visited, and
+     * <li>It is the immediate ancestor of a commit which is going to be previsited.
+     * </ul>
+     * 
+     */
+    private ImmutableList<ObjectId> scanForPrevisitList(List<ObjectId> want, List<ObjectId> have) {
+        /*
+         * @note Implementation note: To find the previsit list, we just iterate over all the
+         * commits that will be visited according to our want and have lists. Any parents of commits
+         * in this traversal which are part of the 'have' list will be in the previsit list.
+         */
+        Iterator<RevCommit> willBeVisited = Iterators.filter( //
+                PostOrderIterator.rangeOfCommits(want, have, database), //
+                RevCommit.class);
+        ImmutableSet.Builder<ObjectId> builder = ImmutableSet.builder();
+
+        while (willBeVisited.hasNext()) {
+            RevCommit next = willBeVisited.next();
+            List<ObjectId> parents = new ArrayList<ObjectId>(next.getParentIds());
+            parents.retainAll(have);
+            builder.addAll(parents);
+        }
+
+        return ImmutableList.copyOf(builder.build());
+    }
+
+    private ImmutableList<ObjectId> reachableContentIds(ImmutableList<ObjectId> needsPrevisit) {
+        Function<RevObject, ObjectId> getIdTransformer = new Function<RevObject, ObjectId>() {
+            @Override
+            @Nullable
+            public ObjectId apply(@Nullable RevObject input) {
+                return input == null ? null : input.getId();
+            }
+        };
+
+        Iterator<ObjectId> reachable = Iterators.transform( //
+                PostOrderIterator.contentsOf(needsPrevisit, database), //
+                getIdTransformer);
+        return ImmutableList.copyOf(reachable);
     }
 
     public void ingest(final InputStream in) {

@@ -6,6 +6,7 @@
 package org.geogit.remote;
 
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Queue;
 import java.util.Stack;
 
@@ -22,6 +23,8 @@ abstract class CommitTraverser {
     private Queue<CommitNode> commitQueue;
 
     public Stack<ObjectId> commits;
+
+    public List<ObjectId> have;
 
     /**
      * Traversal node that stores information about the ObjectId of the commit and it's depth from
@@ -66,6 +69,7 @@ abstract class CommitTraverser {
      */
     public CommitTraverser() {
         commits = new Stack<ObjectId>();
+        have = new LinkedList<ObjectId>();
     }
 
     /**
@@ -111,10 +115,15 @@ abstract class CommitTraverser {
                 addParents(node);
                 break;
             case EXCLUDE_AND_PRUNE:
-                // Do nothing
+                if (existsInDestination(node.getObjectId()) && !have.contains(node.getObjectId())) {
+                    have.add(node.getObjectId());
+                }
                 break;
             case EXCLUDE_AND_CONTINUE:
                 addParents(node);
+                if (existsInDestination(node.getObjectId()) && !have.contains(node.getObjectId())) {
+                    have.add(node.getObjectId());
+                }
                 break;
             }
         }
@@ -139,5 +148,13 @@ abstract class CommitTraverser {
      * @return the list of parents
      */
     protected abstract ImmutableList<ObjectId> getParents(ObjectId commitId);
+
+    /**
+     * Determines if the given commitId exists in the destination.
+     * 
+     * @param commitId the id of the commit to find
+     * @return true if the commit exists in the destination
+     */
+    protected abstract boolean existsInDestination(ObjectId commitId);
 
 }

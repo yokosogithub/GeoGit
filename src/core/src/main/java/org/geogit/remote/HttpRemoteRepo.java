@@ -189,6 +189,7 @@ class HttpRemoteRepo extends AbstractRemoteRepo {
             want.addAll(traverser.commits);
             Collections.reverse(want);
             Set<ObjectId> have = new HashSet<ObjectId>();
+            have.addAll(traverser.have);
             while (!want.isEmpty()) {
                 fetchMoreData(want, have);
             }
@@ -222,8 +223,10 @@ class HttpRemoteRepo extends AbstractRemoteRepo {
         List<ObjectId> toSend = new LinkedList<ObjectId>();
         toSend.addAll(traverser.commits);
         Collections.reverse(toSend);
+        Set<ObjectId> have = new HashSet<ObjectId>();
+        have.addAll(traverser.have);
 
-        sendPackedObjects(toSend, new HashSet<ObjectId>());
+        sendPackedObjects(toSend, have);
 
         ObjectId originalRemoteRefValue = ObjectId.NULL;
         if (remoteRef.isPresent()) {
