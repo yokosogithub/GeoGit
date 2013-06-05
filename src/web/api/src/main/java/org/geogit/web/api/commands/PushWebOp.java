@@ -1,7 +1,5 @@
 package org.geogit.web.api.commands;
 
-import java.util.List;
-
 import org.geogit.api.CommandLocator;
 import org.geogit.api.porcelain.PushOp;
 import org.geogit.api.porcelain.SynchronizationException;
@@ -10,19 +8,17 @@ import org.geogit.web.api.CommandContext;
 import org.geogit.web.api.CommandResponse;
 import org.geogit.web.api.ResponseWriter;
 
-import com.google.common.collect.Lists;
-
 public class PushWebOp extends AbstractWebAPICommand {
     private String remoteName;
 
     private boolean pushAll;
 
-    private List<String> refSpecs = Lists.newArrayList();
+    private String refSpec;
 
     /**
      * Mutator for the remoteName variable
      * 
-     * @param remoteName - the name of the remote to add or remove
+     * @param remoteName - the name of the remote to push to
      */
     public void setRemoteName(String remoteName) {
         this.remoteName = remoteName;
@@ -38,21 +34,12 @@ public class PushWebOp extends AbstractWebAPICommand {
     }
 
     /**
-     * Mutator for the refSpecs variable
+     * Mutator for the refSpec variable
      * 
-     * @param refSpecs - a list of all the refs to pull
+     * @param refSpecs - the ref to push
      */
-    public void setRefSpecs(List<String> refSpecs) {
-        this.refSpecs = refSpecs;
-    }
-
-    /**
-     * Adds a ref to the list of refs to pull
-     * 
-     * @param refSpec - a ref to pull
-     */
-    public void addRefSpec(String refSpec) {
-        this.refSpecs.add(refSpec);
+    public void setRefSpec(String refSpec) {
+        this.refSpec = refSpec;
     }
 
     @Override
@@ -61,9 +48,8 @@ public class PushWebOp extends AbstractWebAPICommand {
 
         PushOp command = geogit.command(PushOp.class);
 
-        for (String refSpec : refSpecs) {
-            command.addRefSpec(refSpec);
-        }
+        command.addRefSpec(refSpec);
+
         try {
             command.setAll(pushAll).setRemote(remoteName).call();
             context.setResponseContent(new CommandResponse() {

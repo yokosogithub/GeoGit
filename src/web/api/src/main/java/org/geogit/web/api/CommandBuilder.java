@@ -251,7 +251,7 @@ public class CommandBuilder {
     static PushWebOp buildPush(ParameterSet options) {
         PushWebOp command = new PushWebOp();
         command.setPushAll(Boolean.valueOf(options.getFirstValue("all", "false")));
-        command.setRefSpecs(Arrays.asList(options.getValuesArray("ref")));
+        command.setRefSpec(options.getFirstValue("ref", null));
         command.setRemoteName(options.getFirstValue("remoteName", null));
         return command;
     }
@@ -265,7 +265,7 @@ public class CommandBuilder {
     static PullWebOp buildPull(ParameterSet options) {
         PullWebOp command = new PullWebOp();
         command.setFetchAll(Boolean.valueOf(options.getFirstValue("all", "false")));
-        command.setRefSpecs(Arrays.asList(options.getValuesArray("ref")));
+        command.setRefSpec(options.getFirstValue("ref", null));
         command.setRemoteName(options.getFirstValue("remoteName", null));
         return command;
     }

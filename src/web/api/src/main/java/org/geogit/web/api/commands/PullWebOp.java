@@ -1,7 +1,6 @@
 package org.geogit.web.api.commands;
 
 import java.util.Iterator;
-import java.util.List;
 
 import org.geogit.api.CommandLocator;
 import org.geogit.api.ObjectId;
@@ -15,20 +14,18 @@ import org.geogit.web.api.CommandContext;
 import org.geogit.web.api.CommandResponse;
 import org.geogit.web.api.ResponseWriter;
 
-import com.google.common.collect.Lists;
-
 public class PullWebOp extends AbstractWebAPICommand {
 
     private String remoteName;
 
     private boolean fetchAll;
 
-    private List<String> refSpecs = Lists.newArrayList();
+    private String refSpec;
 
     /**
      * Mutator for the remoteName variable
      * 
-     * @param remoteName - the name of the remote to add or remove
+     * @param remoteName - the name of the remote to pull from
      */
     public void setRemoteName(String remoteName) {
         this.remoteName = remoteName;
@@ -44,21 +41,12 @@ public class PullWebOp extends AbstractWebAPICommand {
     }
 
     /**
-     * Mutator for the refSpecs variable
+     * Mutator for the refSpec variable
      * 
-     * @param refSpecs - a list of all the refs to pull
+     * @param refSpecs - the ref to pull
      */
-    public void setRefSpecs(List<String> refSpecs) {
-        this.refSpecs = refSpecs;
-    }
-
-    /**
-     * Adds a ref to the list of refs to pull
-     * 
-     * @param refSpec - a ref to pull
-     */
-    public void addRefSpec(String refSpec) {
-        this.refSpecs.add(refSpec);
+    public void setRefSpec(String refSpec) {
+        this.refSpec = refSpec;
     }
 
     @Override
@@ -67,9 +55,8 @@ public class PullWebOp extends AbstractWebAPICommand {
 
         PullOp command = geogit.command(PullOp.class);
 
-        for (String refSpec : refSpecs) {
-            command.addRefSpec(refSpec);
-        }
+        command.addRefSpec(refSpec);
+
         try {
             final PullResult result = command.setRemote(remoteName).setAll(fetchAll).call();
             final Iterator<DiffEntry> iter;

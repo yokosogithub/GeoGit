@@ -473,18 +473,25 @@ public class ResponseWriter {
         out.writeStartElement("Fetch");
         if (result.getChangedRefs().entrySet().size() > 0) {
             for (Entry<String, List<ChangedRef>> entry : result.getChangedRefs().entrySet()) {
-                writeElement("Remote", entry.getKey());
+                out.writeStartElement("Remote");
+                writeElement("remoteName", entry.getKey());
                 for (ChangedRef ref : entry.getValue()) {
-                    writeElement("ChangeType", ref.getType().toString());
+                    out.writeStartElement("Branch");
+
+                    writeElement("changeType", ref.getType().toString());
                     if (ref.getOldRef() != null) {
-                        writeElement(ref.getOldRef().localName(), ref.getOldRef().getObjectId()
-                                .toString());
+                        writeElement("name", ref.getOldRef().localName());
+                        writeElement("oldValue", ref.getOldRef().getObjectId().toString());
                     }
                     if (ref.getNewRef() != null) {
-                        writeElement(ref.getNewRef().localName(), ref.getNewRef().getObjectId()
-                                .toString());
+                        if (ref.getOldRef() == null) {
+                            writeElement("name", ref.getNewRef().localName());
+                        }
+                        writeElement("newValue", ref.getNewRef().getObjectId().toString());
                     }
+                    out.writeEndElement();
                 }
+                out.writeEndElement();
             }
         }
         out.writeEndElement();
