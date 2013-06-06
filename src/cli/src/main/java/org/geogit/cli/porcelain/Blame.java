@@ -24,6 +24,8 @@ import org.geogit.api.porcelain.BlameOp;
 import org.geogit.api.porcelain.BlameReport;
 import org.geogit.api.porcelain.ValueAndCommit;
 import org.geogit.cli.AbstractCommand;
+import org.geogit.cli.AnsiDecorator;
+import org.geogit.cli.CLICommand;
 import org.geogit.cli.GeogitCLI;
 import org.geogit.storage.text.TextValueSerializer;
 

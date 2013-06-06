@@ -59,6 +59,29 @@ The ``diff-tree`` command shows a list of differences between two commits. It us
 
 	<path> <blank_space> <old_objectid> <blank_space> <new_object_id>
 
+And additional ``--describe`` switch is available, which causes the output to contain the values of fields in the affected paths
+
+Output format is as follows
+
+::
+
+	<path>
+	<change_type><blank_space><field_name1>
+	[<old_value_of_field_1>]
+	[<new_value_of_field_1>]
+	<change_type><blank_space><field_name2>
+	[<old_value_of_field_2>]
+	[<new_value_of_field_2>]
+	.
+	.
+	.
+
+Change type is a single character: A (added), M (modified), R (remove) or U (unchanged)
+
+both old and new values for a given field appear only if the field has been modified (M). Otherwise, a single value is found, with a meaning according to the type of change.
+
+If several paths are affected, the set of lines describing a changed path are separated by a blank line
+
 rev-list
 ---------
 
