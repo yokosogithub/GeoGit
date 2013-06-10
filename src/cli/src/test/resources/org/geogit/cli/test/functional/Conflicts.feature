@@ -17,4 +17,12 @@ Scenario: Try to merge list conflicts showing diffs
       And I have conflicting branches
      When I run the command "merge branch1"
      And I run the command "conflicts --diff"
-     Then the response should contain "StringProp1_1 -> StringProp1_2"     
+     Then the response should contain "StringProp1_1 -> StringProp1_2"   
+     
+Scenario: Try to merge list conflicts showing only ids
+    Given I have a repository
+      And I have conflicting branches
+     When I run the command "merge branch1"
+     And I run the command "conflicts --ids-only"
+     Then the response should contain 1 lines
+      
