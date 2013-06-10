@@ -121,9 +121,17 @@ public class CommandResource extends Resource {
     private Representation formatUnexpectedException(Exception ex, MediaType format) {
         Logger logger = getLogger();
         UUID uuid = UUID.randomUUID();
+        String stack = "";
+        StackTraceElement[] trace = ex.getStackTrace();
+        for (int index = 0; index < 5; index++) {
+            if (index < trace.length) {
+                stack += trace[index].toString() + '\t';
+            } else {
+                break;
+            }
+        }
         logger.log(Level.SEVERE, "Unexpected exception : " + uuid, ex);
-        return new JettisonRepresentation(format, CommandResponse.error("Unexpected exception : "
-                + uuid), getJSONPCallback());
+        return new JettisonRepresentation(format, CommandResponse.error(stack), getJSONPCallback());
     }
 
     private String getJSONPCallback() {
