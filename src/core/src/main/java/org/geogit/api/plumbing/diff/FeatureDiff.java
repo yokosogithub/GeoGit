@@ -95,7 +95,7 @@ public class FeatureDiff {
                 }
             }
         }
-        updatedAttributes.flip(0, updatedAttributes.length());
+        updatedAttributes.flip(0, newValues.size());
         for (int i = updatedAttributes.nextSetBit(0); i >= 0; i = updatedAttributes
                 .nextSetBit(i + 1)) {
             if (Geometry.class.isAssignableFrom(newAttributes.get(i).getType().getBinding())) {

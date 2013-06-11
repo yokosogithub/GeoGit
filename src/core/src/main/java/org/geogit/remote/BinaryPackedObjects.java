@@ -190,7 +190,7 @@ public final class BinaryPackedObjects {
             if (offset == len)
                 break;
         }
-        ObjectId id = new ObjectId(rawBytes);
+        ObjectId id = ObjectId.createNoClone(rawBytes);
         return id;
     }
 

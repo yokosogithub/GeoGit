@@ -2,10 +2,11 @@
  * This code is licensed under the BSD New License, available at the root
  * application directory.
  */
-package org.geogit.test.performance;
+package org.geogit.test.performance.je;
 
 import org.geogit.di.GeogitModule;
 import org.geogit.test.integration.je.JETestStorageModule;
+import org.geogit.test.performance.LogOpPerformanceTest;
 
 import com.google.inject.Guice;
 import com.google.inject.Injector;

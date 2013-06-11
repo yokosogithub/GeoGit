@@ -38,6 +38,7 @@ import org.opengis.referencing.crs.CoordinateReferenceSystem;
 import com.google.common.base.Optional;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.hash.Funnel;
@@ -220,7 +221,7 @@ class HashObjectFunnels {
         public void funnel(RevFeatureType from, PrimitiveSink into) {
             RevObjectTypeFunnel.funnel(TYPE.FEATURETYPE, into);
 
-            ImmutableSortedSet<PropertyDescriptor> featureTypeProperties = new DescribeFeatureType()
+            ImmutableSet<PropertyDescriptor> featureTypeProperties = new DescribeFeatureType()
                     .setFeatureType(from).call();
 
             NullableStringFunnel.funnel(from.getName().getNamespaceURI(), into);

@@ -72,7 +72,7 @@ public class FormatCommon {
     public final static ObjectId readObjectId(DataInput in) throws IOException {
         byte[] bytes = new byte[20];
         in.readFully(bytes);
-        return new ObjectId(bytes);
+        return ObjectId.createNoClone(bytes);
     }
 
     public static final byte COMMIT_TREE_REF = 0x01;
@@ -130,7 +130,7 @@ public class FormatCommon {
 
         final byte[] treeIdBytes = new byte[20];
         in.readFully(treeIdBytes);
-        final ObjectId treeId = new ObjectId(treeIdBytes);
+        final ObjectId treeId = ObjectId.createNoClone(treeIdBytes);
         final Builder<ObjectId> parentListBuilder = ImmutableList.builder();
 
         while (true) {
@@ -140,7 +140,7 @@ public class FormatCommon {
             } else {
                 final byte[] parentIdBytes = new byte[20];
                 in.readFully(parentIdBytes);
-                parentListBuilder.add(new ObjectId(parentIdBytes));
+                parentListBuilder.add(ObjectId.createNoClone(parentIdBytes));
             }
         }
 
@@ -232,10 +232,11 @@ public class FormatCommon {
         final Envelope bbox = readBBox(in);
         final Node node;
         if (!bbox.isNull()) {
-            node = Node.create(name, new ObjectId(objectId), new ObjectId(metadataId), contentType,
-                    bbox);
+            node = Node.create(name, ObjectId.createNoClone(objectId),
+                    ObjectId.createNoClone(metadataId), contentType, bbox);
         } else {
-            node = Node.create(name, new ObjectId(objectId), new ObjectId(metadataId), contentType);
+            node = Node.create(name, ObjectId.createNoClone(objectId),
+                    ObjectId.createNoClone(metadataId), contentType);
         }
         return node;
     }
@@ -260,13 +261,13 @@ public class FormatCommon {
         final byte[] metadataId = new byte[20];
         in.readFully(metadataId);
         String parentPath = in.readUTF();
-        return new NodeRef(node, parentPath, new ObjectId(metadataId));
+        return new NodeRef(node, parentPath, ObjectId.createNoClone(metadataId));
     }
 
     public static final Bucket readBucket(DataInput in) throws IOException {
         final byte[] hash = new byte[20];
         in.readFully(hash);
-        ObjectId objectId = new ObjectId(hash);
+        ObjectId objectId = ObjectId.createNoClone(hash);
         Envelope bounds = readBBox(in);
         return Bucket.create(objectId, bounds);
     }

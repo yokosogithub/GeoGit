@@ -276,6 +276,8 @@ public abstract class AbstractObjectDatabase implements ObjectDatabase {
                 throw Throwables.propagate(e);
             }
         }
+        int size = ((ByteArrayOutputStream) target).size();
+        //System.err.printf("%d,%s,%s\n", size, object.getId(), object.getType());
     }
 
     /**

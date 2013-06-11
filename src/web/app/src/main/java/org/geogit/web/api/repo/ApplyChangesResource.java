@@ -108,7 +108,7 @@ public class ApplyChangesResource extends ServerResource {
             if (offset == len)
                 break;
         }
-        ObjectId id = new ObjectId(rawBytes);
+        ObjectId id = ObjectId.createNoClone(rawBytes);
         return id;
     }
 }

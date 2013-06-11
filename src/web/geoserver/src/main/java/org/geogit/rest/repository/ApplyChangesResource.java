@@ -138,7 +138,7 @@ public class ApplyChangesResource extends Finder {
                 if (offset == len)
                     break;
             }
-            ObjectId id = new ObjectId(rawBytes);
+            ObjectId id = ObjectId.createNoClone(rawBytes);
             return id;
         }
     }

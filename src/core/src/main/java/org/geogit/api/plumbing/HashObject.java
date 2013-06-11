@@ -62,7 +62,7 @@ public class HashObject extends AbstractGeoGitOp<ObjectId> {
         final Funnel<RevObject> funnel = (Funnel<RevObject>) FUNNELS[object.getType().value()];
         funnel.funnel(object, hasher);
         final byte[] rawKey = hasher.hash().asBytes();
-        final ObjectId id = new ObjectId(rawKey);
+        final ObjectId id = ObjectId.createNoClone(rawKey);
 
         return id;
     }

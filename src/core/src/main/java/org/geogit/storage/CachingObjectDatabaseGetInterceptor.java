@@ -34,7 +34,7 @@ public class CachingObjectDatabaseGetInterceptor implements MethodInterceptor {
         Object object = cache.getIfPresent(oid);
         if (object == null) {
             object = invocation.proceed();
-            if (object instanceof RevTree) {
+            if (object instanceof RevTree && ((RevTree)object).buckets().isPresent()) {
                 cache.put(oid, (RevObject) object);
             }
         }

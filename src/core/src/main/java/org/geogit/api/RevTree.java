@@ -95,6 +95,10 @@ public interface RevTree extends RevObject {
             return Iterators.emptyIterator();
         }
 
+        @Override
+        public String toString() {
+            return "RevTree.EMTPY";
+        }
     };
 
     /**
