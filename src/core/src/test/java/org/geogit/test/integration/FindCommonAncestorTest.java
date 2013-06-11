@@ -12,6 +12,7 @@ import org.geogit.api.porcelain.CommitOp;
 import org.geogit.api.porcelain.ConfigOp;
 import org.geogit.api.porcelain.ConfigOp.ConfigAction;
 import org.geogit.api.porcelain.MergeOp;
+import org.geogit.api.porcelain.MergeOp.MergeReport;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -154,11 +155,11 @@ public class FindCommonAncestorTest extends RepositoryTestCase {
         insertAndAdd(lines2);
         geogit.command(CommitOp.class).setMessage("commit for " + idL2).call();
 
-        final RevCommit mergeCommit = geogit.command(MergeOp.class)
+        final MergeReport mergeReport = geogit.command(MergeOp.class)
                 .addCommit(Suppliers.ofInstance(left.getId())).call();
 
         Optional<RevCommit> commonAncestor = geogit.command(FindCommonAncestor.class)
-                .setLeft(mergeCommit).setRight(branch2).call();
+                .setLeft(mergeReport.getMergeCommit()).setRight(branch2).call();
 
         assertTrue(commonAncestor.isPresent());
         assertEquals(commonAncestor.get().getId(), ancestor.getId());

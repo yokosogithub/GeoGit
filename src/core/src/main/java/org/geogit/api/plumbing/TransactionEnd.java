@@ -70,9 +70,10 @@ public class TransactionEnd extends AbstractGeoGitOp<Boolean> {
     }
 
     /**
-     * Creates a new transaction and returns it.
+     * Ends the current transaction by either committing the changes or discarding them depending on
+     * whether cancel is true or not.
      * 
-     * @return the {@link GeogitTransaction} that was created by the operation
+     * @return Boolean - true if the transaction was successfully closed
      */
     @Override
     public Boolean call() {

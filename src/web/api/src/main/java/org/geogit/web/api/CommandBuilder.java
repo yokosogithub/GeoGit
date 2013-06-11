@@ -3,13 +3,17 @@ package org.geogit.web.api;
 import java.util.Arrays;
 
 import org.geogit.api.ObjectId;
+import org.geogit.web.api.commands.BeginTransaction;
 import org.geogit.web.api.commands.BranchWebOp;
+import org.geogit.web.api.commands.CheckoutWebOp;
 import org.geogit.web.api.commands.Commit;
 import org.geogit.web.api.commands.Diff;
+import org.geogit.web.api.commands.EndTransaction;
 import org.geogit.web.api.commands.FeatureDiffWeb;
 import org.geogit.web.api.commands.GetCommitGraph;
 import org.geogit.web.api.commands.Log;
 import org.geogit.web.api.commands.LsTree;
+import org.geogit.web.api.commands.MergeWebOp;
 import org.geogit.web.api.commands.RefParseWeb;
 import org.geogit.web.api.commands.RemoteWebOp;
 import org.geogit.web.api.commands.Status;
@@ -32,7 +36,7 @@ public class CommandBuilder {
      */
     public static WebAPICommand build(String commandName, ParameterSet options)
             throws CommandSpecException {
-        WebAPICommand command = null;
+        AbstractWebAPICommand command = null;
         if ("status".equalsIgnoreCase(commandName)) {
             command = buildStatus(options);
         } else if ("log".equalsIgnoreCase(commandName)) {
@@ -57,9 +61,20 @@ public class CommandBuilder {
             command = buildFeatureDiff(options);
         } else if ("getCommitGraph".equalsIgnoreCase(commandName)) {
             command = buildGetCommitGraph(options);
+        } else if ("merge".equalsIgnoreCase(commandName)) {
+            command = buildMerge(options);
+        } else if ("checkout".equalsIgnoreCase(commandName)) {
+            command = buildCheckout(options);
+        } else if ("beginTransaction".equalsIgnoreCase(commandName)) {
+            command = buildBeginTransaction(options);
+        } else if ("endTransaction".equalsIgnoreCase(commandName)) {
+            command = buildEndTransaction(options);
         } else {
             throw new CommandSpecException("'" + commandName + "' is not a geogit command");
         }
+
+        command.setTransactionId(options.getFirstValue("transactionId", null));
+
         return command;
     }
 
@@ -114,6 +129,8 @@ public class CommandBuilder {
         command.setUntil(options.getFirstValue("until"));
         command.setPage(parseInt(options, "page", 0));
         command.setElementsPerPage(parseInt(options, "show", 30));
+        command.setFirstParentOnly(Boolean.valueOf(options
+                .getFirstValue("firstParentOnly", "false")));
         return command;
     }
 
@@ -252,6 +269,54 @@ public class CommandBuilder {
         command.setCommitId(options.getFirstValue("commitId", ObjectId.NULL.toString()));
         command.setPage(parseInt(options, "page", 0));
         command.setElementsPerPage(parseInt(options, "show", 30));
+        return command;
+    }
+
+    /**
+     * Builds the {@link BeginTransaction} command.
+     * 
+     * @param options the parameter set
+     * @return the built command
+     */
+    static BeginTransaction buildBeginTransaction(ParameterSet options) {
+        BeginTransaction command = new BeginTransaction();
+        return command;
+    }
+
+    /**
+     * Builds the {@link EndTransaction} command.
+     * 
+     * @param options the parameter set
+     * @return the built command
+     */
+    static EndTransaction buildEndTransaction(ParameterSet options) {
+        EndTransaction command = new EndTransaction();
+        command.setCancel(Boolean.valueOf(options.getFirstValue("cancel", "false")));
+        return command;
+    }
+
+    /**
+     * Builds the {@link MergeWebOp} command.
+     * 
+     * @param options the parameter set
+     * @return the built command
+     */
+    static MergeWebOp buildMerge(ParameterSet options) {
+        MergeWebOp command = new MergeWebOp();
+        command.setNoCommit(Boolean.valueOf(options.getFirstValue("noCommit", "false")));
+        command.setCommit(options.getFirstValue("commit", null));
+        return command;
+    }
+
+    /**
+     * Builds the {@link CheckoutWebOp} command.
+     * 
+     * @param options the parameter set
+     * @return the built command
+     */
+    static CheckoutWebOp buildCheckout(ParameterSet options) {
+        CheckoutWebOp command = new CheckoutWebOp();
+        command.setName(options.getFirstValue("branch", null));
         return command;
     }
 }

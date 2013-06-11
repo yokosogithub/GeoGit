@@ -43,7 +43,7 @@ import com.google.inject.Inject;
  * Merge two or more histories together.
  * 
  */
-public class MergeOp extends AbstractGeoGitOp<RevCommit> {
+public class MergeOp extends AbstractGeoGitOp<MergeOp.MergeReport> {
 
     private List<ObjectId> commits = new ArrayList<ObjectId>();;
 
@@ -126,7 +126,7 @@ public class MergeOp extends AbstractGeoGitOp<RevCommit> {
      * @return always {@code true}
      */
     @Override
-    public RevCommit call() throws RuntimeException {
+    public MergeReport call() throws RuntimeException {
 
         Preconditions.checkArgument(commits.size() > 0, "No commits specified for merge.");
         Preconditions.checkArgument(!(ours && theirs), "Cannot use both --ours and --theirs.");
@@ -143,6 +143,8 @@ public class MergeOp extends AbstractGeoGitOp<RevCommit> {
 
         boolean fastForward = true;
         boolean changed = false;
+
+        Optional<MergeScenarioReport> mergeScenario = Optional.absent();
 
         boolean hasConflictsOrAutomerge;
         List<RevCommit> revCommits = Lists.newArrayList();
@@ -168,10 +170,10 @@ public class MergeOp extends AbstractGeoGitOp<RevCommit> {
                     + commitId.toString());
 
             final RevCommit targetCommit = repository.getCommit(commitId);
-            MergeScenarioReport mergeScenario = command(ReportMergeScenarioOp.class)
-                    .setMergeIntoCommit(headCommit).setToMergeCommit(targetCommit).call();
+            mergeScenario = Optional.of(command(ReportMergeScenarioOp.class)
+                    .setMergeIntoCommit(headCommit).setToMergeCommit(targetCommit).call());
 
-            List<FeatureInfo> merged = mergeScenario.getMerged();
+            List<FeatureInfo> merged = mergeScenario.get().getMerged();
             for (FeatureInfo feature : merged) {
                 this.getWorkTree().insert(NodeRef.parentPath(feature.getPath()),
                         feature.getFeature());
@@ -180,7 +182,7 @@ public class MergeOp extends AbstractGeoGitOp<RevCommit> {
                 changed = true;
                 fastForward = false;
             }
-            List<DiffEntry> unconflicting = mergeScenario.getUnconflicted();
+            List<DiffEntry> unconflicting = mergeScenario.get().getUnconflicted();
             if (!unconflicting.isEmpty()) {
                 getIndex().stage(getProgressListener(), unconflicting.iterator(), 0);
                 changed = true;
@@ -189,7 +191,7 @@ public class MergeOp extends AbstractGeoGitOp<RevCommit> {
 
             getWorkTree().updateWorkHead(getIndex().getTree().getId());
 
-            List<Conflict> conflicts = mergeScenario.getConflicts();
+            List<Conflict> conflicts = mergeScenario.get().getConflicts();
             if (!ours && !conflicts.isEmpty()) {
                 // In case we use the "ours" strategy, we do nothing. We ignore conflicting
                 // changes and leave the current elements
@@ -206,7 +208,7 @@ public class MergeOp extends AbstractGeoGitOp<RevCommit> {
                     msg.append("Merge commit '" + commitId.toString() + "'. ");
                 }
                 msg.append("\n\nConflicts:\n");
-                for (Conflict conflict : mergeScenario.getConflicts()) {
+                for (Conflict conflict : mergeScenario.get().getConflicts()) {
                     msg.append("\t" + conflict.getPath() + "\n");
                 }
 
@@ -255,6 +257,7 @@ public class MergeOp extends AbstractGeoGitOp<RevCommit> {
 
                 RevCommit headCommit = repository.getCommit(headRef.getObjectId());
                 final RevCommit targetCommit = repository.getCommit(commitId);
+
                 Optional<RevCommit> ancestorCommit = command(FindCommonAncestor.class)
                         .setLeft(headCommit).setRight(targetCommit).call();
                 subProgress.progress(10.f);
@@ -263,6 +266,8 @@ public class MergeOp extends AbstractGeoGitOp<RevCommit> {
                         "No ancestor commit could be found.");
 
                 if (commits.size() == 1) {
+                    mergeScenario = Optional.of(command(ReportMergeScenarioOp.class)
+                            .setMergeIntoCommit(headCommit).setToMergeCommit(targetCommit).call());
                     if (ancestorCommit.get().getId().equals(headCommit.getId())) {
                         // Fast-forward
                         if (headRef instanceof SymRef) {
@@ -307,7 +312,11 @@ public class MergeOp extends AbstractGeoGitOp<RevCommit> {
             throw new NothingToCommitException("The branch has already been merged.");
         }
 
-        return commit(fastForward);
+        RevCommit mergeCommit = commit(fastForward);
+
+        MergeReport result = new MergeReport(mergeCommit, mergeScenario);
+
+        return result;
 
     }
 
@@ -348,5 +357,24 @@ public class MergeOp extends AbstractGeoGitOp<RevCommit> {
         getProgressListener().complete();
 
         return mergeCommit;
+    }
+
+    public class MergeReport {
+        private RevCommit mergeCommit;
+
+        private Optional<MergeScenarioReport> report;
+
+        public RevCommit getMergeCommit() {
+            return mergeCommit;
+        }
+
+        public Optional<MergeScenarioReport> getReport() {
+            return report;
+        }
+
+        public MergeReport(RevCommit mergeCommit, Optional<MergeScenarioReport> report) {
+            this.mergeCommit = mergeCommit;
+            this.report = report;
+        }
     }
 }

@@ -2,13 +2,13 @@ package org.geogit.web.api.commands;
 
 import java.util.List;
 
-import org.geogit.api.GeoGIT;
+import org.geogit.api.CommandLocator;
 import org.geogit.api.RevTag;
 import org.geogit.api.porcelain.TagListOp;
+import org.geogit.web.api.AbstractWebAPICommand;
 import org.geogit.web.api.CommandContext;
 import org.geogit.web.api.CommandResponse;
 import org.geogit.web.api.ResponseWriter;
-import org.geogit.web.api.WebAPICommand;
 
 /**
  * Interface for the Tag operations in GeoGit. Currently only supports the list option.
@@ -16,7 +16,7 @@ import org.geogit.web.api.WebAPICommand;
  * Web interface for {@link TagListOp}
  */
 
-public class TagWebOp implements WebAPICommand {
+public class TagWebOp extends AbstractWebAPICommand {
 
     private boolean list;
 
@@ -37,7 +37,7 @@ public class TagWebOp implements WebAPICommand {
     @Override
     public void run(CommandContext context) {
         if (list) {
-            final GeoGIT geogit = context.getGeoGIT();
+            final CommandLocator geogit = this.getCommandLocator(context);
             final List<RevTag> tags = geogit.command(TagListOp.class).call();
 
             context.setResponseContent(new CommandResponse() {
