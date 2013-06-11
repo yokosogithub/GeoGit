@@ -9,7 +9,7 @@ import org.geogit.api.GeogitTransaction;
  * An abstract command that allows WebAPICommands to support long transactions.
  */
 
-public class AbstractWebAPICommand implements WebAPICommand {
+public abstract class AbstractWebAPICommand implements WebAPICommand {
 
     private UUID transactionId = null;
 
@@ -48,12 +48,6 @@ public class AbstractWebAPICommand implements WebAPICommand {
         return context.getGeoGIT().getCommandLocator();
     }
 
-    /**
-     * Empty override.
-     */
-    @Override
-    public void run(CommandContext context) {
-
-    }
+    public abstract void run(CommandContext context);
 
 }
