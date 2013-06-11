@@ -40,14 +40,21 @@ public interface GraphDatabase {
     public boolean exists(final ObjectId commitId);
 
     /**
-     * Retrieves all of the parents for the given commit
+     * Retrieves all of the parents for the given commit.
      * 
-     * @param commitid
-     * @return
+     * @param commitid the commit whose parents should be returned
+     * @return a list of the parents of the provided commit
      * @throws IllegalArgumentException
      */
     public ImmutableList<ObjectId> getParents(ObjectId commitId) throws IllegalArgumentException;
 
+    /**
+     * Retrieves all of the children for the given commit.
+     * 
+     * @param commitid the commit whose children should be returned
+     * @return a list of the children of the provided commit
+     * @throws IllegalArgumentException
+     */
     public ImmutableList<ObjectId> getChildren(ObjectId commitId) throws IllegalArgumentException;
 
     /**
