@@ -46,7 +46,8 @@ public class NodeTest {
                 TYPE.FEATURE);
 
         String readableNode = node.toString();
-        assertTrue(readableNode.equals("Node[Points.1 -> " + node.getObjectId() + "]"));
+        String expected = "FeatureNode[Points.1 -> " + node.getObjectId() + "]";
+        assertEquals(expected, readableNode.toString());
     }
 
     @Test

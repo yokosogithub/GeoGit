@@ -11,13 +11,14 @@ import javax.annotation.Nullable;
 import org.geogit.api.RevObject.TYPE;
 
 import com.google.common.base.Optional;
+import com.google.common.base.Preconditions;
 import com.vividsolutions.jts.geom.Envelope;
 
 /**
  * An identifier->object id mapping for an object
  * 
  */
-public class Node implements Bounded, Comparable<Node> {
+public abstract class Node implements Bounded, Comparable<Node> {
 
     /**
      * The name of the element
@@ -31,24 +32,17 @@ public class Node implements Bounded, Comparable<Node> {
     private ObjectId metadataId;
 
     /**
-     * The element type
-     */
-    private TYPE type;
-
-    /**
      * Id of the object this ref points to
      */
     private ObjectId objectId;
 
-    private Node(final String name, final ObjectId oid, final ObjectId metadataId,
-            final RevObject.TYPE type) {
+    private Node(final String name, final ObjectId oid, final ObjectId metadataId) {
         checkNotNull(name);
         checkNotNull(oid);
-        checkNotNull(type);
+        checkNotNull(metadataId);
         this.name = name;
         this.objectId = oid;
         this.metadataId = metadataId.isNull() ? null : metadataId;
-        this.type = type;
     }
 
     public Optional<ObjectId> getMetadataId() {
@@ -72,9 +66,7 @@ public class Node implements Bounded, Comparable<Node> {
     /**
      * @return the type of {@link RevObject} this node points to
      */
-    public TYPE getType() {
-        return type;
-    }
+    public abstract TYPE getType();
 
     /**
      * Provides for natural ordering of {@code Node}, based on {@link #getName() name}
@@ -89,7 +81,7 @@ public class Node implements Bounded, Comparable<Node> {
      */
     @Override
     public int hashCode() {
-        return 17 ^ type.hashCode() * name.hashCode() * objectId.hashCode();
+        return 17 ^ getType().hashCode() * name.hashCode() * objectId.hashCode();
     }
 
     /**
@@ -102,7 +94,7 @@ public class Node implements Bounded, Comparable<Node> {
             return false;
         }
         Node r = (Node) o;
-        return name.equals(r.name) && type.equals(r.type) && objectId.equals(r.objectId);
+        return getType().equals(r.getType()) && name.equals(r.name) && objectId.equals(r.objectId);
     }
 
     /**
@@ -110,8 +102,8 @@ public class Node implements Bounded, Comparable<Node> {
      */
     @Override
     public String toString() {
-        return new StringBuilder("Node").append('[').append(getName()).append(" -> ")
-                .append(getObjectId()).append(']').toString();
+        return new StringBuilder(getClass().getSimpleName()).append('[').append(getName())
+                .append(" -> ").append(getObjectId()).append(']').toString();
     }
 
     @Override
@@ -132,63 +124,128 @@ public class Node implements Bounded, Comparable<Node> {
     public static Node create(final String name, final ObjectId oid, final ObjectId metadataId,
             final TYPE type, @Nullable final Envelope bounds) {
 
-        if (bounds == null || bounds.isNull()) {
-            return new Node(name, oid, metadataId, type);
+        switch (type) {
+        case FEATURE:
+            if (bounds == null || bounds.isNull()) {
+                return new FeatureNode(name, oid, metadataId);
+            } else {
+                return new BoundedFeatureNode(name, oid, metadataId, bounds);
+            }
+        case TREE:
+            if (bounds == null || bounds.isNull()) {
+                return new TreeNode(name, oid, metadataId);
+            } else {
+                return new BoundedTreeNode(name, oid, metadataId, bounds);
+            }
+        default:
+            throw new IllegalArgumentException(
+                    "Only FEATURE and TREE nodes can be created, got type " + type);
         }
-        if (bounds.getWidth() == 0D && bounds.getHeight() == 0D) {
-            return new PointNode(name, oid, metadataId, type, bounds.getMinX(), bounds.getMinY());
-        }
-        return new BoundedNode(name, oid, metadataId, type, new Envelope(bounds));
     }
 
-    /**
-     * A Node with spatial hints.
-     */
-    private static class BoundedNode extends Node {
+    private static class TreeNode extends Node {
 
-        private Envelope bounds;
+        public TreeNode(String name, ObjectId oid, ObjectId mdid) {
+            super(name, oid, mdid);
+        }
 
-        public BoundedNode(String name, ObjectId oid, ObjectId metadataId, TYPE type,
-                Envelope bounds) {
-            super(name, oid, metadataId, type);
-            this.bounds = bounds;
+        @Override
+        public final TYPE getType() {
+            return TYPE.TREE;
+        }
+    }
+
+    private static final class BoundedTreeNode extends TreeNode {
+
+        // dim0(0),dim0(1),dim1(0),dim1(1)
+        private float[] bounds;
+
+        public BoundedTreeNode(String name, ObjectId oid, ObjectId mdid, Envelope env) {
+            super(name, oid, mdid);
+            Preconditions.checkArgument(!env.isNull());
+
+            if (env.getWidth() == 0 && env.getHeight() == 0) {
+                bounds = new float[2];
+            } else {
+                bounds = new float[4];
+                bounds[2] = (float) env.getMaxX();
+                bounds[3] = (float) env.getMaxY();
+            }
+            bounds[0] = (float) env.getMinX();
+            bounds[1] = (float) env.getMinY();
         }
 
         @Override
         public boolean intersects(Envelope env) {
-            return env.intersects(this.bounds);
+            if (env.isNull()) {
+                return false;
+            }
+            if (bounds.length == 2) {
+                return env.intersects(bounds[0], bounds[1]);
+            }
+            return !(env.getMinX() > bounds[2] || env.getMaxX() < bounds[0]
+                    || env.getMinY() > bounds[3] || env.getMaxY() < bounds[1]);
         }
 
         @Override
         public void expand(Envelope env) {
-            env.expandToInclude(this.bounds.getMinX(), this.bounds.getMinY());
-            env.expandToInclude(this.bounds.getMaxX(), this.bounds.getMaxY());
+            env.expandToInclude(bounds[0], bounds[1]);
+            if (bounds.length > 2) {
+                env.expandToInclude(bounds[2], bounds[3]);
+            }
         }
-
     }
 
-    /**
-     * A Node with spatial hints.
-     */
-    private static class PointNode extends Node {
+    private static class FeatureNode extends Node {
 
-        private final double x, y;
+        public FeatureNode(String name, ObjectId oid, ObjectId mdid) {
+            super(name, oid, mdid);
+        }
 
-        public PointNode(String name, ObjectId oid, ObjectId metadataId, TYPE type, double x,
-                double y) {
-            super(name, oid, metadataId, type);
-            this.x = x;
-            this.y = y;
+        @Override
+        public final TYPE getType() {
+            return TYPE.FEATURE;
+        }
+    }
+
+    private static final class BoundedFeatureNode extends FeatureNode {
+
+        // dim0(0),dim0(1),dim1(0),dim1(1)
+        private float[] bounds;
+
+        public BoundedFeatureNode(String name, ObjectId oid, ObjectId mdid, Envelope env) {
+            super(name, oid, mdid);
+            Preconditions.checkArgument(!env.isNull());
+
+            if (env.getWidth() == 0 && env.getHeight() == 0) {
+                bounds = new float[2];
+            } else {
+                bounds = new float[4];
+                bounds[2] = (float) env.getMaxX();
+                bounds[3] = (float) env.getMaxY();
+            }
+            bounds[0] = (float) env.getMinX();
+            bounds[1] = (float) env.getMinY();
         }
 
         @Override
         public boolean intersects(Envelope env) {
-            return env.intersects(x, y);
+            if (env.isNull()) {
+                return false;
+            }
+            if (bounds.length == 2) {
+                return env.intersects(bounds[0], bounds[1]);
+            }
+            return !(env.getMinX() > bounds[2] || env.getMaxX() < bounds[0]
+                    || env.getMinY() > bounds[3] || env.getMaxY() < bounds[1]);
         }
 
         @Override
         public void expand(Envelope env) {
-            env.expandToInclude(x, y);
+            env.expandToInclude(bounds[0], bounds[1]);
+            if (bounds.length > 2) {
+                env.expandToInclude(bounds[2], bounds[3]);
+            }
         }
     }
 }
