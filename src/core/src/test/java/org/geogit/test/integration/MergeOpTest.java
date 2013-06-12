@@ -32,6 +32,7 @@ import org.geogit.api.porcelain.ConfigOp;
 import org.geogit.api.porcelain.ConfigOp.ConfigAction;
 import org.geogit.api.porcelain.LogOp;
 import org.geogit.api.porcelain.MergeOp;
+import org.geogit.api.porcelain.MergeOp.MergeReport;
 import org.geogit.api.porcelain.NothingToCommitException;
 import org.geogit.api.porcelain.PullOp;
 import org.junit.Rule;
@@ -99,11 +100,11 @@ public class MergeOpTest extends RepositoryTestCase {
         // o - master - HEAD - Merge commit
 
         Ref branch1 = geogit.command(RefParse.class).setName("branch1").call().get();
-        RevCommit mergeCommit = geogit.command(MergeOp.class)
+        MergeReport mergeReport = geogit.command(MergeOp.class)
                 .addCommit(Suppliers.ofInstance(branch1.getObjectId()))
                 .setMessage("My merge message.").call();
 
-        RevTree mergedTree = repo.getTree(mergeCommit.getTreeId());
+        RevTree mergedTree = repo.getTree(mergeReport.getMergeCommit().getTreeId());
 
         String path = appendChild(pointsName, points2.getIdentifier().getID());
         assertTrue(repo.command(FindTreeChild.class).setParent(mergedTree).setChildPath(path)
@@ -211,12 +212,12 @@ public class MergeOpTest extends RepositoryTestCase {
 
         Ref branch1 = geogit.command(RefParse.class).setName("branch1").call().get();
         Ref branch2 = geogit.command(RefParse.class).setName("branch2").call().get();
-        final RevCommit mergeCommit = geogit.command(MergeOp.class)
+        final MergeReport mergeReport = geogit.command(MergeOp.class)
                 .addCommit(Suppliers.ofInstance(branch1.getObjectId()))
                 .addCommit(Suppliers.ofInstance(branch2.getObjectId()))
                 .setMessage("My merge message.").call();
 
-        RevTree mergedTree = repo.getTree(mergeCommit.getTreeId());
+        RevTree mergedTree = repo.getTree(mergeReport.getMergeCommit().getTreeId());
 
         String path = appendChild(pointsName, points1.getIdentifier().getID());
         assertTrue(repo.command(FindTreeChild.class).setParent(mergedTree).setChildPath(path)
@@ -312,10 +313,10 @@ public class MergeOpTest extends RepositoryTestCase {
         // o - master - HEAD - Merge commit
 
         Ref branch1 = geogit.command(RefParse.class).setName("branch1").call().get();
-        final RevCommit mergeCommit = geogit.command(MergeOp.class)
+        final MergeReport mergeReport = geogit.command(MergeOp.class)
                 .addCommit(Suppliers.ofInstance(branch1.getObjectId())).call();
 
-        RevTree mergedTree = repo.getTree(mergeCommit.getTreeId());
+        RevTree mergedTree = repo.getTree(mergeReport.getMergeCommit().getTreeId());
 
         String path = appendChild(pointsName, points2.getIdentifier().getID());
         assertTrue(repo.command(FindTreeChild.class).setParent(mergedTree).setChildPath(path)
@@ -433,10 +434,10 @@ public class MergeOpTest extends RepositoryTestCase {
         // o - master - HEAD - branch1 - Points 2 added
 
         Ref branch1 = geogit.command(RefParse.class).setName("branch1").call().get();
-        final RevCommit mergeCommit = geogit.command(MergeOp.class)
+        final MergeReport mergeReport = geogit.command(MergeOp.class)
                 .addCommit(Suppliers.ofInstance(branch1.getObjectId())).call();
 
-        RevTree mergedTree = repo.getTree(mergeCommit.getTreeId());
+        RevTree mergedTree = repo.getTree(mergeReport.getMergeCommit().getTreeId());
 
         String path = appendChild(pointsName, points1.getIdentifier().getID());
         assertTrue(repo.command(FindTreeChild.class).setParent(mergedTree).setChildPath(path)
@@ -489,10 +490,10 @@ public class MergeOpTest extends RepositoryTestCase {
         // o - master - HEAD - branch1 - Points 1 added
 
         Ref branch1 = geogit.command(RefParse.class).setName("branch1").call().get();
-        final RevCommit mergeCommit = geogit.command(MergeOp.class)
+        final MergeReport mergeReport = geogit.command(MergeOp.class)
                 .addCommit(Suppliers.ofInstance(branch1.getObjectId())).call();
 
-        RevTree mergedTree = repo.getTree(mergeCommit.getTreeId());
+        RevTree mergedTree = repo.getTree(mergeReport.getMergeCommit().getTreeId());
 
         String path = appendChild(pointsName, points1.getIdentifier().getID());
         assertTrue(repo.command(FindTreeChild.class).setParent(mergedTree).setChildPath(path)
@@ -887,8 +888,7 @@ public class MergeOpTest extends RepositoryTestCase {
 
         geogit.command(CheckoutOp.class).setSource("master").call();
         Ref branch = geogit.command(RefParse.class).setName("TestBranch").call().get();
-        RevCommit mergeCommit = geogit.command(MergeOp.class)
-                .addCommit(Suppliers.ofInstance(branch.getObjectId())).call();
+        geogit.command(MergeOp.class).addCommit(Suppliers.ofInstance(branch.getObjectId())).call();
 
         String path = appendChild(pointsName, points1.getIdentifier().getID());
 

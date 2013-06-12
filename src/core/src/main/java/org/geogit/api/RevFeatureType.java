@@ -5,7 +5,6 @@
 package org.geogit.api;
 
 import java.util.ArrayList;
-import java.util.Collections;
 
 import org.geogit.api.plumbing.HashObject;
 import org.opengis.feature.type.FeatureType;
@@ -14,7 +13,6 @@ import org.opengis.feature.type.PropertyDescriptor;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
-import com.google.common.collect.Ordering;
 
 /**
  * A binary representation of the state of a Feature Type.
@@ -24,22 +22,6 @@ public class RevFeatureType extends AbstractRevObject {
     private final FeatureType featureType;
 
     private ImmutableList<PropertyDescriptor> sortedDescriptors;
-
-    /**
-     * Provides a method of sorting {@link PropertyDescriptor}s by their names.
-     */
-    public static final Ordering<PropertyDescriptor> PROPERTY_ORDER = new Ordering<PropertyDescriptor>() {
-        @Override
-        public int compare(PropertyDescriptor left, PropertyDescriptor right) {
-            int c = Ordering.natural().nullsFirst()
-                    .compare(left.getName().getNamespaceURI(), right.getName().getNamespaceURI());
-            if (c == 0) {
-                c = Ordering.natural().nullsFirst()
-                        .compare(left.getName().getLocalPart(), right.getName().getLocalPart());
-            }
-            return c;
-        }
-    };
 
     public static RevFeatureType build(FeatureType type) {
         RevFeatureType unnamed = new RevFeatureType(type);
@@ -68,7 +50,6 @@ public class RevFeatureType extends AbstractRevObject {
         this.featureType = featureType;
         ArrayList<PropertyDescriptor> descriptors = Lists.newArrayList(this.featureType
                 .getDescriptors());
-        Collections.sort(descriptors, PROPERTY_ORDER);
         sortedDescriptors = ImmutableList.copyOf(descriptors);
 
     }

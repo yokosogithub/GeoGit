@@ -273,7 +273,7 @@ public final class BinaryPackedChanges {
             if (offset == len)
                 break;
         }
-        ObjectId id = new ObjectId(rawBytes);
+        ObjectId id = ObjectId.createNoClone(rawBytes);
         return id;
     }
 

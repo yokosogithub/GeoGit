@@ -5,6 +5,7 @@
 
 package org.geogit.cli.porcelain;
 
+import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkState;
 
 import java.io.IOException;
@@ -62,11 +63,17 @@ public class Conflicts extends AbstractCommand implements CLICommand {
     @Parameter(names = { "--diff" }, description = "Show diffs instead of full element descriptions")
     private boolean previewDiff;
 
+    @Parameter(names = { "--ids-only" }, description = "Just show ids of elements")
+    private boolean idsOnly;
+
     private GeoGIT geogit;
 
     @Override
     public void runInternal(GeogitCLI cli) throws Exception {
         checkState(cli.getGeogit() != null, "Not a geogit repository: " + cli.getPlatform().pwd());
+
+        checkArgument(!(idsOnly && previewDiff),
+                "Cannot use --diff and --ids-only at the same time");
 
         geogit = cli.getGeogit();
         List<Conflict> conflicts = geogit.command(ConflictsReadOp.class).call();
@@ -79,6 +86,8 @@ public class Conflicts extends AbstractCommand implements CLICommand {
             if (paths.isEmpty() || paths.contains(conflict.getPath())) {
                 if (previewDiff) {
                     printConflictDiff(conflict, cli.getConsole(), geogit);
+                } else if (idsOnly) {
+                    cli.getConsole().println(conflict.toString());
                 } else {
                     printConflict(conflict, cli.getConsole(), geogit);
                 }

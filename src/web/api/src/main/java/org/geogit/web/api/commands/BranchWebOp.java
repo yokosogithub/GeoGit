@@ -2,13 +2,13 @@ package org.geogit.web.api.commands;
 
 import java.util.List;
 
-import org.geogit.api.GeoGIT;
+import org.geogit.api.CommandLocator;
 import org.geogit.api.Ref;
 import org.geogit.api.porcelain.BranchListOp;
+import org.geogit.web.api.AbstractWebAPICommand;
 import org.geogit.web.api.CommandContext;
 import org.geogit.web.api.CommandResponse;
 import org.geogit.web.api.ResponseWriter;
-import org.geogit.web.api.WebAPICommand;
 
 import com.google.common.collect.Lists;
 
@@ -19,7 +19,7 @@ import com.google.common.collect.Lists;
  * Web interface for {@link BranchListOp}
  */
 
-public class BranchWebOp implements WebAPICommand {
+public class BranchWebOp extends AbstractWebAPICommand {
 
     private boolean list;
 
@@ -51,7 +51,7 @@ public class BranchWebOp implements WebAPICommand {
     @Override
     public void run(CommandContext context) {
         if (list) {
-            final GeoGIT geogit = context.getGeoGIT();
+            final CommandLocator geogit = this.getCommandLocator(context);
             final List<Ref> localBranches = geogit.command(BranchListOp.class).call();
             final List<Ref> remoteBranches;
             if (remotes) {

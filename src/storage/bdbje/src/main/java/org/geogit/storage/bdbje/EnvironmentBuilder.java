@@ -5,19 +5,19 @@
 package org.geogit.storage.bdbje;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URISyntaxException;
 import java.net.URL;
-import java.util.Properties;
 import java.util.concurrent.TimeUnit;
 
 import org.geogit.api.Platform;
 import org.geogit.api.plumbing.ResolveGeogitDir;
 
 import com.google.common.base.Throwables;
-import com.google.common.io.Closeables;
+import com.google.common.io.Files;
+import com.google.common.io.InputSupplier;
+import com.google.common.io.Resources;
 import com.google.inject.Inject;
 import com.google.inject.Provider;
 import com.sleepycat.je.CacheMode;
@@ -33,6 +33,8 @@ public class EnvironmentBuilder implements Provider<Environment> {
     private String[] path;
 
     private File absolutePath;
+
+    private boolean stagingDatabase;
 
     public EnvironmentBuilder setRelativePath(String... path) {
         this.path = path;
@@ -79,39 +81,58 @@ public class EnvironmentBuilder implements Provider<Environment> {
             throw new IllegalStateException("Unable to create Environment directory: '"
                     + storeDirectory.getAbsolutePath() + "'");
         }
-        EnvironmentConfig envCfg;
-        File envConfigFile = new File(storeDirectory, "environment.properties");
-        if (envConfigFile.exists()) {
-            // use the environment setttings
-            Properties jeProps = new Properties();
-            InputStream in = null;
-            try {
-                in = new FileInputStream(envConfigFile);
-                jeProps.load(in);
-            } catch (IOException e) {
-                throw Throwables.propagate(e);
-            } finally {
-                Closeables.closeQuietly(in);
+        {
+            File conf = new File(storeDirectory, "je.properties");
+            if (!conf.exists()) {
+                String resource = stagingDatabase ? "je.properties.staging"
+                        : "je.properties.objectdb";
+                InputSupplier<InputStream> from = Resources.newInputStreamSupplier(getClass()
+                        .getResource(resource));
+                try {
+                    Files.copy(from, conf);
+                } catch (IOException e) {
+                    Throwables.propagate(e);
+                }
             }
-            envCfg = new EnvironmentConfig(jeProps);
-        } else {
-            // use the default settings
-            envCfg = new EnvironmentConfig();
-            envCfg.setAllowCreate(true);
-            envCfg.setCacheMode(CacheMode.MAKE_COLD);
-            envCfg.setLockTimeout(1000, TimeUnit.MILLISECONDS);
-            envCfg.setDurability(Durability.COMMIT_WRITE_NO_SYNC);
-            envCfg.setSharedCache(true);
-            envCfg.setTransactional(true);
-            envCfg.setCachePercent(50);// Use up to 50% of the heap size for the shared db cache
-            envCfg.setConfigParam("je.log.fileMax", String.valueOf(256 * 1024 * 1024));
-            // check <http://www.oracle.com/technetwork/database/berkeleydb/je-faq-096044.html#35>
-            envCfg.setConfigParam("je.evictor.lruOnly", "false");
-            envCfg.setConfigParam("je.evictor.nodesPerScan", "100");
         }
+        EnvironmentConfig envCfg;
+
+        // use the default settings
+        envCfg = new EnvironmentConfig();
+        envCfg.setAllowCreate(true);
+        envCfg.setCacheMode(CacheMode.MAKE_COLD);
+        envCfg.setLockTimeout(1000, TimeUnit.MILLISECONDS);
+        envCfg.setDurability(Durability.COMMIT_WRITE_NO_SYNC);
+
+        // envCfg.setSharedCache(true);
+        //
+        // final boolean transactional = true;
+        // envCfg.setTransactional(transactional);
+        // envCfg.setCachePercent(75);// Use up to 50% of the heap size for the shared db cache
+        // envCfg.setConfigParam(EnvironmentConfig.LOG_FILE_MAX, String.valueOf(256 * 1024 * 1024));
+        // // check <http://www.oracle.com/technetwork/database/berkeleydb/je-faq-096044.html#35>
+        // envCfg.setConfigParam("je.evictor.lruOnly", "false");
+        // envCfg.setConfigParam("je.evictor.nodesPerScan", "100");
+        //
+        // envCfg.setConfigParam(EnvironmentConfig.CLEANER_MIN_UTILIZATION, "25");
+        // envCfg.setConfigParam(EnvironmentConfig.CHECKPOINTER_HIGH_PRIORITY, "true");
+        //
+        // envCfg.setConfigParam(EnvironmentConfig.CLEANER_THREADS, "4");
+        // // TODO: check whether we can set is locking to false
+        // envCfg.setConfigParam(EnvironmentConfig.ENV_IS_LOCKING, String.valueOf(transactional));
+        //
+        // envCfg.setConfigParam(EnvironmentConfig.ENV_RUN_CHECKPOINTER,
+        // String.valueOf(!transactional));
+        // envCfg.setConfigParam(EnvironmentConfig.ENV_RUN_CLEANER, String.valueOf(!transactional));
+        //
+        // // envCfg.setConfigParam(EnvironmentConfig.ENV_RUN_EVICTOR, "false");
 
         Environment env = new Environment(storeDirectory, envCfg);
         return env;
+    }
+
+    public void setIsStagingDatabase(boolean stagingDatabase) {
+        this.stagingDatabase = stagingDatabase;
     }
 
 }

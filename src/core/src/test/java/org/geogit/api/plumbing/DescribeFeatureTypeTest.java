@@ -9,6 +9,7 @@ import org.geogit.test.integration.RepositoryTestCase;
 import org.junit.Test;
 import org.opengis.feature.type.PropertyDescriptor;
 
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 
 public class DescribeFeatureTypeTest extends RepositoryTestCase {
@@ -36,8 +37,7 @@ public class DescribeFeatureTypeTest extends RepositoryTestCase {
     public void testDescribeFeatureType() throws Exception {
         DescribeFeatureType describe = new DescribeFeatureType();
 
-        ImmutableSortedSet<PropertyDescriptor> properties = describe.setFeatureType(featureType)
-                .call();
+        ImmutableSet<PropertyDescriptor> properties = describe.setFeatureType(featureType).call();
 
         for (PropertyDescriptor prop : properties) {
             assertTrue(pointsType.getDescriptors().contains(prop));

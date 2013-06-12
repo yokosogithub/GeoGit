@@ -22,6 +22,7 @@ import org.geogit.api.porcelain.CheckoutOp;
 import org.geogit.api.porcelain.CommitOp;
 import org.geogit.api.porcelain.LogOp;
 import org.geogit.api.porcelain.MergeOp;
+import org.geogit.api.porcelain.MergeOp.MergeReport;
 import org.geotools.util.Range;
 import org.junit.Rule;
 import org.junit.Test;
@@ -367,9 +368,11 @@ public class LogOpTest extends RepositoryTestCase {
         // o - master - HEAD - Merge commit
 
         Ref branch1 = geogit.command(RefParse.class).setName("branch1").call().get();
-        RevCommit mergeCommit = geogit.command(MergeOp.class)
+        MergeReport mergeReport = geogit.command(MergeOp.class)
                 .addCommit(Suppliers.ofInstance(branch1.getObjectId()))
                 .setMessage("My merge message.").call();
+
+        RevCommit mergeCommit = mergeReport.getMergeCommit();
 
         Iterator<RevCommit> iterator = logOp.call();
         assertNotNull(iterator);

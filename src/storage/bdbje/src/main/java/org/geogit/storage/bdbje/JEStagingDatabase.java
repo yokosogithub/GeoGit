@@ -110,6 +110,7 @@ public class JEStagingDatabase implements ObjectDatabase, StagingDatabase {
         this.repositoryDb = repositoryDb;
         this.envProvider = envBuilder;
         this.platform = platform;
+        this.envProvider.setIsStagingDatabase(true);
     }
 
     @Override

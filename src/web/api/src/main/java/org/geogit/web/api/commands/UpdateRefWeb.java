@@ -1,6 +1,6 @@
 package org.geogit.web.api.commands;
 
-import org.geogit.api.GeoGIT;
+import org.geogit.api.CommandLocator;
 import org.geogit.api.ObjectId;
 import org.geogit.api.Ref;
 import org.geogit.api.SymRef;
@@ -8,11 +8,11 @@ import org.geogit.api.plumbing.RefParse;
 import org.geogit.api.plumbing.RevParse;
 import org.geogit.api.plumbing.UpdateRef;
 import org.geogit.api.plumbing.UpdateSymRef;
+import org.geogit.web.api.AbstractWebAPICommand;
 import org.geogit.web.api.CommandContext;
 import org.geogit.web.api.CommandResponse;
 import org.geogit.web.api.CommandSpecException;
 import org.geogit.web.api.ResponseWriter;
-import org.geogit.web.api.WebAPICommand;
 
 import com.google.common.base.Optional;
 
@@ -22,7 +22,7 @@ import com.google.common.base.Optional;
  * Web interface for {@link UpdateRef}, {@link UpdateSymRef}
  */
 
-public class UpdateRefWeb implements WebAPICommand {
+public class UpdateRefWeb extends AbstractWebAPICommand {
 
     private String name;
 
@@ -73,7 +73,7 @@ public class UpdateRefWeb implements WebAPICommand {
                     "Nothing specified to update with, must specify either deletion or new value to update to.");
         }
 
-        final GeoGIT geogit = context.getGeoGIT();
+        final CommandLocator geogit = this.getCommandLocator(context);
         Optional<Ref> ref;
 
         try {

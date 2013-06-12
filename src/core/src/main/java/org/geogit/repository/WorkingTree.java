@@ -22,6 +22,7 @@ import org.geogit.api.Ref;
 import org.geogit.api.RevFeature;
 import org.geogit.api.RevFeatureBuilder;
 import org.geogit.api.RevFeatureType;
+import org.geogit.api.RevObject;
 import org.geogit.api.RevObject.TYPE;
 import org.geogit.api.RevTree;
 import org.geogit.api.RevTreeBuilder;
@@ -43,8 +44,10 @@ import org.opengis.feature.Feature;
 import org.opengis.feature.type.FeatureType;
 import org.opengis.feature.type.Name;
 import org.opengis.filter.Filter;
+import org.opengis.geometry.BoundingBox;
 import org.opengis.util.ProgressListener;
 
+import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
@@ -417,47 +420,117 @@ public class WorkingTree {
      * @param listener a {@link ProgressListener} for the current process
      * @param insertedTarget if provided, inserted features will be added to this list
      * @param collectionSize number of features to add
+     * @throws Exception
      */
     public void insert(final String treePath, Iterator<? extends Feature> features,
-            ProgressListener listener, @Nullable List<Node> insertedTarget,
-            @Nullable Integer collectionSize) {
+            final ProgressListener listener, @Nullable final List<Node> insertedTarget,
+            @Nullable final Integer collectionSize) {
 
         checkArgument(collectionSize == null || collectionSize.intValue() > -1);
 
-        Optional<NodeRef> typeTreeRef = commandLocator.command(FindTreeChild.class).setIndex(true)
-                .setParent(getTree()).setChildPath(treePath).call();
-
         final NodeRef treeRef;
+        {
+            Optional<NodeRef> typeTreeRef = commandLocator.command(FindTreeChild.class)
+                    .setIndex(true).setParent(getTree()).setChildPath(treePath).call();
 
-        if (typeTreeRef.isPresent()) {
-            treeRef = typeTreeRef.get();
-        } else {
-            Preconditions.checkArgument(features.hasNext(),
-                    "Can't create new FeatureType tree %s as no features were provided, "
-                            + "try using createTypeTree() first", treePath);
+            if (typeTreeRef.isPresent()) {
+                treeRef = typeTreeRef.get();
+            } else {
+                Preconditions.checkArgument(features.hasNext(),
+                        "Can't create new FeatureType tree %s as no features were provided, "
+                                + "try using createTypeTree() first", treePath);
 
-            features = Iterators.peekingIterator(features);
+                features = Iterators.peekingIterator(features);
 
-            FeatureType featureType = ((PeekingIterator<Feature>) features).peek().getType();
-            treeRef = createTypeTree(treePath, featureType);
+                FeatureType featureType = ((PeekingIterator<Feature>) features).peek().getType();
+                treeRef = createTypeTree(treePath, featureType);
+            }
         }
 
-        final Integer size = collectionSize == null || collectionSize.intValue() < 1 ? null
-                : collectionSize.intValue();
+        final ObjectId defaultMetadataId = treeRef.getMetadataId();
+        final Map<Name, ObjectId> revFeatureTypes = Maps.newHashMap();
 
-        RevTreeBuilder parentTree = commandLocator.command(FindOrCreateSubtree.class)
+        final RevTreeBuilder typeTreeBuilder = commandLocator.command(FindOrCreateSubtree.class)
                 .setIndex(true).setParent(Suppliers.ofInstance(Optional.of(getTree())))
                 .setChildPath(treePath).call().builder(indexDatabase);
 
-        putInDatabase(treePath, features, listener, size, insertedTarget, parentTree,
-                treeRef.getMetadataId());
+        Iterator<RevObject> objects = Iterators.transform(features,
+                new Function<Feature, RevObject>() {
 
-        RevTree newTypeTree = parentTree.build();
+                    private RevFeatureBuilder builder = new RevFeatureBuilder();
+
+                    private int count;
+
+                    @Override
+                    public RevFeature apply(Feature feature) {
+                        final RevFeature revFeature = builder.build(feature);
+                        FeatureType featureType = feature.getType();
+                        ObjectId revFeatureTypeId = revFeatureTypes.get(featureType.getName());
+
+                        if (null == revFeatureTypeId) {
+                            RevFeatureType newFeatureType = RevFeatureType.build(featureType);
+                            revFeatureTypeId = newFeatureType.getId();
+                            indexDatabase.put(newFeatureType);
+                            revFeatureTypes.put(feature.getType().getName(), revFeatureTypeId);
+                        }
+
+                        ObjectId metadataId = defaultMetadataId.equals(revFeatureTypeId) ? ObjectId.NULL
+                                : revFeatureTypeId;
+                        Node node = createNode(metadataId, feature, revFeature);
+
+                        if (insertedTarget != null) {
+                            insertedTarget.add(node);
+                        }
+                        typeTreeBuilder.put(node);
+
+                        count++;
+                        if (collectionSize != null) {
+                            listener.progress((float) (count * 100) / collectionSize.intValue());
+                        }
+                        return revFeature;
+                    }
+
+                });
+
+        // System.err.println("\n inserting rev features...");
+        // Stopwatch sw = new Stopwatch().start();
+        listener.started();
+        indexDatabase.putAll(objects);
+        listener.complete();
+        // sw.stop();
+        // System.err.printf("\n%d features inserted in %s", collectionSize, sw);
+
+        // System.err.println("\nBuilding final tree...");
+        // sw.reset().start();
+        RevTree newFeatureTree = typeTreeBuilder.build();
+        indexDatabase.put(newFeatureTree);
+        // sw.stop();
+        // System.err.println("\nfinal tree built in " + sw);
+
         ObjectId newTree = commandLocator.command(WriteBack.class).setAncestor(getTreeSupplier())
                 .setChildPath(treePath).setMetadataId(treeRef.getMetadataId()).setToIndex(true)
-                .setTree(newTypeTree).call();
+                .setTree(newFeatureTree).call();
 
         updateWorkHead(newTree);
+    }
+
+    private Node createNode(final ObjectId metadataId, Feature feature, final RevFeature revFeature) {
+        final String name;
+        final ObjectId oid;
+        final Envelope env;
+        name = feature.getIdentifier().getID();
+        BoundingBox bounds = feature.getBounds();
+        if (bounds instanceof ReferencedEnvelope) {
+            env = (Envelope) bounds;
+        } else if (bounds != null) {
+            env = new Envelope(bounds.getMinX(), bounds.getMaxX(), bounds.getMinY(),
+                    bounds.getMaxY());
+        } else {
+            env = null;
+        }
+        oid = revFeature.getId();
+        Node node = Node.create(name, oid, metadataId, TYPE.FEATURE, env);
+        return node;
     }
 
     /**

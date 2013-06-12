@@ -1,18 +1,21 @@
 package org.geogit.web.api;
 
+import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
+import java.util.UUID;
 
 import javax.annotation.Nullable;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamWriter;
 
 import org.codehaus.jettison.AbstractXMLStreamWriter;
+import org.geogit.api.CommandLocator;
 import org.geogit.api.FeatureBuilder;
-import org.geogit.api.GeoGIT;
+import org.geogit.api.FeatureInfo;
 import org.geogit.api.GeogitSimpleFeature;
 import org.geogit.api.NodeRef;
 import org.geogit.api.ObjectId;
@@ -20,25 +23,35 @@ import org.geogit.api.Ref;
 import org.geogit.api.Remote;
 import org.geogit.api.RevCommit;
 import org.geogit.api.RevFeature;
+import org.geogit.api.RevFeatureBuilder;
 import org.geogit.api.RevFeatureType;
 import org.geogit.api.RevObject;
 import org.geogit.api.RevPerson;
 import org.geogit.api.RevTag;
+import org.geogit.api.RevTree;
 import org.geogit.api.SymRef;
 import org.geogit.api.plumbing.DiffIndex;
 import org.geogit.api.plumbing.DiffWorkTree;
+import org.geogit.api.plumbing.FindTreeChild;
 import org.geogit.api.plumbing.RevObjectParse;
 import org.geogit.api.plumbing.diff.AttributeDiff;
 import org.geogit.api.plumbing.diff.AttributeDiff.TYPE;
 import org.geogit.api.plumbing.diff.DiffEntry;
 import org.geogit.api.plumbing.diff.DiffEntry.ChangeType;
+import org.geogit.api.plumbing.merge.Conflict;
+import org.geogit.api.plumbing.merge.MergeScenarioReport;
+import org.geogit.storage.GtEntityType;
 import org.geogit.web.api.commands.BranchWebOp;
 import org.geogit.web.api.commands.LsTree;
 import org.geogit.web.api.commands.RefParseWeb;
 import org.geogit.web.api.commands.RemoteWebOp;
 import org.geogit.web.api.commands.TagWebOp;
 import org.geogit.web.api.commands.UpdateRefWeb;
+import org.geotools.referencing.CRS;
+import org.opengis.feature.type.GeometryType;
 import org.opengis.feature.type.PropertyDescriptor;
+import org.opengis.feature.type.PropertyType;
+import org.opengis.referencing.crs.CoordinateReferenceSystem;
 
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
@@ -174,6 +187,26 @@ public class ResponseWriter {
     public void writeUnstaged(DiffWorkTree setFilter, int start, int length)
             throws XMLStreamException {
         writeDiffEntries("unstaged", start, length, setFilter.call());
+    }
+
+    public void writeUnmerged(List<Conflict> conflicts, int start, int length)
+            throws XMLStreamException {
+        Iterator<Conflict> entries = conflicts.iterator();
+
+        advance(entries, start);
+        if (length < 0) {
+            length = Integer.MAX_VALUE;
+        }
+        for (int i = 0; i < length && entries.hasNext(); i++) {
+            Conflict entry = entries.next();
+            out.writeStartElement("unmerged");
+            writeElement("changeType", "CONFLICT");
+            writeElement("path", entry.getPath());
+            writeElement("ours", entry.getOurs().toString());
+            writeElement("theirs", entry.getTheirs().toString());
+            writeElement("ancestor", entry.getAncestor().toString());
+            out.writeEndElement();
+        }
     }
 
     @SuppressWarnings("rawtypes")
@@ -463,13 +496,13 @@ public class ResponseWriter {
     }
 
     /**
-     * Writes the response for all feature changes between two commits to the stream.
+     * Writes the response for a set of diffs while also supplying the geometry.
      * 
-     * @param features the features that changed
-     * @param changes the change type of each feature
+     * @param geogit - a CommandLocator to call commands from
+     * @param diff - a DiffEntry iterator to build the response from
      * @throws XMLStreamException
      */
-    public void writeGeometryChanges(final GeoGIT geogit, Iterator<DiffEntry> diff)
+    public void writeGeometryChanges(final CommandLocator geogit, Iterator<DiffEntry> diff)
             throws XMLStreamException {
 
         Iterator<GeometryChange> changeIterator = Iterators.transform(diff,
@@ -479,6 +512,7 @@ public class ResponseWriter {
                         Optional<RevObject> feature = Optional.absent();
                         Optional<RevObject> type = Optional.absent();
                         String path = null;
+                        String crsCode = null;
                         GeometryChange change = null;
                         if (input.changeType() == ChangeType.ADDED
                                 || input.changeType() == ChangeType.MODIFIED) {
@@ -497,11 +531,31 @@ public class ResponseWriter {
                         }
                         if (feature.isPresent() && feature.get() instanceof RevFeature
                                 && type.isPresent() && type.get() instanceof RevFeatureType) {
+                            RevFeatureType featureType = (RevFeatureType) type.get();
+                            Collection<PropertyDescriptor> attribs = featureType.type()
+                                    .getDescriptors();
+
+                            for (PropertyDescriptor attrib : attribs) {
+                                PropertyType attrType = attrib.getType();
+                                GtEntityType entityType = GtEntityType.fromBinding(attrType
+                                        .getBinding());
+                                if (entityType.isGeometry() && attrType instanceof GeometryType) {
+                                    GeometryType gt = (GeometryType) attrType;
+                                    CoordinateReferenceSystem crs = gt
+                                            .getCoordinateReferenceSystem();
+                                    if (crs != null) {
+                                        crsCode = CRS.toSRS(crs);
+                                    }
+                                    break;
+                                }
+                            }
+
                             RevFeature revFeature = (RevFeature) feature.get();
-                            FeatureBuilder builder = new FeatureBuilder((RevFeatureType) type.get());
+                            FeatureBuilder builder = new FeatureBuilder(featureType);
                             GeogitSimpleFeature simpleFeature = (GeogitSimpleFeature) builder
                                     .build(revFeature.getId().toString(), revFeature);
-                            change = new GeometryChange(simpleFeature, input.changeType(), path);
+                            change = new GeometryChange(simpleFeature, input.changeType(), path,
+                                    crsCode);
                         }
                         return change;
                     }
@@ -522,10 +576,231 @@ public class ResponseWriter {
                         break;
                     }
                 }
+                if (next.getCRS() != null) {
+                    writeElement("crs", next.getCRS());
+                }
                 out.writeEndElement();
             }
         }
 
+    }
+
+    /**
+     * Writes the response for a set of conflicts while also supplying the geometry.
+     * 
+     * @param geogit - a CommandLocator to call commands from
+     * @param conflicts - a Conflict iterator to build the response from
+     * @throws XMLStreamException
+     */
+    public void writeConflicts(final CommandLocator geogit, Iterator<Conflict> conflicts,
+            final ObjectId ours, final ObjectId theirs) throws XMLStreamException {
+        Iterator<GeometryConflict> conflictIterator = Iterators.transform(conflicts,
+                new Function<Conflict, GeometryConflict>() {
+                    @Override
+                    public GeometryConflict apply(Conflict input) {
+                        ObjectId commitId = ours;
+                        if (input.getOurs().equals(ObjectId.NULL)) {
+                            commitId = theirs;
+                        }
+                        Optional<RevObject> object = geogit.command(RevObjectParse.class)
+                                .setObjectId(commitId).call();
+                        RevCommit commit = null;
+                        if (object.isPresent() && object.get() instanceof RevCommit) {
+                            commit = (RevCommit) object.get();
+                        } else {
+                            throw new CommandSpecException("Couldn't resolve id: "
+                                    + commitId.toString() + " to a commit");
+                        }
+
+                        object = geogit.command(RevObjectParse.class)
+                                .setObjectId(commit.getTreeId()).call();
+                        Optional<NodeRef> node = Optional.absent();
+                        if (object.isPresent()) {
+                            RevTree tree = (RevTree) object.get();
+                            node = geogit.command(FindTreeChild.class).setParent(tree)
+                                    .setChildPath(input.getPath()).call();
+                        } else {
+                            throw new CommandSpecException("Couldn't resolve commit's treeId");
+                        }
+
+                        RevFeatureType type = null;
+                        RevFeature feature = null;
+
+                        if (node.isPresent()) {
+                            object = geogit.command(RevObjectParse.class)
+                                    .setObjectId(node.get().getMetadataId()).call();
+                            if (object.isPresent() && object.get() instanceof RevFeatureType) {
+                                type = (RevFeatureType) object.get();
+                            } else {
+                                throw new CommandSpecException(
+                                        "Couldn't resolve newCommit's featureType");
+                            }
+                            object = geogit.command(RevObjectParse.class)
+                                    .setObjectId(node.get().objectId()).call();
+                            if (object.isPresent() && object.get() instanceof RevFeature) {
+                                feature = (RevFeature) object.get();
+                            } else {
+                                throw new CommandSpecException(
+                                        "Couldn't resolve newCommit's feature");
+                            }
+                        }
+
+                        GeometryConflict conflict = null;
+
+                        if (feature != null && type != null) {
+                            String crsCode = null;
+                            Collection<PropertyDescriptor> attribs = type.type().getDescriptors();
+
+                            for (PropertyDescriptor attrib : attribs) {
+                                PropertyType attrType = attrib.getType();
+                                GtEntityType entityType = GtEntityType.fromBinding(attrType
+                                        .getBinding());
+                                if (entityType.isGeometry() && attrType instanceof GeometryType) {
+                                    GeometryType gt = (GeometryType) attrType;
+                                    CoordinateReferenceSystem crs = gt
+                                            .getCoordinateReferenceSystem();
+
+                                    if (crs != null) {
+                                        crsCode = CRS.toSRS(crs);
+                                    }
+                                    break;
+                                }
+                            }
+
+                            FeatureBuilder builder = new FeatureBuilder(type);
+                            GeogitSimpleFeature simpleFeature = (GeogitSimpleFeature) builder
+                                    .build(feature.getId().toString(), feature);
+                            Geometry geom = null;
+                            List<Object> attributes = simpleFeature.getAttributes();
+                            for (Object attribute : attributes) {
+                                if (attribute instanceof Geometry) {
+                                    geom = (Geometry) attribute;
+                                    break;
+                                }
+                            }
+                            conflict = new GeometryConflict(input, geom, crsCode);
+                        }
+                        return conflict;
+                    }
+                });
+
+        while (conflictIterator.hasNext()) {
+            GeometryConflict next = conflictIterator.next();
+            if (next != null) {
+                out.writeStartElement("Feature");
+                writeElement("change", "CONFLICT");
+                writeElement("id", next.getConflict().getPath());
+                writeElement("geometry", next.getGeometry().toText());
+                if (next.getCRS() != null) {
+                    writeElement("crs", next.getCRS());
+                }
+                out.writeEndElement();
+            }
+        }
+    }
+
+    /**
+     * Writes the response for a set of merged features while also supplying the geometry.
+     * 
+     * @param geogit - a CommandLocator to call commands from
+     * @param features - a FeatureInfo iterator to build the response from
+     * @throws XMLStreamException
+     */
+    public void writeMerged(final CommandLocator geogit, Iterator<FeatureInfo> features)
+            throws XMLStreamException {
+        Iterator<GeometryChange> changeIterator = Iterators.transform(features,
+                new Function<FeatureInfo, GeometryChange>() {
+                    @Override
+                    public GeometryChange apply(FeatureInfo input) {
+                        GeometryChange change = null;
+                        RevFeatureBuilder revBuilder = new RevFeatureBuilder();
+                        RevFeature revFeature = revBuilder.build(input.getFeature());
+                        RevFeatureType featureType = input.getFeatureType();
+                        Collection<PropertyDescriptor> attribs = featureType.type()
+                                .getDescriptors();
+                        String crsCode = null;
+
+                        for (PropertyDescriptor attrib : attribs) {
+                            PropertyType attrType = attrib.getType();
+                            GtEntityType entityType = GtEntityType.fromBinding(attrType
+                                    .getBinding());
+                            if (entityType.isGeometry() && attrType instanceof GeometryType) {
+                                GeometryType gt = (GeometryType) attrType;
+                                CoordinateReferenceSystem crs = gt.getCoordinateReferenceSystem();
+                                if (crs != null) {
+                                    crsCode = CRS.toSRS(crs);
+                                }
+                                break;
+                            }
+                        }
+
+                        FeatureBuilder builder = new FeatureBuilder(featureType);
+                        GeogitSimpleFeature simpleFeature = (GeogitSimpleFeature) builder.build(
+                                revFeature.getId().toString(), revFeature);
+                        change = new GeometryChange(simpleFeature, ChangeType.MODIFIED, input
+                                .getPath(), crsCode);
+                        return change;
+                    }
+                });
+
+        while (changeIterator.hasNext()) {
+            GeometryChange next = changeIterator.next();
+            if (next != null) {
+                GeogitSimpleFeature feature = next.getFeature();
+                out.writeStartElement("Feature");
+                writeElement("change", "MERGED");
+                writeElement("id", next.getPath());
+                List<Object> attributes = feature.getAttributes();
+                for (Object attribute : attributes) {
+                    if (attribute instanceof Geometry) {
+                        writeElement("geometry", ((Geometry) attribute).toText());
+                        break;
+                    }
+                }
+                if (next.getCRS() != null) {
+                    writeElement("crs", next.getCRS());
+                }
+                out.writeEndElement();
+            }
+        }
+    }
+
+    /**
+     * Writes the response for a merge dry-run, contains unconflicted, conflicted and merged
+     * features.
+     * 
+     * @param report - the MergeScenarioReport containing all the merge results
+     * @param transaction - a CommandLocator to call commands from
+     * @throws XMLStreamException
+     */
+    public void writeMergeResponse(MergeScenarioReport report, CommandLocator transaction,
+            ObjectId ours, ObjectId theirs, ObjectId ancestor) throws XMLStreamException {
+        out.writeStartElement("Merge");
+        writeElement("ours", ours.toString());
+        writeElement("theirs", theirs.toString());
+        writeElement("ancestor", ancestor.toString());
+        if (report.getConflicts().size() > 0) {
+            writeElement("conflicts", Integer.toString(report.getConflicts().size()));
+        }
+        writeGeometryChanges(transaction, report.getUnconflicted().iterator());
+        writeConflicts(transaction, report.getConflicts().iterator(), ours, theirs);
+        writeMerged(transaction, report.getMerged().iterator());
+        out.writeEndElement();
+    }
+
+    /**
+     * Writes the id of the transaction created or nothing if it was ended successfully.
+     * 
+     * @param transactionId - the id of the transaction or null if the transaction was closed
+     *        successfully
+     * @throws XMLStreamException
+     */
+    public void writeTransactionId(UUID transactionId) throws XMLStreamException {
+        out.writeStartElement("Transaction");
+        if (transactionId != null) {
+            writeElement("ID", transactionId.toString());
+        }
+        out.writeEndElement();
     }
 
     private class GeometryChange {
@@ -535,10 +810,14 @@ public class ResponseWriter {
 
         private String path;
 
-        public GeometryChange(GeogitSimpleFeature feature, ChangeType changeType, String path) {
+        private String crs;
+
+        public GeometryChange(GeogitSimpleFeature feature, ChangeType changeType, String path,
+                String crs) {
             this.feature = feature;
             this.changeType = changeType;
             this.path = path;
+            this.crs = crs;
         }
 
         public GeogitSimpleFeature getFeature() {
@@ -551,6 +830,36 @@ public class ResponseWriter {
 
         public String getPath() {
             return path;
+        }
+
+        public String getCRS() {
+            return crs;
+        }
+    }
+
+    private class GeometryConflict {
+        private Conflict conflict;
+
+        private Geometry geom;
+
+        private String crs;
+
+        public GeometryConflict(Conflict conflict, Geometry geom, String crs) {
+            this.conflict = conflict;
+            this.geom = geom;
+            this.crs = crs;
+        }
+
+        public Conflict getConflict() {
+            return conflict;
+        }
+
+        public Geometry getGeometry() {
+            return geom;
+        }
+
+        public String getCRS() {
+            return crs;
         }
     }
 }

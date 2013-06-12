@@ -234,10 +234,6 @@ public class GeoServerRESTIntegrationTest extends GeoServerSystemTestSupport {
         final String url = resource;
 
         RevObject expected = geogit.command(RevObjectParse.class).setObjectId(oid).call().get();
-        geogit.command(RevObjectParse.class)
-                .setObjectId(ObjectId.valueOf("e56a8b48066e918fc0a2a3c117500a8da59b6519")).call()
-                .get();
-        // fail(oid.toString());
 
         JsonObject requestBody = new JsonObject();
         JsonArray wantList = new JsonArray();

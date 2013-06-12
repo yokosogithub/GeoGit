@@ -273,10 +273,12 @@ public class RevTreeBuilderTest extends RepositoryTestCase {
         int c = 0;
         for (int i = from; i != breakAt; i += increment, c++) {
             addNode(tree, i);
-            if ((c + 1) % (numEntries / 10) == 0) {
-                System.err.print("#" + (c + 1));
-            } else if ((c + 1) % (numEntries / 100) == 0) {
-                System.err.print('.');
+            if (numEntries > 100) {
+                if ((c + 1) % (numEntries / 10) == 0) {
+                    System.err.print("#" + (c + 1));
+                } else if ((c + 1) % (numEntries / 100) == 0) {
+                    System.err.print('.');
+                }
             }
         }
         System.err.print('\n');
