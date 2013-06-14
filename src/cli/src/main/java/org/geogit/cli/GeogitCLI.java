@@ -283,6 +283,9 @@ public class GeogitCLI {
                     // command throwing it should have taken care of outputting an error message or
                     // providing user interaction
                     consoleReader.flush();
+                } else {
+                    consoleReader.println(e.getMessage());
+                    consoleReader.flush();
                 }
             } catch (IOException ioe) {
                 ioe.printStackTrace();
