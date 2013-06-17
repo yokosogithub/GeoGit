@@ -13,6 +13,7 @@ import org.geogit.api.Ref;
 import org.geogit.api.SymRef;
 import org.geogit.api.porcelain.CheckoutOp;
 import org.geogit.api.porcelain.MergeOp;
+import org.geogit.api.porcelain.NothingToCommitException;
 import org.geogit.api.porcelain.RebaseOp;
 
 import com.google.common.base.Optional;
@@ -118,9 +119,13 @@ public class TransactionEnd extends AbstractGeoGitOp<Boolean> {
                             // sync transactions have to use merge to prevent divergent history
                             transaction.command(CheckoutOp.class).setSource(ref.getName())
                                     .setForce(true).call();
+                            try {
                             transaction.command(MergeOp.class)
                                     .addCommit(Suppliers.ofInstance(repoRef.get().getObjectId()))
                                     .setTheirs(true).call();
+                            } catch (NothingToCommitException e) {
+                            	// The repo commit is already in our history, this is a fast forward.
+                            }
                             updatedRef = transaction.command(RefParse.class).setName(ref.getName())
                                     .call().get();
                         }

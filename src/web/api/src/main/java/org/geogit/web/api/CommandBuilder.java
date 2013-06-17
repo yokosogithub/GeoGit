@@ -280,7 +280,7 @@ public class CommandBuilder {
         FetchWebOp command = new FetchWebOp();
         command.setFetchAll(Boolean.valueOf(options.getFirstValue("all", "false")));
         command.setPrune(Boolean.valueOf(options.getFirstValue("prune", "false")));
-        command.setRemotes(Arrays.asList(options.getValuesArray("remote")));
+        command.setRemote(options.getFirstValue("remote"));
         return command;
     }
 
@@ -371,6 +371,9 @@ public class CommandBuilder {
     static CheckoutWebOp buildCheckout(ParameterSet options) {
         CheckoutWebOp command = new CheckoutWebOp();
         command.setName(options.getFirstValue("branch", null));
+        command.setOurs(Boolean.valueOf(options.getFirstValue("ours", "false")));
+        command.setTheirs(Boolean.valueOf(options.getFirstValue("theirs", "false")));
+        command.setPath(options.getFirstValue("path", null));
         return command;
     }
 }

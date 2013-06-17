@@ -134,6 +134,7 @@ public class MergeOp extends AbstractGeoGitOp<MergeOp.MergeReport> {
         final Optional<Ref> currHead = command(RefParse.class).setName(Ref.HEAD).call();
         Preconditions.checkState(currHead.isPresent(), "Repository has no HEAD, can't rebase.");
         Ref headRef = currHead.get();
+        ObjectId oursId = headRef.getObjectId();
         // Preconditions.checkState(currHead.get() instanceof SymRef,
         // "Can't rebase from detached HEAD");
         // SymRef headRef = (SymRef) currHead.get();
@@ -145,6 +146,8 @@ public class MergeOp extends AbstractGeoGitOp<MergeOp.MergeReport> {
         boolean changed = false;
 
         Optional<MergeScenarioReport> mergeScenario = Optional.absent();
+
+        List<CommitAncestorPair> pairs = Lists.newArrayList();
 
         boolean hasConflictsOrAutomerge;
         List<RevCommit> revCommits = Lists.newArrayList();
@@ -170,6 +173,11 @@ public class MergeOp extends AbstractGeoGitOp<MergeOp.MergeReport> {
                     + commitId.toString());
 
             final RevCommit targetCommit = repository.getCommit(commitId);
+            Optional<RevCommit> ancestorCommit = command(FindCommonAncestor.class)
+                    .setLeft(headCommit).setRight(targetCommit).call();
+
+            pairs.add(new CommitAncestorPair(commitId, ancestorCommit.get().getId()));
+
             mergeScenario = Optional.of(command(ReportMergeScenarioOp.class)
                     .setMergeIntoCommit(headCommit).setToMergeCommit(targetCommit).call());
 
@@ -260,6 +268,9 @@ public class MergeOp extends AbstractGeoGitOp<MergeOp.MergeReport> {
 
                 Optional<RevCommit> ancestorCommit = command(FindCommonAncestor.class)
                         .setLeft(headCommit).setRight(targetCommit).call();
+
+                pairs.add(new CommitAncestorPair(commitId, ancestorCommit.get().getId()));
+
                 subProgress.progress(10.f);
 
                 Preconditions.checkState(ancestorCommit.isPresent(),
@@ -314,7 +325,8 @@ public class MergeOp extends AbstractGeoGitOp<MergeOp.MergeReport> {
 
         RevCommit mergeCommit = commit(fastForward);
 
-        MergeReport result = new MergeReport(mergeCommit, mergeScenario);
+        MergeReport result = new MergeReport(mergeCommit, mergeScenario, oursId,
+                pairs);
 
         return result;
 
@@ -359,22 +371,56 @@ public class MergeOp extends AbstractGeoGitOp<MergeOp.MergeReport> {
         return mergeCommit;
     }
 
+    public class CommitAncestorPair {
+        private ObjectId theirs;
+
+        private ObjectId ancestor;
+
+        public ObjectId getTheirs() {
+            return theirs;
+        }
+
+        public ObjectId getAncestor() {
+            return ancestor;
+        }
+
+        public CommitAncestorPair(ObjectId theirs, ObjectId ancestor) {
+            this.theirs = theirs;
+            this.ancestor = ancestor;
+        }
+    }
+
     public class MergeReport {
         private RevCommit mergeCommit;
 
         private Optional<MergeScenarioReport> report;
 
+        private ObjectId ours;
+
+        private List<CommitAncestorPair> pairs;
+
         public RevCommit getMergeCommit() {
             return mergeCommit;
+        }
+
+        public ObjectId getOurs() {
+            return ours;
+        }
+
+        public List<CommitAncestorPair> getPairs() {
+            return pairs;
         }
 
         public Optional<MergeScenarioReport> getReport() {
             return report;
         }
 
-        public MergeReport(RevCommit mergeCommit, Optional<MergeScenarioReport> report) {
+        public MergeReport(RevCommit mergeCommit, Optional<MergeScenarioReport> report,
+                ObjectId ours, List<CommitAncestorPair> pairs) {
             this.mergeCommit = mergeCommit;
             this.report = report;
+            this.ours = ours;
+            this.pairs = pairs;
         }
     }
 }

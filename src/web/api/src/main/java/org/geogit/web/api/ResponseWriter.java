@@ -40,10 +40,10 @@ import org.geogit.api.plumbing.diff.DiffEntry;
 import org.geogit.api.plumbing.diff.DiffEntry.ChangeType;
 import org.geogit.api.plumbing.merge.Conflict;
 import org.geogit.api.plumbing.merge.MergeScenarioReport;
-import org.geogit.storage.GtEntityType;
 import org.geogit.api.porcelain.FetchResult;
 import org.geogit.api.porcelain.FetchResult.ChangedRef;
 import org.geogit.api.porcelain.PullResult;
+import org.geogit.storage.GtEntityType;
 import org.geogit.web.api.commands.BranchWebOp;
 import org.geogit.web.api.commands.LsTree;
 import org.geogit.web.api.commands.RefParseWeb;
@@ -497,7 +497,7 @@ public class ResponseWriter {
         out.writeEndElement();
     }
 
-    public void writePullResponse(PullResult result, Iterator<DiffEntry> iter)
+    public void writePullResponse(PullResult result, Iterator<DiffEntry> iter, CommandLocator geogit)
             throws XMLStreamException {
         out.writeStartElement("Pull");
         writeFetchResponse(result.getFetchResult());
@@ -520,6 +520,13 @@ public class ResponseWriter {
             writeElement("Added", Integer.toString(added));
             writeElement("Modified", Integer.toString(modified));
             writeElement("Removed", Integer.toString(removed));
+        }
+        if (result.getMergeReport().isPresent()
+                && result.getMergeReport().get().getReport().isPresent()) {
+            writeMergeResponse(result.getMergeReport().get().getReport().get(), geogit, result
+                    .getMergeReport().get().getOurs(), result.getMergeReport().get().getPairs()
+                    .get(0).getTheirs(), result.getMergeReport().get().getPairs().get(0)
+                    .getAncestor());
         }
         out.writeEndElement();
     }

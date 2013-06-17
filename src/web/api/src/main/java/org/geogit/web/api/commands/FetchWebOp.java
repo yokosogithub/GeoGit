@@ -1,7 +1,5 @@
 package org.geogit.web.api.commands;
 
-import java.util.List;
-
 import org.geogit.api.CommandLocator;
 import org.geogit.api.porcelain.FetchOp;
 import org.geogit.api.porcelain.FetchResult;
@@ -11,14 +9,12 @@ import org.geogit.web.api.CommandContext;
 import org.geogit.web.api.CommandResponse;
 import org.geogit.web.api.ResponseWriter;
 
-import com.google.common.collect.Lists;
-
 public class FetchWebOp extends AbstractWebAPICommand {
     private boolean prune;
 
     private boolean fetchAll;
 
-    private List<String> remotes = Lists.newArrayList();
+    private String remote;
 
     /**
      * Mutator for the prune variable
@@ -39,21 +35,12 @@ public class FetchWebOp extends AbstractWebAPICommand {
     }
 
     /**
-     * Mutator for the remotes variable
+     * Mutator for the remote variable
      * 
-     * @param remotes - a list of all the remotes to fetch from
+     * @param remotes - the remote to fetch from
      */
-    public void setRemotes(List<String> remotes) {
-        this.remotes = remotes;
-    }
-
-    /**
-     * Adds a remote to the list of remote to fetch
-     * 
-     * @param remote - a remote to pull
-     */
-    public void addRemote(String remote) {
-        this.remotes.add(remote);
+    public void setRemote(String remote) {
+        this.remote = remote;
     }
 
     @Override
@@ -62,9 +49,8 @@ public class FetchWebOp extends AbstractWebAPICommand {
 
         FetchOp command = geogit.command(FetchOp.class);
 
-        for (String remote : remotes) {
-            command.addRemote(remote);
-        }
+        command.addRemote(remote);
+
         try {
             final FetchResult result = command.setAll(fetchAll).setPrune(prune).call();
             context.setResponseContent(new CommandResponse() {

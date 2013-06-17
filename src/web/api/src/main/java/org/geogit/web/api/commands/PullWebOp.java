@@ -79,7 +79,7 @@ public class PullWebOp extends AbstractWebAPICommand {
                 @Override
                 public void write(ResponseWriter out) throws Exception {
                     out.start();
-                    out.writePullResponse(result, iter);
+                    out.writePullResponse(result, iter, geogit);
                     out.finish();
                 }
             });

@@ -14,6 +14,7 @@ import org.geogit.api.Remote;
 import org.geogit.api.SymRef;
 import org.geogit.api.plumbing.RefParse;
 import org.geogit.api.plumbing.UpdateRef;
+import org.geogit.api.porcelain.MergeOp.MergeReport;
 
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
@@ -197,8 +198,9 @@ public class PullOp extends AbstractGeoGitOp<PullResult> {
                         command(RebaseOp.class).setUpstream(
                                 Suppliers.ofInstance(sourceRef.get().getObjectId())).call();
                     } else {
-                        command(MergeOp.class).addCommit(
+                        MergeReport report = command(MergeOp.class).addCommit(
                                 Suppliers.ofInstance(sourceRef.get().getObjectId())).call();
+                        result.setMergeReport(Optional.of(report));
                     }
                 }
                 destRef = command(RefParse.class).setName(destinationref).call();
