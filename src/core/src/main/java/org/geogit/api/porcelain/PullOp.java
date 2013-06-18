@@ -198,9 +198,14 @@ public class PullOp extends AbstractGeoGitOp<PullResult> {
                         command(RebaseOp.class).setUpstream(
                                 Suppliers.ofInstance(sourceRef.get().getObjectId())).call();
                     } else {
-                        MergeReport report = command(MergeOp.class).addCommit(
-                                Suppliers.ofInstance(sourceRef.get().getObjectId())).call();
-                        result.setMergeReport(Optional.of(report));
+                        try {
+                            MergeReport report = command(MergeOp.class).addCommit(
+                                    Suppliers.ofInstance(sourceRef.get().getObjectId())).call();
+                            result.setMergeReport(Optional.of(report));
+                        } catch (NothingToCommitException e) {
+                            // the branch that we are trying to pull has less history than the
+                            // branch we are pulling into
+                        }
                     }
                 }
                 destRef = command(RefParse.class).setName(destinationref).call();

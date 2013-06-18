@@ -68,20 +68,6 @@ public class MergeWebOp extends AbstractWebAPICommand {
         }
 
         MergeOp merge = transaction.command(MergeOp.class);
-        final RevCommit ours = context.getGeoGIT().getRepository()
-                .getCommit(currHead.get().getObjectId());
-        final Optional<ObjectId> oid = transaction.command(RevParse.class).setRefSpec(commit)
-                .call();
-        final RevCommit theirs;
-        if (oid.isPresent()) {
-            theirs = context.getGeoGIT().getRepository().getCommit(oid.get());
-            merge.addCommit(Suppliers.ofInstance(oid.get()));
-        } else {
-            throw new CommandSpecException("Couldn't resolve '" + commit + "' to a commit.");
-        }
-
-        final Optional<RevCommit> ancestor = transaction.command(FindCommonAncestor.class)
-                .setLeft(ours).setRight(theirs).call();
 
         try {
             final MergeReport report = merge.setNoCommit(noCommit).call();
@@ -90,12 +76,27 @@ public class MergeWebOp extends AbstractWebAPICommand {
                 @Override
                 public void write(ResponseWriter out) throws Exception {
                     out.start();
-                    out.writeMergeResponse(report.getReport().get(), transaction, ours.getId(),
-                            theirs.getId(), ancestor.get().getId());
+                    out.writeMergeResponse(report.getReport().get(), transaction, report.getOurs(),
+                            report.getPairs().get(0).getTheirs(), report.getPairs().get(0)
+                                    .getAncestor());
                     out.finish();
                 }
             });
         } catch (Exception e) {
+            final RevCommit ours = context.getGeoGIT().getRepository()
+                    .getCommit(currHead.get().getObjectId());
+            final Optional<ObjectId> oid = transaction.command(RevParse.class).setRefSpec(commit)
+                    .call();
+            final RevCommit theirs;
+            if (oid.isPresent()) {
+                theirs = context.getGeoGIT().getRepository().getCommit(oid.get());
+                merge.addCommit(Suppliers.ofInstance(oid.get()));
+            } else {
+                throw new CommandSpecException("Couldn't resolve '" + commit + "' to a commit.");
+            }
+
+            final Optional<RevCommit> ancestor = transaction.command(FindCommonAncestor.class)
+                    .setLeft(ours).setRight(theirs).call();
             context.setResponseContent(new CommandResponse() {
                 final MergeScenarioReport report = transaction.command(ReportMergeScenarioOp.class)
                         .setMergeIntoCommit(ours).setToMergeCommit(theirs).call();
