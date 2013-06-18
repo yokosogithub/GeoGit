@@ -1,3 +1,5 @@
+.. _configuring:
+
 Configuring a GeoGit repository
 ================================
 
@@ -17,14 +19,14 @@ To define your user, you have to configure a name and an email address, using th
 
 ::
 
-	$geogit config user.name "volaya"
-	$geogit config user.email "volaya@opengeo.org"
+	$ geogit config user.name "volaya"
+	$ geogit config user.email "volaya@opengeo.org"
 
 You can get a listing of all configured values by using the ``-l`` option. 
 
 ::
 
-	$geogit config -l
+	$ geogit config -l
 	user.name=volaya
 	user.email=volaya@opengeo.org
 
@@ -38,13 +40,13 @@ To set the global value of a parameter, use the ``--global`` option.
 
 ::
 
-	$geogit config --global user.name "volaya"
-	$geogit config --gloabl user.email "volaya@opengeo.org"
+	$ geogit config --global user.name "volaya"
+	$ geogit config --gloabl user.email "volaya@opengeo.org"
 
 You can use it as well for listing all currently set global variables.
 
 ::
 
-	$geogit config -l --global
+	$ geogit config -l --global
 	user.name=volaya
 	user.email=volaya@opengeo.org

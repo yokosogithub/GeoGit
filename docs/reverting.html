@@ -1,0 +1,139 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en-US" xml:lang="en-US">
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  
+  <title>Reverting changes &mdash; GeoGit documentation 1.0 documentation</title>
+  <link rel="stylesheet" href="_static/blueprint/screen.css" type="text/css" media="screen, projection" />
+  <link rel="stylesheet" href="_static/blueprint/print.css" type="text/css" media="print" /> 
+  <!--[if IE]>
+  <link rel="stylesheet" href="_static/blueprint/ie.css" type="text/css" media="screen, projection" />
+  <![endif]-->
+  <link rel="stylesheet" href="_static/default.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+  <script type="text/javascript">
+    var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '1.0',
+        COLLAPSE_MODINDEX: false,
+        FILE_SUFFIX: '.html'
+    };
+  </script>
+  <script type="text/javascript" src="_static/jquery.js"></script>
+  <script type="text/javascript" src="_static/doctools.js"></script>
+  <script type="text/javascript" src="_static/searchtools.js"></script>
+  <script type="text/javascript" src="searchindex.js"></script>
+      <link rel="top" title="GeoGit documentation 1.0 documentation" href="index.html" />
+      <link rel="next" title="Interacting with remote repositories" href="remotes.html" />
+      <link rel="prev" title="Cherry-picking commits" href="picking.html" />
+
+</head>
+<body class="reverting">
+  <div id="header" class="selfclear">
+    <div class="wrap selfclear">
+      <div id="logo"><a href="index.html">GeoGit documentation 1.0 documentation</a></div>
+
+<!--    <ul id="top-nav">
+        <li class="first"><a href="http://geoserver.org/display/GEOS/What+is+Geoserver">About</a></li>
+        <li><a href="http://blog.geoserver.org/">Blog</a></li>
+        <li><a href="http://geoserver.org/display/GEOS/Download">Download</a></li>
+        <li><a href="index.html">Documentation</a></li>
+      </ul>
+-->
+        <form id="quick-search" action="search.html" method="get">
+          <fieldset>
+            <input type="hidden" name="check_keywords" value="yes" />
+            <input type="hidden" name="area" value="default" />
+            <input id="quick-search-query" type="text" name="q" accessKey="q" name="searchQuery.queryString" size="25" value="Search Documentation &hellip;" size="20" tabindex="3" onblur="if(this.value=='') this.value='Search Documentation &hellip;';" onfocus="if(this.value=='Search Documentation &hellip;') this.value='';" />
+            <input id="quick-search-submit" type="image" value="Search" src="_static/chrome/search_icon_blue.png" />
+          </fieldset>
+        </form>
+    </div><!-- /.wrap -->
+  </div><!-- /#header -->
+  <div id="main">
+    <div class="wrap selfclear">
+      <div id="content">
+<ul id="breadcrumbs">
+     
+  <li><a href="index.html">Home</a> &raquo;</li>
+  <li>Reverting changes</li>
+</ul>
+<ul id="relatedlinks" class="selfclear">
+  <li class="first">
+    <a href="genindex.html" title="General Index"
+       accesskey="I">index</a></li>
+  <li>
+    <a href="remotes.html" title="Interacting with remote repositories"
+       accesskey="N">next</a>|</li>
+  <li>
+    <a href="picking.html" title="Cherry-picking commits"
+       accesskey="P">previous</a>|</li>
+</ul>
+        
+  <div class="section" id="reverting-changes">
+<h1>Reverting changes<a class="headerlink" href="#reverting-changes" title="Permalink to this headline">¶</a></h1>
+<p>Sometimes, the changes introduced by a given commit are not correct and you might want to undo them. This situation can be solved in GeoGit in different ways, depending on whether the commit is the most recent one or not, and, in this last case, whether further changes have been made that are uncompatible with undoing the changes in the problem commit.</p>
+<p>If the commits to undo is the last one (is the current HEAD), then you can reset your head to the previous commit, by using</p>
+<div class="highlight-python"><pre>$geogit reset --hard HEAD^1</pre>
+</div>
+<p>That rewinds the HEAD reference one commit. the <tt class="docutils literal"><span class="pre">--hard</span></tt> option indicates that it should also change the working tree to reflect the content of the new head commit, so you should take care and make sure that you do not have unstaged changes in the working three, since they will be overwritten.</p>
+<p>Another way of undoing the latest commit is by using the <tt class="docutils literal"><span class="pre">revert</span></tt> command.</p>
+<div class="highlight-python"><pre>$geogit revert HEAD</pre>
+</div>
+<p>Instead of rewinding the HEAD and <em>erasing</em> the last command, this adds a new commit of top of the current HEAD, which has exactly the opposite changes to the commit passed (in this case, <tt class="docutils literal"><span class="pre">HEAD</span></tt>). The state of your repo will we the same one as two commits ago, since you have added one commit, but then another one that cancels that one.</p>
+<p>You can revert not only the HEAD commit, but any other one. That makes the <tt class="docutils literal"><span class="pre">revert</span></tt> command more interesting that <tt class="docutils literal"><span class="pre">reset</span></tt> if the problematic commit you want to undo is not the last one. In that case, using <tt class="docutils literal"><span class="pre">reset</span></tt> would cancel the commit, but also all the other ones after it, since it operates rewinding the HEAD reference. The <tt class="docutils literal"><span class="pre">revert</span></tt> command is more flexible for this task.</p>
+<p>Let&#8217;s assume you have the following log entries in your repository:</p>
+<div class="highlight-python"><pre>$geogit log --oneline --abbrev-commit
+adf66fe Edited wrong geometries
+da1534a Added missing feature
+159b517 Minor changes
+6cda554 First import</pre>
+</div>
+<p>Now let&#8217;s say that you want to undo the second last commit (&#8220;Added missing feature&#8221;), since you found out that the missing feature the commit message refers to is not correct and should not be added. You can revert that commit by running</p>
+<div class="highlight-python"><pre>$geogit revert da1534a</pre>
+</div>
+<p>Your HEAD now will not have that extra feature, but will keep the edits incorporated by the &#8220;Edited wrong geometries&#8221; commit. Your log now will look like this.</p>
+<blockquote>
+<div>$geogit log &#8211;oneline &#8211;abbrev-commit
+4ff56da Revert &#8216;Added missing feature&#8217;
+adf66fe Edited wrong geometries
+da1534a Added missing feature
+159b517 Minor changes
+6cda554 First import</div></blockquote>
+<p>It is not always possible to apply the revert operation as easily as in the case above. If further changes have been introduced in the features to revert, reverting might cause data losses. For this reason, if a feature affected by the commit to revert has been modified in another commit made after that one, GeoGit considers that to be a conflicting situation, and will ask you to manually solve the conflict.</p>
+<p>This situation is similar to the one found when merging or rebasing. For a conflicted feature, you will have different versions (the original one you want to revert to, the one created by the commit to revert, and the current one in HEAD), and you have to select one of them or manually combine them. Once you have done that, stage the feature and continue the revert operation by calling</p>
+<div class="highlight-python"><pre>$geogit revert --continue</pre>
+</div>
+<p>To abort the revert operation after it has been stopped due to conflicts, use the <tt class="docutils literal"><span class="pre">--abort</span></tt> option.</p>
+<div class="highlight-python"><pre>$geogit revert --abort</pre>
+</div>
+</div>
+
+
+      <div class="selfclear pagination-nav">
+          <div class="leftwise"><strong>Previous</strong>: <a href="picking.html" title="previous chapter">Cherry-picking commits</a></div>
+          <div class="rightwise"><strong>Next</strong>: <a href="remotes.html" title="next chapter">Interacting with remote repositories</a></div>
+      </div>
+      </div><!-- /#content> -->
+ <div id="sidebar">
+        <div class="section">
+          <h3>Continue Reading</h3>
+          <ul>
+            <li>Previous: <a href="picking.html" title="previous chapter">Cherry-picking commits</a></li>
+            <li>Next: <a href="remotes.html" title="next chapter">Interacting with remote repositories</a></li>
+          </ul>
+        </div>
+      
+  </div><!-- /#sidebar -->
+  </div><!-- /.wrap> -->
+</div><!-- /#main -->
+<div id="footer">
+  <div class="wrap">
+    &copy; Copyright <a href="http://opengeo.org/">OpenGeo</a>.
+    Created using <a href="http://sphinx.pocoo.org/">Sphinx</a>.
+  <a rel="license" href="http://creativecommons.org/licenses/by-sa/3.0/"><img alt="Creative Commons License" style="border-width:0; vertical-align:top" src="http://i.creativecommons.org/l/by-sa/3.0/80x15.png" /></a>
+  </div><!-- /.wrap> -->
+</div><!-- /#footer -->
+  </body>
+</html>

@@ -1,3 +1,5 @@
+.. _structure:
+
 Understanding the structure of a GeoGit repository
 ===================================================
 

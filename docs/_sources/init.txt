@@ -1,3 +1,5 @@
+.. _init:
+
 Creating a GeoGit repository
 =============================
 
@@ -7,7 +9,7 @@ GeoGit is a command-line application, and it is run from the console typing comm
 
 ::
 
-	$geogit init
+	$ geogit init
 
 This creates a new folder in the current folder, named ``.geogit``. That folder will contain all your data, both the current version and the history of old versions that were created. Other than that folder, GeoGit will put nothing else under the folder from which you called the ``init`` command. You can put whatever you want on that folder, whether spatial or non-spatial data files, since GeoGit will ignore them.
 

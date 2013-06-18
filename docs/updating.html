@@ -1,58 +1,78 @@
-
-
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en-US" xml:lang="en-US">
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  
+  <title>Updating the repository data. &mdash; GeoGit documentation 1.0 documentation</title>
+  <link rel="stylesheet" href="_static/blueprint/screen.css" type="text/css" media="screen, projection" />
+  <link rel="stylesheet" href="_static/blueprint/print.css" type="text/css" media="print" /> 
+  <!--[if IE]>
+  <link rel="stylesheet" href="_static/blueprint/ie.css" type="text/css" media="screen, projection" />
+  <![endif]-->
+  <link rel="stylesheet" href="_static/default.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+  <script type="text/javascript">
+    var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '1.0',
+        COLLAPSE_MODINDEX: false,
+        FILE_SUFFIX: '.html'
+    };
+  </script>
+  <script type="text/javascript" src="_static/jquery.js"></script>
+  <script type="text/javascript" src="_static/doctools.js"></script>
+  <script type="text/javascript" src="_static/searchtools.js"></script>
+  <script type="text/javascript" src="searchindex.js"></script>
+      <link rel="top" title="GeoGit documentation 1.0 documentation" href="index.html" />
+      <link rel="next" title="Exporting from a GeoGit repository" href="exporting.html" />
+      <link rel="prev" title="Exploring a repository" href="exploring.html" />
 
+</head>
+<body class="updating">
+  <div id="header" class="selfclear">
+    <div class="wrap selfclear">
+      <div id="logo"><a href="index.html">GeoGit documentation 1.0 documentation</a></div>
 
-<html xmlns="http://www.w3.org/1999/xhtml">
-  <head>
-    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    
-    <title>Updating the repository data. &mdash; GeoGit documentation 0.1 documentation</title>
-    
-    <link rel="stylesheet" href="_static/default.css" type="text/css" />
-    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-    
-    <script type="text/javascript">
-      var DOCUMENTATION_OPTIONS = {
-        URL_ROOT:    '',
-        VERSION:     '0.1',
-        COLLAPSE_INDEX: false,
-        FILE_SUFFIX: '.html',
-        HAS_SOURCE:  true
-      };
-    </script>
-    <script type="text/javascript" src="_static/jquery.js"></script>
-    <script type="text/javascript" src="_static/underscore.js"></script>
-    <script type="text/javascript" src="_static/doctools.js"></script>
-    <link rel="top" title="GeoGit documentation 0.1 documentation" href="index.html" />
-    <link rel="next" title="Exporting from a GeoGit repository" href="exporting.html" />
-    <link rel="prev" title="Exploring a repository" href="exploring.html" /> 
-  </head>
-  <body>
-    <div class="related">
-      <h3>Navigation</h3>
-      <ul>
-        <li class="right" style="margin-right: 10px">
-          <a href="genindex.html" title="General Index"
-             accesskey="I">index</a></li>
-        <li class="right" >
-          <a href="exporting.html" title="Exporting from a GeoGit repository"
-             accesskey="N">next</a> |</li>
-        <li class="right" >
-          <a href="exploring.html" title="Exploring a repository"
-             accesskey="P">previous</a> |</li>
-        <li><a href="index.html">GeoGit documentation 0.1 documentation</a> &raquo;</li> 
+<!--    <ul id="top-nav">
+        <li class="first"><a href="http://geoserver.org/display/GEOS/What+is+Geoserver">About</a></li>
+        <li><a href="http://blog.geoserver.org/">Blog</a></li>
+        <li><a href="http://geoserver.org/display/GEOS/Download">Download</a></li>
+        <li><a href="index.html">Documentation</a></li>
       </ul>
-    </div>  
-
-    <div class="document">
-      <div class="documentwrapper">
-        <div class="bodywrapper">
-          <div class="body">
-            
+-->
+        <form id="quick-search" action="search.html" method="get">
+          <fieldset>
+            <input type="hidden" name="check_keywords" value="yes" />
+            <input type="hidden" name="area" value="default" />
+            <input id="quick-search-query" type="text" name="q" accessKey="q" name="searchQuery.queryString" size="25" value="Search Documentation &hellip;" size="20" tabindex="3" onblur="if(this.value=='') this.value='Search Documentation &hellip;';" onfocus="if(this.value=='Search Documentation &hellip;') this.value='';" />
+            <input id="quick-search-submit" type="image" value="Search" src="_static/chrome/search_icon_blue.png" />
+          </fieldset>
+        </form>
+    </div><!-- /.wrap -->
+  </div><!-- /#header -->
+  <div id="main">
+    <div class="wrap selfclear">
+      <div id="content">
+<ul id="breadcrumbs">
+     
+  <li><a href="index.html">Home</a> &raquo;</li>
+  <li>Updating the repository data.</li>
+</ul>
+<ul id="relatedlinks" class="selfclear">
+  <li class="first">
+    <a href="genindex.html" title="General Index"
+       accesskey="I">index</a></li>
+  <li>
+    <a href="exporting.html" title="Exporting from a GeoGit repository"
+       accesskey="N">next</a>|</li>
+  <li>
+    <a href="exploring.html" title="Exploring a repository"
+       accesskey="P">previous</a>|</li>
+</ul>
+        
   <div class="section" id="updating-the-repository-data">
-<h1>Updating the repository data.<a class="headerlink" href="#updating-the-repository-data" title="Permalink to this headline">¶</a></h1>
+<span id="updating"></span><h1>Updating the repository data.<a class="headerlink" href="#updating-the-repository-data" title="Permalink to this headline">¶</a></h1>
 <p>If you have modified your original data, you should update the data in the GeoGit repository, so it is kept synchronized. This section extends what we have already seen about importing data, by considering some special situations that might arise when importing into a repository that already has some previous data. Along with the next section, which covers the GeoGit commands used for exporting data from the GeoGit repository to a file or database, they describe all the tools and commands needed to set a bidirectional communication between a GeoGit repository and external files and databases. These files and databases keep a snapshot of the repository accessible to external applications such as a desktop GIS, which can work on them and modify them.</p>
 <p>Let&#8217;s assume that our GeoGit repository already has some data, which has been imported from a shapefile. That puts the data in the GeoGit working tree, and we have after that staged and committed it to the repository database. Now we have changed the original shapefile adding some new features and editing the old ones, and we want that to be reflected in the GeoGit repository, creating a new version of the data it stores. The way to do this is re-importing the shapefile, running the <tt class="docutils literal"><span class="pre">geogit</span> <span class="pre">shp</span> <span class="pre">import</span></tt> command as we did in the first import.</p>
 <p>Importing without additional options actually removes the previous tree at the path you specify (or, if you specify no path, the path taken from the data source, into which where feature are to be imported), and then adds those features from the data source. Remember that this is happening only in the working tree, your previous data is safely stored in the repository database.</p>
@@ -102,65 +122,40 @@
 </div>
 
 
-          </div>
-        </div>
+      <div class="selfclear pagination-nav">
+          <div class="leftwise"><strong>Previous</strong>: <a href="exploring.html" title="previous chapter">Exploring a repository</a></div>
+          <div class="rightwise"><strong>Next</strong>: <a href="exporting.html" title="next chapter">Exporting from a GeoGit repository</a></div>
       </div>
-      <div class="sphinxsidebar">
-        <div class="sphinxsidebarwrapper">
-  <h3><a href="index.html">Table Of Contents</a></h3>
-  <ul>
+      </div><!-- /#content> -->
+ <div id="sidebar" class="contrast">
+      <div id="toc" class="section">
+        <h3 class="pngfix">Table Of Contents</h3>
+        <ul>
 <li><a class="reference internal" href="#">Updating the repository data.</a><ul>
 <li><a class="reference internal" href="#combining-different-feature-types">Combining different feature types</a></li>
 </ul>
 </li>
 </ul>
 
-  <h4>Previous topic</h4>
-  <p class="topless"><a href="exploring.html"
-                        title="previous chapter">Exploring a repository</a></p>
-  <h4>Next topic</h4>
-  <p class="topless"><a href="exporting.html"
-                        title="next chapter">Exporting from a GeoGit repository</a></p>
-  <h3>This Page</h3>
-  <ul class="this-page-menu">
-    <li><a href="_sources/updating.txt"
-           rel="nofollow">Show Source</a></li>
-  </ul>
-<div id="searchbox" style="display: none">
-  <h3>Quick search</h3>
-    <form class="search" action="search.html" method="get">
-      <input type="text" name="q" />
-      <input type="submit" value="Go" />
-      <input type="hidden" name="check_keywords" value="yes" />
-      <input type="hidden" name="area" value="default" />
-    </form>
-    <p class="searchtip" style="font-size: 90%">
-    Enter search terms or a module, class or function name.
-    </p>
-</div>
-<script type="text/javascript">$('#searchbox').show(0);</script>
-        </div>
+        <div class="section-footer"></div>
       </div>
-      <div class="clearer"></div>
-    </div>
-    <div class="related">
-      <h3>Navigation</h3>
-      <ul>
-        <li class="right" style="margin-right: 10px">
-          <a href="genindex.html" title="General Index"
-             >index</a></li>
-        <li class="right" >
-          <a href="exporting.html" title="Exporting from a GeoGit repository"
-             >next</a> |</li>
-        <li class="right" >
-          <a href="exploring.html" title="Exploring a repository"
-             >previous</a> |</li>
-        <li><a href="index.html">GeoGit documentation 0.1 documentation</a> &raquo;</li> 
-      </ul>
-    </div>
-    <div class="footer">
-        &copy; Copyright 2013, OpenGeo.
-      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
-    </div>
+        <div class="section">
+          <h3>Continue Reading</h3>
+          <ul>
+            <li>Previous: <a href="exploring.html" title="previous chapter">Exploring a repository</a></li>
+            <li>Next: <a href="exporting.html" title="next chapter">Exporting from a GeoGit repository</a></li>
+          </ul>
+        </div>
+      
+  </div><!-- /#sidebar -->
+  </div><!-- /.wrap> -->
+</div><!-- /#main -->
+<div id="footer">
+  <div class="wrap">
+    &copy; Copyright <a href="http://opengeo.org/">OpenGeo</a>.
+    Created using <a href="http://sphinx.pocoo.org/">Sphinx</a>.
+  <a rel="license" href="http://creativecommons.org/licenses/by-sa/3.0/"><img alt="Creative Commons License" style="border-width:0; vertical-align:top" src="http://i.creativecommons.org/l/by-sa/3.0/80x15.png" /></a>
+  </div><!-- /.wrap> -->
+</div><!-- /#footer -->
   </body>
 </html>

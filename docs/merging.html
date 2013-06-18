@@ -1,78 +1,98 @@
-
-
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en-US" xml:lang="en-US">
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  
+  <title>Merging branches &mdash; GeoGit documentation 1.0 documentation</title>
+  <link rel="stylesheet" href="_static/blueprint/screen.css" type="text/css" media="screen, projection" />
+  <link rel="stylesheet" href="_static/blueprint/print.css" type="text/css" media="print" /> 
+  <!--[if IE]>
+  <link rel="stylesheet" href="_static/blueprint/ie.css" type="text/css" media="screen, projection" />
+  <![endif]-->
+  <link rel="stylesheet" href="_static/default.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+  <script type="text/javascript">
+    var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '1.0',
+        COLLAPSE_MODINDEX: false,
+        FILE_SUFFIX: '.html'
+    };
+  </script>
+  <script type="text/javascript" src="_static/jquery.js"></script>
+  <script type="text/javascript" src="_static/doctools.js"></script>
+  <script type="text/javascript" src="_static/searchtools.js"></script>
+  <script type="text/javascript" src="searchindex.js"></script>
+      <link rel="top" title="GeoGit documentation 1.0 documentation" href="index.html" />
+      <link rel="next" title="Cherry-picking commits" href="picking.html" />
+      <link rel="prev" title="Exploring your history" href="history.html" />
 
+</head>
+<body class="merging">
+  <div id="header" class="selfclear">
+    <div class="wrap selfclear">
+      <div id="logo"><a href="index.html">GeoGit documentation 1.0 documentation</a></div>
 
-<html xmlns="http://www.w3.org/1999/xhtml">
-  <head>
-    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    
-    <title>Merging branches &mdash; GeoGit documentation 0.1 documentation</title>
-    
-    <link rel="stylesheet" href="_static/default.css" type="text/css" />
-    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-    
-    <script type="text/javascript">
-      var DOCUMENTATION_OPTIONS = {
-        URL_ROOT:    '',
-        VERSION:     '0.1',
-        COLLAPSE_INDEX: false,
-        FILE_SUFFIX: '.html',
-        HAS_SOURCE:  true
-      };
-    </script>
-    <script type="text/javascript" src="_static/jquery.js"></script>
-    <script type="text/javascript" src="_static/underscore.js"></script>
-    <script type="text/javascript" src="_static/doctools.js"></script>
-    <link rel="top" title="GeoGit documentation 0.1 documentation" href="index.html" />
-    <link rel="next" title="Interacting with remote repositories" href="remotes.html" />
-    <link rel="prev" title="Exploring you history" href="history.html" /> 
-  </head>
-  <body>
-    <div class="related">
-      <h3>Navigation</h3>
-      <ul>
-        <li class="right" style="margin-right: 10px">
-          <a href="genindex.html" title="General Index"
-             accesskey="I">index</a></li>
-        <li class="right" >
-          <a href="remotes.html" title="Interacting with remote repositories"
-             accesskey="N">next</a> |</li>
-        <li class="right" >
-          <a href="history.html" title="Exploring you history"
-             accesskey="P">previous</a> |</li>
-        <li><a href="index.html">GeoGit documentation 0.1 documentation</a> &raquo;</li> 
+<!--    <ul id="top-nav">
+        <li class="first"><a href="http://geoserver.org/display/GEOS/What+is+Geoserver">About</a></li>
+        <li><a href="http://blog.geoserver.org/">Blog</a></li>
+        <li><a href="http://geoserver.org/display/GEOS/Download">Download</a></li>
+        <li><a href="index.html">Documentation</a></li>
       </ul>
-    </div>  
-
-    <div class="document">
-      <div class="documentwrapper">
-        <div class="bodywrapper">
-          <div class="body">
-            
+-->
+        <form id="quick-search" action="search.html" method="get">
+          <fieldset>
+            <input type="hidden" name="check_keywords" value="yes" />
+            <input type="hidden" name="area" value="default" />
+            <input id="quick-search-query" type="text" name="q" accessKey="q" name="searchQuery.queryString" size="25" value="Search Documentation &hellip;" size="20" tabindex="3" onblur="if(this.value=='') this.value='Search Documentation &hellip;';" onfocus="if(this.value=='Search Documentation &hellip;') this.value='';" />
+            <input id="quick-search-submit" type="image" value="Search" src="_static/chrome/search_icon_blue.png" />
+          </fieldset>
+        </form>
+    </div><!-- /.wrap -->
+  </div><!-- /#header -->
+  <div id="main">
+    <div class="wrap selfclear">
+      <div id="content">
+<ul id="breadcrumbs">
+     
+  <li><a href="index.html">Home</a> &raquo;</li>
+  <li>Merging branches</li>
+</ul>
+<ul id="relatedlinks" class="selfclear">
+  <li class="first">
+    <a href="genindex.html" title="General Index"
+       accesskey="I">index</a></li>
+  <li>
+    <a href="picking.html" title="Cherry-picking commits"
+       accesskey="N">next</a>|</li>
+  <li>
+    <a href="history.html" title="Exploring your history"
+       accesskey="P">previous</a>|</li>
+</ul>
+        
   <div class="section" id="merging-branches">
-<h1>Merging branches<a class="headerlink" href="#merging-branches" title="Permalink to this headline">¶</a></h1>
+<span id="merging"></span><h1>Merging branches<a class="headerlink" href="#merging-branches" title="Permalink to this headline">¶</a></h1>
 <p>When you work on a new branch, eventually you will want to put the data on that branch into the master branch. You might also want to combine the work done on two separate branches. Whatever the case, it&#8217;s common in a normal GeoGit workflow to merge the content of two or more branches. Graphically, this is what happens to a GeoGit repository after you merge two branches.</p>
 <div class="figure">
 <img alt="_images/merged.png" src="_images/merged.png" />
 </div>
 <p>Merging is usually done when you have finished working on a given branch and you think the modifications that you have made are ready to become part of the main <tt class="docutils literal"><span class="pre">master</span></tt> branch. In that case, you will apply all the same changes that you have made to the features and trees in a that branch onto the features and trees in the <tt class="docutils literal"><span class="pre">master</span></tt> branch, and the <tt class="docutils literal"><span class="pre">master</span></tt> branch will end up having both the changes that were introduced in it since the creation of the branch to merge, and the changes indeendently made in that branch to merge.</p>
 <p>Merging is done using the <tt class="docutils literal"><span class="pre">geogit</span> <span class="pre">merge</span></tt> commmand. If you are on the destination branch, then you should just add the name of the branch from which to take the changes that you are going to include in the current branch. If you are in <tt class="docutils literal"><span class="pre">master</span></tt> and want to add into it the changes from a branch named <tt class="docutils literal"><span class="pre">mybranch</span></tt>, you would use the following command.</p>
-<div class="highlight-python"><pre>$geogit merge mybranch</pre>
+<div class="highlight-python"><pre>$ geogit merge mybranch</pre>
 </div>
 <p>That will add new commits to the current branch, which will include the changes in the <tt class="docutils literal"><span class="pre">mybranch</span></tt> branch.</p>
 <p>Once you have merged your changes, you can delete the branch by calling</p>
-<div class="highlight-python"><pre>$geogit branch -d mybranch</pre>
+<div class="highlight-python"><pre>$ geogit branch -d mybranch</pre>
 </div>
 <div class="section" id="solving-merge-conflicts">
 <h2>Solving merge conflicts<a class="headerlink" href="#solving-merge-conflicts" title="Permalink to this headline">¶</a></h2>
 <p>When merging two branches, the changes made in them might not be compatible. For instance if both branches have modified the same attribute value of the same feature, setting a different new value, that will cause a conflicting situation that GeoGit cannot solve automatically, since it cannot decide which one of the changes it should keep. In this case, it will merge all the compatible changes and leave the conflicting ones marked, so they can be manually resolved and then committed.</p>
 <p>When a merge operation finds conflicts and it cannot automatically merge all the changes, it shows a message like the one shown below:</p>
-<div class="highlight-python"><pre>$geogit merge mybranch
-CONFLICT: Merge conflict in parks/parks.2
-CONFLICT: Merge conflict in parks/parks.3
-CONFLICT: Merge conflict in parks/parks.1
+<div class="highlight-python"><pre>$ geogit merge mybranch
+CONFLICT: Merge conflict in parks/2
+CONFLICT: Merge conflict in parks/3
+CONFLICT: Merge conflict in parks/1
 Automatic merge failed. Fix conflicts and then commit the result.</pre>
 </div>
 <p>The following is a list of situations that will cause a merge conflict:</p>
@@ -84,6 +104,7 @@ Automatic merge failed. Fix conflicts and then commit the result.</pre>
 <li>Both branches have modified the default feature type for a given path, setting different values.</li>
 <li>Both branches have modified the geometry of a feature, and there is no way of applying both changes, for instance, if both have modified the same point in a polygon.</li>
 <li>One branch has deleted a tree, while the other one has added or modified a feature under that tree.</li>
+<li>Both branches have modified a feature and at least one of them has changed its feature type, and the resulting feature types are not the same.</li>
 </ul>
 <p>The following cases will not produce a merge conflict:</p>
 <ul class="simple">
@@ -95,71 +116,80 @@ Automatic merge failed. Fix conflicts and then commit the result.</pre>
 <li>Both branches have modified the geometry of a feature, but changes are compatible and can be both incorporated, for instance if each one has moved a different point in a polygon, leaving the remaining points unchanged.</li>
 <li>Both branches have made the same modification to a feature geometry.</li>
 </ul>
+<p>If an uncommon merge situation (mostly likely to happen when feature types have been modified) not among the above ones is found, GeoGit will consider it a conflict and report it as such. In general, whenever the situation doesn&#8217;t have a clear way of being solved, GeoGit will report a conflict in sake of safety, letting the user do a manual merge.</p>
 <p>When a conflict arises, the merge operation is interrupted. Conflicted elements are marked in the index and the user should solve them manually before committing to complete the merge operation.</p>
 <p>You can check which elements are conflicted by running the <tt class="docutils literal"><span class="pre">geogit</span> <span class="pre">status</span></tt> command. The result will be similar to the one shown next:</p>
-<div class="highlight-python"><pre>$geogit status
+<div class="highlight-python"><pre>$ geogit status
 # On branch master
 # Unmerged paths:
 #   (use "geogit add/rm &lt;path/to/fid&gt;..." as appropriate to mark resolution
 #
-#      unmerged  parks/parks.2
-#      unmerged  parks/parks.3
-#      unmerged  parks/parks.1
+#      unmerged  parks/2
+#      unmerged  parks/3
+#      unmerged  parks/1
 # 3 total.</pre>
 </div>
 <p>The above message shows a repository with just 3 conflicted features in its index. If there are unstaged elements, they will also be shown, as usual. Also, if the merge operation staged elements that did not cause any conflict, they will appear as ready to be committed. These elements will also be changed in the working tree, to reflect the same version that is stored in the index, which is the result of the automatic merge operation.</p>
 <p>In order to fix the conflicts in the staging area, several GeoGit tools and approaches can be used. These are described below.</p>
 </div>
+<div class="section" id="aborting-the-merge-operation">
+<h2>Aborting the merge operation<a class="headerlink" href="#aborting-the-merge-operation" title="Permalink to this headline">¶</a></h2>
+<p>You can abort the merge operation and restore it to the original state it had before you invoked the <tt class="docutils literal"><span class="pre">merge</span></tt> command. You have the following alternatives, which will cause the same result [NOTE: this is not like git, the &#8211;abort here is just a reset op, but not in git]</p>
+<ul class="simple">
+<li><tt class="docutils literal"><span class="pre">geogit</span> <span class="pre">reset</span> <span class="pre">--hard</span> <span class="pre">ORIG_HEAD</span></tt></li>
+<li><tt class="docutils literal"><span class="pre">geogit</span> <span class="pre">merge</span> <span class="pre">--abort</span></tt></li>
+</ul>
+</div>
 <div class="section" id="showing-conflicts">
 <h2>Showing conflicts<a class="headerlink" href="#showing-conflicts" title="Permalink to this headline">¶</a></h2>
-<p>The <tt class="docutils literal"><span class="pre">conflicts</span></tt> command can also be used to describe the current unmerged elements. There are two ways of displaying conflicts: the first uses no options and it prints the full description of the three versions involved in the conflict (the common ancestor, &#8216;ours&#8217; and &#8216;theirs&#8217;). It looks like the example shown next, corresponding to a single unmerged feature.</p>
-<div class="highlight-python"><pre>$geogit conflicts
-parks/parks.2
-
-Ancestor    27207309879802a99d161b063b8f958d179be3b0
+<p>The <tt class="docutils literal"><span class="pre">conflicts</span></tt> command can be used to describe the current unmerged elements. There are three ways of displaying conflicts: the first is the default one it prints the full description of the three versions involved in the conflict (the common ancestor, &#8216;ours&#8217; and &#8216;theirs&#8217;). It looks like the example shown next, corresponding to a single unmerged feature.</p>
+<dl class="docutils">
+<dt>::</dt>
+<dd><p class="first">$ geogit conflicts
+$geogit conflicts
+parks/2</p>
+<p>Ancestor    27207309879802a99d161b063b8f958d179be3b0
 FEATURE
 id    27207309879802a99d161b063b8f958d179be3b0
-java.lang.String    Medford School District
-java.lang.Double    53935.8939996
-java.lang.Double    1004.9211325
-java.lang.String    Kennedy Elementary
-java.lang.Long    0
-java.lang.String    Medford School District
-java.lang.String    School Field
-com.vividsolutions.jts.geom.MultiPolygon    MULTIPOLYGON (((-122.84163143974176 42.35985624789982, -122.84146965654989 42.35985609227347, -122.84117673733482 42.35985565827537, -122.8409230724077 42.35985528171881, -122.84062434545373 42.35985483812396, -122.84034728245699 42.35985442523742, -122.8403468719201 42.35943411552068, -122.84163015984652 42.35942328456196, -122.8416300075414 42.359625066567794, -122.84163143974176 42.35985624789982)))
-java.lang.String    Public
-
-
-Ours    d8cc931603603bd64506880dc1760b372808ef2d
+STRING    Medford School District
+DOUBLE    53935.8939996
+DOUBLE    1004.9211325
+STRING    Kennedy Elementary
+LONG    0
+STRING    Medford School District
+STRING    School Field
+MULTIPOLYGON    MULTIPOLYGON (((-122.84163143974176 42.35985624789982, -122.84146965654989 42.35985609227347, -122.84117673733482 42.35985565827537, -122.8409230724077 42.35985528171881, -122.84062434545373 42.35985483812396, -122.84034728245699 42.35985442523742, -122.8403468719201 42.35943411552068, -122.84163015984652 42.35942328456196, -122.8416300075414 42.359625066567794, -122.84163143974176 42.35985624789982)))
+STRING    Public</p>
+<p>Ours    d8cc931603603bd64506880dc1760b372808ef2d
 FEATURE
 id    d8cc931603603bd64506880dc1760b372808ef2d
-java.lang.String    Medford School District
-java.lang.Double    53935.8939996
-java.lang.Double    1004.9211325
-java.lang.String    Kennedy Elementary
-java.lang.Long    5
-java.lang.String    Medford School District
-java.lang.String    School Field
-com.vividsolutions.jts.geom.MultiPolygon    MULTIPOLYGON (((-122.84163143974176 42.35985624789982, -122.84146965654989 42.35985609227347, -122.84117673733482 42.35985565827537, -122.8409230724077 42.35985528171881, -122.84062434545373 42.35985483812396, -122.84034728245699 42.35985442523742, -122.8403468719201 42.35943411552068, -122.84163015984652 42.35942328456196, -122.8416300075414 42.359625066567794, -122.84163143974176 42.35985624789982)))
-java.lang.String    Public
-
-
-Theirs    a77e46d2ad6e2c9eef3b6e5191a6c299037d602c
+STRING    Medford School District
+DOUBLE    53935.8939996
+DOUBLE    1004.9211325
+STRING    Kennedy Elementary
+LONG    5
+STRING    Medford School District
+STRING    School Field
+MULTIPOLYGON    MULTIPOLYGON (((-122.84163143974176 42.35985624789982, -122.84146965654989 42.35985609227347, -122.84117673733482 42.35985565827537, -122.8409230724077 42.35985528171881, -122.84062434545373 42.35985483812396, -122.84034728245699 42.35985442523742, -122.8403468719201 42.35943411552068, -122.84163015984652 42.35942328456196, -122.8416300075414 42.359625066567794, -122.84163143974176 42.35985624789982)))
+STRING    Public</p>
+<p class="last">Theirs    a77e46d2ad6e2c9eef3b6e5191a6c299037d602c
 FEATURE
 id    a77e46d2ad6e2c9eef3b6e5191a6c299037d602c
-java.lang.String    Medford School District
-java.lang.Double    53935.8939996
-java.lang.Double    1004.9211325
-java.lang.String    Kennedy Elementary
-java.lang.Long    2
-java.lang.String    Medford School District
-java.lang.String    School Field
-com.vividsolutions.jts.geom.MultiPolygon    MULTIPOLYGON (((-122.8434107328942 42.36043884831257, -122.84324894970233 42.360438692686216, -122.84295603048726 42.36043825868812, -122.84270236556014 42.360437882131556, -122.84240363860617 42.36043743853671, -122.84212657560943 42.36043702565017, -122.84212616507254 42.360016715933426, -122.84340945299896 42.36000588497471, -122.84340930069384 42.36020766698054, -122.8434107328942 42.36043884831257)))
-java.lang.String    Public</pre>
-</div>
+STRING    Medford School District
+DOUBLE    53935.8939996
+DOUBLE    1004.9211325
+STRING    Kennedy Elementary
+LONG    2
+STRING    Medford School District
+STRING    School Field
+MULTIPOLYGON    MULTIPOLYGON (((-122.8434107328942 42.36043884831257, -122.84324894970233 42.360438692686216, -122.84295603048726 42.36043825868812, -122.84270236556014 42.360437882131556, -122.84240363860617 42.36043743853671, -122.84212657560943 42.36043702565017, -122.84212616507254 42.360016715933426, -122.84340945299896 42.36000588497471, -122.84340930069384 42.36020766698054, -122.8434107328942 42.36043884831257)))
+STRING    Public</p>
+</dd>
+</dl>
 <p>The descriptions of the involved elements are the same ones that would be obtained by calling the GeoGit <tt class="docutils literal"><span class="pre">cat</span></tt> command on each of them.</p>
-<p>A representation with diff-like syntax instead of full descriptions can be obtained using the <tt class="docutils literal"><span class="pre">--preview-diff</span></tt> option. For the same unmerged feature described above, the resulting output would look like this:</p>
-<div class="highlight-python"><pre>$geogit conflicts --diff
+<p>A representation with diff-like syntax instead of full descriptions can be obtained using the <tt class="docutils literal"><span class="pre">--diff</span></tt> option. For the same unmerged feature described above, the resulting output would look like this:</p>
+<div class="highlight-python"><pre>$ geogit conflicts --diff
+$geogit conflicts --diff
 ---parks/parks.2---
 Ours
 number_fac: 0 -&gt; 5
@@ -168,7 +198,26 @@ Theirs
 number_fac: 0 -&gt; 2
 the_geom: MultiPolygon [-122.84163143974176,42.35985624789982 -122.84146965654989,42.35985609227347 -122.84117673733482,42.35985565827537 -122.8409230724077,42.35985528171881 -122.84062434545373,42.35985483812396 -122.84034728245699,42.35985442523742 -122.8403468719201,42.35943411552068 -122.84163015984652,42.35942328456196 -122.8416300075414,42.359625066567794 -122.84163143974176,42.35985624789982] (-122.8434107328942,42.36043884831257 -122.84324894970233,42.360438692686216 -122.84295603048726,42.36043825868812 -122.84270236556014,42.360437882131556 -122.84240363860617,42.36043743853671 -122.84212657560943,42.36043702565017 -122.84212616507254,42.360016715933426 -122.84340945299896,42.36000588497471 -122.84340930069384,42.36020766698054 -122.8434107328942,42.36043884831257)</pre>
 </div>
-<p>It uses the same syntax as the <tt class="docutils literal"><span class="pre">diff</span></tt> command, which is described in the <a href="#id1"><span class="problematic" id="id2">`Showing differences`_</span></a>  section. This makes it easier to see why the conflict arises and how to solve it.</p>
+<p>It uses the same syntax as the <tt class="docutils literal"><span class="pre">diff</span></tt> command, which is described in the <a class="reference internal" href="diffs.html#differences"><em>Showing differences</em></a>  section. This makes it easier to see why the conflict arises and how to solve it.</p>
+<p>Using the <tt class="docutils literal"><span class="pre">--ids-only</span></tt> switch you will just get the ids of the three versions corresponding to each unmerged element, as show next:</p>
+<div class="highlight-python"><pre>parks/parks.2   27207309879802a99d161b063b8f958d179be3b0        d8cc931603603bd64506880dc1760b372808ef2d        a77e46d2ad6e2c9eef3b6e5191a6c299037d602c</pre>
+</div>
+</div>
+<div class="section" id="solving-using-the-merge-tool">
+<h2>Solving using the merge tool<a class="headerlink" href="#solving-using-the-merge-tool" title="Permalink to this headline">¶</a></h2>
+<p>The most practical way to solve the merge conflicts is using the merge tool.</p>
+<p>[To Be Written]</p>
+</div>
+<div class="section" id="merging-more-than-two-branches">
+<h2>Merging more than two branches<a class="headerlink" href="#merging-more-than-two-branches" title="Permalink to this headline">¶</a></h2>
+<p>The <tt class="docutils literal"><span class="pre">merge</span></tt> command accepts more than one single branch name as entry. If several branch names are provided, it will perform what is know as an <em>octopus merge</em>. There is no limit to the number of branches than can be merged that way, but some functionalities are not available for more than two branches. The following situations will cause GeoGit not to start the merge process if it involves more than two branches being merged:</p>
+<ul class="simple">
+<li>A conflict on any type exist, whether it is a conflict between two branches or between many of them at the same time.</li>
+<li>A feature has been edited by at least two branches, and the changes introduced are not identical. Even if the changes are compatible (for instance, if branches have edited values for different attributes), GeoGit will not perform an automerge in this case, and the merge operation won&#8217;t be executed.</li>
+</ul>
+<p>If you are in one of the above cases, you will have to merge branches individually, solving conflicts for each of them before merging the next branch. Notice that, as it was mentioned, this might be the case even if there are no conflicts but the same feature has been modified by several branches.</p>
+<p>Notice that, in the case of an octopus merge, the merge process is not even started, so non-conflicting changes are not added, and there will be no unmerged elements in the index. The check is performed before the actual merge operation starts, and the current scenario has some of the situations mentioned above, GeoGit stops and tells the user that the operation should be run separately for each branch.
+It uses the same syntax as the <tt class="docutils literal"><span class="pre">diff</span></tt> command, which is described in the <a href="#id2"><span class="problematic" id="id3">`Showing differences`_</span></a>  section. This makes it easier to see why the conflict arises and how to solve it.</p>
 </div>
 <div class="section" id="staging-a-merged-version-of-an-unmerged-conflicted-element">
 <h2>Staging a merged version of an unmerged (conflicted) element.<a class="headerlink" href="#staging-a-merged-version-of-an-unmerged-conflicted-element" title="Permalink to this headline">¶</a></h2>
@@ -176,7 +225,7 @@ the_geom: MultiPolygon [-122.84163143974176,42.35985624789982 -122.8414696565498
 <p>If you want to stage a different version, you can use one of the following procedures to set a different feature in the working tree before running the <tt class="docutils literal"><span class="pre">add</span></tt> command.</p>
 <ul class="simple">
 <li>Import a new feature using one of the several importing tools from GeoGit</li>
-<li>Set the version from the branch to merge (the &#8216;theirs&#8217; version) by running <tt class="docutils literal"><span class="pre">geogit</span> <span class="pre">checkout</span> <span class="pre">--theirs</span></tt></li>
+<li>Set the version from the branch to merge (the &#8216;theirs&#8217; version) by running <tt class="docutils literal"><span class="pre">geogit</span> <span class="pre">checkout</span> <span class="pre">-p</span> <span class="pre">&lt;path_to_feature&gt;</span> <span class="pre">--ours|--theirs</span></tt></li>
 <li>Delete the feature using the <tt class="docutils literal"><span class="pre">rm</span></tt> command. This will remove it from both the working tree and the index, and will remove the conflict mark from the index as well. Their is no need to call <tt class="docutils literal"><span class="pre">add</span></tt> afterwards, unless you have staged some other element to solve a different conflict, using any of the other methods described above.</li>
 </ul>
 <p>Once you have the correct version that you want to commit, run <tt class="docutils literal"><span class="pre">add</span></tt> to stage it and then run <tt class="docutils literal"><span class="pre">commit</span></tt> to finally commit your resolved elements and finish the merge.</p>
@@ -184,13 +233,13 @@ the_geom: MultiPolygon [-122.84163143974176,42.35985624789982 -122.8414696565498
 <div class="highlight-python"><pre>Merge branch refs/heads/b1
 
 Conflicts:
-        parks/parks.2
-        parks/parks.3
-        parks/parks.1</pre>
+        parks/2
+        parks/3
+        parks/1</pre>
 </div>
 </div>
-<div class="section" id="aborting-the-merge-operation">
-<h2>Aborting the merge operation<a class="headerlink" href="#aborting-the-merge-operation" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="id1">
+<h2>Aborting the merge operation<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h2>
 <p>You can abort the merge operation and restore it to the original state it had before you invoked the <tt class="docutils literal"><span class="pre">merge</span></tt> command. You have the following alternatives, which will cause the same result</p>
 <ul class="simple">
 <li><tt class="docutils literal"><span class="pre">geogit</span> <span class="pre">reset</span> <span class="pre">--hard</span> <span class="pre">ORIG_HEAD</span></tt></li>
@@ -200,68 +249,46 @@ Conflicts:
 </div>
 
 
-          </div>
-        </div>
+      <div class="selfclear pagination-nav">
+          <div class="leftwise"><strong>Previous</strong>: <a href="history.html" title="previous chapter">Exploring your history</a></div>
+          <div class="rightwise"><strong>Next</strong>: <a href="picking.html" title="next chapter">Cherry-picking commits</a></div>
       </div>
-      <div class="sphinxsidebar">
-        <div class="sphinxsidebarwrapper">
-  <h3><a href="index.html">Table Of Contents</a></h3>
-  <ul>
+      </div><!-- /#content> -->
+ <div id="sidebar" class="contrast">
+      <div id="toc" class="section">
+        <h3 class="pngfix">Table Of Contents</h3>
+        <ul>
 <li><a class="reference internal" href="#">Merging branches</a><ul>
 <li><a class="reference internal" href="#solving-merge-conflicts">Solving merge conflicts</a></li>
-<li><a class="reference internal" href="#showing-conflicts">Showing conflicts</a></li>
-<li><a class="reference internal" href="#staging-a-merged-version-of-an-unmerged-conflicted-element">Staging a merged version of an unmerged (conflicted) element.</a></li>
 <li><a class="reference internal" href="#aborting-the-merge-operation">Aborting the merge operation</a></li>
+<li><a class="reference internal" href="#showing-conflicts">Showing conflicts</a></li>
+<li><a class="reference internal" href="#solving-using-the-merge-tool">Solving using the merge tool</a></li>
+<li><a class="reference internal" href="#merging-more-than-two-branches">Merging more than two branches</a></li>
+<li><a class="reference internal" href="#staging-a-merged-version-of-an-unmerged-conflicted-element">Staging a merged version of an unmerged (conflicted) element.</a></li>
+<li><a class="reference internal" href="#id1">Aborting the merge operation</a></li>
 </ul>
 </li>
 </ul>
 
-  <h4>Previous topic</h4>
-  <p class="topless"><a href="history.html"
-                        title="previous chapter">Exploring you history</a></p>
-  <h4>Next topic</h4>
-  <p class="topless"><a href="remotes.html"
-                        title="next chapter">Interacting with remote repositories</a></p>
-  <h3>This Page</h3>
-  <ul class="this-page-menu">
-    <li><a href="_sources/merging.txt"
-           rel="nofollow">Show Source</a></li>
-  </ul>
-<div id="searchbox" style="display: none">
-  <h3>Quick search</h3>
-    <form class="search" action="search.html" method="get">
-      <input type="text" name="q" />
-      <input type="submit" value="Go" />
-      <input type="hidden" name="check_keywords" value="yes" />
-      <input type="hidden" name="area" value="default" />
-    </form>
-    <p class="searchtip" style="font-size: 90%">
-    Enter search terms or a module, class or function name.
-    </p>
-</div>
-<script type="text/javascript">$('#searchbox').show(0);</script>
-        </div>
+        <div class="section-footer"></div>
       </div>
-      <div class="clearer"></div>
-    </div>
-    <div class="related">
-      <h3>Navigation</h3>
-      <ul>
-        <li class="right" style="margin-right: 10px">
-          <a href="genindex.html" title="General Index"
-             >index</a></li>
-        <li class="right" >
-          <a href="remotes.html" title="Interacting with remote repositories"
-             >next</a> |</li>
-        <li class="right" >
-          <a href="history.html" title="Exploring you history"
-             >previous</a> |</li>
-        <li><a href="index.html">GeoGit documentation 0.1 documentation</a> &raquo;</li> 
-      </ul>
-    </div>
-    <div class="footer">
-        &copy; Copyright 2013, OpenGeo.
-      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
-    </div>
+        <div class="section">
+          <h3>Continue Reading</h3>
+          <ul>
+            <li>Previous: <a href="history.html" title="previous chapter">Exploring your history</a></li>
+            <li>Next: <a href="picking.html" title="next chapter">Cherry-picking commits</a></li>
+          </ul>
+        </div>
+      
+  </div><!-- /#sidebar -->
+  </div><!-- /.wrap> -->
+</div><!-- /#main -->
+<div id="footer">
+  <div class="wrap">
+    &copy; Copyright <a href="http://opengeo.org/">OpenGeo</a>.
+    Created using <a href="http://sphinx.pocoo.org/">Sphinx</a>.
+  <a rel="license" href="http://creativecommons.org/licenses/by-sa/3.0/"><img alt="Creative Commons License" style="border-width:0; vertical-align:top" src="http://i.creativecommons.org/l/by-sa/3.0/80x15.png" /></a>
+  </div><!-- /.wrap> -->
+</div><!-- /#footer -->
   </body>
 </html>
