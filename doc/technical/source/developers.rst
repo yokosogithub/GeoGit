@@ -66,7 +66,7 @@ To work with the Eclipse IDE, follow these steps.
 
 - Select the *File->Import...* menu and then select "Existing projects from workspace". You will see the dialog shown below
 
-	.. figure:: import_eclipse.png
+	.. figure:: ../img/import_eclipse.png
 
 - In the *Select root directory* field, select the ``src`` folder where the GeoGit source code can be found (which now will also contain the Eclipse projects). The list of projects in the *Projects* field will be populated. 
 
@@ -78,13 +78,13 @@ Once your workspace contains the GeoGit source code, configure it following thes
 
 - Open the preferences dialog (*Window->Preferences*) and in the left part, select the *Java->Editor->Formatter* entry.
 
-	.. figure:: formatter.png
+	.. figure:: ../img/formatter.png
 
 - Press the *Import* button and import the GeoGit formatting rules that are found at ``build/eclipse/formatter.xml``. Set ``GeoGit`` as the current active profile.
 
 - If you use the auto-formatting on save option, make sure that only edited lines are formatted.
 
-	.. figure:: autoformat_save.png
+	.. figure:: ../img/autoformat_save.png
 
 
 Programming guide

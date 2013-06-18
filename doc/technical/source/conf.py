@@ -40,7 +40,7 @@ source_suffix = '.rst'
 master_doc = 'index'
 
 # General information about the project.
-project = u'GeoGit documentation'
+project = u'GeoGit Technical Manual'
 copyright = u'2013, OpenGeo'
 
 # The version info for the project you're documenting, acts as replacement for
@@ -91,8 +91,8 @@ pygments_style = 'sphinx'
 
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
-html_theme = 'geogit'
 html_theme_path = ['../../themes/']
+html_theme = 'geogit'
 
 # Theme options are theme-specific and customize the look and feel of a theme
 # further.  For a list of options available for each theme, see the
@@ -162,7 +162,7 @@ html_static_path = ['_static']
 #html_file_suffix = None
 
 # Output file base name for HTML help builder.
-htmlhelp_basename = 'GeoGitdocumentationdoc'
+htmlhelp_basename = 'GeoGitTechnicalManual'
 
 
 # -- Options for LaTeX output --------------------------------------------------
@@ -181,7 +181,7 @@ latex_elements = {
 # Grouping the document tree into LaTeX files. List of tuples
 # (source start file, target name, title, author, documentclass [howto/manual]).
 latex_documents = [
-  ('index', 'GeoGitdocumentation.tex', u'GeoGit documentation Documentation',
+  ('index', 'GeoGitTechnicalManual.tex', u'GeoGit Technical Manual',
    u'OpenGeo', 'manual'),
 ]
 
@@ -211,7 +211,7 @@ latex_documents = [
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
 man_pages = [
-    ('index', 'geogitdocumentation', u'GeoGit documentation Documentation',
+    ('index', 'geogitdocumentation', u'GeoGit Technical Manual',
      [u'OpenGeo'], 1)
 ]
 
@@ -225,8 +225,8 @@ man_pages = [
 # (source start file, target name, title, author,
 #  dir menu entry, description, category)
 texinfo_documents = [
-  ('index', 'GeoGitdocumentation', u'GeoGit documentation Documentation',
-   u'OpenGeo', 'GeoGitdocumentation', 'One line description of project.',
+  ('index', 'GeoGitTechnicalManual', u'GeoGit Technical Manual',
+   u'OpenGeo', 'GeoGitTechnicalManual', 'GeoGit Technical Manual.',
    'Miscellaneous'),
 ]
 
