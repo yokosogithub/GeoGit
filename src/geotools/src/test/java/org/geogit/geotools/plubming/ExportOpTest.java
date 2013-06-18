@@ -24,6 +24,7 @@ import org.opengis.feature.simple.SimpleFeature;
 import org.opengis.feature.simple.SimpleFeatureType;
 
 import com.google.common.base.Function;
+import com.google.common.base.Optional;
 
 public class ExportOpTest extends RepositoryTestCase {
 
@@ -95,14 +96,14 @@ public class ExportOpTest extends RepositoryTestCase {
                 simplifiedPoints3 };
 
         final SimpleFeatureBuilder featureBuilder = new SimpleFeatureBuilder(simplifiedPointsType);
-        Function<Feature, Feature> function = new Function<Feature, Feature>() {
+        Function<Feature, Optional<Feature>> function = new Function<Feature, Optional<Feature>>() {
             @Override
             @Nullable
-            public Feature apply(@Nullable Feature feature) {
+            public Optional<Feature> apply(@Nullable Feature feature) {
                 SimpleFeature simpleFeature = (SimpleFeature) feature;
                 featureBuilder.add(simpleFeature.getAttribute(0));
                 featureBuilder.add(simpleFeature.getAttribute(2));
-                return featureBuilder.buildFeature(null);
+                return Optional.of((Feature) featureBuilder.buildFeature(null));
             }
         };
 
@@ -131,13 +132,13 @@ public class ExportOpTest extends RepositoryTestCase {
                     wrongFeaturesName, wrongFeaturesTypeSpec);
             final SimpleFeatureBuilder wrongFeatureBuilder = new SimpleFeatureBuilder(
                     wrongFeaturesType);
-            Function<Feature, Feature> wrongFunction = new Function<Feature, Feature>() {
+            Function<Feature, Optional<Feature>> wrongFunction = new Function<Feature, Optional<Feature>>() {
                 @Override
                 @Nullable
-                public Feature apply(@Nullable Feature feature) {
+                public Optional<Feature> apply(@Nullable Feature feature) {
                     SimpleFeature simpleFeature = (SimpleFeature) feature;
                     wrongFeatureBuilder.add(simpleFeature.getAttribute(0));
-                    return wrongFeatureBuilder.buildFeature(null);
+                    return Optional.of((Feature) wrongFeatureBuilder.buildFeature(null));
                 }
             };
             geogit.command(ExportOp.class).setFeatureStore(featureStore).setPath(pointsName)

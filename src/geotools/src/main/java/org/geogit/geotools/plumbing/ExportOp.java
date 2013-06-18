@@ -8,6 +8,8 @@ package org.geogit.geotools.plumbing;
 import java.io.IOException;
 import java.util.List;
 
+import javax.annotation.Nullable;
+
 import org.geogit.api.AbstractGeoGitOp;
 import org.geogit.api.FeatureBuilder;
 import org.geogit.api.NodeRef;
@@ -33,11 +35,9 @@ import org.geotools.factory.Hints;
 import org.geotools.feature.DefaultFeatureCollection;
 import org.opengis.feature.Feature;
 import org.opengis.feature.simple.SimpleFeature;
-import org.opengis.feature.type.FeatureType;
 import org.opengis.feature.type.PropertyDescriptor;
 
 import com.google.common.base.Function;
-import com.google.common.base.Functions;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
@@ -58,7 +58,15 @@ public class ExportOp extends AbstractGeoGitOp<SimpleFeatureStore> {
 
     private ObjectDatabase database;
 
-    private Function<Feature, Feature> function = Functions.identity();
+    private Function<Feature, Optional<Feature>> function = new Function<Feature, Optional<Feature>>() {
+
+        @Override
+        @Nullable
+        public Optional<Feature> apply(@Nullable Feature feature) {
+            return Optional.fromNullable(feature);
+        }
+
+    };
 
     private ObjectId featureTypeId;
 
@@ -143,7 +151,7 @@ public class ExportOp extends AbstractGeoGitOp<SimpleFeatureStore> {
         boolean featureTypeWasSpecified = featureTypeId != null;
         featureTypeId = featureTypeId == null ? parentMetadataId : featureTypeId;
         FeatureBuilder featureBuilder = null;
-        FeatureType featureType = null;
+        // FeatureType featureType = null;
         int i = 1;
         while (iter.hasNext()) {
             NodeRef nodeRef = iter.next();
@@ -158,7 +166,7 @@ public class ExportOp extends AbstractGeoGitOp<SimpleFeatureStore> {
                     } else if (alter) {
                         RevFeatureType revFeatureType = command(RevObjectParse.class)
                                 .setObjectId(featureTypeId).call(RevFeatureType.class).get();
-                        featureType = revFeatureType.type();
+                        // featureType = revFeatureType.type();
                         featureBuilder = new FeatureBuilder(revFeatureType);
                         revFeature = new RevFeatureBuilder().build(alter(nodeRef, revFeatureType));
                     } else {
@@ -168,19 +176,21 @@ public class ExportOp extends AbstractGeoGitOp<SimpleFeatureStore> {
                 if (featureBuilder == null) {
                     RevFeatureType revFeatureType = command(RevObjectParse.class)
                             .setObjectId(featureTypeId).call(RevFeatureType.class).get();
-                    featureType = revFeatureType.type();
+                    // featureType = revFeatureType.type();
                     featureBuilder = new FeatureBuilder(revFeatureType);
                 }
                 Feature feature = featureBuilder.build(nodeRef.getNode().getName(), revFeature);
                 feature.getUserData().put(Hints.USE_PROVIDED_FID, true);
-                Feature validFeature = function.apply(feature);
-                features.add((SimpleFeature) validFeature);
+                Optional<Feature> validFeature = function.apply(feature);
+                if (validFeature.isPresent()) {
+                    features.add((SimpleFeature) validFeature.get());
+                }
                 getProgressListener().progress((i * 100.f) / revTree.get().size());
                 i++;
             }
         }
 
-        if (featureType == null) {
+        if (featureBuilder == null) {
             throw new GeoToolsOpException(StatusCode.UNABLE_TO_GET_FEATURES);
         }
 
@@ -324,10 +334,13 @@ public class ExportOp extends AbstractGeoGitOp<SimpleFeatureStore> {
      * If no function is explicitly set, and identity function is used, and Features are not
      * converted.
      * 
+     * This function can be used as a filter as well. If the returned object is Optional.absent, no
+     * feature will be added
+     * 
      * @param function
      * @return {@code this}
      */
-    public ExportOp setFeatureTypeConversionFunction(Function<Feature, Feature> function) {
+    public ExportOp setFeatureTypeConversionFunction(Function<Feature, Optional<Feature>> function) {
         this.function = function;
         return this;
     }
