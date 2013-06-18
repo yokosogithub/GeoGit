@@ -1,6 +1,6 @@
 /* -----------------------------------------------------------------------
    
-   GeoServer Admin Screens by OpenGeo
+   GeoGit Admin Screens by OpenGeo
    based on Blueprint CSS Framework 0.7.1 http://blueprintcss.googlecode.com
 
    * Copyright (c) 2007-2008. See LICENSE for more info.
@@ -45,14 +45,14 @@ address {margin:0 0 1.5em;font-style:italic;}
 del {color:#666;}
 pre, code {margin:1.5em 0;white-space:pre;}
 pre, code, tt {font:1em 'andale mono', 'lucida console', monospace;line-height:1.5;}
-li ul, li ol {margin:0.5em 1.5em;}
+li ul, li ol {margin:0 1.5em;}
 ul, ol {margin:0 1.5em 1.5em 1.5em;}
 ul {list-style-type:disc;}
 ol {list-style-type:decimal;}
 dl {margin:0 0 1.5em 0;}
 dl dt {font-weight:bold;}
 dd {margin-left:1.5em;}
-table {margin-bottom:1.4em;margin-right:auto;margin-left:auto;}
+table {margin-bottom:1.4em;width:100%;}
 th {font-weight:bold;background:#C3D9FF;}
 th, td {padding:4px 10px 4px 5px;}
 tr.even td {background:#E5ECF9;}
