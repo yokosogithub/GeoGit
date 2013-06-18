@@ -1,0 +1,161 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en-US" xml:lang="en-US">
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  
+  <title>GeoGit Technical Manual &mdash; GeoGit Technical Manual 0.3 documentation</title>
+  <link rel="stylesheet" href="_static/blueprint/screen.css" type="text/css" media="screen, projection" />
+  <link rel="stylesheet" href="_static/blueprint/print.css" type="text/css" media="print" /> 
+  <!--[if IE]>
+  <link rel="stylesheet" href="_static/blueprint/ie.css" type="text/css" media="screen, projection" />
+  <![endif]-->
+  <link rel="stylesheet" href="_static/default.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+  <script type="text/javascript">
+    var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '0.3',
+        COLLAPSE_MODINDEX: false,
+        FILE_SUFFIX: '.html'
+    };
+  </script>
+  <script type="text/javascript" src="_static/jquery.js"></script>
+  <script type="text/javascript" src="_static/doctools.js"></script>
+  <script type="text/javascript" src="_static/searchtools.js"></script>
+  <script type="text/javascript" src="searchindex.js"></script>
+      <link rel="top" title="GeoGit Technical Manual 0.3 documentation" href="#" />
+      <link rel="next" title="Binary encoding of GeoGit objects" href="geogit-binary.html" />
+</head>
+<body class="index">
+  <div id="header" class="selfclear">
+    <div class="wrap selfclear">
+      <div id="logo"><a href="#">GeoGit Technical Manual 0.3 documentation</a></div>
+      <ul id="top-nav">
+        <li class="first"><a href="https://github.com/opengeo/GeoGit/wiki">About</a></li>
+        <li><a href="https://github.com/opengeo/GeoGit/downloads">Download</a></li>
+        <li><a href="#">Documentation</a></li>
+      </ul>
+        <form id="quick-search" action="search.html" method="get">
+          <fieldset>
+            <input type="hidden" name="check_keywords" value="yes" />
+            <input type="hidden" name="area" value="default" />
+            <input id="quick-search-query" type="text" name="q" accessKey="q" name="searchQuery.queryString" size="25" value="Search Documentation&hellip;" size="20" tabindex="3" onblur="if(this.value=='') this.value='Search Documentation&hellip;';" onfocus="if(this.value=='Search Documentation&hellip;') this.value='';" />
+            <input id="quick-search-submit" type="image" value="Search" src="_static/chrome/search_icon_green.png" />
+          </fieldset>
+        </form>
+    </div><!-- /.wrap -->
+  </div><!-- /#header -->
+  <div id="main">
+    <div class="wrap selfclear">
+      <div id="content">
+<ul id="breadcrumbs">
+  
+  <li>GeoGit Technical Manual 0.3 documentation</li>
+</ul>
+<ul id="relatedlinks" class="selfclear">
+  <li class="first">
+    <a href="genindex.html" title="General Index"
+       accesskey="I">index</a></li>
+  <li>
+    <a href="geogit-binary.html" title="Binary encoding of GeoGit objects"
+       accesskey="N">next</a>|</li>
+</ul>
+        
+  <div class="section" id="geogit-technical-manual">
+<h1>GeoGit Technical Manual<a class="headerlink" href="#geogit-technical-manual" title="Permalink to this headline">¶</a></h1>
+<p>Contents:</p>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="geogit-binary.html">Binary encoding of GeoGit objects</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="geogit-binary.html#conventions">Conventions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="geogit-binary.html#commit">Commit</a></li>
+<li class="toctree-l2"><a class="reference internal" href="geogit-binary.html#tree">Tree</a></li>
+<li class="toctree-l2"><a class="reference internal" href="geogit-binary.html#feature">Feature</a></li>
+<li class="toctree-l2"><a class="reference internal" href="geogit-binary.html#featuretype">FeatureType</a></li>
+<li class="toctree-l2"><a class="reference internal" href="geogit-binary.html#tag">Tag</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="geogit-network-sync.html">GeoGit Network Synchronization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="geogit-network-sync.html#server-operations">Server operations</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="geogit-network-sync.html#manifest">Manifest</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="geogit-network-sync.html#example">Example</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="geogit-network-sync.html#existence-check">Existence Check</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="geogit-network-sync.html#id1">Example</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="geogit-network-sync.html#bulk-objects">Bulk Objects</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="geogit-network-sync.html#id2">Example</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="geogit-network-sync.html#bulk-send">Bulk Send</a></li>
+<li class="toctree-l2"><a class="reference internal" href="geogit-network-sync.html#reference-update">Reference Update</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="plumbing_commands.html">Plumbing commands</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="plumbing_commands.html#ls-tree">ls-tree</a></li>
+<li class="toctree-l2"><a class="reference internal" href="plumbing_commands.html#diff-tree">diff-tree</a></li>
+<li class="toctree-l2"><a class="reference internal" href="plumbing_commands.html#rev-list">rev-list</a></li>
+<li class="toctree-l2"><a class="reference internal" href="plumbing_commands.html#cat">cat</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="plumbing_commands.html#commit">Commit</a></li>
+<li class="toctree-l3"><a class="reference internal" href="plumbing_commands.html#tree">Tree</a></li>
+<li class="toctree-l3"><a class="reference internal" href="plumbing_commands.html#feature">Feature</a></li>
+<li class="toctree-l3"><a class="reference internal" href="plumbing_commands.html#feature-type">Feature type</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="plumbing_commands.html#blame">blame</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="developers.html">GeoGit for developers</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="developers.html#building">Building</a></li>
+<li class="toctree-l2"><a class="reference internal" href="developers.html#working-with-eclipse">Working with eclipse</a></li>
+<li class="toctree-l2"><a class="reference internal" href="developers.html#programming-guide">Programming guide</a></li>
+<li class="toctree-l2"><a class="reference internal" href="developers.html#tehcnical-documentation">Tehcnical documentation</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="geogit-merge-conflicts.html">GeoGit merge conflicts strategy</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="geogit-merge-conflicts.html#possible-merge-scenarios">Possible merge scenarios</a></li>
+<li class="toctree-l2"><a class="reference internal" href="geogit-merge-conflicts.html#the-conflict-file-during-a-conflicted-merge-operation">The conflict file during a conflicted merge operation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="geogit-merge-conflicts.html#the-working-tree-file-during-a-conflicted-merge-operation">The working tree file during a conflicted merge operation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="geogit-merge-conflicts.html#references-during-a-conflicted-merge-operation">References during a conflicted merge operation.</a></li>
+<li class="toctree-l2"><a class="reference internal" href="geogit-merge-conflicts.html#some-implementation-details">Some implementation details</a></li>
+<li class="toctree-l2"><a class="reference internal" href="geogit-merge-conflicts.html#mergetool">MergeTool</a></li>
+<li class="toctree-l2"><a class="reference internal" href="geogit-merge-conflicts.html#import-of-solved-elements">Import of solved elements</a></li>
+<li class="toctree-l2"><a class="reference internal" href="geogit-merge-conflicts.html#tree-feature-type-changes">Tree/Feature type changes</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</div>
+
+
+      <div class="selfclear pagination-nav">
+          <div class="rightwise"><strong>Next</strong>: <a href="geogit-binary.html" title="next chapter">Binary encoding of GeoGit objects</a></div>
+      </div>
+      </div><!-- /#content> -->
+  <div id="sidebar">
+        <div class="section">
+          <h3>Continue Reading</h3>
+          <ul>
+            <li>Next: <a href="geogit-binary.html" title="next chapter">Binary encoding of GeoGit objects</a></li>
+          </ul>
+        </div>
+        <div class="section">
+        <h3>This Page</h3>
+        <ul class="this-page-menu">
+          <li><a href="_sources/index.txt">Show Source</a></li>
+        </ul>
+        </div>
+  </div><!-- /#sidebar -->
+  </div><!-- /.wrap> -->
+</div><!-- /#main -->
+<div id="footer">
+  <div class="wrap">
+    &copy; Copyright 2013, OpenGeo.
+    Created using <a href="http://sphinx.pocoo.org/">Sphinx</a>.
+  </div><!-- /.wrap> -->
+</div><!-- /#footer -->
+  </body>
+</html>

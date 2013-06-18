@@ -1,0 +1,159 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en-US" xml:lang="en-US">
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  
+  <title>geogit-branch documentation &mdash; GeoGit 0.3 GeoGit man pages</title>
+  <link rel="stylesheet" href="_static/blueprint/screen.css" type="text/css" media="screen, projection" />
+  <link rel="stylesheet" href="_static/blueprint/print.css" type="text/css" media="print" /> 
+  <!--[if IE]>
+  <link rel="stylesheet" href="_static/blueprint/ie.css" type="text/css" media="screen, projection" />
+  <![endif]-->
+  <link rel="stylesheet" href="_static/default.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+  <script type="text/javascript">
+    var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '0.3',
+        COLLAPSE_MODINDEX: false,
+        FILE_SUFFIX: '.html'
+    };
+  </script>
+  <script type="text/javascript" src="_static/jquery.js"></script>
+  <script type="text/javascript" src="_static/doctools.js"></script>
+  <script type="text/javascript" src="_static/searchtools.js"></script>
+  <script type="text/javascript" src="searchindex.js"></script>
+      <link rel="top" title="GeoGit 0.3 GeoGit man pages" href="index.html" />
+</head>
+<body class="branch">
+  <div id="header" class="selfclear">
+    <div class="wrap selfclear">
+      <div id="logo"><a href="index.html">GeoGit 0.3 GeoGit man pages</a></div>
+      <ul id="top-nav">
+        <li class="first"><a href="https://github.com/opengeo/GeoGit/wiki">About</a></li>
+        <li><a href="https://github.com/opengeo/GeoGit/downloads">Download</a></li>
+        <li><a href="index.html">Documentation</a></li>
+      </ul>
+        <form id="quick-search" action="search.html" method="get">
+          <fieldset>
+            <input type="hidden" name="check_keywords" value="yes" />
+            <input type="hidden" name="area" value="default" />
+            <input id="quick-search-query" type="text" name="q" accessKey="q" name="searchQuery.queryString" size="25" value="Search Documentation&hellip;" size="20" tabindex="3" onblur="if(this.value=='') this.value='Search Documentation&hellip;';" onfocus="if(this.value=='Search Documentation&hellip;') this.value='';" />
+            <input id="quick-search-submit" type="image" value="Search" src="_static/chrome/search_icon_green.png" />
+          </fieldset>
+        </form>
+    </div><!-- /.wrap -->
+  </div><!-- /#header -->
+  <div id="main">
+    <div class="wrap selfclear">
+      <div id="content">
+<ul id="breadcrumbs">
+  
+  <li><a href="index.html">GeoGit 0.3 GeoGit man pages</a> &raquo;</li>
+  <li>geogit-branch documentation</li>
+</ul>
+<ul id="relatedlinks" class="selfclear">
+</ul>
+        
+  <div class="section" id="geogit-branch-documentation">
+<span id="geogit-branch"></span><h1>geogit-branch documentation<a class="headerlink" href="#geogit-branch-documentation" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="synopsis">
+<h2>SYNOPSIS<a class="headerlink" href="#synopsis" title="Permalink to this headline">¶</a></h2>
+<p>geogit branch [&lt;options&gt;] [&lt;branchname&gt; [&lt;startpoint&gt;]]
+geogit branch &#8211;delete &lt;branchname&gt;...
+geogit branch &#8211;rename [&#8211;force] [&lt;oldBranchName&gt;] &lt;newBranchName&gt;</p>
+</div>
+<div class="section" id="description">
+<h2>DESCRIPTION<a class="headerlink" href="#description" title="Permalink to this headline">¶</a></h2>
+<p>With no arguments the command will display all existing branches with the current branch
+highlighted with the asterisk. The -r option will list only remote branches and the -a option will list both local and remote branches. Adding the &#8211;color option with the value of auto, always, or never will add or remove color from the listing. With the -v option it will list the branches along with the commit id and commit message that the branch is currently on.</p>
+<p>With a branch name specified it will create a branch of off the current branch. If a start point is specified as well then it will be created off of the given start point. If the -c option is given it will automatically checkout the branch once it is created.</p>
+<p>With the -d option with a branch name specified will delete that branch. You cannot delete the branch that you are currently on, checkout a different branch to delete it. Also with the -d option you can list multiple branches for deletion.</p>
+<p>With the -m option you can specify an oldBranchName to rename with the given newBranchName or you can rename the current branch by not specifying oldBranchName. With the &#8211;force option you can rename a branch to a name that already exists as a branch, however this will delete the other branch.</p>
+</div>
+<div class="section" id="options">
+<h2>OPTIONS<a class="headerlink" href="#options" title="Permalink to this headline">¶</a></h2>
+<table class="docutils option-list" frame="void" rules="none">
+<col class="option" />
+<col class="description" />
+<tbody valign="top">
+<tr><td class="option-group">
+<kbd><span class="option">--color</span></kbd></td>
+<td>Whether to apply colored output. Possible values are
+auto|never|always</td></tr>
+<tr><td class="option-group">
+<kbd><span class="option">--checkout</span>, <span class="option">-c</span></kbd></td>
+<td>Automatically checkout the new branch when the command is
+used to create a branch</td></tr>
+<tr><td class="option-group">
+<kbd><span class="option">--delete</span>, <span class="option">-d</span></kbd></td>
+<td>Deletes the specified branch</td></tr>
+<tr><td class="option-group">
+<kbd><span class="option">--rename</span>, <span class="option">-m</span></kbd></td>
+<td>Rename the current branch if no oldBranchName is specified
+or the branch called oldBranchName to the newBranchName
+specified</td></tr>
+<tr><td class="option-group">
+<kbd><span class="option">--force</span>, <span class="option">-f</span></kbd></td>
+<td>Forces the renaming of a branch to an existing branch and
+deletes the original branch by that name</td></tr>
+<tr><td class="option-group">
+<kbd><span class="option">--verbose</span>, <span class="option">-v</span></kbd></td>
+<td>Verbose output for list mode, shows branch commit id and
+commit message</td></tr>
+<tr><td class="option-group">
+<kbd><span class="option">--remote</span>, <span class="option">-r</span></kbd></td>
+<td>List or delete (if used with &#8211;delete or -D) the
+remote-tracking branches</td></tr>
+<tr><td class="option-group">
+<kbd><span class="option">--all</span>, <span class="option">-a</span></kbd></td>
+<td>List all branches, both local and remote</td></tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="see-also">
+<h2>SEE ALSO<a class="headerlink" href="#see-also" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="bugs">
+<h2>BUGS<a class="headerlink" href="#bugs" title="Permalink to this headline">¶</a></h2>
+<p>Discussion is still open.</p>
+</div>
+</div>
+
+
+      </div><!-- /#content> -->
+  <div id="sidebar" class="contrast">
+      <div id="toc" class="section">
+        <h3 class="pngfix">Table Of Contents</h3>
+        <ul>
+<li><a class="reference internal" href="#">geogit-branch documentation</a><ul>
+<li><a class="reference internal" href="#synopsis">SYNOPSIS</a></li>
+<li><a class="reference internal" href="#description">DESCRIPTION</a></li>
+<li><a class="reference internal" href="#options">OPTIONS</a></li>
+<li><a class="reference internal" href="#see-also">SEE ALSO</a></li>
+<li><a class="reference internal" href="#bugs">BUGS</a></li>
+</ul>
+</li>
+</ul>
+
+        <div class="section-footer"></div>
+      </div>
+        <div class="section">
+        <h3>This Page</h3>
+        <ul class="this-page-menu">
+          <li><a href="_sources/branch.txt">Show Source</a></li>
+        </ul>
+        </div>
+  </div><!-- /#sidebar -->
+  </div><!-- /.wrap> -->
+</div><!-- /#main -->
+<div id="footer">
+  <div class="wrap">
+    &copy; Copyright OpenGeo <http://opengeo.org>.
+    Last updated on Jun 18, 2013.
+    Created using <a href="http://sphinx.pocoo.org/">Sphinx</a>.
+  </div><!-- /.wrap> -->
+</div><!-- /#footer -->
+  </body>
+</html>

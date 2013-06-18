@@ -1,0 +1,145 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en-US" xml:lang="en-US">
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  
+  <title>geogit-rebase documentation &mdash; GeoGit 0.3 GeoGit man pages</title>
+  <link rel="stylesheet" href="_static/blueprint/screen.css" type="text/css" media="screen, projection" />
+  <link rel="stylesheet" href="_static/blueprint/print.css" type="text/css" media="print" /> 
+  <!--[if IE]>
+  <link rel="stylesheet" href="_static/blueprint/ie.css" type="text/css" media="screen, projection" />
+  <![endif]-->
+  <link rel="stylesheet" href="_static/default.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+  <script type="text/javascript">
+    var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '0.3',
+        COLLAPSE_MODINDEX: false,
+        FILE_SUFFIX: '.html'
+    };
+  </script>
+  <script type="text/javascript" src="_static/jquery.js"></script>
+  <script type="text/javascript" src="_static/doctools.js"></script>
+  <script type="text/javascript" src="_static/searchtools.js"></script>
+  <script type="text/javascript" src="searchindex.js"></script>
+      <link rel="top" title="GeoGit 0.3 GeoGit man pages" href="index.html" />
+</head>
+<body class="rebase">
+  <div id="header" class="selfclear">
+    <div class="wrap selfclear">
+      <div id="logo"><a href="index.html">GeoGit 0.3 GeoGit man pages</a></div>
+      <ul id="top-nav">
+        <li class="first"><a href="https://github.com/opengeo/GeoGit/wiki">About</a></li>
+        <li><a href="https://github.com/opengeo/GeoGit/downloads">Download</a></li>
+        <li><a href="index.html">Documentation</a></li>
+      </ul>
+        <form id="quick-search" action="search.html" method="get">
+          <fieldset>
+            <input type="hidden" name="check_keywords" value="yes" />
+            <input type="hidden" name="area" value="default" />
+            <input id="quick-search-query" type="text" name="q" accessKey="q" name="searchQuery.queryString" size="25" value="Search Documentation&hellip;" size="20" tabindex="3" onblur="if(this.value=='') this.value='Search Documentation&hellip;';" onfocus="if(this.value=='Search Documentation&hellip;') this.value='';" />
+            <input id="quick-search-submit" type="image" value="Search" src="_static/chrome/search_icon_green.png" />
+          </fieldset>
+        </form>
+    </div><!-- /.wrap -->
+  </div><!-- /#header -->
+  <div id="main">
+    <div class="wrap selfclear">
+      <div id="content">
+<ul id="breadcrumbs">
+  
+  <li><a href="index.html">GeoGit 0.3 GeoGit man pages</a> &raquo;</li>
+  <li>geogit-rebase documentation</li>
+</ul>
+<ul id="relatedlinks" class="selfclear">
+</ul>
+        
+  <div class="section" id="geogit-rebase-documentation">
+<span id="geogit-rebase"></span><h1>geogit-rebase documentation<a class="headerlink" href="#geogit-rebase-documentation" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="synopsis">
+<h2>SYNOPSIS<a class="headerlink" href="#synopsis" title="Permalink to this headline">¶</a></h2>
+<p>geogit rebase [&#8211;onto &lt;newbase&gt;] [&lt;upstream&gt;] [&lt;branch&gt;] [&#8211;abort] [&#8211;continue] [&#8211;continue &lt;message&gt;] [&#8211;skip]</p>
+</div>
+<div class="section" id="description">
+<h2>DESCRIPTION<a class="headerlink" href="#description" title="Permalink to this headline">¶</a></h2>
+<p>Forward-port local commits to the updated upstream head.</p>
+<p>If &lt;branch&gt; is specified, geogit rebase will perform an automatic geogit checkout &lt;branch&gt; before doing anything else. Otherwise it remains on the current branch.</p>
+<p>All changes made by commits in the current branch but that are not in &lt;upstream&gt; are saved to a temporary area.</p>
+<p>The current branch is reset to &lt;upstream&gt;, or &lt;newbase&gt; if the &#8211;onto option was supplied.</p>
+<p>The commits that were previously saved into the temporary area are then reapplied to the current branch, one by one, in order.</p>
+<p>If conflicts are found while aplying any of the commits, the rebase operation is stopped. Conflicts should be resolved and the rebase commands has to be run again with the &#8211;continue switch to continue aplying the remaining commits</p>
+</div>
+<div class="section" id="options">
+<h2>OPTIONS<a class="headerlink" href="#options" title="Permalink to this headline">¶</a></h2>
+<table class="docutils option-list" frame="void" rules="none">
+<col class="option" />
+<col class="description" />
+<tbody valign="top">
+<tr><td class="option-group" colspan="2">
+<kbd><span class="option">--onto <var>&lt;newbase&gt;</var></span></kbd></td>
+</tr>
+<tr><td>&nbsp;</td><td>Starting point at which to create the new commits. If the &#8211;onto option is not specified, the starting point is &lt;upstream&gt;. May be any valid commit, and not just an existing branch name.</td></tr>
+<tr><td class="option-group">
+<kbd><span class="option">--abort</span></kbd></td>
+<td>Aborts a rebase operation that was stopped after conflicts were found. It reverts the repository to its pre-rebase state.</td></tr>
+<tr><td class="option-group">
+<kbd><span class="option">--continue</span></kbd></td>
+<td>Continues a rebase operation that was stopped after conflicts were found. It should be run after conflicts have been resolved.</td></tr>
+<tr><td class="option-group">
+<kbd><span class="option">--skip</span></kbd></td>
+<td>Skips the commit that caused the rebase operation to stop due to conflicts and moves into the next one.</td></tr>
+<tr><td class="option-group" colspan="2">
+<kbd><span class="option">--squash <var>&lt;message&gt;</var></span></kbd></td>
+</tr>
+<tr><td>&nbsp;</td><td>Squash all commits into a single one. The provided message will be used as commit message.</td></tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="see-also">
+<h2>SEE ALSO<a class="headerlink" href="#see-also" title="Permalink to this headline">¶</a></h2>
+<p><a class="reference internal" href="log.html#geogit-log"><em>geogit-log documentation</em></a></p>
+</div>
+<div class="section" id="bugs">
+<h2>BUGS<a class="headerlink" href="#bugs" title="Permalink to this headline">¶</a></h2>
+<p>Discussion is still open.</p>
+</div>
+</div>
+
+
+      </div><!-- /#content> -->
+  <div id="sidebar" class="contrast">
+      <div id="toc" class="section">
+        <h3 class="pngfix">Table Of Contents</h3>
+        <ul>
+<li><a class="reference internal" href="#">geogit-rebase documentation</a><ul>
+<li><a class="reference internal" href="#synopsis">SYNOPSIS</a></li>
+<li><a class="reference internal" href="#description">DESCRIPTION</a></li>
+<li><a class="reference internal" href="#options">OPTIONS</a></li>
+<li><a class="reference internal" href="#see-also">SEE ALSO</a></li>
+<li><a class="reference internal" href="#bugs">BUGS</a></li>
+</ul>
+</li>
+</ul>
+
+        <div class="section-footer"></div>
+      </div>
+        <div class="section">
+        <h3>This Page</h3>
+        <ul class="this-page-menu">
+          <li><a href="_sources/rebase.txt">Show Source</a></li>
+        </ul>
+        </div>
+  </div><!-- /#sidebar -->
+  </div><!-- /.wrap> -->
+</div><!-- /#main -->
+<div id="footer">
+  <div class="wrap">
+    &copy; Copyright OpenGeo <http://opengeo.org>.
+    Last updated on Jun 18, 2013.
+    Created using <a href="http://sphinx.pocoo.org/">Sphinx</a>.
+  </div><!-- /.wrap> -->
+</div><!-- /#footer -->
+  </body>
+</html>
