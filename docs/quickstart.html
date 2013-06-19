@@ -85,8 +85,8 @@
 </ul>
 <div class="section" id="installation">
 <h2>Installation<a class="headerlink" href="#installation" title="Permalink to this headline">¶</a></h2>
-<p>Download <a class="reference external" href="http://sourceforge.net/projects/geogit/files/geogit-0.1.0/geogit-cli-app-0.1.0.zip/download">Version 0.1.0</a> from SourceForge. Full documentation is available for download and online.</p>
-<p>To install unzip the <em>geogit-cli-app-0.1.0.zip</em> to an applications directory, and then add the unzipped geogit/bin/ folder to your <tt class="docutils literal"><span class="pre">PATH</span></tt>.</p>
+<p>Download <a class="reference external" href="http://sourceforge.net/projects/geogit/files/geogit-0.3.0/geogit-cli-app-0.3.0.zip/download">Version 0.3.0</a> from SourceForge. Full documentation is available for download and online.</p>
+<p>To install unzip the <em>geogit-cli-app-0.3.0.zip</em> to an applications directory, and then add the unzipped geogit/bin/ folder to your <tt class="docutils literal"><span class="pre">PATH</span></tt>.</p>
 <p>To test that GeoGit is ready to be used, open a console and type <tt class="docutils literal"><span class="pre">geogit</span> <span class="pre">help</span></tt>. You should see a list of available commands like the one shown below.</p>
 <div class="highlight-python"><pre>usage: geogit &lt;command&gt; [&lt;args&gt;]
 
@@ -125,7 +125,7 @@ $ geogit config --gloabl user.email "myemail@address.com"</pre>
 <div class="section" id="importing-data">
 <h2>Importing data<a class="headerlink" href="#importing-data" title="Permalink to this headline">¶</a></h2>
 <p>To version a dataset, it has to be imported into the repository. Data in different formats can be imported into GeoGit.</p>
-<p>Download the data in <a class="reference external" href="https://github.com/opengeo/GeoGit/blob/0.1.0/doc/quickstart/quickstart_data.zip?raw=true">this zip file</a>. It contains several folders, each of them with a snapshot of the dataset. We will use them to create our GeoGit repository, simulating the edition and creation of all the versions it contains.</p>
+<p>Download the data in <a class="reference external" href="https://raw.github.com/opengeo/GeoGit/0.3.0/doc/manual/sample_data/quickstart_data.zip">this zip file</a>. It contains several folders, each of them with a snapshot of the dataset. We will use them to create our GeoGit repository, simulating the edition and creation of all the versions it contains.</p>
 <p>We will start by importing the <tt class="docutils literal"><span class="pre">snapshot1/parks.shp</span></tt> shapefile, using the following command:</p>
 <div class="highlight-python"><pre>$ geogit shp import snapshot1/parks.shp
 Importing from shapefile snapshot1\parks.shp
