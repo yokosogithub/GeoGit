@@ -10,8 +10,9 @@ Contents:
 
 .. toctree::
 
-  intro  
-  installing 
+  intro
+  quickstart
+  installing
   init
   config
   import
