@@ -6,6 +6,10 @@
 package org.geogit.osm.out.cli;
 
 import java.io.File;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.SQLException;
+import java.sql.Statement;
 
 import jline.UnsupportedTerminal;
 import jline.console.ConsoleReader;
@@ -17,10 +21,12 @@ import org.geogit.osm.in.internal.OSMImportOp;
 import org.geogit.osm.map.cli.OSMMap;
 import org.geogit.repository.WorkingTree;
 import org.junit.Assert;
+import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
+import org.sqlite.SQLiteConfig;
 
 public class OSMExportSLTest extends Assert {
 
@@ -42,6 +48,31 @@ public class OSMExportSLTest extends Assert {
         cli.execute("config", "user.email", "groldan@opengeo.org");
         assertTrue(new File(workingDirectory, ".geogit").exists());
 
+
+        // Use in-memory database to test whether we can load Spatialite extension
+        Connection connection = null;
+        Throwable thrown = null;
+
+        try {
+            Class.forName("org.sqlite.JDBC");
+            SQLiteConfig config = new SQLiteConfig();
+            config.enableSpatiaLite(true);
+            connection = DriverManager.getConnection("jdbc:sqlite::memory:", config.toProperties());
+            Statement statement = connection.createStatement();
+            statement.execute("SELECT InitSpatialMetaData();");
+        } catch (SQLException e) {
+            thrown = e;
+            thrown.printStackTrace();
+        } finally {
+            if (connection != null) {
+                connection.close();
+            }
+        }
+
+        if (thrown != null) {
+            thrown.printStackTrace();
+            Assume.assumeNoException(thrown);
+        }
     }
 
     @Test
