@@ -69,6 +69,14 @@ public class MergeWebOp extends AbstractWebAPICommand {
 
         MergeOp merge = transaction.command(MergeOp.class);
 
+        final Optional<ObjectId> oid = transaction.command(RevParse.class).setRefSpec(commit)
+                .call();
+        if (oid.isPresent()) {
+            merge.addCommit(Suppliers.ofInstance(oid.get()));
+        } else {
+            throw new CommandSpecException("Couldn't resolve '" + commit + "' to a commit.");
+        }
+
         try {
             final MergeReport report = merge.setNoCommit(noCommit).call();
 
@@ -85,16 +93,7 @@ public class MergeWebOp extends AbstractWebAPICommand {
         } catch (Exception e) {
             final RevCommit ours = context.getGeoGIT().getRepository()
                     .getCommit(currHead.get().getObjectId());
-            final Optional<ObjectId> oid = transaction.command(RevParse.class).setRefSpec(commit)
-                    .call();
-            final RevCommit theirs;
-            if (oid.isPresent()) {
-                theirs = context.getGeoGIT().getRepository().getCommit(oid.get());
-                merge.addCommit(Suppliers.ofInstance(oid.get()));
-            } else {
-                throw new CommandSpecException("Couldn't resolve '" + commit + "' to a commit.");
-            }
-
+            final RevCommit theirs = context.getGeoGIT().getRepository().getCommit(oid.get());
             final Optional<RevCommit> ancestor = transaction.command(FindCommonAncestor.class)
                     .setLeft(ours).setRight(theirs).call();
             context.setResponseContent(new CommandResponse() {

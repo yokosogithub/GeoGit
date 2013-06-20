@@ -48,7 +48,9 @@ public class PushWebOp extends AbstractWebAPICommand {
 
         PushOp command = geogit.command(PushOp.class);
 
-        command.addRefSpec(refSpec);
+        if (refSpec != null) {
+            command.addRefSpec(refSpec);
+        }
 
         try {
             command.setAll(pushAll).setRemote(remoteName).call();

@@ -52,9 +52,6 @@ public class Commit extends AbstractWebAPICommand {
      */
     @Override
     public void run(CommandContext context) {
-        if (message == null || message.trim().isEmpty()) {
-            throw new CommandSpecException("No commit message provided");
-        }
         final CommandLocator geogit = this.getCommandLocator(context);
         RevCommit commit;
         try {
@@ -62,6 +59,9 @@ public class Commit extends AbstractWebAPICommand {
             assert commit != null;
         } catch (NothingToCommitException noChanges) {
             context.setResponseContent(CommandResponse.warning("Nothing to commit"));
+            commit = null;
+        } catch (IllegalStateException e) {
+            context.setResponseContent(CommandResponse.warning(e.getMessage()));
             commit = null;
         }
         if (commit != null) {
