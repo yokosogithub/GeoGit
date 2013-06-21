@@ -3,6 +3,7 @@ package org.geogit.web.api;
 import java.util.Arrays;
 
 import org.geogit.api.ObjectId;
+import org.geogit.web.api.commands.AddWebOp;
 import org.geogit.web.api.commands.BeginTransaction;
 import org.geogit.web.api.commands.BranchWebOp;
 import org.geogit.web.api.commands.CheckoutWebOp;
@@ -19,6 +20,7 @@ import org.geogit.web.api.commands.PullWebOp;
 import org.geogit.web.api.commands.PushWebOp;
 import org.geogit.web.api.commands.RefParseWeb;
 import org.geogit.web.api.commands.RemoteWebOp;
+import org.geogit.web.api.commands.RemoveWebOp;
 import org.geogit.web.api.commands.Status;
 import org.geogit.web.api.commands.TagWebOp;
 import org.geogit.web.api.commands.UpdateRefWeb;
@@ -78,6 +80,10 @@ public class CommandBuilder {
             command = buildBeginTransaction(options);
         } else if ("endTransaction".equalsIgnoreCase(commandName)) {
             command = buildEndTransaction(options);
+        } else if ("add".equalsIgnoreCase(commandName)) {
+            command = buildAdd(options);
+        } else if ("remove".equalsIgnoreCase(commandName)) {
+        	command = buildRemove(options);
         } else {
             throw new CommandSpecException("'" + commandName + "' is not a geogit command");
         }
@@ -374,6 +380,31 @@ public class CommandBuilder {
         command.setOurs(Boolean.valueOf(options.getFirstValue("ours", "false")));
         command.setTheirs(Boolean.valueOf(options.getFirstValue("theirs", "false")));
         command.setPath(options.getFirstValue("path", null));
+        return command;
+    }
+
+    /**
+     * Builds the {@link AddWebOp} command.
+     * 
+     * @param options the parameter set
+     * @return the built command
+     */
+    static AddWebOp buildAdd(ParameterSet options) {
+        AddWebOp command = new AddWebOp();
+        command.setPath(options.getFirstValue("path", null));
+        return command;
+    }
+    
+    /**
+     * Builds the {@link RemoveWebOp} command.
+     * 
+     * @param options the parameter set
+     * @return the built command
+     */
+    static RemoveWebOp buildRemove(ParameterSet options) {
+    	RemoveWebOp command = new RemoveWebOp();
+        command.setPath(options.getFirstValue("path", null));
+        command.setRecursive(Boolean.valueOf(options.getFirstValue("recursive", "false")));
         return command;
     }
 }

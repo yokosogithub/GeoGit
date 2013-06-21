@@ -52,6 +52,10 @@ public class Commit extends AbstractWebAPICommand {
      */
     @Override
     public void run(CommandContext context) {
+        if (this.getTransactionId() == null) {
+            throw new CommandSpecException(
+                    "No transaction was specified, commit requires a transaction to preserve the stability of the repository.");
+        }
         final CommandLocator geogit = this.getCommandLocator(context);
         RevCommit commit;
         try {

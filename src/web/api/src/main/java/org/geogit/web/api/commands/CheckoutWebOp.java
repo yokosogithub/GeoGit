@@ -26,7 +26,7 @@ public class CheckoutWebOp extends AbstractWebAPICommand {
     /**
      * Mutator for the branchOrCommit variable
      * 
-     * @param commit - the branch or commit to checkout
+     * @param branchOrCommit - the branch or commit to checkout
      */
     public void setName(String branchOrCommit) {
         this.branchOrCommit = branchOrCommit;
