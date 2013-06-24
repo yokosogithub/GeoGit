@@ -117,7 +117,8 @@ public class DepthSearch {
         NodeRef result = null;
         if (node.isPresent()) {
             String nodeParentPath = NodeRef.parentPath(childPath);
-            result = new NodeRef(node.get(), nodeParentPath, metadataId);
+            result = new NodeRef(node.get(), nodeParentPath, node.get().getMetadataId()
+                    .or(metadataId));
         }
         return Optional.fromNullable(result);
     }
