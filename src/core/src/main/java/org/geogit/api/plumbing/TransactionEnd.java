@@ -120,7 +120,7 @@ public class TransactionEnd extends AbstractGeoGitOp<Boolean> {
                                     .setForce(true).call();
                             transaction.command(MergeOp.class)
                                     .addCommit(Suppliers.ofInstance(repoRef.get().getObjectId()))
-                                    .call();
+                                    .setTheirs(true).call();
                             updatedRef = transaction.command(RefParse.class).setName(ref.getName())
                                     .call().get();
                         }
@@ -156,7 +156,7 @@ public class TransactionEnd extends AbstractGeoGitOp<Boolean> {
     }
 
     private ImmutableSet<Ref> getChangedRefs() {
-        return transaction.command(ForEachRef.class).setPrefixFilter(Ref.HEADS_PREFIX).call();
+        return transaction.command(ForEachRef.class).setPrefixFilter(Ref.REFS_PREFIX).call();
     }
 
     private boolean repositoryChanged(Ref ref) {
