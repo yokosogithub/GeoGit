@@ -348,9 +348,9 @@ public class JEStagingDatabase implements ObjectDatabase, StagingDatabase {
             }
             String s = sb.toString();
             if (!s.isEmpty()) {
-                Files.append(s, file.get(), Charsets.UTF_8);
+                Files.write(s, file.get(), Charsets.UTF_8);
             } else {
-            	file.get().delete();
+                file.get().delete();
             }
         } catch (IOException e) {
             throw Throwables.propagate(e);

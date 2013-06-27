@@ -59,7 +59,8 @@ public class Commit extends AbstractWebAPICommand {
         final CommandLocator geogit = this.getCommandLocator(context);
         RevCommit commit;
         try {
-            commit = geogit.command(CommitOp.class).setMessage(message).setAll(all).call();
+            commit = geogit.command(CommitOp.class).setMessage(message).setAllowEmpty(true)
+                    .setAll(all).call();
             assert commit != null;
         } catch (NothingToCommitException noChanges) {
             context.setResponseContent(CommandResponse.warning("Nothing to commit"));

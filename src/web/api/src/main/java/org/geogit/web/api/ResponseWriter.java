@@ -755,6 +755,8 @@ public class ResponseWriter {
                 out.writeStartElement("Feature");
                 writeElement("change", "CONFLICT");
                 writeElement("id", next.getConflict().getPath());
+                writeElement("ourvalue", next.getConflict().getOurs().toString());
+                writeElement("theirvalue", next.getConflict().getTheirs().toString());
                 writeElement("geometry", next.getGeometry().toText());
                 if (next.getCRS() != null) {
                     writeElement("crs", next.getCRS());

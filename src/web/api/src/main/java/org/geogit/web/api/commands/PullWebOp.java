@@ -4,7 +4,14 @@ import java.util.Iterator;
 
 import org.geogit.api.CommandLocator;
 import org.geogit.api.ObjectId;
+import org.geogit.api.Ref;
+import org.geogit.api.RevCommit;
+import org.geogit.api.SymRef;
+import org.geogit.api.plumbing.FindCommonAncestor;
+import org.geogit.api.plumbing.RefParse;
 import org.geogit.api.plumbing.diff.DiffEntry;
+import org.geogit.api.plumbing.merge.MergeScenarioReport;
+import org.geogit.api.plumbing.merge.ReportMergeScenarioOp;
 import org.geogit.api.porcelain.DiffOp;
 import org.geogit.api.porcelain.PullOp;
 import org.geogit.api.porcelain.PullResult;
@@ -13,6 +20,8 @@ import org.geogit.web.api.AbstractWebAPICommand;
 import org.geogit.web.api.CommandContext;
 import org.geogit.web.api.CommandResponse;
 import org.geogit.web.api.ResponseWriter;
+
+import com.google.common.base.Optional;
 
 public class PullWebOp extends AbstractWebAPICommand {
 
@@ -53,12 +62,10 @@ public class PullWebOp extends AbstractWebAPICommand {
     public void run(CommandContext context) {
         final CommandLocator geogit = this.getCommandLocator(context);
 
-        PullOp command = geogit.command(PullOp.class);
-
-        command.addRefSpec(refSpec);
-
+        PullOp command = geogit.command(PullOp.class).setRemote(remoteName).setAll(fetchAll)
+                .addRefSpec(refSpec);
         try {
-            final PullResult result = command.setRemote(remoteName).setAll(fetchAll).call();
+            final PullResult result = command.call();
             final Iterator<DiffEntry> iter;
             if (result.getOldRef() != null && result.getNewRef() != null
                     && result.getOldRef().equals(result.getNewRef())) {
@@ -90,7 +97,46 @@ public class PullWebOp extends AbstractWebAPICommand {
                 context.setResponseContent(CommandResponse
                         .error("Unable to pull, the remote history is shallow."));
             }
+        } catch (IllegalStateException e) {
+            String[] refs = refSpec.split(":");
+            String remoteRef = Ref.REMOTES_PREFIX + remoteName + "/" + refs[0];
+            Optional<Ref> sourceRef = geogit.command(RefParse.class).setName(remoteRef).call();
+            String destinationref = "";
+            if (refs.length == 2) {
+                destinationref = refs[1];
+            } else {
+                final Optional<Ref> currHead = geogit.command(RefParse.class).setName(Ref.HEAD)
+                        .call();
+                if (!currHead.isPresent()) {
+                    context.setResponseContent(CommandResponse
+                            .error("Repository has no HEAD, can't pull."));
+                } else if (!(currHead.get() instanceof SymRef)) {
+                    context.setResponseContent(CommandResponse
+                            .error("Can't pull from detached HEAD"));
+                }
+                final SymRef headRef = (SymRef) currHead.get();
+                destinationref = headRef.getTarget();
+            }
+
+            Optional<Ref> destRef = geogit.command(RefParse.class).setName(destinationref).call();
+            final RevCommit theirs = context.getGeoGIT().getRepository()
+                    .getCommit(sourceRef.get().getObjectId());
+            final RevCommit ours = context.getGeoGIT().getRepository()
+                    .getCommit(destRef.get().getObjectId());
+            final Optional<RevCommit> ancestor = geogit.command(FindCommonAncestor.class)
+                    .setLeft(ours).setRight(theirs).call();
+            context.setResponseContent(new CommandResponse() {
+                final MergeScenarioReport report = geogit.command(ReportMergeScenarioOp.class)
+                        .setMergeIntoCommit(ours).setToMergeCommit(theirs).call();
+
+                @Override
+                public void write(ResponseWriter out) throws Exception {
+                    out.start();
+                    out.writeMergeResponse(report, geogit, ours.getId(), theirs.getId(), ancestor
+                            .get().getId());
+                    out.finish();
+                }
+            });
         }
     }
-
 }
