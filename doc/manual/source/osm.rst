@@ -218,7 +218,7 @@ Mappings are defined in a mapping file, using JSON syntax, as in the following e
 
 ::
 
-	{"rules":[{"name":"onewaystreets","filter":{"oneway":["yes"]},"fields":{"lit":"STRING","geom":"LINESTRING"}}]}
+	{"rules":[{"name":"onewaystreets","filter":{"oneway":["yes"]},"fields":{"lit":{"name":"lit", "type":STRING"},"geom":{"name":"geom", "type":LINESTRING"}}]}
 
 A mapping description is an array of mapping rules, each of them with the following fields:
  
@@ -229,20 +229,21 @@ A mapping description is an array of mapping rules, each of them with the follow
 
  ::
 
- 	{"rules":[{"filter":{},"fields":{"geom":"LINESTRING"},"name":"all_ways"}]}
+ 	{"rules":[{"filter":{},"fields":{"geom":{"name":geom","type":"LINESTRING"}},"name":"all_ways"}]}
 
  To get all entities that have a given tag, no matter which value the tag gas, just use an empty list for the accepted values. For instance, to get all the nodes with the tag ``power`` (can be ``power=tower``, ``power=pole``, etc.), use the following mapping:
 
 
 ::
 
- 	{"rules":[{"filter":{"power":[]},"fields":{"geom":"POINT"},"name":"power"}]}
+ 	{"rules":[{"filter":{"power":[]},"fields":{"geom":{"name":"geom","type":POINT"},"name":"power"}]}
 
 
 
- - ``fields`` describes the attributes for the feature type, as ``field_name:field_type`` values. Valid types for the ``field_type`` are ``INTEGER, FLOAT, DOUBLE, LONG SHORT, POINT LINE, POLYGON, STRING, DATE``. Only one of the geometry types can be used for a field in a mapping rule. This defines the type of entities that will be used, so it acts as a filter as well. So, if you add a field "coordinate:POINT", it will use only those entities represented as a points. That is, it will use only nodes. LINESTRING  and POLYGON will cause only ways to be used. In both cases, all ways are used, even if they are not closed (they will be automatically closed to create the polygon). It is up to you to define the criteria for a way to be suitable for creating a polygon, such as, for instance, requiring the ``area=yes`` or "building=yes" tag/value pair.
+ - ``fields`` describes the attributes for the feature type, as ``tag_name:{"name":field_name, "type":field_type}`` values. Usually, ``tag_name`` and ``field_name`` will be identical, so the name of the tag is used as the field name. However, you can use a different name for the field, which will act as an alias for the tag.
+  Valid types for the ``field_type`` are ``INTEGER, FLOAT, DOUBLE, LONG SHORT, POINT LINE, POLYGON, STRING, DATE``. Only one of the geometry types can be used for a field in a mapping rule. This defines the type of entities that will be used, so it acts as a filter as well. So, if you add a field of type ``POINT``, it will use only those entities represented as a points. That is, it will use only nodes. ``LINESTRING``  and ``POLYGON`` will cause only ways to be used. In both cases, all ways are used, even if they are not closed (they will be automatically closed to create the polygon). It is up to you to define the criteria for a way to be suitable for creating a polygon, such as, for instance, requiring the ``area=yes`` or "building=yes" tag/value pair.
 
- Apart from the fields that you add to the feature type in your mapping definition, GeoGit will always add an ``id`` field with the OSM Id of the entity. This is used to track the Id and allow for unmapping, as we will later see. In the case of ways, another field is added, ``nodes``, which contains the Id's of nodes that belong to the way. You should avoid using ``id`` or ``nodes`` as names of your fields, as that might cause problems.
+  Apart from the fields that you add to the feature type in your mapping definition, GeoGit will always add an ``id`` field with the OSM Id of the entity. This is used to track the Id and allow for unmapping, as we will later see. In the case of ways, another field is added, ``nodes``, which contains the Id's of nodes that belong to the way. You should avoid using ``id`` or ``nodes`` as names of your fields, as that might cause problems.
 
 .. note:: [Explain this better and in more in detail]
 
@@ -326,7 +327,7 @@ Let's say that you have run the ``export-pg`` command to export your nodes to a 
 
 ::
 
-	 {"rules":[{"filter":{"amenity":["fire_station"]},"fields":{"geom":"POINT", "name":"STRING"},"name":"firestations"}]}
+	 {"rules":[{"filter":{"amenity":["fire_station"]},"fields":{"geom":{"name":"geom", "type":POINT"}, "name":"{"name":"name", "type":"STRING"}},"name":"firestations"}]}
 
 Basically, you are mapping all fire stations to a new feature type which just contains the station name and its location.
 
@@ -352,6 +353,14 @@ Although the ``phone`` tag was not present in the mapped data, it will continue 
 All the work done by the unmap command takes place on the working tree. That is, the mapped path ``firestations`` refers to ``WORK_HEAD:firestations``, and the unmapped data is added/replaced in ``WORK_HEAD:node`` and ``WORK_HEAD:way``.
 
 In the case of ways, the ``nodes`` field will be recomputed based on the geometry. If the geometry has changed and new points have been added to the corresponding line of polygon, new nodes will be added accordingly.
+
+If the mapping you used to create the tree that now you want to unmap contained aliases (that is, field names and tag names do not match), you must pass the mappping file to the unmap command. Otherwise, it will not be able to resolve to original tag name from the field name, and will use that field name as the tag name.
+
+To pass the mapping file to the unmap command, use the ``--mapping`` option
+
+::
+
+	$ geogit unmap fire_stations --mapping mapping.json
 
 An OSM workflow using GeoGit
 -----------------------------

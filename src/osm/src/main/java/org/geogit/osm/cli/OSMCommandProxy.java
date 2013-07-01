@@ -6,16 +6,16 @@
 package org.geogit.osm.cli;
 
 import org.geogit.cli.CLICommandExtension;
-import org.geogit.osm.changeset.cli.CreateOSMChangeset;
-import org.geogit.osm.history.cli.OSMHistoryImport;
-import org.geogit.osm.in.cli.OSMDownload;
-import org.geogit.osm.in.cli.OSMImport;
-import org.geogit.osm.map.cli.OSMMap;
-import org.geogit.osm.map.cli.OSMUnmap;
-import org.geogit.osm.out.cli.OSMExport;
-import org.geogit.osm.out.cli.OSMExportPG;
-import org.geogit.osm.out.cli.OSMExportSL;
-import org.geogit.osm.out.cli.OSMExportShp;
+import org.geogit.osm.cli.commands.CreateOSMChangeset;
+import org.geogit.osm.cli.commands.OSMDownload;
+import org.geogit.osm.cli.commands.OSMExport;
+import org.geogit.osm.cli.commands.OSMExportPG;
+import org.geogit.osm.cli.commands.OSMExportSL;
+import org.geogit.osm.cli.commands.OSMExportShp;
+import org.geogit.osm.cli.commands.OSMHistoryImport;
+import org.geogit.osm.cli.commands.OSMImport;
+import org.geogit.osm.cli.commands.OSMMap;
+import org.geogit.osm.cli.commands.OSMUnmap;
 
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameters;
