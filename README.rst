@@ -41,24 +41,4 @@ If you want to get involved in the development of GeoGit, build GeoGit yourself 
 Participation
 =============
 
-Everyone is invited to participate in GeoGit and help in its development.
-
-Discussion takes place on our `geogit google group <https://groups.google.com/a/opengeo.org/group/geogit/>`_. Please join and introduce yourself, we'd love to help, and to figure out ways for you to get involved.
-
-There is also a GeoGit IRC channel on freenode (#geogit). 
-
-Participation is encouraged using the github *fork* and *pull request* workflow:
-
-- Include test case demonstrating functionality
-- Contributions are expected to pass all tests and not break the build
-- Include proper license headers on your contributed files
-
-More information on this workflow and how to remotely collaborate in a project like GeoGit can be found at the `GitHub help page <https://help.github.com/categories/63/articles>`_
-
-Issues to help out on are at our `issue tracker <https://github.com/opengeo/GeoGit/issues>`_.
-
-Before contributing code, read the `developers section <https://github.com/opengeo/GeoGit/blob/master/doc/technical/source/developers.rst>`_ for technical details about how to build and develop GeoGit.
-
-For those who can't code help on documentation is always appreciated, all docs can be found at https://github.com/opengeo/GeoGit/tree/master/doc/ and contributed to by editing in ReStructuredText and using standard GitHub workflows.
-
-Our build is `actively monitored using hudson <http://hudson.opengeo.org/hudson/view/geogit/>`_.
+Everyone is invited to participate in GeoGit and help in its development. Check the `How to help <https://github.com/opengeo/GeoGit/blob/master/helping.rst>`_ section to read about how you can help us improve GeoGit.
