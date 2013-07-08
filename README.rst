@@ -57,7 +57,7 @@ More information on this workflow and how to remotely collaborate in a project l
 
 Issues to help out on are at our `issue tracker <https://github.com/opengeo/GeoGit/issues>`_.
 
-Before contributing code, read the `developers section <https://github.com/opengeo/GeoGit/blob/master/doc/technical/developers.rst>`_ for technical details about how to build and develop GeoGit.
+Before contributing code, read the `developers section <https://github.com/opengeo/GeoGit/blob/master/doc/technical/source/developers.rst>`_ for technical details about how to build and develop GeoGit.
 
 For those who can't code help on documentation is always appreciated, all docs can be found at https://github.com/opengeo/GeoGit/tree/master/doc/ and contributed to by editing in ReStructuredText and using standard GitHub workflows.
 
