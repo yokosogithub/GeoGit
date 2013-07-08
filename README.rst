@@ -36,7 +36,7 @@ See the `QuickStart <http://geogit.org/docs/quickstart.html>`_ guide for an intr
 Developing
 ===========
 
-If you want to get involved in the development of GeoGit, build GeoGit yourself or know more about the technical details behind GeoGit, check the `developers section <https://github.com/opengeo/GeoGit/blob/master/doc/technical/developers.rst>`_.
+If you want to get involved in the development of GeoGit, build GeoGit yourself or know more about the technical details behind GeoGit, check the `developers section <https://github.com/opengeo/GeoGit/blob/master/doc/technical/source/developers.rst>`_.
 
 Participation
 =============
