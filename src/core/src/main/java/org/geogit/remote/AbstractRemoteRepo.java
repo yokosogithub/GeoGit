@@ -147,8 +147,7 @@ abstract class AbstractRemoteRepo implements IRemoteRepo {
 
         @Override
         protected Evaluation evaluate(CommitNode commitNode) {
-            if (destination.objectExists(commitNode.getObjectId())
-                    || commits.contains(commitNode.getObjectId())) {
+            if (destination.objectExists(commitNode.getObjectId())) {
                 return Evaluation.EXCLUDE_AND_PRUNE;
             } else {
                 return Evaluation.INCLUDE_AND_CONTINUE;
