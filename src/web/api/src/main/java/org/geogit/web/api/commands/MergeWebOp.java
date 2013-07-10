@@ -1,5 +1,7 @@
 package org.geogit.web.api.commands;
 
+import javax.annotation.Nullable;
+
 import org.geogit.api.GeogitTransaction;
 import org.geogit.api.ObjectId;
 import org.geogit.api.Ref;
@@ -26,6 +28,10 @@ public class MergeWebOp extends AbstractWebAPICommand {
 
     private String commit;
 
+    private Optional<String> authorName = Optional.absent();
+
+    private Optional<String> authorEmail = Optional.absent();
+
     /**
      * Mutator for the noCommit variable
      * 
@@ -42,6 +48,20 @@ public class MergeWebOp extends AbstractWebAPICommand {
      */
     public void setCommit(String commit) {
         this.commit = commit;
+    }
+
+    /**
+     * @param authorName the author of the merge commit
+     */
+    public void setAuthorName(@Nullable String authorName) {
+        this.authorName = Optional.fromNullable(authorName);
+    }
+
+    /**
+     * @param authorEmail the email of the author of the merge commit
+     */
+    public void setAuthorEmail(@Nullable String authorEmail) {
+        this.authorEmail = Optional.fromNullable(authorEmail);
     }
 
     /**
@@ -68,6 +88,7 @@ public class MergeWebOp extends AbstractWebAPICommand {
         }
 
         MergeOp merge = transaction.command(MergeOp.class);
+        merge.setAuthor(authorName.orNull(), authorEmail.orNull());
 
         final Optional<ObjectId> oid = transaction.command(RevParse.class).setRefSpec(commit)
                 .call();

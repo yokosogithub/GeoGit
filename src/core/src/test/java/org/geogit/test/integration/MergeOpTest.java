@@ -162,6 +162,63 @@ public class MergeOpTest extends RepositoryTestCase {
     }
 
     @Test
+    public void testSpecifyAuthor() throws Exception {
+        // Create the following revision graph
+        // o
+        // |
+        // o - Points 1 added
+        // |\
+        // | o - branch1 - Points 2 added
+        // |
+        // o - Points 3 added
+        // |
+        // o - master - HEAD - Lines 1 added
+        insertAndAdd(points1);
+        geogit.command(CommitOp.class).setMessage("commit for " + idP1).call();
+
+        // create branch1 and checkout
+        geogit.command(BranchCreateOp.class).setAutoCheckout(true).setName("branch1").call();
+        insertAndAdd(points2);
+        final RevCommit c2 = geogit.command(CommitOp.class).setMessage("commit for " + idP2).call();
+
+        // checkout master
+        geogit.command(CheckoutOp.class).setSource("master").call();
+        insertAndAdd(points3);
+        geogit.command(CommitOp.class).setMessage("commit for " + idP3).call();
+        insertAndAdd(lines1);
+        final RevCommit c4 = geogit.command(CommitOp.class).setMessage("commit for " + idL1).call();
+
+        // Merge branch1 into master to create the following revision graph
+        // o
+        // |
+        // o - Points 1 added
+        // |\
+        // | o - branch1 - Points 2 added
+        // | |
+        // o | - Points 3 added
+        // | |
+        // o | - Lines 1 added
+        // |/
+        // o - master - HEAD - Merge commit
+
+        Ref branch1 = geogit.command(RefParse.class).setName("branch1").call().get();
+        geogit.command(MergeOp.class).setAuthor("Merge Author", "merge@author.com")
+                .addCommit(Suppliers.ofInstance(branch1.getObjectId()))
+                .setMessage("My merge message.").call();
+
+        Iterator<RevCommit> log = geogit.command(LogOp.class).call();
+
+        // Merge Commit
+        RevCommit logCmerge = log.next();
+        assertEquals("My merge message.", logCmerge.getMessage());
+        assertEquals("Merge Author", logCmerge.getAuthor().getName().get());
+        assertEquals("merge@author.com", logCmerge.getAuthor().getEmail().get());
+        assertEquals(2, logCmerge.getParentIds().size());
+        assertEquals(c4.getId(), logCmerge.getParentIds().get(0));
+        assertEquals(c2.getId(), logCmerge.getParentIds().get(1));
+    }
+
+    @Test
     public void testMergeMultiple() throws Exception {
         // Create the following revision graph
         // . o

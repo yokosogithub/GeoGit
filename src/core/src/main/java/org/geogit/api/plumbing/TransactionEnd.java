@@ -7,6 +7,8 @@ package org.geogit.api.plumbing;
 
 import java.util.concurrent.TimeoutException;
 
+import javax.annotation.Nullable;
+
 import org.geogit.api.AbstractGeoGitOp;
 import org.geogit.api.GeogitTransaction;
 import org.geogit.api.Ref;
@@ -42,6 +44,10 @@ public class TransactionEnd extends AbstractGeoGitOp<Boolean> {
 
     private boolean rebase = false;
 
+    private Optional<String> authorName = Optional.absent();
+
+    private Optional<String> authorEmail = Optional.absent();
+
     @Inject
     public TransactionEnd() {
     }
@@ -67,6 +73,12 @@ public class TransactionEnd extends AbstractGeoGitOp<Boolean> {
 
     public TransactionEnd setRebase(boolean rebase) {
         this.rebase = rebase;
+        return this;
+    }
+
+    public TransactionEnd setAuthor(@Nullable String authorName, @Nullable String authorEmail) {
+        this.authorName = Optional.fromNullable(authorName);
+        this.authorEmail = Optional.fromNullable(authorEmail);
         return this;
     }
 
@@ -121,6 +133,7 @@ public class TransactionEnd extends AbstractGeoGitOp<Boolean> {
                                     .setForce(true).call();
                             try {
                             transaction.command(MergeOp.class)
+                                    .setAuthor(authorName.orNull(), authorEmail.orNull())
                                     .addCommit(Suppliers.ofInstance(repoRef.get().getObjectId()))
                                     .setTheirs(true).call();
                             } catch (NothingToCommitException e) {

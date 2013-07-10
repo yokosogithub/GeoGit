@@ -365,6 +365,8 @@ public class CommandBuilder {
         MergeWebOp command = new MergeWebOp();
         command.setNoCommit(Boolean.valueOf(options.getFirstValue("noCommit", "false")));
         command.setCommit(options.getFirstValue("commit", null));
+        command.setAuthorName(options.getFirstValue("authorName", null));
+        command.setAuthorEmail(options.getFirstValue("authorEmail", null));
         return command;
     }
 
