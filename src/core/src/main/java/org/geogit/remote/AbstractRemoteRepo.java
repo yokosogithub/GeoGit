@@ -11,7 +11,6 @@ import org.geogit.api.plumbing.FindCommonAncestor;
 import org.geogit.api.porcelain.SynchronizationException;
 import org.geogit.api.porcelain.SynchronizationException.StatusCode;
 import org.geogit.repository.Repository;
-import org.geogit.storage.Deduplicator;
 
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
@@ -229,8 +228,8 @@ abstract class AbstractRemoteRepo implements IRemoteRepo {
      * @param ref the local ref that points to new commit data
      */
     @Override
-    public void pushNewData(Ref ref, Deduplicator deduplicator) throws SynchronizationException {
-        pushNewData(ref, ref.getName(), deduplicator);
+    public void pushNewData(Ref ref) throws SynchronizationException {
+        pushNewData(ref, ref.getName());
     }
 
     /**

@@ -13,13 +13,10 @@ import java.util.List;
 import jline.console.ConsoleReader;
 
 import org.geogit.api.RevObject;
-import org.geogit.api.plumbing.CreateDeduplicator;
 import org.geogit.api.plumbing.WalkGraphOp;
 import org.geogit.cli.AbstractCommand;
 import org.geogit.cli.CLICommand;
 import org.geogit.cli.GeogitCLI;
-import org.geogit.storage.Deduplicator;
-import org.geogit.storage.memory.HeapDeduplicator;
 
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.Parameters;
@@ -48,14 +45,8 @@ public class WalkGraph extends AbstractCommand implements CLICommand {
         } else {
             ref = refList.get(0);
         }
-        
-        Deduplicator deduplicator = cli.getGeogit().command(CreateDeduplicator.class).call(); // deduplication.createDeduplicator();
-//        Deduplicator deduplicator = new HeapDeduplicator();
-        
         Iterator<RevObject> iter = cli.getGeogit() //
-                .command(WalkGraphOp.class) //
-                .setReference(ref) //
-                .setDeduplicator(deduplicator)
+                .command(WalkGraphOp.class).setReference(ref) //
                 // .setStrategy(lsStrategy) //
                 .call();
 
@@ -81,15 +72,10 @@ public class WalkGraph extends AbstractCommand implements CLICommand {
         };
 
         Iterator<CharSequence> lines = Iterators.transform(iter, printFunctor);
-        
-        try {
-            while (lines.hasNext()) {
-                console.println(lines.next());
-            }
-        } finally {
-            deduplicator.release();
-        }
 
+        while (lines.hasNext()) {
+            console.println(lines.next());
+        }
         console.flush();
     }
 }

@@ -24,7 +24,6 @@ import org.geogit.api.RevFeatureType;
 import org.geogit.api.RevObject;
 import org.geogit.api.RevTree;
 import org.geogit.repository.PostOrderIterator;
-import org.geogit.storage.Deduplicator;
 import org.geogit.storage.ObjectDatabase;
 import org.geogit.storage.ObjectReader;
 import org.geogit.storage.ObjectSerializingFactory;
@@ -63,12 +62,12 @@ public final class BinaryPackedObjects {
     }
 
     public void write(OutputStream out, List<ObjectId> want, List<ObjectId> have,
-            boolean traverseCommits, Deduplicator deduplicator) throws IOException {
-        write(out, want, have, new HashSet<ObjectId>(), DEFAULT_CALLBACK, traverseCommits, deduplicator);
+            boolean traverseCommits) throws IOException {
+        write(out, want, have, new HashSet<ObjectId>(), DEFAULT_CALLBACK, traverseCommits);
     }
 
     public <T> T write(OutputStream out, List<ObjectId> want, List<ObjectId> have,
-            Set<ObjectId> sent, Callback<T> callback, boolean traverseCommits, Deduplicator deduplicator) throws IOException {
+            Set<ObjectId> sent, Callback<T> callback, boolean traverseCommits) throws IOException {
         T state = null;
         for (ObjectId i : want) {
             if (!database.exists(i)) {
@@ -82,7 +81,7 @@ public final class BinaryPackedObjects {
 
         int commitsSent = 0;
         Iterator<RevObject> objects = PostOrderIterator.range(want, new ArrayList<ObjectId>(
-                previsitResults), database, traverseCommits, deduplicator);
+                previsitResults), database, traverseCommits);
         while (objects.hasNext() && commitsSent < CAP) {
             RevObject object = objects.next();
 

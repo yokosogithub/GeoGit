@@ -23,7 +23,6 @@ import org.geogit.repository.StagingArea;
 import org.geogit.repository.WorkingTree;
 import org.geogit.storage.CachingObjectDatabaseGetInterceptor;
 import org.geogit.storage.ConfigDatabase;
-import org.geogit.storage.DeduplicationService;
 import org.geogit.storage.GraphDatabase;
 import org.geogit.storage.Neo4JGraphDatabase;
 import org.geogit.storage.ObjectDatabase;
@@ -34,7 +33,6 @@ import org.geogit.storage.datastream.DataStreamSerializationFactory;
 import org.geogit.storage.fs.FileObjectDatabase;
 import org.geogit.storage.fs.FileRefDatabase;
 import org.geogit.storage.fs.IniConfigDatabase;
-import org.geogit.storage.memory.HeapDeduplicationService;
 
 import com.google.common.base.Throwables;
 import com.google.inject.AbstractModule;
@@ -78,7 +76,6 @@ public class GeogitModule extends AbstractModule {
 
         bind(ObjectSerializingFactory.class).to(DataStreamSerializationFactory.class).in(
                 Scopes.SINGLETON);
-        bind(DeduplicationService.class).to(HeapDeduplicationService.class);
 
         bindRevObjectCachingDatabaseInterceptor();
 

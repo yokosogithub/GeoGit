@@ -10,7 +10,6 @@ import org.geogit.api.AbstractGeoGitOp;
 import org.geogit.api.ObjectId;
 import org.geogit.api.RevObject;
 import org.geogit.repository.PostOrderIterator;
-import org.geogit.storage.Deduplicator;
 import org.geogit.storage.ObjectDatabase;
 
 import com.google.common.base.Optional;
@@ -23,8 +22,6 @@ public final class WalkGraphOp extends AbstractGeoGitOp<Iterator<RevObject>> {
 
     private ObjectDatabase odb;
 
-    private Deduplicator deduplicator;
-
     public WalkGraphOp setReference(final String reference) {
         this.reference = reference;
         return this;
@@ -34,17 +31,12 @@ public final class WalkGraphOp extends AbstractGeoGitOp<Iterator<RevObject>> {
     public WalkGraphOp(ObjectDatabase odb) {
         this.odb = odb;
     }
-    
-    public WalkGraphOp setDeduplicator(Deduplicator deduplicator) {
-        this.deduplicator = deduplicator;
-        return this;
-    }
 
     @Override
     public Iterator<RevObject> call() {
         Optional<ObjectId> ref = command(RevParse.class).setRefSpec(reference).call();
         if (!ref.isPresent())
             return Iterators.emptyIterator();
-        return PostOrderIterator.allWithDeduplicator(ref.get(), odb, this.deduplicator);
+        return PostOrderIterator.all(ref.get(), odb);
     }
 }

@@ -284,12 +284,7 @@ public class GeogitCLI {
                     // providing user interaction
                     consoleReader.flush();
                 } else {
-                    if (e.getMessage() == null) {
-                        consoleReader.println(e.toString());
-                        e.printStackTrace();
-                    } else {
-                        consoleReader.println(e.getMessage());
-                    }
+                    consoleReader.println(e.getMessage());
                     consoleReader.flush();
                 }
             } catch (IOException ioe) {
