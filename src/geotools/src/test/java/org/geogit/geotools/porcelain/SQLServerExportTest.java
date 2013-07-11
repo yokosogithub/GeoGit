@@ -11,6 +11,7 @@ import jline.UnsupportedTerminal;
 import jline.console.ConsoleReader;
 
 import org.geogit.api.porcelain.CommitOp;
+import org.geogit.cli.CommandFailedException;
 import org.geogit.cli.GeogitCLI;
 import org.geogit.test.integration.RepositoryTestCase;
 import org.geotools.data.AbstractDataStoreFactory;
@@ -75,6 +76,7 @@ public class SQLServerExportTest extends RepositoryTestCase {
         SQLServerExport exportCommand = new SQLServerExport();
         exportCommand.args = Arrays.asList("Points", "Points");
         exportCommand.dataStoreFactory = TestHelper.createNullTestFactory();
+        exception.expect(CommandFailedException.class);
         exportCommand.run(cli);
     }
 
@@ -83,6 +85,7 @@ public class SQLServerExportTest extends RepositoryTestCase {
         SQLServerExport exportCommand = new SQLServerExport();
         exportCommand.args = Arrays.asList();
         exportCommand.dataStoreFactory = TestHelper.createNullTestFactory();
+        exception.expect(CommandFailedException.class);
         exportCommand.run(cli);
     }
 
@@ -91,6 +94,7 @@ public class SQLServerExportTest extends RepositoryTestCase {
         SQLServerExport exportCommand = new SQLServerExport();
         exportCommand.args = Arrays.asList("Points", "table1");
         exportCommand.dataStoreFactory = factory;
+        exception.expect(CommandFailedException.class);
         exportCommand.run(cli);
     }
 
@@ -129,7 +133,7 @@ public class SQLServerExportTest extends RepositoryTestCase {
         SQLServerExport exportCommand = new SQLServerExport();
         exportCommand.args = Arrays.asList(null, "invalidTable");
         exportCommand.dataStoreFactory = factory;
-        exception.expect(IllegalArgumentException.class);
+        exception.expect(CommandFailedException.class);
         exportCommand.run(cli);
     }
 

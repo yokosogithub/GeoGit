@@ -4,11 +4,14 @@
  */
 package org.geogit.geotools.porcelain;
 
+import static com.google.common.base.Preconditions.checkState;
+
 import java.net.ConnectException;
 import java.util.Map;
 import java.util.Map.Entry;
 
 import org.geogit.cli.CLICommand;
+import org.geogit.cli.CommandFailedException;
 import org.geogit.cli.GeogitCLI;
 import org.geogit.geotools.plumbing.DescribeOp;
 import org.geogit.geotools.plumbing.GeoToolsOpException;
@@ -35,18 +38,14 @@ public class SQLServerDescribe extends AbstractSQLServerCommand implements CLICo
      */
     @Override
     protected void runInternal(GeogitCLI cli) throws Exception {
-        if (cli.getGeogit() == null) {
-            cli.getConsole().println("Not a geogit repository: " + cli.getPlatform().pwd());
-            return;
-        }
+        checkState(cli.getGeogit() != null, "Not a geogit repository: " + cli.getPlatform().pwd());
 
         DataStore dataStore = null;
         try {
             dataStore = getDataStore();
         } catch (ConnectException e) {
             cli.getConsole().println("Unable to connect using the specified database parameters.");
-            cli.getConsole().flush();
-            return;
+            throw new CommandFailedException();
         }
 
         try {
@@ -65,20 +64,22 @@ public class SQLServerDescribe extends AbstractSQLServerCommand implements CLICo
                 }
             } else {
                 cli.getConsole().println("Could not find the specified table.");
+                throw new CommandFailedException();
             }
         } catch (GeoToolsOpException e) {
             switch (e.statusCode) {
             case TABLE_NOT_DEFINED:
                 cli.getConsole().println("No table supplied.");
-                break;
+                throw new CommandFailedException();
             case UNABLE_TO_GET_FEATURES:
                 cli.getConsole().println("Unable to read the feature source.");
-                break;
+                throw new CommandFailedException();
             case UNABLE_TO_GET_NAMES:
                 cli.getConsole().println("Unable to read feature types.");
-                break;
+                throw new CommandFailedException();
             default:
                 cli.getConsole().println("Exception: " + e.statusCode.name());
+                throw new CommandFailedException();
             }
 
         } finally {
