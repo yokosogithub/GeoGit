@@ -15,6 +15,7 @@ import jline.UnsupportedTerminal;
 import jline.console.ConsoleReader;
 
 import org.geogit.api.Platform;
+import org.geogit.cli.CommandFailedException;
 import org.geogit.cli.GeogitCLI;
 import org.geotools.data.AbstractDataStoreFactory;
 import org.junit.After;
@@ -76,6 +77,7 @@ public class SQLServerListTest extends Assert {
     public void testInvalidDatabaseParams() throws Exception {
         SQLServerList listCommand = new SQLServerList();
         listCommand.commonArgs.host = "nonexistent";
+        exception.expect(CommandFailedException.class);
         listCommand.run(cli);
     }
 
@@ -87,6 +89,7 @@ public class SQLServerListTest extends Assert {
 
         SQLServerList listCommand = new SQLServerList();
         listCommand.dataStoreFactory = factory;
+        exception.expect(IllegalStateException.class);
         listCommand.run(cli);
     }
 
@@ -94,6 +97,7 @@ public class SQLServerListTest extends Assert {
     public void testNullDataStore() throws Exception {
         SQLServerList listCommand = new SQLServerList();
         listCommand.dataStoreFactory = TestHelper.createNullTestFactory();
+        exception.expect(CommandFailedException.class);
         listCommand.run(cli);
     }
 
@@ -101,6 +105,7 @@ public class SQLServerListTest extends Assert {
     public void testEmptyDataStore() throws Exception {
         SQLServerList listCommand = new SQLServerList();
         listCommand.dataStoreFactory = TestHelper.createEmptyTestFactory();
+        exception.expect(CommandFailedException.class);
         listCommand.run(cli);
     }
 
@@ -108,6 +113,7 @@ public class SQLServerListTest extends Assert {
     public void testGetNamesException() throws Exception {
         SQLServerList listCommand = new SQLServerList();
         listCommand.dataStoreFactory = TestHelper.createFactoryWithGetNamesException();
+        exception.expect(CommandFailedException.class);
         listCommand.run(cli);
     }
 

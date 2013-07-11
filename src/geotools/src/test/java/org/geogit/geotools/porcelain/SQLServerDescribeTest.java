@@ -17,6 +17,7 @@ import jline.UnsupportedTerminal;
 import jline.console.ConsoleReader;
 
 import org.geogit.api.Platform;
+import org.geogit.cli.CommandFailedException;
 import org.geogit.cli.GeogitCLI;
 import org.geotools.data.AbstractDataStoreFactory;
 import org.junit.After;
@@ -73,6 +74,7 @@ public class SQLServerDescribeTest extends Assert {
         SQLServerDescribe describeCommand = new SQLServerDescribe();
         describeCommand.commonArgs.host = "nonexistent";
         describeCommand.table = "table1";
+        exception.expect(CommandFailedException.class);
         describeCommand.run(cli);
     }
 
@@ -81,6 +83,7 @@ public class SQLServerDescribeTest extends Assert {
         SQLServerDescribe describeCommand = new SQLServerDescribe();
         describeCommand.table = "nonexistent";
         describeCommand.dataStoreFactory = factory;
+        exception.expect(CommandFailedException.class);
         describeCommand.run(cli);
     }
 
@@ -89,6 +92,7 @@ public class SQLServerDescribeTest extends Assert {
         SQLServerDescribe describeCommand = new SQLServerDescribe();
         describeCommand.table = "";
         describeCommand.dataStoreFactory = factory;
+        exception.expect(CommandFailedException.class);
         describeCommand.run(cli);
     }
 
@@ -97,6 +101,7 @@ public class SQLServerDescribeTest extends Assert {
         SQLServerDescribe describeCommand = new SQLServerDescribe();
         describeCommand.table = "table1";
         describeCommand.dataStoreFactory = TestHelper.createNullTestFactory();
+        exception.expect(CommandFailedException.class);
         describeCommand.run(cli);
     }
 
@@ -109,6 +114,7 @@ public class SQLServerDescribeTest extends Assert {
         SQLServerDescribe describeCommand = new SQLServerDescribe();
         describeCommand.table = "table1";
         describeCommand.dataStoreFactory = factory;
+        exception.expect(IllegalStateException.class);
         describeCommand.run(cli);
     }
 

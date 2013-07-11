@@ -5,10 +5,13 @@
 
 package org.geogit.geotools.porcelain;
 
+import static com.google.common.base.Preconditions.checkState;
+
 import java.net.ConnectException;
 import java.util.List;
 
 import org.geogit.cli.CLICommand;
+import org.geogit.cli.CommandFailedException;
 import org.geogit.cli.GeogitCLI;
 import org.geogit.geotools.plumbing.GeoToolsOpException;
 import org.geogit.geotools.plumbing.ListOp;
@@ -35,18 +38,14 @@ public class SQLServerList extends AbstractSQLServerCommand implements CLIComman
      */
     @Override
     protected void runInternal(GeogitCLI cli) throws Exception {
-        if (cli.getGeogit() == null) {
-            cli.getConsole().println("Not a geogit repository: " + cli.getPlatform().pwd());
-            return;
-        }
+        checkState(cli.getGeogit() != null, "Not a geogit repository: " + cli.getPlatform().pwd());
 
         DataStore dataStore = null;
         try {
             dataStore = getDataStore();
         } catch (ConnectException e) {
             cli.getConsole().println("Unable to connect using the specified database parameters.");
-            cli.getConsole().flush();
-            return;
+            throw new CommandFailedException();
         }
 
         try {
@@ -61,9 +60,11 @@ public class SQLServerList extends AbstractSQLServerCommand implements CLIComman
                 }
             } else {
                 cli.getConsole().println("No features types were found in the specified database.");
+                throw new CommandFailedException();
             }
         } catch (GeoToolsOpException e) {
             cli.getConsole().println("Unable to get feature types from the database.");
+            throw new CommandFailedException();
         } finally {
             dataStore.dispose();
             cli.getConsole().flush();

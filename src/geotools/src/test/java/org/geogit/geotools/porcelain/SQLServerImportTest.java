@@ -15,6 +15,7 @@ import jline.UnsupportedTerminal;
 import jline.console.ConsoleReader;
 
 import org.geogit.api.Platform;
+import org.geogit.cli.CommandFailedException;
 import org.geogit.cli.GeogitCLI;
 import org.geotools.data.AbstractDataStoreFactory;
 import org.junit.After;
@@ -71,6 +72,7 @@ public class SQLServerImportTest {
         importCommand.all = false;
         importCommand.table = "";
         importCommand.dataStoreFactory = factory;
+        exception.expect(CommandFailedException.class);
         importCommand.run(cli);
     }
 
@@ -80,6 +82,7 @@ public class SQLServerImportTest {
         importCommand.all = true;
         importCommand.table = "table1";
         importCommand.dataStoreFactory = factory;
+        exception.expect(CommandFailedException.class);
         importCommand.run(cli);
     }
 
@@ -92,6 +95,7 @@ public class SQLServerImportTest {
         SQLServerImport importCommand = new SQLServerImport();
         importCommand.all = true;
         importCommand.dataStoreFactory = factory;
+        exception.expect(IllegalStateException.class);
         importCommand.run(cli);
     }
 
@@ -116,6 +120,7 @@ public class SQLServerImportTest {
         SQLServerImport importCommand = new SQLServerImport();
         importCommand.commonArgs.host = "nonexistent";
         importCommand.all = true;
+        exception.expect(CommandFailedException.class);
         importCommand.run(cli);
     }
 
@@ -141,6 +146,7 @@ public class SQLServerImportTest {
         importCommand.all = false;
         importCommand.table = "nonexistent";
         importCommand.dataStoreFactory = factory;
+        exception.expect(CommandFailedException.class);
         importCommand.run(cli);
     }
 
@@ -157,6 +163,7 @@ public class SQLServerImportTest {
         SQLServerImport importCommand = new SQLServerImport();
         importCommand.all = true;
         importCommand.dataStoreFactory = TestHelper.createNullTestFactory();
+        exception.expect(CommandFailedException.class);
         importCommand.run(cli);
     }
 
@@ -165,6 +172,7 @@ public class SQLServerImportTest {
         SQLServerImport importCommand = new SQLServerImport();
         importCommand.all = true;
         importCommand.dataStoreFactory = TestHelper.createFactoryWithGetNamesException();
+        exception.expect(CommandFailedException.class);
         importCommand.run(cli);
     }
 
