@@ -14,7 +14,6 @@ import java.util.Set;
 import org.geogit.api.AbstractGeoGitOp;
 import org.geogit.api.NodeRef;
 import org.geogit.api.RevFeature;
-import org.geogit.api.RevFeatureBuilder;
 import org.geogit.api.RevFeatureType;
 import org.geogit.api.RevTree;
 import org.geogit.api.plumbing.LsTreeOp;
@@ -161,6 +160,7 @@ public class OSMUnmapOp extends AbstractGeoGitOp<RevTree> {
     }
 
     private void unmapNode(SimpleFeature feature, FeatureMapFlusher mapFlusher) {
+        boolean modified = false;
         String id = feature.getID();
         SimpleFeatureBuilder featureBuilder = new SimpleFeatureBuilder(OSMUtils.nodeType());
         Optional<RevFeature> rawFeature = command(RevObjectParse.class).setRefSpec(
@@ -212,38 +212,43 @@ public class OSMUnmapOp extends AbstractGeoGitOp<RevTree> {
                         unaliased.put(name, tagName);
                     }
                 }
+
+                if (tagsMap.containsKey(tagName) && !modified) {
+                    String oldValue = tagsMap.get(tagName);
+                    modified = !value.equals(oldValue);
+                }
                 tagsMap.put(tagName, value.toString());
             }
         }
 
-        tags.clear();
+        if (!modified && rawFeature.isPresent()) {
+            // no changes after unmapping tags, so there's nothing else to do
+            return;
+        }
+
+        Collection<Tag> newTags = Lists.newArrayList();
         Set<Entry<String, String>> entries = tagsMap.entrySet();
         for (Entry<String, String> entry : entries) {
-            tags.add(new Tag(entry.getKey(), entry.getValue()));
+            newTags.add(new Tag(entry.getKey(), entry.getValue()));
         }
-        featureBuilder.set("tags", OSMUtils.buildTagsString(tags));
+        featureBuilder.set("tags", OSMUtils.buildTagsString(newTags));
         featureBuilder.set("location", feature.getDefaultGeometry());
         featureBuilder.set("changeset", changeset);
         featureBuilder.set("timestamp", timestamp);
         featureBuilder.set("version", version);
         featureBuilder.set("user", user);
         featureBuilder.set("visible", true);
-        // featureBuilder.buildFeature(id);
-        RevFeature newRevFeature = new RevFeatureBuilder().build(feature);
         if (rawFeature.isPresent()) {
-            if (!newRevFeature.getId().equals(rawFeature.get().getId())) {
-                // the feature has changed, so we cannot reuse some attributes.
-                // We reconstruct the feature and insert it
-                featureBuilder.set("timestamp", System.currentTimeMillis());
-                featureBuilder.set("user", null);
-                featureBuilder.set("changeset", null);
-                featureBuilder.set("version", null);
-                featureBuilder.set("tags", OSMUtils.buildTagsString(tags));
-                featureBuilder.set("location", feature.getDefaultGeometry());
-                featureBuilder.set("visible", true);
-                mapFlusher.put("node", featureBuilder.buildFeature(id));
-            }
+            // the feature has changed, so we cannot reuse some attributes.
+            // We reconstruct the feature and insert it
+            featureBuilder.set("timestamp", System.currentTimeMillis());
+            featureBuilder.set("user", null);
+            featureBuilder.set("changeset", null);
+            featureBuilder.set("version", null);
+            featureBuilder.set("visible", true);
+            mapFlusher.put("node", featureBuilder.buildFeature(id));
         } else {
+            // The feature didn't exist, so we have to add it
             mapFlusher.put("node", featureBuilder.buildFeature(id));
         }
 
@@ -316,6 +321,7 @@ public class OSMUnmapOp extends AbstractGeoGitOp<RevTree> {
     }
 
     private void unmapWay(SimpleFeature feature, FeatureMapFlusher flusher) {
+        boolean modified = false;
         String id = feature.getID();
         SimpleFeatureBuilder featureBuilder = new SimpleFeatureBuilder(OSMUtils.wayType());
         Optional<RevFeature> rawFeature = command(RevObjectParse.class).setRefSpec(
@@ -347,19 +353,39 @@ public class OSMUnmapOp extends AbstractGeoGitOp<RevTree> {
             }
         }
 
+        Map<String, String> unaliased = Maps.newHashMap();
         Collection<Property> properties = feature.getProperties();
         for (Property property : properties) {
-            String key = property.getName().getLocalPart();
-            if (key.equals("id")
-                    || key.equals("nodes")
+            String name = property.getName().getLocalPart();
+            if (name.equals("id")
+                    || name.equals("nodes")
                     || Geometry.class.isAssignableFrom(property.getDescriptor().getType()
                             .getBinding())) {
                 continue;
             }
             Object value = property.getValue();
             if (value != null) {
-                tagsMap.put(key, value.toString());
+                String tagName = name;
+                if (mapping != null) {
+                    if (unaliased.containsKey(name)) {
+                        tagName = unaliased.get(name);
+                    } else {
+                        tagName = mapping.getTagNameFromAlias(path, tagName);
+                        unaliased.put(name, tagName);
+                    }
+                }
+
+                if (tagsMap.containsKey(tagName) && !modified) {
+                    String oldValue = tagsMap.get(tagName);
+                    modified = !value.equals(oldValue);
+                }
+                tagsMap.put(tagName, value.toString());
             }
+        }
+
+        if (!modified && rawFeature.isPresent()) {
+            // no changes after unmapping tags, so there's nothing else to do
+            return;
         }
 
         tags.clear();
@@ -374,22 +400,17 @@ public class OSMUnmapOp extends AbstractGeoGitOp<RevTree> {
         featureBuilder.set("timestamp", timestamp);
         featureBuilder.set("version", version);
         featureBuilder.set("user", user);
-        featureBuilder.set("visible", true);
         featureBuilder.set("nodes", getNodeStringFromWay(feature, flusher));
-        RevFeature newRevFeature = new RevFeatureBuilder().build(feature);
-        if (!newRevFeature.getId().equals(rawFeature.get().getId())) {
+        if (rawFeature.isPresent()) {
             // the feature has changed, so we cannot reuse some attributes
             featureBuilder.set("timestamp", System.currentTimeMillis());
             featureBuilder.set("user", null);
             featureBuilder.set("changeset", null);
             featureBuilder.set("version", null);
-            featureBuilder.set("visible", true);
-            featureBuilder.set("nodes", getNodeStringFromWay(feature, flusher));
-            featureBuilder.set("tags", OSMUtils.buildTagsString(tags));
-            featureBuilder.set("way", line);
+            flusher.put("way", featureBuilder.buildFeature(id));
+        } else {
             flusher.put("way", featureBuilder.buildFeature(id));
         }
 
     }
-
 }
