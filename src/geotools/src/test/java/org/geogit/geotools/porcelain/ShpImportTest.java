@@ -73,6 +73,7 @@ public class ShpImportTest extends Assert {
     @Test
     public void testImportNullShapefileList() throws Exception {
         ShpImport importCommand = new ShpImport();
+        exception.expect(IllegalArgumentException.class);
         importCommand.run(cli);
     }
 
@@ -80,6 +81,7 @@ public class ShpImportTest extends Assert {
     public void testImportEmptyShapefileList() throws Exception {
         ShpImport importCommand = new ShpImport();
         importCommand.shapeFile = new ArrayList<String>();
+        exception.expect(IllegalArgumentException.class);
         importCommand.run(cli);
     }
 
@@ -92,6 +94,7 @@ public class ShpImportTest extends Assert {
         ShpImport importCommand = new ShpImport();
         importCommand.shapeFile = new ArrayList<String>();
         importCommand.shapeFile.add("file://test.shp");
+        exception.expect(IllegalStateException.class);
         importCommand.run(cli);
     }
 

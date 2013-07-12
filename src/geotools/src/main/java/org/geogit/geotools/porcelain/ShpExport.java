@@ -29,6 +29,7 @@ import org.geogit.api.plumbing.ResolveTreeish;
 import org.geogit.api.plumbing.RevObjectParse;
 import org.geogit.api.plumbing.RevParse;
 import org.geogit.cli.CLICommand;
+import org.geogit.cli.CommandFailedException;
 import org.geogit.cli.GeogitCLI;
 import org.geogit.geotools.plumbing.ExportOp;
 import org.geogit.geotools.plumbing.GeoToolsOpException;
@@ -74,14 +75,11 @@ public class ShpExport extends AbstractShpCommand implements CLICommand {
      */
     @Override
     protected void runInternal(GeogitCLI cli) throws Exception {
-        if (cli.getGeogit() == null) {
-            cli.getConsole().println("Not a geogit repository: " + cli.getPlatform().pwd());
-            return;
-        }
+        checkState(cli.getGeogit() != null, "Not a geogit repository: " + cli.getPlatform().pwd());
 
         if (args.isEmpty()) {
             printUsage();
-            return;
+            throw new CommandFailedException();
         }
 
         String path = args.get(0);
@@ -92,7 +90,7 @@ public class ShpExport extends AbstractShpCommand implements CLICommand {
         File file = new File(shapefile);
         if (file.exists() && !overwrite) {
             cli.getConsole().println("The selected shapefile already exists. Use -o to overwrite");
-            return;
+            throw new CommandFailedException();
         }
 
         Map<String, Serializable> params = new HashMap<String, Serializable>();
@@ -146,18 +144,18 @@ public class ShpExport extends AbstractShpCommand implements CLICommand {
                             .println(
                                     "\nError: The selected tree contains mixed feature types.\nUse --defaulttype or --featuretype <feature_type_ref> to export.");
                     file.delete();
-                    return;
+                    throw new CommandFailedException();
                 default:
                     cli.getConsole().println("Could not export. Error:" + e.statusCode.name());
                     file.delete();
-                    return;
+                    throw new CommandFailedException();
                 }
             }
             cli.getConsole().println(path + " exported successfully to " + shapefile);
         } else {
             // do we need to check this?
             cli.getConsole().println("Could not create feature store.");
-            return;
+            throw new CommandFailedException();
         }
 
     }
