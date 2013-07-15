@@ -83,7 +83,7 @@ public class CommandBuilder {
         } else if ("add".equalsIgnoreCase(commandName)) {
             command = buildAdd(options);
         } else if ("remove".equalsIgnoreCase(commandName)) {
-        	command = buildRemove(options);
+            command = buildRemove(options);
         } else {
             throw new CommandSpecException("'" + commandName + "' is not a geogit command");
         }
@@ -275,6 +275,8 @@ public class CommandBuilder {
         command.setFetchAll(Boolean.valueOf(options.getFirstValue("all", "false")));
         command.setRefSpec(options.getFirstValue("ref", null));
         command.setRemoteName(options.getFirstValue("remoteName", null));
+        command.setAuthorName(options.getFirstValue("authorName", null));
+        command.setAuthorEmail(options.getFirstValue("authorEmail", null));
         return command;
     }
 
@@ -398,7 +400,7 @@ public class CommandBuilder {
         command.setPath(options.getFirstValue("path", null));
         return command;
     }
-    
+
     /**
      * Builds the {@link RemoveWebOp} command.
      * 
@@ -406,7 +408,7 @@ public class CommandBuilder {
      * @return the built command
      */
     static RemoveWebOp buildRemove(ParameterSet options) {
-    	RemoveWebOp command = new RemoveWebOp();
+        RemoveWebOp command = new RemoveWebOp();
         command.setPath(options.getFirstValue("path", null));
         command.setRecursive(Boolean.valueOf(options.getFirstValue("recursive", "false")));
         return command;

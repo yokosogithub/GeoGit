@@ -2,6 +2,8 @@ package org.geogit.web.api.commands;
 
 import java.util.Iterator;
 
+import javax.annotation.Nullable;
+
 import org.geogit.api.CommandLocator;
 import org.geogit.api.ObjectId;
 import org.geogit.api.Ref;
@@ -31,6 +33,10 @@ public class PullWebOp extends AbstractWebAPICommand {
 
     private String refSpec;
 
+    private Optional<String> authorName = Optional.absent();
+
+    private Optional<String> authorEmail = Optional.absent();
+
     /**
      * Mutator for the remoteName variable
      * 
@@ -58,12 +64,27 @@ public class PullWebOp extends AbstractWebAPICommand {
         this.refSpec = refSpec;
     }
 
+    /**
+     * @param authorName the author of the merge commit
+     */
+    public void setAuthorName(@Nullable String authorName) {
+        this.authorName = Optional.fromNullable(authorName);
+    }
+
+    /**
+     * @param authorEmail the email of the author of the merge commit
+     */
+    public void setAuthorEmail(@Nullable String authorEmail) {
+        this.authorEmail = Optional.fromNullable(authorEmail);
+    }
+
     @Override
     public void run(CommandContext context) {
         final CommandLocator geogit = this.getCommandLocator(context);
 
-        PullOp command = geogit.command(PullOp.class).setRemote(remoteName).setAll(fetchAll)
-                .addRefSpec(refSpec);
+        PullOp command = geogit.command(PullOp.class)
+                .setAuthor(authorName.orNull(), authorEmail.orNull()).setRemote(remoteName)
+                .setAll(fetchAll).addRefSpec(refSpec);
         try {
             final PullResult result = command.call();
             final Iterator<DiffEntry> iter;
