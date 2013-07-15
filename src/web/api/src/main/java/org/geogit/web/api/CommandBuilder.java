@@ -159,6 +159,8 @@ public class CommandBuilder {
         Commit commit = new Commit();
         commit.setAll(Boolean.valueOf(options.getFirstValue("all", "false")));
         commit.setMessage(options.getFirstValue("message", null));
+        commit.setAuthorName(options.getFirstValue("authorName", null));
+        commit.setAuthorEmail(options.getFirstValue("authorEmail", null));
         return commit;
     }
 
