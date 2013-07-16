@@ -58,6 +58,9 @@ public class Commit extends AbstractCommand implements CLICommand {
 
     @Parameter(names = "-c", description = "Commit to reuse")
     private String commitToReuse;
+    
+    @Parameter(names = "-t", description = "Commit timestamp")
+    private long commitTimestamp = 0L;
 
     @Parameter(description = "<pathFilter>  [<paths_to_commit]...")
     private List<String> pathFilters = Lists.newLinkedList();
@@ -87,6 +90,9 @@ public class Commit extends AbstractCommand implements CLICommand {
         RevCommit commit;
         try {
             CommitOp commitOp = geogit.command(CommitOp.class).setMessage(message);
+            if (commitTimestamp != 0L) {
+                commitOp.setCommitterTimestamp( commitTimestamp );
+            }
             if (commitToReuse != null) {
                 Optional<ObjectId> commitId = geogit.command(RevParse.class)
                         .setRefSpec(commitToReuse).call();
