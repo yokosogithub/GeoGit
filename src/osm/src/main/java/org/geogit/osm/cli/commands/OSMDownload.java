@@ -28,6 +28,7 @@ import org.geogit.cli.GeogitCLI;
 import org.geogit.osm.internal.AddOSMLogEntry;
 import org.geogit.osm.internal.EmptyOSMDownloadException;
 import org.geogit.osm.internal.Mapping;
+import org.geogit.osm.internal.OSMDownloadReport;
 import org.geogit.osm.internal.OSMImportOp;
 import org.geogit.osm.internal.OSMLogEntry;
 import org.geogit.osm.internal.ReadOSMFilterFile;
@@ -144,32 +145,36 @@ public class OSMDownload extends AbstractCommand implements CLICommand {
         }
 
         try {
-            Optional<OSMLogEntry> entry = op.setFilter(filter)
+            Optional<OSMDownloadReport> report = op.setFilter(filter)
                     .setProgressListener(cli.getProgressListener()).call();
 
-            if (!entry.isPresent()) {
+            if (!report.isPresent()) {
                 return;
             }
+
+            if (report.get().getUnpprocessedCount() > 0) {
+                cli.getConsole().println(
+                        "Some elements returned by the specified filter could not be processed.\nProcessed entities: "
+                                + report.get().getCount() + "\nWrong or uncomplete elements: "
+                                + report.get().getUnpprocessedCount());
+            }
+
             cli.execute("add");
             String message = "Updated OSM data";
             cli.execute("commit", "-m", message);
-            cli.getGeogit().command(AddOSMLogEntry.class).setEntry(entry.get()).call();
-            cli.getGeogit().command(WriteOSMFilterFile.class).setEntry(entry.get())
-                    .setFilterCode(filter).call();
+            OSMLogEntry entry = new OSMLogEntry(cli.getGeogit().getRepository().getWorkingTree()
+                    .getTree().getId(), report.get().getLatestChangeset(), report.get()
+                    .getLatestTimestamp());
+            cli.getGeogit().command(AddOSMLogEntry.class).setEntry(entry).call();
+            cli.getGeogit().command(WriteOSMFilterFile.class).setEntry(entry).setFilterCode(filter)
+                    .call();
 
         } catch (EmptyOSMDownloadException e) {
-            if (e.getUnpprocessedCount() > 0) {
-                throw new IllegalStateException(
-                        "Some elements returned by the specified filter could not be processed.\nProcessed entities: "
-                                + e.getCount() + "\nWrong or uncomplete elements: "
-                                + e.getUnpprocessedCount());
-            } else {
-                throw new IllegalArgumentException(
-                        "The specified filter did not return any element.\n"
-                                + "No changes were made to the repository.\n"
-                                + "To check the downloaded elements, use the --saveto and"
-                                + " --keep-files options and verify the intermediate file.");
-            }
+            throw new IllegalArgumentException("The specified filter did not return any element.\n"
+                    + "No changes were made to the repository.\n"
+                    + "To check the downloaded elements, use the --saveto and"
+                    + " --keep-files options and verify the intermediate file.");
+
         } catch (RuntimeException e) {
             throw new IllegalStateException("Error importing OSM data: " + e.getMessage(), e);
         }
@@ -211,11 +216,15 @@ public class OSMDownload extends AbstractCommand implements CLICommand {
 
         Preconditions.checkState(filter.isPresent(), "Filter file not found");
 
-        Optional<OSMLogEntry> entry = geogit.command(OSMImportOp.class).setFilter(filter.get())
-                .setDataSource(resolveAPIURL()).setProgressListener(cli.getProgressListener())
-                .call();
+        Optional<OSMDownloadReport> report = geogit.command(OSMImportOp.class)
+                .setFilter(filter.get()).setDataSource(resolveAPIURL())
+                .setProgressListener(cli.getProgressListener()).call();
 
-        if (!entry.isPresent()) {
+        OSMLogEntry entry = new OSMLogEntry(cli.getGeogit().getRepository().getWorkingTree()
+                .getTree().getId(), report.get().getLatestChangeset(), report.get()
+                .getLatestTimestamp());
+
+        if (!report.isPresent()) {
             return;
         }
 
@@ -224,8 +233,8 @@ public class OSMDownload extends AbstractCommand implements CLICommand {
             cli.execute("add");
             String message = "Updated OSM data";
             cli.execute("commit", "-m", message);
-            cli.getGeogit().command(AddOSMLogEntry.class).setEntry(entry.get()).call();
-            cli.getGeogit().command(WriteOSMFilterFile.class).setEntry(entry.get())
+            cli.getGeogit().command(AddOSMLogEntry.class).setEntry(entry).call();
+            cli.getGeogit().command(WriteOSMFilterFile.class).setEntry(entry)
                     .setFilterCode(filter.get()).call();
         } else {
             // no changes, so we exit and do not continue with the merge

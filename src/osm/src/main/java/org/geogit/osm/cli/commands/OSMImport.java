@@ -16,10 +16,12 @@ import org.geogit.cli.CLICommand;
 import org.geogit.cli.GeogitCLI;
 import org.geogit.osm.internal.EmptyOSMDownloadException;
 import org.geogit.osm.internal.Mapping;
+import org.geogit.osm.internal.OSMDownloadReport;
 import org.geogit.osm.internal.OSMImportOp;
 
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.Parameters;
+import com.google.common.base.Optional;
 import com.google.common.collect.Lists;
 
 /**
@@ -53,20 +55,21 @@ public class OSMImport extends AbstractCommand implements CLICommand {
         }
 
         try {
-            cli.getGeogit().command(OSMImportOp.class).setDataSource(importFile.getAbsolutePath())
-                    .setMapping(mapping).setNoRaw(noRaw).setAdd(add)
-                    .setProgressListener(cli.getProgressListener()).call();
-        } catch (EmptyOSMDownloadException e) {
-            if (e.getCount() > 0) {
-                throw new IllegalStateException(
+            Optional<OSMDownloadReport> report = cli.getGeogit().command(OSMImportOp.class)
+                    .setDataSource(importFile.getAbsolutePath()).setMapping(mapping)
+                    .setNoRaw(noRaw).setAdd(add).setProgressListener(cli.getProgressListener())
+                    .call();
+            if (report.isPresent() && report.get().getUnpprocessedCount() > 0) {
+                cli.getConsole().println(
                         "Some elements in the by specified file could not be processed.\nProcessed entities: "
-                                + e.getCount() + "\nWrong or uncomplete elements: "
-                                + e.getUnpprocessedCount());
-            } else {
-                throw new IllegalArgumentException(
-                        "The specified filter did not contain any valid element.\n"
-                                + "No changes were made to the repository.\n");
+                                + report.get().getCount() + "\nWrong or uncomplete elements: "
+                                + report.get().getUnpprocessedCount());
             }
+
+        } catch (EmptyOSMDownloadException e) {
+            throw new IllegalArgumentException(
+                    "The specified filter did not contain any valid element.\n"
+                            + "No changes were made to the repository.\n");
         } catch (RuntimeException e) {
             new IllegalStateException("Error importing OSM data: " + e.getMessage(), e);
         }

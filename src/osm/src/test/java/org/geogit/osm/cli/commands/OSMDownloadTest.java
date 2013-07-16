@@ -18,7 +18,6 @@ import org.geogit.api.RevCommit;
 import org.geogit.api.TestPlatform;
 import org.geogit.api.porcelain.LogOp;
 import org.geogit.cli.GeogitCLI;
-import org.geogit.osm.cli.commands.OSMMap;
 import org.geogit.osm.internal.OSMImportOp;
 import org.geogit.osm.internal.OSMLogEntry;
 import org.geogit.osm.internal.ReadOSMLogEntries;
@@ -132,9 +131,8 @@ public class OSMDownloadTest extends Assert {
         File filterFile = new File(filename);
         try {
             cli.execute("osm", "download", "-f", filterFile.getAbsolutePath());
-        } catch (IllegalStateException e) {
-            assertTrue(e.getMessage().startsWith(
-                    "Some elements returned by the specified filter could not be processed"));
+        } catch (IllegalArgumentException e) {
+            assertTrue(e.getMessage().startsWith("The specified filter did not return any element"));
         }
 
     }

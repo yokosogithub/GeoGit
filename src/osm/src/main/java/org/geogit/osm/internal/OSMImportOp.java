@@ -54,7 +54,7 @@ import crosby.binary.osmosis.OsmosisReader;
  * overpass api, or from a file with OSM data
  * 
  */
-public class OSMImportOp extends AbstractGeoGitOp<Optional<OSMLogEntry>> {
+public class OSMImportOp extends AbstractGeoGitOp<Optional<OSMDownloadReport>> {
 
     /**
      * The filter to use if calling the overpass API
@@ -150,7 +150,7 @@ public class OSMImportOp extends AbstractGeoGitOp<Optional<OSMLogEntry>> {
     }
 
     @Override
-    public Optional<OSMLogEntry> call() {
+    public Optional<OSMDownloadReport> call() {
 
         checkNotNull(urlOrFilepath);
 
@@ -193,17 +193,17 @@ public class OSMImportOp extends AbstractGeoGitOp<Optional<OSMLogEntry>> {
 
         EntityConverter converter = new EntityConverter();
 
-        OSMLogEntry entry = parseDataFileAndInsert(file, converter);
+        OSMDownloadReport report = parseDataFileAndInsert(file, converter);
 
         if (urlOrFilepath.startsWith("http") && !keepFile) {
             downloadFile.delete();
         }
 
-        return Optional.fromNullable(entry);
+        return Optional.fromNullable(report);
 
     }
 
-    private OSMLogEntry parseDataFileAndInsert(File file, final EntityConverter converter) {
+    private OSMDownloadReport parseDataFileAndInsert(File file, final EntityConverter converter) {
 
         boolean pbf = false;
         CompressionMethod compression = CompressionMethod.None;
@@ -243,13 +243,13 @@ public class OSMImportOp extends AbstractGeoGitOp<Optional<OSMLogEntry>> {
             }
         }
 
-        if (sink.getCount() == 0 || sink.getUnprocessedCount() > 0) {
-            throw new EmptyOSMDownloadException(sink.getCount(), sink.getUnprocessedCount());
+        if (sink.getCount() == 0) {
+            throw new EmptyOSMDownloadException();
         }
 
-        OSMLogEntry entry = new OSMLogEntry(getWorkTree().getTree().getId(),
-                sink.getLatestChangeset(), sink.getLatestTimestamp());
-        return entry;
+        OSMDownloadReport report = new OSMDownloadReport(sink.getCount(),
+                sink.getUnprocessedCount(), sink.getLatestChangeset(), sink.getLatestTimestamp());
+        return report;
 
     }
 
