@@ -24,6 +24,7 @@ import org.geogit.api.RevFeatureType;
 import org.geogit.api.RevObject;
 import org.geogit.api.RevTree;
 import org.geogit.repository.PostOrderIterator;
+import org.geogit.storage.Deduplicator;
 import org.geogit.storage.ObjectDatabase;
 import org.geogit.storage.ObjectReader;
 import org.geogit.storage.ObjectSerializingFactory;
@@ -62,12 +63,12 @@ public final class BinaryPackedObjects {
     }
 
     public void write(OutputStream out, List<ObjectId> want, List<ObjectId> have,
-            boolean traverseCommits) throws IOException {
-        write(out, want, have, new HashSet<ObjectId>(), DEFAULT_CALLBACK, traverseCommits);
+            boolean traverseCommits, Deduplicator deduplicator) throws IOException {
+        write(out, want, have, new HashSet<ObjectId>(), DEFAULT_CALLBACK, traverseCommits, deduplicator);
     }
 
     public <T> T write(OutputStream out, List<ObjectId> want, List<ObjectId> have,
-            Set<ObjectId> sent, Callback<T> callback, boolean traverseCommits) throws IOException {
+            Set<ObjectId> sent, Callback<T> callback, boolean traverseCommits, Deduplicator deduplicator) throws IOException {
         T state = null;
         for (ObjectId i : want) {
             if (!database.exists(i)) {
@@ -75,13 +76,13 @@ public final class BinaryPackedObjects {
             }
         }
 
-        ImmutableList<ObjectId> needsPrevisit = traverseCommits ? scanForPrevisitList(want, have)
+        ImmutableList<ObjectId> needsPrevisit = traverseCommits ? scanForPrevisitList(want, have, deduplicator)
                 : ImmutableList.copyOf(have);
-        ImmutableList<ObjectId> previsitResults = reachableContentIds(needsPrevisit);
+        ImmutableList<ObjectId> previsitResults = reachableContentIds(needsPrevisit, deduplicator);
 
         int commitsSent = 0;
         Iterator<RevObject> objects = PostOrderIterator.range(want, new ArrayList<ObjectId>(
-                previsitResults), database, traverseCommits);
+                previsitResults), database, traverseCommits, deduplicator);
         while (objects.hasNext() && commitsSent < CAP) {
             RevObject object = objects.next();
 
@@ -111,14 +112,14 @@ public final class BinaryPackedObjects {
      * </ul>
      * 
      */
-    private ImmutableList<ObjectId> scanForPrevisitList(List<ObjectId> want, List<ObjectId> have) {
+    private ImmutableList<ObjectId> scanForPrevisitList(List<ObjectId> want, List<ObjectId> have, Deduplicator deduplicator) {
         /*
          * @note Implementation note: To find the previsit list, we just iterate over all the
          * commits that will be visited according to our want and have lists. Any parents of commits
          * in this traversal which are part of the 'have' list will be in the previsit list.
          */
         Iterator<RevCommit> willBeVisited = Iterators.filter( //
-                PostOrderIterator.rangeOfCommits(want, have, database), //
+                PostOrderIterator.rangeOfCommits(want, have, database, deduplicator), //
                 RevCommit.class);
         ImmutableSet.Builder<ObjectId> builder = ImmutableSet.builder();
 
@@ -132,7 +133,7 @@ public final class BinaryPackedObjects {
         return ImmutableList.copyOf(builder.build());
     }
 
-    private ImmutableList<ObjectId> reachableContentIds(ImmutableList<ObjectId> needsPrevisit) {
+    private ImmutableList<ObjectId> reachableContentIds(ImmutableList<ObjectId> needsPrevisit, Deduplicator deduplicator) {
         Function<RevObject, ObjectId> getIdTransformer = new Function<RevObject, ObjectId>() {
             @Override
             @Nullable
@@ -142,7 +143,7 @@ public final class BinaryPackedObjects {
         };
 
         Iterator<ObjectId> reachable = Iterators.transform( //
-                PostOrderIterator.contentsOf(needsPrevisit, database), //
+                PostOrderIterator.contentsOf(needsPrevisit, database, deduplicator), //
                 getIdTransformer);
         return ImmutableList.copyOf(reachable);
     }

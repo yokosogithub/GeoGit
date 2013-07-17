@@ -24,6 +24,7 @@ import org.geogit.api.porcelain.FetchResult.ChangedRef.ChangeTypes;
 import org.geogit.remote.IRemoteRepo;
 import org.geogit.remote.RemoteUtils;
 import org.geogit.repository.Repository;
+import org.geogit.storage.DeduplicationService;
 import org.opengis.util.ProgressListener;
 
 import com.google.common.base.Optional;
@@ -54,13 +55,16 @@ public class FetchOp extends AbstractGeoGitOp<FetchResult> {
     private Repository localRepository;
 
     private Optional<Integer> depth = Optional.absent();
+    
+    private final DeduplicationService deduplicationService;
 
     /**
      * Constructs a new {@code FetchOp}.
      */
     @Inject
-    public FetchOp(Repository localRepository) {
+    public FetchOp(Repository localRepository, DeduplicationService deduplicationService) {
         this.localRepository = localRepository;
+        this.deduplicationService = deduplicationService;
     }
 
     /**
@@ -205,8 +209,8 @@ public class FetchOp extends AbstractGeoGitOp<FetchResult> {
                     }
                 }
             }
-
-            Optional<IRemoteRepo> remoteRepo = getRemoteRepo(remote);
+            
+            Optional<IRemoteRepo> remoteRepo = getRemoteRepo(remote, deduplicationService);
 
             Preconditions.checkState(remoteRepo.isPresent(), "Failed to connect to the remote.");
             try {
@@ -284,9 +288,9 @@ public class FetchOp extends AbstractGeoGitOp<FetchResult> {
      * @param remote the remote to get
      * @return an interface for the remote repository
      */
-    public Optional<IRemoteRepo> getRemoteRepo(Remote remote) {
+    public Optional<IRemoteRepo> getRemoteRepo(Remote remote, DeduplicationService deduplicationService) {
         return RemoteUtils
-                .newRemote(GlobalInjectorBuilder.builder.build(), remote, localRepository);
+                .newRemote(GlobalInjectorBuilder.builder.build(), remote, localRepository, deduplicationService);
     }
 
     private Ref updateLocalRef(Ref remoteRef, Remote remote, ImmutableSet<Ref> localRemoteRefs) {
