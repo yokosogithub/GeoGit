@@ -137,7 +137,7 @@ public class CommandBuilder {
      */
     static Log buildLog(ParameterSet options) {
         Log command = new Log();
-        command.setLimit(parseInt(options, "limit", 50));
+        command.setLimit(parseInt(options, "limit", null));
         command.setOffset(parseInt(options, "offset", null));
         command.setPaths(Arrays.asList(options.getValuesArray("path")));
         command.setSince(options.getFirstValue("since"));
