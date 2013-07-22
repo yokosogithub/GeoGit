@@ -8,7 +8,7 @@ import org.geogit.api.ObjectId;
 import org.geogit.storage.Deduplicator;
 
 public class HeapDeduplicator implements Deduplicator {
-    private final Set<ObjectId> seen = new HashSet<ObjectId>();
+    private Set<ObjectId> seen = new HashSet<ObjectId>();
     
     @Override
     public boolean visit(ObjectId id) {
@@ -24,9 +24,14 @@ public class HeapDeduplicator implements Deduplicator {
     public void removeDuplicates(List<ObjectId> ids) {
         ids.removeAll(seen);
     }
+    
+    @Override
+    public void reset() {
+    	seen.clear();
+    }
 
     @Override
     public void release() {
-        // No-op
+    	seen = null;
     }
 }

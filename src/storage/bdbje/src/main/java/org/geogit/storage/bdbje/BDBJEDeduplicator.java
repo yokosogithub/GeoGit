@@ -15,26 +15,13 @@ import com.sleepycat.je.OperationStatus;
 
 public class BDBJEDeduplicator implements Deduplicator {
     private static final DatabaseEntry DUMMY_DATA = new DatabaseEntry(new byte[0]);
-    private final Database objectDb;
+    private Database objectDb;
     private final BDBJEDeduplicationService service;
 
     public BDBJEDeduplicator(Database database, BDBJEDeduplicationService service) {
         this.objectDb = database;
         this.service = service;
     }
-    
-//    public BDBJEDeduplicator(EnvironmentBuilder builder) {
-//        this.environment = builder.setRelativePath("seen").get();
-//        
-//        DatabaseConfig dbConfig = new DatabaseConfig();
-//        dbConfig.setAllowCreate(true);
-//        dbConfig.setDeferredWrite(false);
-//        dbConfig.setTransactional(false);
-//        dbConfig.setTemporary(true);
-//
-//        Database database = this.environment.openDatabase(null, "ObjectDatabase", dbConfig);
-//        this.objectDb = database;
-//    }
     
     @Override
     public boolean isDuplicate(ObjectId id) {
@@ -52,9 +39,19 @@ public class BDBJEDeduplicator implements Deduplicator {
     }
     
     @Override
+    public void reset() {
+    	objectDb.close();
+    	service.reset(this);
+    }
+    
+    @Override
     public void release() {
         objectDb.close();
         service.deregister(this);
+    }
+    
+    protected void setDatabase(Database db) {
+    	this.objectDb = db;
     }
     
     private boolean destructiveTest(final ObjectId id) {

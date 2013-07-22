@@ -78,7 +78,9 @@ public final class BinaryPackedObjects {
 
         ImmutableList<ObjectId> needsPrevisit = traverseCommits ? scanForPrevisitList(want, have, deduplicator)
                 : ImmutableList.copyOf(have);
+        deduplicator.reset();
         ImmutableList<ObjectId> previsitResults = reachableContentIds(needsPrevisit, deduplicator);
+        deduplicator.reset();
 
         int commitsSent = 0;
         Iterator<RevObject> objects = PostOrderIterator.range(want, new ArrayList<ObjectId>(

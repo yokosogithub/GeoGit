@@ -29,16 +29,26 @@ public class BDBJEDeduplicationService implements DeduplicationService {
         return this.environment;
     }
     
-    @Override
-    public synchronized Deduplicator createDeduplicator() {
+    private synchronized Database createDatabase() {
         DatabaseConfig dbConfig = new DatabaseConfig();
         dbConfig.setAllowCreate(true);
         dbConfig.setDeferredWrite(false);
         dbConfig.setTransactional(false);
         dbConfig.setTemporary(true);
 
-        Database database = getEnvironment().openDatabase(null, "seen" + (tick++), dbConfig);
-        return new BDBJEDeduplicator(database, this);
+        return getEnvironment().openDatabase(null, "seen" + (tick++), dbConfig);
+    }
+    
+    @Override
+    public synchronized Deduplicator createDeduplicator() {
+    	Database database = createDatabase();
+        BDBJEDeduplicator deduplicator = new BDBJEDeduplicator(database, this);
+        this.openDeduplicators.add(deduplicator);
+        return deduplicator;
+    }
+    
+    protected void reset(BDBJEDeduplicator deduplicator) {
+    	deduplicator.setDatabase(createDatabase());
     }
     
     public synchronized void deregister(BDBJEDeduplicator deduplicator) {
