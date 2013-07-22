@@ -137,7 +137,10 @@ abstract class CommitTraverser {
     private void addParents(CommitNode commitNode) {
         ImmutableList<ObjectId> parents = getParents(commitNode.getObjectId());
         for (ObjectId parent : parents) {
-            commitQueue.add(new CommitNode(parent, commitNode.getDepth() + 1));
+            if (!commits.contains(parent) && !have.contains(parent)
+                    && !commitQueue.contains(parent)) {
+                commitQueue.add(new CommitNode(parent, commitNode.getDepth() + 1));
+            }
         }
     }
 
