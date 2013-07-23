@@ -217,7 +217,8 @@ public class GeoGitDataStore extends ContentDataStore implements DataStore {
         });
         switch (matches.size()) {
         case 0:
-            throw new NoSuchElementException();
+            throw new NoSuchElementException(String.format("No tree ref matched the name: %s",
+                    localName));
         case 1:
             return matches.iterator().next();
         default:
