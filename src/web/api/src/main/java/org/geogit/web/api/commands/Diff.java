@@ -26,6 +26,10 @@ public class Diff extends AbstractWebAPICommand {
 
     private boolean showGeometryChanges = false;
 
+    private int page;
+
+    private int elementsPerPage;
+
     /**
      * Mutator for the oldRefSpec variable
      * 
@@ -63,6 +67,24 @@ public class Diff extends AbstractWebAPICommand {
     }
 
     /**
+     * Mutator for the page variable
+     * 
+     * @param page - the page number to build the response
+     */
+    public void setPage(int page) {
+        this.page = page;
+    }
+
+    /**
+     * Mutator for the elementsPerPage variable
+     * 
+     * @param elementsPerPage - the number of elements to display in the response per page
+     */
+    public void setElementsPerPage(int elementsPerPage) {
+        this.elementsPerPage = elementsPerPage;
+    }
+
+    /**
      * Runs the command and builds the appropriate response
      * 
      * @param context - the context to use for this command
@@ -85,9 +107,9 @@ public class Diff extends AbstractWebAPICommand {
             public void write(ResponseWriter out) throws Exception {
                 out.start();
                 if (showGeometryChanges) {
-                    out.writeGeometryChanges(geogit, diff);
+                    out.writeGeometryChanges(geogit, diff, page, elementsPerPage);
                 } else {
-                    out.writeDiffEntries("diff", 0, -1, diff);
+                    out.writeDiffEntries("diff", page * elementsPerPage, elementsPerPage, diff);
                 }
                 out.finish();
             }
