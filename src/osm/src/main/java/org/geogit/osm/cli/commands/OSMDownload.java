@@ -205,6 +205,9 @@ public class OSMDownload extends AbstractCommand implements CLICommand {
                     break;
                 }
             }
+            if (lastCommit != null) {
+                break;
+            }
         }
         checkNotNull(lastCommit, "The current branch does not contain OSM data");
 
@@ -238,11 +241,13 @@ public class OSMDownload extends AbstractCommand implements CLICommand {
                     .setFilterCode(filter.get()).call();
         } else {
             // no changes, so we exit and do not continue with the merge
+            geogit.command(CheckoutOp.class).setSource(((SymRef) currHead.get()).getTarget())
+                    .call();
             cli.getConsole().println("No changes found");
             return;
         }
 
-        geogit.command(CheckoutOp.class).setSource(currHead.get().getName()).call();
+        geogit.command(CheckoutOp.class).setSource(((SymRef) currHead.get()).getTarget()).call();
 
         if (rebase) {
             cli.execute("rebase", OSM_FETCH_BRANCH);
