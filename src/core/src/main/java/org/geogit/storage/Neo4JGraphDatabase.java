@@ -31,6 +31,7 @@ import org.neo4j.graphdb.RelationshipType;
 import org.neo4j.graphdb.Transaction;
 import org.neo4j.graphdb.factory.GraphDatabaseFactory;
 import org.neo4j.graphdb.index.Index;
+import org.neo4j.graphdb.index.UniqueFactory;
 import org.neo4j.graphdb.traversal.Evaluation;
 import org.neo4j.graphdb.traversal.Evaluator;
 import org.neo4j.graphdb.traversal.TraversalDescription;
@@ -244,18 +245,6 @@ public class Neo4JGraphDatabase extends AbstractGraphDatabase {
         return listBuilder.build();
     }
 
-    private ImmutableList<Node> getParentNodes(final Node commitNode) {
-        Builder<Node> listBuilder = new ImmutableList.Builder<Node>();
-
-        if (commitNode != null) {
-            for (Relationship parent : commitNode.getRelationships(Direction.OUTGOING,
-                    CommitRelationshipTypes.PARENT)) {
-                listBuilder.add(parent.getOtherNode(commitNode));
-            }
-        }
-        return listBuilder.build();
-    }
-
     /**
      * Retrieves all of the children for the given commit.
      * 
@@ -397,15 +386,15 @@ public class Neo4JGraphDatabase extends AbstractGraphDatabase {
      * @return
      */
     private Node getOrAddNode(ObjectId commitId) {
-        Index<Node> idIndex = graphDB.index().forNodes("identifiers");
         final String commitIdStr = commitId.toString();
-        Node node = idIndex.get("id", commitIdStr).getSingle();
-        if (node == null) {
-            node = graphDB.createNode();
-            node.setProperty("id", commitIdStr);
-            idIndex.add(node, "id", commitIdStr);
-        }
-        return node;
+        UniqueFactory<Node> factory = new UniqueFactory.UniqueNodeFactory(graphDB, "identifiers") {
+            @Override
+            protected void initialize(Node created, Map<String, Object> properties) {
+                created.setProperty("id", properties.get("id"));
+            }
+        };
+
+        return factory.getOrCreate("id", commitIdStr);
     }
 
     /**
@@ -464,18 +453,6 @@ public class Neo4JGraphDatabase extends AbstractGraphDatabase {
         Iterable<Path> paths = finder.findAllPaths(startNode, endNode);
 
         for (Path path : paths) {
-            Node lastNode = path.lastRelationship().getOtherNode(path.endNode());
-            Node mappedNode = getMappedNode(lastNode);
-            if (mappedNode != null) {
-                ImmutableList<Node> parentNodes = getParentNodes(mappedNode);
-                for (Node parentNode : parentNodes) {
-                    // If these nodes aren't represented, they were excluded and the path is sparse
-                    Node mappedParentNode = getMappedNode(parentNode);
-                    if (getMappedNode(mappedParentNode).getId() != parentNode.getId()) {
-                        return true;
-                    }
-                }
-            }
             for (Node node : path.nodes()) {
                 if (!node.equals(endNode) && node.hasProperty(SPARSE_FLAG)) {
                     return true;
@@ -589,13 +566,17 @@ public class Neo4JGraphDatabase extends AbstractGraphDatabase {
     private void stopAncestryPath(Node commit, Queue<Node> theirQueue, Set<Node> theirSet) {
         Queue<Node> ancestorQueue = new LinkedList<Node>();
         ancestorQueue.add(commit);
+        List<Node> processed = new LinkedList<Node>();
         while (!ancestorQueue.isEmpty()) {
             Node ancestor = ancestorQueue.poll();
             for (Relationship parent : ancestor.getRelationships(CommitRelationshipTypes.PARENT)) {
                 Node parentNode = parent.getEndNode();
                 if (parentNode.getId() != ancestor.getId()) {
                     if (theirSet.contains(parentNode)) {
-                        ancestorQueue.add(parentNode);
+                        if (!processed.contains(parentNode)) {
+                            ancestorQueue.add(parentNode);
+                            processed.add(parentNode);
+                        }
                     } else if (theirQueue.contains(parentNode)) {
                         theirQueue.remove(parentNode);
                     }
@@ -611,6 +592,7 @@ public class Neo4JGraphDatabase extends AbstractGraphDatabase {
             Set<Node> rightSet) {
         Queue<Node> ancestorQueue = new LinkedList<Node>();
         List<Node> falseAncestors = new LinkedList<Node>();
+        List<Node> processed = new LinkedList<Node>();
         for (Node n : potentialCommonAncestors) {
             if (falseAncestors.contains(n)) {
                 continue;
@@ -623,7 +605,10 @@ public class Neo4JGraphDatabase extends AbstractGraphDatabase {
                     Node parentNode = parent.getEndNode();
                     if (parentNode.getId() != ancestor.getId()) {
                         if (leftSet.contains(parentNode) || rightSet.contains(parentNode)) {
-                            ancestorQueue.add(parentNode);
+                            if (!processed.contains(parentNode)) {
+                                ancestorQueue.add(parentNode);
+                                processed.add(parentNode);
+                            }
                             if (potentialCommonAncestors.contains(parentNode)) {
                                 falseAncestors.add(parentNode);
                             }
