@@ -9,6 +9,9 @@ import static com.google.common.base.Preconditions.checkState;
 
 import java.util.Iterator;
 import java.util.List;
+import java.util.Date;
+import java.sql.Timestamp;
+import javax.xml.datatype.DatatypeFactory;
 
 import jline.console.ConsoleReader;
 
@@ -62,6 +65,9 @@ public class Commit extends AbstractCommand implements CLICommand {
     @Parameter(names = "-t", description = "Commit timestamp")
     private long commitTimestamp = 0L;
 
+    @Parameter(names = "-datetime", description = "RFC3339 Datetime")
+    private String rfcDateTime;
+
     @Parameter(description = "<pathFilter>  [<paths_to_commit]...")
     private List<String> pathFilters = Lists.newLinkedList();
 
@@ -90,7 +96,12 @@ public class Commit extends AbstractCommand implements CLICommand {
         RevCommit commit;
         try {
             CommitOp commitOp = geogit.command(CommitOp.class).setMessage(message);
-            if (commitTimestamp != 0L) {
+            if (rfcDateTime != null && ! Strings.isNullOrEmpty(rfcDateTime)) {
+                long commitTimestamp = javax.xml.datatype.DatatypeFactory.newInstance()
+                        .newXMLGregorianCalendar(rfcDateTime).toGregorianCalendar().getTimeInMillis();
+                commitOp.setCommitterTimestamp( commitTimestamp );
+            }
+            else if (commitTimestamp != 0L) {
                 commitOp.setCommitterTimestamp( commitTimestamp );
             }
             if (commitToReuse != null) {
