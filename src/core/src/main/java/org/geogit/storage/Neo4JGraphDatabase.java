@@ -245,18 +245,6 @@ public class Neo4JGraphDatabase extends AbstractGraphDatabase {
         return listBuilder.build();
     }
 
-    private ImmutableList<Node> getParentNodes(final Node commitNode) {
-        Builder<Node> listBuilder = new ImmutableList.Builder<Node>();
-
-        if (commitNode != null) {
-            for (Relationship parent : commitNode.getRelationships(Direction.OUTGOING,
-                    CommitRelationshipTypes.PARENT)) {
-                listBuilder.add(parent.getOtherNode(commitNode));
-            }
-        }
-        return listBuilder.build();
-    }
-
     /**
      * Retrieves all of the children for the given commit.
      * 
@@ -465,18 +453,6 @@ public class Neo4JGraphDatabase extends AbstractGraphDatabase {
         Iterable<Path> paths = finder.findAllPaths(startNode, endNode);
 
         for (Path path : paths) {
-            Node lastNode = path.lastRelationship().getOtherNode(path.endNode());
-            Node mappedNode = getMappedNode(lastNode);
-            if (mappedNode != null) {
-                ImmutableList<Node> parentNodes = getParentNodes(mappedNode);
-                for (Node parentNode : parentNodes) {
-                    // If these nodes aren't represented, they were excluded and the path is sparse
-                    Node mappedParentNode = getMappedNode(parentNode);
-                    if (getMappedNode(mappedParentNode).getId() != parentNode.getId()) {
-                        return true;
-                    }
-                }
-            }
             for (Node node : path.nodes()) {
                 if (!node.equals(endNode) && node.hasProperty(SPARSE_FLAG)) {
                     return true;
