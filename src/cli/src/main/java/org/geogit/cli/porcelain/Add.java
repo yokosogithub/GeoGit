@@ -12,6 +12,8 @@ import java.util.List;
 
 import jline.console.ConsoleReader;
 
+import org.geogit.api.plumbing.merge.Conflict;
+import org.geogit.api.plumbing.merge.ConflictsReadOp;
 import org.geogit.api.porcelain.AddOp;
 import org.geogit.cli.AbstractCommand;
 import org.geogit.cli.CLICommand;
@@ -78,7 +80,8 @@ public class Add extends AbstractCommand implements CLICommand {
 
         console.print("Counting unstaged features...");
         long unstaged = cli.getGeogit().getRepository().getWorkingTree().countUnstaged(pathFilter);
-        if (0 == unstaged) {
+        List<Conflict> conflicts = cli.getGeogit().command(ConflictsReadOp.class).call();
+        if (0 == unstaged && conflicts.isEmpty()) {
             console.println();
             console.println("No unstaged features, exiting.");
             return;

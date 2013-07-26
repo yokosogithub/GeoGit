@@ -25,4 +25,18 @@ Scenario: Try to merge list conflicts showing only ids
      When I run the command "merge branch1"
      And I run the command "conflicts --ids-only"
      Then the response should contain 1 lines
+     
+Scenario: Try to merge list conflicts showing only ids and diffs
+    Given I have a repository
+      And I have conflicting branches
+     When I run the command "merge branch1"
+     And I run the command "conflicts --ids-only --diff"
+     Then the response should contain "Cannot use --diff and --ids-only at the same time"    
+     
+Scenario: Try to merge list conflicts when no conflicts exist
+    Given I have a repository
+      And I have conflicting branches
+     When I run the command "merge branch1"
+     And I run the command "conflicts --ids-only --diff"
+     Then the response should contain "No elements need merging"       
       

@@ -3,6 +3,16 @@ Feature: "add" command
     As a Geogit User
     I want to stage my changes to the working tree
 
+  Scenario: Try to add a conflicted feature
+    Given I have a repository
+      And I have conflicting branches
+      And I run the command "merge branch1"
+     When I run the command "add Points/Points.1"
+     Then the response should contain "1 features staged for commit"
+      And it should exit with zero exit code
+     When I run the command "conflicts"
+     Then the response should contain "No elements need merging"  
+     
   Scenario: Try to add features to the index
     Given I have a repository
       And I have unstaged "points1"
@@ -59,3 +69,5 @@ Feature: "add" command
       And the response should contain "2 total"
       And the response should contain "Changes not staged for commit"
       And the response should contain "1 total"   
+      
+             
