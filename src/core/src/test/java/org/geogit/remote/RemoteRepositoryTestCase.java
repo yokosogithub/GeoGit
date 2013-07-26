@@ -37,6 +37,7 @@ import org.geogit.api.porcelain.PullOp;
 import org.geogit.api.porcelain.PushOp;
 import org.geogit.repository.Repository;
 import org.geogit.repository.WorkingTree;
+import org.geogit.storage.DeduplicationService;
 import org.geogit.test.integration.TestInjectorBuilder;
 import org.geotools.data.DataUtilities;
 import org.geotools.feature.NameImpl;
@@ -217,7 +218,7 @@ public abstract class RemoteRepositoryTestCase {
     protected FetchOp fetch() {
         FetchOp remoteRepoFetch = spy(localGeogit.geogit.command(FetchOp.class));
 
-        doReturn(Optional.of(remoteRepo)).when(remoteRepoFetch).getRemoteRepo(any(Remote.class));
+        doReturn(Optional.of(remoteRepo)).when(remoteRepoFetch).getRemoteRepo(any(Remote.class), any(DeduplicationService.class));
         LsRemote lsRemote = lsremote();
         when(remoteRepoFetch.command(LsRemote.class)).thenReturn(lsRemote);
 

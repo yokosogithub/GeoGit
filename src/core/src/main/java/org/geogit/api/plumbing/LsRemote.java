@@ -14,6 +14,7 @@ import org.geogit.api.Remote;
 import org.geogit.remote.IRemoteRepo;
 import org.geogit.remote.RemoteUtils;
 import org.geogit.repository.Repository;
+import org.geogit.storage.DeduplicationService;
 
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
@@ -38,18 +39,20 @@ public class LsRemote extends AbstractGeoGitOp<ImmutableSet<Ref>> {
 
     private boolean local;
 
-    private Repository localRepository;
+    private final Repository localRepository;
+    private final DeduplicationService deduplicationService;
 
     /**
      * Constructs a new {@code LsRemote}.
      */
     @Inject
-    public LsRemote(Repository repository) {
+    public LsRemote(Repository repository, DeduplicationService deduplicationService) {
         Optional<Remote> abstent = Optional.absent();
         this.remote = Suppliers.ofInstance(abstent);
         this.getHeads = true;
         this.getTags = true;
         this.localRepository = repository;
+        this.deduplicationService = deduplicationService;
     }
 
     /**
@@ -134,7 +137,7 @@ public class LsRemote extends AbstractGeoGitOp<ImmutableSet<Ref>> {
      */
     public Optional<IRemoteRepo> getRemoteRepo(Remote remote) {
         return RemoteUtils
-                .newRemote(GlobalInjectorBuilder.builder.build(), remote, localRepository);
+                .newRemote(GlobalInjectorBuilder.builder.build(), remote, localRepository, deduplicationService);
     }
 
     /**

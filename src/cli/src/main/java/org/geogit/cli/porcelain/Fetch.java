@@ -20,9 +20,11 @@ import org.geogit.api.porcelain.SynchronizationException;
 import org.geogit.cli.AbstractCommand;
 import org.geogit.cli.CLICommand;
 import org.geogit.cli.GeogitCLI;
+import org.geogit.storage.DeduplicationService;
 
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.Parameters;
+import com.google.inject.Inject;
 
 /**
  * Fetches named heads or tags from one or more other repositories, along with the objects necessary
@@ -57,7 +59,7 @@ public class Fetch extends AbstractCommand implements CLICommand {
 
     @Parameter(description = "[<repository>...]")
     private List<String> args;
-
+    
     /**
      * Executes the fetch command using the provided options.
      * 

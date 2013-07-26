@@ -18,6 +18,7 @@ import org.geogit.api.plumbing.RefParse;
 import org.geogit.remote.IRemoteRepo;
 import org.geogit.remote.RemoteUtils;
 import org.geogit.repository.Repository;
+import org.geogit.storage.DeduplicationService;
 
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
@@ -43,6 +44,7 @@ public class PushOp extends AbstractGeoGitOp<Void> {
     private Supplier<Optional<Remote>> remote;
 
     private Repository localRepository;
+    private final DeduplicationService deduplicationService;
 
     /**
      * Constructs a new {@code PushOp} with the provided parameters.
@@ -50,8 +52,9 @@ public class PushOp extends AbstractGeoGitOp<Void> {
      * @param localRepository the local geogit repository
      */
     @Inject
-    public PushOp(final Repository localRepository) {
+    public PushOp(final Repository localRepository, final DeduplicationService deduplicationService) {
         this.localRepository = localRepository;
+        this.deduplicationService = deduplicationService;
     }
 
     /**
@@ -213,6 +216,6 @@ public class PushOp extends AbstractGeoGitOp<Void> {
      */
     public Optional<IRemoteRepo> getRemoteRepo(Remote remote) {
         return RemoteUtils
-                .newRemote(GlobalInjectorBuilder.builder.build(), remote, localRepository);
+                .newRemote(GlobalInjectorBuilder.builder.build(), remote, localRepository, deduplicationService);
     }
 }
