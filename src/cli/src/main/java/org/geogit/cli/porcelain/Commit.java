@@ -9,9 +9,6 @@ import static com.google.common.base.Preconditions.checkState;
 
 import java.util.Iterator;
 import java.util.List;
-import java.util.Date;
-import java.sql.Timestamp;
-import javax.xml.datatype.DatatypeFactory;
 
 import jline.console.ConsoleReader;
 
@@ -21,6 +18,7 @@ import org.geogit.api.GeoGIT;
 import org.geogit.api.ObjectId;
 import org.geogit.api.RevCommit;
 import org.geogit.api.RevObject.TYPE;
+import org.geogit.api.plumbing.ParseTimestamp;
 import org.geogit.api.plumbing.ResolveObjectType;
 import org.geogit.api.plumbing.RevParse;
 import org.geogit.api.plumbing.diff.DiffEntry;
@@ -61,12 +59,9 @@ public class Commit extends AbstractCommand implements CLICommand {
 
     @Parameter(names = "-c", description = "Commit to reuse")
     private String commitToReuse;
-    
-    @Parameter(names = "-t", description = "Commit timestamp")
-    private long commitTimestamp = 0L;
 
-    @Parameter(names = "-datetime", description = "RFC3339 Datetime")
-    private String rfcDateTime;
+    @Parameter(names = "-t", description = "Commit timestamp")
+    private String commitTimestamp;
 
     @Parameter(description = "<pathFilter>  [<paths_to_commit]...")
     private List<String> pathFilters = Lists.newLinkedList();
@@ -96,14 +91,12 @@ public class Commit extends AbstractCommand implements CLICommand {
         RevCommit commit;
         try {
             CommitOp commitOp = geogit.command(CommitOp.class).setMessage(message);
-            if (rfcDateTime != null && ! Strings.isNullOrEmpty(rfcDateTime)) {
-                long commitTimestamp = javax.xml.datatype.DatatypeFactory.newInstance()
-                        .newXMLGregorianCalendar(rfcDateTime).toGregorianCalendar().getTimeInMillis();
-                commitOp.setCommitterTimestamp( commitTimestamp );
+            if (commitTimestamp != null && !Strings.isNullOrEmpty(commitTimestamp)) {
+                Long millis = geogit.command(ParseTimestamp.class).setString(commitTimestamp)
+                        .call();
+                commitOp.setCommitterTimestamp(millis.longValue());
             }
-            else if (commitTimestamp != 0L) {
-                commitOp.setCommitterTimestamp( commitTimestamp );
-            }
+
             if (commitToReuse != null) {
                 Optional<ObjectId> commitId = geogit.command(RevParse.class)
                         .setRefSpec(commitToReuse).call();

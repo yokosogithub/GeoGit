@@ -3,6 +3,21 @@ Feature: "commit" command
     As a Geogit User
     I want to create a commit and add it to the repository
 
+    
+  Scenario: Try to commit with timestamp
+    Given I have a repository
+     And I have staged "points1"     
+     And I run the command "commit -t 2010-04-22T19:53:23Z -m msg"
+    When I run the command "log"
+    Then the response should contain "2010-04-22"
+    
+  Scenario: Try to commit with timestamp in millisecs
+    Given I have a repository
+     And I have staged "points1"     
+     And I run the command "commit -t 1 -m msg"
+    When I run the command "log"
+    Then the response should contain "1970"    
+    
   Scenario: Try to commit current staged features
     Given I have a repository
       And I have staged "points1"
@@ -76,3 +91,6 @@ Feature: "commit" command
      And I have staged "lines2"
     When I run the command "commit -m Test Points"
     Then the response should contain "2 features added"
+    
+
+         

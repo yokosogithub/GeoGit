@@ -5,11 +5,12 @@
 
 package org.geogit.api.plumbing;
 
-import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.HashMap;
+
+import javax.xml.datatype.DatatypeConfigurationException;
 
 import org.geogit.api.AbstractGeoGitOp;
 import org.geogit.api.Platform;
@@ -128,14 +129,15 @@ public class ParseTimestamp extends AbstractGeoGitOp<Long> {
         }
 
         // finally, try to parse it as a Date object
-        DateFormat df = DateFormat.getDateTimeInstance(DateFormat.SHORT, DateFormat.SHORT);
         try {
-            Date date = df.parse(string);
-            return date.getTime();
-        } catch (ParseException e) {
+            long time = javax.xml.datatype.DatatypeFactory.newInstance()
+                    .newXMLGregorianCalendar(string).toGregorianCalendar().getTimeInMillis();
+            return time;
+        } catch (DatatypeConfigurationException e) {
+        } catch (IllegalArgumentException e) {
         }
 
         throw new IllegalArgumentException("Invalid timestamp string: " + string);
-    }
 
+    }
 }
