@@ -131,9 +131,9 @@ public class SQLServerExportTest extends RepositoryTestCase {
     @Test
     public void testExportWithNullFeatureType() throws Exception {
         SQLServerExport exportCommand = new SQLServerExport();
-        exportCommand.args = Arrays.asList(null, "invalidTable");
+        exportCommand.args = Arrays.asList("", "invalidTable");
         exportCommand.dataStoreFactory = factory;
-        exception.expect(CommandFailedException.class);
+        exception.expect(IllegalArgumentException.class);
         exportCommand.run(cli);
     }
 
