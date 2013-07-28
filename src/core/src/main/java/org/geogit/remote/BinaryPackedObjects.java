@@ -8,11 +8,14 @@ import java.io.EOFException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Set;
+
+import javax.annotation.Nullable;
 
 import org.geogit.api.ObjectId;
 import org.geogit.api.RevCommit;
@@ -21,13 +24,18 @@ import org.geogit.api.RevFeatureType;
 import org.geogit.api.RevObject;
 import org.geogit.api.RevTree;
 import org.geogit.repository.PostOrderIterator;
+import org.geogit.storage.Deduplicator;
 import org.geogit.storage.ObjectDatabase;
 import org.geogit.storage.ObjectReader;
 import org.geogit.storage.ObjectSerializingFactory;
 import org.geogit.storage.ObjectWriter;
 import org.geogit.storage.datastream.DataStreamSerializationFactory;
 
+import com.google.common.base.Function;
 import com.google.common.base.Throwables;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Iterators;
 
 public final class BinaryPackedObjects {
     private final ObjectWriter<RevCommit> commitWriter;
@@ -55,12 +63,12 @@ public final class BinaryPackedObjects {
     }
 
     public void write(OutputStream out, List<ObjectId> want, List<ObjectId> have,
-            boolean traverseCommits) throws IOException {
-        write(out, want, have, new HashSet<ObjectId>(), DEFAULT_CALLBACK, traverseCommits);
+            boolean traverseCommits, Deduplicator deduplicator) throws IOException {
+        write(out, want, have, new HashSet<ObjectId>(), DEFAULT_CALLBACK, traverseCommits, deduplicator);
     }
 
     public <T> T write(OutputStream out, List<ObjectId> want, List<ObjectId> have,
-            Set<ObjectId> sent, Callback<T> callback, boolean traverseCommits) throws IOException {
+            Set<ObjectId> sent, Callback<T> callback, boolean traverseCommits, Deduplicator deduplicator) throws IOException {
         T state = null;
         for (ObjectId i : want) {
             if (!database.exists(i)) {
@@ -68,9 +76,15 @@ public final class BinaryPackedObjects {
             }
         }
 
+        ImmutableList<ObjectId> needsPrevisit = traverseCommits ? scanForPrevisitList(want, have, deduplicator)
+                : ImmutableList.copyOf(have);
+        deduplicator.reset();
+        ImmutableList<ObjectId> previsitResults = reachableContentIds(needsPrevisit, deduplicator);
+        deduplicator.reset();
+
         int commitsSent = 0;
-        Iterator<RevObject> objects = PostOrderIterator
-                .range(want, have, database, traverseCommits);
+        Iterator<RevObject> objects = PostOrderIterator.range(want, new ArrayList<ObjectId>(
+                previsitResults), database, traverseCommits, deduplicator);
         while (objects.hasNext() && commitsSent < CAP) {
             RevObject object = objects.next();
 
@@ -89,6 +103,51 @@ public final class BinaryPackedObjects {
         }
 
         return state;
+    }
+
+    /**
+     * Find commits which should be previsited to avoid resending objects that are already on the
+     * receiving end. A commit should be previsited if:
+     * <ul>
+     * <li>It is not going to be visited, and
+     * <li>It is the immediate ancestor of a commit which is going to be previsited.
+     * </ul>
+     * 
+     */
+    private ImmutableList<ObjectId> scanForPrevisitList(List<ObjectId> want, List<ObjectId> have, Deduplicator deduplicator) {
+        /*
+         * @note Implementation note: To find the previsit list, we just iterate over all the
+         * commits that will be visited according to our want and have lists. Any parents of commits
+         * in this traversal which are part of the 'have' list will be in the previsit list.
+         */
+        Iterator<RevCommit> willBeVisited = Iterators.filter( //
+                PostOrderIterator.rangeOfCommits(want, have, database, deduplicator), //
+                RevCommit.class);
+        ImmutableSet.Builder<ObjectId> builder = ImmutableSet.builder();
+
+        while (willBeVisited.hasNext()) {
+            RevCommit next = willBeVisited.next();
+            List<ObjectId> parents = new ArrayList<ObjectId>(next.getParentIds());
+            parents.retainAll(have);
+            builder.addAll(parents);
+        }
+
+        return ImmutableList.copyOf(builder.build());
+    }
+
+    private ImmutableList<ObjectId> reachableContentIds(ImmutableList<ObjectId> needsPrevisit, Deduplicator deduplicator) {
+        Function<RevObject, ObjectId> getIdTransformer = new Function<RevObject, ObjectId>() {
+            @Override
+            @Nullable
+            public ObjectId apply(@Nullable RevObject input) {
+                return input == null ? null : input.getId();
+            }
+        };
+
+        Iterator<ObjectId> reachable = Iterators.transform( //
+                PostOrderIterator.contentsOf(needsPrevisit, database, deduplicator), //
+                getIdTransformer);
+        return ImmutableList.copyOf(reachable);
     }
 
     public void ingest(final InputStream in) {
@@ -134,7 +193,7 @@ public final class BinaryPackedObjects {
             if (offset == len)
                 break;
         }
-        ObjectId id = new ObjectId(rawBytes);
+        ObjectId id = ObjectId.createNoClone(rawBytes);
         return id;
     }
 

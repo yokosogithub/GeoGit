@@ -114,7 +114,7 @@ public class CheckoutOp extends AbstractGeoGitOp<CheckoutResult> {
 
         CheckoutResult result = new CheckoutResult();
 
-        List<Conflict> conflicts = getIndex().getDatabase().getConflicts(null);
+        List<Conflict> conflicts = getIndex().getDatabase().getConflicts(null, null);
         if (!paths.isEmpty()) {
             result.setResult(CheckoutResult.Results.UPDATE_OBJECTS);
             Optional<RevTree> tree = Optional.absent();
@@ -172,11 +172,14 @@ public class CheckoutOp extends AbstractGeoGitOp<CheckoutResult> {
                     getIndex().getDatabase().put(newRoot);
                     getWorkTree().updateWorkHead(newRoot.getId());
                 } else {
+
+                    ObjectId metadataId = ObjectId.NULL;
                     Optional<NodeRef> parentNode = command(FindTreeChild.class)
                             .setParent(getWorkTree().getTree())
                             .setChildPath(node.get().getParentPath()).setIndex(true).call();
                     RevTreeBuilder treeBuilder = null;
                     if (parentNode.isPresent()) {
+                        metadataId = parentNode.get().getMetadataId();
                         Optional<RevTree> parsed = command(RevObjectParse.class).setObjectId(
                                 parentNode.get().getNode().getObjectId()).call(RevTree.class);
                         checkState(parsed.isPresent(),
@@ -190,7 +193,7 @@ public class CheckoutOp extends AbstractGeoGitOp<CheckoutResult> {
                     ObjectId newTreeId = command(WriteBack.class)
                             .setAncestor(getWorkTree().getTree().builder(getIndex().getDatabase()))
                             .setChildPath(node.get().getParentPath()).setToIndex(true)
-                            .setTree(treeBuilder.build()).call();
+                            .setTree(treeBuilder.build()).setMetadataId(metadataId).call();
                     getWorkTree().updateWorkHead(newTreeId);
                 }
             }

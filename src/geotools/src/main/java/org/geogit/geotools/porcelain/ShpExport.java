@@ -150,6 +150,7 @@ public class ShpExport extends AbstractShpCommand implements CLICommand {
                 default:
                     cli.getConsole().println("Could not export. Error:" + e.statusCode.name());
                     file.delete();
+                    return;
                 }
             }
             cli.getConsole().println(path + " exported successfully to " + shapefile);

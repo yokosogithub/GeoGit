@@ -117,7 +117,7 @@ public class AddOp extends AbstractGeoGitOp<WorkingTree> {
             // working index object is the same as the staging area one (for instance, after running
             // checkout --ours), it will not be reported by the getUnstaged method. We solve that
             // here.
-            getIndex().getDatabase().removeConflict(conflict.getPath());
+            getIndex().getDatabase().removeConflict(null, conflict.getPath());
         }
     }
 

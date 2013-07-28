@@ -7,6 +7,8 @@ package org.geogit.storage.bdbje;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URISyntaxException;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -16,12 +18,14 @@ import java.util.Set;
 import javax.annotation.Nullable;
 
 import org.geogit.api.ObjectId;
+import org.geogit.api.Platform;
 import org.geogit.api.RevCommit;
 import org.geogit.api.RevFeature;
 import org.geogit.api.RevFeatureType;
 import org.geogit.api.RevObject;
 import org.geogit.api.RevTag;
 import org.geogit.api.RevTree;
+import org.geogit.api.plumbing.ResolveGeogitDir;
 import org.geogit.api.plumbing.merge.Conflict;
 import org.geogit.storage.ObjectDatabase;
 import org.geogit.storage.ObjectInserter;
@@ -91,6 +95,8 @@ public class JEStagingDatabase implements ObjectDatabase, StagingDatabase {
 
     private ObjectSerializingFactory sfac;
 
+    private Platform platform;
+
     /**
      * @param referenceDatabase the repository reference database, used to get the head re
      * @param repoDb
@@ -98,10 +104,13 @@ public class JEStagingDatabase implements ObjectDatabase, StagingDatabase {
      */
     @Inject
     public JEStagingDatabase(final ObjectSerializingFactory sfac,
-            final ObjectDatabase repositoryDb, final EnvironmentBuilder envBuilder) {
+            final ObjectDatabase repositoryDb, final EnvironmentBuilder envBuilder,
+            final Platform platform) {
         this.sfac = sfac;
         this.repositoryDb = repositoryDb;
         this.envProvider = envBuilder;
+        this.platform = platform;
+        this.envProvider.setIsStagingDatabase(true);
     }
 
     @Override
@@ -257,9 +266,16 @@ public class JEStagingDatabase implements ObjectDatabase, StagingDatabase {
     // conflict file in the index folder
     // *****************************************************************************************
 
+    /**
+     * Gets all conflicts that match the specified path filter.
+     * 
+     * @param namespace the namespace of the conflict
+     * @param pathFilter the path filter, if this is not defined, all conflicts will be returned
+     * @return the list of conflicts
+     */
     @Override
-    public List<Conflict> getConflicts(final String pathFilter) {
-        Optional<File> conflictsFile = findOrCreateConflictsFile();
+    public List<Conflict> getConflicts(@Nullable String namespace, final String pathFilter) {
+        Optional<File> conflictsFile = findOrCreateConflictsFile(namespace);
         if (!conflictsFile.isPresent()) {
             return ImmutableList.of();
         }
@@ -294,9 +310,15 @@ public class JEStagingDatabase implements ObjectDatabase, StagingDatabase {
         return conflicts;
     }
 
+    /**
+     * Adds a conflict to the database.
+     * 
+     * @param namespace the namespace of the conflict
+     * @param conflict the conflict to add
+     */
     @Override
-    public void addConflict(Conflict conflict) {
-        Optional<File> file = findOrCreateConflictsFile();
+    public void addConflict(@Nullable String namespace, Conflict conflict) {
+        Optional<File> file = findOrCreateConflictsFile(namespace);
         Preconditions.checkState(file.isPresent());
         try {
             Files.append(conflict.toString() + "\n", file.get(), Charsets.UTF_8);
@@ -305,10 +327,16 @@ public class JEStagingDatabase implements ObjectDatabase, StagingDatabase {
         }
     }
 
+    /**
+     * Removes a conflict from the database.
+     * 
+     * @param namespace the namespace of the conflict
+     * @param path the path of feature whose conflict should be removed
+     */
     @Override
-    public void removeConflict(String path) {
-        List<Conflict> conflicts = getConflicts(null);
-        Optional<File> file = findOrCreateConflictsFile();
+    public void removeConflict(@Nullable String namespace, String path) {
+        List<Conflict> conflicts = getConflicts(namespace, null);
+        Optional<File> file = findOrCreateConflictsFile(namespace);
         Preconditions.checkState(file.isPresent());
 
         StringBuilder sb = new StringBuilder();
@@ -320,16 +348,25 @@ public class JEStagingDatabase implements ObjectDatabase, StagingDatabase {
             }
             String s = sb.toString();
             if (!s.isEmpty()) {
-                Files.append(s, file.get(), Charsets.UTF_8);
+                Files.write(s, file.get(), Charsets.UTF_8);
+            } else {
+                file.get().delete();
             }
         } catch (IOException e) {
             throw Throwables.propagate(e);
         }
     }
 
+    /**
+     * Gets the specified conflict from the database.
+     * 
+     * @param namespace the namespace of the conflict
+     * @param path the conflict to retrieve
+     * @return the conflict, or {@link Optional#absent()} if it was not found
+     */
     @Override
-    public Optional<Conflict> getConflict(final String path) {
-        Optional<File> file = findOrCreateConflictsFile();
+    public Optional<Conflict> getConflict(@Nullable String namespace, final String path) {
+        Optional<File> file = findOrCreateConflictsFile(namespace);
         if (!file.isPresent()) {
             return Optional.absent();
         }
@@ -364,13 +401,23 @@ public class JEStagingDatabase implements ObjectDatabase, StagingDatabase {
         return Optional.fromNullable(conflict);
     }
 
-    private Optional<File> findOrCreateConflictsFile() {
+    private Optional<File> findOrCreateConflictsFile(@Nullable String namespace) {
+        if (namespace == null) {
+            namespace = "conflicts";
+        }
         Optional<File> conflicts = Optional.absent();
         if (environment != null) {
-            File file = environment.getHome();
-            file = new File(file, "conflicts");
+            URL repoPath = new ResolveGeogitDir(platform).call();
+            File file = null;
+            try {
+                file = new File(repoPath.toURI());
+            } catch (URISyntaxException e1) {
+                Throwables.propagate(e1);
+            }
+            file = new File(file, namespace);
             if (!file.exists()) {
                 try {
+                    file.getParentFile().mkdirs();
                     file.createNewFile();
                 } catch (IOException e) {
                     throw Throwables.propagate(e);
@@ -381,9 +428,14 @@ public class JEStagingDatabase implements ObjectDatabase, StagingDatabase {
         return conflicts;
     }
 
+    /**
+     * Removes all conflicts from the database.
+     * 
+     * @param namespace the namespace of the conflicts to remove
+     */
     @Override
-    public void removeConflicts() {
-        Optional<File> file = findOrCreateConflictsFile();
+    public void removeConflicts(@Nullable String namespace) {
+        Optional<File> file = findOrCreateConflictsFile(namespace);
         if (file.isPresent()) {
             file.get().delete();
         }

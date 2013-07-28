@@ -5,6 +5,7 @@
 package org.geogit.test.integration;
 
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.Random;
 import java.util.Set;
@@ -32,6 +33,34 @@ public class RevTreeBuilderTest extends RepositoryTestCase {
     @Override
     protected void setUpInternal() throws Exception {
         odb = repo.getObjectDatabase();
+    }
+
+    @Test
+    public void testResultingTreeSize() {
+        testResultingTreeSize(0);
+        testResultingTreeSize(1);
+        testResultingTreeSize(7);
+        testResultingTreeSize(11);
+        testResultingTreeSize(100);
+        testResultingTreeSize(987);
+        testResultingTreeSize(56789);
+        testResultingTreeSize(1234567);
+    }
+
+    private void testResultingTreeSize(int numEntries) {
+        RevTreeBuilder builder = createTree(numEntries, true);
+        RevTree tree = builder.build();
+        final long declaredSize = tree.size();
+
+        Iterator<NodeRef> it = new DepthTreeIterator("", ObjectId.NULL, tree, odb,
+                Strategy.RECURSIVE_FEATURES_ONLY);
+        long itSize = 0;
+        while (it.hasNext()) {
+            it.next();
+            itSize++;
+        }
+        assertEquals(numEntries, itSize);
+        assertEquals(numEntries, declaredSize);
     }
 
     @Test
@@ -273,10 +302,12 @@ public class RevTreeBuilderTest extends RepositoryTestCase {
         int c = 0;
         for (int i = from; i != breakAt; i += increment, c++) {
             addNode(tree, i);
-            if ((c + 1) % (numEntries / 10) == 0) {
-                System.err.print("#" + (c + 1));
-            } else if ((c + 1) % (numEntries / 100) == 0) {
-                System.err.print('.');
+            if (numEntries > 100) {
+                if ((c + 1) % (numEntries / 10) == 0) {
+                    System.err.print("#" + (c + 1));
+                } else if ((c + 1) % (numEntries / 100) == 0) {
+                    System.err.print('.');
+                }
             }
         }
         System.err.print('\n');

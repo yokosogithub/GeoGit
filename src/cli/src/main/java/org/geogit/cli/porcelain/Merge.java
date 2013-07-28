@@ -24,6 +24,7 @@ import org.geogit.api.plumbing.RevParse;
 import org.geogit.api.plumbing.diff.DiffEntry;
 import org.geogit.api.porcelain.DiffOp;
 import org.geogit.api.porcelain.MergeOp;
+import org.geogit.api.porcelain.MergeOp.MergeReport;
 import org.geogit.api.porcelain.NothingToCommitException;
 import org.geogit.api.porcelain.ResetOp;
 import org.geogit.api.porcelain.ResetOp.ResetMode;
@@ -113,7 +114,8 @@ public class Merge extends AbstractCommand implements CLICommand {
                 checkArgument(commitId.isPresent(), "Commit not found '%s'", commitish);
                 merge.addCommit(Suppliers.ofInstance(commitId.get()));
             }
-            commit = merge.call();
+            MergeReport report = merge.call();
+            commit = report.getMergeCommit();
         } catch (NothingToCommitException noChanges) {
             console.println(ansi.fg(Color.RED).a(noChanges.getMessage()).reset().toString());
             throw new CommandFailedException();

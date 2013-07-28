@@ -8,6 +8,7 @@ import java.util.List;
 import org.geogit.api.GeoGIT;
 import org.geogit.api.ObjectId;
 import org.geogit.api.plumbing.RevParse;
+import org.geogit.api.porcelain.RevertConflictsException;
 import org.geogit.api.porcelain.RevertOp;
 import org.geogit.cli.AbstractCommand;
 import org.geogit.cli.CLICommand;
@@ -24,15 +25,12 @@ import com.google.common.base.Suppliers;
  * record some new commits that record them. This requires your working tree to be clean (no
  * modifications from the HEAD commit).
  * 
- * <b>NOTE:</b> so far we don't have the ability to merge non conflicting changes. Instead, the diff
- * list we get acts on whole objects, so this operation will not revert feature changes if that
- * feature has been modified on both branches.
  * <p>
  * CLI Proxy for {@link RevertOp}
  * <p>
  * Usage:
  * <ul>
- * <li> {@code geogit revert <commit>...}
+ * <li> {@code geogit revert [--continue] [--abort] [--no-commit] <commit>...}
  * </ul>
  * 
  * @see RevertOp
@@ -42,6 +40,15 @@ public class Revert extends AbstractCommand implements CLICommand {
 
     @Parameter(description = "<commits>...", variableArity = true)
     private List<String> commits = Lists.newArrayList();
+
+    @Parameter(names = "--no-commit", description = "Do not create new commit with reverted changes")
+    private boolean noCommit;
+
+    @Parameter(names = "--continue", description = "Continue a revert process stopped because of conflicts")
+    private boolean continueRevert;
+
+    @Parameter(names = "--abort", description = "Abort a revert process stopped because of conflicts")
+    private boolean abort;
 
     /**
      * Executes the revert command.
@@ -53,7 +60,8 @@ public class Revert extends AbstractCommand implements CLICommand {
     protected void runInternal(GeogitCLI cli) throws Exception {
         final GeoGIT geogit = cli.getGeogit();
         checkState(geogit != null, "not in a geogit repository.");
-        checkArgument(commits.size() > 0, "nothing specified for reverting");
+        checkArgument(commits.size() > 0 || abort || continueRevert,
+                "nothing specified for reverting");
 
         RevertOp revert = geogit.command(RevertOp.class);
 
@@ -63,7 +71,19 @@ public class Revert extends AbstractCommand implements CLICommand {
                     + "' to a commit, aborting revert.");
             revert.addCommit(Suppliers.ofInstance(commitId.get()));
         }
-        revert.call();
+        try {
+            revert.setCreateCommit(!noCommit).setAbort(abort).setContinue(continueRevert).call();
+        } catch (RevertConflictsException e) {
+            StringBuilder sb = new StringBuilder();
+            sb.append(e.getMessage() + "\n");
+            sb.append("When you have fixed these conflicts, run 'geogit revert --continue' to continue the revert operation.\n");
+            sb.append("To abort the revert operation, run 'geogit revert --abort'\n");
+            throw new IllegalStateException(sb.toString());
+        }
+
+        if (abort) {
+            cli.getConsole().println("Revert aborted successfully.");
+        }
 
     }
 }

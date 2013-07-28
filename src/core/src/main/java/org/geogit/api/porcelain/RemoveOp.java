@@ -12,6 +12,7 @@ import org.geogit.api.AbstractGeoGitOp;
 import org.geogit.api.NodeRef;
 import org.geogit.api.plumbing.FindTreeChild;
 import org.geogit.api.plumbing.diff.DiffEntry;
+import org.geogit.api.plumbing.merge.Conflict;
 import org.geogit.di.CanRunDuringConflict;
 import org.geogit.repository.WorkingTree;
 
@@ -53,8 +54,18 @@ public class RemoveOp extends AbstractGeoGitOp<WorkingTree> {
             Optional<NodeRef> node;
             node = command(FindTreeChild.class).setParent(getWorkTree().getTree()).setIndex(true)
                     .setChildPath(pathToRemove).call();
-            Preconditions.checkArgument(node.isPresent(),
-                    "pathspec '%s' did not match any feature or tree", pathToRemove);
+            List<Conflict> conflicts = getIndex().getConflicted(pathToRemove);
+            if (conflicts.size() > 0) {
+                for (Conflict conflict : conflicts) {
+                    getIndex().getDatabase().removeConflict(null, conflict.getPath());
+                }
+                if (!node.isPresent()) {
+                    pathsToRemove.remove(pathToRemove);
+                }
+            } else {
+                Preconditions.checkArgument(node.isPresent(),
+                        "pathspec '%s' did not match any feature or tree", pathToRemove);
+            }
         }
 
         // separate trees from features an delete accordingly

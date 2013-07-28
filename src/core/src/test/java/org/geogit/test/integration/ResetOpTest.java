@@ -345,7 +345,7 @@ public class ResetOpTest extends RepositoryTestCase {
         geogit.command(ResetOp.class).setMode(ResetMode.HARD)
                 .setCommit(Suppliers.ofInstance(resetCommit.getId())).call();
         List<Conflict> conflicts = geogit.getRepository().getIndex().getDatabase()
-                .getConflicts(null);
+                .getConflicts(null, null);
         assertTrue(conflicts.isEmpty());
         Optional<Ref> ref = geogit.command(RefParse.class).setName(Ref.MERGE_HEAD).call();
         assertFalse(ref.isPresent());

@@ -311,6 +311,27 @@ class GeogitFeatureSource extends ContentFeatureSource {
     @Override
     protected SimpleFeatureType buildFeatureType() throws IOException {
 
+        SimpleFeatureType featureType = getNativeType();
+
+        final Name name = featureType.getName();
+        final Name assignedName = getEntry().getName();
+
+        if (assignedName.getNamespaceURI() != null && !assignedName.equals(name)) {
+            SimpleFeatureTypeBuilder builder = new SimpleFeatureTypeBuilder();
+            builder.init(featureType);
+            builder.setName(assignedName);
+            featureType = builder.buildFeatureType();
+        }
+        return featureType;
+    }
+
+    CommandLocator getCommandLocator() {
+        CommandLocator commandLocator = getDataStore().getCommandLocator(getTransaction());
+        return commandLocator;
+    }
+
+    SimpleFeatureType getNativeType() {
+
         final NodeRef typeRef = getTypeRef();
         final String treePath = typeRef.path();
         final ObjectId metadataId = typeRef.getMetadataId();
@@ -318,26 +339,14 @@ class GeogitFeatureSource extends ContentFeatureSource {
         CommandLocator commandLocator = getCommandLocator();
         Optional<RevFeatureType> revType = commandLocator.command(RevObjectParse.class)
                 .setObjectId(metadataId).call(RevFeatureType.class);
-        if (revType.isPresent()) {
-            SimpleFeatureType featureType = (SimpleFeatureType) revType.get().type();
-            Name name = featureType.getName();
-            Name assignedName = getEntry().getName();
-            if (assignedName.getNamespaceURI() != null && !assignedName.equals(name)) {
-                SimpleFeatureTypeBuilder builder = new SimpleFeatureTypeBuilder();
-                builder.init(featureType);
-                builder.setName(assignedName);
-                featureType = builder.buildFeatureType();
-            }
-            return featureType;
+
+        if (!revType.isPresent()) {
+            throw new IllegalStateException(String.format("Feature type for tree %s not found",
+                    treePath));
         }
 
-        throw new IllegalStateException(String.format("Feature type for tree %s not found",
-                treePath));
-    }
-
-    CommandLocator getCommandLocator() {
-        CommandLocator commandLocator = getDataStore().getCommandLocator(getTransaction());
-        return commandLocator;
+        SimpleFeatureType featureType = (SimpleFeatureType) revType.get().type();
+        return featureType;
     }
 
     String getTypeTreePath() {

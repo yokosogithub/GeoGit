@@ -5,11 +5,11 @@ import java.util.List;
 import org.geogit.api.GeoGIT;
 import org.geogit.api.ObjectId;
 import org.geogit.api.RevCommit;
+import org.geogit.web.api.AbstractWebAPICommand;
 import org.geogit.web.api.CommandContext;
 import org.geogit.web.api.CommandResponse;
 import org.geogit.web.api.CommandSpecException;
 import org.geogit.web.api.ResponseWriter;
-import org.geogit.web.api.WebAPICommand;
 
 import com.google.common.collect.Lists;
 
@@ -18,7 +18,7 @@ import com.google.common.collect.Lists;
  * 
  */
 
-public class GetCommitGraph implements WebAPICommand {
+public class GetCommitGraph extends AbstractWebAPICommand {
 
     private String commitId;
 

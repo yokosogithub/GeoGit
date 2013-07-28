@@ -33,6 +33,7 @@ import com.sleepycat.je.CursorConfig;
 import com.sleepycat.je.Database;
 import com.sleepycat.je.DatabaseConfig;
 import com.sleepycat.je.DatabaseEntry;
+import com.sleepycat.je.Durability;
 import com.sleepycat.je.Environment;
 import com.sleepycat.je.LockMode;
 import com.sleepycat.je.OperationStatus;
@@ -87,7 +88,8 @@ public class JEObjectDatabase extends AbstractObjectDatabase implements ObjectDa
         }
         if (env != null) {
             // System.err.println("--> " + env.getHome());
-            env.evictMemory();
+            // env.evictMemory();
+            env.cleanLog();
             env.sync();
             env.close();
             env = null;
@@ -112,6 +114,9 @@ public class JEObjectDatabase extends AbstractObjectDatabase implements ObjectDa
         DatabaseConfig dbConfig = new DatabaseConfig();
         dbConfig.setAllowCreate(true);
         boolean transactional = getEnvironment().getConfig().getTransactional();
+
+        dbConfig.setDeferredWrite(!transactional);
+
         dbConfig.setTransactional(transactional);
         Database database = environment.openDatabase(null, "ObjectDatabase", dbConfig);
         this.objectDb = database;
@@ -132,14 +137,13 @@ public class JEObjectDatabase extends AbstractObjectDatabase implements ObjectDa
         List<ObjectId> matches;
 
         CursorConfig cursorConfig = new CursorConfig();
-        cursorConfig.setReadCommitted(true);
-        cursorConfig.setReadUncommitted(false);
+        cursorConfig.setReadUncommitted(true);
 
         Transaction transaction = txn == null ? null : txn.getTransaction();
         Cursor cursor = objectDb.openCursor(transaction, cursorConfig);
         try {
             // position cursor at the first closest key to the one looked up
-            OperationStatus status = cursor.getSearchKeyRange(key, data, LockMode.DEFAULT);
+            OperationStatus status = cursor.getSearchKeyRange(key, data, LockMode.READ_UNCOMMITTED);
             if (SUCCESS.equals(status)) {
                 matches = new ArrayList<ObjectId>(2);
                 final byte[] compKey = new byte[partialId.length];
@@ -151,7 +155,7 @@ public class JEObjectDatabase extends AbstractObjectDatabase implements ObjectDa
                     } else {
                         break;
                     }
-                    status = cursor.getNext(key, data, LockMode.DEFAULT);
+                    status = cursor.getNext(key, data, LockMode.READ_UNCOMMITTED);
                 }
             } else {
                 matches = Collections.emptyList();
@@ -174,7 +178,7 @@ public class JEObjectDatabase extends AbstractObjectDatabase implements ObjectDa
         // tell db not to retrieve data
         data.setPartial(0, 0, true);
 
-        final LockMode lockMode = LockMode.DEFAULT;
+        final LockMode lockMode = LockMode.READ_UNCOMMITTED;
         Transaction transaction = txn == null ? null : txn.getTransaction();
         OperationStatus status = objectDb.get(transaction, key, data, lockMode);
         return SUCCESS == status;
@@ -186,7 +190,7 @@ public class JEObjectDatabase extends AbstractObjectDatabase implements ObjectDa
         DatabaseEntry key = new DatabaseEntry(id.getRawValue());
         DatabaseEntry data = new DatabaseEntry();
 
-        final LockMode lockMode = LockMode.READ_COMMITTED;
+        final LockMode lockMode = LockMode.READ_UNCOMMITTED;
         Transaction transaction = txn == null ? null : txn.getTransaction();
         OperationStatus operationStatus = objectDb.get(transaction, key, data, lockMode);
         if (NOTFOUND.equals(operationStatus)) {
@@ -202,8 +206,28 @@ public class JEObjectDatabase extends AbstractObjectDatabase implements ObjectDa
 
     @Override
     public void putAll(final Iterator<? extends RevObject> objects) {
-        TransactionConfig config = TransactionConfig.DEFAULT;
-        Transaction transaction = txn.beginTransaction(config);
+        final boolean transactional = this.objectDb.getConfig().getTransactional();
+        Transaction transaction;
+        TransactionConfig txConfig;
+        final boolean handleTx;
+        if (transactional) {
+            txConfig = new TransactionConfig();
+            txConfig.setDurability(Durability.COMMIT_NO_SYNC);
+            txConfig.setReadUncommitted(true);
+            transaction = txn.getTransaction();
+            handleTx = transaction == null;
+            if (handleTx) {
+                transaction = txn.beginTransaction(txConfig);
+            }
+        } else {
+            transaction = null;
+            txConfig = null;
+            handleTx = false;
+        }
+
+        // final int commitThreshold = 100 * 1000;
+        // int count = 0;
+
         try {
             ByteArrayOutputStream rawOut = new ByteArrayOutputStream();
             while (objects.hasNext()) {
@@ -215,10 +239,27 @@ public class JEObjectDatabase extends AbstractObjectDatabase implements ObjectDa
                 final byte[] rawData = rawOut.toByteArray();
                 final ObjectId id = object.getId();
                 putInternal(id, rawData, transaction);
+
+                // count++;
+                // if (count % commitThreshold == 0) {
+                // env.evictMemory();
+                // }
             }
-            txn.commitTransaction();
+            if (transactional) {
+                if (handleTx) {
+                    txn.commitTransaction();
+                }
+            } else {
+                // finally force an environment checkpoint to ensure durability
+                // Stopwatch sw = new Stopwatch().start();
+                this.env.sync();
+                // sw.stop();
+                // System.err.printf("environment sync time %s\n", sw);
+            }
         } catch (Exception e) {
-            txn.abortTransaction();
+            if (transactional) {
+                txn.abortTransaction();
+            }
             throw Throwables.propagate(e);
         }
     }

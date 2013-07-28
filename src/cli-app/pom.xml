@@ -6,7 +6,7 @@
   <parent>
     <groupId>org.geogit</groupId>
     <artifactId>geogit</artifactId>
-    <version>0.3-SNAPSHOT</version>
+    <version>0.4-SNAPSHOT</version>
     <relativePath>../parent/pom.xml</relativePath>
   </parent>
 
@@ -40,7 +40,7 @@
         <artifactId>appassembler-maven-plugin</artifactId>
         <configuration>
           <!-- Extra JVM arguments that will be included in the bin scripts -->
-          <extraJvmArguments>-Xmx1024m -XX:MaxPermSize=128m -Dorg.geotools.referencing.forceXY=true</extraJvmArguments>
+          <extraJvmArguments>-Xmx2G -XX:MaxPermSize=128m -Dorg.geotools.referencing.forceXY=true</extraJvmArguments>
           <!-- set alternative assemble directory -->
           <assembleDirectory>${project.build.directory}/geogit-build</assembleDirectory>
           <repositoryLayout>flat</repositoryLayout>
@@ -132,7 +132,7 @@
 
  <profiles>
     <profile>
-      <id>oracleDriver</id>
+      <id>oracle</id>
       <dependencies>
         <dependency>
           <groupId>com.oracle</groupId>
@@ -141,6 +141,15 @@
         </dependency>
       </dependencies>
     </profile>
+    <profile>
+      <id>sqlServer</id>
+      <dependencies>
+        <dependency>
+          <groupId>com.microsoft</groupId>
+          <artifactId>sqljdbc4</artifactId> 
+          <version>3.0</version>
+        </dependency>
+      </dependencies>
+    </profile>
   </profiles>
- 
 </project>

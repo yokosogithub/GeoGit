@@ -17,6 +17,7 @@ import org.geogit.api.ObjectId;
 import org.geogit.api.RevCommit;
 import org.geogit.api.RevObject;
 import org.geogit.api.RevTree;
+import org.geogit.storage.Deduplicator;
 import org.geogit.storage.ObjectDatabase;
 
 import com.google.common.collect.AbstractIterator;
@@ -41,7 +42,7 @@ public class PostOrderIterator extends AbstractIterator<RevObject> {
     /**
      * A traversal of all objects reachable from the given origin, with deduplication.
      */
-    public static Iterator<RevObject> all(ObjectId top, ObjectDatabase database) {
+    public static Iterator<RevObject> all(ObjectId top, ObjectDatabase database, Deduplicator deduplicator) {
         List<ObjectId> start = new ArrayList<ObjectId>();
         start.add(top);
         return new PostOrderIterator(start, database, unique(ALL_SUCCESSORS));
@@ -53,9 +54,25 @@ public class PostOrderIterator extends AbstractIterator<RevObject> {
      * commits will be traversed as well as the content, otherwise only the content.
      */
     public static Iterator<RevObject> range(List<ObjectId> start, List<ObjectId> base,
-            ObjectDatabase database, boolean traverseCommits) {
+            ObjectDatabase database, boolean traverseCommits, Deduplicator deduplicator) {
         return new PostOrderIterator(new ArrayList<ObjectId>(start), database, //
-                unique(blacklist((traverseCommits ? ALL_SUCCESSORS : COMMIT_SUCCESSORS), base)));
+                uniqueWithDeduplicator(blacklist((traverseCommits ? ALL_SUCCESSORS : COMMIT_SUCCESSORS), base), deduplicator));
+    }
+
+    /**
+     * A traversal of commit history (no content) with deduplication. 
+     * @param start
+     * @param base
+     * @param database
+     * @return
+     */
+    public static Iterator<RevObject> rangeOfCommits(List<ObjectId> start, List<ObjectId> base, ObjectDatabase database, Deduplicator deduplicator) {
+        return new PostOrderIterator(new ArrayList<ObjectId>(start), database, uniqueWithDeduplicator(blacklist( COMMIT_PARENTS, base), deduplicator));
+    }
+
+    public static Iterator<RevObject> contentsOf(List<ObjectId> needsPrevisit,
+            ObjectDatabase database, Deduplicator deduplicator) {
+        return new PostOrderIterator(new ArrayList<ObjectId>(needsPrevisit), database, uniqueWithDeduplicator(COMMIT_SUCCESSORS, deduplicator));
     }
 
     /**
@@ -310,18 +327,21 @@ public class PostOrderIterator extends AbstractIterator<RevObject> {
      *         repetitions.
      */
     private final static Successors unique(final Successors delegate) {
-        final Set<ObjectId> seen = new HashSet<ObjectId>();
+        return uniqueWithDeduplicator(delegate, new org.geogit.storage.memory.HeapDeduplicator());
+    }
+    
+    private final static Successors uniqueWithDeduplicator(final Successors delegate, final Deduplicator deduplicator) {
         return new Successors() {
             public void findSuccessors(final RevObject object, final List<ObjectId> successors) {
-                if (!seen.contains(object.getId())) {
+                if (!deduplicator.isDuplicate(object.getId())) {
                     final int oldSize = successors.size();
                     delegate.findSuccessors(object, successors);
-                    successors.subList(oldSize, successors.size()).removeAll(seen);
+                    deduplicator.removeDuplicates(successors.subList(oldSize, successors.size()));
                 }
             }
 
             public boolean previsit(ObjectId id) {
-                return seen.add(id) && delegate.previsit(id);
+                return (!deduplicator.visit(id)) && delegate.previsit(id);
             }
         };
     }

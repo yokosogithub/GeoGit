@@ -1,6 +1,9 @@
 package org.geogit.api.porcelain;
 
 import org.geogit.api.Ref;
+import org.geogit.api.porcelain.MergeOp.MergeReport;
+
+import com.google.common.base.Optional;
 
 public class PullResult {
 
@@ -11,6 +14,8 @@ public class PullResult {
     private String remoteName = null;
 
     private FetchResult fetchResult = null;
+
+    private Optional<MergeReport> mergeReport = Optional.absent();
 
     public String getRemoteName() {
         return remoteName;
@@ -42,5 +47,13 @@ public class PullResult {
 
     public void setNewRef(Ref newRef) {
         this.newRef = newRef;
+    }
+
+    public Optional<MergeReport> getMergeReport() {
+        return mergeReport;
+    }
+
+    public void setMergeReport(Optional<MergeReport> mergeReport) {
+        this.mergeReport = mergeReport;
     }
 }

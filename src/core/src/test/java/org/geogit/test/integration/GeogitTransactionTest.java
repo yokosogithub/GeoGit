@@ -138,6 +138,69 @@ public class GeogitTransactionTest extends RepositoryTestCase {
     }
 
     @Test
+    public void testTransactionAuthor() throws Exception {
+        LinkedList<RevCommit> expectedMain = new LinkedList<RevCommit>();
+        LinkedList<RevCommit> expectedTransaction = new LinkedList<RevCommit>();
+
+        // make a commit
+        insertAndAdd(points1);
+        RevCommit firstCommit = geogit.command(CommitOp.class).call();
+        expectedMain.addFirst(firstCommit);
+        expectedTransaction.addFirst(firstCommit);
+
+        // start a transaction
+        GeogitTransaction t = geogit.command(TransactionBegin.class).call();
+
+        t.setAuthor("Transaction Author", "transaction@author.com");
+
+        // perform a commit in the transaction
+        insertAndAdd(t, points2);
+        RevCommit transactionCommit = t.command(CommitOp.class).call();
+        expectedTransaction.addFirst(transactionCommit);
+
+        // perform a commit on the repo
+        insertAndAdd(points3);
+        RevCommit repoCommit = geogit.command(CommitOp.class).call();
+        expectedMain.addFirst(repoCommit);
+
+        // Verify that the base repository is unchanged
+        Iterator<RevCommit> logs = geogit.command(LogOp.class).call();
+        List<RevCommit> logged = new ArrayList<RevCommit>();
+        for (; logs.hasNext();) {
+            logged.add(logs.next());
+        }
+
+        assertEquals(expectedMain, logged);
+
+        // Verify that the transaction has the commit
+        logs = t.command(LogOp.class).call();
+        logged = new ArrayList<RevCommit>();
+        for (; logs.hasNext();) {
+            logged.add(logs.next());
+        }
+
+        assertEquals(expectedTransaction, logged);
+
+        // Commit the transaction
+        t.commitSyncTransaction();
+
+        // Verify that a merge commit was created
+        logs = geogit.command(LogOp.class).call();
+        RevCommit lastCommit = logs.next();
+        assertFalse(lastCommit.equals(repoCommit));
+        assertTrue(lastCommit.getMessage().contains("Merge commit"));
+        assertEquals(lastCommit.getParentIds().get(0), transactionCommit.getId());
+        assertEquals(lastCommit.getParentIds().get(1), repoCommit.getId());
+        assertEquals("Transaction Author", lastCommit.getAuthor().getName().get());
+        assertEquals("transaction@author.com", lastCommit.getAuthor().getEmail().get());
+        assertEquals(logs.next(), repoCommit);
+        assertEquals(logs.next(), transactionCommit);
+        assertEquals(logs.next(), firstCommit);
+        assertFalse(logs.hasNext());
+
+    }
+
+    @Test
     public void testMultipleTransaction() throws Exception {
 
         // make a commit

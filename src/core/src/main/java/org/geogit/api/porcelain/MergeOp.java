@@ -8,6 +8,8 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
+import javax.annotation.Nullable;
+
 import org.geogit.api.AbstractGeoGitOp;
 import org.geogit.api.FeatureInfo;
 import org.geogit.api.NodeRef;
@@ -43,7 +45,7 @@ import com.google.inject.Inject;
  * Merge two or more histories together.
  * 
  */
-public class MergeOp extends AbstractGeoGitOp<RevCommit> {
+public class MergeOp extends AbstractGeoGitOp<MergeOp.MergeReport> {
 
     private List<ObjectId> commits = new ArrayList<ObjectId>();;
 
@@ -56,6 +58,10 @@ public class MergeOp extends AbstractGeoGitOp<RevCommit> {
     private boolean theirs;
 
     private boolean noCommit;
+
+    private Optional<String> authorName = Optional.absent();
+
+    private Optional<String> authorEmail = Optional.absent();
 
     /**
      * Constructs a new {@code MergeOp} using the specified parameters.
@@ -121,12 +127,24 @@ public class MergeOp extends AbstractGeoGitOp<RevCommit> {
     }
 
     /**
+     * 
+     * @param author the author of the commit
+     * @param email email of author
+     * @return {@code this}
+     */
+    public MergeOp setAuthor(@Nullable String authorName, @Nullable String authorEmail) {
+        this.authorName = Optional.fromNullable(authorName);
+        this.authorEmail = Optional.fromNullable(authorEmail);
+        return this;
+    }
+
+    /**
      * Executes the merge operation.
      * 
      * @return always {@code true}
      */
     @Override
-    public RevCommit call() throws RuntimeException {
+    public MergeReport call() throws RuntimeException {
 
         Preconditions.checkArgument(commits.size() > 0, "No commits specified for merge.");
         Preconditions.checkArgument(!(ours && theirs), "Cannot use both --ours and --theirs.");
@@ -134,6 +152,7 @@ public class MergeOp extends AbstractGeoGitOp<RevCommit> {
         final Optional<Ref> currHead = command(RefParse.class).setName(Ref.HEAD).call();
         Preconditions.checkState(currHead.isPresent(), "Repository has no HEAD, can't rebase.");
         Ref headRef = currHead.get();
+        ObjectId oursId = headRef.getObjectId();
         // Preconditions.checkState(currHead.get() instanceof SymRef,
         // "Can't rebase from detached HEAD");
         // SymRef headRef = (SymRef) currHead.get();
@@ -143,6 +162,10 @@ public class MergeOp extends AbstractGeoGitOp<RevCommit> {
 
         boolean fastForward = true;
         boolean changed = false;
+
+        Optional<MergeScenarioReport> mergeScenario = Optional.absent();
+
+        List<CommitAncestorPair> pairs = Lists.newArrayList();
 
         boolean hasConflictsOrAutomerge;
         List<RevCommit> revCommits = Lists.newArrayList();
@@ -168,10 +191,15 @@ public class MergeOp extends AbstractGeoGitOp<RevCommit> {
                     + commitId.toString());
 
             final RevCommit targetCommit = repository.getCommit(commitId);
-            MergeScenarioReport mergeScenario = command(ReportMergeScenarioOp.class)
-                    .setMergeIntoCommit(headCommit).setToMergeCommit(targetCommit).call();
+            Optional<RevCommit> ancestorCommit = command(FindCommonAncestor.class)
+                    .setLeft(headCommit).setRight(targetCommit).call();
 
-            List<FeatureInfo> merged = mergeScenario.getMerged();
+            pairs.add(new CommitAncestorPair(commitId, ancestorCommit.get().getId()));
+
+            mergeScenario = Optional.of(command(ReportMergeScenarioOp.class)
+                    .setMergeIntoCommit(headCommit).setToMergeCommit(targetCommit).call());
+
+            List<FeatureInfo> merged = mergeScenario.get().getMerged();
             for (FeatureInfo feature : merged) {
                 this.getWorkTree().insert(NodeRef.parentPath(feature.getPath()),
                         feature.getFeature());
@@ -180,7 +208,7 @@ public class MergeOp extends AbstractGeoGitOp<RevCommit> {
                 changed = true;
                 fastForward = false;
             }
-            List<DiffEntry> unconflicting = mergeScenario.getUnconflicted();
+            List<DiffEntry> unconflicting = mergeScenario.get().getUnconflicted();
             if (!unconflicting.isEmpty()) {
                 getIndex().stage(getProgressListener(), unconflicting.iterator(), 0);
                 changed = true;
@@ -189,7 +217,7 @@ public class MergeOp extends AbstractGeoGitOp<RevCommit> {
 
             getWorkTree().updateWorkHead(getIndex().getTree().getId());
 
-            List<Conflict> conflicts = mergeScenario.getConflicts();
+            List<Conflict> conflicts = mergeScenario.get().getConflicts();
             if (!ours && !conflicts.isEmpty()) {
                 // In case we use the "ours" strategy, we do nothing. We ignore conflicting
                 // changes and leave the current elements
@@ -206,7 +234,7 @@ public class MergeOp extends AbstractGeoGitOp<RevCommit> {
                     msg.append("Merge commit '" + commitId.toString() + "'. ");
                 }
                 msg.append("\n\nConflicts:\n");
-                for (Conflict conflict : mergeScenario.getConflicts()) {
+                for (Conflict conflict : mergeScenario.get().getConflicts()) {
                     msg.append("\t" + conflict.getPath() + "\n");
                 }
 
@@ -255,14 +283,20 @@ public class MergeOp extends AbstractGeoGitOp<RevCommit> {
 
                 RevCommit headCommit = repository.getCommit(headRef.getObjectId());
                 final RevCommit targetCommit = repository.getCommit(commitId);
+
                 Optional<RevCommit> ancestorCommit = command(FindCommonAncestor.class)
                         .setLeft(headCommit).setRight(targetCommit).call();
+
+                pairs.add(new CommitAncestorPair(commitId, ancestorCommit.get().getId()));
+
                 subProgress.progress(10.f);
 
                 Preconditions.checkState(ancestorCommit.isPresent(),
                         "No ancestor commit could be found.");
 
                 if (commits.size() == 1) {
+                    mergeScenario = Optional.of(command(ReportMergeScenarioOp.class)
+                            .setMergeIntoCommit(headCommit).setToMergeCommit(targetCommit).call());
                     if (ancestorCommit.get().getId().equals(headCommit.getId())) {
                         // Fast-forward
                         if (headRef instanceof SymRef) {
@@ -307,7 +341,12 @@ public class MergeOp extends AbstractGeoGitOp<RevCommit> {
             throw new NothingToCommitException("The branch has already been merged.");
         }
 
-        return commit(fastForward);
+        RevCommit mergeCommit = commit(fastForward);
+
+        MergeReport result = new MergeReport(mergeCommit, mergeScenario, oursId,
+                pairs);
+
+        return result;
 
     }
 
@@ -341,12 +380,66 @@ public class MergeOp extends AbstractGeoGitOp<RevCommit> {
                 command(SaveMergeCommitMessageOp.class).setMessage(commitMessage).call();
             } else {
                 mergeCommit = command(CommitOp.class).setAllowEmpty(true).setMessage(commitMessage)
-                        .addParents(commits).call();
+                        .addParents(commits).setAuthor(authorName.orNull(), authorEmail.orNull())
+                        .call();
             }
         }
 
         getProgressListener().complete();
 
         return mergeCommit;
+    }
+
+    public class CommitAncestorPair {
+        private ObjectId theirs;
+
+        private ObjectId ancestor;
+
+        public ObjectId getTheirs() {
+            return theirs;
+        }
+
+        public ObjectId getAncestor() {
+            return ancestor;
+        }
+
+        public CommitAncestorPair(ObjectId theirs, ObjectId ancestor) {
+            this.theirs = theirs;
+            this.ancestor = ancestor;
+        }
+    }
+
+    public class MergeReport {
+        private RevCommit mergeCommit;
+
+        private Optional<MergeScenarioReport> report;
+
+        private ObjectId ours;
+
+        private List<CommitAncestorPair> pairs;
+
+        public RevCommit getMergeCommit() {
+            return mergeCommit;
+        }
+
+        public ObjectId getOurs() {
+            return ours;
+        }
+
+        public List<CommitAncestorPair> getPairs() {
+            return pairs;
+        }
+
+        public Optional<MergeScenarioReport> getReport() {
+            return report;
+        }
+
+        public MergeReport(RevCommit mergeCommit, Optional<MergeScenarioReport> report,
+                ObjectId ours, List<CommitAncestorPair> pairs) {
+            this.mergeCommit = mergeCommit;
+            this.report = report;
+            this.ours = ours;
+            this.pairs = pairs;
+        }
     }
 }

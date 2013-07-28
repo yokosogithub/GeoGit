@@ -209,11 +209,13 @@ class GeogitFeatureStore extends ContentFeatureStore {
         }
 
         String path = delegate.getTypeTreePath();
+        WorkingTree wtree = getFeatureSource().getWorkingTree();
+
         GeoGitFeatureWriter writer;
         if ((flags | WRITER_ADD) == WRITER_ADD) {
-            writer = GeoGitFeatureWriter.createAppendable(features, path);
+            writer = GeoGitFeatureWriter.createAppendable(features, path, wtree);
         } else {
-            writer = GeoGitFeatureWriter.create(features, path);
+            writer = GeoGitFeatureWriter.create(features, path, wtree);
         }
         return writer;
     }
@@ -258,7 +260,16 @@ class GeogitFeatureStore extends ContentFeatureStore {
         try {
             Iterator<SimpleFeature> features;
             features = new FeatureIteratorIterator<SimpleFeature>(featureIterator);
-            features = Iterators.transform(features, FORCE_USE_PROVIDED_FID);
+            /*
+             * Make sure to transform the incoming features to the native schema to avoid situations
+             * where geogit would change the metadataId of the RevFeature nodes due to small
+             * differences in the default and incoming schema such as namespace or missing
+             * properties
+             */
+            final SimpleFeatureType nativeSchema = delegate.getNativeType();
+
+            features = Iterators.transform(features, new SchemaInforcer(nativeSchema));
+
             workingTree.insert(path, features, listener, deferringTarget, count);
         } catch (Exception e) {
             throw new IOException(e);
@@ -275,17 +286,35 @@ class GeogitFeatureStore extends ContentFeatureStore {
      * let the feature unchanged, otherwise return a feature with the exact same contents but a
      * newly generaged feature id.
      */
-    private static Function<SimpleFeature, SimpleFeature> FORCE_USE_PROVIDED_FID = new Function<SimpleFeature, SimpleFeature>() {
+    private static class SchemaInforcer implements Function<SimpleFeature, SimpleFeature> {
+
+        private SimpleFeatureBuilder builder;
+
+        public SchemaInforcer(final SimpleFeatureType targetSchema) {
+            this.builder = new SimpleFeatureBuilder(targetSchema);
+        }
 
         @Override
         public SimpleFeature apply(SimpleFeature input) {
-            if (Boolean.TRUE.equals(input.getUserData().get(Hints.USE_PROVIDED_FID))) {
-                return input;
+            builder.reset();
+
+            for (int i = 0; i < input.getType().getAttributeCount(); i++) {
+                String name = input.getType().getDescriptor(i).getLocalName();
+                builder.set(name, input.getAttribute(name));
             }
-            SimpleFeatureBuilder builder = new SimpleFeatureBuilder(input.getFeatureType());
-            builder.init(input);
-            SimpleFeature newFeature = builder.buildFeature(null);
-            return newFeature;
+
+            String id;
+            if (Boolean.TRUE.equals(input.getUserData().get(Hints.USE_PROVIDED_FID))) {
+                id = input.getID();
+            } else {
+                id = null;
+            }
+
+            SimpleFeature feature = builder.buildFeature(id);
+            if (!input.getUserData().isEmpty()) {
+                feature.getUserData().putAll(input.getUserData());
+            }
+            return feature;
         }
     };
 
@@ -294,11 +323,21 @@ class GeogitFeatureStore extends ContentFeatureStore {
 
         final WorkingTree workingTree = delegate.getWorkingTree();
         final String path = delegate.getTypeTreePath();
-        final Iterator<? extends Feature> features = modifyingFeatureIterator(names, values, filter);
+        Iterator<SimpleFeature> features = modifyingFeatureIterator(names, values, filter);
+        /*
+         * Make sure to transform the incoming features to the native schema to avoid situations
+         * where geogit would change the metadataId of the RevFeature nodes due to small
+         * differences in the default and incoming schema such as namespace or missing
+         * properties
+         */
+        final SimpleFeatureType nativeSchema = delegate.getNativeType();
+
+        features = Iterators.transform(features, new SchemaInforcer(nativeSchema));
+
         try {
             NullProgressListener listener = new NullProgressListener();
-            List<Node> target = (List<Node>) null;
             Integer count = (Integer) null;
+            List<Node> target = (List<Node>) null;
             workingTree.insert(path, features, listener, target, count);
         } catch (Exception e) {
             throw new IOException(e);
@@ -382,6 +421,7 @@ class GeogitFeatureStore extends ContentFeatureStore {
                 Object attValue = values[i];
                 input.setAttribute(attName, attValue);
             }
+            input.getUserData().put(Hints.USE_PROVIDED_FID, Boolean.TRUE);
             return input;
         }
 

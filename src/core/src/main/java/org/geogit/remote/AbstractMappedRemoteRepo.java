@@ -113,6 +113,11 @@ abstract class AbstractMappedRemoteRepo implements IRemoteRepo {
             return source.getParents(commitId);
         }
 
+        @Override
+        protected boolean existsInDestination(ObjectId commitId) {
+            return destination.getGraphDatabase().exists(commitId);
+        }
+
     };
 
     /**
@@ -138,6 +143,12 @@ abstract class AbstractMappedRemoteRepo implements IRemoteRepo {
         @Override
         protected ImmutableList<ObjectId> getParents(ObjectId commitId) {
             return source.getGraphDatabase().getParents(commitId);
+        }
+
+        @Override
+        protected boolean existsInDestination(ObjectId commitId) {
+            // If the commit has not been mapped, it hasn't been pushed to the remote yet
+            return !source.getGraphDatabase().getMapping(commitId).equals(ObjectId.NULL);
         }
 
     };

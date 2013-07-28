@@ -43,12 +43,12 @@ public final class NodePathStorageOrder extends Ordering<String> {
     // private Cache<String, ObjectId> cache = CacheBuilder.newBuilder().maximumSize(1000).build();
     private Map<String, ObjectId> cache = new WeakHashMap<String, ObjectId>();
 
-    private ObjectId pathHash(final String path) {
+    public ObjectId pathHash(final String path) {
         ObjectId pathHash = cache.get(path);// .getIfPresent(path);
         if (pathHash == null) {
             hasher.reset();
             hasher.update(path.getBytes(Charset.forName("UTF-8")));
-            pathHash = new ObjectId(hasher.digest());
+            pathHash = ObjectId.createNoClone(hasher.digest());
             cache.put(path, pathHash);
         }
         return pathHash;

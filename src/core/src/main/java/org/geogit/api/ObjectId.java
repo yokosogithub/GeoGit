@@ -28,7 +28,7 @@ public final class ObjectId implements Comparable<ObjectId> {
      */
     public static final HashFunction HASH_FUNCTION;
 
-    private static final int NUM_BYTES;
+    public static final int NUM_BYTES;
 
     private static int NUM_CHARS;
     static {
@@ -56,10 +56,18 @@ public final class ObjectId implements Comparable<ObjectId> {
      * @param raw the byte code to use
      */
     public ObjectId(byte[] raw) {
+        this(raw, true);
+    }
+
+    private ObjectId(byte[] raw, boolean cloneArg) {
         Preconditions.checkNotNull(raw);
         Preconditions.checkArgument(raw.length == NUM_BYTES, "expected a byte[%s], got byte[%s]",
                 NUM_BYTES, raw.length);
-        this.hashCode = raw.clone();
+        this.hashCode = cloneArg ? raw.clone() : raw;
+    }
+
+    public static ObjectId createNoClone(byte[] rawHash) {
+        return new ObjectId(rawHash, false);
     }
 
     /**
@@ -124,7 +132,7 @@ public final class ObjectId implements Comparable<ObjectId> {
         for (int i = 0; i < NUM_BYTES; i++) {
             raw[i] = (byte) Integer.parseInt(hash.substring(2 * i, 2 * i + 2), radix);
         }
-        return new ObjectId(raw);
+        return new ObjectId(raw, false);
     }
 
     /**
@@ -160,7 +168,7 @@ public final class ObjectId implements Comparable<ObjectId> {
         return compare(left, right);
     }
 
-    private static int compare(byte[] left, byte[] right) {
+    public static int compare(byte[] left, byte[] right) {
         int c;
         for (int i = 0; i < left.length; i++) {
             c = left[i] - right[i];
@@ -179,6 +187,10 @@ public final class ObjectId implements Comparable<ObjectId> {
         return hashCode.clone();
     }
 
+    public void getRawValue(byte[] target) {
+        System.arraycopy(hashCode, 0, target, 0, NUM_BYTES);
+    }
+
     /**
      * Utility method to quickly hash a String and create an ObjectId out of the string SHA-1 hash.
      * <p>
@@ -192,7 +204,7 @@ public final class ObjectId implements Comparable<ObjectId> {
     public static ObjectId forString(final String strToHash) {
         Preconditions.checkNotNull(strToHash);
         HashCode hashCode = HASH_FUNCTION.hashString(strToHash, Charset.forName("UTF-8"));
-        return new ObjectId(hashCode.asBytes());
+        return new ObjectId(hashCode.asBytes(), false);
     }
 
     /**

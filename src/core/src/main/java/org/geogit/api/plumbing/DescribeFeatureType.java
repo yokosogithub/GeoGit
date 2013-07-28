@@ -11,12 +11,12 @@ import org.opengis.feature.type.FeatureType;
 import org.opengis.feature.type.PropertyDescriptor;
 
 import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.ImmutableSet;
 
 /**
  * Retrieves the set of property descriptors for the given feature type.
  */
-public class DescribeFeatureType extends AbstractGeoGitOp<ImmutableSortedSet<PropertyDescriptor>> {
+public class DescribeFeatureType extends AbstractGeoGitOp<ImmutableSet<PropertyDescriptor>> {
 
     private RevFeatureType featureType;
 
@@ -34,13 +34,12 @@ public class DescribeFeatureType extends AbstractGeoGitOp<ImmutableSortedSet<Pro
      * @return a sorted set of all the property descriptors of the feature type.
      */
     @Override
-    public ImmutableSortedSet<PropertyDescriptor> call() {
+    public ImmutableSet<PropertyDescriptor> call() {
         Preconditions.checkState(featureType != null, "FeatureType has not been set.");
 
         FeatureType type = featureType.type();
 
-        ImmutableSortedSet.Builder<PropertyDescriptor> propertySetBuilder = new ImmutableSortedSet.Builder<PropertyDescriptor>(
-                RevFeatureType.PROPERTY_ORDER);
+        ImmutableSet.Builder<PropertyDescriptor> propertySetBuilder = new ImmutableSet.Builder<PropertyDescriptor>();
 
         propertySetBuilder.addAll(type.getDescriptors());
 

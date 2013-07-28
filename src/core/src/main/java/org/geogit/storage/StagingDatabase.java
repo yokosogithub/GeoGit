@@ -18,14 +18,45 @@ import com.google.common.base.Optional;
  */
 public interface StagingDatabase extends ObjectDatabase {
 
-    public Optional<Conflict> getConflict(String st);
+    /**
+     * Gets the specified conflict from the database.
+     * 
+     * @param namespace the namespace of the conflict
+     * @param path the conflict to retrieve
+     * @return the conflict, or {@link Optional#absent()} if it was not found
+     */
+    public Optional<Conflict> getConflict(@Nullable String namespace, String path);
 
-    public List<Conflict> getConflicts(@Nullable String pathFilter);
+    /**
+     * Gets all conflicts that match the specified path filter.
+     * 
+     * @param namespace the namespace of the conflict
+     * @param pathFilter the path filter, if this is not defined, all conflicts will be returned
+     * @return the list of conflicts
+     */
+    public List<Conflict> getConflicts(@Nullable String namespace, @Nullable String pathFilter);
 
-    public void addConflict(Conflict conflict);
+    /**
+     * Adds a conflict to the database.
+     * 
+     * @param namespace the namespace of the conflict
+     * @param conflict the conflict to add
+     */
+    public void addConflict(@Nullable String namespace, Conflict conflict);
 
-    public void removeConflict(String path);
+    /**
+     * Removes a conflict from the database.
+     * 
+     * @param namespace the namespace of the conflict
+     * @param path the path of feature whose conflict should be removed
+     */
+    public void removeConflict(@Nullable String namespace, String path);
 
-    public void removeConflicts();
+    /**
+     * Removes all conflicts from the database.
+     * 
+     * @param namespace the namespace of the conflicts to remove
+     */
+    public void removeConflicts(@Nullable String namespace);
 
 }

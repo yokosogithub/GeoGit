@@ -2,29 +2,37 @@ package org.geogit.web.api.commands;
 
 import java.util.Iterator;
 
-import org.geogit.api.GeoGIT;
+import javax.annotation.Nullable;
+
+import org.geogit.api.CommandLocator;
 import org.geogit.api.ObjectId;
 import org.geogit.api.RevCommit;
 import org.geogit.api.plumbing.diff.DiffEntry;
 import org.geogit.api.porcelain.CommitOp;
 import org.geogit.api.porcelain.DiffOp;
 import org.geogit.api.porcelain.NothingToCommitException;
+import org.geogit.web.api.AbstractWebAPICommand;
 import org.geogit.web.api.CommandContext;
 import org.geogit.web.api.CommandResponse;
 import org.geogit.web.api.CommandSpecException;
 import org.geogit.web.api.ResponseWriter;
-import org.geogit.web.api.WebAPICommand;
+
+import com.google.common.base.Optional;
 
 /**
  * Interface for the Commit operation in GeoGit.
  * 
  * Web interface for {@link CommitOp}
  */
-public class Commit implements WebAPICommand {
+public class Commit extends AbstractWebAPICommand {
 
     String message;
 
     boolean all;
+
+    private Optional<String> authorName = Optional.absent();
+
+    private Optional<String> authorEmail = Optional.absent();
 
     /**
      * Mutator for the message variable
@@ -45,6 +53,20 @@ public class Commit implements WebAPICommand {
     }
 
     /**
+     * @param authorName the author of the merge commit
+     */
+    public void setAuthorName(@Nullable String authorName) {
+        this.authorName = Optional.fromNullable(authorName);
+    }
+
+    /**
+     * @param authorEmail the email of the author of the merge commit
+     */
+    public void setAuthorEmail(@Nullable String authorEmail) {
+        this.authorEmail = Optional.fromNullable(authorEmail);
+    }
+
+    /**
      * Runs the command and builds the appropriate response
      * 
      * @param context - the context to use for this command
@@ -52,16 +74,22 @@ public class Commit implements WebAPICommand {
      */
     @Override
     public void run(CommandContext context) {
-        if (message == null || message.trim().isEmpty()) {
-            throw new CommandSpecException("No commit message provided");
+        if (this.getTransactionId() == null) {
+            throw new CommandSpecException(
+                    "No transaction was specified, commit requires a transaction to preserve the stability of the repository.");
         }
-        final GeoGIT geogit = context.getGeoGIT();
+        final CommandLocator geogit = this.getCommandLocator(context);
         RevCommit commit;
         try {
-            commit = geogit.command(CommitOp.class).setMessage(message).setAll(all).call();
+            commit = geogit.command(CommitOp.class)
+                    .setAuthor(authorName.orNull(), authorEmail.orNull()).setMessage(message)
+                    .setAllowEmpty(true).setAll(all).call();
             assert commit != null;
         } catch (NothingToCommitException noChanges) {
             context.setResponseContent(CommandResponse.warning("Nothing to commit"));
+            commit = null;
+        } catch (IllegalStateException e) {
+            context.setResponseContent(CommandResponse.warning(e.getMessage()));
             commit = null;
         }
         if (commit != null) {

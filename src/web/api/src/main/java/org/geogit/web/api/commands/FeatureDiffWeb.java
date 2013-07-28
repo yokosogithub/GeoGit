@@ -3,7 +3,7 @@ package org.geogit.web.api.commands;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.geogit.api.GeoGIT;
+import org.geogit.api.CommandLocator;
 import org.geogit.api.NodeRef;
 import org.geogit.api.ObjectId;
 import org.geogit.api.Ref;
@@ -19,11 +19,11 @@ import org.geogit.api.plumbing.diff.AttributeDiff;
 import org.geogit.api.plumbing.diff.FeatureDiff;
 import org.geogit.api.plumbing.diff.GenericAttributeDiffImpl;
 import org.geogit.api.plumbing.diff.GeometryAttributeDiff;
+import org.geogit.web.api.AbstractWebAPICommand;
 import org.geogit.web.api.CommandContext;
 import org.geogit.web.api.CommandResponse;
 import org.geogit.web.api.CommandSpecException;
 import org.geogit.web.api.ResponseWriter;
-import org.geogit.web.api.WebAPICommand;
 import org.opengis.feature.type.PropertyDescriptor;
 
 import com.google.common.base.Optional;
@@ -38,7 +38,7 @@ import com.vividsolutions.jts.geom.Geometry;
  * Web interface for {@link FeatureDiff}
  */
 
-public class FeatureDiffWeb implements WebAPICommand {
+public class FeatureDiffWeb extends AbstractWebAPICommand {
 
     private String path;
 
@@ -94,7 +94,7 @@ public class FeatureDiffWeb implements WebAPICommand {
      * 
      * @throws CommandSpecException - if the commit or treeid couldn't be resolved
      */
-    private Optional<NodeRef> parseID(ObjectId id, GeoGIT geogit) {
+    private Optional<NodeRef> parseID(ObjectId id, CommandLocator geogit) {
         Optional<RevObject> object = geogit.command(RevObjectParse.class).setObjectId(id).call();
         RevCommit commit = null;
         if (object.isPresent() && object.get() instanceof RevCommit) {
@@ -125,7 +125,7 @@ public class FeatureDiffWeb implements WebAPICommand {
         }
 
         ObjectId newId = null;
-        final GeoGIT geogit = context.getGeoGIT();
+        final CommandLocator geogit = this.getCommandLocator(context);
 
         if (newCommitId.equals(ObjectId.NULL.toString()) || newCommitId.trim().isEmpty()) {
             Optional<ObjectId> oid = geogit.command(ResolveTreeish.class).setTreeish(Ref.HEAD)

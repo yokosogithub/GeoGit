@@ -2,6 +2,8 @@ package org.geogit.api;
 
 import java.util.UUID;
 
+import javax.annotation.Nullable;
+
 import org.geogit.api.plumbing.TransactionEnd;
 import org.geogit.repository.Index;
 import org.geogit.repository.Repository;
@@ -9,7 +11,9 @@ import org.geogit.repository.StagingArea;
 import org.geogit.repository.WorkingTree;
 import org.geogit.storage.RefDatabase;
 import org.geogit.storage.TransactionRefDatabase;
+import org.geogit.storage.TransactionStagingArea;
 
+import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 
 /**
@@ -20,7 +24,9 @@ import com.google.common.base.Preconditions;
  */
 public class GeogitTransaction implements CommandLocator {
 
-    public static String TRANSACTIONS_DIR = "transactions/";
+    public static final String TRANSACTIONS_NAMESPACE = "transactions";
+
+    public static final String TRANSACTIONS_DIR = TRANSACTIONS_NAMESPACE + "/";
 
     private UUID transactionId;
 
@@ -31,6 +37,10 @@ public class GeogitTransaction implements CommandLocator {
     private final WorkingTree transactionWorkTree;
 
     private final TransactionRefDatabase transactionRefDatabase;
+
+    private Optional<String> authorName = Optional.absent();
+
+    private Optional<String> authorEmail = Optional.absent();
 
     /**
      * Constructs the transaction with the given ID and Injector.
@@ -43,7 +53,8 @@ public class GeogitTransaction implements CommandLocator {
         this.locator = locator;
         this.transactionId = transactionId;
 
-        transactionIndex = new Index(repository.getIndex().getDatabase(), this);
+        transactionIndex = new TransactionStagingArea(new Index(
+                repository.getIndex().getDatabase(), this), transactionId);
         transactionWorkTree = new WorkingTree(repository.getIndex().getDatabase(), this);
         transactionRefDatabase = new TransactionRefDatabase(repository.getRefDatabase(),
                 transactionId);
@@ -55,6 +66,18 @@ public class GeogitTransaction implements CommandLocator {
 
     public void close() {
         transactionRefDatabase.close();
+    }
+
+    /**
+     * 
+     * @param authorName name of the author of this transaction
+     * @param authorEmail email of the author of this transaction
+     * @return {@code this}
+     */
+    public GeogitTransaction setAuthor(@Nullable String authorName, @Nullable String authorEmail) {
+        this.authorName = Optional.fromNullable(authorName);
+        this.authorEmail = Optional.fromNullable(authorEmail);
+        return this;
     }
 
     /**
@@ -99,12 +122,13 @@ public class GeogitTransaction implements CommandLocator {
     }
 
     public void commit() {
-        locator.command(TransactionEnd.class).setTransaction(this).setCancel(false).setRebase(true)
-                .call();
+        locator.command(TransactionEnd.class).setAuthor(authorName.orNull(), authorEmail.orNull())
+                .setTransaction(this).setCancel(false).setRebase(true).call();
     }
 
     public void commitSyncTransaction() {
-        locator.command(TransactionEnd.class).setTransaction(this).setCancel(false).call();
+        locator.command(TransactionEnd.class).setAuthor(authorName.orNull(), authorEmail.orNull())
+                .setTransaction(this).setCancel(false).call();
     }
 
     public void abort() {

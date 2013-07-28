@@ -282,6 +282,10 @@ public class GeogitCLI {
                     // do nothing here, this exception indicates a failure, but the corresponding
                     // command throwing it should have taken care of outputting an error message or
                     // providing user interaction
+                    consoleReader.flush();
+                } else {
+                    consoleReader.println(e.getMessage());
+                    consoleReader.flush();
                 }
             } catch (IOException ioe) {
                 ioe.printStackTrace();
@@ -524,6 +528,16 @@ public class GeogitCLI {
                 public void started() {
                     super.started();
                     lastRun = -(delayMillis + 1);
+                }
+
+                public void setDescription(String s) {
+                    try {
+                        console.println();
+                        console.println(s);
+                        console.flush();
+                    } catch (IOException e) {
+                        Throwables.propagate(e);
+                    }
                 }
 
                 @Override

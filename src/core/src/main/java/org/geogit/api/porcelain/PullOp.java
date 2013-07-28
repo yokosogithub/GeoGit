@@ -7,6 +7,8 @@ package org.geogit.api.porcelain;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.annotation.Nullable;
+
 import org.geogit.api.AbstractGeoGitOp;
 import org.geogit.api.ObjectId;
 import org.geogit.api.Ref;
@@ -14,6 +16,7 @@ import org.geogit.api.Remote;
 import org.geogit.api.SymRef;
 import org.geogit.api.plumbing.RefParse;
 import org.geogit.api.plumbing.UpdateRef;
+import org.geogit.api.porcelain.MergeOp.MergeReport;
 
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
@@ -38,6 +41,10 @@ public class PullOp extends AbstractGeoGitOp<PullResult> {
     private List<String> refSpecs = new ArrayList<String>();
 
     private Optional<Integer> depth = Optional.absent();
+
+    private Optional<String> authorName = Optional.absent();
+
+    private Optional<String> authorEmail = Optional.absent();
 
     /**
      * Constructs a new {@code PullOp}.
@@ -115,6 +122,18 @@ public class PullOp extends AbstractGeoGitOp<PullResult> {
         Preconditions.checkNotNull(remoteSupplier);
         remote = remoteSupplier;
 
+        return this;
+    }
+
+    /**
+     * 
+     * @param author the author of the commit
+     * @param email email of author
+     * @return {@code this}
+     */
+    public PullOp setAuthor(@Nullable String authorName, @Nullable String authorEmail) {
+        this.authorName = Optional.fromNullable(authorName);
+        this.authorEmail = Optional.fromNullable(authorEmail);
         return this;
     }
 
@@ -197,8 +216,16 @@ public class PullOp extends AbstractGeoGitOp<PullResult> {
                         command(RebaseOp.class).setUpstream(
                                 Suppliers.ofInstance(sourceRef.get().getObjectId())).call();
                     } else {
-                        command(MergeOp.class).addCommit(
-                                Suppliers.ofInstance(sourceRef.get().getObjectId())).call();
+                        try {
+                            MergeReport report = command(MergeOp.class)
+                                    .setAuthor(authorName.orNull(), authorEmail.orNull())
+                                    .addCommit(Suppliers.ofInstance(sourceRef.get().getObjectId()))
+                                    .call();
+                            result.setMergeReport(Optional.of(report));
+                        } catch (NothingToCommitException e) {
+                            // the branch that we are trying to pull has less history than the
+                            // branch we are pulling into
+                        }
                     }
                 }
                 destRef = command(RefParse.class).setName(destinationref).call();

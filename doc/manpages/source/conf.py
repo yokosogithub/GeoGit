@@ -70,8 +70,16 @@ extensions = ['sphinx.ext.todo']
 
 #todo_include_todos = True
 
-# Add any paths that contain templates here, relative to this directory.
-#templates_path = ['../../theme/_templates']
+# -- Options for HTML output ---------------------------------------------------
+
+# Theme options are theme-specific and customize the look and feel of a theme
+# further.  For a list of options available for each theme, see the
+# documentation.
+#html_theme_options = {}
+
+# Add any paths that contain custom themes here, relative to this directory.
+html_theme_path = ['../../themes/']
+html_theme = 'geogit'
 
 # The suffix of source filenames.
 source_suffix = '.rst'
@@ -88,12 +96,12 @@ copyright = u'OpenGeo <http://opengeo.org>'
 # other places throughout the built documents.
 #
 # The short X.Y version.
-version = '0.1'
+version = '0.3'
 # The full version, including alpha/beta/rc tags.
-release = '0.1-SNAPSHOT'
+release = '0.3'
 # Users don't need to see the "SNAPSHOT" notation when it's there
 if release.find('SNAPSHOT') != -1:
-   release = '0.1.x'
+   release = '0.3'
 
 # There are two options for replacing |today|: either, you set today to some
 # non-false value, then it is used:

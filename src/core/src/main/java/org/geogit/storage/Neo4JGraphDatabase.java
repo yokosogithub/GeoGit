@@ -31,6 +31,7 @@ import org.neo4j.graphdb.RelationshipType;
 import org.neo4j.graphdb.Transaction;
 import org.neo4j.graphdb.factory.GraphDatabaseFactory;
 import org.neo4j.graphdb.index.Index;
+import org.neo4j.graphdb.index.UniqueFactory;
 import org.neo4j.graphdb.traversal.Evaluation;
 import org.neo4j.graphdb.traversal.Evaluator;
 import org.neo4j.graphdb.traversal.TraversalDescription;
@@ -43,15 +44,48 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableList.Builder;
 import com.google.inject.Inject;
 
+/**
+ * Provides an implementation of a GeoGit Graph Database using Neo4J.
+ */
 public class Neo4JGraphDatabase extends AbstractGraphDatabase {
 
     protected GraphDatabaseService graphDB = null;
 
     protected String dbPath;
 
-    protected static Map<String, GraphDatabaseService> databaseServices = new ConcurrentHashMap<String, GraphDatabaseService>();
+    protected static Map<String, ServiceContainer> databaseServices = new ConcurrentHashMap<String, ServiceContainer>();
 
     private final Platform platform;
+
+    /**
+     * Container class for the database service to keep track of reference counts.
+     */
+    protected class ServiceContainer {
+        private GraphDatabaseService dbService;
+
+        private int refCount;
+
+        public ServiceContainer(GraphDatabaseService dbService) {
+            this.dbService = dbService;
+            this.refCount = 0;
+        }
+
+        public void removeRef() {
+            this.refCount--;
+        }
+
+        public void addRef() {
+            this.refCount++;
+        }
+
+        public int getRefCount() {
+            return this.refCount;
+        }
+
+        public GraphDatabaseService getService() {
+            return this.dbService;
+        }
+    }
 
     private enum CommitRelationshipTypes implements RelationshipType {
         TOROOT, PARENT, MAPPED_TO
@@ -64,10 +98,10 @@ public class Neo4JGraphDatabase extends AbstractGraphDatabase {
         Runtime.getRuntime().addShutdownHook(new Thread() {
             @Override
             public void run() {
-                for (Entry<String, GraphDatabaseService> entry : databaseServices.entrySet()) {
+                for (Entry<String, ServiceContainer> entry : databaseServices.entrySet()) {
                     File graphPath = new File(entry.getKey());
                     if (graphPath.exists()) {
-                        entry.getValue().shutdown();
+                        entry.getValue().getService().shutdown();
                     }
                 }
                 databaseServices.clear();
@@ -85,6 +119,9 @@ public class Neo4JGraphDatabase extends AbstractGraphDatabase {
         this.platform = platform;
     }
 
+    /**
+     * Opens the Neo4J graph database.
+     */
     @Override
     public void open() {
         if (isOpen()) {
@@ -114,37 +151,69 @@ public class Neo4JGraphDatabase extends AbstractGraphDatabase {
         dbPath = graph.getAbsolutePath() + "/graphDB.db";
 
         if (databaseServices.containsKey(dbPath)) {
-            graphDB = databaseServices.get(dbPath);
+            ServiceContainer serviceContainer = databaseServices.get(dbPath);
+            serviceContainer.addRef();
+            graphDB = serviceContainer.getService();
         } else {
-            graphDB = getGraphDatabase(dbPath);
+            graphDB = getGraphDatabase();
+            ServiceContainer newContainer = new ServiceContainer(graphDB);
+            newContainer.addRef();
+            databaseServices.put(dbPath, newContainer);
         }
 
     }
 
-    protected GraphDatabaseService getGraphDatabase(String dbPath) {
-        GraphDatabaseService dbService = new GraphDatabaseFactory().newEmbeddedDatabase(dbPath);
-        databaseServices.put(dbPath, dbService);
-        return dbService;
+    /**
+     * Constructs the graph database service.
+     * 
+     * @return the new {@link GraphDatabaseService}
+     */
+    protected GraphDatabaseService getGraphDatabase() {
+        return new GraphDatabaseFactory().newEmbeddedDatabase(dbPath);
     }
 
+    /**
+     * Destroy the graph database service. This will only happen when the ref count for the database
+     * service is 0.
+     */
+    protected void destroyGraphDatabase() {
+        File graphPath = new File(dbPath);
+        if (graphPath.exists()) {
+            graphDB.shutdown();
+        }
+        databaseServices.remove(dbPath);
+    }
+
+    /**
+     * @return true if the database is open, false otherwise
+     */
     @Override
     public boolean isOpen() {
         return graphDB != null;
     }
 
+    /**
+     * Closes the database.
+     */
     @Override
     public void close() {
         if (isOpen()) {
-            File graphPath = new File(dbPath);
-            if (graphPath.exists()) {
-                graphDB.shutdown();
+            ServiceContainer container = databaseServices.get(dbPath);
+            container.removeRef();
+            if (container.getRefCount() <= 0) {
+                destroyGraphDatabase();
             }
-            databaseServices.remove(dbPath);
             graphDB = null;
         }
 
     }
 
+    /**
+     * Determines if the given commit exists in the graph database.
+     * 
+     * @param commitId the commit id to search for
+     * @return true if the commit exists, false otherwise
+     */
     @Override
     public boolean exists(ObjectId commitId) {
         Index<Node> idIndex = graphDB.index().forNodes("identifiers");
@@ -152,6 +221,13 @@ public class Neo4JGraphDatabase extends AbstractGraphDatabase {
         return node != null;
     }
 
+    /**
+     * Retrieves all of the parents for the given commit.
+     * 
+     * @param commitid the commit whose parents should be returned
+     * @return a list of the parents of the provided commit
+     * @throws IllegalArgumentException
+     */
     @Override
     public ImmutableList<ObjectId> getParents(ObjectId commitId) throws IllegalArgumentException {
         Index<Node> idIndex = graphDB.index().forNodes("identifiers");
@@ -169,18 +245,13 @@ public class Neo4JGraphDatabase extends AbstractGraphDatabase {
         return listBuilder.build();
     }
 
-    public ImmutableList<Node> getParentNodes(final Node commitNode) {
-        Builder<Node> listBuilder = new ImmutableList.Builder<Node>();
-
-        if (commitNode != null) {
-            for (Relationship parent : commitNode.getRelationships(Direction.OUTGOING,
-                    CommitRelationshipTypes.PARENT)) {
-                listBuilder.add(parent.getOtherNode(commitNode));
-            }
-        }
-        return listBuilder.build();
-    }
-
+    /**
+     * Retrieves all of the children for the given commit.
+     * 
+     * @param commitid the commit whose children should be returned
+     * @return a list of the children of the provided commit
+     * @throws IllegalArgumentException
+     */
     @Override
     public ImmutableList<ObjectId> getChildren(ObjectId commitId) throws IllegalArgumentException {
         Index<Node> idIndex = graphDB.index().forNodes("identifiers");
@@ -196,6 +267,14 @@ public class Neo4JGraphDatabase extends AbstractGraphDatabase {
         return listBuilder.build();
     }
 
+    /**
+     * Adds a commit to the database with the given parents. If a commit with the same id already
+     * exists, it will not be inserted.
+     * 
+     * @param commitId the commit id to insert
+     * @param parentIds the commit ids of the commit's parents
+     * @return true if the commit id was inserted, false otherwise
+     */
     @Override
     public boolean put(ObjectId commitId, ImmutableList<ObjectId> parentIds) {
         Transaction tx = graphDB.beginTx();
@@ -307,15 +386,15 @@ public class Neo4JGraphDatabase extends AbstractGraphDatabase {
      * @return
      */
     private Node getOrAddNode(ObjectId commitId) {
-        Index<Node> idIndex = graphDB.index().forNodes("identifiers");
         final String commitIdStr = commitId.toString();
-        Node node = idIndex.get("id", commitIdStr).getSingle();
-        if (node == null) {
-            node = graphDB.createNode();
-            node.setProperty("id", commitIdStr);
-            idIndex.add(node, "id", commitIdStr);
-        }
-        return node;
+        UniqueFactory<Node> factory = new UniqueFactory.UniqueNodeFactory(graphDB, "identifiers") {
+            @Override
+            protected void initialize(Node created, Map<String, Object> properties) {
+                created.setProperty("id", properties.get("id"));
+            }
+        };
+
+        return factory.getOrCreate("id", commitIdStr);
     }
 
     /**
@@ -355,6 +434,65 @@ public class Neo4JGraphDatabase extends AbstractGraphDatabase {
         return min;
     }
 
+    /**
+     * Determines if there are any sparse commits between the start commit and the end commit, not
+     * including the end commit.
+     * 
+     * @param start the start commit
+     * @param end the end commit
+     * @return true if there are any sparse commits between start and end
+     */
+    public boolean isSparsePath(ObjectId start, ObjectId end) {
+        Index<Node> idIndex = graphDB.index().forNodes("identifiers");
+        Node startNode = idIndex.get("id", start.toString()).getSingle();
+        Node endNode = idIndex.get("id", end.toString()).getSingle();
+        PathFinder<Path> finder = GraphAlgoFactory.shortestPath(
+                Traversal.expanderForTypes(CommitRelationshipTypes.PARENT, Direction.OUTGOING),
+                Integer.MAX_VALUE);
+
+        Iterable<Path> paths = finder.findAllPaths(startNode, endNode);
+
+        for (Path path : paths) {
+            for (Node node : path.nodes()) {
+                if (!node.equals(endNode) && node.hasProperty(SPARSE_FLAG)) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Set a property on the provided commit node.
+     * 
+     * @param commitId the id of the commit
+     */
+    public void setProperty(ObjectId commitId, String propertyName, String propertyValue) {
+        Index<Node> idIndex = graphDB.index().forNodes("identifiers");
+
+        Transaction tx = graphDB.beginTx();
+        try {
+            Node commitNode = idIndex.get("id", commitId.toString()).getSingle();
+            commitNode.setProperty(propertyName, propertyValue);
+
+            tx.success();
+        } catch (Exception e) {
+            tx.failure();
+            throw Throwables.propagate(e);
+        } finally {
+            tx.finish();
+        }
+
+    }
+
+    /**
+     * Finds the lowest common ancestor of two commits.
+     * 
+     * @param leftId the commit id of the left commit
+     * @param rightId the commit id of the right commit
+     * @return An {@link Optional} of the lowest common ancestor of the two commits, or
+     *         {@link Optional#absent()} if a common ancestor could not be found.
+     */
     @Override
     public Optional<ObjectId> findLowestCommonAncestor(ObjectId leftId, ObjectId rightId) {
         Index<Node> idIndex = graphDB.index().forNodes("identifiers");
@@ -399,61 +537,9 @@ public class Neo4JGraphDatabase extends AbstractGraphDatabase {
         return ancestor;
     }
 
-    public boolean isSparsePath(ObjectId start, ObjectId end) {
-        Index<Node> idIndex = graphDB.index().forNodes("identifiers");
-        Node startNode = idIndex.get("id", start.toString()).getSingle();
-        Node endNode = idIndex.get("id", end.toString()).getSingle();
-        PathFinder<Path> finder = GraphAlgoFactory.shortestPath(
-                Traversal.expanderForTypes(CommitRelationshipTypes.PARENT, Direction.OUTGOING),
-                Integer.MAX_VALUE);
-
-        Iterable<Path> paths = finder.findAllPaths(startNode, endNode);
-
-        for (Path path : paths) {
-            Node lastNode = path.lastRelationship().getOtherNode(path.endNode());
-            Node mappedNode = getMappedNode(lastNode);
-            if (mappedNode != null) {
-                ImmutableList<Node> parentNodes = getParentNodes(mappedNode);
-                for (Node parentNode : parentNodes) {
-                    // If these nodes aren't represented, they were excluded and the path is sparse
-                    Node mappedParentNode = getMappedNode(parentNode);
-                    if (getMappedNode(mappedParentNode).getId() != parentNode.getId()) {
-                        return true;
-                    }
-                }
-            }
-            for (Node node : path.nodes()) {
-                if (!node.equals(endNode) && node.hasProperty(SPARSE_FLAG)) {
-                    return true;
-                }
-            }
-        }
-        return false;
-    }
-
     /**
-     * Set a property on the provided commit node.
-     * 
-     * @param commitId the id of the commit
+     * Helper method for {@link #findLowestCommonAncestor(ObjectId, ObjectId)}.
      */
-    public void setProperty(ObjectId commitId, String propertyName, String propertyValue) {
-        Index<Node> idIndex = graphDB.index().forNodes("identifiers");
-
-        Transaction tx = graphDB.beginTx();
-        try {
-            Node commitNode = idIndex.get("id", commitId.toString()).getSingle();
-            commitNode.setProperty(propertyName, propertyValue);
-
-            tx.success();
-        } catch (Exception e) {
-            tx.failure();
-            throw Throwables.propagate(e);
-        } finally {
-            tx.finish();
-        }
-
-    }
-
     private boolean processCommit(Node commit, Queue<Node> myQueue, Set<Node> mySet,
             Queue<Node> theirQueue, Set<Node> theirSet) {
         if (!mySet.contains(commit)) {
@@ -474,16 +560,23 @@ public class Neo4JGraphDatabase extends AbstractGraphDatabase {
         return false;
     }
 
+    /**
+     * Helper method for {@link #findLowestCommonAncestor(ObjectId, ObjectId)}.
+     */
     private void stopAncestryPath(Node commit, Queue<Node> theirQueue, Set<Node> theirSet) {
         Queue<Node> ancestorQueue = new LinkedList<Node>();
         ancestorQueue.add(commit);
+        List<Node> processed = new LinkedList<Node>();
         while (!ancestorQueue.isEmpty()) {
             Node ancestor = ancestorQueue.poll();
             for (Relationship parent : ancestor.getRelationships(CommitRelationshipTypes.PARENT)) {
                 Node parentNode = parent.getEndNode();
                 if (parentNode.getId() != ancestor.getId()) {
                     if (theirSet.contains(parentNode)) {
-                        ancestorQueue.add(parentNode);
+                        if (!processed.contains(parentNode)) {
+                            ancestorQueue.add(parentNode);
+                            processed.add(parentNode);
+                        }
                     } else if (theirQueue.contains(parentNode)) {
                         theirQueue.remove(parentNode);
                     }
@@ -492,10 +585,14 @@ public class Neo4JGraphDatabase extends AbstractGraphDatabase {
         }
     }
 
+    /**
+     * Helper method for {@link #findLowestCommonAncestor(ObjectId, ObjectId)}.
+     */
     private void verifyAncestors(List<Node> potentialCommonAncestors, Set<Node> leftSet,
             Set<Node> rightSet) {
         Queue<Node> ancestorQueue = new LinkedList<Node>();
         List<Node> falseAncestors = new LinkedList<Node>();
+        List<Node> processed = new LinkedList<Node>();
         for (Node n : potentialCommonAncestors) {
             if (falseAncestors.contains(n)) {
                 continue;
@@ -508,7 +605,10 @@ public class Neo4JGraphDatabase extends AbstractGraphDatabase {
                     Node parentNode = parent.getEndNode();
                     if (parentNode.getId() != ancestor.getId()) {
                         if (leftSet.contains(parentNode) || rightSet.contains(parentNode)) {
-                            ancestorQueue.add(parentNode);
+                            if (!processed.contains(parentNode)) {
+                                ancestorQueue.add(parentNode);
+                                processed.add(parentNode);
+                            }
                             if (potentialCommonAncestors.contains(parentNode)) {
                                 falseAncestors.add(parentNode);
                             }

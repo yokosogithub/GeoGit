@@ -10,8 +10,9 @@ Contents:
 
 .. toctree::
 
-  intro  
-  installing 
+  intro
+  quickstart
+  installing
   init
   config
   import
@@ -28,10 +29,12 @@ Contents:
   history
   merging
   picking
+  reverting
   remotes
   modifying
   patches
   partial_cloning
   configuration
   console
+  osm
 

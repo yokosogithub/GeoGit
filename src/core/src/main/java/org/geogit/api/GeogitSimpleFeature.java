@@ -165,7 +165,7 @@ public class GeogitSimpleFeature implements SimpleFeature {
     public Object getDefaultGeometry() {
         // should be specified in the index as the default key (null)
         Integer idx = nameToRevTypeIndex.get(null);
-        Object defaultGeometry = idx != null ? getAttribute(idx) : null;
+        Object defaultGeometry = idx != null ? revFeatureValues.get(idx).orNull() : null;
 
         // not found? do we have a default geometry at all?
         if (defaultGeometry == null) {

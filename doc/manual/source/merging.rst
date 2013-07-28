@@ -86,20 +86,6 @@ The above message shows a repository with just 3 conflicted features in its inde
 
 In order to fix the conflicts in the staging area, several GeoGit tools and approaches can be used. These are described below.
 
-Showing conflicts
-------------------
-
-The ``conflicts`` command can also be used to describe the current unmerged elements. There are two ways of displaying conflicts: the first uses no options and it prints the full description of the three versions involved in the conflict (the common ancestor, 'ours' and 'theirs'). It looks like the example shown next, corresponding to a single unmerged feature.
-
-::
-
-	Merge branch refs/heads/b1
-
-	Conflicts:
-		parks/2
-		parks/3
-		parks/1
-
 
 Aborting the merge operation
 -----------------------------
@@ -112,7 +98,7 @@ You can abort the merge operation and restore it to the original state it had be
 Showing conflicts
 -------------------
 
-The ``conflicts`` command can be used to describe the current unmerged elements. There are two ways of displaying conflicts: the first is the deafult one it prints the full description of the three versions involved in the conflict (the common ancestor, 'ours' and 'theirs'). It looks like the example shown next, corresponding to a single unmerged feature.
+The ``conflicts`` command can be used to describe the current unmerged elements. There are three ways of displaying conflicts: the first is the default one it prints the full description of the three versions involved in the conflict (the common ancestor, 'ours' and 'theirs'). It looks like the example shown next, corresponding to a single unmerged feature.
 
 ::
 	$ geogit conflicts
@@ -122,43 +108,43 @@ The ``conflicts`` command can be used to describe the current unmerged elements.
 	Ancestor    27207309879802a99d161b063b8f958d179be3b0
 	FEATURE
 	id    27207309879802a99d161b063b8f958d179be3b0
-	java.lang.String    Medford School District
-	java.lang.Double    53935.8939996
-	java.lang.Double    1004.9211325
-	java.lang.String    Kennedy Elementary
-	java.lang.Long    0
-	java.lang.String    Medford School District
-	java.lang.String    School Field
-	com.vividsolutions.jts.geom.MultiPolygon    MULTIPOLYGON (((-122.84163143974176 42.35985624789982, -122.84146965654989 42.35985609227347, -122.84117673733482 42.35985565827537, -122.8409230724077 42.35985528171881, -122.84062434545373 42.35985483812396, -122.84034728245699 42.35985442523742, -122.8403468719201 42.35943411552068, -122.84163015984652 42.35942328456196, -122.8416300075414 42.359625066567794, -122.84163143974176 42.35985624789982)))
-	java.lang.String    Public
+	STRING    Medford School District
+	DOUBLE    53935.8939996
+	DOUBLE    1004.9211325
+	STRING    Kennedy Elementary
+	LONG    0
+	STRING    Medford School District
+	STRING    School Field
+	MULTIPOLYGON    MULTIPOLYGON (((-122.84163143974176 42.35985624789982, -122.84146965654989 42.35985609227347, -122.84117673733482 42.35985565827537, -122.8409230724077 42.35985528171881, -122.84062434545373 42.35985483812396, -122.84034728245699 42.35985442523742, -122.8403468719201 42.35943411552068, -122.84163015984652 42.35942328456196, -122.8416300075414 42.359625066567794, -122.84163143974176 42.35985624789982)))
+	STRING    Public
 
 
 	Ours    d8cc931603603bd64506880dc1760b372808ef2d
 	FEATURE
 	id    d8cc931603603bd64506880dc1760b372808ef2d
-	java.lang.String    Medford School District
-	java.lang.Double    53935.8939996
-	java.lang.Double    1004.9211325
-	java.lang.String    Kennedy Elementary
-	java.lang.Long    5
-	java.lang.String    Medford School District
-	java.lang.String    School Field
-	com.vividsolutions.jts.geom.MultiPolygon    MULTIPOLYGON (((-122.84163143974176 42.35985624789982, -122.84146965654989 42.35985609227347, -122.84117673733482 42.35985565827537, -122.8409230724077 42.35985528171881, -122.84062434545373 42.35985483812396, -122.84034728245699 42.35985442523742, -122.8403468719201 42.35943411552068, -122.84163015984652 42.35942328456196, -122.8416300075414 42.359625066567794, -122.84163143974176 42.35985624789982)))
-	java.lang.String    Public
+	STRING    Medford School District
+	DOUBLE    53935.8939996
+	DOUBLE    1004.9211325
+	STRING    Kennedy Elementary
+	LONG    5
+	STRING    Medford School District
+	STRING    School Field
+	MULTIPOLYGON    MULTIPOLYGON (((-122.84163143974176 42.35985624789982, -122.84146965654989 42.35985609227347, -122.84117673733482 42.35985565827537, -122.8409230724077 42.35985528171881, -122.84062434545373 42.35985483812396, -122.84034728245699 42.35985442523742, -122.8403468719201 42.35943411552068, -122.84163015984652 42.35942328456196, -122.8416300075414 42.359625066567794, -122.84163143974176 42.35985624789982)))
+	STRING    Public
 
 
 	Theirs    a77e46d2ad6e2c9eef3b6e5191a6c299037d602c
 	FEATURE
 	id    a77e46d2ad6e2c9eef3b6e5191a6c299037d602c
-	java.lang.String    Medford School District
-	java.lang.Double    53935.8939996
-	java.lang.Double    1004.9211325
-	java.lang.String    Kennedy Elementary
-	java.lang.Long    2
-	java.lang.String    Medford School District
-	java.lang.String    School Field
-	com.vividsolutions.jts.geom.MultiPolygon    MULTIPOLYGON (((-122.8434107328942 42.36043884831257, -122.84324894970233 42.360438692686216, -122.84295603048726 42.36043825868812, -122.84270236556014 42.360437882131556, -122.84240363860617 42.36043743853671, -122.84212657560943 42.36043702565017, -122.84212616507254 42.360016715933426, -122.84340945299896 42.36000588497471, -122.84340930069384 42.36020766698054, -122.8434107328942 42.36043884831257)))
-	java.lang.String    Public
+	STRING    Medford School District
+	DOUBLE    53935.8939996
+	DOUBLE    1004.9211325
+	STRING    Kennedy Elementary
+	LONG    2
+	STRING    Medford School District
+	STRING    School Field
+	MULTIPOLYGON    MULTIPOLYGON (((-122.8434107328942 42.36043884831257, -122.84324894970233 42.360438692686216, -122.84295603048726 42.36043825868812, -122.84270236556014 42.360437882131556, -122.84240363860617 42.36043743853671, -122.84212657560943 42.36043702565017, -122.84212616507254 42.360016715933426, -122.84340945299896 42.36000588497471, -122.84340930069384 42.36020766698054, -122.8434107328942 42.36043884831257)))
+	STRING    Public
 
 The descriptions of the involved elements are the same ones that would be obtained by calling the GeoGit ``cat`` command on each of them.
 
@@ -177,6 +163,12 @@ A representation with diff-like syntax instead of full descriptions can be obtai
 	the_geom: MultiPolygon [-122.84163143974176,42.35985624789982 -122.84146965654989,42.35985609227347 -122.84117673733482,42.35985565827537 -122.8409230724077,42.35985528171881 -122.84062434545373,42.35985483812396 -122.84034728245699,42.35985442523742 -122.8403468719201,42.35943411552068 -122.84163015984652,42.35942328456196 -122.8416300075414,42.359625066567794 -122.84163143974176,42.35985624789982] (-122.8434107328942,42.36043884831257 -122.84324894970233,42.360438692686216 -122.84295603048726,42.36043825868812 -122.84270236556014,42.360437882131556 -122.84240363860617,42.36043743853671 -122.84212657560943,42.36043702565017 -122.84212616507254,42.360016715933426 -122.84340945299896,42.36000588497471 -122.84340930069384,42.36020766698054 -122.8434107328942,42.36043884831257)
 
 It uses the same syntax as the ``diff`` command, which is described in the :ref:`differences`  section. This makes it easier to see why the conflict arises and how to solve it.
+
+Using the ``--ids-only`` switch you will just get the ids of the three versions corresponding to each unmerged element, as show next:
+
+::
+
+	parks/parks.2 	27207309879802a99d161b063b8f958d179be3b0	d8cc931603603bd64506880dc1760b372808ef2d	a77e46d2ad6e2c9eef3b6e5191a6c299037d602c
 
 
 Solving using the merge tool
@@ -209,7 +201,7 @@ Using the ``geogit add`` command, features can be staged in the usual way. When 
 If you want to stage a different version, you can use one of the following procedures to set a different feature in the working tree before running the ``add`` command.
 
 - Import a new feature using one of the several importing tools from GeoGit
-- Set the version from the branch to merge (the 'theirs' version) by running ``geogit checkout --theirs``
+- Set the version from the branch to merge (the 'theirs' version) by running ``geogit checkout -p <path_to_feature> --ours|--theirs``
 - Delete the feature using the ``rm`` command. This will remove it from both the working tree and the index, and will remove the conflict mark from the index as well. Their is no need to call ``add`` afterwards, unless you have staged some other element to solve a different conflict, using any of the other methods described above.
 
 Once you have the correct version that you want to commit, run ``add`` to stage it and then run ``commit`` to finally commit your resolved elements and finish the merge.

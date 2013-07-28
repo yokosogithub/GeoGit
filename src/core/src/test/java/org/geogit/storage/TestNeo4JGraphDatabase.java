@@ -18,17 +18,13 @@ public class TestNeo4JGraphDatabase extends Neo4JGraphDatabase {
     }
 
     @Override
-    protected GraphDatabaseService getGraphDatabase(String dbPath) {
+    protected GraphDatabaseService getGraphDatabase() {
         return new TestGraphDatabaseFactory().newImpermanentDatabaseBuilder().newGraphDatabase();
     }
 
     @Override
-    public void close() {
-        if (isOpen()) {
-            graphDB.shutdown();
-            databaseServices.remove(dbPath);
-            graphDB = null;
-        }
-
+    protected void destroyGraphDatabase() {
+        graphDB.shutdown();
+        databaseServices.remove(dbPath);
     }
 }

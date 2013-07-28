@@ -6,7 +6,7 @@
   <parent>
     <groupId>org.geogit</groupId>
     <artifactId>geogit</artifactId>
-    <version>0.3-SNAPSHOT</version>
+    <version>0.4-SNAPSHOT</version>
     <relativePath>../parent/pom.xml</relativePath>
   </parent>
 
@@ -26,6 +26,11 @@
       <version>${project.version}</version>
     </dependency>
     <dependency>
+      <groupId>org.geogit</groupId>
+      <artifactId>geogit-geotools</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
       <!-- Google Common Libraries. Featuring com.google.collect collection classes -->
       <groupId>com.google.guava</groupId>
       <artifactId>guava</artifactId>
@@ -34,7 +39,23 @@
       <groupId>net.sourceforge.findbugs</groupId>
       <artifactId>jsr305</artifactId>
     </dependency>
-
+    
+    <dependency>
+		<groupId>org.openstreetmap.osmosis</groupId>
+		<artifactId>osmosis-core</artifactId>
+		<version>${osmosis.version}</version>
+	</dependency>
+	<dependency>
+	  <groupId>org.openstreetmap.osmosis</groupId>
+	  <artifactId>osmosis-xml</artifactId>
+	  <version>${osmosis.version}</version>
+	</dependency>
+	<dependency>
+	  <groupId>org.openstreetmap.osmosis</groupId>
+	  <artifactId>osmosis-pbf</artifactId>
+	  <version>${osmosis.version}</version>
+	</dependency>
+	
     <dependency>
       <groupId>com.google.inject</groupId>
       <artifactId>guice</artifactId>

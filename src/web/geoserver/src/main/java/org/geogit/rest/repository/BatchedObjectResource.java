@@ -17,8 +17,11 @@ import java.util.List;
 
 import org.geogit.api.GeoGIT;
 import org.geogit.api.ObjectId;
+import org.geogit.api.plumbing.CreateDeduplicator;
 import org.geogit.remote.BinaryPackedObjects;
 import org.geogit.repository.Repository;
+import org.geogit.storage.Deduplicator;
+import org.geogit.storage.memory.HeapDeduplicator;
 import org.restlet.Context;
 import org.restlet.Finder;
 import org.restlet.data.MediaType;
@@ -102,10 +105,11 @@ public class BatchedObjectResource extends Finder {
 
             final GeoGIT ggit = getGeogit(getRequest()).get();
             final Repository repository = ggit.getRepository();
+            final Deduplicator deduplicator = ggit.command(CreateDeduplicator.class).call();
 
             BinaryPackedObjects packer = new BinaryPackedObjects(repository.getIndex()
                     .getDatabase());
-            getResponse().setEntity(new RevObjectBinaryRepresentation(packer, want, have));
+            getResponse().setEntity(new RevObjectBinaryRepresentation(packer, want, have, deduplicator));
         }
     }
 
@@ -116,20 +120,28 @@ public class BatchedObjectResource extends Finder {
 
         private final List<ObjectId> have;
 
+		private Deduplicator deduplicator;
+
         public RevObjectBinaryRepresentation( //
                 BinaryPackedObjects packer, //
                 List<ObjectId> want, //
-                List<ObjectId> have) //
+                List<ObjectId> have, //
+                Deduplicator deduplicator) //
         {
             super(MediaType.APPLICATION_OCTET_STREAM);
             this.packer = packer;
             this.want = want;
             this.have = have;
+            this.deduplicator = deduplicator;
         }
 
         @Override
         public void write(OutputStream out) throws IOException {
-            packer.write(out, want, have, false);
+        	try {
+        		packer.write(out, want, have, false, deduplicator);
+        	} finally {
+        		deduplicator.release();
+        	}
         }
     }
 

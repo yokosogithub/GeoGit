@@ -16,7 +16,10 @@ import com.google.inject.Binder;
  * @see ShpCommandProxy
  * @see SLCommandProxy
  * @see OracleCommandProxy
+ * @see SQLServerCommandProxy
  */
+
+
 public class GeoToolsModule implements CLIModule {
 
     /**
@@ -28,6 +31,7 @@ public class GeoToolsModule implements CLIModule {
         binder.bind(ShpCommandProxy.class);
         binder.bind(SLCommandProxy.class);
         binder.bind(OracleCommandProxy.class);
+        binder.bind(SQLServerCommandProxy.class);
     }
 
 }

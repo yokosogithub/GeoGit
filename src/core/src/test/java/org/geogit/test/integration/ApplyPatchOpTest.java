@@ -100,7 +100,7 @@ public class ApplyPatchOpTest extends RepositoryTestCase {
                 .setRefSpec("WORK_HEAD:" + path).call(RevFeature.class);
         assertTrue(feature.isPresent());
         ImmutableList<Optional<Object>> values = feature.get().getValues();
-        assertEquals("new", values.get(2).get());
+        assertEquals("new", values.get(0).get());
     }
 
     @Test
@@ -310,7 +310,7 @@ public class ApplyPatchOpTest extends RepositoryTestCase {
         Optional<RevFeature> feature = geogit.command(RevObjectParse.class)
                 .setRefSpec("WORK_HEAD:" + path).call(RevFeature.class);
         assertTrue(feature.isPresent());
-        assertEquals(oldValue, feature.get().getValues().get(2));
+        assertEquals(oldValue, feature.get().getValues().get(0));
     }
 
     @Test
