@@ -20,14 +20,15 @@ import org.geogit.api.NodeRef;
 import org.geogit.api.ObjectId;
 import org.geogit.api.RevFeatureType;
 import org.geogit.api.RevObject;
-import org.geogit.api.RevTree;
 import org.geogit.api.RevObject.TYPE;
+import org.geogit.api.RevTree;
 import org.geogit.api.plumbing.FindTreeChild;
 import org.geogit.api.plumbing.ResolveObjectType;
 import org.geogit.api.plumbing.ResolveTreeish;
 import org.geogit.api.plumbing.RevObjectParse;
 import org.geogit.api.plumbing.RevParse;
 import org.geogit.cli.CLICommand;
+import org.geogit.cli.CommandFailedException;
 import org.geogit.cli.GeogitCLI;
 import org.geogit.geotools.plumbing.ExportOp;
 import org.geogit.geotools.plumbing.GeoToolsOpException;
@@ -76,14 +77,11 @@ public class OracleExport extends AbstractOracleCommand implements CLICommand {
      */
     @Override
     protected void runInternal(GeogitCLI cli) throws Exception {
-        if (cli.getGeogit() == null) {
-            cli.getConsole().println("Not a geogit repository: " + cli.getPlatform().pwd());
-            return;
-        }
+        checkState(cli.getGeogit() != null, "Not a geogit repository: " + cli.getPlatform().pwd());
 
         if (args.isEmpty()) {
             printUsage();
-            return;
+            throw new CommandFailedException();
         }
 
         String path = args.get(0);
@@ -96,8 +94,7 @@ public class OracleExport extends AbstractOracleCommand implements CLICommand {
             dataStore = getDataStore();
         } catch (ConnectException e) {
             cli.getConsole().println("Unable to connect using the specified database parameters.");
-            cli.getConsole().flush();
-            return;
+            throw new CommandFailedException();
         }
 
         ObjectId featureTypeId = null;
@@ -126,19 +123,19 @@ public class OracleExport extends AbstractOracleCommand implements CLICommand {
                             sft.getDescription());
                 } catch (GeoToolsOpException e) {
                     cli.getConsole().println("No features to export.");
-                    return;
+                    throw new CommandFailedException();
                 }
             }
             try {
                 dataStore.createSchema(outputFeatureType);
             } catch (IOException e) {
                 cli.getConsole().println("Cannot create new table in database");
-                return;
+                throw new CommandFailedException();
             }
         } else {
             if (!overwrite) {
                 cli.getConsole().println("The selected table already exists. Use -o to overwrite");
-                return;
+                throw new CommandFailedException();
             }
         }
 
@@ -161,16 +158,17 @@ public class OracleExport extends AbstractOracleCommand implements CLICommand {
                     cli.getConsole()
                             .println(
                                     "The selected tree contains mixed feature types. Use --defaulttype or --featuretype <feature_type_ref> to export.");
-                    return;
+                    throw new CommandFailedException();
                 default:
                     cli.getConsole().println("Could not export. Error:" + e.statusCode.name());
+                    throw new CommandFailedException();
                 }
             }
 
             cli.getConsole().println(path + " exported successfully to " + tableName);
         } else {
             cli.getConsole().println("Can't write to the selected table");
-            return;
+            throw new CommandFailedException();
         }
 
     }

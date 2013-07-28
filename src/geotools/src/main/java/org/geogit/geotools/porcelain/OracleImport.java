@@ -4,9 +4,12 @@
  */
 package org.geogit.geotools.porcelain;
 
+import static com.google.common.base.Preconditions.checkState;
+
 import java.net.ConnectException;
 
 import org.geogit.cli.CLICommand;
+import org.geogit.cli.CommandFailedException;
 import org.geogit.cli.GeogitCLI;
 import org.geogit.geotools.plumbing.GeoToolsOpException;
 import org.geogit.geotools.plumbing.ImportOp;
@@ -66,18 +69,14 @@ public class OracleImport extends AbstractOracleCommand implements CLICommand {
      */
     @Override
     protected void runInternal(GeogitCLI cli) throws Exception {
-        if (cli.getGeogit() == null) {
-            cli.getConsole().println("Not a geogit repository: " + cli.getPlatform().pwd());
-            return;
-        }
+        checkState(cli.getGeogit() != null, "Not a geogit repository: " + cli.getPlatform().pwd());
 
         DataStore dataStore = null;
         try {
             dataStore = getDataStore();
         } catch (ConnectException e) {
             cli.getConsole().println("Unable to connect using the specified database parameters.");
-            cli.getConsole().flush();
-            return;
+            throw new CommandFailedException();
         }
 
         try {
@@ -95,31 +94,32 @@ public class OracleImport extends AbstractOracleCommand implements CLICommand {
             case TABLE_NOT_DEFINED:
                 cli.getConsole().println(
                         "No tables specified for import. Specify --all or --table <table>.");
-                break;
+                throw new CommandFailedException();
             case ALL_AND_TABLE_DEFINED:
                 cli.getConsole().println("Specify --all or --table <table>, both cannot be set.");
-                break;
+                throw new CommandFailedException();
             case NO_FEATURES_FOUND:
                 cli.getConsole().println("No features were found in the database.");
                 break;
             case TABLE_NOT_FOUND:
                 cli.getConsole().println("Could not find the specified table.");
-                break;
+                throw new CommandFailedException();
             case UNABLE_TO_GET_NAMES:
                 cli.getConsole().println("Unable to get feature types from the database.");
-                break;
+                throw new CommandFailedException();
             case UNABLE_TO_GET_FEATURES:
                 cli.getConsole().println("Unable to get features from the database.");
                 break;
             case UNABLE_TO_INSERT:
                 cli.getConsole().println("Unable to insert features into the working tree.");
-                break;
+                throw new CommandFailedException();
             case ALTER_AND_ALL_DEFINED:
                 cli.getConsole().println(
                         "Alter cannot be used with --all option and more than one table.");
-                break;
+                throw new CommandFailedException();
             default:
                 cli.getConsole().println("Import failed with exception: " + e.statusCode.name());
+                throw new CommandFailedException();
             }
         } finally {
             dataStore.dispose();
