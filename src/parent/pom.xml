@@ -26,6 +26,26 @@
   Online tests avaialble using:
     
     mvn -Ponline
+
+  To build additional support for commercial databases:
+
+  * For SQL Server:
+  
+    mvn clean install -PsqlServer
+
+    Note: the jdbc driver for SQL Server must be in your
+    local Maven repository, you can install it by issuing:
+
+    mvn install:install-file  -Dfile=<path to sqljdbc4.jar>
+         -DartifactId=sqljdbc4 \ 
+         -DgroupId=com.microsoft \ 
+         -Dversion=3.0 \
+         -Dpackaging=jar \ 
+         -DgeneratePom=true
+
+    Online tests can be performed by issuing the following:
+
+    mvn clean install -PsqlServer,sqlServerOnline
   
   Corertura is configufred for a test coverage report:
     
@@ -105,6 +125,7 @@
     <maven.build.timestamp.format>dd-MMM-yyyy HH:mm</maven.build.timestamp.format>
     <build.timestamp>${maven.build.timestamp}</build.timestamp>
     <online.skip.pattern>**/*OnlineTest.java</online.skip.pattern>
+    <sqlServerOnline.skip.pattern>**/*SQLServerFunctionalTest.java</sqlServerOnline.skip.pattern>
     <allow.test.skip>true</allow.test.skip>
   </properties>
 
@@ -307,6 +328,7 @@
           </includes>
           <excludes>
             <exclude>${online.skip.pattern}</exclude>
+	   <exclude>${sqlServerOnline.skip.pattern}</exclude>
           </excludes>
           <forkMode>pertest</forkMode>
           <argLine>-Xms256m -Xmx512m</argLine>

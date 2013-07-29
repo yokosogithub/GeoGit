@@ -10,6 +10,7 @@ import java.net.URI;
 
 import org.geogit.api.Remote;
 import org.geogit.repository.Repository;
+import org.geogit.storage.DeduplicationService;
 
 import com.google.common.base.Optional;
 import com.google.common.base.Throwables;
@@ -30,7 +31,7 @@ public class RemoteUtils {
      *         {@link Optional#absent()} if a connection to the remote could not be established.
      */
     public static Optional<IRemoteRepo> newRemote(Injector injector, Remote remoteConfig,
-            Repository localRepository) {
+            Repository localRepository, DeduplicationService deduplicationService) {
 
         try {
             URI fetchURI = URI.create(remoteConfig.getFetchURL());
@@ -49,7 +50,7 @@ public class RemoteUtils {
                 if (remoteConfig.getMapped()) {
                     remoteRepo = new HttpMappedRemoteRepo(fetchURI.toURL(), localRepository);
                 } else {
-                    remoteRepo = new HttpRemoteRepo(fetchURI.toURL(), localRepository);
+                    remoteRepo = new HttpRemoteRepo(fetchURI.toURL(), localRepository, deduplicationService);
                 }
             } else {
                 throw new UnsupportedOperationException(

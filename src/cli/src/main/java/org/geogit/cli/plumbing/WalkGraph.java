@@ -13,10 +13,12 @@ import java.util.List;
 import jline.console.ConsoleReader;
 
 import org.geogit.api.RevObject;
+import org.geogit.api.plumbing.CreateDeduplicator;
 import org.geogit.api.plumbing.WalkGraphOp;
 import org.geogit.cli.AbstractCommand;
 import org.geogit.cli.CLICommand;
 import org.geogit.cli.GeogitCLI;
+import org.geogit.storage.Deduplicator;
 
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.Parameters;
@@ -45,37 +47,43 @@ public class WalkGraph extends AbstractCommand implements CLICommand {
         } else {
             ref = refList.get(0);
         }
-        Iterator<RevObject> iter = cli.getGeogit() //
-                .command(WalkGraphOp.class).setReference(ref) //
-                // .setStrategy(lsStrategy) //
-                .call();
-
-        final ConsoleReader console = cli.getConsole();
-        if (!iter.hasNext()) {
-            if (ref == null) {
-                console.println("The working tree is empty");
-            } else {
-                console.println("The specified path is empty");
-            }
-            return;
+        Deduplicator deduplicator = cli.getGeogit().command(CreateDeduplicator.class).call();
+        try {
+	        Iterator<RevObject> iter = cli.getGeogit() //
+	                .command(WalkGraphOp.class).setReference(ref) //
+	                .setDeduplicator(deduplicator) //
+	                // .setStrategy(lsStrategy) //
+	                .call();
+	
+	        final ConsoleReader console = cli.getConsole();
+	        if (!iter.hasNext()) {
+	            if (ref == null) {
+	                console.println("The working tree is empty");
+	            } else {
+	                console.println("The specified path is empty");
+	            }
+	            return;
+	        }
+	
+	        Function<RevObject, CharSequence> printFunctor = new Function<RevObject, CharSequence>() {
+	            @Override
+	            public CharSequence apply(RevObject input) {
+	                if (verbose) {
+	                    return String.format("%s: %s %s", input.getId(), input.getType(), input);
+	                } else {
+	                    return String.format("%s: %s", input.getId(), input.getType());
+	                }
+	            }
+	        };
+	
+	        Iterator<CharSequence> lines = Iterators.transform(iter, printFunctor);
+	
+	        while (lines.hasNext()) {
+	            console.println(lines.next());
+	        }
+	        console.flush();
+        } finally {
+        	deduplicator.release();
         }
-
-        Function<RevObject, CharSequence> printFunctor = new Function<RevObject, CharSequence>() {
-            @Override
-            public CharSequence apply(RevObject input) {
-                if (verbose) {
-                    return String.format("%s: %s %s", input.getId(), input.getType(), input);
-                } else {
-                    return String.format("%s: %s", input.getId(), input.getType());
-                }
-            }
-        };
-
-        Iterator<CharSequence> lines = Iterators.transform(iter, printFunctor);
-
-        while (lines.hasNext()) {
-            console.println(lines.next());
-        }
-        console.flush();
     }
 }
