@@ -12,10 +12,7 @@ import java.util.Map;
 import org.geogit.api.Node;
 import org.geogit.api.RevFeature;
 import org.geogit.api.plumbing.RevObjectParse;
-import org.geogit.osm.internal.AttributeDefinition;
-import org.geogit.osm.internal.Mapping;
-import org.geogit.osm.internal.MappingRule;
-import org.geogit.osm.internal.OSMImportOp;
+import org.geogit.osm.internal.log.ResolveOSMMappingLogFolder;
 import org.geogit.storage.FieldType;
 import org.geogit.test.integration.RepositoryTestCase;
 import org.junit.Rule;
@@ -109,6 +106,7 @@ public class OSMImportOpTest extends RepositoryTestCase {
         assertEquals(wkt, values.get(2).get().toString());
         assertEquals("31045880", values.get(0).get().toString());
         assertEquals("yes", values.get(1).get());
+
     }
 
     @Test
@@ -150,6 +148,14 @@ public class OSMImportOpTest extends RepositoryTestCase {
         assertEquals(wkt, values.get(2).get().toString());
         assertEquals("31045880", values.get(0).get().toString());
         assertEquals("yes", values.get(1).get());
+
+        // check it has not created mapping log files
+        File osmMapFolder = geogit.command(ResolveOSMMappingLogFolder.class).call();
+        file = new File(osmMapFolder, "onewaystreets");
+        assertFalse(file.exists());
+        file = new File(osmMapFolder, geogit.getRepository().getWorkingTree().getTree().getId()
+                .toString());
+        assertFalse(file.exists());
     }
 
 }

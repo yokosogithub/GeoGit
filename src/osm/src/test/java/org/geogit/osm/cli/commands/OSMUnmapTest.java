@@ -56,6 +56,9 @@ public class OSMUnmapTest extends Assert {
         WorkingTree workTree = cli.getGeogit().getRepository().getWorkingTree();
         long unstaged = workTree.countUnstaged("busstops").getCount();
         assertTrue(unstaged > 0);
+        Optional<RevFeature> revFeature = cli.getGeogit().command(RevObjectParse.class)
+                .setRefSpec("HEAD:busstops/507464799").call(RevFeature.class);
+        assertTrue(revFeature.isPresent());
 
     }
 
@@ -90,7 +93,7 @@ public class OSMUnmapTest extends Assert {
         assertTrue(unmapped.isPresent());
         ImmutableList<Optional<Object>> values = unmapped.get().getValues();
         assertEquals("POINT (7.1959361 50.739397)", values.get(6).get().toString());
-        assertEquals("name_alias:Gielgen", values.get(3).get().toString());
+        assertEquals("name:Gielgen", values.get(3).get().toString());
 
     }
 

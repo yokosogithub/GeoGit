@@ -11,6 +11,7 @@ import static com.google.common.base.Preconditions.checkState;
 import java.io.File;
 import java.util.List;
 
+import org.geogit.api.ObjectId;
 import org.geogit.cli.AbstractCommand;
 import org.geogit.cli.CLICommand;
 import org.geogit.cli.GeogitCLI;
@@ -18,6 +19,8 @@ import org.geogit.osm.internal.EmptyOSMDownloadException;
 import org.geogit.osm.internal.Mapping;
 import org.geogit.osm.internal.OSMDownloadReport;
 import org.geogit.osm.internal.OSMImportOp;
+import org.geogit.osm.internal.log.OSMMappingLogEntry;
+import org.geogit.osm.internal.log.WriteOSMMappingEntries;
 
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.Parameters;
@@ -42,18 +45,25 @@ public class OSMImport extends AbstractCommand implements CLICommand {
     @Parameter(names = { "--mapping" }, description = "The file that contains the data mapping to use")
     public String mappingFile;
 
+    @Parameter(names = "--message", description = "Message for the commit to create.")
+    public String message;
+
     @Override
     protected void runInternal(GeogitCLI cli) throws Exception {
         checkState(cli.getGeogit() != null, "Not a geogit repository: " + cli.getPlatform().pwd());
         checkArgument(apiUrl != null && apiUrl.size() == 1, "One file must be specified");
         File importFile = new File(apiUrl.get(0));
         checkArgument(importFile.exists(), "The specified OSM data file does not exist");
+        checkArgument(!(message != null && noRaw), "cannot use --message if using --no-raw");
+        checkArgument(message == null || mappingFile != null,
+                "Cannot use --message if not using --mapping");
 
         Mapping mapping = null;
         if (mappingFile != null) {
             mapping = Mapping.fromFile(mappingFile);
         }
 
+        ObjectId oldTreeId = cli.getGeogit().getRepository().getWorkingTree().getTree().getId();
         try {
             Optional<OSMDownloadReport> report = cli.getGeogit().command(OSMImportOp.class)
                     .setDataSource(importFile.getAbsolutePath()).setMapping(mapping)
@@ -64,6 +74,15 @@ public class OSMImport extends AbstractCommand implements CLICommand {
                         "Some elements in the by specified file could not be processed.\nProcessed entities: "
                                 + report.get().getCount() + "\nWrong or uncomplete elements: "
                                 + report.get().getUnpprocessedCount());
+            }
+            if (mapping != null && !noRaw) {
+                cli.execute("add");
+                message = message == null ? "Updated OSM data" : message;
+                cli.execute("commit", "-m", message);
+                ObjectId newTreeId = cli.getGeogit().getRepository().getWorkingTree().getTree()
+                        .getId();
+                cli.getGeogit().command(WriteOSMMappingEntries.class).setMapping(mapping)
+                        .setMappingLogEntry(new OSMMappingLogEntry(oldTreeId, newTreeId)).call();
             }
 
         } catch (EmptyOSMDownloadException e) {

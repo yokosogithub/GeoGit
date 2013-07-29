@@ -19,8 +19,9 @@ import org.geogit.api.TestPlatform;
 import org.geogit.api.porcelain.LogOp;
 import org.geogit.cli.GeogitCLI;
 import org.geogit.osm.internal.OSMImportOp;
-import org.geogit.osm.internal.OSMLogEntry;
-import org.geogit.osm.internal.ReadOSMLogEntries;
+import org.geogit.osm.internal.log.OSMLogEntry;
+import org.geogit.osm.internal.log.ReadOSMLogEntries;
+import org.geogit.osm.internal.log.ResolveOSMMappingLogFolder;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Ignore;
@@ -156,7 +157,7 @@ public class OSMDownloadTest extends Assert {
         assertTrue(tree.isPresent());
     }
 
-    @Ignore
+    // @Ignore
     @Test
     public void testDownloadWithBBoxAndMapping() throws Exception {
         String mappingFilename = OSMMap.class.getResource("mapping.json").getFile();
@@ -167,6 +168,13 @@ public class OSMDownloadTest extends Assert {
         assertTrue(tree.isPresent());
         tree = cli.getGeogit().getRepository().getRootTreeChild("onewaystreets");
         assertTrue(tree.isPresent());
+        // check it has created mapping log files
+        File osmMapFolder = cli.getGeogit().command(ResolveOSMMappingLogFolder.class).call();
+        File file = new File(osmMapFolder, "onewaystreets");
+        assertTrue(file.exists());
+        file = new File(osmMapFolder, cli.getGeogit().getRepository().getWorkingTree().getTree()
+                .getId().toString());
+        assertTrue(file.exists());
     }
 
     @Test

@@ -21,6 +21,10 @@ import org.geogit.api.plumbing.LsTreeOp;
 import org.geogit.api.plumbing.LsTreeOp.Strategy;
 import org.geogit.api.plumbing.RevObjectParse;
 import org.geogit.api.plumbing.RevParse;
+import org.geogit.api.porcelain.AddOp;
+import org.geogit.api.porcelain.CommitOp;
+import org.geogit.osm.internal.log.OSMMappingLogEntry;
+import org.geogit.osm.internal.log.WriteOSMMappingEntries;
 import org.geotools.feature.simple.SimpleFeatureBuilder;
 import org.opengis.feature.Feature;
 import org.opengis.feature.simple.SimpleFeature;
@@ -47,6 +51,11 @@ public class OSMMapOp extends AbstractGeoGitOp<RevTree> {
     private Mapping mapping;
 
     /**
+     * The message to use for the commit to create
+     */
+    private String message;
+
+    /**
      * Sets the mapping to use
      * 
      * @param mapping the mapping to use
@@ -57,10 +66,17 @@ public class OSMMapOp extends AbstractGeoGitOp<RevTree> {
         return this;
     }
 
+    public OSMMapOp setMessage(String message) {
+        this.message = message;
+        return this;
+    }
+
     @Override
     public RevTree call() {
 
         checkNotNull(mapping);
+
+        ObjectId oldTreeId = getWorkTree().getTree().getId();
 
         Iterator<Feature> nodes;
         if (mapping.canUseNodes()) {
@@ -87,6 +103,13 @@ public class OSMMapOp extends AbstractGeoGitOp<RevTree> {
             }
         }
         insertsByParent.flushAll();
+
+        ObjectId newTreeId = getWorkTree().getTree().getId();
+
+        command(AddOp.class).call();
+        command(CommitOp.class).setMessage(message).call();
+        command(WriteOSMMappingEntries.class).setMapping(mapping)
+                .setMappingLogEntry(new OSMMappingLogEntry(oldTreeId, newTreeId)).call();
 
         return getWorkTree().getTree();
 

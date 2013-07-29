@@ -2,7 +2,7 @@
  * This code is licensed under the BSD New License, available at the root
  * application directory.
  */
-package org.geogit.osm.internal;
+package org.geogit.osm.internal.log;
 
 import org.geogit.api.ObjectId;
 

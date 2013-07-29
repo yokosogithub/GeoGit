@@ -267,11 +267,20 @@ This option is only available for the ``osm import`` command, but not for the ``
 
 Be aware that, when you import using the ``--no-raw`` switch, you will not be able to use OSM operations on the imported data, since GeoGit will not consider it as OSM data. When using a mapping, the mapped data is an additional version of the data that is imported in a different tree to give a more practical alternative to the *raw* one, but that data is not guaranteed to have the necessary information to be able to reconstruct OSM entities. In short, GeoGit will not track data other than the data stored in the ``way`` and ``node`` trees as OSM data, so you should not to use the ``--no-raw`` switch if you plan to do OSM-like work on the imported data.
 
+if ``--mapping`` is used and the ``--no-raw`` switch is not, the working tree and index have to be clean, and after the import and mapping, a commit will be made. This is done to allow geoGit to keep track of mappings, so then the unmmaping operations can provide additional functionality. The comit message is automatically generated, but if you want to define your own message, you can do it using the ``--message`` option
+
+::
+
+	$ geogit osm import fiji-latest.osm.pbf --mapping mymapping.txt -message "import and map Fiji data" 
+
 - With already imported OSM data. If you imported OSM data without a mapping, you can apply it afterwards by using the ``osm map`` command followed by the mapping file, as in the example below.
 
 ::
 
 	$ geogit osm map mymapping.txt
+
+
+Also in this case, as mentioned above, a commit will be created after the mapping, and the working tree and index have to be clean before performing the mapping operation. The ``--message`` option can be used as well to set a given commit message.
 
 - When exporting OSM data. OSM data can be exported to OSM formats using the ``osm export`` command, and also to other formats using commands such as ``shp export`` or ``pg export``. In these two last cases, the feature type created in the destination file or database is the same one used it the ``way`` or ``node`` tree. That is, the default one used for storing the *raw* OSM data in GeoGit. Additional commands are available to export a mapped set of features.
 
@@ -354,13 +363,7 @@ All the work done by the unmap command takes place on the working tree. That is,
 
 In the case of ways, the ``nodes`` field will be recomputed based on the geometry. If the geometry has changed and new points have been added to the corresponding line of polygon, new nodes will be added accordingly.
 
-If the mapping you used to create the tree that now you want to unmap contained aliases (that is, field names and tag names do not match), you must pass the mappping file to the unmap command. Otherwise, it will not be able to resolve to original tag name from the field name, and will use that field name as the tag name.
-
-To pass the mapping file to the unmap command, use the ``--mapping`` option
-
-::
-
-	$ geogit unmap fire_stations --mapping mapping.json
+The unmapping operation also considers deleted features, by comparing with the state of your mapped tree just after the last mapping operation (that's the reason why a commit is created after mapping, to be able to locate that snapshot). All features that have been deleted from those that existed at that commit just after the mapping was performed, will be deleted from the canonical trees as well. A deleted way will not cause its corresponding nodes to be deleted, but only the canonical representation of the way itself.
 
 An OSM workflow using GeoGit
 -----------------------------

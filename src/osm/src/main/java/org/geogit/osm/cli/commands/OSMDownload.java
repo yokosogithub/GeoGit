@@ -15,6 +15,7 @@ import java.util.Iterator;
 import java.util.List;
 
 import org.geogit.api.GeoGIT;
+import org.geogit.api.ObjectId;
 import org.geogit.api.Ref;
 import org.geogit.api.RevCommit;
 import org.geogit.api.SymRef;
@@ -25,15 +26,17 @@ import org.geogit.api.porcelain.LogOp;
 import org.geogit.cli.AbstractCommand;
 import org.geogit.cli.CLICommand;
 import org.geogit.cli.GeogitCLI;
-import org.geogit.osm.internal.AddOSMLogEntry;
 import org.geogit.osm.internal.EmptyOSMDownloadException;
 import org.geogit.osm.internal.Mapping;
 import org.geogit.osm.internal.OSMDownloadReport;
 import org.geogit.osm.internal.OSMImportOp;
-import org.geogit.osm.internal.OSMLogEntry;
-import org.geogit.osm.internal.ReadOSMFilterFile;
-import org.geogit.osm.internal.ReadOSMLogEntries;
-import org.geogit.osm.internal.WriteOSMFilterFile;
+import org.geogit.osm.internal.log.AddOSMLogEntry;
+import org.geogit.osm.internal.log.OSMLogEntry;
+import org.geogit.osm.internal.log.OSMMappingLogEntry;
+import org.geogit.osm.internal.log.ReadOSMFilterFile;
+import org.geogit.osm.internal.log.ReadOSMLogEntries;
+import org.geogit.osm.internal.log.WriteOSMFilterFile;
+import org.geogit.osm.internal.log.WriteOSMMappingEntries;
 
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.Parameters;
@@ -80,6 +83,9 @@ public class OSMDownload extends AbstractCommand implements CLICommand {
 
     @Parameter(names = "--saveto", description = "Directory where to save the dowloaded OSM data files.")
     public File saveFile;
+
+    @Parameter(names = "--message", description = "Message for the commit to create.")
+    public String message;
 
     @Parameter(names = { "--keep-files", "-k" }, description = "If specified, downloaded files are kept in the --saveto folder")
     public boolean keepFiles = false;
@@ -147,6 +153,7 @@ public class OSMDownload extends AbstractCommand implements CLICommand {
         }
 
         try {
+            ObjectId oldTreeId = cli.getGeogit().getRepository().getWorkingTree().getTree().getId();
             Optional<OSMDownloadReport> report = op.setFilter(filter)
                     .setProgressListener(cli.getProgressListener()).call();
 
@@ -164,12 +171,16 @@ public class OSMDownload extends AbstractCommand implements CLICommand {
             cli.execute("add");
             String message = "Updated OSM data";
             cli.execute("commit", "-m", message);
-            OSMLogEntry entry = new OSMLogEntry(cli.getGeogit().getRepository().getWorkingTree()
-                    .getTree().getId(), report.get().getLatestChangeset(), report.get()
-                    .getLatestTimestamp());
+            ObjectId newTreeId = cli.getGeogit().getRepository().getWorkingTree().getTree().getId();
+            OSMLogEntry entry = new OSMLogEntry(newTreeId, report.get().getLatestChangeset(),
+                    report.get().getLatestTimestamp());
             cli.getGeogit().command(AddOSMLogEntry.class).setEntry(entry).call();
             cli.getGeogit().command(WriteOSMFilterFile.class).setEntry(entry).setFilterCode(filter)
                     .call();
+            if (mapping != null) {
+                cli.getGeogit().command(WriteOSMMappingEntries.class).setMapping(mapping)
+                        .setMappingLogEntry(new OSMMappingLogEntry(oldTreeId, newTreeId)).call();
+            }
 
         } catch (EmptyOSMDownloadException e) {
             throw new IllegalArgumentException("The specified filter did not return any element.\n"
@@ -236,7 +247,7 @@ public class OSMDownload extends AbstractCommand implements CLICommand {
         cli.getConsole().println();
         if (cli.getGeogit().getRepository().getWorkingTree().countUnstaged(null).getCount() != 0) {
             cli.execute("add");
-            String message = "Updated OSM data";
+            message = message == null ? "Updated OSM data" : message;
             cli.execute("commit", "-m", message);
             cli.getGeogit().command(AddOSMLogEntry.class).setEntry(entry).call();
             cli.getGeogit().command(WriteOSMFilterFile.class).setEntry(entry)
