@@ -81,3 +81,5 @@ je.evictor.nodesPerScan = 100
 # Needs to be true if the environment is on a NFS mount
 je.log.useODSYNC = false
 
+# Force statistics logging off as it causes problems in GeoGit unit tests.
+je.stats.collect = false
