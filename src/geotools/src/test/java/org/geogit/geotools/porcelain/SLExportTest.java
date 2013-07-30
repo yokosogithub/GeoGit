@@ -14,7 +14,7 @@ import org.geogit.api.porcelain.CommitOp;
 import org.geogit.cli.GeogitCLI;
 import org.geogit.test.integration.RepositoryTestCase;
 import org.geotools.data.AbstractDataStoreFactory;
-import org.junit.BeforeClass;
+import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -29,10 +29,10 @@ public class SLExportTest extends RepositoryTestCase {
 
     private GeogitCLI cli;
 
-    private static AbstractDataStoreFactory factory;
+    private AbstractDataStoreFactory factory;
 
-    @BeforeClass
-    public static void oneTimeSetup() throws Exception {
+    @Before
+    public void oneTimeSetup() throws Exception {
         factory = TestHelper.createTestFactory();
     }
 
