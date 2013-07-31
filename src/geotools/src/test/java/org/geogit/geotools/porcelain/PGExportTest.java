@@ -128,7 +128,7 @@ public class PGExportTest extends RepositoryTestCase {
         PGExport exportCommand = new PGExport();
         exportCommand.args = Arrays.asList(null, "invalidTable");
         exportCommand.dataStoreFactory = factory;
-        exception.expect(CommandFailedException.class);
+        exception.expect(IllegalArgumentException.class);
         exportCommand.run(cli);
     }
 

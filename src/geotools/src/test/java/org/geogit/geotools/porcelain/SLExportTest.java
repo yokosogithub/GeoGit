@@ -136,7 +136,7 @@ public class SLExportTest extends RepositoryTestCase {
         SLExport exportCommand = new SLExport();
         exportCommand.args = Arrays.asList(null, "invalidTable");
         exportCommand.dataStoreFactory = factory;
-        exception.expect(CommandFailedException.class);
+        exception.expect(IllegalArgumentException.class);
         exportCommand.run(cli);
     }
 
