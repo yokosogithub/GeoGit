@@ -21,7 +21,16 @@ import java.util.concurrent.ThreadFactory;
 
 import org.geogit.api.AbstractGeoGitOp;
 import org.geogit.api.NodeRef;
+import org.geogit.api.ObjectId;
 import org.geogit.api.RevFeature;
+import org.geogit.api.hooks.Hookable;
+import org.geogit.api.porcelain.AddOp;
+import org.geogit.api.porcelain.CommitOp;
+import org.geogit.osm.internal.log.AddOSMLogEntry;
+import org.geogit.osm.internal.log.OSMLogEntry;
+import org.geogit.osm.internal.log.OSMMappingLogEntry;
+import org.geogit.osm.internal.log.WriteOSMFilterFile;
+import org.geogit.osm.internal.log.WriteOSMMappingEntries;
 import org.opengis.feature.Feature;
 import org.opengis.feature.simple.SimpleFeature;
 import org.openstreetmap.osmosis.core.container.v0_6.EntityContainer;
@@ -54,6 +63,7 @@ import crosby.binary.osmosis.OsmosisReader;
  * overpass api, or from a file with OSM data
  * 
  */
+@Hookable(name = "osmimport")
 public class OSMImportOp extends AbstractGeoGitOp<Optional<OSMDownloadReport>> {
 
     /**
@@ -76,6 +86,8 @@ public class OSMImportOp extends AbstractGeoGitOp<Optional<OSMDownloadReport>> {
 
     private boolean noRaw;
 
+    private String message;
+
     /**
      * Sets the filter to use. It uses the overpass Query Language
      * 
@@ -84,6 +96,17 @@ public class OSMImportOp extends AbstractGeoGitOp<Optional<OSMDownloadReport>> {
      */
     public OSMImportOp setFilter(String filter) {
         this.filter = filter;
+        return this;
+    }
+
+    /**
+     * Sets the message to use if a commit is created
+     * 
+     * @param message the commit message
+     * @return {@code this}
+     */
+    public OSMImportOp setMessage(String message) {
+        this.message = message;
         return this;
     }
 
@@ -158,6 +181,8 @@ public class OSMImportOp extends AbstractGeoGitOp<Optional<OSMDownloadReport>> {
                 .setNameFormat("osm-data-download-thread-%d").build();
         final ExecutorService executor = Executors.newFixedThreadPool(3, threadFactory);
 
+        ObjectId oldTreeId = getWorkTree().getTree().getId();
+
         File file;
         if (urlOrFilepath.startsWith("http")) {
             getProgressListener().setDescription("Downloading data...");
@@ -197,6 +222,28 @@ public class OSMImportOp extends AbstractGeoGitOp<Optional<OSMDownloadReport>> {
 
         if (urlOrFilepath.startsWith("http") && !keepFile) {
             downloadFile.delete();
+        }
+
+        if (report != null) {
+            ObjectId newTreeId = getWorkTree().getTree().getId();
+            if (!noRaw) {
+                if (mapping != null || filter != null) {
+                    command(AddOp.class).call();
+                    command(CommitOp.class).setMessage(message).call();
+                    OSMLogEntry entry = new OSMLogEntry(newTreeId, report.getLatestChangeset(),
+                            report.getLatestTimestamp());
+                    command(AddOSMLogEntry.class).setEntry(entry).call();
+                    if (filter != null) {
+                        command(WriteOSMFilterFile.class).setEntry(entry).setFilterCode(filter)
+                                .call();
+                    }
+                    if (mapping != null) {
+                        command(WriteOSMMappingEntries.class).setMapping(mapping)
+                                .setMappingLogEntry(new OSMMappingLogEntry(oldTreeId, newTreeId))
+                                .call();
+                    }
+                }
+            }
         }
 
         return Optional.fromNullable(report);

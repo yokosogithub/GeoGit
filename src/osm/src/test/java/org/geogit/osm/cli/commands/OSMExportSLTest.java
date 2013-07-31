@@ -15,11 +15,11 @@ import jline.UnsupportedTerminal;
 import jline.console.ConsoleReader;
 
 import org.geogit.api.Platform;
+import org.geogit.api.RevTree;
 import org.geogit.api.TestPlatform;
+import org.geogit.api.plumbing.RevObjectParse;
 import org.geogit.cli.GeogitCLI;
-import org.geogit.osm.cli.commands.OSMMap;
 import org.geogit.osm.internal.OSMImportOp;
-import org.geogit.repository.WorkingTree;
 import org.junit.Assert;
 import org.junit.Assume;
 import org.junit.Before;
@@ -27,6 +27,8 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 import org.sqlite.SQLiteConfig;
+
+import com.google.common.base.Optional;
 
 public class OSMExportSLTest extends Assert {
 
@@ -47,7 +49,6 @@ public class OSMExportSLTest extends Assert {
         cli.execute("config", "user.name", "Gabriel Roldan");
         cli.execute("config", "user.email", "groldan@opengeo.org");
         assertTrue(new File(workingDirectory, ".geogit").exists());
-
 
         // Use in-memory database to test whether we can load Spatialite extension
         Connection connection = null;
@@ -80,11 +81,16 @@ public class OSMExportSLTest extends Assert {
         String filename = OSMImportOp.class.getResource("ways.xml").getFile();
         File file = new File(filename);
         cli.execute("osm", "import", file.getAbsolutePath());
-        WorkingTree workTree = cli.getGeogit().getRepository().getWorkingTree();
-        long unstaged = workTree.countUnstaged("way").getCount();
-        assertTrue(unstaged > 0);
-        unstaged = workTree.countUnstaged("node").getCount();
-        assertTrue(unstaged > 0);
+        cli.execute("add");
+        cli.execute("commit", "-m", "message");
+        Optional<RevTree> tree = cli.getGeogit().command(RevObjectParse.class)
+                .setRefSpec("HEAD:node").call(RevTree.class);
+        assertTrue(tree.isPresent());
+        assertTrue(tree.get().size() > 0);
+        tree = cli.getGeogit().command(RevObjectParse.class).setRefSpec("HEAD:way")
+                .call(RevTree.class);
+        assertTrue(tree.isPresent());
+        assertTrue(tree.get().size() > 0);
         String mappingFilename = OSMMap.class.getResource("mapping.json").getFile();
         File mappingFile = new File(mappingFilename);
         File exportFile = new File(tempFolder.getRoot(), "export.sqlite");
@@ -93,7 +99,8 @@ public class OSMExportSLTest extends Assert {
         assertTrue(exportFile.exists());
         cli.execute("sl", "import", "-t", "onewaystreets", "--database",
                 exportFile.getAbsolutePath());
-        unstaged = workTree.countUnstaged("onewaystreets").getCount();
+        long unstaged = cli.getGeogit().getRepository().getWorkingTree()
+                .countUnstaged("onewaystreets").getCount();
         assertTrue(unstaged > 0);
     }
 

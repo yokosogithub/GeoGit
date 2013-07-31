@@ -51,12 +51,12 @@ public class CreateOSMChangesetTest extends Assert {
         File file = new File(filename);
         cli.execute("osm", "import", file.getAbsolutePath());
         cli.execute("add");
-        cli.execute("commit", "-m", "commit1");
+        cli.execute("commit", "-m", "message");
         filename = CreateOSMChangesetOpTest.class.getResource("nodes_for_changeset2.xml").getFile();
         file = new File(filename);
         cli.execute("osm", "import", file.getAbsolutePath());
         cli.execute("add");
-        cli.execute("commit", "-m", "commit2");
+        cli.execute("commit", "-m", "message2");
         File changesetFile = new File(tempFolder.getRoot(), "changesets.xml");
         cli.execute("osm", "create-changeset", "HEAD", "HEAD~1", "-f",
                 changesetFile.getAbsolutePath());
@@ -93,15 +93,16 @@ public class CreateOSMChangesetTest extends Assert {
 
     }
 
-    @Test
-    public void testCreateChangesetsWithoutCommitting() throws Exception {
-        String filename = CreateOSMChangesetOpTest.class.getResource("nodes.xml").getFile();
-        File file = new File(filename);
-        cli.execute("osm", "import", file.getAbsolutePath());
-        File changesetFile = new File(tempFolder.getRoot(), "changesets.xml");
-        cli.execute("osm", "create-changeset", "-f", changesetFile.getAbsolutePath());
-        assertTrue(changesetFile.exists());
-        assertTrue(changesetFile.length() > 0);// TODO??
-
-    }
+    // @Test
+    // public void testCreateChangesetsWithoutCommitting() throws Exception {
+    // String filename = CreateOSMChangesetOpTest.class.getResource("nodes.xml").getFile();
+    // File file = new File(filename);
+    // cli.execute("osm", "import", file.getAbsolutePath());
+    // File changesetFile = new File(tempFolder.getRoot(), "changesets.xml");
+    // cli.execute("osm", "create-changeset", "-f",
+    // changesetFile.getAbsolutePath());
+    // assertTrue(changesetFile.exists());
+    // assertTrue(changesetFile.length() > 0);// TODO??
+    //
+    // }
 }

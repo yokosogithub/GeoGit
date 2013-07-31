@@ -12,11 +12,11 @@ import jline.console.ConsoleReader;
 
 import org.geogit.api.Platform;
 import org.geogit.api.RevFeature;
+import org.geogit.api.RevTree;
 import org.geogit.api.TestPlatform;
 import org.geogit.api.plumbing.RevObjectParse;
 import org.geogit.cli.GeogitCLI;
 import org.geogit.osm.internal.OSMImportOp;
-import org.geogit.repository.WorkingTree;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Rule;
@@ -52,48 +52,31 @@ public class OSMUnmapTest extends Assert {
                 .getFile();
         File mappingFile = new File(mappingFilename);
         cli.execute("osm", "import", file.getAbsolutePath(), "--mapping",
-                mappingFile.getAbsolutePath(), "--no-raw");
-        WorkingTree workTree = cli.getGeogit().getRepository().getWorkingTree();
-        long unstaged = workTree.countUnstaged("busstops").getCount();
-        assertTrue(unstaged > 0);
+                mappingFile.getAbsolutePath());
         Optional<RevFeature> revFeature = cli.getGeogit().command(RevObjectParse.class)
-                .setRefSpec("HEAD:busstops/507464799").call(RevFeature.class);
+                .setRefSpec("WORK_HEAD:busstops/507464799").call(RevFeature.class);
         assertTrue(revFeature.isPresent());
-
-    }
-
-    @Test
-    public void testUnMappingUsingMappingFile() throws Exception {
-        String mappingFilename = OSMUnmap.class.getResource("nodes_mapping_with_aliases.json")
-                .getFile();
-        File mappingFile = new File(mappingFilename);
-        cli.execute("osm", "unmap", "busstops", "--mapping", mappingFile.getAbsolutePath());
-        WorkingTree workTree = cli.getGeogit().getRepository().getWorkingTree();
-        long unstaged = workTree.countUnstaged("node").getCount();
-        assertTrue(unstaged > 0);
-
-        Optional<RevFeature> unmapped = cli.getGeogit().command(RevObjectParse.class)
-                .setRefSpec("WORK_HEAD:node/507464799").call(RevFeature.class);
-        assertTrue(unmapped.isPresent());
-        ImmutableList<Optional<Object>> values = unmapped.get().getValues();
-        assertEquals("POINT (7.1959361 50.739397)", values.get(6).get().toString());
-        assertEquals("name:Gielgen", values.get(3).get().toString());
-
+        cli.getGeogit().getRepository().getWorkingTree().delete("node");
+        Optional<RevTree> tree = cli.getGeogit().command(RevObjectParse.class)
+                .setRefSpec("WORK_HEAD:node").call(RevTree.class);
+        assertFalse(tree.isPresent());
     }
 
     @Test
     public void testUnMapping() throws Exception {
         cli.execute("osm", "unmap", "busstops");
-        WorkingTree workTree = cli.getGeogit().getRepository().getWorkingTree();
-        long unstaged = workTree.countUnstaged("node").getCount();
-        assertTrue(unstaged > 0);
-
+        Optional<RevTree> tree = cli.getGeogit().command(RevObjectParse.class)
+                .setRefSpec("HEAD:node").call(RevTree.class);
+        assertTrue(tree.isPresent());
+        assertTrue(tree.get().size() > 0);
         Optional<RevFeature> unmapped = cli.getGeogit().command(RevObjectParse.class)
-                .setRefSpec("WORK_HEAD:node/507464799").call(RevFeature.class);
+                .setRefSpec("HEAD:node/507464799").call(RevFeature.class);
         assertTrue(unmapped.isPresent());
         ImmutableList<Optional<Object>> values = unmapped.get().getValues();
         assertEquals("POINT (7.1959361 50.739397)", values.get(6).get().toString());
-        assertEquals("name_alias:Gielgen", values.get(3).get().toString());
+        assertEquals(
+                "VRS:gemeinde:BONN|VRS:ortsteil:Hoholz|VRS:ref:68566|bus:yes|highway:bus_stop|name:Gielgen|public_transport:platform",
+                values.get(3).get().toString());
 
     }
 

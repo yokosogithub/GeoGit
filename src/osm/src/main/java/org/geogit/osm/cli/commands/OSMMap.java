@@ -5,6 +5,9 @@
 
 package org.geogit.osm.cli.commands;
 
+import static com.google.common.base.Preconditions.checkState;
+
+import java.io.File;
 import java.util.List;
 
 import jline.console.ConsoleReader;
@@ -33,6 +36,9 @@ public class OSMMap extends AbstractCommand implements CLICommand {
     @Parameter(description = "<file>")
     public List<String> args;
 
+    @Parameter(names = { "--message", "-m" }, description = "The message for the commit to create")
+    public String message;
+
     private GeoGIT geogit;
 
     /**
@@ -52,6 +58,10 @@ public class OSMMap extends AbstractCommand implements CLICommand {
             throw new CommandFailedException();
         }
 
+        checkState(cli.getGeogit().getRepository().getIndex().countStaged(null)
+                + cli.getGeogit().getRepository().getWorkingTree().countUnstaged(null) == 0,
+                "Working tree and index are not clean");
+
         String mappingFilepath = args.get(0);
 
         Mapping mapping = Mapping.fromFile(mappingFilepath);
@@ -60,11 +70,15 @@ public class OSMMap extends AbstractCommand implements CLICommand {
 
         ObjectId oldTreeId = geogit.getRepository().getWorkingTree().getTree().getId();
 
-        ObjectId newTreeId = geogit.command(OSMMapOp.class).setMapping(mapping).call().getId();
+        message = message == null ? "Applied mapping " + new File(mappingFilepath).getName()
+                : message;
+
+        ObjectId newTreeId = geogit.command(OSMMapOp.class).setMapping(mapping).setMessage(message)
+                .call().getId();
 
         ConsoleReader console = cli.getConsole();
         if (newTreeId.equals(oldTreeId)) {
-            console.println("No features matched the specified filter.\n"
+            console.println("No features matched the specified filter, or they provided no updated data.\n"
                     + "No changes have been made to the working tree");
         } else {
             // print something?
