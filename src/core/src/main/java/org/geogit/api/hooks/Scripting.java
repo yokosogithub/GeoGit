@@ -108,8 +108,10 @@ public class Scripting {
                 int exitCode = process.waitFor();
                 if (exitCode != 0) {
                     // the script exited with non-zero code, so we indicate it throwing the
-                    // corresponding exception
-                    throw new CannotRunGeogitOperationException();
+                    // corresponding exception.
+                    // TODO: get message?
+                    throw new CannotRunGeogitOperationException(
+                            "Hook script exited with non-zero error code");
                 }
             } catch (IOException e) {
                 return; // can't run scripts, so there is nothing that blocks running the

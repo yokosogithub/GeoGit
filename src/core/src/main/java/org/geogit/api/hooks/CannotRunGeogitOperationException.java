@@ -8,10 +8,6 @@ public class CannotRunGeogitOperationException extends Exception {
 
     private static final long serialVersionUID = 1L;
 
-    public CannotRunGeogitOperationException() {
-        // TODO Auto-generated constructor stub
-    }
-
     /**
      * Constructs a new {@code CannotRunGeogitOperationException} with the given message.
      * 
