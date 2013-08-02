@@ -172,6 +172,7 @@ public class OSMImportOp extends AbstractGeoGitOp<Optional<OSMDownloadReport>> {
         return this;
     }
 
+    @SuppressWarnings("deprecation")
     @Override
     public Optional<OSMDownloadReport> call() {
 
@@ -228,8 +229,11 @@ public class OSMImportOp extends AbstractGeoGitOp<Optional<OSMDownloadReport>> {
             ObjectId newTreeId = getWorkTree().getTree().getId();
             if (!noRaw) {
                 if (mapping != null || filter != null) {
-                    command(AddOp.class).call();
-                    command(CommitOp.class).setMessage(message).call();
+                    getProgressListener().setDescription("Staging features...");
+                    command(AddOp.class).setProgressListener(getProgressListener()).call();
+                    getProgressListener().setDescription("Committing features...");
+                    command(CommitOp.class).setMessage(message)
+                            .setProgressListener(getProgressListener()).call();
                     OSMLogEntry entry = new OSMLogEntry(newTreeId, report.getLatestChangeset(),
                             report.getLatestTimestamp());
                     command(AddOSMLogEntry.class).setEntry(entry).call();

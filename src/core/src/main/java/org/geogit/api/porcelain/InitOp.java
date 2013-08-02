@@ -8,12 +8,12 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.net.URL;
-import java.nio.file.Files;
 
 import org.geogit.api.AbstractGeoGitOp;
 import org.geogit.api.ObjectId;
@@ -149,7 +149,7 @@ public class InitOp extends AbstractGeoGitOp<Repository> {
     private void copyHookFile(String folder, String file) throws IOException {
 
         URL url = Resources.getResource("org/geogit/api/hooks/" + file);
-        OutputStream os = Files.newOutputStream(new File(folder, file).toPath());
+        OutputStream os = new FileOutputStream(new File(folder, file).getAbsolutePath());
         Resources.copy(url, os);
         os.close();
 

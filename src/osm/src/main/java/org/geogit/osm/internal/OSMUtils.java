@@ -16,6 +16,14 @@ import com.google.common.collect.Lists;
 
 public class OSMUtils {
 
+    public static final String OSM_FETCH_BRANCH = "OSM_FETCH";
+
+    public static final String DEFAULT_API_ENDPOINT = "http://overpass-api.de/api/interpreter";
+
+    public static final String FR_API_ENDPOINT = "http://api.openstreetmap.fr/oapi/interpreter/";
+
+    public static final String RU_API_ENDPOINT = "http://overpass.osm.rambler.ru/";
+
     public static final String NODE_TYPE_NAME = "node";
 
     public static final String WAY_TYPE_NAME = "way";
