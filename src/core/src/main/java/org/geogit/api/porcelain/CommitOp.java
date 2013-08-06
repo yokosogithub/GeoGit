@@ -28,7 +28,7 @@ import org.geogit.api.plumbing.ResolveTreeish;
 import org.geogit.api.plumbing.RevObjectParse;
 import org.geogit.api.plumbing.UpdateRef;
 import org.geogit.api.plumbing.UpdateSymRef;
-import org.geogit.api.plumbing.WriteTree;
+import org.geogit.api.plumbing.WriteTree2;
 import org.geogit.api.plumbing.merge.Conflict;
 import org.geogit.api.plumbing.merge.ConflictsReadOp;
 import org.geogit.api.plumbing.merge.ReadMergeCommitMessageOp;
@@ -285,9 +285,16 @@ public class CommitOp extends AbstractGeoGitOp<RevCommit> {
         for (String st : pathFilters) {
             command(AddOp.class).addPattern(st).call();
         }
-        ObjectId newTreeId = command(WriteTree.class).setOldRoot(resolveOldRoot())
-                .setPathFilter(pathFilters).setProgressListener(subProgress(writeTreeProgress))
-                .call();
+        ObjectId newTreeId;
+        {
+            WriteTree2 writeTree = command(WriteTree2.class);
+            Supplier<RevTree> oldRoot = resolveOldRoot();
+            writeTree.setOldRoot(oldRoot).setProgressListener(subProgress(writeTreeProgress));
+            if (!pathFilters.isEmpty()) {
+                writeTree.setPathFilter(pathFilters);
+            }
+            newTreeId = writeTree.call();
+        }
 
         if (getProgressListener().isCanceled()) {
             return null;
@@ -327,6 +334,7 @@ public class CommitOp extends AbstractGeoGitOp<RevCommit> {
             }
             commit = cb.build();
         }
+
         if (getProgressListener().isCanceled()) {
             return null;
         }

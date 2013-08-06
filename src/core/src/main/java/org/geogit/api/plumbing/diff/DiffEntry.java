@@ -206,4 +206,16 @@ public class DiffEntry {
     public int hashCode() {
         return Objects.hashCode(oldObject, newObject);
     }
+
+    public boolean isDelete() {
+        return ChangeType.REMOVED.equals(changeType());
+    }
+
+    public boolean isAdd() {
+        return ChangeType.ADDED.equals(changeType());
+    }
+
+    public boolean isChange() {
+        return ChangeType.MODIFIED.equals(changeType());
+    }
 }

@@ -262,4 +262,9 @@ public class TransactionStagingDatabase implements StagingDatabase {
         database.removeConflicts(txNamespace);
     }
 
+    @Override
+    public void deleteAll(Iterator<ObjectId> ids) {
+        database.deleteAll(ids);        
+    }
+
 }

@@ -5,6 +5,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -62,7 +63,7 @@ public class HeapObjectDatabse extends AbstractObjectDatabase implements ObjectD
         if (isOpen()) {
             return;
         }
-        Map<ObjectId, byte[]> map = Maps.newTreeMap();
+        Map<ObjectId, byte[]> map = Maps.newConcurrentMap();
         objects = Collections.synchronizedMap(map);
     }
 
@@ -133,6 +134,13 @@ public class HeapObjectDatabse extends AbstractObjectDatabase implements ObjectD
         }
         objects.put(id, rawData);
         return true;
+    }
+
+    @Override
+    public void deleteAll(Iterator<ObjectId> ids) {
+        while(ids.hasNext()){
+            this.objects.remove(ids.next());
+        }
     }
 
 }

@@ -111,7 +111,9 @@ public class WriteTree extends AbstractGeoGitOp<ObjectId> {
     /**
      * Executes the write tree operation.
      * 
-     * @return the new root tree id
+     * @return the new root tree id, the current HEAD tree id if there are no differences between
+     *         the index and the HEAD, or {@code null} if the operation has been cancelled (as
+     *         indicated by the {@link #getProgressListener() progress listener}.
      */
     @Override
     public ObjectId call() {
