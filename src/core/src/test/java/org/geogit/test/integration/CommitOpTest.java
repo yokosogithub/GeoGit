@@ -508,11 +508,11 @@ public class CommitOpTest extends RepositoryTestCase {
 
         RevCommit commit = geogit.command(CommitOp.class).call();
 
-        insert(points3);
+        insertAndAdd(points3);
 
-        insert(lines1);
-        insert(lines2);
-        insert(lines3);
+        insertAndAdd(lines1);
+        insertAndAdd(lines2);
+        insertAndAdd(lines3);
 
         List<String> filters = Arrays.asList("Points/Points.3", "Lines/Lines.1", "Lines/Lines.3");
         commit = geogit.command(CommitOp.class).setPathFilters(filters).call();

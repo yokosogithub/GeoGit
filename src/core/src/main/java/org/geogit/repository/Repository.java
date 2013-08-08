@@ -16,6 +16,7 @@ import org.geogit.api.ObjectId;
 import org.geogit.api.Ref;
 import org.geogit.api.RevCommit;
 import org.geogit.api.RevFeature;
+import org.geogit.api.RevObject;
 import org.geogit.api.RevTree;
 import org.geogit.api.plumbing.FindTreeChild;
 import org.geogit.api.plumbing.RefParse;
@@ -192,12 +193,11 @@ public class Repository implements CommandLocator {
      */
     public boolean commitExists(final ObjectId id) {
         try {
-            getObjectDatabase().getCommit(id);
+            RevObject revObject = getObjectDatabase().get(id);
+            return revObject instanceof RevCommit;
         } catch (IllegalArgumentException e) {
             return false;
         }
-
-        return true;
     }
 
     /**

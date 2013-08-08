@@ -45,6 +45,8 @@ public class DiffTreeWalk {
 
     private boolean reportTrees;
 
+    private boolean recursive;
+
     public DiffTreeWalk(final ObjectDatabase db, final RevTree fromRootTree,
             final RevTree toRootTree) {
         Preconditions.checkNotNull(db);
@@ -53,6 +55,7 @@ public class DiffTreeWalk {
         this.objectDb = db;
         this.fromRootTree = fromRootTree;
         this.toRootTree = toRootTree;
+        this.recursive = true;
     }
 
     public void addFilter(final String pathPrefix) {
@@ -74,6 +77,14 @@ public class DiffTreeWalk {
      */
     public void setReportTrees(boolean reportTrees) {
         this.reportTrees = reportTrees;
+    }
+
+    /**
+     * Sets whether to return differences recursively ({@code true} or just for direct children (
+     * {@code false}. Defaults to {@code true}
+     */
+    public void setRecursive(boolean recursive) {
+        this.recursive = recursive;
     }
 
     public Iterator<DiffEntry> get() {
@@ -128,7 +139,7 @@ public class DiffTreeWalk {
         // TODO: pass pathFilter to TreeDiffEntryIterator so it ignores inner trees where the path
         // is guaranteed not to be present
         Iterator<DiffEntry> iterator = new TreeDiffEntryIterator(oldRef, newRef, oldTree, newTree,
-                reportTrees, objectDb);
+                reportTrees, recursive, objectDb);
 
         // boolean comparingTree = (oldRef == null ? newRef : oldRef).getType().equals(TYPE.TREE);
         // if (reportTrees && comparingTree && !Objects.equal(oldRef, newRef)) {

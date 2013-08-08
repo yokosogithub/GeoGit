@@ -87,6 +87,7 @@ public abstract class AbstractShpCommand implements CLICommand {
         Map<String, Serializable> params = Maps.newHashMap();
         params.put(ShapefileDataStoreFactory.URLP.key, new File(shapefile).toURI().toURL());
         params.put(ShapefileDataStoreFactory.NAMESPACEP.key, "http://www.opengis.net/gml");
+        params.put(ShapefileDataStoreFactory.CREATE_SPATIAL_INDEX.key, Boolean.FALSE);
 
         if (!dataStoreFactory.canProcess(params)) {
             throw new FileNotFoundException();

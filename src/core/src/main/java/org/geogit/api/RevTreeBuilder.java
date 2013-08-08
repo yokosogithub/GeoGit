@@ -479,4 +479,14 @@ public class RevTreeBuilder {
         return namedTree;
     }
 
+    /**
+     * Deletes all nodes that represent subtrees
+     * 
+     * @return {@code this}
+     */
+    public RevTreeBuilder clearSubtrees() {
+        this.treeChanges.clear();
+        return this;
+    }
+
 }

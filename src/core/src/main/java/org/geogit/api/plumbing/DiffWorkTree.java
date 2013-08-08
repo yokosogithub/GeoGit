@@ -20,12 +20,14 @@ import org.geogit.repository.WorkingTree;
 
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Supplier;
 
 /**
  * Compares the features in the {@link WorkingTree working tree} and the {@link StagingArea index}
  * or a given root tree-ish.
  */
-public class DiffWorkTree extends AbstractGeoGitOp<Iterator<DiffEntry>> {
+public class DiffWorkTree extends AbstractGeoGitOp<Iterator<DiffEntry>> implements
+        Supplier<Iterator<DiffEntry>> {
 
     private String pathFilter;
 
@@ -109,6 +111,16 @@ public class DiffWorkTree extends AbstractGeoGitOp<Iterator<DiffEntry>> {
     public DiffWorkTree setReportTrees(boolean reportTrees) {
         this.reportTrees = reportTrees;
         return this;
+    }
+
+    /**
+     * Implements {@link Supplier#get()} by deferring to {@link #call()}
+     * 
+     * @see #call()
+     */
+    @Override
+    public Iterator<DiffEntry> get() {
+        return call();
     }
 
 }

@@ -13,8 +13,14 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Future;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
 import javax.annotation.Nullable;
 
@@ -25,7 +31,11 @@ import org.geogit.storage.ObjectDatabase;
 import org.geogit.storage.ObjectSerializingFactory;
 
 import com.google.common.base.Preconditions;
+import com.google.common.base.Stopwatch;
 import com.google.common.base.Throwables;
+import com.google.common.collect.Iterators;
+import com.google.common.collect.Lists;
+import com.google.common.collect.UnmodifiableIterator;
 import com.google.inject.Inject;
 import com.sleepycat.collections.CurrentTransaction;
 import com.sleepycat.je.Cursor;
@@ -33,7 +43,6 @@ import com.sleepycat.je.CursorConfig;
 import com.sleepycat.je.Database;
 import com.sleepycat.je.DatabaseConfig;
 import com.sleepycat.je.DatabaseEntry;
-import com.sleepycat.je.Durability;
 import com.sleepycat.je.Environment;
 import com.sleepycat.je.LockMode;
 import com.sleepycat.je.OperationStatus;
@@ -79,8 +88,19 @@ public class JEObjectDatabase extends AbstractObjectDatabase implements ObjectDa
         return env;
     }
 
+    private ExecutorService service;
+
     @Override
     public void close() {
+        service.shutdownNow();
+        try {
+            while (!service.awaitTermination(5, TimeUnit.SECONDS)) {
+                System.err.println("Awaiting termination of bulk insert thread pool...");
+            }
+        } catch (InterruptedException e) {
+            Throwables.propagate(e);
+        }
+
         // System.err.println("CLOSE");
         if (objectDb != null) {
             objectDb.close();
@@ -105,6 +125,13 @@ public class JEObjectDatabase extends AbstractObjectDatabase implements ObjectDa
     public void open() {
         if (isOpen()) {
             return;
+        }
+        {
+            // REVISIT: make thread pool size configurable?
+            final int nThreads = Math.max(2, Runtime.getRuntime().availableProcessors());
+            // System.err.println("bulk thread pool executor: " + nThreads + " threads.");
+            service = new ThreadPoolExecutor(nThreads, nThreads, 0L, TimeUnit.MILLISECONDS,
+                    new LinkedBlockingQueue<Runnable>(), new ThreadPoolExecutor.CallerRunsPolicy());
         }
         // System.err.println("OPEN");
         Environment environment = getEnvironment();
@@ -204,64 +231,123 @@ public class JEObjectDatabase extends AbstractObjectDatabase implements ObjectDa
         return new ByteArrayInputStream(cData);
     }
 
+    private static final Comparator<RevObject> OBJECTID_COMPARATOR = new Comparator<RevObject>() {
+        @Override
+        public int compare(RevObject o1, RevObject o2) {
+            return o1.getId().compareTo(o2.getId());
+        }
+    };
+
     @Override
     public void putAll(final Iterator<? extends RevObject> objects) {
-        final boolean transactional = this.objectDb.getConfig().getTransactional();
-        Transaction transaction;
-        TransactionConfig txConfig;
-        final boolean handleTx;
-        if (transactional) {
-            txConfig = new TransactionConfig();
-            txConfig.setDurability(Durability.COMMIT_NO_SYNC);
-            txConfig.setReadUncommitted(true);
-            transaction = txn.getTransaction();
-            handleTx = transaction == null;
-            if (handleTx) {
-                transaction = txn.beginTransaction(txConfig);
-            }
-        } else {
-            transaction = null;
-            txConfig = null;
-            handleTx = false;
+        if (!objects.hasNext()) {
+            return;
         }
 
-        // final int commitThreshold = 100 * 1000;
-        // int count = 0;
+        List<Future<?>> futures = Lists.newLinkedList();
 
-        try {
-            ByteArrayOutputStream rawOut = new ByteArrayOutputStream();
-            while (objects.hasNext()) {
-                RevObject object = objects.next();
+        // REVISIT: make partitionSize configurable? it seems that the larger the value the longer
+        // it'll take the BulkInserts to acquire the db locks and hence the larger the thread
+        // contention on the db.
+        final int partitionSize = 500;
 
-                rawOut.reset();
+        UnmodifiableIterator<?> partitions = Iterators.partition(objects, partitionSize);
+        while (partitions.hasNext()) {
+            @SuppressWarnings("unchecked")
+            List<RevObject> partition = (List<RevObject>) partitions.next();
+            partition = Lists.newArrayList(partition);
 
-                writeObject(object, rawOut);
-                final byte[] rawData = rawOut.toByteArray();
-                final ObjectId id = object.getId();
-                putInternal(id, rawData, transaction);
+            Collections.sort(partition, OBJECTID_COMPARATOR);
 
-                // count++;
-                // if (count % commitThreshold == 0) {
-                // env.evictMemory();
-                // }
+            Future<?> future = putAll(partition);
+            futures.add(future);
+        }
+        for (Future<?> future : futures) {
+            try {
+                future.get();
+            } catch (Exception e) {
+                Throwables.propagate(e);
             }
+        }
+    }
+
+    private Future<?> putAll(List<RevObject> partition) {
+        BulkInsert bulkInsert = new BulkInsert(partition);
+        Future<?> future = service.submit(bulkInsert);
+        return future;
+    }
+
+    private class BulkInsert implements Runnable {
+
+        private List<RevObject> partition;
+
+        public BulkInsert(List<RevObject> partition) {
+            this.partition = partition;
+        }
+
+        @Override
+        public void run() {
+            final boolean transactional = objectDb.getConfig().getTransactional();
+            Transaction transaction;
+            final boolean handleTx;
             if (transactional) {
+                transaction = txn.getTransaction();
+                handleTx = transaction == null;
                 if (handleTx) {
-                    txn.commitTransaction();
+                    TransactionConfig txConfig = TransactionConfig.DEFAULT;
+                    // txConfig = new TransactionConfig();
+                    // txConfig.setDurability(Durability.COMMIT_NO_SYNC);
+                    // txConfig.setReadUncommitted(true);
+                    transaction = txn.beginTransaction(txConfig);
                 }
             } else {
-                // finally force an environment checkpoint to ensure durability
-                // Stopwatch sw = new Stopwatch().start();
-                this.env.sync();
-                // sw.stop();
-                // System.err.printf("environment sync time %s\n", sw);
+                transaction = null;
+                handleTx = false;
             }
-        } catch (Exception e) {
-            if (transactional) {
-                txn.abortTransaction();
+
+            CursorConfig cursorConfig = CursorConfig.READ_UNCOMMITTED;
+            Cursor cursor = objectDb.openCursor(transaction, cursorConfig);
+            try {
+                ByteArrayOutputStream rawOut = new ByteArrayOutputStream();
+                DatabaseEntry key = new DatabaseEntry(new byte[ObjectId.NUM_BYTES]);
+
+                for (RevObject object : partition) {
+                    rawOut.reset();
+                    writeObject(object, rawOut);
+                    final byte[] rawData = rawOut.toByteArray();
+                    final ObjectId id = object.getId();
+
+                    id.getRawValue(key.getData());
+                    DatabaseEntry data = new DatabaseEntry(rawData);
+
+                    cursor.putNoOverwrite(key, data);
+                }
+                cursor.close();
+                if (transactional) {
+                    if (handleTx) {
+                        // System.err.printf("committed %s (%s)\n", partition.size(), Thread
+                        // .currentThread().getName());
+                        txn.commitTransaction();
+                    } else {
+                        // System.err.println("inserted " + partition.size()
+                        // + " not committed, transaction not owned by this bulk inserter");
+                    }
+                } else {
+                    // finally force an environment checkpoint to ensure durability
+                    // this.env.sync();
+                    // objectDb.sync();
+                }
+            } catch (Exception e) {
+                cursor.close();
+                if (transactional) {
+                    txn.abortTransaction();
+                }
+            } finally {
+                partition.clear();
+                partition = null;
             }
-            throw Throwables.propagate(e);
         }
+
     }
 
     @Override
@@ -294,5 +380,52 @@ public class JEObjectDatabase extends AbstractObjectDatabase implements ObjectDa
         final OperationStatus status = objectDb.delete(transaction, key);
 
         return SUCCESS.equals(status);
+    }
+
+    @Override
+    public void deleteAll(Iterator<ObjectId> ids) {
+        Stopwatch sw = new Stopwatch().start();
+        long count = 0;
+
+        CursorConfig cconfig = new CursorConfig();
+        UnmodifiableIterator<List<ObjectId>> partition = Iterators.partition(ids, 10 * 1000);
+
+        final DatabaseEntry data = new DatabaseEntry();
+        data.setPartial(0, 0, true);// do not retrieve data
+
+        while (partition.hasNext()) {
+            List<ObjectId> nextIds = Lists.newArrayList(partition.next());
+            Collections.sort(nextIds);
+
+            Transaction transaction = txn == null ? null : env.beginTransaction(null,
+                    TransactionConfig.DEFAULT);
+            Cursor cursor = objectDb.openCursor(transaction, cconfig);
+            try {
+                DatabaseEntry key = new DatabaseEntry(new byte[ObjectId.NUM_BYTES]);
+                for (ObjectId id : nextIds) {
+                    // copy id to key object without allocating new byte[]
+                    id.getRawValue(key.getData());
+
+                    OperationStatus status = cursor.getSearchKey(key, data, LockMode.DEFAULT);
+                    if (OperationStatus.SUCCESS.equals(status)) {
+                        OperationStatus delete = cursor.delete();
+                        count++;
+                    }
+                }
+                cursor.close();
+            } catch (Exception e) {
+                cursor.close();
+                if (transaction != null) {
+                    transaction.abort();
+                }
+                Throwables.propagate(e);
+            }
+            if (transaction != null) {
+                transaction.commit();
+            }
+        }
+        sw.stop();
+        // REVISIT when we have logging
+        // System.err.printf("Deleted %s objects in %s\n", count, sw);
     }
 }

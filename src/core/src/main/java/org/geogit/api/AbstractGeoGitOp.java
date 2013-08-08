@@ -11,6 +11,7 @@ import org.geogit.repository.WorkingTree;
 import org.geogit.storage.RefDatabase;
 import org.geotools.util.NullProgressListener;
 import org.geotools.util.SubProgressListener;
+import org.geotools.util.logging.Logging;
 import org.opengis.util.ProgressListener;
 
 import com.google.inject.Inject;
@@ -111,4 +112,23 @@ public abstract class AbstractGeoGitOp<T> implements Callable<T> {
         return getCommandLocator().getRefDatabase();
     }
 
+    protected void debug(String format, Object... args) {
+        // TODO: properly. Temporary measure to aid in manual testing
+        String prop = System.getProperty("debuglevel");
+        if (prop == null)
+            prop = System.getenv("debuglevel");
+        if ("debug".equals(prop)) {
+            System.err.println(String.format(format, args));
+        }
+    }
+
+    protected void info(String format, Object... args) {
+        // TODO: properly. Temporary measure to aid in manual testing
+        String prop = System.getProperty("debuglevel");
+        if (prop == null)
+            prop = System.getenv("debuglevel");
+        if ("info".equals(prop) || "debug".equals(prop)) {
+            System.err.println(String.format(format, args));
+        }
+    }
 }

@@ -55,6 +55,8 @@ class TreeDiffEntryIterator extends AbstractIterator<DiffEntry> {
 
     private final boolean reportTrees;
 
+    private final boolean recursive;
+
     /**
      * The {@link Strategy} used to iterate the two trees which tells whether to report or not tree
      * entries besides feature entries
@@ -63,17 +65,14 @@ class TreeDiffEntryIterator extends AbstractIterator<DiffEntry> {
 
     public TreeDiffEntryIterator(@Nullable NodeRef oldTreeRef, @Nullable NodeRef newTreeRef,
             @Nullable RevTree oldTree, @Nullable RevTree newTree, final boolean reportTrees,
-            final ObjectDatabase db) {
+            final boolean recursive, final ObjectDatabase db) {
 
         checkArgument(oldTree != null || newTree != null);
         this.reportTrees = reportTrees;
+        this.recursive = recursive;
         this.objectDb = db;
 
-        if (reportTrees) {
-            strategy = DepthTreeIterator.Strategy.RECURSIVE;
-        } else {
-            strategy = DepthTreeIterator.Strategy.RECURSIVE_FEATURES_ONLY;
-        }
+        this.strategy = resolveStrategy();
 
         if (oldTree != null && newTree != null && oldTree.getId().equals(newTree.getId())) {
             delegate = Iterators.emptyIterator();
@@ -83,11 +82,14 @@ class TreeDiffEntryIterator extends AbstractIterator<DiffEntry> {
             delegate = addRemoveAll(oldTreeRef, oldTree, REMOVED);
         } else if (!oldTree.buckets().isPresent() && !newTree.buckets().isPresent()) {
 
+            Strategy itStategy = recursive ? DepthTreeIterator.Strategy.CHILDREN
+                    : DepthTreeIterator.Strategy.FEATURES_ONLY;
+
             Iterator<NodeRef> left = new DepthTreeIterator(oldTreeRef.path(),
-                    oldTreeRef.getMetadataId(), oldTree, db, DepthTreeIterator.Strategy.CHILDREN);
+                    oldTreeRef.getMetadataId(), oldTree, db, itStategy);
 
             Iterator<NodeRef> right = new DepthTreeIterator(newTreeRef.path(),
-                    newTreeRef.getMetadataId(), newTree, db, DepthTreeIterator.Strategy.CHILDREN);
+                    newTreeRef.getMetadataId(), newTree, db, itStategy);
 
             delegate = new ChildrenChildrenDiff(left, right);
         } else if (oldTree.buckets().isPresent() && newTree.buckets().isPresent()) {
@@ -125,6 +127,24 @@ class TreeDiffEntryIterator extends AbstractIterator<DiffEntry> {
             UnmodifiableIterator<DiffEntry> iter = Iterators.singletonIterator(diffEntry);
             delegate = Iterators.concat(delegate, iter);
         }
+    }
+
+    private Strategy resolveStrategy() {
+        Strategy strategy;
+        if (reportTrees) {
+            if (recursive) {
+                strategy = DepthTreeIterator.Strategy.RECURSIVE;
+            } else {
+                strategy = DepthTreeIterator.Strategy.CHILDREN;
+            }
+        } else {
+            if (recursive) {
+                strategy = DepthTreeIterator.Strategy.RECURSIVE_FEATURES_ONLY;
+            } else {
+                strategy = DepthTreeIterator.Strategy.FEATURES_ONLY;
+            }
+        }
+        return strategy;
     }
 
     @Override
@@ -234,13 +254,20 @@ class TreeDiffEntryIterator extends AbstractIterator<DiffEntry> {
 
             checkArgument(nextLeft != null || nextRight != null);
 
+            if (!recursive) {
+                if (reportTrees) {
+                    return Iterators.singletonIterator(new DiffEntry(nextLeft, nextRight));
+                } else {
+                    return Iterators.emptyIterator();
+                }
+            }
             RevTree fromTree = resolveSubtree(nextLeft);
             RevTree toTree = resolveSubtree(nextRight);
 
             Iterator<DiffEntry> it;
 
             it = new TreeDiffEntryIterator(nextLeft, nextRight, fromTree, toTree, reportTrees,
-                    objectDb);
+                    recursive, objectDb);
 
             return it;
         }
@@ -334,7 +361,7 @@ class TreeDiffEntryIterator extends AbstractIterator<DiffEntry> {
                 final RevTree right = resolveTree(rightBucket);
 
                 this.currentBucketIterator = new TreeDiffEntryIterator(leftRef, rightRef, left,
-                        right, reportTrees, objectDb);
+                        right, reportTrees, recursive, objectDb);
                 break;
             }
             return computeNext();
