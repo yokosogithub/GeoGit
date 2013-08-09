@@ -4,7 +4,7 @@
 <head>
   <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
   
-  <title>Using GeoGit with OpenStreetMap data &mdash; GeoGit documentation 0.3 documentation</title>
+  <title>Using GeoGit with OpenStreetMap data &mdash; GeoGit documentation 0.4 documentation</title>
   <link rel="stylesheet" href="_static/blueprint/screen.css" type="text/css" media="screen, projection" />
   <link rel="stylesheet" href="_static/blueprint/print.css" type="text/css" media="print" /> 
   <!--[if IE]>
@@ -15,7 +15,7 @@
   <script type="text/javascript">
     var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    './',
-        VERSION:     '0.3',
+        VERSION:     '0.4',
         COLLAPSE_MODINDEX: false,
         FILE_SUFFIX: '.html'
     };
@@ -24,15 +24,15 @@
   <script type="text/javascript" src="_static/doctools.js"></script>
   <script type="text/javascript" src="_static/searchtools.js"></script>
   <script type="text/javascript" src="searchindex.js"></script>
-      <link rel="top" title="GeoGit documentation 0.3 documentation" href="index.html" />
+      <link rel="top" title="GeoGit documentation 0.4 documentation" href="index.html" />
       <link rel="prev" title="The GeoGit Console" href="console.html" />
 </head>
 <body class="osm">
   <div id="header" class="selfclear">
     <div class="wrap selfclear">
-      <div id="logo"><a href="index.html">GeoGit documentation 0.3 documentation</a></div>
+      <div id="logo"><a href="index.html">GeoGit documentation 0.4 documentation</a></div>
       <ul id="top-nav">
-        <li class="first"><a href="http://geogit.org/">Home</a></li>
+        <li class="first"><a href="https://github.com/opengeo/GeoGit/blob/master/README.rst">About</a></li>
         <li><a href="http://sourceforge.net/projects/geogit">Download</a></li>
         <li><a href="/docs/">Users Manual</a></li>
         <li><a href="/technical/">Technical Manual</a></li>
@@ -53,7 +53,7 @@
       <div id="content">
 <ul id="breadcrumbs">
   
-  <li><a href="index.html">GeoGit documentation 0.3 documentation</a> &raquo;</li>
+  <li><a href="index.html">GeoGit documentation 0.4 documentation</a> &raquo;</li>
   <li>Using GeoGit with OpenStreetMap data</li>
 </ul>
 <ul id="relatedlinks" class="selfclear">
@@ -216,8 +216,7 @@ out meta;</pre>
 <li>A set of attributes for the feature type to use. Value of those attributes will be taken from the tags of the same name, if present.</li>
 </ul>
 <p>Mappings are defined in a mapping file, using JSON syntax, as in the following example:</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="p">{</span><span class="s">&quot;rules&quot;</span><span class="p">:[{</span><span class="s">&quot;name&quot;</span><span class="p">:</span><span class="s">&quot;onewaystreets&quot;</span><span class="p">,</span><span class="s">&quot;filter&quot;</span><span class="p">:{</span><span class="s">&quot;oneway&quot;</span><span class="p">:[</span><span class="s">&quot;yes&quot;</span><span class="p">]},</span><span class="s">&quot;fields&quot;</span><span class="p">:{</span><span class="s">&quot;lit&quot;</span><span class="p">:</span><span class="s">&quot;STRING&quot;</span><span class="p">,</span><span class="s">&quot;geom&quot;</span><span class="p">:</span><span class="s">&quot;LINESTRING&quot;</span><span class="p">}}]}</span>
-</pre></div>
+<div class="highlight-python"><pre>{"rules":[{"name":"onewaystreets","filter":{"oneway":["yes"]},"fields":{"lit":{"name":"lit", "type":STRING"},"geom":{"name":"geom", "type":LINESTRING"}}]}</pre>
 </div>
 <p>A mapping description is an array of mapping rules, each of them with the following fields:</p>
 <blockquote>
@@ -226,18 +225,18 @@ out meta;</pre>
 <li><tt class="docutils literal"><span class="pre">filter</span></tt> is a set of tags and values, which define the entities to use for the tree. All entities which have any of the specified values for any of the given tags will be used. And empty filter will cause all entities to be used.</li>
 </ul>
 <p>The following mapping will cause all ways to be be mapped, to a feature type that just contains the geometry of the way:</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="p">{</span><span class="s">&quot;rules&quot;</span><span class="p">:[{</span><span class="s">&quot;filter&quot;</span><span class="p">:{},</span><span class="s">&quot;fields&quot;</span><span class="p">:{</span><span class="s">&quot;geom&quot;</span><span class="p">:</span><span class="s">&quot;LINESTRING&quot;</span><span class="p">},</span><span class="s">&quot;name&quot;</span><span class="p">:</span><span class="s">&quot;all_ways&quot;</span><span class="p">}]}</span>
-</pre></div>
+<div class="highlight-python"><pre>{"rules":[{"filter":{},"fields":{"geom":{"name":geom","type":"LINESTRING"}},"name":"all_ways"}]}</pre>
 </div>
 <p>To get all entities that have a given tag, no matter which value the tag gas, just use an empty list for the accepted values. For instance, to get all the nodes with the tag <tt class="docutils literal"><span class="pre">power</span></tt> (can be <tt class="docutils literal"><span class="pre">power=tower</span></tt>, <tt class="docutils literal"><span class="pre">power=pole</span></tt>, etc.), use the following mapping:</p>
 </div></blockquote>
-<div class="highlight-python"><pre>       {"rules":[{"filter":{"power":[]},"fields":{"geom":"POINT"},"name":"power"}]}
+<div class="highlight-python"><pre>       {"rules":[{"filter":{"power":[]},"fields":{"geom":{"name":"geom","type":POINT"},"name":"power"}]}
 
 
 
-- ``fields`` describes the attributes for the feature type, as ``field_name:field_type`` values. Valid types for the ``field_type`` are ``INTEGER, FLOAT, DOUBLE, LONG SHORT, POINT LINE, POLYGON, STRING, DATE``. Only one of the geometry types can be used for a field in a mapping rule. This defines the type of entities that will be used, so it acts as a filter as well. So, if you add a field "coordinate:POINT", it will use only those entities represented as a points. That is, it will use only nodes. LINESTRING  and POLYGON will cause only ways to be used. In both cases, all ways are used, even if they are not closed (they will be automatically closed to create the polygon). It is up to you to define the criteria for a way to be suitable for creating a polygon, such as, for instance, requiring the ``area=yes`` or "building=yes" tag/value pair.
+- ``fields`` describes the attributes for the feature type, as ``tag_name:{"name":field_name, "type":field_type}`` values. Usually, ``tag_name`` and ``field_name`` will be identical, so the name of the tag is used as the field name. However, you can use a different name for the field, which will act as an alias for the tag.
+ Valid types for the ``field_type`` are ``INTEGER, FLOAT, DOUBLE, LONG SHORT, POINT LINE, POLYGON, STRING, DATE``. Only one of the geometry types can be used for a field in a mapping rule. This defines the type of entities that will be used, so it acts as a filter as well. So, if you add a field of type ``POINT``, it will use only those entities represented as a points. That is, it will use only nodes. ``LINESTRING``  and ``POLYGON`` will cause only ways to be used. In both cases, all ways are used, even if they are not closed (they will be automatically closed to create the polygon). It is up to you to define the criteria for a way to be suitable for creating a polygon, such as, for instance, requiring the ``area=yes`` or "building=yes" tag/value pair.
 
-Apart from the fields that you add to the feature type in your mapping definition, GeoGit will always add an ``id`` field with the OSM Id of the entity. This is used to track the Id and allow for unmapping, as we will later see. In the case of ways, another field is added, ``nodes``, which contains the Id's of nodes that belong to the way. You should avoid using ``id`` or ``nodes`` as names of your fields, as that might cause problems.</pre>
+ Apart from the fields that you add to the feature type in your mapping definition, GeoGit will always add an ``id`` field with the OSM Id of the entity. This is used to track the Id and allow for unmapping, as we will later see. In the case of ways, another field is added, ``nodes``, which contains the Id's of nodes that belong to the way. You should avoid using ``id`` or ``nodes`` as names of your fields, as that might cause problems.</pre>
 </div>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
@@ -303,8 +302,7 @@ name:Unnamed fire station
 phone:5555986154</pre>
 </div>
 <p>Let&#8217;s say that you have run the <tt class="docutils literal"><span class="pre">export-pg</span></tt> command to export your nodes to a postGIS database, with the following mapping</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="p">{</span><span class="s">&quot;rules&quot;</span><span class="p">:[{</span><span class="s">&quot;filter&quot;</span><span class="p">:{</span><span class="s">&quot;amenity&quot;</span><span class="p">:[</span><span class="s">&quot;fire_station&quot;</span><span class="p">]},</span><span class="s">&quot;fields&quot;</span><span class="p">:{</span><span class="s">&quot;geom&quot;</span><span class="p">:</span><span class="s">&quot;POINT&quot;</span><span class="p">,</span> <span class="s">&quot;name&quot;</span><span class="p">:</span><span class="s">&quot;STRING&quot;</span><span class="p">},</span><span class="s">&quot;name&quot;</span><span class="p">:</span><span class="s">&quot;firestations&quot;</span><span class="p">}]}</span>
-</pre></div>
+<div class="highlight-python"><pre>{"rules":[{"filter":{"amenity":["fire_station"]},"fields":{"geom":{"name":"geom", "type":POINT"}, "name":"{"name":"name", "type":"STRING"}},"name":"firestations"}]}</pre>
 </div>
 <p>Basically, you are mapping all fire stations to a new feature type which just contains the station name and its location.</p>
 <p>Now, in your exported data, you modified the name of the above firestation from &#8220;Unnamed fire station&#8221; to &#8220;Central fire station&#8221;. After that, you imported the data to a <tt class="docutils literal"><span class="pre">fire_stations</span></tt> tree using the <tt class="docutils literal"><span class="pre">pg</span> <span class="pre">import</span></tt> command.</p>
@@ -319,6 +317,10 @@ phone:5555986154</pre>
 <p>Although the <tt class="docutils literal"><span class="pre">phone</span></tt> tag was not present in the mapped data, it will continue to appear here, since it is taken from the previous version of the feature that was stored in the <tt class="docutils literal"><span class="pre">node</span></tt> tree.</p>
 <p>All the work done by the unmap command takes place on the working tree. That is, the mapped path <tt class="docutils literal"><span class="pre">firestations</span></tt> refers to <tt class="docutils literal"><span class="pre">WORK_HEAD:firestations</span></tt>, and the unmapped data is added/replaced in <tt class="docutils literal"><span class="pre">WORK_HEAD:node</span></tt> and <tt class="docutils literal"><span class="pre">WORK_HEAD:way</span></tt>.</p>
 <p>In the case of ways, the <tt class="docutils literal"><span class="pre">nodes</span></tt> field will be recomputed based on the geometry. If the geometry has changed and new points have been added to the corresponding line of polygon, new nodes will be added accordingly.</p>
+<p>If the mapping you used to create the tree that now you want to unmap contained aliases (that is, field names and tag names do not match), you must pass the mappping file to the unmap command. Otherwise, it will not be able to resolve to original tag name from the field name, and will use that field name as the tag name.</p>
+<p>To pass the mapping file to the unmap command, use the <tt class="docutils literal"><span class="pre">--mapping</span></tt> option</p>
+<div class="highlight-python"><pre>$ geogit unmap fire_stations --mapping mapping.json</pre>
+</div>
 </div>
 <div class="section" id="an-osm-workflow-using-geogit">
 <h2>An OSM workflow using GeoGit<a class="headerlink" href="#an-osm-workflow-using-geogit" title="Permalink to this headline">¶</a></h2>
