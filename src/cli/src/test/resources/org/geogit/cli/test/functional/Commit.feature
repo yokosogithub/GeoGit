@@ -14,9 +14,9 @@ Feature: "commit" command
   Scenario: Try to commit with timestamp in millisecs
     Given I have a repository
      And I have staged "points1"     
-     And I run the command "commit -t 1 -m msg"
+     And I run the command "commit -t 1000000000 -m msg"
     When I run the command "log"
-    Then the response should contain "1970"    
+    Then the response should contain "1970-01"    
     
   Scenario: Try to commit current staged features
     Given I have a repository
