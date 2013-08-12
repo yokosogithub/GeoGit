@@ -47,6 +47,12 @@ public class TestHelper {
         builder3.add("number", Long.class);
         builder3.setName("table3");
 
+        SimpleFeatureTypeBuilder builder4 = new SimpleFeatureTypeBuilder();
+        builder4.setCRS(CRS.decode("EPSG:4326"));
+        builder4.add("geom", Point.class);
+        builder4.add("number", Double.class);
+        builder4.setName("table4");
+
         SimpleFeatureType type3 = builder3.buildFeatureType();
 
         GeometryFactory gf = new GeometryFactory();
@@ -68,6 +74,7 @@ public class TestHelper {
         testDataStore.addFeature(f2);
         testDataStore.addFeature(f3);
         testDataStore.addFeature(f4);
+        testDataStore.createSchema(builder4.buildFeatureType());
 
         final AbstractDataStoreFactory factory = mock(AbstractDataStoreFactory.class);
         when(factory.createDataStore(anyMapOf(String.class, Serializable.class))).thenReturn(

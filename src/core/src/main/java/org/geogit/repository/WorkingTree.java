@@ -38,6 +38,7 @@ import org.geogit.api.plumbing.RevObjectParse;
 import org.geogit.api.plumbing.UpdateRef;
 import org.geogit.api.plumbing.WriteBack;
 import org.geogit.api.plumbing.diff.DiffEntry;
+import org.geogit.api.plumbing.diff.DiffObjectCount;
 import org.geogit.storage.StagingDatabase;
 import org.geotools.geometry.jts.ReferencedEnvelope;
 import org.opengis.feature.Feature;
@@ -584,10 +585,20 @@ public class WorkingTree {
      * @param pathFilter if specified, only changes that match the filter will be counted
      * @return the number differences between the work tree and the index based on the path filter.
      */
-    public long countUnstaged(final @Nullable String pathFilter) {
-        Long count = commandLocator.command(DiffCount.class).setOldVersion(Ref.STAGE_HEAD)
-                .setNewVersion(Ref.WORK_HEAD).addFilter(pathFilter).call();
-        return count.longValue();
+    public DiffObjectCount countUnstaged(final @Nullable String pathFilter) {
+        DiffObjectCount count = commandLocator.command(DiffCount.class)
+                .setOldVersion(Ref.STAGE_HEAD).setNewVersion(Ref.WORK_HEAD).addFilter(pathFilter)
+                .call();
+        return count;
+    }
+
+    /**
+     * Returns true if there are no unstaged changes, false otherwise
+     */
+    public boolean isClean() {
+        Optional<ObjectId> resolved = commandLocator.command(ResolveTreeish.class)
+                .setTreeish(Ref.STAGE_HEAD).call();
+        return getTree().getId().equals(resolved.or(ObjectId.NULL));
     }
 
     /**

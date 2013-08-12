@@ -13,6 +13,7 @@ import org.geogit.api.Node;
 import org.geogit.api.ObjectId;
 import org.geogit.api.RevTree;
 import org.geogit.api.plumbing.diff.DiffEntry;
+import org.geogit.api.plumbing.diff.DiffObjectCount;
 import org.geogit.api.plumbing.merge.Conflict;
 import org.geogit.storage.StagingDatabase;
 import org.opengis.util.ProgressListener;
@@ -45,6 +46,11 @@ public interface StagingArea {
     public RevTree getTree();
 
     /**
+     * @return true if there are no uncommitted features in the index. False otherwise
+     */
+    public boolean isClean();
+
+    /**
      * @param path
      * @return the Node for the feature at the specified path if it exists in the index, otherwise
      *         Optional.absent()
@@ -72,7 +78,7 @@ public interface StagingArea {
      * @param pathFilter
      * @return the number differences between STAGE_HEAD and HEAD based on the path filter.
      */
-    public abstract long countStaged(final @Nullable List<String> pathFilters);
+    public abstract DiffObjectCount countStaged(final @Nullable List<String> pathFilters);
 
     /**
      * returns the number of conflicted objects in the index, for the given path filter

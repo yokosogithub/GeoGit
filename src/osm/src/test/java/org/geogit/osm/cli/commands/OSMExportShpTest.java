@@ -50,9 +50,9 @@ public class OSMExportShpTest extends Assert {
         File file = new File(filename);
         cli.execute("osm", "import", file.getAbsolutePath());
         WorkingTree workTree = cli.getGeogit().getRepository().getWorkingTree();
-        long unstaged = workTree.countUnstaged("way");
+        long unstaged = workTree.countUnstaged("way").getCount();
         assertTrue(unstaged > 0);
-        unstaged = workTree.countUnstaged("node");
+        unstaged = workTree.countUnstaged("node").getCount();
         assertTrue(unstaged > 0);
         String mappingFilename = OSMMap.class.getResource("mapping.json").getFile();
         File mappingFile = new File(mappingFilename);
@@ -61,7 +61,7 @@ public class OSMExportShpTest extends Assert {
                 mappingFile.getAbsolutePath());
         assertTrue(exportFile.exists());
         cli.execute("shp", "import", "-d", "mapped", exportFile.getAbsolutePath());
-        unstaged = workTree.countUnstaged("mapped");
+        unstaged = workTree.countUnstaged("mapped").getCount();
         assertTrue(unstaged > 0);
     }
 
@@ -71,9 +71,9 @@ public class OSMExportShpTest extends Assert {
         File file = new File(filename);
         cli.execute("osm", "import", file.getAbsolutePath());
         WorkingTree workTree = cli.getGeogit().getRepository().getWorkingTree();
-        long unstaged = workTree.countUnstaged("way");
+        long unstaged = workTree.countUnstaged("way").getCount();
         assertTrue(unstaged > 0);
-        unstaged = workTree.countUnstaged("node");
+        unstaged = workTree.countUnstaged("node").getCount();
         assertTrue(unstaged > 0);
         String mappingFilename = OSMMap.class.getResource("no_geometry_mapping.json").getFile();
         File mappingFile = new File(mappingFilename);

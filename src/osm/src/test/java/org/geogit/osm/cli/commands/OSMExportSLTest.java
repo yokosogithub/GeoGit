@@ -81,9 +81,9 @@ public class OSMExportSLTest extends Assert {
         File file = new File(filename);
         cli.execute("osm", "import", file.getAbsolutePath());
         WorkingTree workTree = cli.getGeogit().getRepository().getWorkingTree();
-        long unstaged = workTree.countUnstaged("way");
+        long unstaged = workTree.countUnstaged("way").getCount();
         assertTrue(unstaged > 0);
-        unstaged = workTree.countUnstaged("node");
+        unstaged = workTree.countUnstaged("node").getCount();
         assertTrue(unstaged > 0);
         String mappingFilename = OSMMap.class.getResource("mapping.json").getFile();
         File mappingFile = new File(mappingFilename);
@@ -93,7 +93,7 @@ public class OSMExportSLTest extends Assert {
         assertTrue(exportFile.exists());
         cli.execute("sl", "import", "-t", "onewaystreets", "--database",
                 exportFile.getAbsolutePath());
-        unstaged = workTree.countUnstaged("onewaystreets");
+        unstaged = workTree.countUnstaged("onewaystreets").getCount();
         assertTrue(unstaged > 0);
     }
 

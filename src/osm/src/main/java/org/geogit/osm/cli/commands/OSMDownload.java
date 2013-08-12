@@ -99,13 +99,13 @@ public class OSMDownload extends AbstractCommand implements CLICommand {
 
     @Override
     protected void runInternal(GeogitCLI cli) throws Exception {
-        checkState(cli.getGeogit() != null, "Not a geogit repository: " + cli.getPlatform().pwd());
+        final GeoGIT geogit = cli.getGeogit();
+        checkState(geogit != null, "Not a geogit repository: " + cli.getPlatform().pwd());
         checkArgument(filterFile != null ^ bbox != null || update,
                 "You must specify a filter file or a bounding box");
         checkArgument((filterFile != null || bbox != null) ^ update,
                 "Filters cannot be used when updating");
-        checkState(cli.getGeogit().getRepository().getIndex().countStaged(null)
-                + cli.getGeogit().getRepository().getWorkingTree().countUnstaged(null) == 0,
+        checkState(geogit.countStaged().getCount() + geogit.countUnstaged().getCount() == 0,
                 "Working tree and index are not clean");
         checkArgument(!rebase || update, "--rebase switch can only be used when updating");
         checkArgument(filterFile == null || filterFile.exists(),
@@ -232,7 +232,7 @@ public class OSMDownload extends AbstractCommand implements CLICommand {
         }
 
         cli.getConsole().println();
-        if (cli.getGeogit().getRepository().getWorkingTree().countUnstaged(null) != 0) {
+        if (cli.getGeogit().getRepository().getWorkingTree().countUnstaged(null).getCount() != 0) {
             cli.execute("add");
             String message = "Updated OSM data";
             cli.execute("commit", "-m", message);

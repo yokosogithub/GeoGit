@@ -61,16 +61,16 @@ public class OSMMapTest extends Assert {
         File file = new File(filename);
         cli.execute("osm", "import", file.getAbsolutePath());
         WorkingTree workTree = cli.getGeogit().getRepository().getWorkingTree();
-        long unstaged = workTree.countUnstaged("way");
+        long unstaged = workTree.countUnstaged("way").getCount();
         assertTrue(unstaged > 0);
-        unstaged = workTree.countUnstaged("node");
+        unstaged = workTree.countUnstaged("node").getCount();
         assertTrue(unstaged > 0);
         // map
         String mappingFilename = OSMMap.class.getResource("mapping.json").getFile();
         File mappingFile = new File(mappingFilename);
         cli.execute("osm", "map", mappingFile.getAbsolutePath());
         // check it all went fine and the mapped tree is created
-        unstaged = workTree.countUnstaged("onewaystreets");
+        unstaged = workTree.countUnstaged("onewaystreets").getCount();
         assertEquals(1, unstaged);
         Optional<Node> feature = workTree.findUnstaged("onewaystreets/31045880");
         assertTrue(feature.isPresent());
@@ -91,9 +91,9 @@ public class OSMMapTest extends Assert {
         File file = new File(filename);
         cli.execute("osm", "import", file.getAbsolutePath());
         WorkingTree workTree = cli.getGeogit().getRepository().getWorkingTree();
-        long unstaged = workTree.countUnstaged("way");
+        long unstaged = workTree.countUnstaged("way").getCount();
         assertTrue(unstaged > 0);
-        unstaged = workTree.countUnstaged("node");
+        unstaged = workTree.countUnstaged("node").getCount();
         assertTrue(unstaged > 0);
         String mappingFilename = OSMMap.class.getResource("wrong_mapping.json").getFile();
         File mappingFile = new File(mappingFilename);
@@ -111,9 +111,9 @@ public class OSMMapTest extends Assert {
         File file = new File(filename);
         cli.execute("osm", "import", file.getAbsolutePath());
         WorkingTree workTree = cli.getGeogit().getRepository().getWorkingTree();
-        long unstaged = workTree.countUnstaged("way");
+        long unstaged = workTree.countUnstaged("way").getCount();
         assertTrue(unstaged > 0);
-        unstaged = workTree.countUnstaged("node");
+        unstaged = workTree.countUnstaged("node").getCount();
         assertTrue(unstaged > 0);
         try {
             cli.execute("osm", "map", "awrongpath/awroongfile.json");
@@ -130,14 +130,14 @@ public class OSMMapTest extends Assert {
         File file = new File(filename);
         cli.execute("osm", "import", file.getAbsolutePath());
         WorkingTree workTree = cli.getGeogit().getRepository().getWorkingTree();
-        long unstaged = workTree.countUnstaged("way");
+        long unstaged = workTree.countUnstaged("way").getCount();
         assertTrue(unstaged > 0);
         String mappingFilename = OSMMap.class.getResource("no_filter_mapping.json").getFile();
         File mappingFile = new File(mappingFilename);
         cli.execute("osm", "map", mappingFile.getAbsolutePath());
-        long allways = workTree.countUnstaged("all_ways");
+        long allways = workTree.countUnstaged("all_ways").getCount();
         assertTrue(allways > 0);
-        long ways = workTree.countUnstaged("way");
+        long ways = workTree.countUnstaged("way").getCount();
         assertEquals(ways, allways);
     }
 
@@ -148,7 +148,7 @@ public class OSMMapTest extends Assert {
         File file = new File(filename);
         cli.execute("osm", "import", file.getAbsolutePath());
         WorkingTree workTree = cli.getGeogit().getRepository().getWorkingTree();
-        long unstaged = workTree.countUnstaged("way");
+        long unstaged = workTree.countUnstaged("way").getCount();
         assertTrue(unstaged > 0);
         String mappingFilename = OSMMap.class.getResource("polygons_mapping.json").getFile();
         File mappingFile = new File(mappingFilename);

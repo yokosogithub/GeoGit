@@ -35,7 +35,6 @@ import com.beust.jcommander.Parameter;
 import com.beust.jcommander.Parameters;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Supplier;
 
 /**
  * Displays features that have differences between the index and the current HEAD commit and
@@ -82,9 +81,9 @@ public class Status implements CLICommand {
 
         final WorkingTree workTree = geogit.getRepository().getWorkingTree();
 
-        final long countStaged = index.countStaged(null);
+        final long countStaged = index.countStaged(null).getCount();
         final int countConflicted = index.countConflicted(null);
-        final long countUnstaged = workTree.countUnstaged(null);
+        final long countUnstaged = workTree.countUnstaged(null).getCount();
 
         final Optional<Ref> currHead = geogit.command(RefParse.class).setName(Ref.HEAD).call();
         Preconditions.checkState(currHead.isPresent(), "Repository has no HEAD.");
@@ -101,8 +100,8 @@ public class Status implements CLICommand {
         }
 
         if (countStaged > 0) {
-            Supplier<Iterator<DiffEntry>> staged = geogit.command(DiffIndex.class);
-
+            Iterator<DiffEntry> staged = geogit.command(DiffIndex.class).setReportTrees(true)
+                    .call();
             console.println("# Changes to be committed:");
             console.println("#   (use \"geogit reset HEAD <path/to/fid>...\" to unstage)");
             console.println("#");
@@ -120,7 +119,8 @@ public class Status implements CLICommand {
         }
 
         if (countUnstaged > 0) {
-            Supplier<Iterator<DiffEntry>> unstaged = geogit.command(DiffWorkTree.class);
+            Iterator<DiffEntry> unstaged = geogit.command(DiffWorkTree.class).setReportTrees(true)
+                    .call();
             console.println("# Changes not staged for commit:");
             console.println("#   (use \"geogit add <path/to/fid>...\" to update what will be committed");
             console.println("#   (use \"geogit checkout -- <path/to/fid>...\" to discard changes in working directory");
@@ -140,7 +140,7 @@ public class Status implements CLICommand {
      * @throws IOException
      * @see DiffEntry
      */
-    private void print(final ConsoleReader console, final Supplier<Iterator<DiffEntry>> changes,
+    private void print(final ConsoleReader console, final Iterator<DiffEntry> changes,
             final Color color, final long total) throws IOException {
 
         final int limit = all || this.limit == null ? Integer.MAX_VALUE : this.limit.intValue();
@@ -166,7 +166,7 @@ public class Status implements CLICommand {
         String path;
         int cnt = 0;
         if (limit > 0) {
-            Iterator<DiffEntry> changesIterator = changes.get();
+            Iterator<DiffEntry> changesIterator = changes;
             while (changesIterator.hasNext() && cnt < limit) {
                 ++cnt;
 

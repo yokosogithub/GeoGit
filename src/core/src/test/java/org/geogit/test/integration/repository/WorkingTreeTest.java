@@ -401,7 +401,8 @@ public class WorkingTreeTest extends RepositoryTestCase {
 
         workTree.insert(pointsName, featureList.iterator(), LISTENER, null, 3);
 
-        assertEquals(3, workTree.countUnstaged(null));
+        assertEquals(3, workTree.countUnstaged(null).getFeaturesCount());
+        assertEquals(1, workTree.countUnstaged(null).getTreesCount());
 
         Iterator<DiffEntry> changes = workTree.getUnstaged(null);
 

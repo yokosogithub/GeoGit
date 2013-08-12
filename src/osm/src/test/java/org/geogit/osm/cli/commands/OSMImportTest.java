@@ -15,6 +15,7 @@ import org.geogit.api.TestPlatform;
 import org.geogit.cli.GeogitCLI;
 import org.geogit.osm.cli.commands.OSMMap;
 import org.geogit.osm.internal.OSMImportOp;
+import org.geogit.repository.WorkingTree;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Rule;
@@ -47,9 +48,10 @@ public class OSMImportTest extends Assert {
         String filename = OSMImportOp.class.getResource("ways.xml").getFile();
         File file = new File(filename);
         cli.execute("osm", "import", file.getAbsolutePath());
-        long unstaged = cli.getGeogit().getRepository().getWorkingTree().countUnstaged("node");
+        WorkingTree workingTree = cli.getGeogit().getRepository().getWorkingTree();
+        long unstaged = workingTree.countUnstaged("node").getCount();
         assertTrue(unstaged > 0);
-        unstaged = cli.getGeogit().getRepository().getWorkingTree().countUnstaged("way");
+        unstaged = workingTree.countUnstaged("way").getCount();
         assertTrue(unstaged > 0);
     }
 
@@ -61,8 +63,8 @@ public class OSMImportTest extends Assert {
         File mappingFile = new File(mappingFilename);
         cli.execute("osm", "import", file.getAbsolutePath(), "--mapping",
                 mappingFile.getAbsolutePath());
-        long unstaged = cli.getGeogit().getRepository().getWorkingTree()
-                .countUnstaged("onewaystreets");
+        WorkingTree workingTree = cli.getGeogit().getRepository().getWorkingTree();
+        long unstaged = workingTree.countUnstaged("onewaystreets").getCount();
         assertTrue(unstaged > 0);
     }
 

@@ -54,7 +54,7 @@ public class OSMUnmapTest extends Assert {
         cli.execute("osm", "import", file.getAbsolutePath(), "--mapping",
                 mappingFile.getAbsolutePath(), "--no-raw");
         WorkingTree workTree = cli.getGeogit().getRepository().getWorkingTree();
-        long unstaged = workTree.countUnstaged("busstops");
+        long unstaged = workTree.countUnstaged("busstops").getCount();
         assertTrue(unstaged > 0);
 
     }
@@ -66,7 +66,7 @@ public class OSMUnmapTest extends Assert {
         File mappingFile = new File(mappingFilename);
         cli.execute("osm", "unmap", "busstops", "--mapping", mappingFile.getAbsolutePath());
         WorkingTree workTree = cli.getGeogit().getRepository().getWorkingTree();
-        long unstaged = workTree.countUnstaged("node");
+        long unstaged = workTree.countUnstaged("node").getCount();
         assertTrue(unstaged > 0);
 
         Optional<RevFeature> unmapped = cli.getGeogit().command(RevObjectParse.class)
@@ -82,7 +82,7 @@ public class OSMUnmapTest extends Assert {
     public void testUnMapping() throws Exception {
         cli.execute("osm", "unmap", "busstops");
         WorkingTree workTree = cli.getGeogit().getRepository().getWorkingTree();
-        long unstaged = workTree.countUnstaged("node");
+        long unstaged = workTree.countUnstaged("node").getCount();
         assertTrue(unstaged > 0);
 
         Optional<RevFeature> unmapped = cli.getGeogit().command(RevObjectParse.class)
