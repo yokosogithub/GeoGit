@@ -19,6 +19,7 @@ import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
@@ -36,6 +37,7 @@ import com.google.common.base.Throwables;
 import com.google.common.collect.Iterators;
 import com.google.common.collect.Lists;
 import com.google.common.collect.UnmodifiableIterator;
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.inject.Inject;
 import com.sleepycat.collections.CurrentTransaction;
 import com.sleepycat.je.Cursor;
@@ -128,10 +130,19 @@ public class JEObjectDatabase extends AbstractObjectDatabase implements ObjectDa
         }
         {
             // REVISIT: make thread pool size configurable?
-            final int nThreads = Math.max(2, Runtime.getRuntime().availableProcessors());
-            // System.err.println("bulk thread pool executor: " + nThreads + " threads.");
-            service = new ThreadPoolExecutor(nThreads, nThreads, 0L, TimeUnit.MILLISECONDS,
-                    new LinkedBlockingQueue<Runnable>(), new ThreadPoolExecutor.CallerRunsPolicy());
+            final int nThreads = Math.max(2, Runtime.getRuntime().availableProcessors() / 2);
+
+            final ThreadFactory threadFactory = new ThreadFactoryBuilder().setNameFormat(
+                    "BDBJE " + getEnvironment().getHome().getName() + " thread %d").build();
+
+            int corePoolSize = nThreads;
+            int maximumPoolSize = nThreads;
+            long keepAliveTime = 0L;
+            TimeUnit timeUnit = TimeUnit.MILLISECONDS;
+            LinkedBlockingQueue<Runnable> queue = new LinkedBlockingQueue<Runnable>();
+            ThreadPoolExecutor.CallerRunsPolicy rejectedExecutionHandler = new ThreadPoolExecutor.CallerRunsPolicy();
+            service = new ThreadPoolExecutor(corePoolSize, maximumPoolSize, keepAliveTime,
+                    timeUnit, queue, threadFactory, rejectedExecutionHandler);
         }
         // System.err.println("OPEN");
         Environment environment = getEnvironment();
