@@ -23,8 +23,11 @@ import com.google.inject.Inject;
  * 
  * Supported formats are:
  * 
- * - Standard format supported by the DateFormat class in the current locale - git-like time strings
- * (yesterday, 2.days.ago, etc) - a long representing miliseconds since the standard UNIX epoch
+ * <ul>
+ * <li>Standard format supported by the DateFormat class in the current locale
+ * <li>git-like time strings (yesterday, 2.days.ago, etc)
+ * <li>a {@code long} representing miliseconds since the standard UNIX epoch
+ * </ul>
  * 
  */
 public class ParseTimestamp extends AbstractGeoGitOp<Long> {
