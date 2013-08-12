@@ -212,7 +212,9 @@ public class RevTreeBuilder {
 
             if (unnamedTree.size() <= NORMALIZED_SIZE_LIMIT) {
                 this.bucketTreesByBucket.clear();
-                unnamedTree = moveBucketsToChildren(unnamedTree);
+                if (unnamedTree.buckets().isPresent()) {
+                    unnamedTree = moveBucketsToChildren(unnamedTree);
+                }
                 if (this.depth == 0) {
                     pendingWritesCache.clear();
                 }
