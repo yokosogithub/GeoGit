@@ -42,6 +42,7 @@ import org.geogit.cli.porcelain.Show;
 import org.geogit.cli.porcelain.Squash;
 import org.geogit.cli.porcelain.Status;
 import org.geogit.cli.porcelain.Tag;
+import org.geogit.cli.porcelain.Version;
 
 import com.google.inject.AbstractModule;
 
@@ -74,6 +75,7 @@ import com.google.inject.AbstractModule;
  * @see Pull
  * @see Show
  * @see Fetch
+ * @see Version
  */
 public class BuiltinCommandsModule extends AbstractModule implements CLIModule {
 
@@ -118,6 +120,7 @@ public class BuiltinCommandsModule extends AbstractModule implements CLIModule {
         bind(Squash.class);
         bind(Tag.class);
         bind(WalkGraph.class);
+        bind(Version.class);
     }
 
 }

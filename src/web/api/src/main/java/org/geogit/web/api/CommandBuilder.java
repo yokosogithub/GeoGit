@@ -24,6 +24,7 @@ import org.geogit.web.api.commands.RemoveWebOp;
 import org.geogit.web.api.commands.Status;
 import org.geogit.web.api.commands.TagWebOp;
 import org.geogit.web.api.commands.UpdateRefWeb;
+import org.geogit.web.api.commands.VersionWebOp;
 
 /**
  * Builds {@link WebAPICommand}s by parsing a given command name and uses a given parameter set to
@@ -84,6 +85,8 @@ public class CommandBuilder {
             command = buildAdd(options);
         } else if ("remove".equalsIgnoreCase(commandName)) {
             command = buildRemove(options);
+        } else if ("version".equalsIgnoreCase(commandName)) {
+            command = buildVersion(options);
         } else {
             throw new CommandSpecException("'" + commandName + "' is not a geogit command");
         }
@@ -400,6 +403,17 @@ public class CommandBuilder {
     static AddWebOp buildAdd(ParameterSet options) {
         AddWebOp command = new AddWebOp();
         command.setPath(options.getFirstValue("path", null));
+        return command;
+    }
+
+    /**
+     * Builds the {@link VersionWebOp} command.
+     * 
+     * @param options the parameter set
+     * @return the built command
+     */
+    static VersionWebOp buildVersion(ParameterSet options) {
+        VersionWebOp command = new VersionWebOp();
         return command;
     }
 
