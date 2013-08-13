@@ -140,8 +140,10 @@ public class OSMDownload extends AbstractCommand implements CLICommand {
                 throw new IllegalArgumentException("Error reading filter file:" + e.getMessage(), e);
             }
         } else if (bbox != null) {
-            filter = "way(" + bbox.get(0) + "," + bbox.get(1) + "," + bbox.get(2) + ","
-                    + bbox.get(3) + ");\n(._;>;);\nout meta;";
+            String bboxString = bbox.get(0) + "," + bbox.get(1) + "," + bbox.get(2) + ","
+                    + bbox.get(3);
+            filter = "(node(" + bboxString + ");\n" + "way(" + bboxString
+                    + "););\n(._;>;);\nout meta;";
         }
 
         try {
