@@ -261,7 +261,11 @@ public class CommitOp extends AbstractGeoGitOp<RevCommit> {
         float writeTreeProgress = 99f;
         if (all) {
             writeTreeProgress = 50f;
-            command(AddOp.class).setUpdateOnly(true).setProgressListener(subProgress(49f)).call();
+            AddOp op = command(AddOp.class);
+            for (String st : pathFilters) {
+                op.addPattern(st);
+            }
+            op.setUpdateOnly(true).setProgressListener(subProgress(49f)).call();
         }
         if (getProgressListener().isCanceled()) {
             return null;
@@ -313,9 +317,6 @@ public class CommitOp extends AbstractGeoGitOp<RevCommit> {
             }
         }
 
-        for (String st : pathFilters) {
-            command(AddOp.class).addPattern(st).call();
-        }
         ObjectId newTreeId;
         {
             WriteTree2 writeTree = command(WriteTree2.class);
