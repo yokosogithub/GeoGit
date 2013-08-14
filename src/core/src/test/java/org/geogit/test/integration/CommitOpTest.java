@@ -9,6 +9,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import java.util.Arrays;
+import java.util.Iterator;
 import java.util.List;
 
 import javax.annotation.Nullable;
@@ -18,6 +19,7 @@ import org.geogit.api.NodeRef;
 import org.geogit.api.ObjectId;
 import org.geogit.api.Ref;
 import org.geogit.api.RevCommit;
+import org.geogit.api.RevFeature;
 import org.geogit.api.RevFeatureType;
 import org.geogit.api.RevTree;
 import org.geogit.api.plumbing.FindTreeChild;
@@ -26,6 +28,7 @@ import org.geogit.api.plumbing.RevParse;
 import org.geogit.api.plumbing.diff.DiffEntry;
 import org.geogit.api.porcelain.AddOp;
 import org.geogit.api.porcelain.CommitOp;
+import org.geogit.api.porcelain.LogOp;
 import org.geogit.api.porcelain.NothingToCommitException;
 import org.geogit.repository.StagingArea;
 import org.geogit.repository.WorkingTree;
@@ -481,6 +484,52 @@ public class CommitOpTest extends RepositoryTestCase {
 
         assertTrue(tree2.trees().isPresent());
         assertEquals(1, tree2.trees().get().size());
+    }
+
+    @Test
+    public void testAmend() throws Exception {
+
+        final ObjectId id = insertAndAdd(points1);
+        final RevCommit commit1 = geogit.command(CommitOp.class).setMessage("Message").call();
+        {
+            assertCommit(commit1, null, null, null);
+            assertEquals(id, repo.getRootTreeChild(appendChild(pointsName, idP1)).get()
+                    .getObjectId());
+            assertNotNull(repo.getObjectDatabase().getRaw(id));
+        }
+
+        final ObjectId id2 = insertAndAdd(points2);
+        final RevCommit commit2 = geogit.command(CommitOp.class).setAmend(true).call();
+        {
+            assertCommit(commit2, null, "groldan", "Message");
+            Optional<RevFeature> p2 = geogit.command(RevObjectParse.class)
+                    .setRefSpec("HEAD:" + appendChild(pointsName, idP2)).call(RevFeature.class);
+            assertTrue(p2.isPresent());
+            assertEquals(id2, p2.get().getId());
+            Optional<RevFeature> p1 = geogit.command(RevObjectParse.class)
+                    .setRefSpec("HEAD:" + appendChild(pointsName, idP1)).call(RevFeature.class);
+            assertTrue(p1.isPresent());
+            assertEquals(id, p1.get().getId());
+        }
+        Iterator<RevCommit> log = geogit.command(LogOp.class).call();
+        assertTrue(log.hasNext());
+        log.next();
+        assertFalse(log.hasNext());
+
+    }
+
+    @Test
+    public void testCannotAmend() throws Exception {
+
+        insertAndAdd(points1);
+        try {
+            geogit.command(CommitOp.class).setAmend(true).call();
+            fail("expected IllegalArgumentException");
+        } catch (IllegalArgumentException e) {
+            assertTrue(true);
+
+        }
+
     }
 
     private void assertCommit(RevCommit commit, @Nullable ObjectId parentId, String author,
