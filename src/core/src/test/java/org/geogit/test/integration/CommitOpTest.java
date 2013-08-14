@@ -35,6 +35,7 @@ import org.junit.rules.ExpectedException;
 import org.opengis.util.ProgressListener;
 
 import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableList;
 
 public class CommitOpTest extends RepositoryTestCase {
     @Rule
@@ -284,6 +285,61 @@ public class CommitOpTest extends RepositoryTestCase {
                 NodeRef.appendChild(pointsName, featureId));
         assertTrue(featureBlobId.isPresent());
         assertEquals(oid, featureBlobId.get().getObjectId());
+
+        ObjectId commitId = geogit.command(RevParse.class).setRefSpec(Ref.HEAD).call().get();
+        assertEquals(commit.getId(), commitId);
+    }
+
+    @Test
+    public void testCommitWithAllOptionAndPaths() throws Exception {
+        try {
+            geogit.command(AddOp.class).addPattern(".").call();
+            geogit.command(CommitOp.class).call();
+            fail("expected NothingToCommitException");
+        } catch (NothingToCommitException e) {
+            assertTrue(true);
+        }
+
+        insertAndAdd(points1);
+
+        geogit.command(AddOp.class).addPattern(".").call();
+        RevCommit commit = geogit.command(CommitOp.class).call();
+
+        ObjectId oid = insertAndAdd(points1_modified);
+        insert(points2);
+        insert(lines1);
+
+        CommitOp commitCommand = geogit.command(CommitOp.class);
+        commit = commitCommand.setPathFilters(ImmutableList.of(pointsName)).setAll(true).call();
+        assertNotNull(commit);
+        assertNotNull(commit.getParentIds());
+        assertEquals(1, commit.getParentIds().size());
+        assertNotNull(commit.getId());
+
+        ObjectId treeId = commit.getTreeId();
+
+        assertNotNull(treeId);
+        RevTree root = repo.getTree(treeId);
+        assertNotNull(root);
+
+        Optional<Node> linesTreeId = repo.getTreeChild(root, linesName);
+        assertFalse(linesTreeId.isPresent());
+
+        Optional<Node> typeTreeId = repo.getTreeChild(root, pointsName);
+        assertTrue(typeTreeId.isPresent());
+
+        RevTree typeTree = repo.getTree(typeTreeId.get().getObjectId());
+        assertNotNull(typeTree);
+
+        String featureId = points1.getIdentifier().getID();
+        Optional<Node> featureBlobId = repo.getTreeChild(root,
+                NodeRef.appendChild(pointsName, featureId));
+        assertTrue(featureBlobId.isPresent());
+        assertEquals(oid, featureBlobId.get().getObjectId());
+
+        featureId = points2.getIdentifier().getID();
+        featureBlobId = repo.getTreeChild(root, NodeRef.appendChild(pointsName, featureId));
+        assertFalse(featureBlobId.isPresent());
 
         ObjectId commitId = geogit.command(RevParse.class).setRefSpec(Ref.HEAD).call().get();
         assertEquals(commit.getId(), commitId);
@@ -545,6 +601,68 @@ public class CommitOpTest extends RepositoryTestCase {
         featureId = points3.getIdentifier().getID();
         featureBlobId = repo.getTreeChild(root, NodeRef.appendChild(pointsName, featureId));
         assertTrue(featureBlobId.isPresent());
+
+        typeTreeId = repo.getTreeChild(root, linesName);
+        assertTrue(typeTreeId.isPresent());
+        typeTree = repo.getTree(typeTreeId.get().getObjectId());
+        assertNotNull(typeTree);
+
+        featureId = lines1.getIdentifier().getID();
+        featureBlobId = repo.getTreeChild(root, NodeRef.appendChild(linesName, featureId));
+        assertTrue(featureBlobId.isPresent());
+
+        featureId = lines2.getIdentifier().getID();
+        featureBlobId = repo.getTreeChild(root, NodeRef.appendChild(linesName, featureId));
+        assertFalse(featureBlobId.isPresent());
+
+        featureId = lines3.getIdentifier().getID();
+        featureBlobId = repo.getTreeChild(root, NodeRef.appendChild(linesName, featureId));
+        assertTrue(featureBlobId.isPresent());
+    }
+
+    @Test
+    public void testPathFilteringWithUnstaged() throws Exception {
+        insertAndAdd(points1);
+        insertAndAdd(points2);
+
+        RevCommit commit = geogit.command(CommitOp.class).call();
+
+        insertAndAdd(lines1);
+        insertAndAdd(lines3);
+        insert(lines2);
+        insert(points3);
+
+        List<String> filters = Arrays.asList(pointsName, linesName);
+        commit = geogit.command(CommitOp.class).setPathFilters(filters).call();
+
+        assertNotNull(commit);
+        assertNotNull(commit.getParentIds());
+        assertEquals(1, commit.getParentIds().size());
+        assertNotNull(commit.getId());
+
+        ObjectId treeId = commit.getTreeId();
+
+        assertNotNull(treeId);
+        RevTree root = repo.getTree(treeId);
+        assertNotNull(root);
+
+        Optional<Node> typeTreeId = repo.getTreeChild(root, pointsName);
+        assertTrue(typeTreeId.isPresent());
+        RevTree typeTree = repo.getTree(typeTreeId.get().getObjectId());
+        assertNotNull(typeTree);
+
+        String featureId = points1.getIdentifier().getID();
+        Optional<Node> featureBlobId = repo.getTreeChild(root,
+                NodeRef.appendChild(pointsName, featureId));
+        assertTrue(featureBlobId.isPresent());
+
+        featureId = points2.getIdentifier().getID();
+        featureBlobId = repo.getTreeChild(root, NodeRef.appendChild(pointsName, featureId));
+        assertTrue(featureBlobId.isPresent());
+
+        featureId = points3.getIdentifier().getID();
+        featureBlobId = repo.getTreeChild(root, NodeRef.appendChild(pointsName, featureId));
+        assertFalse(featureBlobId.isPresent());
 
         typeTreeId = repo.getTreeChild(root, linesName);
         assertTrue(typeTreeId.isPresent());
