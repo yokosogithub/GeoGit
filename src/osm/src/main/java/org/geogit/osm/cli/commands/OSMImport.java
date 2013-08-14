@@ -71,7 +71,7 @@ public class OSMImport extends AbstractCommand implements CLICommand {
                     "The specified filter did not contain any valid element.\n"
                             + "No changes were made to the repository.\n");
         } catch (RuntimeException e) {
-            new IllegalStateException("Error importing OSM data: " + e.getMessage(), e);
+            throw new IllegalStateException("Error importing OSM data: " + e.getMessage(), e);
         }
 
     }
