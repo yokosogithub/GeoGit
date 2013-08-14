@@ -5,10 +5,14 @@
 
 package org.geogit.geotools.porcelain;
 
+import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkState;
+
 import java.io.FileNotFoundException;
 import java.util.List;
 
 import org.geogit.cli.CLICommand;
+import org.geogit.cli.CommandFailedException;
 import org.geogit.cli.GeogitCLI;
 import org.geogit.geotools.plumbing.GeoToolsOpException;
 import org.geogit.geotools.plumbing.ImportOp;
@@ -61,14 +65,8 @@ public class ShpImport extends AbstractShpCommand implements CLICommand {
      */
     @Override
     protected void runInternal(GeogitCLI cli) throws Exception {
-        if (cli.getGeogit() == null) {
-            cli.getConsole().println("Not a geogit repository: " + cli.getPlatform().pwd());
-            return;
-        }
-        if (shapeFile == null || shapeFile.isEmpty()) {
-            cli.getConsole().println("No shapefile specified");
-            return;
-        }
+        checkState(cli.getGeogit() != null, "Not a geogit repository: " + cli.getPlatform().pwd());
+        checkArgument(shapeFile != null && !shapeFile.isEmpty(), "No shapefile specified");
 
         for (String shp : shapeFile) {
 
@@ -94,19 +92,20 @@ public class ShpImport extends AbstractShpCommand implements CLICommand {
                 switch (e.statusCode) {
                 case NO_FEATURES_FOUND:
                     cli.getConsole().println("No features were found in the shapefile.");
-                    break;
+                    throw new CommandFailedException();
                 case UNABLE_TO_GET_NAMES:
                     cli.getConsole().println("Unable to get feature types from the shapefile.");
-                    break;
+                    throw new CommandFailedException();
                 case UNABLE_TO_GET_FEATURES:
                     cli.getConsole().println("Unable to get features from the shapefile.");
-                    break;
+                    throw new CommandFailedException();
                 case UNABLE_TO_INSERT:
                     cli.getConsole().println("Unable to insert features into the working tree.");
-                    break;
+                    throw new CommandFailedException();
                 default:
                     cli.getConsole()
                             .println("Import failed with exception: " + e.statusCode.name());
+                    throw new CommandFailedException();
                 }
             } finally {
                 dataStore.dispose();

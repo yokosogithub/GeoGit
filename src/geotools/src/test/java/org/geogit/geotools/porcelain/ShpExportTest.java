@@ -12,6 +12,7 @@ import jline.UnsupportedTerminal;
 import jline.console.ConsoleReader;
 
 import org.geogit.api.porcelain.CommitOp;
+import org.geogit.cli.CommandFailedException;
 import org.geogit.cli.GeogitCLI;
 import org.geogit.test.integration.RepositoryTestCase;
 import org.geotools.data.AbstractDataStoreFactory;
@@ -70,6 +71,7 @@ public class ShpExportTest extends RepositoryTestCase {
         String shapeFileName = "TestPoints";
         exportCommand.args = Arrays.asList("Points", shapeFileName + ".shp");
         exportCommand.dataStoreFactory = factory;
+        exception.expect(CommandFailedException.class);
         exportCommand.run(cli);
 
         deleteShapeFile(shapeFileName);
@@ -112,8 +114,14 @@ public class ShpExportTest extends RepositoryTestCase {
         String shapeFileName = "TestPoints";
         exportCommand.args = Arrays.asList("Points/Points.1", shapeFileName + ".shp");
         exportCommand.dataStoreFactory = factory;
-        exception.expect(IllegalArgumentException.class);
-        exportCommand.run(cli);
+        try {
+            exportCommand.run(cli);
+            fail();
+        } catch (IllegalArgumentException e) {
+
+        } finally {
+            deleteShapeFile(shapeFileName);
+        }
     }
 
     @Test
@@ -125,10 +133,14 @@ public class ShpExportTest extends RepositoryTestCase {
         exportCommand.run(cli);
 
         exportCommand.args = Arrays.asList("Lines", shapeFileName + ".shp");
-        exportCommand.overwrite = true;
-        exportCommand.run(cli);
+        try {
+            exportCommand.run(cli);
+            fail();
+        } catch (CommandFailedException e) {
 
-        deleteShapeFile(shapeFileName);
+        } finally {
+            deleteShapeFile(shapeFileName);
+        }
     }
 
     @Test
@@ -136,6 +148,7 @@ public class ShpExportTest extends RepositoryTestCase {
         ShpExport exportCommand = new ShpExport();
         exportCommand.args = Arrays.asList();
         exportCommand.dataStoreFactory = TestHelper.createNullTestFactory();
+        exception.expect(CommandFailedException.class);
         exportCommand.run(cli);
     }
 

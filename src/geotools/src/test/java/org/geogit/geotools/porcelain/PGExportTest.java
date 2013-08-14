@@ -6,6 +6,7 @@ import jline.UnsupportedTerminal;
 import jline.console.ConsoleReader;
 
 import org.geogit.api.porcelain.CommitOp;
+import org.geogit.cli.CommandFailedException;
 import org.geogit.cli.GeogitCLI;
 import org.geogit.test.integration.RepositoryTestCase;
 import org.geotools.data.AbstractDataStoreFactory;
@@ -70,6 +71,7 @@ public class PGExportTest extends RepositoryTestCase {
         PGExport exportCommand = new PGExport();
         exportCommand.args = Arrays.asList("Points", "Points");
         exportCommand.dataStoreFactory = TestHelper.createNullTestFactory();
+        exception.expect(CommandFailedException.class);
         exportCommand.run(cli);
     }
 
@@ -77,6 +79,7 @@ public class PGExportTest extends RepositoryTestCase {
     public void testNoArgs() throws Exception {
         PGExport exportCommand = new PGExport();
         exportCommand.args = Arrays.asList();
+        exception.expect(CommandFailedException.class);
         exportCommand.dataStoreFactory = TestHelper.createNullTestFactory();
         exportCommand.run(cli);
     }
@@ -86,6 +89,7 @@ public class PGExportTest extends RepositoryTestCase {
         PGExport exportCommand = new PGExport();
         exportCommand.args = Arrays.asList("Points", "table1");
         exportCommand.dataStoreFactory = factory;
+        exception.expect(CommandFailedException.class);
         exportCommand.run(cli);
     }
 
