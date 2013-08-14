@@ -117,9 +117,6 @@ class GeogitTransactionState implements State {
         }
 
         this.geogitTx.setAuthor(author, null).commit();
-        GeoGitDataStore dataStore = (GeoGitDataStore) entry.getDataStore();
-        GeogitSynchronizationHandler.get().setDirty(dataStore.getGeogit(),
-                dataStore.getOrFigureOutBranch());
 
         this.geogitTx = null;
     }
