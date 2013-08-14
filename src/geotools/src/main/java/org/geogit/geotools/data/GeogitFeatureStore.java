@@ -116,7 +116,7 @@ class GeogitFeatureStore extends ContentFeatureStore {
     }
 
     @Override
-    public Transaction getTransaction() {
+    public synchronized Transaction getTransaction() {
         return delegate.getTransaction();
     }
 
