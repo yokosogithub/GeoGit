@@ -22,6 +22,12 @@ import org.geogit.web.api.ResponseWriter;
 import com.google.common.base.Optional;
 import com.google.common.base.Suppliers;
 
+/**
+ * Interface for the Merge operation in GeoGit.
+ * 
+ * Web interface for {@link MergeOp}
+ */
+
 public class MergeWebOp extends AbstractWebAPICommand {
 
     private boolean noCommit;

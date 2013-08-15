@@ -8,8 +8,19 @@ import org.geogit.web.api.CommandContext;
 import org.geogit.web.api.CommandResponse;
 import org.geogit.web.api.ResponseWriter;
 
+/**
+ * Interface for the Version operation in the GeoGit.
+ * 
+ * Web interface for {@link VersionOp}, {@link VersionInfo}
+ */
+
 public class VersionWebOp extends AbstractWebAPICommand {
 
+    /**
+     * Runs the command and builds the appropriate response.
+     * 
+     * @param context - the context to use for this command
+     */
     @Override
     public void run(CommandContext context) {
         final CommandLocator geogit = this.getCommandLocator(context);
