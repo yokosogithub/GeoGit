@@ -60,9 +60,8 @@ public class GeoGitDataStoreFactory implements DataStoreFactorySpi {
             false);
 
     public static final Param CREATE = new Param("create", Boolean.class,
-            "Optional flag to enable creation of a new repository if it does not exist", 
-            false);
-    
+            "Optional flag to enable creation of a new repository if it does not exist", false);
+
     @Override
     public String getDisplayName() {
         return DISPLAY_NAME;
@@ -83,10 +82,10 @@ public class GeoGitDataStoreFactory implements DataStoreFactorySpi {
         try {
             Object repository = REPOSITORY.lookUp(params);
 
-            //check that repository points to a file, and either that fiel is a directory, or the 
+            // check that repository points to a file, and either that fiel is a directory, or the
             // the create option is set
-            return repository instanceof File && 
-                ((File) repository).isDirectory() || Boolean.TRUE.equals(CREATE.lookUp(params));
+            return repository instanceof File && ((File) repository).isDirectory()
+                    || Boolean.TRUE.equals(CREATE.lookUp(params));
         } catch (IOException e) {
             //
         }

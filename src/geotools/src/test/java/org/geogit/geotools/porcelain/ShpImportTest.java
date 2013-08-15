@@ -16,7 +16,9 @@ import jline.UnsupportedTerminal;
 import jline.console.ConsoleReader;
 
 import org.geogit.api.Platform;
+import org.geogit.cli.CommandFailedException;
 import org.geogit.cli.GeogitCLI;
+import org.geogit.cli.InvalidParameterException;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -57,7 +59,7 @@ public class ShpImportTest extends Assert {
     public void testImport() throws Exception {
         ShpImport importCommand = new ShpImport();
         importCommand.shapeFile = new ArrayList<String>();
-        importCommand.shapeFile.add("file://test.shp");
+        importCommand.shapeFile.add(ShpImport.class.getResource("shape.shp").getFile());
         importCommand.dataStoreFactory = TestHelper.createTestFactory();
         importCommand.run(cli);
     }
@@ -73,7 +75,7 @@ public class ShpImportTest extends Assert {
     @Test
     public void testImportNullShapefileList() throws Exception {
         ShpImport importCommand = new ShpImport();
-        exception.expect(IllegalArgumentException.class);
+        exception.expect(InvalidParameterException.class);
         importCommand.run(cli);
     }
 
@@ -81,7 +83,7 @@ public class ShpImportTest extends Assert {
     public void testImportEmptyShapefileList() throws Exception {
         ShpImport importCommand = new ShpImport();
         importCommand.shapeFile = new ArrayList<String>();
-        exception.expect(IllegalArgumentException.class);
+        exception.expect(InvalidParameterException.class);
         importCommand.run(cli);
     }
 
@@ -93,8 +95,8 @@ public class ShpImportTest extends Assert {
 
         ShpImport importCommand = new ShpImport();
         importCommand.shapeFile = new ArrayList<String>();
-        importCommand.shapeFile.add("file://test.shp");
-        exception.expect(IllegalStateException.class);
+        importCommand.shapeFile.add(ShpImport.class.getResource("shape.shp").getFile());
+        exception.expect(CommandFailedException.class);
         importCommand.run(cli);
     }
 
@@ -116,7 +118,7 @@ public class ShpImportTest extends Assert {
         when(mockCli.getConsole()).thenThrow(new MockitoException("Exception"));
         ShpImport importCommand = new ShpImport();
         importCommand.shapeFile = new ArrayList<String>();
-        importCommand.shapeFile.add("file://test.shp");
+        importCommand.shapeFile.add(ShpImport.class.getResource("shape.shp").getFile());
         exception.expect(MockitoException.class);
         importCommand.run(mockCli);
     }
@@ -125,8 +127,9 @@ public class ShpImportTest extends Assert {
     public void testImportGetNamesException() throws Exception {
         ShpImport importCommand = new ShpImport();
         importCommand.shapeFile = new ArrayList<String>();
-        importCommand.shapeFile.add("file://test.shp");
+        importCommand.shapeFile.add(ShpImport.class.getResource("shape.shp").getFile());
         importCommand.dataStoreFactory = TestHelper.createFactoryWithGetNamesException();
+        exception.expect(CommandFailedException.class);
         importCommand.run(cli);
     }
 
@@ -134,8 +137,9 @@ public class ShpImportTest extends Assert {
     public void testImportFeatureSourceException() throws Exception {
         ShpImport importCommand = new ShpImport();
         importCommand.shapeFile = new ArrayList<String>();
-        importCommand.shapeFile.add("file://test.shp");
+        importCommand.shapeFile.add(ShpImport.class.getResource("shape.shp").getFile());
         importCommand.dataStoreFactory = TestHelper.createFactoryWithGetFeatureSourceException();
+        exception.expect(CommandFailedException.class);
         importCommand.run(cli);
     }
 
@@ -143,7 +147,7 @@ public class ShpImportTest extends Assert {
     public void testNullDataStore() throws Exception {
         ShpImport importCommand = new ShpImport();
         importCommand.shapeFile = new ArrayList<String>();
-        importCommand.shapeFile.add("file://test.shp");
+        importCommand.shapeFile.add(ShpImport.class.getResource("shape.shp").getFile());
         importCommand.dataStoreFactory = TestHelper.createNullTestFactory();
         importCommand.run(cli);
     }

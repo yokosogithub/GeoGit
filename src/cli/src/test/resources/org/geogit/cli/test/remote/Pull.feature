@@ -6,7 +6,7 @@ Feature: "pull" command
   Scenario: Try to pull from an empty directory
     Given I am in an empty directory
      When I run the command "pull origin"
-     Then the response should start with "Not a geogit repository"
+     Then the response should start with "Not in a geogit repository"
      
   Scenario: Try to pull from origin
     Given I have a repository with a remote

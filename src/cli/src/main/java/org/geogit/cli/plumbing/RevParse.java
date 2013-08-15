@@ -6,6 +6,8 @@
 package org.geogit.cli.plumbing;
 
 import java.io.File;
+import java.io.IOException;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.List;
 
@@ -16,11 +18,12 @@ import org.geogit.api.ObjectId;
 import org.geogit.api.plumbing.ResolveGeogitDir;
 import org.geogit.cli.AbstractCommand;
 import org.geogit.cli.GeogitCLI;
+import org.geogit.cli.RequiresRepository;
 
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.Parameters;
 import com.google.common.base.Optional;
-import com.google.common.base.Preconditions;
+import com.google.common.base.Throwables;
 import com.google.common.collect.Lists;
 
 /**
@@ -34,6 +37,7 @@ import com.google.common.collect.Lists;
  * geogit repository and print out the repository location
  * </ul>
  */
+@RequiresRepository
 @Parameters(commandNames = "rev-parse", commandDescription = "Resolve parameters according to the arguments")
 public class RevParse extends AbstractCommand {
 
@@ -48,27 +52,20 @@ public class RevParse extends AbstractCommand {
 
     /**
      * Executes the rev-parse command using the provided options.
-     * 
-     * @param cli
-     * @see org.geogit.cli.AbstractCommand#runInternal(org.geogit.cli.GeogitCLI)
      */
     @Override
-    protected void runInternal(GeogitCLI cli) throws Exception {
+    protected void runInternal(GeogitCLI cli) throws IOException {
         GeoGIT geogit = cli.getGeogit();
-        Preconditions.checkArgument(refSpecs.isEmpty() || geogit != null,
-                "Not in a geogit directory, can't parse refSpec.");
 
         if (!refSpecs.isEmpty()) {
-            Preconditions
-                    .checkArgument(!(resolve_geogit_dir || is_inside_work_tree),
-                            "if refSpec is given, --resolve-geogit-dir or --is-inside-work-tree shall not be specified");
+            checkParameter(!(resolve_geogit_dir || is_inside_work_tree),
+                    "if refSpec is given, --resolve-geogit-dir or --is-inside-work-tree shall not be specified");
             ConsoleReader console = cli.getConsole();
             for (String refSpec : this.refSpecs) {
                 Optional<ObjectId> resolved = geogit
                         .command(org.geogit.api.plumbing.RevParse.class).setRefSpec(refSpec).call();
-                Preconditions.checkArgument(resolved.isPresent(),
-                        "fatal: ambiguous argument '%s': "
-                                + "unknown revision or path not in the working tree.", refSpec);
+                checkParameter(resolved.isPresent(), "fatal: ambiguous argument '%s': "
+                        + "unknown revision or path not in the working tree.", refSpec);
                 console.println(resolved.get().toString());
             }
             console.flush();
@@ -86,7 +83,7 @@ public class RevParse extends AbstractCommand {
 
     }
 
-    private void isInsideWorkTree(ConsoleReader console, GeoGIT geogit) throws Exception {
+    private void isInsideWorkTree(ConsoleReader console, GeoGIT geogit) throws IOException {
         URL repoUrl = geogit.command(ResolveGeogitDir.class).call();
 
         File pwd = geogit.getPlatform().pwd();
@@ -100,7 +97,7 @@ public class RevParse extends AbstractCommand {
         }
     }
 
-    private void resolveGeogitDir(ConsoleReader console, GeoGIT geogit) throws Exception {
+    private void resolveGeogitDir(ConsoleReader console, GeoGIT geogit) throws IOException {
 
         URL repoUrl = geogit.command(ResolveGeogitDir.class).call();
         if (null == repoUrl) {
@@ -108,7 +105,11 @@ public class RevParse extends AbstractCommand {
             console.println("Error: not a geogit dir '"
                     + currDir.getCanonicalFile().getAbsolutePath() + "'");
         } else if ("file".equals(repoUrl.getProtocol())) {
-            console.println(new File(repoUrl.toURI()).getCanonicalFile().getAbsolutePath());
+            try {
+                console.println(new File(repoUrl.toURI()).getCanonicalFile().getAbsolutePath());
+            } catch (URISyntaxException e) {
+                Throwables.propagate(e);
+            }
         } else {
             console.println(repoUrl.toExternalForm());
         }

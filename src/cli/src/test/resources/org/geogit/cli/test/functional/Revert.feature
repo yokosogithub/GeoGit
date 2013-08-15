@@ -6,7 +6,7 @@ Feature: "revert" command
   Scenario: Try to revert something while not in a geogit repository
   	Given I am in an empty directory
   	  And I run the command "revert master"
-  	 Then the response should contain "not in a geogit repository"
+  	 Then the response should contain "Not in a geogit repository"
   	  And it should exit with non-zero exit code
   	 
   Scenario: Try to revert with nothing specified for reverting

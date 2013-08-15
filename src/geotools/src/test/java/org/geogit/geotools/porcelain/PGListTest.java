@@ -92,7 +92,7 @@ public class PGListTest extends Assert {
 
         PGList listCommand = new PGList();
         listCommand.dataStoreFactory = factory;
-        exception.expect(IllegalStateException.class);
+        exception.expect(CommandFailedException.class);
         listCommand.run(cli);
     }
 

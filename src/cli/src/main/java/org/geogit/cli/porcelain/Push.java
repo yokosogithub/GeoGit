@@ -5,15 +5,15 @@
 
 package org.geogit.cli.porcelain;
 
-import static com.google.common.base.Preconditions.checkState;
-
 import java.util.List;
 
 import org.geogit.api.porcelain.PushOp;
 import org.geogit.api.porcelain.SynchronizationException;
 import org.geogit.cli.AbstractCommand;
 import org.geogit.cli.CLICommand;
+import org.geogit.cli.CommandFailedException;
 import org.geogit.cli.GeogitCLI;
+import org.geogit.cli.RequiresRepository;
 
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.Parameters;
@@ -30,6 +30,7 @@ import com.beust.jcommander.Parameters;
  * 
  * @see PushOp
  */
+@RequiresRepository
 @Parameters(commandNames = "push", commandDescription = "Update remote refs along with associated objects")
 public class Push extends AbstractCommand implements CLICommand {
 
@@ -41,13 +42,9 @@ public class Push extends AbstractCommand implements CLICommand {
 
     /**
      * Executes the push command using the provided options.
-     * 
-     * @param cli
-     * @see org.geogit.cli.AbstractCommand#runInternal(org.geogit.cli.GeogitCLI)
      */
     @Override
-    public void runInternal(GeogitCLI cli) throws Exception {
-        checkState(cli.getGeogit() != null, "Not a geogit repository: " + cli.getPlatform().pwd());
+    public void runInternal(GeogitCLI cli) {
 
         PushOp push = cli.getGeogit().command(PushOp.class);
         push.setProgressListener(cli.getProgressListener());
@@ -62,20 +59,19 @@ public class Push extends AbstractCommand implements CLICommand {
             }
         }
         try {
+            // TODO: listen on progress?
             push.call();
         } catch (SynchronizationException e) {
             switch (e.statusCode) {
             case NOTHING_TO_PUSH:
-                cli.getConsole().println("Nothing to push.");
-                break;
+                throw new CommandFailedException("Nothing to push.", e);
             case REMOTE_HAS_CHANGES:
-                cli.getConsole()
-                        .println(
-                                "Push failed: The remote repository has changes that would be lost in the event of a push.");
-                break;
+                throw new CommandFailedException(
+                        "Push failed: The remote repository has changes that would be lost in the event of a push.",
+                        e);
             case HISTORY_TOO_SHALLOW:
-                cli.getConsole().println(
-                        "Push failed: There is not enough local history to complete the push.");
+                throw new CommandFailedException(
+                        "Push failed: There is not enough local history to complete the push.", e);
             }
         }
     }

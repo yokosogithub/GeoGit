@@ -4,8 +4,7 @@
  */
 package org.geogit.cli.plumbing;
 
-import static com.google.common.base.Preconditions.checkState;
-
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -14,8 +13,10 @@ import jline.console.ConsoleReader;
 import org.geogit.api.GeoGIT;
 import org.geogit.api.Ref;
 import org.geogit.api.plumbing.ForEachRef;
+import org.geogit.cli.AbstractCommand;
 import org.geogit.cli.CLICommand;
 import org.geogit.cli.GeogitCLI;
+import org.geogit.cli.RequiresRepository;
 
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.Parameters;
@@ -26,8 +27,9 @@ import com.google.common.collect.ImmutableSet;
  * Displays a list of refs in a repository
  * 
  */
+@RequiresRepository
 @Parameters(commandNames = "show-ref", commandDescription = "Shows a list of refs")
-public class ShowRef implements CLICommand {
+public class ShowRef extends AbstractCommand implements CLICommand {
 
     /**
      * The path to the element to display. Accepts all the notation types accepted by the RevParse
@@ -36,13 +38,8 @@ public class ShowRef implements CLICommand {
     @Parameter(description = "<pattern>")
     private List<String> patterns = new ArrayList<String>();
 
-    /**
-     * @param cli
-     * @see org.geogit.cli.CLICommand#run(org.geogit.cli.GeogitCLI)
-     */
     @Override
-    public void run(GeogitCLI cli) throws Exception {
-        checkState(cli.getGeogit() != null, "Not a geogit repository: " + cli.getPlatform().pwd());
+    public void runInternal(GeogitCLI cli) throws IOException {
 
         ConsoleReader console = cli.getConsole();
         GeoGIT geogit = cli.getGeogit();

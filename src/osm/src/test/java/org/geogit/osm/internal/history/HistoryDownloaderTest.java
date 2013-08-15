@@ -13,9 +13,6 @@ import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-import org.geogit.osm.internal.history.Change;
-import org.geogit.osm.internal.history.Changeset;
-import org.geogit.osm.internal.history.HistoryDownloader;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Ignore;

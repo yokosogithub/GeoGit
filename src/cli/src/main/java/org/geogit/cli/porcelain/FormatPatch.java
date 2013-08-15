@@ -6,6 +6,7 @@
 package org.geogit.cli.porcelain;
 
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.util.Iterator;
 import java.util.List;
@@ -19,10 +20,10 @@ import org.geogit.api.porcelain.DiffOp;
 import org.geogit.cli.AbstractCommand;
 import org.geogit.cli.CLICommand;
 import org.geogit.cli.GeogitCLI;
+import org.geogit.cli.RequiresRepository;
 
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.Parameters;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.Iterators;
 import com.google.common.collect.Lists;
 
@@ -34,6 +35,7 @@ import com.google.common.collect.Lists;
  * 
  * @see Diff
  */
+@RequiresRepository
 @Parameters(commandNames = "format-patch", commandDescription = "Creates a patch with a set of changes")
 public class FormatPatch extends AbstractCommand implements CLICommand {
 
@@ -51,19 +53,13 @@ public class FormatPatch extends AbstractCommand implements CLICommand {
 
     /**
      * Executes the format-patch command with the specified options.
-     * 
-     * @param cli
-     * @throws Exception
-     * @see org.geogit.cli.AbstractCommand#runInternal(org.geogit.cli.GeogitCLI)
      */
     @Override
-    protected void runInternal(GeogitCLI cli) throws Exception {
-        if (refSpec.size() > 2) {
-            cli.getConsole().println("Commit list is too long :" + refSpec);
-            return;
-        }
+    protected void runInternal(GeogitCLI cli) throws IOException {
+        checkParameter(refSpec.size() > 2, "Commit list is too long :%s", refSpec);
+
         GeoGIT geogit = cli.getGeogit();
-        Preconditions.checkState(file != null, "Patch file not specified");
+        checkParameter(file != null, "Patch file not specified");
 
         DiffOp diff = geogit.command(DiffOp.class).setReportTrees(true);
 

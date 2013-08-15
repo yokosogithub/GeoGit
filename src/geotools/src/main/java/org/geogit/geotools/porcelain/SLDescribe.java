@@ -5,15 +5,14 @@
 
 package org.geogit.geotools.porcelain;
 
-import static com.google.common.base.Preconditions.checkState;
-
-import java.net.ConnectException;
+import java.io.IOException;
 import java.util.Map;
 import java.util.Map.Entry;
 
 import org.geogit.cli.CLICommand;
 import org.geogit.cli.CommandFailedException;
 import org.geogit.cli.GeogitCLI;
+import org.geogit.cli.RequiresRepository;
 import org.geogit.geotools.plumbing.DescribeOp;
 import org.geogit.geotools.plumbing.GeoToolsOpException;
 import org.geotools.data.DataStore;
@@ -29,6 +28,7 @@ import com.google.common.base.Optional;
  * 
  * @see DescribeOp
  */
+@RequiresRepository
 @Parameters(commandNames = "describe", commandDescription = "Describe a SpatiaLite table")
 public class SLDescribe extends AbstractSLCommand implements CLICommand {
 
@@ -40,21 +40,11 @@ public class SLDescribe extends AbstractSLCommand implements CLICommand {
 
     /**
      * Executes the describe command using the provided options.
-     * 
-     * @param cli
-     * @see org.geogit.cli.AbstractSLCommand#runInternal(org.geogit.cli.GeogitCLI)
      */
     @Override
-    protected void runInternal(GeogitCLI cli) throws Exception {
-        checkState(cli.getGeogit() != null, "Not a geogit repository: " + cli.getPlatform().pwd());
+    protected void runInternal(GeogitCLI cli) throws IOException {
 
-        DataStore dataStore = null;
-        try {
-            dataStore = getDataStore();
-        } catch (ConnectException e) {
-            cli.getConsole().println("Unable to connect using the specified database parameters.");
-            throw new CommandFailedException();
-        }
+        DataStore dataStore = getDataStore();
 
         try {
             cli.getConsole().println("Fetching table...");
@@ -71,23 +61,18 @@ public class SLDescribe extends AbstractSLCommand implements CLICommand {
                     cli.getConsole().println("----------------------------------------");
                 }
             } else {
-                cli.getConsole().println("Could not find the specified table.");
-                throw new CommandFailedException();
+                throw new CommandFailedException("Could not find the specified table.");
             }
         } catch (GeoToolsOpException e) {
             switch (e.statusCode) {
             case TABLE_NOT_DEFINED:
-                cli.getConsole().println("No table supplied.");
-                throw new CommandFailedException();
+                throw new CommandFailedException("No table supplied.", e);
             case UNABLE_TO_GET_FEATURES:
-                cli.getConsole().println("Unable to read the feature source.");
-                throw new CommandFailedException();
+                throw new CommandFailedException("Unable to read the feature source.", e);
             case UNABLE_TO_GET_NAMES:
-                cli.getConsole().println("Unable to read feature types.");
-                throw new CommandFailedException();
+                throw new CommandFailedException("Unable to read feature types.", e);
             default:
-                cli.getConsole().println("Exception: " + e.statusCode.name());
-                throw new CommandFailedException();
+                throw new CommandFailedException("Exception: " + e.statusCode.name(), e);
             }
 
         } finally {

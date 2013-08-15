@@ -5,15 +5,14 @@
 
 package org.geogit.geotools.porcelain;
 
-import static com.google.common.base.Preconditions.checkArgument;
-import static com.google.common.base.Preconditions.checkState;
-
-import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.util.List;
 
 import org.geogit.cli.CLICommand;
 import org.geogit.cli.CommandFailedException;
 import org.geogit.cli.GeogitCLI;
+import org.geogit.cli.InvalidParameterException;
+import org.geogit.cli.RequiresRepository;
 import org.geogit.geotools.plumbing.GeoToolsOpException;
 import org.geogit.geotools.plumbing.ImportOp;
 import org.geotools.data.DataStore;
@@ -29,6 +28,7 @@ import com.beust.jcommander.Parameters;
  * 
  * @see ImportOp
  */
+@RequiresRepository
 @Parameters(commandNames = "import", commandDescription = "Import Shapefile")
 public class ShpImport extends AbstractShpCommand implements CLICommand {
 
@@ -59,21 +59,17 @@ public class ShpImport extends AbstractShpCommand implements CLICommand {
 
     /**
      * Executes the import command using the provided options.
-     * 
-     * @param cli
-     * @see org.geogit.cli.AbstractPGCommand#runInternal(org.geogit.cli.GeogitCLI)
      */
     @Override
-    protected void runInternal(GeogitCLI cli) throws Exception {
-        checkState(cli.getGeogit() != null, "Not a geogit repository: " + cli.getPlatform().pwd());
-        checkArgument(shapeFile != null && !shapeFile.isEmpty(), "No shapefile specified");
+    protected void runInternal(GeogitCLI cli) throws IOException {
+        checkParameter(shapeFile != null && !shapeFile.isEmpty(), "No shapefile specified");
 
         for (String shp : shapeFile) {
 
             DataStore dataStore = null;
             try {
                 dataStore = getDataStore(shp);
-            } catch (FileNotFoundException e) {
+            } catch (InvalidParameterException e) {
                 cli.getConsole().println(
                         "The shapefile '" + shp + "' could not be found, skipping...");
                 continue;
@@ -91,21 +87,19 @@ public class ShpImport extends AbstractShpCommand implements CLICommand {
             } catch (GeoToolsOpException e) {
                 switch (e.statusCode) {
                 case NO_FEATURES_FOUND:
-                    cli.getConsole().println("No features were found in the shapefile.");
-                    throw new CommandFailedException();
+                    throw new CommandFailedException("No features were found in the shapefile.", e);
                 case UNABLE_TO_GET_NAMES:
-                    cli.getConsole().println("Unable to get feature types from the shapefile.");
-                    throw new CommandFailedException();
+                    throw new CommandFailedException(
+                            "Unable to get feature types from the shapefile.", e);
                 case UNABLE_TO_GET_FEATURES:
-                    cli.getConsole().println("Unable to get features from the shapefile.");
-                    throw new CommandFailedException();
+                    throw new CommandFailedException("Unable to get features from the shapefile.",
+                            e);
                 case UNABLE_TO_INSERT:
-                    cli.getConsole().println("Unable to insert features into the working tree.");
-                    throw new CommandFailedException();
+                    throw new CommandFailedException(
+                            "Unable to insert features into the working tree.", e);
                 default:
-                    cli.getConsole()
-                            .println("Import failed with exception: " + e.statusCode.name());
-                    throw new CommandFailedException();
+                    throw new CommandFailedException("Import failed with exception: "
+                            + e.statusCode.name(), e);
                 }
             } finally {
                 dataStore.dispose();

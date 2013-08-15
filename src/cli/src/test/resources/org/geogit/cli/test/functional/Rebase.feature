@@ -61,7 +61,7 @@ Feature: "rebase" command
   Scenario: Try to rebase from an empty directory
     Given I am in an empty directory
      When I run the command "rebase master branch1"
-     Then it should answer "Not in a geogit repository."
+     Then the response should start with "Not in a geogit repository"
       And it should exit with non-zero exit code    
    
   Scenario: Try to rebase with conflicts and skip

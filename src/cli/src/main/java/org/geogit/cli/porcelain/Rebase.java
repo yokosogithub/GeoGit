@@ -5,9 +5,7 @@
 
 package org.geogit.cli.porcelain;
 
-import static com.google.common.base.Preconditions.checkArgument;
-import static com.google.common.base.Preconditions.checkState;
-
+import java.io.IOException;
 import java.util.List;
 
 import org.geogit.api.GeoGIT;
@@ -21,9 +19,9 @@ import org.geogit.api.porcelain.RebaseConflictsException;
 import org.geogit.api.porcelain.RebaseOp;
 import org.geogit.cli.AbstractCommand;
 import org.geogit.cli.CLICommand;
+import org.geogit.cli.CommandFailedException;
 import org.geogit.cli.GeogitCLI;
-
-import scala.Console;
+import org.geogit.cli.RequiresRepository;
 
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.Parameters;
@@ -55,6 +53,7 @@ import com.google.common.base.Suppliers;
  * 
  * @see RebaseOp
  */
+@RequiresRepository
 @Parameters(commandNames = { "rebase" }, commandDescription = "Forward-port local commits to the updated upstream head")
 public class Rebase extends AbstractCommand implements CLICommand {
 
@@ -78,21 +77,17 @@ public class Rebase extends AbstractCommand implements CLICommand {
 
     /**
      * Executes the rebase command using the provided options.
-     * 
-     * @param cli
-     * @see org.geogit.cli.AbstractCommand#runInternal(org.geogit.cli.GeogitCLI)
      */
     @Override
-    public void runInternal(GeogitCLI cli) throws Exception {
-        final GeoGIT geogit = cli.getGeogit();
-        checkState(geogit != null, "Not in a geogit repository.");
+    public void runInternal(GeogitCLI cli) throws IOException {
 
-        checkArgument(!(skip && continueRebase), "Cannot use both --skip and --continue");
-        checkArgument(!(skip && abort), "Cannot use both --skip and --abort");
-        checkArgument(!(abort && continueRebase), "Cannot use both --abort and --continue");
+        checkParameter(!(skip && continueRebase), "Cannot use both --skip and --continue");
+        checkParameter(!(skip && abort), "Cannot use both --skip and --abort");
+        checkParameter(!(abort && continueRebase), "Cannot use both --abort and --continue");
 
-        RebaseOp rebase = cli.getGeogit().command(RebaseOp.class).setSkip(skip)
-                .setContinue(continueRebase).setAbort(abort).setSquashMessage(squash);
+        GeoGIT geogit = cli.getGeogit();
+        RebaseOp rebase = geogit.command(RebaseOp.class).setSkip(skip).setContinue(continueRebase)
+                .setAbort(abort).setSquashMessage(squash);
         rebase.setProgressListener(cli.getProgressListener());
 
         if (arguments == null || arguments.size() == 0) {
@@ -102,32 +97,30 @@ public class Rebase extends AbstractCommand implements CLICommand {
                 throw new UnsupportedOperationException("remote branch rebase not yet supported");
             }
         } else {
-            checkArgument(arguments.size() < 3, "Too many arguments specified.");
+            checkParameter(arguments.size() < 3, "Too many arguments specified.");
             if (arguments.size() == 2) {
                 // Make sure branch is valid
-                Optional<ObjectId> branchRef = cli.getGeogit().command(RevParse.class)
+                Optional<ObjectId> branchRef = geogit.command(RevParse.class)
                         .setRefSpec(arguments.get(1)).call();
-                checkState(branchRef.isPresent(), "The branch reference could not be resolved.");
+                checkParameter(branchRef.isPresent(), "The branch reference could not be resolved.");
                 // Checkout <branch> prior to rebase
                 try {
-                    cli.getGeogit().command(CheckoutOp.class).setSource(arguments.get(1)).call();
+                    geogit.command(CheckoutOp.class).setSource(arguments.get(1)).call();
                 } catch (CheckoutException e) {
-                    Console.println(e.getMessage());
-                    return;
+                    throw new CommandFailedException(e.getMessage(), e);
                 }
 
             }
 
-            Optional<Ref> upstreamRef = cli.getGeogit().command(RefParse.class)
-                    .setName(arguments.get(0)).call();
-            checkArgument(upstreamRef.isPresent(), "The upstream reference could not be resolved.");
+            Optional<Ref> upstreamRef = geogit.command(RefParse.class).setName(arguments.get(0))
+                    .call();
+            checkParameter(upstreamRef.isPresent(), "The upstream reference could not be resolved.");
             rebase.setUpstream(Suppliers.ofInstance(upstreamRef.get().getObjectId()));
         }
 
         if (onto != null) {
-            Optional<ObjectId> ontoId = cli.getGeogit().command(RevParse.class).setRefSpec(onto)
-                    .call();
-            checkArgument(ontoId.isPresent(), "The onto reference could not be resolved.");
+            Optional<ObjectId> ontoId = geogit.command(RevParse.class).setRefSpec(onto).call();
+            checkParameter(ontoId.isPresent(), "The onto reference could not be resolved.");
             rebase.setOnto(Suppliers.ofInstance(ontoId.get()));
         }
 
@@ -139,7 +132,7 @@ public class Rebase extends AbstractCommand implements CLICommand {
             sb.append("When you have fixed this conflicts, run 'geogit rebase --continue' to continue rebasing.\n");
             sb.append("If you would prefer to skip this commit, instead run 'geogit rebase --skip.\n");
             sb.append("To check out the original branch and stop rebasing, run 'geogit rebase --abort'\n");
-            throw new IllegalStateException(sb.toString());
+            throw new CommandFailedException(sb.toString());
         }
 
         if (abort) {

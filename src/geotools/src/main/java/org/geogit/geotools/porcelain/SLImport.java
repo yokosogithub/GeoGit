@@ -5,13 +5,12 @@
 
 package org.geogit.geotools.porcelain;
 
-import static com.google.common.base.Preconditions.checkState;
-
-import java.net.ConnectException;
+import java.io.IOException;
 
 import org.geogit.cli.CLICommand;
 import org.geogit.cli.CommandFailedException;
 import org.geogit.cli.GeogitCLI;
+import org.geogit.cli.RequiresRepository;
 import org.geogit.geotools.plumbing.GeoToolsOpException;
 import org.geogit.geotools.plumbing.ImportOp;
 import org.geotools.data.DataStore;
@@ -27,6 +26,7 @@ import com.beust.jcommander.Parameters;
  * 
  * @see ImportOp
  */
+@RequiresRepository
 @Parameters(commandNames = "import", commandDescription = "Import SpatiaLite database")
 public class SLImport extends AbstractSLCommand implements CLICommand {
 
@@ -57,21 +57,10 @@ public class SLImport extends AbstractSLCommand implements CLICommand {
 
     /**
      * Executes the import command using the provided options.
-     * 
-     * @param cli
-     * @see org.geogit.cli.AbstractSLCommand#runInternal(org.geogit.cli.GeogitCLI)
      */
     @Override
-    protected void runInternal(GeogitCLI cli) throws Exception {
-        checkState(cli.getGeogit() != null, "Not a geogit repository: " + cli.getPlatform().pwd());
-
-        DataStore dataStore = null;
-        try {
-            dataStore = getDataStore();
-        } catch (ConnectException e) {
-            cli.getConsole().println("Unable to connect using the specified database parameters.");
-            throw new CommandFailedException();
-        }
+    protected void runInternal(GeogitCLI cli) throws IOException {
+        DataStore dataStore = getDataStore();
 
         try {
 
@@ -87,34 +76,29 @@ public class SLImport extends AbstractSLCommand implements CLICommand {
         } catch (GeoToolsOpException e) {
             switch (e.statusCode) {
             case TABLE_NOT_DEFINED:
-                cli.getConsole().println(
-                        "No tables specified for import. Specify --all or --table <table>.");
-                throw new CommandFailedException();
+                throw new CommandFailedException(
+                        "No tables specified for import. Specify --all or --table <table>.", e);
             case ALL_AND_TABLE_DEFINED:
-                cli.getConsole().println("Specify --all or --table <table>, both cannot be set.");
-                throw new CommandFailedException();
+                throw new CommandFailedException(
+                        "Specify --all or --table <table>, both cannot be set.", e);
             case NO_FEATURES_FOUND:
-                cli.getConsole().println("No features were found in the database.");
-                throw new CommandFailedException();
+                throw new CommandFailedException("No features were found in the database.", e);
             case TABLE_NOT_FOUND:
-                cli.getConsole().println("Could not find the specified table.");
-                throw new CommandFailedException();
+                throw new CommandFailedException("Could not find the specified table.", e);
             case UNABLE_TO_GET_NAMES:
-                cli.getConsole().println("Unable to get feature types from the database.");
-                throw new CommandFailedException();
+                throw new CommandFailedException("Unable to get feature types from the database.",
+                        e);
             case UNABLE_TO_GET_FEATURES:
-                cli.getConsole().println("Unable to get features from the database.");
-                throw new CommandFailedException();
+                throw new CommandFailedException("Unable to get features from the database.", e);
             case UNABLE_TO_INSERT:
-                cli.getConsole().println("Unable to insert features into the working tree.");
-                throw new CommandFailedException();
+                throw new CommandFailedException(
+                        "Unable to insert features into the working tree.", e);
             case ALTER_AND_ALL_DEFINED:
-                cli.getConsole().println(
-                        "Alter cannot be used with --all option and more than one table.");
-                throw new CommandFailedException();
+                throw new CommandFailedException(
+                        "Alter cannot be used with --all option and more than one table.", e);
             default:
-                cli.getConsole().println("Import failed with exception: " + e.statusCode.name());
-                throw new CommandFailedException();
+                throw new CommandFailedException("Import failed with exception: "
+                        + e.statusCode.name(), e);
             }
         } finally {
             dataStore.dispose();

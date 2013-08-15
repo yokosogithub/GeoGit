@@ -328,10 +328,10 @@ public class GeoGitDataStoreTest extends RepositoryTestCase {
         dataStore.createSchema(linesType);
 
         Transaction tx = new DefaultTransaction();
-        FeatureWriter<SimpleFeatureType,SimpleFeature> fw = 
-            dataStore.getFeatureWriterAppend(linesTypeName.getLocalPart(), tx);
+        FeatureWriter<SimpleFeatureType, SimpleFeature> fw = dataStore.getFeatureWriterAppend(
+                linesTypeName.getLocalPart(), tx);
 
-        LineString line = new GeometryBuilder().lineString(0,0,1,1);
+        LineString line = new GeometryBuilder().lineString(0, 0, 1, 1);
         SimpleFeature f = (SimpleFeature) fw.next();
         f.setAttribute("sp", "foo");
         f.setAttribute("ip", 10);
@@ -339,19 +339,20 @@ public class GeoGitDataStoreTest extends RepositoryTestCase {
 
         fw.write();
         fw.close();
-        
+
         tx.commit();
 
-        FeatureSource<SimpleFeatureType, SimpleFeature> source = dataStore.getFeatureSource(linesTypeName);
+        FeatureSource<SimpleFeatureType, SimpleFeature> source = dataStore
+                .getFeatureSource(linesTypeName);
         assertEquals(1, source.getCount(null));
 
-        FeatureReader<SimpleFeatureType, SimpleFeature> r = dataStore.getFeatureReader(
-            new Query(linesTypeName.getLocalPart()), Transaction.AUTO_COMMIT);
+        FeatureReader<SimpleFeatureType, SimpleFeature> r = dataStore.getFeatureReader(new Query(
+                linesTypeName.getLocalPart()), Transaction.AUTO_COMMIT);
         assertTrue(r.hasNext());
 
         f = r.next();
         assertEquals("foo", f.getAttribute("sp"));
         assertEquals(10, f.getAttribute("ip"));
-        assertTrue(line.equals((Geometry)f.getAttribute("pp")));
+        assertTrue(line.equals((Geometry) f.getAttribute("pp")));
     }
 }

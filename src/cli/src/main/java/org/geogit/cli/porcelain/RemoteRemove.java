@@ -5,8 +5,6 @@
 
 package org.geogit.cli.porcelain;
 
-import static com.google.common.base.Preconditions.checkState;
-
 import java.util.List;
 
 import org.geogit.api.porcelain.RemoteException;
@@ -15,6 +13,7 @@ import org.geogit.cli.AbstractCommand;
 import org.geogit.cli.CLICommand;
 import org.geogit.cli.CommandFailedException;
 import org.geogit.cli.GeogitCLI;
+import org.geogit.cli.RequiresRepository;
 
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.Parameters;
@@ -33,6 +32,7 @@ import com.beust.jcommander.Parameters;
  * 
  * @see RemoteRemoveOp
  */
+@RequiresRepository
 @Parameters(commandNames = "rm", commandDescription = "Remove a remote from the repository")
 public class RemoteRemove extends AbstractCommand implements CLICommand {
 
@@ -41,13 +41,9 @@ public class RemoteRemove extends AbstractCommand implements CLICommand {
 
     /**
      * Executes the remote remove command.
-     * 
-     * @param cli
-     * @see org.geogit.cli.AbstractCommand#runInternal(org.geogit.cli.GeogitCLI)
      */
     @Override
-    public void runInternal(GeogitCLI cli) throws Exception {
-        checkState(cli.getGeogit() != null, "Not a geogit repository: " + cli.getPlatform().pwd());
+    public void runInternal(GeogitCLI cli) {
         if (params == null || params.size() != 1) {
             printUsage();
             throw new CommandFailedException();
@@ -58,10 +54,10 @@ public class RemoteRemove extends AbstractCommand implements CLICommand {
         } catch (RemoteException e) {
             switch (e.statusCode) {
             case REMOTE_NOT_FOUND:
-                throw new IllegalArgumentException("Could not find a remote called '"
-                        + params.get(0) + "'.", e);
+                throw new CommandFailedException("Could not find a remote called '" + params.get(0)
+                        + "'.", e);
             default:
-                throw new IllegalArgumentException(e);
+                throw new CommandFailedException(e.getMessage(), e);
             }
         }
     }

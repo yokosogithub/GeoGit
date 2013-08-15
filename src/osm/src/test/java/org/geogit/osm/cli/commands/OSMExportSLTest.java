@@ -17,7 +17,6 @@ import jline.console.ConsoleReader;
 import org.geogit.api.Platform;
 import org.geogit.api.TestPlatform;
 import org.geogit.cli.GeogitCLI;
-import org.geogit.osm.cli.commands.OSMMap;
 import org.geogit.osm.internal.OSMImportOp;
 import org.geogit.repository.WorkingTree;
 import org.junit.Assert;

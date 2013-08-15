@@ -15,7 +15,7 @@ Feature: "checkout" command
   Scenario: Try to checkout something while not in a repository
   	Given I am in an empty directory
   	 When I run the command "checkout noBranch"
-  	 Then the response should contain "not in a geogit repository."
+  	 Then the response should contain "Not in a geogit repository"
   	  And it should exit with non-zero exit code
   	 
   Scenario: Try to checkout without specifying a path

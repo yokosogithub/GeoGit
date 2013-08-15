@@ -99,7 +99,7 @@ public class PGImportTest extends Assert {
         PGImport importCommand = new PGImport();
         importCommand.all = true;
         importCommand.dataStoreFactory = factory;
-        exception.expect(IllegalStateException.class);
+        exception.expect(CommandFailedException.class);
         importCommand.run(cli);
     }
 

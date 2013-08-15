@@ -5,6 +5,7 @@
 
 package org.geogit.cli.porcelain;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -20,6 +21,7 @@ import org.geogit.cli.AbstractCommand;
 import org.geogit.cli.CLICommand;
 import org.geogit.cli.CommandFailedException;
 import org.geogit.cli.GeogitCLI;
+import org.geogit.cli.InvalidParameterException;
 
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.Parameters;
@@ -73,12 +75,9 @@ public class Config extends AbstractCommand implements CLICommand {
 
     /**
      * Executes the config command using the provided options.
-     * 
-     * @param cli
-     * @see org.geogit.cli.AbstractCommand#runInternal(org.geogit.cli.GeogitCLI)
      */
     @Override
-    public void runInternal(GeogitCLI cli) throws Exception {
+    public void runInternal(GeogitCLI cli) throws IOException {
 
         GeoGIT geogit = cli.getGeogit();
         if (null == geogit) {
@@ -140,31 +139,32 @@ public class Config extends AbstractCommand implements CLICommand {
             switch (e.statusCode) {
             case INVALID_LOCATION:
                 // TODO: This could probably be more descriptive.
-                throw new IllegalStateException("The config location is invalid", e);
+                throw new CommandFailedException("The config location is invalid", e);
             case CANNOT_WRITE:
-                throw new IllegalStateException("Cannot write to the config", e);
+                throw new CommandFailedException("Cannot write to the config", e);
             case SECTION_OR_NAME_NOT_PROVIDED:
-                throw new IllegalArgumentException("No section or name was provided", e);
+                throw new InvalidParameterException("No section or name was provided", e);
             case SECTION_OR_KEY_INVALID:
-                throw new IllegalArgumentException("The section or key is invalid", e);
+                throw new InvalidParameterException("The section or key is invalid", e);
             case OPTION_DOES_NOT_EXIST:
-                throw new IllegalArgumentException("Tried to unset an option that does not exist",
+                throw new InvalidParameterException("Tried to unset an option that does not exist",
                         e);
             case MULTIPLE_OPTIONS_MATCH:
-                throw new IllegalArgumentException(
+                throw new InvalidParameterException(
                         "Tried to unset/set an option for which multiple lines match", e);
             case INVALID_REGEXP:
-                throw new IllegalArgumentException("Tried to use an invalid regexp", e);
+                throw new InvalidParameterException("Tried to use an invalid regexp", e);
             case USERHOME_NOT_SET:
-                throw new IllegalArgumentException(
+                throw new InvalidParameterException(
                         "Used --global option without $HOME being properly set", e);
             case TOO_MANY_ACTIONS:
-                throw new IllegalArgumentException("Tried to use more than one action at a time", e);
+                throw new InvalidParameterException("Tried to use more than one action at a time",
+                        e);
             case MISSING_SECTION:
-                throw new IllegalArgumentException(
+                throw new InvalidParameterException(
                         "Could not find a section with the name provided", e);
             case TOO_MANY_ARGS:
-                throw new IllegalArgumentException("Too many arguments provided.", e);
+                throw new InvalidParameterException("Too many arguments provided.", e);
             }
         }
     }

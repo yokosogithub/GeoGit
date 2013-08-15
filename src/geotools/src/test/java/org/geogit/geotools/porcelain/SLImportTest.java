@@ -99,7 +99,7 @@ public class SLImportTest extends Assert {
         SLImport importCommand = new SLImport();
         importCommand.all = true;
         importCommand.dataStoreFactory = factory;
-        exception.expect(IllegalStateException.class);
+        exception.expect(CommandFailedException.class);
         importCommand.run(cli);
     }
 

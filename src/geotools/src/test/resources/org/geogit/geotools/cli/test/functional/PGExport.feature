@@ -6,7 +6,7 @@ Feature: "pg export" command
   Scenario: Try exporting from an empty directory
     Given I am in an empty directory
      When I run the command "pg export Points Points" on the PostGIS database
-     Then the response should start with "Not a geogit repository:"
+     Then the response should start with "Not in a geogit repository:"
      
   Scenario: Try exporting a feature type
     Given I have a repository

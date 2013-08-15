@@ -5,6 +5,7 @@
 
 package org.geogit.osm.cli.commands;
 
+import java.io.IOException;
 import java.util.List;
 
 import jline.console.ConsoleReader;
@@ -15,6 +16,7 @@ import org.geogit.cli.AbstractCommand;
 import org.geogit.cli.CLICommand;
 import org.geogit.cli.CommandFailedException;
 import org.geogit.cli.GeogitCLI;
+import org.geogit.cli.RequiresRepository;
 import org.geogit.osm.internal.Mapping;
 import org.geogit.osm.internal.OSMMapOp;
 
@@ -27,6 +29,7 @@ import com.beust.jcommander.Parameters;
  * 
  * @see OSMMapOp
  */
+@RequiresRepository
 @Parameters(commandNames = "map", commandDescription = "Create new data in the repository, applying a mapping to the current OSM data")
 public class OSMMap extends AbstractCommand implements CLICommand {
 
@@ -37,16 +40,9 @@ public class OSMMap extends AbstractCommand implements CLICommand {
 
     /**
      * Executes the map command using the provided options.
-     * 
-     * @param cli
      */
     @Override
-    protected void runInternal(GeogitCLI cli) throws Exception {
-        if (cli.getGeogit() == null) {
-            cli.getConsole().println("Not a geogit repository: " + cli.getPlatform().pwd());
-            return;
-        }
-
+    protected void runInternal(GeogitCLI cli) throws IOException {
         if (args == null || args.isEmpty() || args.size() != 1) {
             printUsage();
             throw new CommandFailedException();

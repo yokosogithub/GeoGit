@@ -5,7 +5,6 @@
 
 package org.geogit.osm.cli.commands;
 
-import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 
@@ -24,7 +23,9 @@ import org.geogit.api.porcelain.CheckoutOp;
 import org.geogit.api.porcelain.LogOp;
 import org.geogit.cli.AbstractCommand;
 import org.geogit.cli.CLICommand;
+import org.geogit.cli.CommandFailedException;
 import org.geogit.cli.GeogitCLI;
+import org.geogit.cli.RequiresRepository;
 import org.geogit.osm.internal.AddOSMLogEntry;
 import org.geogit.osm.internal.EmptyOSMDownloadException;
 import org.geogit.osm.internal.Mapping;
@@ -58,6 +59,7 @@ import com.google.common.io.Files;
  * elements modified/added since the last import (which is stored on the OSM log file)
  * 
  */
+@RequiresRepository
 @Parameters(commandNames = "download", commandDescription = "Download OpenStreetMap data")
 public class OSMDownload extends AbstractCommand implements CLICommand {
 
@@ -98,19 +100,20 @@ public class OSMDownload extends AbstractCommand implements CLICommand {
     private GeogitCLI cli;
 
     @Override
-    protected void runInternal(GeogitCLI cli) throws Exception {
+    protected void runInternal(GeogitCLI cli) throws IOException {
         final GeoGIT geogit = cli.getGeogit();
-        checkState(geogit != null, "Not a geogit repository: " + cli.getPlatform().pwd());
-        checkArgument(filterFile != null ^ bbox != null || update,
+        checkParameter(filterFile != null ^ bbox != null || update,
                 "You must specify a filter file or a bounding box");
-        checkArgument((filterFile != null || bbox != null) ^ update,
+        checkParameter((filterFile != null || bbox != null) ^ update,
                 "Filters cannot be used when updating");
+        
         checkState(geogit.countStaged().getCount() + geogit.countUnstaged().getCount() == 0,
                 "Working tree and index are not clean");
-        checkArgument(!rebase || update, "--rebase switch can only be used when updating");
-        checkArgument(filterFile == null || filterFile.exists(),
+        
+        checkParameter(!rebase || update, "--rebase switch can only be used when updating");
+        checkParameter(filterFile == null || filterFile.exists(),
                 "The specified filter file does not exist");
-        checkArgument(bbox == null || bbox.size() == 4, "The specified bounding box is not correct");
+        checkParameter(bbox == null || bbox.size() == 4, "The specified bounding box is not correct");
 
         osmAPIUrl = resolveAPIURL();
 
@@ -122,7 +125,7 @@ public class OSMDownload extends AbstractCommand implements CLICommand {
         }
     }
 
-    private void download() throws Exception {
+    private void download() throws IOException {
 
         Mapping mapping = null;
         if (mappingFile != null) {
@@ -137,7 +140,7 @@ public class OSMDownload extends AbstractCommand implements CLICommand {
             try {
                 filter = readFile(filterFile);
             } catch (IOException e) {
-                throw new IllegalArgumentException("Error reading filter file:" + e.getMessage(), e);
+                throw new CommandFailedException("Error reading filter file:" + e.getMessage(), e);
             }
         } else if (bbox != null) {
             String bboxString = bbox.get(0) + "," + bbox.get(1) + "," + bbox.get(2) + ","
@@ -183,7 +186,7 @@ public class OSMDownload extends AbstractCommand implements CLICommand {
 
     }
 
-    private void update() throws Exception {
+    private void update() throws IOException {
         GeoGIT geogit = cli.getGeogit();
         final Optional<Ref> currHead = geogit.command(RefParse.class).setName(Ref.HEAD).call();
         Preconditions.checkState(currHead.isPresent(), "Repository has no HEAD, can't update.");
@@ -191,7 +194,7 @@ public class OSMDownload extends AbstractCommand implements CLICommand {
                 "Can't update from detached HEAD");
 
         List<OSMLogEntry> entries = geogit.command(ReadOSMLogEntries.class).call();
-        checkArgument(!entries.isEmpty(), "Not in a geogit repository with OSM data");
+        checkParameter(!entries.isEmpty(), "Not in a geogit repository with OSM data");
 
         Iterator<RevCommit> log = geogit.command(LogOp.class).setFirstParentOnly(false)
                 .setTopoOrder(false).call();

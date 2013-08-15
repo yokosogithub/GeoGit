@@ -4,21 +4,20 @@
  */
 package org.geogit.geotools.porcelain;
 
+import java.io.IOException;
 import java.io.Serializable;
-import java.net.ConnectException;
 import java.sql.Connection;
+import java.sql.SQLException;
 import java.util.Map;
 
+import org.geogit.cli.AbstractCommand;
 import org.geogit.cli.CLICommand;
-import org.geogit.cli.GeogitCLI;
+import org.geogit.cli.CommandFailedException;
 import org.geotools.data.AbstractDataStoreFactory;
 import org.geotools.data.DataStore;
 import org.geotools.data.postgis.PostgisNGDataStoreFactory;
 import org.geotools.jdbc.JDBCDataStore;
 
-import com.beust.jcommander.JCommander;
-import com.beust.jcommander.Parameter;
-import com.beust.jcommander.Parameters;
 import com.beust.jcommander.ParametersDelegate;
 import com.beust.jcommander.internal.Maps;
 
@@ -27,13 +26,7 @@ import com.beust.jcommander.internal.Maps;
  * 
  * @see CLICommand
  */
-public abstract class AbstractPGCommand implements CLICommand {
-
-    /**
-     * Flag for displaying help for the command.
-     */
-    @Parameter(names = "--help", help = true, hidden = true)
-    public boolean help;
+public abstract class AbstractPGCommand extends AbstractCommand implements CLICommand {
 
     /**
      * Common arguments for PostGIS commands.
@@ -51,46 +44,13 @@ public abstract class AbstractPGCommand implements CLICommand {
     public AbstractDataStoreFactory dataStoreFactory = new PostgisNGDataStoreFactory();
 
     /**
-     * Executes the command.
-     * 
-     * @param cli
-     * @throws Exception
-     * @see org.geogit.cli.CLICommand#run(org.geogit.cli.GeogitCLI)
-     */
-    @Override
-    public void run(GeogitCLI cli) throws Exception {
-        if (help) {
-            printUsage();
-            return;
-        }
-
-        runInternal(cli);
-    }
-
-    /**
-     * Prints the correct usage of the geogit pg command.
-     */
-    protected void printUsage() {
-        JCommander jc = new JCommander(this);
-        String commandName = this.getClass().getAnnotation(Parameters.class).commandNames()[0];
-        jc.setProgramName("geogit pg " + commandName);
-        jc.usage();
-    }
-
-    /**
-     * Subclasses shall implement to do the real work, will not be called if the command was invoked
-     * with {@code --help}
-     */
-    protected abstract void runInternal(GeogitCLI cli) throws Exception;
-
-    /**
      * Constructs a new PostGIS data store using connection parameters from {@link PGCommonArgs}.
      * 
      * @return the constructed data store
      * @throws Exception
      * @see DataStore
      */
-    protected DataStore getDataStore() throws Exception {
+    protected DataStore getDataStore() {
         Map<String, Serializable> params = Maps.newHashMap();
         params.put(PostgisNGDataStoreFactory.DBTYPE.key, "postgis");
         params.put(PostgisNGDataStoreFactory.HOST.key, commonArgs.host);
@@ -101,20 +61,24 @@ public abstract class AbstractPGCommand implements CLICommand {
         params.put(PostgisNGDataStoreFactory.PASSWD.key, commonArgs.password);
         params.put(PostgisNGDataStoreFactory.FETCHSIZE.key, 1000);
 
-        DataStore dataStore = dataStoreFactory.createDataStore(params);
-
-        if (dataStore == null) {
-            throw new ConnectException();
+        DataStore dataStore;
+        try {
+            dataStore = dataStoreFactory.createDataStore(params);
+        } catch (IOException e) {
+            throw new CommandFailedException(
+                    "Unable to connect using the specified database parameters.", e);
         }
-
+        if (dataStore == null) {
+            throw new CommandFailedException(
+                    "Unable to connect using the specified database parameters.");
+        }
         if (dataStore instanceof JDBCDataStore) {
             Connection con = null;
             try {
                 con = ((JDBCDataStore) dataStore).getDataSource().getConnection();
-            } catch (Exception e) {
-                throw new ConnectException();
+            } catch (SQLException e) {
+                throw new CommandFailedException(e.getMessage(), e);
             }
-
             ((JDBCDataStore) dataStore).closeSafe(con);
         }
 

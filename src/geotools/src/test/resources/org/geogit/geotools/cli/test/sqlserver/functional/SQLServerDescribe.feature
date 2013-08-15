@@ -6,7 +6,7 @@ Feature: "sqlserver describe" command
   Scenario: Try describing a SQL Server table from an empty directory
     Given I am in an empty directory
      When I run the command "sqlserver describe --table geogit_sqlserver_test" on the SQL Server database
-     Then the response should start with "Not a geogit repository:"
+     Then the response should start with "Not in a geogit repository"
       
   Scenario: Try describing a SQL Server table
     Given I have a repository

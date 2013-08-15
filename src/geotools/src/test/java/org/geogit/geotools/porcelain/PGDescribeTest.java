@@ -124,7 +124,7 @@ public class PGDescribeTest extends Assert {
         PGDescribe describeCommand = new PGDescribe();
         describeCommand.table = "table1";
         describeCommand.dataStoreFactory = factory;
-        exception.expect(IllegalStateException.class);
+        exception.expect(CommandFailedException.class);
         describeCommand.run(cli);
     }
 

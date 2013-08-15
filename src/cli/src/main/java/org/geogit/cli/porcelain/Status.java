@@ -4,8 +4,6 @@
  */
 package org.geogit.cli.porcelain;
 
-import static com.google.common.base.Preconditions.checkState;
-
 import java.io.IOException;
 import java.util.Iterator;
 import java.util.List;
@@ -25,16 +23,16 @@ import org.geogit.api.plumbing.diff.DiffEntry;
 import org.geogit.api.plumbing.diff.DiffEntry.ChangeType;
 import org.geogit.api.plumbing.merge.Conflict;
 import org.geogit.api.plumbing.merge.ConflictsReadOp;
-import org.geogit.cli.AnsiDecorator;
+import org.geogit.cli.AbstractCommand;
 import org.geogit.cli.CLICommand;
 import org.geogit.cli.GeogitCLI;
+import org.geogit.cli.RequiresRepository;
 import org.geogit.repository.StagingArea;
 import org.geogit.repository.WorkingTree;
 
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.Parameters;
 import com.google.common.base.Optional;
-import com.google.common.base.Preconditions;
 
 /**
  * Displays features that have differences between the index and the current HEAD commit and
@@ -50,11 +48,9 @@ import com.google.common.base.Preconditions;
  * @see Commit
  * @see Add
  */
+@RequiresRepository
 @Parameters(commandNames = "status", commandDescription = "Show the working tree status")
-public class Status implements CLICommand {
-
-    @Parameter(names = "--color", description = "Whether to apply colored output. Possible values are auto|never|always.", converter = ColorArg.Converter.class)
-    private ColorArg coloredOutput = ColorArg.auto;
+public class Status extends AbstractCommand implements CLICommand {
 
     @Parameter(names = "--limit", description = "Limit number of displayed changes. Must be >= 0.")
     private Integer limit = 50;
@@ -64,15 +60,10 @@ public class Status implements CLICommand {
 
     /**
      * Executes the status command using the provided options.
-     * 
-     * @param cli
-     * @see org.geogit.cli.CLICommand#run(org.geogit.cli.GeogitCLI)
      */
     @Override
-    public void run(GeogitCLI cli) throws Exception {
-        checkState(cli.getGeogit() != null, "Not a geogit repository: " + cli.getPlatform().pwd());
-
-        Preconditions.checkArgument(limit >= 0, "Limit must be 0 or greater.");
+    public void runInternal(GeogitCLI cli) throws IOException {
+        checkParameter(limit >= 0, "Limit must be 0 or greater.");
 
         ConsoleReader console = cli.getConsole();
         GeoGIT geogit = cli.getGeogit();
@@ -86,7 +77,7 @@ public class Status implements CLICommand {
         final long countUnstaged = workTree.countUnstaged(null).getCount();
 
         final Optional<Ref> currHead = geogit.command(RefParse.class).setName(Ref.HEAD).call();
-        Preconditions.checkState(currHead.isPresent(), "Repository has no HEAD.");
+        checkParameter(currHead.isPresent(), "Repository has no HEAD.");
         if (currHead.get() instanceof SymRef) {
             final SymRef headRef = (SymRef) currHead.get();
             console.println("# On branch " + Ref.localName(headRef.getTarget()));
@@ -147,19 +138,7 @@ public class Status implements CLICommand {
 
         StringBuilder sb = new StringBuilder();
 
-        boolean useColor;
-        switch (this.coloredOutput) {
-        case never:
-            useColor = false;
-            break;
-        case always:
-            useColor = true;
-            break;
-        default:
-            useColor = console.getTerminal().isAnsiSupported();
-        }
-
-        Ansi ansi = AnsiDecorator.newAnsi(useColor, sb);
+        Ansi ansi = newAnsi(console.getTerminal(), sb);
 
         DiffEntry entry;
         ChangeType type;
@@ -192,19 +171,7 @@ public class Status implements CLICommand {
 
         StringBuilder sb = new StringBuilder();
 
-        boolean useColor;
-        switch (this.coloredOutput) {
-        case never:
-            useColor = false;
-            break;
-        case always:
-            useColor = true;
-            break;
-        default:
-            useColor = console.getTerminal().isAnsiSupported();
-        }
-
-        Ansi ansi = AnsiDecorator.newAnsi(useColor, sb);
+        Ansi ansi = newAnsi(console.getTerminal(), sb);
 
         String path;
         for (int i = 0; i < conflicts.size() && i < limit; i++) {

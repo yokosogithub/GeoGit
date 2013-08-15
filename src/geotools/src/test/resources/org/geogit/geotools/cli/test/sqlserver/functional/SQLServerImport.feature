@@ -6,7 +6,7 @@ Feature: "sqlserver import" command
   Scenario: Try importing into an empty directory
     Given I am in an empty directory
      When I run the command "sqlserver import --table geogit_sqlserver_test" on the SQL Server database
-     Then the response should start with "Not a geogit repository:"
+     Then the response should start with "Not in a geogit repository"
       
   Scenario: Try to import a SQL Server table
     Given I have a repository

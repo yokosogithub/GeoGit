@@ -5,11 +5,9 @@
 
 package org.geogit.cli.porcelain;
 
-import static com.google.common.base.Preconditions.checkArgument;
-import static com.google.common.base.Preconditions.checkState;
-
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
@@ -71,64 +69,56 @@ public class Clone extends AbstractCommand implements CLICommand {
 
     /**
      * Executes the clone command using the provided options.
-     * 
-     * @param cli
-     * @see org.geogit.cli.AbstractCommand#runInternal(org.geogit.cli.GeogitCLI)
      */
     @Override
-    public void runInternal(GeogitCLI cli) throws Exception {
-        checkState(args != null && args.size() > 0, "You must specify a repository to clone.");
-        checkState(args.size() < 3, "Too many arguments provided.");
+    public void runInternal(GeogitCLI cli) throws IOException {
+        checkParameter(args != null && args.size() > 0, "You must specify a repository to clone.");
+        checkParameter(args.size() < 3, "Too many arguments provided.");
         if (filterFile != null) {
-            checkArgument(branch != null,
+            checkParameter(branch != null,
                     "Sparse Clone: You must explicitly specify a remote branch to clone by using '--branch <branch>'.");
         }
 
         String repoURL = args.get(0);
 
-        try {
-            final File repoDir;
-            {
-                File currDir = cli.getPlatform().pwd();
-                if (args != null && args.size() == 2) {
-                    String target = args.get(1);
-                    File f = new File(target);
-                    if (!f.isAbsolute()) {
-                        f = new File(currDir, target).getCanonicalFile();
-                    }
-                    repoDir = f;
-                    if (!repoDir.exists() && !repoDir.mkdirs()) {
-                        throw new IllegalStateException("Can't create directory "
-                                + repoDir.getAbsolutePath());
-                    }
-
-                    // Construct a non-relative repository URL
-                    URI repoURI = URI.create(repoURL);
-                    String protocol = repoURI.getScheme();
-                    if (protocol == null || protocol.equals("file")) {
-                        File repo = new File(repoURL);
-                        if (!repo.isAbsolute()) {
-                            repo = new File(currDir, repoURL).getCanonicalFile();
-                        }
-                        repoURL = repo.toURI().getPath();
-                    }
-
-                } else {
-                    repoDir = currDir;
+        File repoDir;
+        {
+            File currDir = cli.getPlatform().pwd();
+            if (args != null && args.size() == 2) {
+                String target = args.get(1);
+                File f = new File(target);
+                if (!f.isAbsolute()) {
+                    f = new File(currDir, target).getCanonicalFile();
                 }
+                repoDir = f;
+                if (!repoDir.exists() && !repoDir.mkdirs()) {
+                    throw new IllegalStateException("Can't create directory "
+                            + repoDir.getAbsolutePath());
+                }
+
+                // Construct a non-relative repository URL
+                URI repoURI = URI.create(repoURL);
+                String protocol = repoURI.getScheme();
+                if (protocol == null || protocol.equals("file")) {
+                    File repo = new File(repoURL);
+                    if (!repo.isAbsolute()) {
+                        repo = new File(currDir, repoURL).getCanonicalFile();
+                    }
+                    repoURL = repo.toURI().getPath();
+                }
+
+            } else {
+                repoDir = currDir;
             }
-
-            GeoGIT geogit = new GeoGIT(cli.getGeogitInjector(), repoDir);
-
-            Repository repository = geogit.command(InitOp.class).call();
-            checkState(repository != null,
-                    "Destination path already exists and is not an empty directory.");
-            cli.setGeogit(geogit);
-            cli.getPlatform().setWorkingDir(repoDir);
-
-        } catch (Exception e) {
-            throw Throwables.propagate(e);
         }
+
+        GeoGIT geogit = new GeoGIT(cli.getGeogitInjector(), repoDir);
+
+        Repository repository = geogit.command(InitOp.class).call();
+        checkParameter(repository != null,
+                "Destination path already exists and is not an empty directory.");
+        cli.setGeogit(geogit);
+        cli.getPlatform().setWorkingDir(repoDir);
 
         boolean sparse = false;
 
@@ -150,7 +140,6 @@ public class Clone extends AbstractCommand implements CLICommand {
                             "Sparse clone works only against file system repositories. "
                                     + "Repository location: " + envHome.toExternalForm());
                 }
-                File repoDir;
                 try {
                     repoDir = new File(envHome.toURI());
                 } catch (URISyntaxException e) {
