@@ -13,6 +13,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.NoSuchElementException;
 import java.util.Queue;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -43,13 +44,22 @@ import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableList.Builder;
 import com.google.inject.Inject;
+import com.tinkerpop.blueprints.CloseableIterable;
+import com.tinkerpop.blueprints.Edge;
+import com.tinkerpop.blueprints.Graph;
+import com.tinkerpop.blueprints.IndexableGraph;
+import com.tinkerpop.blueprints.Vertex;
+import com.tinkerpop.blueprints.impls.neo4j.Neo4jGraph;
+import com.tinkerpop.gremlin.java.GremlinPipeline;
+import com.tinkerpop.pipes.PipeFunction;
+import com.tinkerpop.pipes.branch.LoopPipe.LoopBundle;
 
 /**
  * Provides an implementation of a GeoGit Graph Database using Neo4J.
  */
 public class Neo4JGraphDatabase extends AbstractGraphDatabase {
 
-    protected GraphDatabaseService graphDB = null;
+    protected Neo4jGraph graphDB = null;
 
     protected String dbPath;
 
@@ -61,11 +71,11 @@ public class Neo4JGraphDatabase extends AbstractGraphDatabase {
      * Container class for the database service to keep track of reference counts.
      */
     protected class ServiceContainer {
-        private GraphDatabaseService dbService;
+        private Neo4jGraph dbService;
 
         private int refCount;
 
-        public ServiceContainer(GraphDatabaseService dbService) {
+        public ServiceContainer(Neo4jGraph dbService) {
             this.dbService = dbService;
             this.refCount = 0;
         }
@@ -82,7 +92,7 @@ public class Neo4JGraphDatabase extends AbstractGraphDatabase {
             return this.refCount;
         }
 
-        public GraphDatabaseService getService() {
+        public Neo4jGraph getService() {
             return this.dbService;
         }
     }
@@ -168,8 +178,9 @@ public class Neo4JGraphDatabase extends AbstractGraphDatabase {
      * 
      * @return the new {@link GraphDatabaseService}
      */
-    protected GraphDatabaseService getGraphDatabase() {
-        return new GraphDatabaseFactory().newEmbeddedDatabase(dbPath);
+    protected Neo4jGraph getGraphDatabase() {
+    	return new Neo4jGraph(dbPath);
+//        return new GraphDatabaseFactory().newEmbeddedDatabase(dbPath);
     }
 
     /**
@@ -216,9 +227,33 @@ public class Neo4JGraphDatabase extends AbstractGraphDatabase {
      */
     @Override
     public boolean exists(ObjectId commitId) {
-        Index<Node> idIndex = graphDB.index().forNodes("identifiers");
-        Node node = idIndex.get("id", commitId.toString()).getSingle();
-        return node != null;
+		try {
+			com.tinkerpop.blueprints.Index<Vertex> idIndex = graphDB.getIndex(
+					"identifiers", Vertex.class);
+			CloseableIterable<Vertex> results = null;
+			try {
+				results = idIndex.get("id", commitId.toString());
+				if (results.iterator().hasNext()) {
+					results.iterator().next();
+					if (results.iterator().hasNext()) {
+						throw new NoSuchElementException(); // strictly
+															// following Neo4J's
+															// getSingle
+															// semantics; is
+															// this necessary?
+					} else {
+						return true;
+					}
+				} else {
+					return false;
+				}
+			} finally {
+				if (results != null)
+					results.close();
+			}
+		} finally {
+			graphDB.rollback();
+		}
     }
 
     /**
@@ -230,19 +265,36 @@ public class Neo4JGraphDatabase extends AbstractGraphDatabase {
      */
     @Override
     public ImmutableList<ObjectId> getParents(ObjectId commitId) throws IllegalArgumentException {
-        Index<Node> idIndex = graphDB.index().forNodes("identifiers");
-        Node node = idIndex.get("id", commitId.toString()).getSingle();
+		try {
+			com.tinkerpop.blueprints.Index<Vertex> idIndex = graphDB.getIndex(
+					"identifiers", Vertex.class);
+			Vertex node = null;
+			CloseableIterable<Vertex> results = null;
+			try {
+				results = idIndex.get("id", commitId.toString());
+				if (results.iterator().hasNext()) {
+					node = results.iterator().next();
+				}
+			} finally {
+				results.close();
+			}
 
-        Builder<ObjectId> listBuilder = new ImmutableList.Builder<ObjectId>();
+			Builder<ObjectId> listBuilder = new ImmutableList.Builder<ObjectId>();
 
-        if (node != null) {
-            for (Relationship parent : node.getRelationships(Direction.OUTGOING,
-                    CommitRelationshipTypes.PARENT)) {
-                Node parentNode = parent.getOtherNode(node);
-                listBuilder.add(ObjectId.valueOf((String) parentNode.getProperty("id")));
-            }
-        }
-        return listBuilder.build();
+			if (node != null) {
+				for (Edge edge : node.getEdges(
+						com.tinkerpop.blueprints.Direction.OUT,
+						CommitRelationshipTypes.PARENT.name())) {
+					Vertex parentNode = edge
+							.getVertex(com.tinkerpop.blueprints.Direction.IN);
+					listBuilder.add(ObjectId.valueOf(parentNode
+							.<String> getProperty("id")));
+				}
+			}
+			return listBuilder.build();
+		} finally {
+			graphDB.rollback();
+		}
     }
 
     /**
@@ -254,17 +306,37 @@ public class Neo4JGraphDatabase extends AbstractGraphDatabase {
      */
     @Override
     public ImmutableList<ObjectId> getChildren(ObjectId commitId) throws IllegalArgumentException {
-        Index<Node> idIndex = graphDB.index().forNodes("identifiers");
-        Node node = idIndex.get("id", commitId.toString()).getSingle();
+		try {
+			com.tinkerpop.blueprints.Index<Vertex> idIndex = graphDB.getIndex(
+					"identifiers", Vertex.class);
+			CloseableIterable<Vertex> results = null;
+			Vertex node = null;
+			try {
+				results = idIndex.get("id", commitId.toString());
+				if (results.iterator().hasNext()) {
+					node = results.iterator().next();
+				}
+			} finally {
+				if (results != null)
+					results.close();
+			}
 
-        Builder<ObjectId> listBuilder = new ImmutableList.Builder<ObjectId>();
+			Builder<ObjectId> listBuilder = new ImmutableList.Builder<ObjectId>();
 
-        for (Relationship child : node.getRelationships(Direction.INCOMING,
-                CommitRelationshipTypes.PARENT)) {
-            Node childNode = child.getOtherNode(node);
-            listBuilder.add(ObjectId.valueOf((String) childNode.getProperty("id")));
-        }
-        return listBuilder.build();
+			if (node != null) {
+				for (Edge child : node.getEdges(
+						com.tinkerpop.blueprints.Direction.IN,
+						CommitRelationshipTypes.PARENT.name())) {
+					Vertex childNode = child
+							.getVertex(com.tinkerpop.blueprints.Direction.OUT);
+					listBuilder.add(ObjectId.valueOf(childNode
+							.<String> getProperty("id")));
+				}
+			}
+			return listBuilder.build();
+		} finally {
+			graphDB.rollback();
+		}
     }
 
     /**
@@ -277,40 +349,33 @@ public class Neo4JGraphDatabase extends AbstractGraphDatabase {
      */
     @Override
     public boolean put(ObjectId commitId, ImmutableList<ObjectId> parentIds) {
-        Transaction tx = graphDB.beginTx();
-
-        Node commitNode = null;
         try {
             // See if it already exists
-            commitNode = getOrAddNode(commitId);
+            Vertex commitNode = getOrAddNode(commitId);
 
             if (parentIds.isEmpty()) {
                 if (!commitNode
-                        .getRelationships(Direction.OUTGOING, CommitRelationshipTypes.TOROOT)
+                		.getEdges(com.tinkerpop.blueprints.Direction.OUT, CommitRelationshipTypes.TOROOT.name())
                         .iterator().hasNext()) {
                     // Attach this node to the root node
-                    commitNode.createRelationshipTo(graphDB.getNodeById(0),
-                            CommitRelationshipTypes.TOROOT);
+                	graphDB.getVertex(0);
+                    commitNode.addEdge(CommitRelationshipTypes.TOROOT.name(), graphDB.getVertex(0));
                 }
             }
 
-            if (!commitNode.getRelationships(Direction.OUTGOING, CommitRelationshipTypes.PARENT)
+            if (!commitNode.getEdges(com.tinkerpop.blueprints.Direction.OUT, CommitRelationshipTypes.PARENT.name())
                     .iterator().hasNext()) {
                 // Don't make relationships if they have been created already
                 for (ObjectId parent : parentIds) {
-                    Node parentNode = getOrAddNode(parent);
-                    commitNode.createRelationshipTo(parentNode, CommitRelationshipTypes.PARENT);
+                    Vertex parentNode = getOrAddNode(parent);
+                    commitNode.addEdge(CommitRelationshipTypes.PARENT.name(), parentNode);
                 }
             }
-
-            tx.success();
+            graphDB.commit();
         } catch (Exception e) {
-            tx.failure();
+        	graphDB.rollback();
             throw Throwables.propagate(e);
-        } finally {
-            tx.finish();
         }
-
         return true;
     }
 
@@ -322,30 +387,27 @@ public class Neo4JGraphDatabase extends AbstractGraphDatabase {
      */
     @Override
     public void map(final ObjectId mapped, final ObjectId original) {
-        Transaction tx = graphDB.beginTx();
-
-        Node commitNode = null;
+        Vertex commitNode = null;
         try {
             // See if it already exists
             commitNode = getOrAddNode(mapped);
 
-            if (commitNode.getRelationships(Direction.OUTGOING, CommitRelationshipTypes.MAPPED_TO)
+            if (commitNode.getEdges(com.tinkerpop.blueprints.Direction.OUT, CommitRelationshipTypes.MAPPED_TO.name())
                     .iterator().hasNext()) {
                 // Remove old mapping
-                commitNode.getRelationships(Direction.OUTGOING, CommitRelationshipTypes.MAPPED_TO)
-                        .iterator().next().delete();
+            	Edge toRemove = 
+                commitNode.getEdges(com.tinkerpop.blueprints.Direction.OUT, CommitRelationshipTypes.MAPPED_TO.name())
+                        .iterator().next();
+            	graphDB.removeEdge(toRemove);
             }
 
             // Don't make relationships if they have been created already
-            Node originalNode = getOrAddNode(original);
-            commitNode.createRelationshipTo(originalNode, CommitRelationshipTypes.MAPPED_TO);
-
-            tx.success();
+            Vertex originalNode = getOrAddNode(original);
+            commitNode.addEdge(CommitRelationshipTypes.MAPPED_TO.name(), originalNode);
+            graphDB.commit();
         } catch (Exception e) {
-            tx.failure();
+        	graphDB.rollback();
             throw Throwables.propagate(e);
-        } finally {
-            tx.finish();
         }
     }
 
@@ -356,24 +418,30 @@ public class Neo4JGraphDatabase extends AbstractGraphDatabase {
      * @return the mapped commit id
      */
     public ObjectId getMapping(final ObjectId commitId) {
-        Index<Node> idIndex = graphDB.index().forNodes("identifiers");
-        Node node = idIndex.get("id", commitId.toString()).getSingle();
-
-        ObjectId mapped = ObjectId.NULL;
-        Node mappedNode = getMappedNode(node);
-        if (mappedNode != null) {
-            mapped = ObjectId.valueOf((String) mappedNode.getProperty("id"));
-        }
-        return mapped;
+    	com.tinkerpop.blueprints.Index<Vertex> idIndex = graphDB.getIndex("identifiers", Vertex.class);
+    	Vertex node = null;
+    	CloseableIterable<Vertex> results = null;
+    	try {
+    		results = idIndex.get("id", commitId.toString());
+    		node = results.iterator().next();
+    	} finally {
+    		if (results != null) results.close();
+    	}
+    	
+    	ObjectId mapped = ObjectId.NULL;
+    	Vertex mappedNode = getMappedNode(node);
+    	if (mappedNode != null) {
+    		mapped = ObjectId.valueOf(mappedNode.<String>getProperty("id"));
+    	}
+    	return mapped;
     }
 
-    private Node getMappedNode(final Node commitNode) {
+    private Vertex getMappedNode(final Vertex commitNode) {
         if (commitNode != null) {
-            Iterator<Relationship> mappings = commitNode.getRelationships(Direction.OUTGOING,
-                    CommitRelationshipTypes.MAPPED_TO).iterator();
-            if (mappings.hasNext()) {
-                return mappings.next().getOtherNode(commitNode);
-            }
+        	Iterable<Edge> mappings = commitNode.getEdges(com.tinkerpop.blueprints.Direction.OUT, CommitRelationshipTypes.MAPPED_TO.name());
+        	if (mappings.iterator().hasNext()) {
+        		return mappings.iterator().next().getVertex(com.tinkerpop.blueprints.Direction.IN);
+        	}
         }
         return null;
     }
@@ -385,16 +453,24 @@ public class Neo4JGraphDatabase extends AbstractGraphDatabase {
      * @param commitId
      * @return
      */
-    private Node getOrAddNode(ObjectId commitId) {
+    private Vertex getOrAddNode(ObjectId commitId) {
         final String commitIdStr = commitId.toString();
-        UniqueFactory<Node> factory = new UniqueFactory.UniqueNodeFactory(graphDB, "identifiers") {
-            @Override
-            protected void initialize(Node created, Map<String, Object> properties) {
-                created.setProperty("id", properties.get("id"));
-            }
-        };
-
-        return factory.getOrCreate("id", commitIdStr);
+        com.tinkerpop.blueprints.Index<Vertex> index = graphDB.getIndex("identifiers", Vertex.class);
+        Vertex v;
+        if (index.count("id", commitId.toString()) == 0) {
+        	v = graphDB.addVertex(null);
+        	v.setProperty("id", commitIdStr);
+        } else {
+        	CloseableIterable<Vertex> results = null;
+        	try {
+        		results = index.get("id", commitIdStr);
+        		v = results.iterator().next();
+        	} finally {
+        		if (results != null) results.close();
+        	}
+        }
+        
+        return v;
     }
 
     /**
@@ -406,26 +482,42 @@ public class Neo4JGraphDatabase extends AbstractGraphDatabase {
      */
     @Override
     public int getDepth(final ObjectId commitId) {
-        Index<Node> idIndex = graphDB.index().forNodes("identifiers");
-        Node commitNode = idIndex.get("id", commitId.toString()).getSingle();
-        TraversalDescription traversalDescription = Traversal.description().breadthFirst()
-                .evaluator(new Evaluator() {
-                    @Override
-                    public Evaluation evaluate(Path path) {
-                        if (!path.endNode().hasRelationship(Direction.OUTGOING)
-                                || path.endNode().hasRelationship(CommitRelationshipTypes.TOROOT)) {
-
-                            return Evaluation.INCLUDE_AND_PRUNE;
-                        }
-                        return Evaluation.EXCLUDE_AND_CONTINUE;
-                    }
-
-                }).relationships(CommitRelationshipTypes.PARENT, Direction.OUTGOING);
-        Traverser traverser = traversalDescription.traverse(commitNode);
+    	com.tinkerpop.blueprints.Index<Vertex> idIndex = graphDB.getIndex("identifiers", Vertex.class);
+    	Vertex commitNode = null;
+    	CloseableIterable<Vertex> results = null;
+    	try {
+    		results = idIndex.get("id", commitId.toString());
+    		commitNode = results.iterator().next();
+    	} finally {
+    		if (results != null) results.close();
+    	}
+    	PipeFunction<LoopBundle<Vertex>, Boolean> expandCriterion =
+    		new PipeFunction<LoopBundle<Vertex>, Boolean>() {
+	    		@Override
+	    		public Boolean compute(LoopBundle<Vertex> argument) {
+	    			Iterable<Edge> edges = argument.getObject().getEdges(com.tinkerpop.blueprints.Direction.OUT, CommitRelationshipTypes.TOROOT.name());
+	    			return edges.iterator().hasNext();
+	    		}
+	    	};
+	    PipeFunction<LoopBundle<Vertex>, Boolean> emitCriterion =
+	        new PipeFunction<LoopBundle<Vertex>, Boolean>() {
+				@Override
+				public Boolean compute(LoopBundle<Vertex> argument) {
+					Iterable<Edge> edges = argument.getObject().getEdges(com.tinkerpop.blueprints.Direction.OUT, CommitRelationshipTypes.TOROOT.name());
+					return !edges.iterator().hasNext();
+				}
+	        };
+    	GremlinPipeline<Vertex, List> pipe = 
+    		new GremlinPipeline<Vertex, Vertex>()
+    		    .start(commitNode)
+	    	    .as("start")
+	    	    .out(CommitRelationshipTypes.PARENT.name())
+	    	    .loop("start", expandCriterion, emitCriterion)
+	    	    .path();
 
         int min = Integer.MAX_VALUE;
-        for (Path path : traverser) {
-            int length = path.length();
+        for (List<?> path : pipe) {
+            int length = path.size();
             if (length < min) {
                 min = length;
             }
@@ -442,23 +534,53 @@ public class Neo4JGraphDatabase extends AbstractGraphDatabase {
      * @param end the end commit
      * @return true if there are any sparse commits between start and end
      */
-    public boolean isSparsePath(ObjectId start, ObjectId end) {
-        Index<Node> idIndex = graphDB.index().forNodes("identifiers");
-        Node startNode = idIndex.get("id", start.toString()).getSingle();
-        Node endNode = idIndex.get("id", end.toString()).getSingle();
-        PathFinder<Path> finder = GraphAlgoFactory.shortestPath(
-                Traversal.expanderForTypes(CommitRelationshipTypes.PARENT, Direction.OUTGOING),
-                Integer.MAX_VALUE);
-
-        Iterable<Path> paths = finder.findAllPaths(startNode, endNode);
-
-        for (Path path : paths) {
-            for (Node node : path.nodes()) {
-                if (!node.equals(endNode) && node.hasProperty(SPARSE_FLAG)) {
-                    return true;
-                }
-            }
-        }
+    public boolean isSparsePath(final ObjectId start, final ObjectId end) {
+    	com.tinkerpop.blueprints.Index<Vertex> idIndex = graphDB.getIndex("identifiers", Vertex.class);
+//        Index<Node> idIndex = graphDB.index().forNodes("identifiers");
+    	Vertex startNode = null;
+    	Vertex endNode = null;
+    	CloseableIterable<Vertex> startResults = null;
+    	CloseableIterable<Vertex> endResults = null;
+    	try {
+    		startResults = idIndex.get("id", start.toString());
+    		startNode = startResults.iterator().next();
+    		endResults = idIndex.get("id", end.toString());
+    		endNode = endResults.iterator().next();
+    	} finally {
+    		if (startResults != null) startResults.close();
+    		if (endResults != null) endResults.close();
+    	}
+    	
+    	
+		PipeFunction<LoopBundle<Vertex>, Boolean> whileFunction = new PipeFunction<LoopBundle<Vertex>, Boolean>() {
+			@Override
+			public Boolean compute(LoopBundle<Vertex> argument) {
+				return !argument.getObject().getProperty("id").equals(end.toString());
+			}
+		};
+		
+		PipeFunction<LoopBundle<Vertex>, Boolean> emitFunction = new PipeFunction<LoopBundle<Vertex>, Boolean>() {
+			@Override
+			public Boolean compute(LoopBundle<Vertex> argument) {
+				return argument.getObject().getProperty("id").equals(end.toString());
+			}
+		};
+		
+		GremlinPipeline<Vertex, List> pipe = new GremlinPipeline<Vertex, Vertex>()
+		    .start(startNode)
+    	    .as("start")
+    	    .out(CommitRelationshipTypes.PARENT.name())
+    	    .loop("start", whileFunction, emitFunction)
+    	    .path();
+		    
+		for (List path : pipe) {
+			for (Vertex vertex : (List<Vertex>)path) {
+				if (!vertex.equals(endNode) && vertex.getPropertyKeys().contains(SPARSE_FLAG)) {
+					return true;
+				}
+			}
+		}
+		
         return false;
     }
 
@@ -468,21 +590,18 @@ public class Neo4JGraphDatabase extends AbstractGraphDatabase {
      * @param commitId the id of the commit
      */
     public void setProperty(ObjectId commitId, String propertyName, String propertyValue) {
-        Index<Node> idIndex = graphDB.index().forNodes("identifiers");
-
-        Transaction tx = graphDB.beginTx();
+        com.tinkerpop.blueprints.Index<Vertex> idIndex = graphDB.getIndex("identifiers", Vertex.class);
+        CloseableIterable<Vertex> results = null;
         try {
-            Node commitNode = idIndex.get("id", commitId.toString()).getSingle();
+        	results = idIndex.get("id", commitId.toString());
+            Vertex commitNode = results.iterator().next();
             commitNode.setProperty(propertyName, propertyValue);
-
-            tx.success();
+            graphDB.commit();
         } catch (Exception e) {
-            tx.failure();
-            throw Throwables.propagate(e);
+        	graphDB.rollback();
         } finally {
-            tx.finish();
+        	if (results != null) results.close();
         }
-
     }
 
     /**
@@ -495,33 +614,46 @@ public class Neo4JGraphDatabase extends AbstractGraphDatabase {
      */
     @Override
     public Optional<ObjectId> findLowestCommonAncestor(ObjectId leftId, ObjectId rightId) {
-        Index<Node> idIndex = graphDB.index().forNodes("identifiers");
+    	com.tinkerpop.blueprints.Index<Vertex> idIndex = graphDB.getIndex("identifiers", Vertex.class);
 
-        Set<Node> leftSet = new HashSet<Node>();
-        Set<Node> rightSet = new HashSet<Node>();
+        Set<Vertex> leftSet = new HashSet<Vertex>();
+        Set<Vertex> rightSet = new HashSet<Vertex>();
 
-        Queue<Node> leftQueue = new LinkedList<Node>();
-        Node leftNode = idIndex.get("id", leftId.toString()).getSingle();
-        if (!leftNode.hasRelationship(Direction.OUTGOING)) {
-            return Optional.absent();
+        Queue<Vertex> leftQueue = new LinkedList<Vertex>();
+        Queue<Vertex> rightQueue = new LinkedList<Vertex>();
+        
+        Vertex leftNode;
+        Vertex rightNode;
+        CloseableIterable<Vertex> leftResults = null;
+        CloseableIterable<Vertex> rightResults = null;
+        try {
+            leftResults = idIndex.get("id", leftId.toString());
+            leftNode = leftResults.iterator().next();
+            if (!leftNode.getEdges(com.tinkerpop.blueprints.Direction.OUT).iterator().hasNext()) {
+            	return Optional.absent();
+            }
+            leftQueue.add(leftNode);
+            rightResults = idIndex.get("id", rightId.toString());
+            rightNode = rightResults.iterator().next();
+            if (!rightNode.getEdges(com.tinkerpop.blueprints.Direction.OUT).iterator().hasNext()) {
+            	return Optional.absent();
+            }
+            rightQueue.add(rightNode);
+        } finally {
+        	if (leftResults != null) leftResults.close();
+        	if (rightResults != null) rightResults.close();
         }
-        leftQueue.add(leftNode);
-        Queue<Node> rightQueue = new LinkedList<Node>();
-        Node rightNode = idIndex.get("id", rightId.toString()).getSingle();
-        if (!rightNode.hasRelationship(Direction.OUTGOING)) {
-            return Optional.absent();
-        }
-        rightQueue.add(rightNode);
-        List<Node> potentialCommonAncestors = new LinkedList<Node>();
+            
+        List<Vertex> potentialCommonAncestors = new LinkedList<Vertex>();
         while (!leftQueue.isEmpty() || !rightQueue.isEmpty()) {
             if (!leftQueue.isEmpty()) {
-                Node commit = leftQueue.poll();
+                Vertex commit = leftQueue.poll();
                 if (processCommit(commit, leftQueue, leftSet, rightQueue, rightSet)) {
                     potentialCommonAncestors.add(commit);
                 }
             }
             if (!rightQueue.isEmpty()) {
-                Node commit = rightQueue.poll();
+                Vertex commit = rightQueue.poll();
                 if (processCommit(commit, rightQueue, rightSet, leftQueue, leftSet)) {
                     potentialCommonAncestors.add(commit);
                 }
@@ -537,27 +669,45 @@ public class Neo4JGraphDatabase extends AbstractGraphDatabase {
         return ancestor;
     }
 
-    /**
-     * Helper method for {@link #findLowestCommonAncestor(ObjectId, ObjectId)}.
-     */
-    private boolean processCommit(Node commit, Queue<Node> myQueue, Set<Node> mySet,
-            Queue<Node> theirQueue, Set<Node> theirSet) {
-        if (!mySet.contains(commit)) {
-            mySet.add(commit);
-            if (theirSet.contains(commit)) {
-                // found a common ancestor
-                stopAncestryPath(commit, theirQueue, theirSet);
-
-                return true;
-            }
-            for (Relationship parent : commit.getRelationships(Direction.OUTGOING,
-                    CommitRelationshipTypes.PARENT)) {
-                if (parent.getEndNode().hasRelationship(Direction.OUTGOING)) {
-                    myQueue.add(parent.getEndNode());
-                }
-            }
-        }
-        return false;
+//    /**
+//     * Helper method for {@link #findLowestCommonAncestor(ObjectId, ObjectId)}.
+//     */
+//    private boolean processCommit(Node commit, Queue<Node> myQueue, Set<Node> mySet,
+//            Queue<Node> theirQueue, Set<Node> theirSet) {
+//        if (!mySet.contains(commit)) {
+//            mySet.add(commit);
+//            if (theirSet.contains(commit)) {
+//                // found a common ancestor
+//                stopAncestryPath(commit, theirQueue, theirSet);
+//
+//                return true;
+//            }
+//            for (Relationship parent : commit.getRelationships(Direction.OUTGOING,
+//                    CommitRelationshipTypes.PARENT)) {
+//                if (parent.getEndNode().hasRelationship(Direction.OUTGOING)) {
+//                    myQueue.add(parent.getEndNode());
+//                }
+//            }
+//        }
+//        return false;
+//    }
+    
+    private boolean processCommit(Vertex commit, Queue<Vertex> myQueue, Set<Vertex> mySet, Queue<Vertex> theirQueue, Set<Vertex> theirSet) {
+    	if (!mySet.contains(commit)) {
+    		mySet.add(commit);
+    		if (theirSet.contains(commit)) {
+    			stopAncestryPath(commit, theirQueue, theirSet);
+    			return true;
+    		}
+    		for (Edge parentEdge : commit.getEdges(com.tinkerpop.blueprints.Direction.OUT, CommitRelationshipTypes.PARENT.name())) {
+    			Vertex parent = parentEdge.getVertex(com.tinkerpop.blueprints.Direction.IN);
+    			if (parent.getEdges(com.tinkerpop.blueprints.Direction.OUT).iterator().hasNext()) {
+    				myQueue.add(parent);
+    			}
+    		}
+    	}
+    	return false;
+    	
     }
 
     /**
@@ -584,39 +734,55 @@ public class Neo4JGraphDatabase extends AbstractGraphDatabase {
             }
         }
     }
+    
+    private void stopAncestryPath(Vertex commit, Queue<Vertex> theirQueue, Set<Vertex> theirSet) {
+    	Queue<Vertex> ancestorQueue = new LinkedList<Vertex>();
+    	ancestorQueue.add(commit);
+    	List<Vertex> processed = new LinkedList<Vertex>();
+    	while (!ancestorQueue.isEmpty()) {
+    		Vertex ancestor = ancestorQueue.poll();
+    		for (Edge parent : ancestor.getEdges(com.tinkerpop.blueprints.Direction.BOTH, CommitRelationshipTypes.PARENT.name())) {
+    			Vertex parentNode = parent.getVertex(com.tinkerpop.blueprints.Direction.IN);
+    			if (parentNode.getId() != ancestor.getId()) {
+    				if (theirSet.contains(parentNode)) {
+    					ancestorQueue.add(parentNode);
+    					processed.add(parentNode);
+    				}
+    			} else if (theirQueue.contains(parentNode)) {
+    				theirQueue.remove(parentNode);
+    			}
+    		}
+    	}
+    }
 
-    /**
-     * Helper method for {@link #findLowestCommonAncestor(ObjectId, ObjectId)}.
-     */
-    private void verifyAncestors(List<Node> potentialCommonAncestors, Set<Node> leftSet,
-            Set<Node> rightSet) {
-        Queue<Node> ancestorQueue = new LinkedList<Node>();
-        List<Node> falseAncestors = new LinkedList<Node>();
-        List<Node> processed = new LinkedList<Node>();
-        for (Node n : potentialCommonAncestors) {
-            if (falseAncestors.contains(n)) {
-                continue;
-            }
-            ancestorQueue.add(n);
-            while (!ancestorQueue.isEmpty()) {
-                Node ancestor = ancestorQueue.poll();
-                for (Relationship parent : ancestor
-                        .getRelationships(CommitRelationshipTypes.PARENT)) {
-                    Node parentNode = parent.getEndNode();
-                    if (parentNode.getId() != ancestor.getId()) {
-                        if (leftSet.contains(parentNode) || rightSet.contains(parentNode)) {
-                            if (!processed.contains(parentNode)) {
-                                ancestorQueue.add(parentNode);
-                                processed.add(parentNode);
-                            }
-                            if (potentialCommonAncestors.contains(parentNode)) {
-                                falseAncestors.add(parentNode);
-                            }
-                        }
-                    }
-                }
-            }
-        }
-        potentialCommonAncestors.removeAll(falseAncestors);
+    private void verifyAncestors(List<Vertex> potentialCommonAncestors, Set<Vertex> leftSet, Set<Vertex> rightSet) {
+    	Queue<Vertex> ancestorQueue = new LinkedList<Vertex>();
+    	List<Vertex> falseAncestors = new LinkedList<Vertex>();
+    	List<Vertex> processed = new LinkedList<Vertex>();
+    	
+    	for (Vertex v : potentialCommonAncestors) {
+    		if (falseAncestors.contains(v)) {
+    			continue;
+    		}
+    		ancestorQueue.add(v);
+    		while (!ancestorQueue.isEmpty()) {
+    			Vertex ancestor = ancestorQueue.poll();
+    			for (Edge parent : ancestor.getEdges(com.tinkerpop.blueprints.Direction.OUT, CommitRelationshipTypes.PARENT.name())) { 
+    				Vertex parentNode = parent.getVertex(com.tinkerpop.blueprints.Direction.IN);
+    				if (parentNode.getId() != ancestor.getId()) {
+    					if (leftSet.contains(parentNode) || rightSet.contains(parentNode)) {
+    						if (!processed.contains(parentNode)) {
+    							ancestorQueue.add(parentNode);
+    							processed.add(parentNode);
+    						}
+    						if (potentialCommonAncestors.contains(parentNode)) {
+    							falseAncestors.add(parentNode);
+    						}
+    					}
+    				}
+    			} 
+    		}
+    	}
+    	potentialCommonAncestors.removeAll(falseAncestors);
     }
 }

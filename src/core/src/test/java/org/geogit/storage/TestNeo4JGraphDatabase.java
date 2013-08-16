@@ -17,10 +17,10 @@ public class TestNeo4JGraphDatabase extends Neo4JGraphDatabase {
         super(platform);
     }
 
-    @Override
-    protected GraphDatabaseService getGraphDatabase() {
-        return new TestGraphDatabaseFactory().newImpermanentDatabaseBuilder().newGraphDatabase();
-    }
+//    @Override
+//    protected GraphDatabaseService getGraphDatabase() {
+//        return new TestGraphDatabaseFactory().newImpermanentDatabaseBuilder().newGraphDatabase();
+//    }
 
     @Override
     protected void destroyGraphDatabase() {
