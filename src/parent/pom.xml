@@ -209,12 +209,12 @@
       <dependency>
         <groupId>org.neo4j</groupId>
         <artifactId>neo4j</artifactId>
-        <version>1.9.RC2</version>
+        <version>1.9.2</version>
       </dependency>
       <dependency>
         <groupId>org.neo4j</groupId>
         <artifactId>neo4j-kernel</artifactId>
-        <version>1.9.RC2</version>
+        <version>1.9.2</version>
         <type>test-jar</type>
       </dependency>
 
