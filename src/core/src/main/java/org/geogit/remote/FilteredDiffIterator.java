@@ -62,6 +62,19 @@ public class FilteredDiffIterator extends AbstractIterator<DiffEntry> {
             NodeRef newObject;
             if (oldObject != null) {
                 newObject = input.getNewObject();
+                if (newObject != null) {
+                    // we are tracking this object, but we still need to process the new object
+                    RevObject object = sourceRepo.command(RevObjectParse.class)
+                            .setObjectId(newObject.getNode().getObjectId()).call().get();
+
+                    RevObject metadata = null;
+                    if (newObject.getMetadataId() != ObjectId.NULL) {
+                        metadata = sourceRepo.command(RevObjectParse.class)
+                                .setObjectId(newObject.getMetadataId()).call().get();
+                    }
+                    processObject(object);
+                    processObject(metadata);
+                }
             } else {
                 newObject = filter(input.getNewObject());
             }
@@ -97,7 +110,7 @@ public class FilteredDiffIterator extends AbstractIterator<DiffEntry> {
 
             RevFeatureType revFeatureType = (RevFeatureType) metadata;
 
-            if (!repoFilter.filterObject(revFeatureType, object)) {
+            if (!repoFilter.filterObject(revFeatureType, node.getParentPath(), object)) {
                 return null;
             }
 

@@ -271,7 +271,7 @@ class HttpMappedRemoteRepo extends AbstractMappedRemoteRepo {
         ImmutableList<FilterDescription> repoFilters = filter.getFilterDescriptions();
         for (FilterDescription description : repoFilters) {
             JsonObject typeFilter = new JsonObject();
-            typeFilter.add("featuretype", new JsonPrimitive(description.getFeatureType()));
+            typeFilter.add("featurepath", new JsonPrimitive(description.getFeaturePath()));
             typeFilter.add("type", new JsonPrimitive(description.getFilterType()));
             typeFilter.add("filter", new JsonPrimitive(description.getFilter()));
             filterArray.add(typeFilter);

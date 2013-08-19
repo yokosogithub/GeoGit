@@ -5,6 +5,7 @@
 
 package org.geogit.remote;
 
+import java.util.Hashtable;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Queue;
@@ -25,6 +26,8 @@ abstract class CommitTraverser {
     public Stack<ObjectId> commits;
 
     public List<ObjectId> have;
+
+    private Hashtable<ObjectId, ImmutableList<ObjectId>> commitParents;
 
     /**
      * Traversal node that stores information about the ObjectId of the commit and it's depth from
@@ -97,6 +100,7 @@ abstract class CommitTraverser {
     public CommitTraverser() {
         commits = new Stack<ObjectId>();
         have = new LinkedList<ObjectId>();
+        commitParents = new Hashtable<ObjectId, ImmutableList<ObjectId>>();
     }
 
     /**
@@ -113,12 +117,11 @@ abstract class CommitTraverser {
      * 
      * @param commitNode the commit to apply
      */
-    protected void apply(CommitNode commitNode) {
-        // If the commit stack already has this commit, we need to move it to the top so it will be
-        // processed earlier.
+    protected void apply(CommitNode commitNode, ImmutableList<ObjectId> parents) {
         if (commits.contains(commitNode.getObjectId())) {
             commits.remove(commitNode.getObjectId());
         }
+
         commits.add(commitNode.getObjectId());
     }
 
@@ -133,13 +136,16 @@ abstract class CommitTraverser {
         while (!commitQueue.isEmpty()) {
             CommitNode node = commitQueue.remove();
             Evaluation evaluation = evaluate(node);
+            ImmutableList<ObjectId> parents;
             switch (evaluation) {
             case INCLUDE_AND_PRUNE:
-                apply(node);
+                parents = getParents(node.getObjectId());
+                apply(node, parents);
                 break;
             case INCLUDE_AND_CONTINUE:
-                apply(node);
-                addParents(node);
+                parents = getParents(node.getObjectId());
+                apply(node, parents);
+                addParents(node, parents);
                 break;
             case EXCLUDE_AND_PRUNE:
                 if (existsInDestination(node.getObjectId()) && !have.contains(node.getObjectId())) {
@@ -147,13 +153,15 @@ abstract class CommitTraverser {
                 }
                 break;
             case EXCLUDE_AND_CONTINUE:
-                addParents(node);
+                parents = getParents(node.getObjectId());
+                addParents(node, parents);
                 if (existsInDestination(node.getObjectId()) && !have.contains(node.getObjectId())) {
                     have.add(node.getObjectId());
                 }
                 break;
             }
         }
+        commitParents.clear();
     }
 
     /**
@@ -161,15 +169,23 @@ abstract class CommitTraverser {
      * 
      * @param commitNode the commit whose parents need to be added
      */
-    private void addParents(CommitNode commitNode) {
-        ImmutableList<ObjectId> parents = getParents(commitNode.getObjectId());
+    private void addParents(CommitNode commitNode, ImmutableList<ObjectId> parents) {
         for (ObjectId parent : parents) {
             CommitNode parentNode = new CommitNode(parent, commitNode.getDepth() + 1);
-            if (!commits.contains(parent) && !have.contains(parent)
-                    && !commitQueue.contains(parentNode)) {
-                commitQueue.add(parentNode);
+            if (commitQueue.contains(parentNode)) {
+                commitQueue.remove(parentNode);
             }
+            commitQueue.add(parentNode);
         }
+    }
+
+    private ImmutableList<ObjectId> getParents(ObjectId commitId) {
+        ImmutableList<ObjectId> parents = commitParents.get(commitId);
+        if (parents == null) {
+            parents = getParentsInternal(commitId);
+            commitParents.put(commitId, parents);
+        }
+        return parents;
     }
 
     /**
@@ -178,7 +194,7 @@ abstract class CommitTraverser {
      * @param commitId the id of the commit whose parents need to be retrieved
      * @return the list of parents
      */
-    protected abstract ImmutableList<ObjectId> getParents(ObjectId commitId);
+    protected abstract ImmutableList<ObjectId> getParentsInternal(ObjectId commitId);
 
     /**
      * Determines if the given commitId exists in the destination.

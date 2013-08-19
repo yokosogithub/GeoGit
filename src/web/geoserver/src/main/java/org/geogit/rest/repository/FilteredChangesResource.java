@@ -112,9 +112,9 @@ public class FilteredChangesResource extends Finder {
                                 String featureType = null;
                                 String filterType = null;
                                 String filterText = null;
-                                if (filterObject.has("featuretype")
-                                        && filterObject.get("featuretype").isJsonPrimitive()) {
-                                    featureType = filterObject.get("featuretype")
+                                if (filterObject.has("featurepath")
+                                        && filterObject.get("featurepath").isJsonPrimitive()) {
+                                    featureType = filterObject.get("featurepath")
                                             .getAsJsonPrimitive().getAsString();
                                 }
                                 if (filterObject.has("type")

@@ -45,7 +45,9 @@ import com.google.common.collect.ImmutableList;
 /**
  * Abstract base implementation for mapped (sparse) clone.
  */
-abstract class AbstractMappedRemoteRepo implements IRemoteRepo {
+public abstract class AbstractMappedRemoteRepo implements IRemoteRepo {
+
+    public static String PLACEHOLDER_COMMIT_MESSAGE = "Placeholder Sparse Commit";
 
     protected Repository localRepository;
 
@@ -109,7 +111,7 @@ abstract class AbstractMappedRemoteRepo implements IRemoteRepo {
         }
 
         @Override
-        protected ImmutableList<ObjectId> getParents(ObjectId commitId) {
+        protected ImmutableList<ObjectId> getParentsInternal(ObjectId commitId) {
             return source.getParents(commitId);
         }
 
@@ -141,7 +143,7 @@ abstract class AbstractMappedRemoteRepo implements IRemoteRepo {
         }
 
         @Override
-        protected ImmutableList<ObjectId> getParents(ObjectId commitId) {
+        protected ImmutableList<ObjectId> getParentsInternal(ObjectId commitId) {
             return source.getGraphDatabase().getParents(commitId);
         }
 
@@ -211,7 +213,7 @@ abstract class AbstractMappedRemoteRepo implements IRemoteRepo {
                 localRepository.getGraphDatabase().map(commit.getId(), mappedCommit);
                 Optional<ObjectId> treeId = localRepository.command(ResolveTreeish.class)
                         .setTreeish(mappedCommit).call();
-                if (treeId.isPresent()) {
+                if (treeId.isPresent() && !treeId.get().equals(ObjectId.NULL)) {
                     rootTree = localRepository.getTree(treeId.get());
                 }
 
@@ -253,7 +255,7 @@ abstract class AbstractMappedRemoteRepo implements IRemoteRepo {
                 }
                 builder.setParentIds(newParents);
                 builder.setTreeId(rootTree.getId());
-                builder.setMessage("Placeholder Sparse Commit");
+                builder.setMessage(PLACEHOLDER_COMMIT_MESSAGE);
 
                 RevCommit mapped = builder.build();
                 localRepository.getObjectDatabase().put(mapped);

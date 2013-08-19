@@ -42,7 +42,7 @@ import com.google.inject.Injector;
  * 
  * @see IRemoteRepo
  */
-class LocalMappedRemoteRepo extends AbstractMappedRemoteRepo {
+public class LocalMappedRemoteRepo extends AbstractMappedRemoteRepo {
 
     private GeoGIT remoteGeoGit;
 
