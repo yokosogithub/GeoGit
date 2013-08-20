@@ -7,6 +7,7 @@ package org.geogit.storage;
 import java.io.File;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -53,6 +54,7 @@ import com.tinkerpop.blueprints.impls.neo4j.Neo4jGraph;
 import com.tinkerpop.gremlin.java.GremlinPipeline;
 import com.tinkerpop.pipes.PipeFunction;
 import com.tinkerpop.pipes.branch.LoopPipe.LoopBundle;
+import com.tinkerpop.pipes.transform.OutEdgesPipe;
 
 /**
  * Provides an implementation of a GeoGit Graph Database using Neo4J.
@@ -137,6 +139,7 @@ public class Neo4JGraphDatabase extends AbstractGraphDatabase {
         if (isOpen()) {
             return;
         }
+        
         URL envHome = new ResolveGeogitDir(platform).call();
         if (envHome == null) {
             throw new IllegalStateException("Not inside a geogit directory");
@@ -170,7 +173,10 @@ public class Neo4JGraphDatabase extends AbstractGraphDatabase {
             newContainer.addRef();
             databaseServices.put(dbPath, newContainer);
         }
-
+        
+        if (graphDB.getIndex("identifiers", Vertex.class) == null) {
+        	graphDB.createIndex("identifiers", Vertex.class);
+        }
     }
 
     /**
@@ -180,7 +186,6 @@ public class Neo4JGraphDatabase extends AbstractGraphDatabase {
      */
     protected Neo4jGraph getGraphDatabase() {
     	return new Neo4jGraph(dbPath);
-//        return new GraphDatabaseFactory().newEmbeddedDatabase(dbPath);
     }
 
     /**
@@ -232,7 +237,7 @@ public class Neo4JGraphDatabase extends AbstractGraphDatabase {
 					"identifiers", Vertex.class);
 			CloseableIterable<Vertex> results = null;
 			try {
-				results = idIndex.get("id", commitId.toString());
+				results = idIndex.get("identifier", commitId.toString());
 				if (results.iterator().hasNext()) {
 					results.iterator().next();
 					if (results.iterator().hasNext()) {
@@ -271,7 +276,7 @@ public class Neo4JGraphDatabase extends AbstractGraphDatabase {
 			Vertex node = null;
 			CloseableIterable<Vertex> results = null;
 			try {
-				results = idIndex.get("id", commitId.toString());
+				results = idIndex.get("identifier", commitId.toString());
 				if (results.iterator().hasNext()) {
 					node = results.iterator().next();
 				}
@@ -288,7 +293,7 @@ public class Neo4JGraphDatabase extends AbstractGraphDatabase {
 					Vertex parentNode = edge
 							.getVertex(com.tinkerpop.blueprints.Direction.IN);
 					listBuilder.add(ObjectId.valueOf(parentNode
-							.<String> getProperty("id")));
+							.<String> getProperty("identifier")));
 				}
 			}
 			return listBuilder.build();
@@ -312,7 +317,7 @@ public class Neo4JGraphDatabase extends AbstractGraphDatabase {
 			CloseableIterable<Vertex> results = null;
 			Vertex node = null;
 			try {
-				results = idIndex.get("id", commitId.toString());
+				results = idIndex.get("identifier", commitId.toString());
 				if (results.iterator().hasNext()) {
 					node = results.iterator().next();
 				}
@@ -330,7 +335,7 @@ public class Neo4JGraphDatabase extends AbstractGraphDatabase {
 					Vertex childNode = child
 							.getVertex(com.tinkerpop.blueprints.Direction.OUT);
 					listBuilder.add(ObjectId.valueOf(childNode
-							.<String> getProperty("id")));
+							.<String> getProperty("identifier")));
 				}
 			}
 			return listBuilder.build();
@@ -422,7 +427,7 @@ public class Neo4JGraphDatabase extends AbstractGraphDatabase {
     	Vertex node = null;
     	CloseableIterable<Vertex> results = null;
     	try {
-    		results = idIndex.get("id", commitId.toString());
+    		results = idIndex.get("identifier", commitId.toString());
     		node = results.iterator().next();
     	} finally {
     		if (results != null) results.close();
@@ -431,7 +436,7 @@ public class Neo4JGraphDatabase extends AbstractGraphDatabase {
     	ObjectId mapped = ObjectId.NULL;
     	Vertex mappedNode = getMappedNode(node);
     	if (mappedNode != null) {
-    		mapped = ObjectId.valueOf(mappedNode.<String>getProperty("id"));
+    		mapped = ObjectId.valueOf(mappedNode.<String>getProperty("identifier"));
     	}
     	return mapped;
     }
@@ -457,13 +462,14 @@ public class Neo4JGraphDatabase extends AbstractGraphDatabase {
         final String commitIdStr = commitId.toString();
         com.tinkerpop.blueprints.Index<Vertex> index = graphDB.getIndex("identifiers", Vertex.class);
         Vertex v;
-        if (index.count("id", commitId.toString()) == 0) {
+        if (index.count("identifier", commitId.toString()) == 0) {
         	v = graphDB.addVertex(null);
-        	v.setProperty("id", commitIdStr);
+        	v.setProperty("identifier", commitIdStr);
+        	index.put("identifier", commitId.toString(), v);
         } else {
         	CloseableIterable<Vertex> results = null;
         	try {
-        		results = index.get("id", commitIdStr);
+        		results = index.get("identifier", commitIdStr);
         		v = results.iterator().next();
         	} finally {
         		if (results != null) results.close();
@@ -486,7 +492,7 @@ public class Neo4JGraphDatabase extends AbstractGraphDatabase {
     	Vertex commitNode = null;
     	CloseableIterable<Vertex> results = null;
     	try {
-    		results = idIndex.get("id", commitId.toString());
+    		results = idIndex.get("identifier", commitId.toString());
     		commitNode = results.iterator().next();
     	} finally {
     		if (results != null) results.close();
@@ -495,7 +501,7 @@ public class Neo4JGraphDatabase extends AbstractGraphDatabase {
     		new PipeFunction<LoopBundle<Vertex>, Boolean>() {
 	    		@Override
 	    		public Boolean compute(LoopBundle<Vertex> argument) {
-	    			Iterable<Edge> edges = argument.getObject().getEdges(com.tinkerpop.blueprints.Direction.OUT, CommitRelationshipTypes.TOROOT.name());
+	    			Iterable<Edge> edges = argument.getObject().getEdges(com.tinkerpop.blueprints.Direction.OUT, CommitRelationshipTypes.PARENT.name());
 	    			return edges.iterator().hasNext();
 	    		}
 	    	};
@@ -503,27 +509,42 @@ public class Neo4JGraphDatabase extends AbstractGraphDatabase {
 	        new PipeFunction<LoopBundle<Vertex>, Boolean>() {
 				@Override
 				public Boolean compute(LoopBundle<Vertex> argument) {
-					Iterable<Edge> edges = argument.getObject().getEdges(com.tinkerpop.blueprints.Direction.OUT, CommitRelationshipTypes.TOROOT.name());
+					Iterable<Edge> edges = argument.getObject().getEdges(com.tinkerpop.blueprints.Direction.OUT, CommitRelationshipTypes.PARENT.name());
 					return !edges.iterator().hasNext();
 				}
 	        };
-    	GremlinPipeline<Vertex, List> pipe = 
+	    @SuppressWarnings("rawtypes")
+	    PipeFunction<List, List<Edge>> verticesOnly = new PipeFunction<List, List<Edge>>() {
+			@Override
+			public List<Edge> compute(List argument) {
+				List<Edge> results = new ArrayList<Edge>();
+				for (Object o : argument) {
+					if (o instanceof Edge){ 
+						results.add((Edge) o);
+					}
+				}
+				return results;
+			}
+	    };
+    	GremlinPipeline<Vertex, List<Edge>> pipe = 
     		new GremlinPipeline<Vertex, Vertex>()
     		    .start(commitNode)
-	    	    .as("start")
-	    	    .out(CommitRelationshipTypes.PARENT.name())
-	    	    .loop("start", expandCriterion, emitCriterion)
-	    	    .path();
-
-        int min = Integer.MAX_VALUE;
-        for (List<?> path : pipe) {
-            int length = path.size();
-            if (length < min) {
-                min = length;
-            }
-        }
-
-        return min;
+    		    .as("start")
+    	        .outE(CommitRelationshipTypes.PARENT.name())
+    	        .inV()
+    	        .loop("start", expandCriterion, emitCriterion)
+    	        .path()
+    	        .transform(verticesOnly);
+    	
+    	if (pipe.hasNext()) {
+    		int length = Integer.MAX_VALUE;
+	    	for (List<?> path : pipe) {
+	    		length = Math.min(length, path.size());
+	    	}
+	    	return length;
+    	} else {
+    		return 0;
+    	}
     }
 
     /**
@@ -542,9 +563,9 @@ public class Neo4JGraphDatabase extends AbstractGraphDatabase {
     	CloseableIterable<Vertex> startResults = null;
     	CloseableIterable<Vertex> endResults = null;
     	try {
-    		startResults = idIndex.get("id", start.toString());
+    		startResults = idIndex.get("identifier", start.toString());
     		startNode = startResults.iterator().next();
-    		endResults = idIndex.get("id", end.toString());
+    		endResults = idIndex.get("identifier", end.toString());
     		endNode = endResults.iterator().next();
     	} finally {
     		if (startResults != null) startResults.close();
@@ -555,28 +576,32 @@ public class Neo4JGraphDatabase extends AbstractGraphDatabase {
 		PipeFunction<LoopBundle<Vertex>, Boolean> whileFunction = new PipeFunction<LoopBundle<Vertex>, Boolean>() {
 			@Override
 			public Boolean compute(LoopBundle<Vertex> argument) {
-				return !argument.getObject().getProperty("id").equals(end.toString());
+				return !argument.getObject().getProperty("identifier").equals(end.toString());
 			}
 		};
 		
 		PipeFunction<LoopBundle<Vertex>, Boolean> emitFunction = new PipeFunction<LoopBundle<Vertex>, Boolean>() {
 			@Override
 			public Boolean compute(LoopBundle<Vertex> argument) {
-				return argument.getObject().getProperty("id").equals(end.toString());
+				return argument.getObject().getProperty("identifier").equals(end.toString());
 			}
 		};
 		
 		GremlinPipeline<Vertex, List> pipe = new GremlinPipeline<Vertex, Vertex>()
 		    .start(startNode)
     	    .as("start")
-    	    .out(CommitRelationshipTypes.PARENT.name())
+    	    .outE(CommitRelationshipTypes.PARENT.name())
+    	    .inV()
     	    .loop("start", whileFunction, emitFunction)
     	    .path();
 		    
 		for (List path : pipe) {
-			for (Vertex vertex : (List<Vertex>)path) {
-				if (!vertex.equals(endNode) && vertex.getPropertyKeys().contains(SPARSE_FLAG)) {
-					return true;
+			for (Object o : path) {
+				if (o instanceof Vertex) {
+					Vertex vertex = (Vertex) o;
+					if (!vertex.equals(endNode) && vertex.getPropertyKeys().contains(SPARSE_FLAG)) {
+						return true;
+					}
 				}
 			}
 		}
@@ -593,7 +618,7 @@ public class Neo4JGraphDatabase extends AbstractGraphDatabase {
         com.tinkerpop.blueprints.Index<Vertex> idIndex = graphDB.getIndex("identifiers", Vertex.class);
         CloseableIterable<Vertex> results = null;
         try {
-        	results = idIndex.get("id", commitId.toString());
+        	results = idIndex.get("identifier", commitId.toString());
             Vertex commitNode = results.iterator().next();
             commitNode.setProperty(propertyName, propertyValue);
             graphDB.commit();
@@ -627,13 +652,13 @@ public class Neo4JGraphDatabase extends AbstractGraphDatabase {
         CloseableIterable<Vertex> leftResults = null;
         CloseableIterable<Vertex> rightResults = null;
         try {
-            leftResults = idIndex.get("id", leftId.toString());
+            leftResults = idIndex.get("identifier", leftId.toString());
             leftNode = leftResults.iterator().next();
             if (!leftNode.getEdges(com.tinkerpop.blueprints.Direction.OUT).iterator().hasNext()) {
             	return Optional.absent();
             }
             leftQueue.add(leftNode);
-            rightResults = idIndex.get("id", rightId.toString());
+            rightResults = idIndex.get("identifier", rightId.toString());
             rightNode = rightResults.iterator().next();
             if (!rightNode.getEdges(com.tinkerpop.blueprints.Direction.OUT).iterator().hasNext()) {
             	return Optional.absent();
@@ -664,7 +689,7 @@ public class Neo4JGraphDatabase extends AbstractGraphDatabase {
         Optional<ObjectId> ancestor = Optional.absent();
         if (potentialCommonAncestors.size() > 0) {
             ancestor = Optional.of(ObjectId.valueOf((String) potentialCommonAncestors.get(0)
-                    .getProperty("id")));
+                    .getProperty("identifier")));
         }
         return ancestor;
     }
