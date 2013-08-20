@@ -76,11 +76,6 @@ public class OSMMapTest extends Assert {
         String mappingFilename = OSMMap.class.getResource("mapping.json").getFile();
         File mappingFile = new File(mappingFilename);
         cli.execute("osm", "map", mappingFile.getAbsolutePath());
-        // check it all went fine and the mapped tree is created
-        unstaged = workTree.countUnstaged("onewaystreets").getCount();
-        assertEquals(1, unstaged);
-        Optional<Node> feature = workTree.findUnstaged("onewaystreets/31045880");
-        assertTrue(feature.isPresent());
         // check that a feature was correctly mapped
         Optional<RevFeature> revFeature = cli.getGeogit().command(RevObjectParse.class)
                 .setRefSpec("HEAD:onewaystreets/31045880").call(RevFeature.class);

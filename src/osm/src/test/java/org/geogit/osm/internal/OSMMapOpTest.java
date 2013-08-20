@@ -71,11 +71,7 @@ public class OSMMapOpTest extends RepositoryTestCase {
         List<MappingRule> mappingRules = Lists.newArrayList();
         mappingRules.add(mappingRule);
         Mapping mapping = new Mapping(mappingRules);
-
-        // Map and check that mapping tree is created
         geogit.command(OSMMapOp.class).setMapping(mapping).call();
-        unstaged = workTree.countUnstaged("onewaystreets").getCount();
-        assertEquals(1, unstaged);
 
         // Check that mapping was correctly performed
         Optional<RevFeature> revFeature = geogit.command(RevObjectParse.class)
@@ -118,11 +114,7 @@ public class OSMMapOpTest extends RepositoryTestCase {
         List<MappingRule> mappingRules = Lists.newArrayList();
         mappingRules.add(mappingRule);
         Mapping mapping = new Mapping(mappingRules);
-
-        // Map and check that mapping tree is created
         geogit.command(OSMMapOp.class).setMapping(mapping).call();
-        unstaged = workTree.countUnstaged("busstops").getCount();
-        assertEquals(2, unstaged);
 
         // Check that mapping was correctly performed
         Optional<RevFeature> revFeature = geogit.command(RevObjectParse.class)
@@ -168,11 +160,7 @@ public class OSMMapOpTest extends RepositoryTestCase {
         List<MappingRule> mappingRules = Lists.newArrayList();
         mappingRules.add(mappingRule);
         Mapping mapping = new Mapping(mappingRules);
-
-        // Map and check that mapping tree is created
         geogit.command(OSMMapOp.class).setMapping(mapping).call();
-        unstaged = workTree.countUnstaged("busstops").getCount();
-        assertEquals(2, unstaged);
 
         // Check that mapping was correctly performed
         Optional<RevFeature> revFeature = geogit.command(RevObjectParse.class)
@@ -251,13 +239,6 @@ public class OSMMapOpTest extends RepositoryTestCase {
         ArrayList<NodeRef> listWays = Lists.newArrayList(ways);
         ArrayList<NodeRef> listAllways = Lists.newArrayList(allways);
         assertEquals(listWays.size(), listAllways.size());
-        Iterator<NodeRef> allways = geogit.command(LsTreeOp.class).setReference("HEAD:allways")
-                .call();
-        assertTrue(allways.hasNext());
-        Iterator<NodeRef> ways = geogit.command(LsTreeOp.class).setReference("HEAD:allways").call();
-        ArrayList<NodeRef> listWays = Lists.newArrayList(ways);
-        ArrayList<NodeRef> listAllways = Lists.newArrayList(allways);
-        assertEquals(listWays.size(), listAllways.size());
     }
 
     @Test
@@ -285,11 +266,6 @@ public class OSMMapOpTest extends RepositoryTestCase {
         Iterator<NodeRef> iter = geogit.command(LsTreeOp.class).setReference("HEAD:mapped").call();
         ArrayList<NodeRef> list = Lists.newArrayList(iter);
         assertEquals(4, list.size());
-
-        Iterator<NodeRef> iter = geogit.command(LsTreeOp.class).setReference("HEAD:mapped").call();
-        ArrayList<NodeRef> list = Lists.newArrayList(iter);
-        assertEquals(4, list.size());
-
     }
 
 }

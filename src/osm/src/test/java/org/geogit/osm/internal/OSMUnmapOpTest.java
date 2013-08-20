@@ -291,9 +291,9 @@ public class OSMUnmapOpTest extends RepositoryTestCase {
 
         // unmap without having made any changes and check that the canonical folders are not
         // modified
-        geogit.command(OSMUnmapOp.class)/* .setMapping(mapping) */.setPath("busstops").call();
+        geogit.command(OSMUnmapOp.class).setPath("busstops").call();
         WorkingTree workTree = geogit.getRepository().getWorkingTree();
-        long unstaged = workTree.countUnstaged("way");
+        long unstaged = workTree.countUnstaged("way").getCount();
         assertEquals(0, unstaged);
         unstaged = workTree.countUnstaged("node").getCount();
         assertEquals(0, unstaged);
@@ -376,7 +376,7 @@ public class OSMUnmapOpTest extends RepositoryTestCase {
         // modified
         WorkingTree workTree = geogit.getRepository().getWorkingTree();
         geogit.command(OSMUnmapOp.class)/* .setMapping(mapping) */.setPath("residential").call();
-        long unstaged = workTree.countUnstaged("way");
+        long unstaged = workTree.countUnstaged("way").getCount();
         assertEquals(0, unstaged);
         unstaged = workTree.countUnstaged("node").getCount();
         assertEquals(0, unstaged);

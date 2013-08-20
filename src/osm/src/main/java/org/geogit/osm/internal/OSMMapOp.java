@@ -83,8 +83,8 @@ public class OSMMapOp extends AbstractGeoGitOp<RevTree> {
 
         checkNotNull(mapping);
 
-        long staged = getIndex().countStaged(null);
-        long unstaged = getWorkTree().countUnstaged(null);
+        long staged = getIndex().countStaged(null).getCount();
+        long unstaged = getWorkTree().countUnstaged(null).getCount();
         Preconditions.checkState((staged == 0 && unstaged == 0),
                 "You must have a clean working tree and index to perform a mapping.");
 
