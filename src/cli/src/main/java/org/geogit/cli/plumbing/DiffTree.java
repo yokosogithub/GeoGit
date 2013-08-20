@@ -23,7 +23,6 @@ import org.geogit.api.plumbing.diff.AttributeDiff.TYPE;
 import org.geogit.api.plumbing.diff.DiffEntry;
 import org.geogit.api.plumbing.diff.DiffEntry.ChangeType;
 import org.geogit.api.plumbing.diff.FeatureDiff;
-import org.geogit.api.porcelain.DiffOp;
 import org.geogit.cli.AbstractCommand;
 import org.geogit.cli.CLICommand;
 import org.geogit.cli.CommandFailedException;
@@ -41,16 +40,16 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 
 /**
- * Plumbing command to shows changes between commits
+ * Plumbing command to shows changes between trees
  * 
- * @see DiffOp
+ * @see DiffTree
  */
-@Parameters(commandNames = "diff-tree", commandDescription = "Show changes between commits")
+@Parameters(commandNames = "diff-tree", commandDescription = "Show changes between trees")
 public class DiffTree extends AbstractCommand implements CLICommand {
 
     private static final String LINE_BREAK = System.getProperty("line.separator");
 
-    @Parameter(description = "[<commit> [<commit>]] [-- <path>...]", arity = 2)
+    @Parameter(description = "[<treeish> [<treeish>]] [-- <path>...]", arity = 2)
     private List<String> refSpec = Lists.newArrayList();
 
     @Parameter(names = "--", hidden = true, variableArity = true)
@@ -65,13 +64,14 @@ public class DiffTree extends AbstractCommand implements CLICommand {
     @Override
     protected void runInternal(GeogitCLI cli) throws IOException {
         if (refSpec.size() > 2) {
-            cli.getConsole().println("Commit list is too long :" + refSpec);
+            cli.getConsole().println("Tree refspecs list is too long :" + refSpec);
             throw new CommandFailedException();
         }
 
         GeoGIT geogit = cli.getGeogit();
 
-        DiffOp diff = geogit.command(DiffOp.class);
+        org.geogit.api.plumbing.DiffTree diff = geogit
+                .command(org.geogit.api.plumbing.DiffTree.class);
 
         String oldVersion = resolveOldVersion();
         String newVersion = resolveNewVersion();
@@ -84,7 +84,7 @@ public class DiffTree extends AbstractCommand implements CLICommand {
         } else {
             diffEntries = Iterators.emptyIterator();
             for (String path : paths) {
-                Iterator<DiffEntry> moreEntries = diff.setFilter(path)
+                Iterator<DiffEntry> moreEntries = diff.setFilterPath(path)
                         .setProgressListener(cli.getProgressListener()).call();
                 diffEntries = Iterators.concat(diffEntries, moreEntries);
             }
@@ -188,11 +188,11 @@ public class DiffTree extends AbstractCommand implements CLICommand {
     }
 
     private String resolveOldVersion() {
-        return refSpec.size() > 0 ? refSpec.get(0) : null;
+        return refSpec.size() > 0 ? refSpec.get(0) : "WORK_HEAD";
     }
 
     private String resolveNewVersion() {
-        return refSpec.size() > 1 ? refSpec.get(1) : null;
+        return refSpec.size() > 1 ? refSpec.get(1) : "STAGE_HEAD";
     }
 
 }

@@ -8,6 +8,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkState;
 
 import java.io.IOException;
+import java.security.InvalidParameterException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -27,6 +28,7 @@ import org.geogit.api.RevTree;
 import org.geogit.api.plumbing.CatObject;
 import org.geogit.api.plumbing.ResolveFeatureType;
 import org.geogit.api.plumbing.RevObjectParse;
+import org.geogit.cli.AbstractCommand;
 import org.geogit.cli.AnsiDecorator;
 import org.geogit.cli.CLICommand;
 import org.geogit.cli.GeogitCLI;
@@ -41,11 +43,10 @@ import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 
 /**
- * Shows formatted information about a commit, feature or feature type
+ * Shows formatted information about a commit, tree, feature or feature type
  * 
  */
 @Parameters(commandNames = "show", commandDescription = "Displays information about a commit, feature or feature type")
-public class Show implements CLICommand {
 public class Show extends AbstractCommand implements CLICommand {
 
     /**
@@ -63,8 +64,8 @@ public class Show extends AbstractCommand implements CLICommand {
      */
     @Override
     public void runInternal(GeogitCLI cli) throws IOException {
-        checkParameter(ref.size() < 2, "Only one refspec allowed");
-        checkParameter(!ref.isEmpty(), "A refspec must be specified");
+        checkParameter(refs.size() < 2, "Only one refspec allowed");
+        checkParameter(!refs.isEmpty(), "A refspec must be specified");
 
         if (raw) {
             printRaw(cli);
@@ -136,9 +137,8 @@ public class Show extends AbstractCommand implements CLICommand {
                 Optional<RevFeatureType> opt = geogit.command(ResolveFeatureType.class)
                         .setRefSpec(ref).call();
                 checkArgument(opt.isPresent(),
-                        "Refspec must resolve to a commit, feature or feature type");
+                        "Refspec must resolve to a commit, tree, feature or feature type");
                 RevFeatureType ft = opt.get();
-                ImmutableList<PropertyDescriptor> attribs = ft.sortedDescriptors();
                 Ansi ansi = AnsiDecorator.newAnsi(true);
 
                 ansi.fg(Color.YELLOW).a("TREE ID:  ").reset().a(tree.getId().toString()).newline();
@@ -146,15 +146,8 @@ public class Show extends AbstractCommand implements CLICommand {
                 ansi.fg(Color.YELLOW).a("NUMBER Of SUBTREES:  ").reset()
                         .a(Integer.toString(tree.numTrees()).toString()).newline();
 
-                ansi.fg(Color.YELLOW).a("DEFAULT FEATURE TYPE ID:  ").reset()
-                        .a(ft.getId().toString()).newline().newline();
-                ansi.a("DEFAULT FEATURE TYPE ATTRIBUTES").newline();
-                ansi.a("--------------------------------").newline();
-                for (PropertyDescriptor attrib : attribs) {
-                    ansi.fg(Color.YELLOW).a(attrib.getName() + ": ").reset()
-                            .a("<" + FieldType.forBinding(attrib.getType().getBinding()) + ">")
-                            .newline();
-                }
+                printFeatureType(ansi, ft, true);
+
                 console.println(ansi.toString());
             } else if (revObject instanceof RevCommit) {
                 RevCommit commit = (RevCommit) revObject;
@@ -176,9 +169,13 @@ public class Show extends AbstractCommand implements CLICommand {
                         .newline();
                 ansi.a(Strings.padEnd("Subject:", 15, ' ')).a(commit.getMessage()).newline();
                 console.println(ansi.toString());
+            } else if (revObject instanceof RevFeatureType) {
+                Ansi ansi = AnsiDecorator.newAnsi(true);
+                printFeatureType(ansi, (RevFeatureType) revObject, false);
+                console.println(ansi.toString());
             } else {
-                throw new IllegalArgumentException(
-                        "Refspec must resolve to a commit, feature or feature type");
+                throw new InvalidParameterException(
+                        "Refspec must resolve to a commit, tree, feature or feature type");
             }
             console.println();
         }
