@@ -20,6 +20,7 @@ import java.util.Set;
 
 import jline.console.ConsoleReader;
 
+import org.geogit.api.FeatureBuilder;
 import org.geogit.api.FeatureInfo;
 import org.geogit.api.GeoGIT;
 import org.geogit.api.NodeRef;
@@ -40,6 +41,7 @@ import org.geogit.cli.AbstractCommand;
 import org.geogit.cli.CommandFailedException;
 import org.geogit.cli.GeogitCLI;
 import org.geogit.repository.DepthSearch;
+import org.opengis.feature.Feature;
 import org.opengis.feature.type.PropertyDescriptor;
 
 import com.beust.jcommander.Parameter;
@@ -251,28 +253,34 @@ public class Apply extends AbstractCommand {
         }
 
         List<FeatureInfo> removed = originalPatch.getRemovedFeatures();
-        for (FeatureInfo feature : removed) {
-            String refSpec = Ref.WORK_HEAD + ":" + feature.getPath();
+        for (FeatureInfo featureInfo : removed) {
+            String refSpec = Ref.WORK_HEAD + ":" + featureInfo.getPath();
             obj = geogit.command(RevObjectParse.class).setRefSpec(refSpec).call();
             if (!obj.isPresent()) {
-                rejected.addRemovedFeature(feature.getPath(), feature.getFeature(),
-                        feature.getFeatureType());
+                rejected.addRemovedFeature(featureInfo.getPath(), featureInfo.getFeature(),
+                        featureInfo.getFeatureType());
             } else {
                 RevFeature revFeature = (RevFeature) obj.get();
                 DepthSearch depthSearch = new DepthSearch(geogit.getRepository().getIndex()
                         .getDatabase());
                 Optional<NodeRef> noderef = depthSearch.find(geogit.getRepository()
-                        .getWorkingTree().getTree(), feature.getPath());
+                        .getWorkingTree().getTree(), featureInfo.getPath());
                 RevFeatureType revFeatureType = geogit.command(RevObjectParse.class)
                         .setObjectId(noderef.get().getMetadataId()).call(RevFeatureType.class)
                         .get();
-                if (revFeature.equals(feature.getFeature())
-                        && revFeatureType.equals(feature.getFeatureType())) {
-                    toApply.addRemovedFeature(feature.getPath(), feature.getFeature(),
-                            feature.getFeatureType());
+                if (revFeatureType.equals(featureInfo.getFeatureType())) {
+                    rejected.addRemovedFeature(featureInfo.getPath(), featureInfo.getFeature(),
+                            featureInfo.getFeatureType());
                 } else {
-                    rejected.addRemovedFeature(feature.getPath(), feature.getFeature(),
-                            feature.getFeatureType());
+                    Feature feature = new FeatureBuilder(revFeatureType).build(
+                            noderef.get().name(), revFeature);
+                    if (feature.equals(featureInfo.getFeature())) {
+                        toApply.addRemovedFeature(featureInfo.getPath(), featureInfo.getFeature(),
+                                featureInfo.getFeatureType());
+                    } else {
+                        rejected.addRemovedFeature(featureInfo.getPath(), featureInfo.getFeature(),
+                                featureInfo.getFeatureType());
+                    }
                 }
             }
         }
