@@ -11,11 +11,11 @@ import com.google.common.collect.ImmutableList;
 
 public class Neo4JGraphDatabaseTest extends RepositoryTestCase {
 
-    protected Neo4JGraphDatabase database;
+    protected BlueprintsGraphDatabase database;
 
     @Override
     protected void setUpInternal() throws Exception {
-        database = (Neo4JGraphDatabase) geogit.getRepository().getGraphDatabase();
+        database = (BlueprintsGraphDatabase) geogit.getRepository().getGraphDatabase();
     }
 
     @Test

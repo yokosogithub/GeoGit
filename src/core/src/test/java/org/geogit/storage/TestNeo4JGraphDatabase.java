@@ -4,7 +4,11 @@
  */
 package org.geogit.storage;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import org.geogit.api.Platform;
+import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.test.TestGraphDatabaseFactory;
 
 import com.google.inject.Inject;
@@ -19,8 +23,12 @@ public class TestNeo4JGraphDatabase extends Neo4JGraphDatabase {
 
     @Override
     protected Neo4jGraph getGraphDatabase() {
-    	return new Neo4jGraph(
-             new TestGraphDatabaseFactory().newImpermanentDatabaseBuilder().newGraphDatabase());
+    	TestGraphDatabaseFactory factory = new TestGraphDatabaseFactory();
+    	Map<String, String> settings = new HashMap<String, String>();
+    	GraphDatabaseService service = factory.newImpermanentDatabaseBuilder()
+    	       .setConfig(settings)
+    	       .newGraphDatabase();
+    	return new Neo4jGraph(service);
     }
 
     @Override
