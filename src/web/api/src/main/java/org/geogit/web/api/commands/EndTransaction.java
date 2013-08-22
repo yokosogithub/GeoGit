@@ -9,6 +9,12 @@ import org.geogit.web.api.CommandResponse;
 import org.geogit.web.api.CommandSpecException;
 import org.geogit.web.api.ResponseWriter;
 
+/**
+ * Interface for the TransactionEnd operation in GeoGit.
+ * 
+ * Web interface for {@link TransactionEnd}
+ */
+
 public class EndTransaction extends AbstractWebAPICommand {
 
     private boolean cancel;

@@ -116,6 +116,8 @@ public class FeatureDiffWeb extends AbstractWebAPICommand {
     /**
      * Runs the command and builds the appropriate response
      * 
+     * @param context - the context to use for this command
+     * 
      * @throws CommandSpecException
      */
     @Override
