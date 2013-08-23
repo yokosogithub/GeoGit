@@ -9,6 +9,12 @@ import org.geogit.web.api.CommandResponse;
 import org.geogit.web.api.CommandSpecException;
 import org.geogit.web.api.ResponseWriter;
 
+/**
+ * The interface for the TransactionBegin operation in GeoGit.
+ * 
+ * Web interface for {@link TransactionBegin}
+ */
+
 public class BeginTransaction extends AbstractWebAPICommand {
 
     /**

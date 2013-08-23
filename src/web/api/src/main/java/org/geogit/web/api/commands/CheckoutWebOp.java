@@ -13,6 +13,12 @@ import org.geogit.web.api.ResponseWriter;
 
 import com.google.common.base.Optional;
 
+/**
+ * The interface for the Checkout operation in GeoGit.
+ * 
+ * Web interface for {@link CheckoutOp}
+ */
+
 public class CheckoutWebOp extends AbstractWebAPICommand {
 
     private String branchOrCommit;

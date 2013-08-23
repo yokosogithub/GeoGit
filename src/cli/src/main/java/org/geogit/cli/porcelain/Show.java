@@ -24,7 +24,6 @@ import org.geogit.api.RevTree;
 import org.geogit.api.plumbing.ResolveFeatureType;
 import org.geogit.api.plumbing.RevObjectParse;
 import org.geogit.cli.AbstractCommand;
-import org.geogit.cli.AnsiDecorator;
 import org.geogit.cli.CLICommand;
 import org.geogit.cli.GeogitCLI;
 import org.geogit.cli.RequiresRepository;
@@ -59,17 +58,21 @@ public class Show extends AbstractCommand implements CLICommand {
         ConsoleReader console = cli.getConsole();
         GeoGIT geogit = cli.getGeogit();
 
-        String path = ref.get(0);
+        final String refSpec = ref.get(0);
 
-        Optional<RevObject> obj = geogit.command(RevObjectParse.class).setRefSpec(path).call();
+        final Optional<RevObject> obj = geogit.command(RevObjectParse.class).setRefSpec(refSpec)
+                .call();
         checkParameter(obj.isPresent(), "refspec did not resolve to any object.");
-        RevObject revObject = obj.get();
+
+        final RevObject revObject = obj.get();
+
+        final Ansi ansi = newAnsi(console.getTerminal());
+
         if (revObject instanceof RevFeature) {
-            RevFeatureType ft = geogit.command(ResolveFeatureType.class).setRefSpec(path).call()
+            RevFeatureType ft = geogit.command(ResolveFeatureType.class).setRefSpec(refSpec).call()
                     .get();
             ImmutableList<PropertyDescriptor> attribs = ft.sortedDescriptors();
             RevFeature feature = (RevFeature) revObject;
-            Ansi ansi = AnsiDecorator.newAnsi(true);
             ansi.newline().fg(Color.YELLOW).a("ID:  ").reset().a(feature.getId().toString())
                     .newline().newline();
             ansi.a("ATTRIBUTES  ").newline();
@@ -89,32 +92,24 @@ public class Show extends AbstractCommand implements CLICommand {
 
         } else if (revObject instanceof RevTree) {
             RevTree tree = (RevTree) revObject;
-            Optional<RevFeatureType> opt = geogit.command(ResolveFeatureType.class)
-                    .setRefSpec(path).call();
-            checkParameter(opt.isPresent(),
-                    "Refspec must resolve to a commit, feature or feature type");
-            RevFeatureType ft = opt.get();
-            ImmutableList<PropertyDescriptor> attribs = ft.sortedDescriptors();
-            Ansi ansi = AnsiDecorator.newAnsi(true);
 
             ansi.fg(Color.YELLOW).a("TREE ID:  ").reset().a(tree.getId().toString()).newline();
             ansi.fg(Color.YELLOW).a("SIZE:  ").reset().a(Long.toString(tree.size())).newline();
             ansi.fg(Color.YELLOW).a("NUMBER Of SUBTREES:  ").reset()
                     .a(Integer.toString(tree.numTrees()).toString()).newline();
 
-            ansi.fg(Color.YELLOW).a("DEFAULT FEATURE TYPE ID:  ").reset().a(ft.getId().toString())
-                    .newline().newline();
-            ansi.a("DEFAULT FEATURE TYPE ATTRIBUTES").newline();
             ansi.a("--------------------------------").newline();
-            for (PropertyDescriptor attrib : attribs) {
-                ansi.fg(Color.YELLOW).a(attrib.getName() + ": ").reset()
-                        .a("<" + FieldType.forBinding(attrib.getType().getBinding()) + ">")
-                        .newline();
+
+            Optional<RevFeatureType> type;
+            type = geogit.command(ResolveFeatureType.class).setRefSpec(refSpec).call();
+            if (type.isPresent()) {
+                printFeatureType(ansi, type.get(), true);
+            } else {
+                ansi.a("Default feature type not available, try including the tree path in the ref spec.");
             }
             console.println(ansi.toString());
         } else if (revObject instanceof RevCommit) {
             RevCommit commit = (RevCommit) revObject;
-            Ansi ansi = AnsiDecorator.newAnsi(true);
             ansi.a(Strings.padEnd("Commit:", 15, ' ')).fg(Color.YELLOW)
                     .a(commit.getId().toString()).reset().newline();
             ansi.a(Strings.padEnd("Author:", 15, ' ')).fg(Color.GREEN)
@@ -129,11 +124,24 @@ public class Show extends AbstractCommand implements CLICommand {
                     .reset().a(") ").a(new Date(commit.getCommitter().getTimestamp())).newline();
             ansi.a(Strings.padEnd("Subject:", 15, ' ')).a(commit.getMessage()).newline();
             console.println(ansi.toString());
+        } else if (revObject instanceof RevFeatureType) {
+            printFeatureType(ansi, (RevFeatureType) revObject, false);
         } else {
-            throw new IllegalArgumentException(
-                    "Refspec must resolve to a commit, feature or feature type");
+            throw new IllegalArgumentException("Unknown object type: " + revObject.getType());
         }
 
+    }
+
+    private void printFeatureType(Ansi ansi, RevFeatureType ft, boolean useDefaultKeyword) {
+        ImmutableList<PropertyDescriptor> attribs = ft.sortedDescriptors();
+
+        ansi.fg(Color.YELLOW).a(useDefaultKeyword ? "DEFAULT " : "").a("FEATURE TYPE ID:  ")
+                .reset().a(ft.getId().toString()).newline().newline();
+        ansi.a(useDefaultKeyword ? "DEFAULT " : "").a("FEATURE TYPE ATTRIBUTES").newline();
+        for (PropertyDescriptor attrib : attribs) {
+            ansi.fg(Color.YELLOW).a(attrib.getName() + ": ").reset()
+                    .a("<" + FieldType.forBinding(attrib.getType().getBinding()) + ">").newline();
+        }
     }
 
     /**

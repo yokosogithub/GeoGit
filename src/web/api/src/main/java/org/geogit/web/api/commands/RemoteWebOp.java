@@ -15,9 +15,9 @@ import org.geogit.web.api.CommandSpecException;
 import org.geogit.web.api.ResponseWriter;
 
 /**
- * Interface for the Remote operations in GeoGit. Currently only supports listing of remotes.
+ * Interface for the Remote operations in GeoGit.
  * 
- * Web interface for {@link RemoteListOp}
+ * Web interface for {@link RemoteListOp}, {@link RemoteRemoveOp}, {@link RemoteAddOp}
  */
 
 public class RemoteWebOp extends AbstractWebAPICommand {

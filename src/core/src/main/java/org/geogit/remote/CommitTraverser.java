@@ -47,6 +47,33 @@ abstract class CommitTraverser {
         public int getDepth() {
             return depth;
         }
+
+        /**
+         * Use the hash code of the ObjectId.
+         */
+        @Override
+        public int hashCode() {
+            return objectId.hashCode();
+        }
+
+        /**
+         * Ignore depth when comparing two commit nodes.
+         * 
+         * @return true if the objects are equal
+         */
+        @Override
+        public boolean equals(Object obj) {
+            if (obj == null)
+                return false;
+            if (obj == this)
+                return true;
+            if (!(obj instanceof CommitNode))
+                return false;
+
+            CommitNode rhs = (CommitNode) obj;
+
+            return rhs.objectId.equals(objectId);
+        }
     }
 
     /**
@@ -137,9 +164,10 @@ abstract class CommitTraverser {
     private void addParents(CommitNode commitNode) {
         ImmutableList<ObjectId> parents = getParents(commitNode.getObjectId());
         for (ObjectId parent : parents) {
+            CommitNode parentNode = new CommitNode(parent, commitNode.getDepth() + 1);
             if (!commits.contains(parent) && !have.contains(parent)
-                    && !commitQueue.contains(parent)) {
-                commitQueue.add(new CommitNode(parent, commitNode.getDepth() + 1));
+                    && !commitQueue.contains(parentNode)) {
+                commitQueue.add(parentNode);
             }
         }
     }
