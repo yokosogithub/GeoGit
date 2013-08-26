@@ -316,8 +316,8 @@ public class GeogitCLI {
      * @param args
      * @throws exceptions thrown by the executed commands.
      */
-    public void execute(String... args) throws ParameterException, IllegalArgumentException,
-            IllegalStateException, CommandFailedException, IOException {
+    public void execute(String... args) throws ParameterException, CommandFailedException,
+            IOException {
 
         JCommander mainCommander = newCommandParser();
         if (null == args || args.length == 0) {

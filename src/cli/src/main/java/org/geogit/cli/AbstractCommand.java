@@ -20,6 +20,7 @@ import org.geogit.cli.porcelain.ColorArg;
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.Parameters;
+import com.google.common.base.Throwables;
 
 /**
  * A template command.
@@ -48,8 +49,7 @@ public abstract class AbstractCommand implements CLICommand {
     public ColorArg color = ColorArg.auto;
 
     @Override
-    public void run(GeogitCLI cli) throws IllegalArgumentException, IllegalStateException,
-            CommandFailedException, IOException {
+    public void run(GeogitCLI cli) throws InvalidParameterException, CommandFailedException {
         checkNotNull(cli, "No GeogitCLI provided");
         if (help) {
             printUsage();
@@ -68,7 +68,11 @@ public abstract class AbstractCommand implements CLICommand {
             }
         }
 
-        runInternal(cli);
+        try {
+            runInternal(cli);
+        } catch (IOException e) {
+            throw Throwables.propagate(e);
+        }
     }
 
     protected Ansi newAnsi(Terminal terminal) {
@@ -111,10 +115,14 @@ public abstract class AbstractCommand implements CLICommand {
      * non null (e.g. there's a working repository) if the implementation class is marked with the
      * {@link RequiresRepository @RequiresRepository} annotation.
      * 
+     * @throws InvalidParameterException as per {@link CLICommand#run(GeogitCLI)}
+     * @throws CommandFailedException as per {@link CLICommand#run(GeogitCLI)}
+     * @throws IOException <b>only</b> propagated back if the IOException was thrown while writing
+     *         to the {@link GeogitCLI#getConsole() console}.
      * @param cli
      */
-    protected abstract void runInternal(GeogitCLI cli) throws IllegalArgumentException,
-            IllegalStateException, CommandFailedException, IOException;
+    protected abstract void runInternal(GeogitCLI cli) throws InvalidParameterException,
+            CommandFailedException, IOException;
 
     /**
      * Prints the JCommander usage for this command.

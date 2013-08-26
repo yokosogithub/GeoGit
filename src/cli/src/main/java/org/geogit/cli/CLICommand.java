@@ -5,8 +5,6 @@
 
 package org.geogit.cli;
 
-import java.io.IOException;
-
 import org.geogit.cli.porcelain.Config;
 import org.geogit.cli.porcelain.Help;
 import org.geogit.cli.porcelain.Init;
@@ -43,12 +41,9 @@ public interface CLICommand {
      * @throws InvalidParameterException if any of the command line arguments is invalid or missing
      * @throws CommandFailedException if the CLI command succeeded in calling the internal
      *         operation, which then failed for a <b>recoverable</b> reason.
-     * @throws IOException <b>only</b> propagated back if the IOException was thrown while writing
-     *         to the {@link GeogitCLI#getConsole() console}.
      * @throws RuntimeException for any other unknown cause of failure to execute the operation,
      *         generally propagated back from it.
      */
-    void run(GeogitCLI cli) throws ParameterException, IllegalArgumentException,
-            IllegalStateException, CommandFailedException, IOException;
+    void run(GeogitCLI cli) throws InvalidParameterException, CommandFailedException;
 
 }
