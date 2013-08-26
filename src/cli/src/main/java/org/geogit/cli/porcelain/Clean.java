@@ -4,8 +4,7 @@
  */
 package org.geogit.cli.porcelain;
 
-import static com.google.common.base.Preconditions.checkState;
-
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -20,17 +19,18 @@ import org.geogit.api.plumbing.FindTreeChild;
 import org.geogit.api.plumbing.diff.DiffEntry;
 import org.geogit.api.plumbing.diff.DiffEntry.ChangeType;
 import org.geogit.api.porcelain.CleanOp;
-import org.geogit.cli.CLICommand;
+import org.geogit.cli.AbstractCommand;
 import org.geogit.cli.GeogitCLI;
+import org.geogit.cli.RequiresRepository;
 import org.geogit.repository.Repository;
 
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.Parameters;
 import com.google.common.base.Optional;
-import com.google.common.base.Preconditions;
 
+@RequiresRepository
 @Parameters(commandNames = "clean", commandDescription = "Deletes untracked features from working tree")
-public class Clean implements CLICommand {
+public class Clean extends AbstractCommand {
 
     @Parameter(description = "<path>")
     private List<String> path = new ArrayList<String>();
@@ -38,16 +38,10 @@ public class Clean implements CLICommand {
     @Parameter(names = { "--dry-run", "-n" }, description = "Don't actually remove anything, just show what would be done.")
     private boolean dryRun;
 
-    /**
-     * @param cli
-     * @see org.geogit.cli.CLICommand#run(org.geogit.cli.GeogitCLI)
-     */
     @Override
-    public void run(GeogitCLI cli) throws Exception {
-        checkState(cli.getGeogit() != null, "Not a geogit repository: " + cli.getPlatform().pwd());
-
-        ConsoleReader console = cli.getConsole();
-        GeoGIT geogit = cli.getGeogit();
+    public void runInternal(GeogitCLI cli) throws IOException {
+        final ConsoleReader console = cli.getConsole();
+        final GeoGIT geogit = cli.getGeogit();
 
         String pathFilter = null;
         if (!path.isEmpty()) {
@@ -64,9 +58,8 @@ public class Clean implements CLICommand {
                         .setParent(repository.getWorkingTree().getTree()).setChildPath(pathFilter)
                         .call();
 
-                Preconditions.checkArgument(ref.isPresent(),
-                        "pathspec '%s' did not match any tree", pathFilter);
-                Preconditions.checkArgument(ref.get().getType() == TYPE.TREE,
+                checkParameter(ref.isPresent(), "pathspec '%s' did not match any tree", pathFilter);
+                checkParameter(ref.get().getType() == TYPE.TREE,
                         "pathspec '%s' did not resolve to a tree", pathFilter);
             }
             Iterator<DiffEntry> unstaged = geogit.command(DiffWorkTree.class).setFilter(pathFilter)

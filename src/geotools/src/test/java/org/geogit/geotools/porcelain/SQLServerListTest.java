@@ -89,7 +89,7 @@ public class SQLServerListTest extends Assert {
 
         SQLServerList listCommand = new SQLServerList();
         listCommand.dataStoreFactory = factory;
-        exception.expect(IllegalStateException.class);
+        exception.expect(CommandFailedException.class);
         listCommand.run(cli);
     }
 

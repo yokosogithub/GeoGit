@@ -5,15 +5,15 @@
 
 package org.geogit.osm.cli.commands;
 
-import static com.google.common.base.Preconditions.checkArgument;
-import static com.google.common.base.Preconditions.checkState;
-
 import java.io.File;
+import java.io.IOException;
 import java.util.List;
 
 import org.geogit.cli.AbstractCommand;
 import org.geogit.cli.CLICommand;
+import org.geogit.cli.CommandFailedException;
 import org.geogit.cli.GeogitCLI;
+import org.geogit.cli.RequiresRepository;
 import org.geogit.osm.internal.EmptyOSMDownloadException;
 import org.geogit.osm.internal.Mapping;
 import org.geogit.osm.internal.OSMDownloadReport;
@@ -27,6 +27,7 @@ import com.google.common.collect.Lists;
 /**
  * Imports data from an OSM file
  */
+@RequiresRepository
 @Parameters(commandNames = "import", commandDescription = "Import OpenStreetMap data from a file")
 public class OSMImport extends AbstractCommand implements CLICommand {
 
@@ -43,11 +44,10 @@ public class OSMImport extends AbstractCommand implements CLICommand {
     public String mappingFile;
 
     @Override
-    protected void runInternal(GeogitCLI cli) throws Exception {
-        checkState(cli.getGeogit() != null, "Not a geogit repository: " + cli.getPlatform().pwd());
-        checkArgument(apiUrl != null && apiUrl.size() == 1, "One file must be specified");
+    protected void runInternal(GeogitCLI cli) throws IOException {
+        checkParameter(apiUrl != null && apiUrl.size() == 1, "One file must be specified");
         File importFile = new File(apiUrl.get(0));
-        checkArgument(importFile.exists(), "The specified OSM data file does not exist");
+        checkParameter(importFile.exists(), "The specified OSM data file does not exist");
 
         Mapping mapping = null;
         if (mappingFile != null) {
@@ -71,7 +71,7 @@ public class OSMImport extends AbstractCommand implements CLICommand {
                     "The specified filter did not contain any valid element.\n"
                             + "No changes were made to the repository.\n");
         } catch (RuntimeException e) {
-            throw new IllegalStateException("Error importing OSM data: " + e.getMessage(), e);
+            throw new CommandFailedException("Error importing OSM data: " + e.getMessage(), e);
         }
 
     }

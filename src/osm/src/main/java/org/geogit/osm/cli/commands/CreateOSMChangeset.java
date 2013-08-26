@@ -8,6 +8,7 @@ package org.geogit.osm.cli.commands;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
+import java.io.IOException;
 import java.util.Iterator;
 import java.util.List;
 
@@ -15,18 +16,19 @@ import org.geogit.api.GeoGIT;
 import org.geogit.cli.AbstractCommand;
 import org.geogit.cli.CLICommand;
 import org.geogit.cli.GeogitCLI;
+import org.geogit.cli.RequiresRepository;
 import org.geogit.osm.internal.CreateOSMChangesetOp;
 import org.openstreetmap.osmosis.core.container.v0_6.ChangeContainer;
 import org.openstreetmap.osmosis.xml.v0_6.XmlChangeWriter;
 
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.Parameters;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 
 /**
  * Imports data from OSM using the Overpass API
  */
+@RequiresRepository
 @Parameters(commandNames = "create-changeset", commandDescription = "Save diff between versions as OSM changeset")
 public class CreateOSMChangeset extends AbstractCommand implements CLICommand {
 
@@ -38,15 +40,11 @@ public class CreateOSMChangeset extends AbstractCommand implements CLICommand {
 
     /**
      * Executes the command with the specified options.
-     * 
-     * @param cli
-     * @throws Exception
-     * @see org.geogit.cli.AbstractCommand#runInternal(org.geogit.cli.GeogitCLI)
      */
     @Override
-    protected void runInternal(GeogitCLI cli) throws Exception {
+    protected void runInternal(GeogitCLI cli) throws IOException {
 
-        Preconditions.checkArgument(refSpec.size() < 3, "Commit list is too long :" + refSpec);
+        checkParameter(refSpec.size() < 3, "Commit list is too long :" + refSpec);
 
         GeoGIT geogit = cli.getGeogit();
 

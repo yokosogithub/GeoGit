@@ -12,7 +12,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-import jline.Terminal;
 import jline.console.ConsoleReader;
 
 import org.fusesource.jansi.Ansi;
@@ -32,9 +31,10 @@ import org.geogit.api.plumbing.diff.DiffEntry;
 import org.geogit.api.porcelain.DiffOp;
 import org.geogit.api.porcelain.LogOp;
 import org.geogit.cli.AbstractCommand;
-import org.geogit.cli.AnsiDecorator;
 import org.geogit.cli.CLICommand;
 import org.geogit.cli.GeogitCLI;
+import org.geogit.cli.InvalidParameterException;
+import org.geogit.cli.RequiresRepository;
 import org.geotools.util.Range;
 
 import com.beust.jcommander.Parameters;
@@ -42,7 +42,6 @@ import com.beust.jcommander.ParametersDelegate;
 import com.beust.jcommander.internal.Lists;
 import com.beust.jcommander.internal.Maps;
 import com.google.common.base.Optional;
-import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
@@ -60,6 +59,7 @@ import com.google.common.collect.ImmutableSet;
  * 
  * @see org.geogit.api.porcelain.LogOp
  */
+@RequiresRepository
 @Parameters(commandNames = "log", commandDescription = "Show commit logs")
 public class Log extends AbstractCommand implements CLICommand {
 
@@ -76,8 +76,6 @@ public class Log extends AbstractCommand implements CLICommand {
 
     private ConsoleReader console;
 
-    private boolean useColor;
-
     /**
      * Executes the log command using the provided options.
      * 
@@ -86,16 +84,12 @@ public class Log extends AbstractCommand implements CLICommand {
      * @see org.geogit.cli.AbstractCommand#runInternal(org.geogit.cli.GeogitCLI)
      */
     @Override
-    public void runInternal(GeogitCLI cli) throws Exception {
-        final Platform platform = cli.getPlatform();
-        Preconditions.checkState(cli.getGeogit() != null, "Not a geogit repository: "
-                + platform.pwd().getAbsolutePath());
-
-        Preconditions.checkArgument(!(args.summary && args.oneline),
+    public void runInternal(GeogitCLI cli) throws IOException {
+        checkParameter(!(args.summary && args.oneline),
                 "--summary and --oneline cannot be used together");
-        Preconditions.checkArgument(!(args.stats && args.oneline),
+        checkParameter(!(args.stats && args.oneline),
                 "--stats and --oneline cannot be used together");
-        Preconditions.checkArgument(!(args.stats && args.oneline),
+        checkParameter(!(args.stats && args.oneline),
                 "--name-only and --oneline cannot be used together");
 
         geogit = cli.getGeogit();
@@ -137,7 +131,7 @@ public class Log extends AbstractCommand implements CLICommand {
             }
         } else if (args.branch != null) {
             Optional<Ref> obj = geogit.command(RefParse.class).setName(args.branch).call();
-            Preconditions.checkArgument(obj.isPresent(), "Wrong branch name: " + args.branch);
+            checkParameter(obj.isPresent(), "Wrong branch name: " + args.branch);
             op.addCommit(obj.get().getObjectId());
         }
 
@@ -162,7 +156,7 @@ public class Log extends AbstractCommand implements CLICommand {
             if (args.until != null) {
                 until = new Date(geogit.command(ParseTimestamp.class).setString(args.until).call());
                 if (args.all) {
-                    throw new IllegalStateException(
+                    throw new InvalidParameterException(
                             "Cannot specify 'until' commit when listing all branches");
                 }
             }
@@ -171,7 +165,7 @@ public class Log extends AbstractCommand implements CLICommand {
         if (!args.sinceUntilPaths.isEmpty()) {
             List<String> sinceUntil = ImmutableList.copyOf((Splitter.on("..")
                     .split(args.sinceUntilPaths.get(0))));
-            Preconditions.checkArgument(sinceUntil.size() == 1 || sinceUntil.size() == 2,
+            checkParameter(sinceUntil.size() == 1 || sinceUntil.size() == 2,
                     "Invalid refSpec format, expected [<until>]|[<since>..<until>]: %s",
                     args.sinceUntilPaths.get(0));
 
@@ -188,19 +182,17 @@ public class Log extends AbstractCommand implements CLICommand {
             if (sinceRefSpec != null) {
                 Optional<ObjectId> since;
                 since = geogit.command(RevParse.class).setRefSpec(sinceRefSpec).call();
-                Preconditions.checkArgument(since.isPresent(), "Object not found '%s'",
-                        sinceRefSpec);
+                checkParameter(since.isPresent(), "Object not found '%s'", sinceRefSpec);
                 op.setSince(since.get());
             }
             if (untilRefSpec != null) {
                 if (args.all) {
-                    throw new IllegalStateException(
+                    throw new InvalidParameterException(
                             "Cannot specify 'until' commit when listing all branches");
                 }
                 Optional<ObjectId> until;
                 until = geogit.command(RevParse.class).setRefSpec(untilRefSpec).call();
-                Preconditions.checkArgument(until.isPresent(), "Object not found '%s'",
-                        sinceRefSpec);
+                checkParameter(until.isPresent(), "Object not found '%s'", sinceRefSpec);
                 op.setUntil(until.get());
             }
         }
@@ -210,19 +202,7 @@ public class Log extends AbstractCommand implements CLICommand {
             }
         }
         Iterator<RevCommit> log = op.call();
-        console = cli.getConsole();
-        Terminal terminal = console.getTerminal();
-        switch (args.color) {
-        case never:
-            useColor = false;
-            break;
-        case always:
-            useColor = true;
-            break;
-        default:
-            useColor = terminal.isAnsiSupported();
-        }
-
+        this.console = cli.getConsole();
         if (!log.hasNext()) {
             console.println("No commits to show");
             console.flush();
@@ -269,7 +249,7 @@ public class Log extends AbstractCommand implements CLICommand {
 
         @Override
         public void print(RevCommit commit) throws IOException {
-            Ansi ansi = AnsiDecorator.newAnsi(useColor);
+            Ansi ansi = newAnsi(console.getTerminal());
             ansi.fg(Color.YELLOW).a(getIdAsString(commit.getId())).reset();
             String message = Strings.nullToEmpty(commit.getMessage());
             String title = Splitter.on('\n').split(message).iterator().next();
@@ -279,11 +259,6 @@ public class Log extends AbstractCommand implements CLICommand {
 
     }
 
-    /**
-     * @param useColor
-     * @param showSummary
-     * @return
-     */
     private class StandardConverter implements LogEntryPrinter {
 
         private SimpleDateFormat DATE_FORMAT;
@@ -300,7 +275,7 @@ public class Log extends AbstractCommand implements CLICommand {
 
         @Override
         public void print(RevCommit commit) throws IOException {
-            Ansi ansi = AnsiDecorator.newAnsi(useColor);
+            Ansi ansi = newAnsi(console.getTerminal());
 
             ansi.a("Commit:  ").fg(Color.YELLOW).a(getIdAsString(commit.getId())).reset().newline();
             if (commit.getParentIds().size() > 1) {

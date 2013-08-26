@@ -4,9 +4,7 @@
  */
 package org.geogit.cli.porcelain;
 
-import static com.google.common.base.Preconditions.checkArgument;
-import static com.google.common.base.Preconditions.checkState;
-
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -25,9 +23,10 @@ import org.geogit.api.RevPerson;
 import org.geogit.api.RevTree;
 import org.geogit.api.plumbing.ResolveFeatureType;
 import org.geogit.api.plumbing.RevObjectParse;
-import org.geogit.cli.AnsiDecorator;
+import org.geogit.cli.AbstractCommand;
 import org.geogit.cli.CLICommand;
 import org.geogit.cli.GeogitCLI;
+import org.geogit.cli.RequiresRepository;
 import org.geogit.storage.FieldType;
 import org.opengis.feature.type.PropertyDescriptor;
 
@@ -41,8 +40,9 @@ import com.google.common.collect.ImmutableList;
  * Shows formatted information about a commit, feature or feature type
  * 
  */
+@RequiresRepository
 @Parameters(commandNames = "show", commandDescription = "Displays information about a commit, feature or feature type")
-public class Show implements CLICommand {
+public class Show extends AbstractCommand implements CLICommand {
 
     /**
      * The path to the element to display.
@@ -50,15 +50,10 @@ public class Show implements CLICommand {
     @Parameter(description = "<reference>")
     private List<String> ref = new ArrayList<String>();
 
-    /**
-     * @param cli
-     * @see org.geogit.cli.CLICommand#run(org.geogit.cli.GeogitCLI)
-     */
     @Override
-    public void run(GeogitCLI cli) throws Exception {
-        checkState(cli.getGeogit() != null, "Not a geogit repository: " + cli.getPlatform().pwd());
-        checkArgument(ref.size() < 2, "Only one refspec allowed");
-        checkArgument(!ref.isEmpty(), "A refspec must be specified");
+    public void runInternal(GeogitCLI cli) throws IOException {
+        checkParameter(ref.size() < 2, "Only one refspec allowed");
+        checkParameter(!ref.isEmpty(), "A refspec must be specified");
 
         ConsoleReader console = cli.getConsole();
         GeoGIT geogit = cli.getGeogit();
@@ -67,11 +62,11 @@ public class Show implements CLICommand {
 
         final Optional<RevObject> obj = geogit.command(RevObjectParse.class).setRefSpec(refSpec)
                 .call();
-        checkState(obj.isPresent(), "refspec did not resolve to any object.");
+        checkParameter(obj.isPresent(), "refspec did not resolve to any object.");
 
         final RevObject revObject = obj.get();
 
-        final Ansi ansi = AnsiDecorator.newAnsi(console.getTerminal().isAnsiSupported());
+        final Ansi ansi = newAnsi(console.getTerminal());
 
         if (revObject instanceof RevFeature) {
             RevFeatureType ft = geogit.command(ResolveFeatureType.class).setRefSpec(refSpec).call()

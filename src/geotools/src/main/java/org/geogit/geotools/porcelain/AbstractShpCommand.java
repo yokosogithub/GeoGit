@@ -5,19 +5,17 @@
 package org.geogit.geotools.porcelain;
 
 import java.io.File;
-import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.io.Serializable;
 import java.util.Map;
 
+import org.geogit.cli.AbstractCommand;
 import org.geogit.cli.CLICommand;
-import org.geogit.cli.GeogitCLI;
+import org.geogit.cli.CommandFailedException;
 import org.geotools.data.AbstractDataStoreFactory;
 import org.geotools.data.DataStore;
 import org.geotools.data.shapefile.ShapefileDataStoreFactory;
 
-import com.beust.jcommander.JCommander;
-import com.beust.jcommander.Parameter;
-import com.beust.jcommander.Parameters;
 import com.beust.jcommander.internal.Maps;
 
 /**
@@ -26,13 +24,7 @@ import com.beust.jcommander.internal.Maps;
  * 
  * @see CLICommand
  */
-public abstract class AbstractShpCommand implements CLICommand {
-
-    /**
-     * Flag for displaying help for the command.
-     */
-    @Parameter(names = "--help", help = true, hidden = true)
-    public boolean help;
+public abstract class AbstractShpCommand extends AbstractCommand implements CLICommand {
 
     /**
      * Factory for constructing the data store.
@@ -42,63 +34,29 @@ public abstract class AbstractShpCommand implements CLICommand {
     public AbstractDataStoreFactory dataStoreFactory = new ShapefileDataStoreFactory();
 
     /**
-     * Executes the command.
-     * 
-     * @param cli
-     * @throws Exception
-     * @see org.geogit.cli.CLICommand#run(org.geogit.cli.GeogitCLI)
-     */
-    @Override
-    public void run(GeogitCLI cli) throws Exception {
-        if (help) {
-            printUsage();
-            return;
-        }
-
-        runInternal(cli);
-    }
-
-    protected void printUsage() {
-        JCommander jc = new JCommander(this);
-        String commandName = this.getClass().getAnnotation(Parameters.class).commandNames()[0];
-        jc.setProgramName("geogit shp " + commandName);
-        jc.usage();
-    }
-
-    /**
-     * Subclasses shall implement to do the real work, will not be called if the command was invoked
-     * with {@code --help}
-     */
-    protected abstract void runInternal(GeogitCLI cli) throws Exception;
-
-    /**
      * Constructs a new shapefile data store using the specified shapefile.
      * 
      * @param shapefile the filepath of the shapefile to use in creating the data store
      * @return the constructed data store
-     * @throws Exception
+     * @throws IllegalArgumentException if the datastore cannot be acquired
      * @see DataStore
      */
-    protected DataStore getDataStore(String shapefile) throws Exception {
+    protected DataStore getDataStore(String shapefile) {
         File file = new File(shapefile);
-        if (!file.exists()) {
-            throw new FileNotFoundException();
+        checkParameter(file.exists(), "File does not exist '%s'", shapefile);
+
+        try {
+            Map<String, Serializable> params = Maps.newHashMap();
+            params.put(ShapefileDataStoreFactory.URLP.key, new File(shapefile).toURI().toURL());
+            params.put(ShapefileDataStoreFactory.NAMESPACEP.key, "http://www.opengis.net/gml");
+            params.put(ShapefileDataStoreFactory.CREATE_SPATIAL_INDEX.key, Boolean.FALSE);
+
+            DataStore dataStore = dataStoreFactory.createDataStore(params);
+            checkParameter(dataStore != null, "Unable to open '%s' as a shapefile", shapefile);
+
+            return dataStore;
+        } catch (IOException e) {
+            throw new CommandFailedException("Error opening shapefile: " + e.getMessage(), e);
         }
-        Map<String, Serializable> params = Maps.newHashMap();
-        params.put(ShapefileDataStoreFactory.URLP.key, new File(shapefile).toURI().toURL());
-        params.put(ShapefileDataStoreFactory.NAMESPACEP.key, "http://www.opengis.net/gml");
-        params.put(ShapefileDataStoreFactory.CREATE_SPATIAL_INDEX.key, Boolean.FALSE);
-
-        if (!dataStoreFactory.canProcess(params)) {
-            throw new FileNotFoundException();
-        }
-
-        DataStore dataStore = dataStoreFactory.createDataStore(params);
-
-        if (dataStore == null) {
-            throw new FileNotFoundException();
-        }
-
-        return dataStore;
     }
 }

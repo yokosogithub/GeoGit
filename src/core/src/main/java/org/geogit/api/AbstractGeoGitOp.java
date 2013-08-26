@@ -11,7 +11,6 @@ import org.geogit.repository.WorkingTree;
 import org.geogit.storage.RefDatabase;
 import org.geotools.util.NullProgressListener;
 import org.geotools.util.SubProgressListener;
-import org.geotools.util.logging.Logging;
 import org.opengis.util.ProgressListener;
 
 import com.google.inject.Inject;

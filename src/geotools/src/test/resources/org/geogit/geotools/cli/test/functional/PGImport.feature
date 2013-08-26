@@ -6,7 +6,7 @@ Feature: "pg import" command
   Scenario: Try importing into an empty directory
     Given I am in an empty directory
      When I run the command "pg import --table geogit_pg_test" on the PostGIS database
-     Then the response should start with "Not a geogit repository:"
+     Then the response should start with "Not in a geogit repository"
       
   Scenario: Try to import a PostGIS table
     Given I have a repository

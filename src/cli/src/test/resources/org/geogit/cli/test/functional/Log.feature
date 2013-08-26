@@ -75,7 +75,7 @@ Feature: "log" command
   Scenario: Try to show a log from an empty directory
     Given I am in an empty directory
      When I run the command "log"
-     Then the response should start with "Not a geogit repository"
+     Then the response should start with "Not in a geogit repository"
       And it should exit with non-zero exit code
 
   Scenario: Try to show a log of all branches

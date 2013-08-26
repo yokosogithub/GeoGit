@@ -5,21 +5,21 @@
 
 package org.geogit.cli.porcelain;
 
-import static com.google.common.base.Preconditions.checkState;
-
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
 import jline.console.ConsoleReader;
 
 import org.geogit.api.GeoGIT;
+import org.geogit.api.plumbing.diff.DiffObjectCount;
 import org.geogit.api.plumbing.merge.Conflict;
 import org.geogit.api.plumbing.merge.ConflictsReadOp;
-import org.geogit.api.plumbing.diff.DiffObjectCount;
 import org.geogit.api.porcelain.AddOp;
 import org.geogit.cli.AbstractCommand;
 import org.geogit.cli.CLICommand;
 import org.geogit.cli.GeogitCLI;
+import org.geogit.cli.RequiresRepository;
 import org.geogit.repository.WorkingTree;
 
 import com.beust.jcommander.Parameter;
@@ -49,6 +49,7 @@ import com.beust.jcommander.Parameters;
  * 
  * @see AddOp
  */
+@RequiresRepository
 @Parameters(commandNames = "add", commandDescription = "Add features to the staging area")
 public class Add extends AbstractCommand implements CLICommand {
 
@@ -68,11 +69,10 @@ public class Add extends AbstractCommand implements CLICommand {
      * @see org.geogit.cli.AbstractCommand#runInternal(org.geogit.cli.GeogitCLI)
      */
     @Override
-    public void runInternal(GeogitCLI cli) throws Exception {
+    public void runInternal(GeogitCLI cli) throws IOException {
         final GeoGIT geogit = cli.getGeogit();
-        checkState(geogit != null, "Not a geogit repository: " + cli.getPlatform().pwd());
 
-        ConsoleReader console = cli.getConsole();
+        final ConsoleReader console = cli.getConsole();
 
         String pathFilter = null;
         if (patterns.size() == 1) {

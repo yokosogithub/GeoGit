@@ -11,8 +11,6 @@ import java.util.List;
 
 import org.geogit.api.porcelain.AddOp;
 import org.geogit.api.porcelain.CommitOp;
-import org.geogit.osm.internal.CreateOSMChangesetOp;
-import org.geogit.osm.internal.OSMImportOp;
 import org.geogit.test.integration.RepositoryTestCase;
 import org.junit.Rule;
 import org.junit.Test;

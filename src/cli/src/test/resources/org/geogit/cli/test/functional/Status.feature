@@ -6,7 +6,7 @@ Feature: "status" command
   Scenario: Try to get the status of an empty directory
     Given I am in an empty directory
      When I run the command "status"
-     Then the response should start with "Not a geogit repository"
+     Then the response should start with "Not in a geogit repository"
       And it should exit with non-zero exit code
      
   Scenario: Try to get the status of a repository with no changes

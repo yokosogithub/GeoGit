@@ -5,9 +5,7 @@
 
 package org.geogit.cli.porcelain;
 
-import static com.google.common.base.Preconditions.checkArgument;
-import static com.google.common.base.Preconditions.checkState;
-
+import java.io.IOException;
 import java.util.Iterator;
 import java.util.List;
 
@@ -29,10 +27,10 @@ import org.geogit.api.porcelain.NothingToCommitException;
 import org.geogit.api.porcelain.ResetOp;
 import org.geogit.api.porcelain.ResetOp.ResetMode;
 import org.geogit.cli.AbstractCommand;
-import org.geogit.cli.AnsiDecorator;
 import org.geogit.cli.CLICommand;
 import org.geogit.cli.CommandFailedException;
 import org.geogit.cli.GeogitCLI;
+import org.geogit.cli.RequiresRepository;
 
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.Parameters;
@@ -53,6 +51,7 @@ import com.google.common.collect.Lists;
  * 
  * @see MergeOp
  */
+@RequiresRepository
 @Parameters(commandNames = "merge", commandDescription = "Merge two or more histories into one")
 public class Merge extends AbstractCommand implements CLICommand {
 
@@ -76,27 +75,23 @@ public class Merge extends AbstractCommand implements CLICommand {
 
     /**
      * Executes the merge command using the provided options.
-     * 
-     * @param cli
-     * @see org.geogit.cli.AbstractCommand#runInternal(org.geogit.cli.GeogitCLI)
      */
     @Override
-    public void runInternal(GeogitCLI cli) throws Exception {
-        checkState(cli.getGeogit() != null, "Not a geogit repository: " + cli.getPlatform().pwd());
-        checkState(commits.size() > 0, "No commits provided to merge.");
+    public void runInternal(GeogitCLI cli) throws IOException {
+        checkParameter(commits.size() > 0, "No commits provided to merge.");
 
         ConsoleReader console = cli.getConsole();
 
         final GeoGIT geogit = cli.getGeogit();
 
-        Ansi ansi = AnsiDecorator.newAnsi(console.getTerminal().isAnsiSupported());
+        Ansi ansi = newAnsi(console.getTerminal());
 
         if (abort) {
             Optional<Ref> ref = geogit.command(RefParse.class).setName(Ref.ORIG_HEAD).call();
             if (!ref.isPresent()) {
-                throw new IllegalArgumentException(
-                        "There is no merge to abort <ORIG_HEAD missing>.");
+                throw new CommandFailedException("There is no merge to abort <ORIG_HEAD missing>.");
             }
+
             geogit.command(ResetOp.class).setMode(ResetMode.HARD)
                     .setCommit(Suppliers.ofInstance(ref.get().getObjectId()));
             console.println("Merge aborted successfully.");
@@ -111,14 +106,17 @@ public class Merge extends AbstractCommand implements CLICommand {
             for (String commitish : commits) {
                 Optional<ObjectId> commitId;
                 commitId = geogit.command(RevParse.class).setRefSpec(commitish).call();
-                checkArgument(commitId.isPresent(), "Commit not found '%s'", commitish);
+                checkParameter(commitId.isPresent(), "Commit not found '%s'", commitish);
                 merge.addCommit(Suppliers.ofInstance(commitId.get()));
             }
             MergeReport report = merge.call();
             commit = report.getMergeCommit();
-        } catch (NothingToCommitException noChanges) {
-            console.println(ansi.fg(Color.RED).a(noChanges.getMessage()).reset().toString());
-            throw new CommandFailedException();
+        } catch (RuntimeException e) {
+            if (e instanceof NothingToCommitException || e instanceof IllegalArgumentException
+                    || e instanceof IllegalStateException) {
+                throw new CommandFailedException(e.getMessage(), e);
+            }
+            throw e;
         }
         final ObjectId parentId = commit.parentN(0).or(ObjectId.NULL);
 

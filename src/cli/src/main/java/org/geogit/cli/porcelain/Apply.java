@@ -4,14 +4,14 @@
  */
 package org.geogit.cli.porcelain;
 
-import static com.google.common.base.Preconditions.checkArgument;
-import static com.google.common.base.Preconditions.checkState;
-
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -37,7 +37,9 @@ import org.geogit.api.plumbing.diff.PatchSerializer;
 import org.geogit.api.porcelain.ApplyPatchOp;
 import org.geogit.api.porcelain.CannotApplyPatchException;
 import org.geogit.cli.AbstractCommand;
+import org.geogit.cli.CommandFailedException;
 import org.geogit.cli.GeogitCLI;
+import org.geogit.cli.RequiresRepository;
 import org.geogit.repository.DepthSearch;
 import org.opengis.feature.type.PropertyDescriptor;
 
@@ -47,6 +49,7 @@ import com.google.common.base.Charsets;
 import com.google.common.base.Objects;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
+import com.google.common.io.Closeables;
 import com.google.common.io.Files;
 
 /**
@@ -55,6 +58,7 @@ import com.google.common.io.Files;
  * Patches are generated using the format-patch command, not with the diff command
  * 
  */
+@RequiresRepository
 @Parameters(commandNames = "apply", commandDescription = "Apply a patch to the current working tree")
 public class Apply extends AbstractCommand {
 
@@ -90,26 +94,33 @@ public class Apply extends AbstractCommand {
     @Parameter(names = { "--summary" }, description = "Do not apply. Just show a summary of changes contained in the patch")
     private boolean summary;
 
-    /**
-     * @param cli
-     * @see org.geogit.cli.CLICommand#run(org.geogit.cli.GeogitCLI)
-     */
     @Override
-    public void runInternal(GeogitCLI cli) throws Exception {
-        checkState(cli.getGeogit() != null, "Not a geogit repository: " + cli.getPlatform().pwd());
-        checkArgument(patchFiles.size() < 2, "Only one single patch file accepted");
-        checkArgument(!patchFiles.isEmpty(), "No patch file specified");
+    public void runInternal(GeogitCLI cli) throws IOException {
+        checkParameter(patchFiles.size() < 2, "Only one single patch file accepted");
+        checkParameter(!patchFiles.isEmpty(), "No patch file specified");
 
         ConsoleReader console = cli.getConsole();
         GeoGIT geogit = cli.getGeogit();
 
         File patchFile = new File(patchFiles.get(0));
-        checkArgument(patchFile.exists(), "Patch file cannot be found");
-        FileInputStream stream = new FileInputStream(patchFile);
-        BufferedReader reader = new BufferedReader(new InputStreamReader(stream, "UTF-8"));
+        checkParameter(patchFile.exists(), "Patch file cannot be found");
+        FileInputStream stream;
+        try {
+            stream = new FileInputStream(patchFile);
+        } catch (FileNotFoundException e1) {
+            throw new IllegalStateException("Can't open patch file " + patchFile);
+        }
+        BufferedReader reader = null;
+        try {
+            reader = new BufferedReader(new InputStreamReader(stream, "UTF-8"));
+        } catch (UnsupportedEncodingException e) {
+            Closeables.closeQuietly(reader);
+            Closeables.closeQuietly(stream);
+            throw new IllegalStateException("Error reading patch file " + patchFile, e);
+        }
         Patch patch = PatchSerializer.read(reader);
-        reader.close();
-        stream.close();
+        Closeables.closeQuietly(reader);
+        Closeables.closeQuietly(stream);
 
         if (reverse) {
             patch = patch.reversed();
@@ -156,7 +167,7 @@ public class Apply extends AbstractCommand {
                     console.println("Patch applied succesfully");
                 }
             } catch (CannotApplyPatchException e) {
-                throw new IllegalArgumentException(e);
+                throw new CommandFailedException(e);
             }
 
         }

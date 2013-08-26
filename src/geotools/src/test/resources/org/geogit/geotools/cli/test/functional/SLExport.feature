@@ -2,11 +2,18 @@ Feature: "sl export" command
     In order to export data from Geogit
     As a Geogit User
     I want to export from the repository into a SpatiaLite database
-
+ 
+  Scenario: Try exporting a table from HEAD  
+    Given I have a repository
+      And I stage 6 features
+     When I run the command "commit -m TestCommit"
+     When I run the command "sl export -o HEAD:Points Points" on the SpatiaLite database
+     Then the response should contain "Points exported successfully to Points"
+     
   Scenario: Try exporting from an empty directory
     Given I am in an empty directory
      When I run the command "sl export Points Points" on the SpatiaLite database
-     Then the response should start with "Not a geogit repository:"
+     Then the response should start with "Not in a geogit repository"
      
   Scenario: Try exporting a feature type
     Given I have a repository
@@ -18,17 +25,11 @@ Feature: "sl export" command
   	Given I have a repository
       And I stage 6 features
      When I run the command "sl export -o WRONGTABLE Points" on the SpatiaLite database
-     Then the response should contain "pathspec 'WRONGTABLE' did not match any valid path"  
+     Then the response should contain "Invalid reference"  
      
 Scenario: Try exporting to a table that already exists
   	Given I have a repository
       And I stage 6 features
      When I run the command "sl export Points geogit_pg_test" on the SpatiaLite database
      Then the response should contain "The selected table already exists. Use -o to overwrite"     
-  
-  Scenario: Try exporting a table from HEAD  
-    Given I have a repository
-      And I stage 6 features
-     When I run the command "commit -m TestCommit"
-     When I run the command "sl export -o HEAD:Points CommitedPoints" on the SpatiaLite database
-     Then the response should contain "Points exported successfully to CommitedPoints"    
+           

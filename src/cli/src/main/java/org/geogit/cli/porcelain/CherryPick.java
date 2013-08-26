@@ -5,9 +5,6 @@
 
 package org.geogit.cli.porcelain;
 
-import static com.google.common.base.Preconditions.checkArgument;
-import static com.google.common.base.Preconditions.checkState;
-
 import java.util.List;
 
 import org.geogit.api.GeoGIT;
@@ -17,11 +14,11 @@ import org.geogit.api.porcelain.CherryPickOp;
 import org.geogit.cli.AbstractCommand;
 import org.geogit.cli.CLICommand;
 import org.geogit.cli.GeogitCLI;
+import org.geogit.cli.RequiresRepository;
 
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.Parameters;
 import com.google.common.base.Optional;
-import com.google.common.base.Preconditions;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.Lists;
 
@@ -38,6 +35,7 @@ import com.google.common.collect.Lists;
  * 
  * @see CherryPickOp
  */
+@RequiresRepository
 @Parameters(commandNames = "cherry-pick", commandDescription = "Apply the changes introduced by existing commits")
 public class CherryPick extends AbstractCommand implements CLICommand {
 
@@ -47,15 +45,14 @@ public class CherryPick extends AbstractCommand implements CLICommand {
     @Override
     public void runInternal(GeogitCLI cli) {
         final GeoGIT geogit = cli.getGeogit();
-        checkState(geogit != null, "not in a geogit repository.");
-        checkArgument(commits.size() > 0, "No commits specified.");
-        checkArgument(commits.size() < 2, "Too many commits specified.");
+        checkParameter(commits.size() > 0, "No commits specified.");
+        checkParameter(commits.size() < 2, "Too many commits specified.");
 
         CherryPickOp cherryPick = geogit.command(CherryPickOp.class);
 
         Optional<ObjectId> commitId;
         commitId = geogit.command(RevParse.class).setRefSpec(commits.get(0)).call();
-        Preconditions.checkArgument(commitId.isPresent(), "Commit not found '%s'", commits.get(0));
+        checkParameter(commitId.isPresent(), "Commit not found '%s'", commits.get(0));
         cherryPick.setCommit(Suppliers.ofInstance(commitId.get()));
 
         cherryPick.call();

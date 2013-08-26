@@ -56,7 +56,7 @@ Feature: "commit" command
   Scenario: Try to commit from an empty directory
     Given I am in an empty directory
      When I run the command "commit -m Test"
-     Then the response should start with "Not a geogit repository"
+     Then the response should start with "Not in a geogit repository"
       And it should exit with non-zero exit code
      
   Scenario: Try to commit when no changes have been made

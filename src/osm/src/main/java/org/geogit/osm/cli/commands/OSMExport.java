@@ -5,10 +5,9 @@
 
 package org.geogit.osm.cli.commands;
 
-import static com.google.common.base.Preconditions.checkArgument;
-
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.util.Iterator;
 import java.util.List;
 
@@ -27,7 +26,9 @@ import org.geogit.api.plumbing.RevObjectParse;
 import org.geogit.api.plumbing.RevParse;
 import org.geogit.cli.AbstractCommand;
 import org.geogit.cli.CLICommand;
+import org.geogit.cli.CommandFailedException;
 import org.geogit.cli.GeogitCLI;
+import org.geogit.cli.RequiresRepository;
 import org.geogit.geotools.plumbing.ExportOp;
 import org.geogit.osm.internal.EntityConverter;
 import org.geogit.osm.internal.OSMUtils;
@@ -49,7 +50,6 @@ import com.beust.jcommander.Parameter;
 import com.beust.jcommander.Parameters;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
-import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterators;
@@ -62,6 +62,7 @@ import crosby.binary.osmosis.OsmosisSerializer;
  * 
  * @see ExportOp
  */
+@RequiresRepository
 @Parameters(commandNames = "export", commandDescription = "Export to OSM format")
 public class OSMExport extends AbstractCommand implements CLICommand {
 
@@ -78,22 +79,15 @@ public class OSMExport extends AbstractCommand implements CLICommand {
 
     /**
      * Executes the export command using the provided options.
-     * 
-     * @param cli
      */
     @Override
-    protected void runInternal(GeogitCLI cli) throws Exception {
-        if (cli.getGeogit() == null) {
-            cli.getConsole().println("Not a geogit repository: " + cli.getPlatform().pwd());
-            return;
-        }
-
+    protected void runInternal(GeogitCLI cli) throws IOException {
         if (args.size() < 1 || args.size() > 2) {
             printUsage();
-            return;
+            throw new CommandFailedException();
         }
 
-        checkArgument(bbox == null || bbox.size() == 4, "The specified bounding box is not correct");
+        checkParameter(bbox == null || bbox.size() == 4, "The specified bounding box is not correct");
 
         geogit = cli.getGeogit();
 
@@ -103,11 +97,11 @@ public class OSMExport extends AbstractCommand implements CLICommand {
         if (args.size() == 2) {
             ref = args.get(1);
             Optional<ObjectId> tree = geogit.command(ResolveTreeish.class).setTreeish(ref).call();
-            Preconditions.checkArgument(tree.isPresent(), "Invalid commit or reference: %s", ref);
+            checkParameter(tree.isPresent(), "Invalid commit or reference: %s", ref);
         }
 
         File file = new File(osmfile);
-        checkArgument(!file.exists() || overwrite,
+        checkParameter(!file.exists() || overwrite,
                 "The selected file already exists. Use -o to overwrite");
 
         Iterator<EntityContainer> nodes = getFeatures(ref + ":node");

@@ -61,7 +61,7 @@ Feature: "add" command
   Scenario: Try to add from an empty directory
     Given I am in an empty directory
      When I run the command "add"
-     Then the response should start with "Not a geogit repository"
+     Then the response should start with "Not in a geogit repository"
      And it should exit with non-zero exit code
      
   Scenario: Try to add when no changes have been made

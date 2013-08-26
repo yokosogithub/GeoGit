@@ -18,7 +18,6 @@ import com.google.inject.Binder;
  * @see SQLServerCommandProxy
  */
 
-
 public class GeoToolsModule implements CLIModule {
 
     /**

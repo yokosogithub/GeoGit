@@ -95,7 +95,7 @@ public class SQLServerImportTest {
         SQLServerImport importCommand = new SQLServerImport();
         importCommand.all = true;
         importCommand.dataStoreFactory = factory;
-        exception.expect(IllegalStateException.class);
+        exception.expect(CommandFailedException.class);
         importCommand.run(cli);
     }
 
@@ -155,6 +155,7 @@ public class SQLServerImportTest {
         SQLServerImport importCommand = new SQLServerImport();
         importCommand.all = true;
         importCommand.dataStoreFactory = TestHelper.createEmptyTestFactory();
+        exception.expect(CommandFailedException.class);
         importCommand.run(cli);
     }
 
@@ -181,6 +182,7 @@ public class SQLServerImportTest {
         SQLServerImport importCommand = new SQLServerImport();
         importCommand.all = true;
         importCommand.dataStoreFactory = TestHelper.createFactoryWithGetFeatureSourceException();
+        exception.expect(CommandFailedException.class);
         importCommand.run(cli);
     }
 

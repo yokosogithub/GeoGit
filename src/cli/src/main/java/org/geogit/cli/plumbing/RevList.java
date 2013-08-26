@@ -13,7 +13,6 @@ import jline.console.ConsoleReader;
 
 import org.geogit.api.GeoGIT;
 import org.geogit.api.ObjectId;
-import org.geogit.api.Platform;
 import org.geogit.api.RevCommit;
 import org.geogit.api.RevPerson;
 import org.geogit.api.plumbing.ParseTimestamp;
@@ -24,18 +23,19 @@ import org.geogit.api.porcelain.LogOp;
 import org.geogit.cli.AbstractCommand;
 import org.geogit.cli.CLICommand;
 import org.geogit.cli.GeogitCLI;
+import org.geogit.cli.RequiresRepository;
 import org.geotools.util.Range;
 
 import com.beust.jcommander.Parameters;
 import com.beust.jcommander.ParametersDelegate;
 import com.google.common.base.Optional;
-import com.google.common.base.Preconditions;
 
 /**
  * Shows list of commits.
  * 
  * @see org.geogit.api.porcelain.LogOp
  */
+@RequiresRepository
 @Parameters(commandNames = "rev-list", commandDescription = "Show list of commits")
 public class RevList extends AbstractCommand implements CLICommand {
 
@@ -48,17 +48,10 @@ public class RevList extends AbstractCommand implements CLICommand {
 
     /**
      * Executes the revlist command using the provided options.
-     * 
-     * @param cli
-     * @throws IOException
-     * @see org.geogit.cli.AbstractCommand#runInternal(org.geogit.cli.GeogitCLI)
      */
     @Override
-    public void runInternal(GeogitCLI cli) throws Exception {
-        final Platform platform = cli.getPlatform();
-        Preconditions.checkState(cli.getGeogit() != null, "Not a geogit repository: "
-                + platform.pwd().getAbsolutePath());
-        Preconditions.checkState(!args.commits.isEmpty(), "No starting commit provided");
+    public void runInternal(GeogitCLI cli) throws IOException {
+        checkParameter(!args.commits.isEmpty(), "No starting commit provided");
 
         geogit = cli.getGeogit();
 
@@ -67,8 +60,8 @@ public class RevList extends AbstractCommand implements CLICommand {
 
         for (String commit : args.commits) {
             Optional<ObjectId> commitId = geogit.command(RevParse.class).setRefSpec(commit).call();
-            Preconditions.checkArgument(commitId.isPresent(), "Object not found '%s'", commit);
-            Preconditions.checkArgument(geogit.getRepository().commitExists(commitId.get()),
+            checkParameter(commitId.isPresent(), "Object not found '%s'", commit);
+            checkParameter(geogit.getRepository().commitExists(commitId.get()),
                     "%s does not resolve to a commit", commit);
             op.addCommit(commitId.get());
         }

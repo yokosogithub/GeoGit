@@ -114,7 +114,7 @@ public class SQLServerDescribeTest extends Assert {
         SQLServerDescribe describeCommand = new SQLServerDescribe();
         describeCommand.table = "table1";
         describeCommand.dataStoreFactory = factory;
-        exception.expect(IllegalStateException.class);
+        exception.expect(CommandFailedException.class);
         describeCommand.run(cli);
     }
 

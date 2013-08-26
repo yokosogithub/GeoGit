@@ -5,8 +5,7 @@
 
 package org.geogit.cli.plumbing;
 
-import static com.google.common.base.Preconditions.checkState;
-
+import java.io.IOException;
 import java.util.Iterator;
 import java.util.List;
 
@@ -18,6 +17,7 @@ import org.geogit.api.plumbing.LsTreeOp.Strategy;
 import org.geogit.cli.AbstractCommand;
 import org.geogit.cli.CLICommand;
 import org.geogit.cli.GeogitCLI;
+import org.geogit.cli.RequiresRepository;
 
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.Parameters;
@@ -28,6 +28,7 @@ import com.google.common.collect.Lists;
 /**
  *
  */
+@RequiresRepository
 @Parameters(commandNames = "ls-tree", commandDescription = "Obtain information about features in the index and the working tree.")
 public class LsTree extends AbstractCommand implements CLICommand {
 
@@ -47,8 +48,7 @@ public class LsTree extends AbstractCommand implements CLICommand {
     private boolean verbose;
 
     @Override
-    public void runInternal(GeogitCLI cli) throws Exception {
-        checkState(cli.getGeogit() != null, "Not a geogit repository: " + cli.getPlatform().pwd());
+    public void runInternal(GeogitCLI cli) throws IOException {
         String ref;
         if (refList.isEmpty()) {
             ref = null;

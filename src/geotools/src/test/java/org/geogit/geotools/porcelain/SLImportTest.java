@@ -15,6 +15,7 @@ import jline.UnsupportedTerminal;
 import jline.console.ConsoleReader;
 
 import org.geogit.api.Platform;
+import org.geogit.cli.CommandFailedException;
 import org.geogit.cli.GeogitCLI;
 import org.geotools.data.AbstractDataStoreFactory;
 import org.junit.After;
@@ -75,6 +76,7 @@ public class SLImportTest extends Assert {
         importCommand.all = false;
         importCommand.table = "";
         importCommand.dataStoreFactory = factory;
+        exception.expect(CommandFailedException.class);
         importCommand.run(cli);
     }
 
@@ -84,6 +86,7 @@ public class SLImportTest extends Assert {
         importCommand.all = true;
         importCommand.table = "table1";
         importCommand.dataStoreFactory = factory;
+        exception.expect(CommandFailedException.class);
         importCommand.run(cli);
     }
 
@@ -96,6 +99,7 @@ public class SLImportTest extends Assert {
         SLImport importCommand = new SLImport();
         importCommand.all = true;
         importCommand.dataStoreFactory = factory;
+        exception.expect(CommandFailedException.class);
         importCommand.run(cli);
     }
 
@@ -137,6 +141,7 @@ public class SLImportTest extends Assert {
         importCommand.all = false;
         importCommand.table = "nonexistent";
         importCommand.dataStoreFactory = factory;
+        exception.expect(CommandFailedException.class);
         importCommand.run(cli);
     }
 
@@ -145,6 +150,7 @@ public class SLImportTest extends Assert {
         SLImport importCommand = new SLImport();
         importCommand.all = true;
         importCommand.dataStoreFactory = TestHelper.createEmptyTestFactory();
+        exception.expect(CommandFailedException.class);
         importCommand.run(cli);
     }
 
@@ -153,6 +159,7 @@ public class SLImportTest extends Assert {
         SLImport importCommand = new SLImport();
         importCommand.all = true;
         importCommand.dataStoreFactory = TestHelper.createNullTestFactory();
+        exception.expect(CommandFailedException.class);
         importCommand.run(cli);
     }
 
@@ -161,6 +168,7 @@ public class SLImportTest extends Assert {
         SLImport importCommand = new SLImport();
         importCommand.all = true;
         importCommand.dataStoreFactory = TestHelper.createFactoryWithGetNamesException();
+        exception.expect(CommandFailedException.class);
         importCommand.run(cli);
     }
 
@@ -169,6 +177,7 @@ public class SLImportTest extends Assert {
         SLImport importCommand = new SLImport();
         importCommand.all = true;
         importCommand.dataStoreFactory = TestHelper.createFactoryWithGetFeatureSourceException();
+        exception.expect(CommandFailedException.class);
         importCommand.run(cli);
     }
 

@@ -5,9 +5,7 @@
 
 package org.geogit.cli.porcelain;
 
-import static com.google.common.base.Preconditions.checkArgument;
-import static com.google.common.base.Preconditions.checkState;
-
+import java.io.IOException;
 import java.util.List;
 
 import jline.console.ConsoleReader;
@@ -18,7 +16,9 @@ import org.geogit.api.porcelain.CheckoutOp;
 import org.geogit.api.porcelain.CheckoutResult;
 import org.geogit.cli.AbstractCommand;
 import org.geogit.cli.CLICommand;
+import org.geogit.cli.CommandFailedException;
 import org.geogit.cli.GeogitCLI;
+import org.geogit.cli.RequiresRepository;
 
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.Parameters;
@@ -43,6 +43,7 @@ import com.google.common.collect.Lists;
  * 
  * @see CheckoutOp
  */
+@RequiresRepository
 @Parameters(commandNames = "checkout", commandDescription = "Checkout a branch or paths to the working tree")
 public class Checkout extends AbstractCommand implements CLICommand {
 
@@ -64,12 +65,11 @@ public class Checkout extends AbstractCommand implements CLICommand {
     private boolean theirs;
 
     @Override
-    public void runInternal(GeogitCLI cli) throws Exception {
+    public void runInternal(GeogitCLI cli) throws IOException {
         final GeoGIT geogit = cli.getGeogit();
-        checkState(geogit != null, "not in a geogit repository.");
-        checkArgument(branchOrStartPoint.size() != 0 || !paths.isEmpty(),
+        checkParameter(branchOrStartPoint.size() != 0 || !paths.isEmpty(),
                 "no branch or paths specified");
-        checkArgument(branchOrStartPoint.size() < 2, "too many arguments");
+        checkParameter(branchOrStartPoint.size() < 2, "too many arguments");
 
         try {
             final ConsoleReader console = cli.getConsole();
@@ -103,11 +103,11 @@ public class Checkout extends AbstractCommand implements CLICommand {
         } catch (CheckoutException e) {
             switch (e.statusCode) {
             case LOCAL_CHANGES_NOT_COMMITTED:
-                throw new IllegalArgumentException(
+                throw new CommandFailedException(
                         "Working tree and index are not clean. To overwrite local changes, use the --force option",
                         e);
             case UNMERGED_PATHS:
-                throw new IllegalArgumentException(e);
+                throw new CommandFailedException(e.getMessage(), e);
             }
         }
     }

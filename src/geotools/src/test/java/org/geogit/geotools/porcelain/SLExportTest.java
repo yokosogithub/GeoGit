@@ -11,7 +11,9 @@ import jline.UnsupportedTerminal;
 import jline.console.ConsoleReader;
 
 import org.geogit.api.porcelain.CommitOp;
+import org.geogit.cli.CommandFailedException;
 import org.geogit.cli.GeogitCLI;
+import org.geogit.cli.InvalidParameterException;
 import org.geogit.test.integration.RepositoryTestCase;
 import org.geotools.data.AbstractDataStoreFactory;
 import org.junit.Before;
@@ -78,6 +80,7 @@ public class SLExportTest extends RepositoryTestCase {
         SLExport exportCommand = new SLExport();
         exportCommand.args = Arrays.asList("Points", "Points");
         exportCommand.dataStoreFactory = TestHelper.createNullTestFactory();
+        exception.expect(CommandFailedException.class);
         exportCommand.run(cli);
     }
 
@@ -86,6 +89,7 @@ public class SLExportTest extends RepositoryTestCase {
         SLExport exportCommand = new SLExport();
         exportCommand.args = Arrays.asList();
         exportCommand.dataStoreFactory = TestHelper.createNullTestFactory();
+        exception.expect(CommandFailedException.class);
         exportCommand.run(cli);
     }
 
@@ -94,6 +98,7 @@ public class SLExportTest extends RepositoryTestCase {
         SLExport exportCommand = new SLExport();
         exportCommand.args = Arrays.asList("Points", "table1");
         exportCommand.dataStoreFactory = factory;
+        exception.expect(CommandFailedException.class);
         exportCommand.run(cli);
     }
 
@@ -114,7 +119,7 @@ public class SLExportTest extends RepositoryTestCase {
         SLExport exportCommand = new SLExport();
         exportCommand.args = Arrays.asList("invalidType", "invalidTable");
         exportCommand.dataStoreFactory = factory;
-        exception.expect(IllegalArgumentException.class);
+        exception.expect(InvalidParameterException.class);
         exportCommand.run(cli);
     }
 
@@ -123,7 +128,7 @@ public class SLExportTest extends RepositoryTestCase {
         SLExport exportCommand = new SLExport();
         exportCommand.args = Arrays.asList("Points", null);
         exportCommand.dataStoreFactory = factory;
-        exception.expect(IllegalArgumentException.class);
+        exception.expect(InvalidParameterException.class);
         exportCommand.run(cli);
     }
 
@@ -132,7 +137,7 @@ public class SLExportTest extends RepositoryTestCase {
         SLExport exportCommand = new SLExport();
         exportCommand.args = Arrays.asList(null, "invalidTable");
         exportCommand.dataStoreFactory = factory;
-        exception.expect(IllegalArgumentException.class);
+        exception.expect(InvalidParameterException.class);
         exportCommand.run(cli);
     }
 
@@ -141,7 +146,7 @@ public class SLExportTest extends RepositoryTestCase {
         SLExport exportCommand = new SLExport();
         exportCommand.args = Arrays.asList("", "invalidTable");
         exportCommand.dataStoreFactory = factory;
-        exception.expect(IllegalArgumentException.class);
+        exception.expect(InvalidParameterException.class);
         exportCommand.run(cli);
     }
 
@@ -150,7 +155,7 @@ public class SLExportTest extends RepositoryTestCase {
         SLExport exportCommand = new SLExport();
         exportCommand.args = Arrays.asList("Points", "");
         exportCommand.dataStoreFactory = factory;
-        exception.expect(IllegalArgumentException.class);
+        exception.expect(InvalidParameterException.class);
         exportCommand.run(cli);
     }
 
@@ -159,7 +164,7 @@ public class SLExportTest extends RepositoryTestCase {
         SLExport exportCommand = new SLExport();
         exportCommand.args = Arrays.asList("Points/Points.1", "invalidTable");
         exportCommand.dataStoreFactory = factory;
-        exception.expect(IllegalArgumentException.class);
+        exception.expect(InvalidParameterException.class);
         exportCommand.run(cli);
     }
 }

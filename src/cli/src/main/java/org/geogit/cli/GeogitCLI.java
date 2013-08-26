@@ -109,8 +109,11 @@ public class GeogitCLI {
      * Note the repository is lazily loaded and cached afterwards to simplify the execution of
      * commands or command options that do not need a live repository.
      * 
-     * @return the GeoGIT facade
+     * @return the GeoGIT facade associated with the current repository, or {@code null} if there's
+     *         no repository in the current {@link Platform#pwd() working directory}
+     * @see ResolveGeogitDir
      */
+    @Nullable
     public synchronized GeoGIT getGeogit() {
         if (geogit == null) {
             GeoGIT geogit = loadRepository();
@@ -135,6 +138,7 @@ public class GeogitCLI {
      * @return a geogit for the current repository or {@code null} if not inside a geogit repository
      *         directory.
      */
+    @Nullable
     private GeoGIT loadRepository() {
         GeoGIT geogit = newGeoGIT();
 
@@ -265,33 +269,45 @@ public class GeogitCLI {
      * @return 0 for normal exit, -1 if there was an exception.
      */
     public int processCommand(String... args) {
-        int exitCode = 0;
+        String consoleMessage = null;
+        boolean printError = true;
         try {
             execute(args);
-        } catch (Exception e) {
-            exitCode = -1;
+            return 0;
+        } catch (ParameterException paramParseException) {
+
+            consoleMessage = paramParseException.getMessage() + ". See geogit --help";
+
+        } catch (InvalidParameterException paramValidationError) {
+
+            consoleMessage = paramValidationError.getMessage();
+
+        } catch (CommandFailedException cmdFailed) {
+            if (null == cmdFailed.getMessage()) {
+                // this is intentional, see the javadoc for CommandFailedException
+                printError = false;
+            } else {
+                consoleMessage = cmdFailed.getMessage();
+            }
+        } catch (RuntimeException e) {
+            e.printStackTrace();
+            consoleMessage = String.format(
+                    "An unhandled error occurred: %s.\nsee the log for more details.",
+                    e.getMessage());
+            // TODO: Log!
+        } catch (IOException ioe) {
+            // can't write to the console, see the javadocs for CLICommand.run(). LOG console error?
+            ioe.printStackTrace();
+        }
+        if (printError) {
             try {
-                if (e instanceof ParameterException) {
-                    consoleReader.println(e.getMessage() + ". See geogit --help.");
-                    consoleReader.flush();
-                } else if (e instanceof IllegalArgumentException
-                        || e instanceof IllegalStateException) {
-                    consoleReader.println(Optional.fromNullable(e.getMessage()).or("Uknown error"));
-                    consoleReader.flush();
-                } else if (e instanceof CommandFailedException) {
-                    // do nothing here, this exception indicates a failure, but the corresponding
-                    // command throwing it should have taken care of outputting an error message or
-                    // providing user interaction
-                    consoleReader.flush();
-                } else {
-                    consoleReader.println(e.getMessage());
-                    consoleReader.flush();
-                }
-            } catch (IOException ioe) {
-                ioe.printStackTrace();
+                consoleReader.println(Optional.fromNullable(consoleMessage).or("Unknown Error"));
+                consoleReader.flush();
+            } catch (IOException e) {
+                e.printStackTrace();
             }
         }
-        return exitCode;
+        return -1;
     }
 
     /**
@@ -300,7 +316,9 @@ public class GeogitCLI {
      * @param args
      * @throws exceptions thrown by the executed commands.
      */
-    public void execute(String... args) throws Exception {
+    public void execute(String... args) throws ParameterException, CommandFailedException,
+            IOException {
+
         JCommander mainCommander = newCommandParser();
         if (null == args || args.length == 0) {
             printShortCommandList(mainCommander);

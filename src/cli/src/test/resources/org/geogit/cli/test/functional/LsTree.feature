@@ -103,7 +103,7 @@ Scenario: Show a list of features in a path, using HEAD as origin
 Scenario: Show a list from an empty directory
     Given I am in an empty directory
      When I run the command "ls-tree"
-     Then the response should start with "Not a geogit repository"
+     Then the response should start with "Not in a geogit repository"
       And it should exit with non-zero exit code
 
 Scenario: Run ls-tree on an empty repository

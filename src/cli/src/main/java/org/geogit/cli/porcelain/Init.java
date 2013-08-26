@@ -6,6 +6,8 @@
 package org.geogit.cli.porcelain;
 
 import java.io.File;
+import java.io.IOException;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.List;
 
@@ -19,7 +21,6 @@ import org.geogit.repository.Repository;
 
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.Parameters;
-import com.google.common.base.Throwables;
 
 /**
  * This command creates an empty geogit repository - basically a .geogit directory with
@@ -43,60 +44,57 @@ public class Init extends AbstractCommand implements CLICommand {
 
     /**
      * Executes the init command.
-     * 
-     * @param cli
-     * @see org.geogit.cli.AbstractCommand#runInternal(org.geogit.cli.GeogitCLI)
      */
     @Override
-    public void runInternal(GeogitCLI cli) {
+    public void runInternal(GeogitCLI cli) throws IOException {
 
-        try {
-            final File repoDir;
-            {
-                File currDir = cli.getPlatform().pwd();
-                if (location != null && location.size() == 1) {
-                    String target = location.get(0);
-                    File f = new File(target);
-                    if (!f.isAbsolute()) {
-                        f = new File(currDir, target).getCanonicalFile();
-                    }
-                    repoDir = f;
-                    if (!repoDir.exists() && !repoDir.mkdirs()) {
-                        throw new IllegalStateException("Can't create directory "
-                                + repoDir.getAbsolutePath());
-                    }
-                } else {
-                    repoDir = currDir;
+        final File repoDir;
+        {
+            File currDir = cli.getPlatform().pwd();
+            if (location != null && location.size() == 1) {
+                String target = location.get(0);
+                File f = new File(target);
+                if (!f.isAbsolute()) {
+                    f = new File(currDir, target).getCanonicalFile();
                 }
-            }
-
-            GeoGIT geogit = null;
-            if (cli.getGeogit() == null) {
-                geogit = new GeoGIT(cli.getGeogitInjector(), repoDir);
+                repoDir = f;
+                if (!repoDir.exists() && !repoDir.mkdirs()) {
+                    throw new IllegalStateException("Can't create directory "
+                            + repoDir.getAbsolutePath());
+                }
             } else {
-                geogit = cli.getGeogit();
+                repoDir = currDir;
             }
-
-            Repository repository = geogit.command(InitOp.class).call();
-            final boolean repoExisted = repository == null;
-            geogit.setRepository(repository);
-            cli.setGeogit(geogit);
-
-            final URL envHome = geogit.command(ResolveGeogitDir.class).call();
-
-            File repoDirectory = new File(envHome.toURI());
-            String message;
-            if (repoExisted) {
-                message = "Reinitialized existing Geogit repository in "
-                        + repoDirectory.getAbsolutePath();
-            } else {
-                message = "Initialized empty Geogit repository in "
-                        + repoDirectory.getAbsolutePath();
-            }
-            cli.getConsole().println(message);
-
-        } catch (Exception e) {
-            throw Throwables.propagate(e);
         }
+
+        GeoGIT geogit = null;
+        if (cli.getGeogit() == null) {
+            geogit = new GeoGIT(cli.getGeogitInjector(), repoDir);
+        } else {
+            geogit = cli.getGeogit();
+        }
+
+        Repository repository = geogit.command(InitOp.class).call();
+        final boolean repoExisted = repository == null;
+        geogit.setRepository(repository);
+        cli.setGeogit(geogit);
+
+        final URL envHome = geogit.command(ResolveGeogitDir.class).call();
+
+        File repoDirectory;
+        try {
+            repoDirectory = new File(envHome.toURI());
+        } catch (URISyntaxException e) {
+            throw new IllegalStateException("Environment home can't be resolved to a directory", e);
+        }
+        String message;
+        if (repoExisted) {
+            message = "Reinitialized existing Geogit repository in "
+                    + repoDirectory.getAbsolutePath();
+        } else {
+            message = "Initialized empty Geogit repository in " + repoDirectory.getAbsolutePath();
+        }
+        cli.getConsole().println(message);
+
     }
 }
