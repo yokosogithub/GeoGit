@@ -43,6 +43,7 @@ public class CloneOp extends AbstractGeoGitOp<Void> {
     private Optional<Integer> depth = Optional.absent();
 
     private final Repository repository;
+
     private final DeduplicationService deduplicationService;
 
     /**
@@ -92,6 +93,10 @@ public class CloneOp extends AbstractGeoGitOp<Void> {
     public Void call() {
         Preconditions.checkArgument(repositoryURL != null && !repositoryURL.isEmpty(),
                 "No repository specified to clone from.");
+        if (repository.isSparse()) {
+            Preconditions
+                    .checkArgument(branch.isPresent(), "No branch specified for sparse clone.");
+        }
 
         getProgressListener().started();
         getProgressListener().progress(0.f);
@@ -103,8 +108,9 @@ public class CloneOp extends AbstractGeoGitOp<Void> {
 
         if (!depth.isPresent()) {
             // See if we are cloning a shallow clone. If so, a depth must be specified.
-            Optional<IRemoteRepo> remoteRepo = RemoteUtils.newRemote(
-                    GlobalInjectorBuilder.builder.build(), remote, repository, deduplicationService);
+            Optional<IRemoteRepo> remoteRepo = RemoteUtils
+                    .newRemote(GlobalInjectorBuilder.builder.build(), remote, repository,
+                            deduplicationService);
 
             Preconditions.checkState(remoteRepo.isPresent(), "Failed to connect to the remote.");
             try {

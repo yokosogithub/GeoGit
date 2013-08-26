@@ -48,14 +48,14 @@ public class IniRepositoryFilter extends RepositoryFilter {
     /**
      * Parses an ini section and adds it as a filter.
      * 
-     * @param featureType the feature type
+     * @param featurePath the path of the features to filter
      * @param attributes the ini section
      */
-    private void parseFilter(String featureType, Section attributes) {
-        if (featureType != null) {
+    private void parseFilter(String featurePath, Section attributes) {
+        if (featurePath != null) {
             String type = attributes.get("type");
             String filter = attributes.get("filter");
-            addFilter(featureType, type, filter);
+            addFilter(featurePath, type, filter);
         }
     }
 }

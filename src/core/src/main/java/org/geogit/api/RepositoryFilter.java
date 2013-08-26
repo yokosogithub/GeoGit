@@ -33,7 +33,7 @@ public class RepositoryFilter {
      * Provides a text description of a particular filter.
      */
     public class FilterDescription {
-        private String featureType;
+        private String featurePath;
 
         private String filterType;
 
@@ -42,22 +42,22 @@ public class RepositoryFilter {
         /**
          * Constructs a new {@code FilterDescription} with the provided values.
          * 
-         * @param featureType the feature type this filter applies to, use "default" as a fall back
-         *        filter
+         * @param featurePath the path of the features this filter applies to, use "default" as a
+         *        fall back filter
          * @param filterType the type of filter, for example "CQL"
          * @param filter the filter text
          */
-        public FilterDescription(String featureType, String filterType, String filter) {
-            this.featureType = featureType;
+        public FilterDescription(String featurePath, String filterType, String filter) {
+            this.featurePath = featurePath;
             this.filterType = filterType;
             this.filter = filter;
         }
 
         /**
-         * @return the feature type this filter applies to
+         * @return the path of the features this filter applies to
          */
-        public String getFeatureType() {
-            return featureType;
+        public String getFeaturePath() {
+            return featurePath;
         }
 
         /**
@@ -93,18 +93,18 @@ public class RepositoryFilter {
     /**
      * Adds a new filter to the repository.
      * 
-     * @param featureType the feature type to filter, "default" for a fall back filter
+     * @param featurePath the path of the features to filter, "default" for a fall back filter
      * @param filterType the format of the filter text, for example "CQL"
      * @param filterText the filter text
      */
-    public void addFilter(String featureType, String filterType, String filterText) {
-        Preconditions.checkState(featureType != null && filterType != null && filterText != null,
+    public void addFilter(String featurePath, String filterType, String filterText) {
+        Preconditions.checkState(featurePath != null && filterType != null && filterText != null,
                 "Missing filter parameter.");
         if (filterType.equals("CQL")) {
             try {
                 Filter newFilter = CQL.toFilter(filterText);
-                repositoryFilters.put(featureType, newFilter);
-                filterDescriptions.add(new FilterDescription(featureType, filterType, filterText));
+                repositoryFilters.put(featurePath, newFilter);
+                filterDescriptions.add(new FilterDescription(featurePath, filterType, filterText));
             } catch (CQLException e) {
                 Throwables.propagate(e);
             }
@@ -115,16 +115,17 @@ public class RepositoryFilter {
      * Determines if the provided object is filtered in this repository.
      * 
      * @param type the feature type
+     * @param featurePath the path of the feature (without the feature ID)
      * @param object the object to filter
      * @return true if the object lies within the filter, false otherwise
      */
-    public boolean filterObject(RevFeatureType type, RevObject object) {
+    public boolean filterObject(RevFeatureType type, String featurePath, RevObject object) {
         if (object.getType() == TYPE.FEATURE) {
             RevFeature revFeature = (RevFeature) object;
             FeatureBuilder builder = new FeatureBuilder(type);
             Feature feature = builder.build("TEMP_ID", revFeature);
 
-            Filter typeFilter = repositoryFilters.get(type.getName());
+            Filter typeFilter = repositoryFilters.get(featurePath);
             if (typeFilter == null) {
                 typeFilter = repositoryFilters.get("default");
             }
