@@ -16,6 +16,7 @@ import org.geogit.api.plumbing.ResolveGeogitDir;
 import org.geogit.api.porcelain.InitOp;
 import org.geogit.cli.AbstractCommand;
 import org.geogit.cli.CLICommand;
+import org.geogit.cli.CommandFailedException;
 import org.geogit.cli.GeogitCLI;
 import org.geogit.cli.RequiresRepository;
 import org.geogit.repository.Repository;
@@ -61,7 +62,7 @@ public class Init extends AbstractCommand implements CLICommand {
                 }
                 repoDir = f;
                 if (!repoDir.exists() && !repoDir.mkdirs()) {
-                    throw new IllegalStateException("Can't create directory "
+                    throw new CommandFailedException("Can't create directory "
                             + repoDir.getAbsolutePath());
                 }
             } else {

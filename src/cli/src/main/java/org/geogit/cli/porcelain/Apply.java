@@ -106,7 +106,7 @@ public class Apply extends AbstractCommand {
         try {
             stream = new FileInputStream(patchFile);
         } catch (FileNotFoundException e1) {
-            throw new IllegalStateException("Can't open patch file " + patchFile);
+            throw new CommandFailedException("Can't open patch file " + patchFile, e1);
         }
         BufferedReader reader = null;
         try {
@@ -114,7 +114,7 @@ public class Apply extends AbstractCommand {
         } catch (UnsupportedEncodingException e) {
             Closeables.closeQuietly(reader);
             Closeables.closeQuietly(stream);
-            throw new IllegalStateException("Error reading patch file " + patchFile, e);
+            throw new CommandFailedException("Error reading patch file " + patchFile, e);
         }
         Patch patch = PatchSerializer.read(reader);
         Closeables.closeQuietly(reader);
@@ -159,7 +159,7 @@ public class Apply extends AbstractCommand {
                         writer.close();
                         sb.append("Patch file with rejected changes created at "
                                 + file.getAbsolutePath() + "\n");
-                        throw new IllegalArgumentException(sb.toString());
+                        throw new CommandFailedException(sb.toString());
                     }
                 } else {
                     console.println("Patch applied succesfully");

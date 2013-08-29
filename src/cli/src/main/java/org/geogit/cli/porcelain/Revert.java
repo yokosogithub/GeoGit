@@ -10,6 +10,7 @@ import org.geogit.api.porcelain.RevertConflictsException;
 import org.geogit.api.porcelain.RevertOp;
 import org.geogit.cli.AbstractCommand;
 import org.geogit.cli.CLICommand;
+import org.geogit.cli.CommandFailedException;
 import org.geogit.cli.GeogitCLI;
 
 import com.beust.jcommander.Parameter;
@@ -72,7 +73,7 @@ public class Revert extends AbstractCommand implements CLICommand {
             sb.append(e.getMessage() + "\n");
             sb.append("When you have fixed these conflicts, run 'geogit revert --continue' to continue the revert operation.\n");
             sb.append("To abort the revert operation, run 'geogit revert --abort'\n");
-            throw new IllegalStateException(sb.toString());
+            throw new CommandFailedException(sb.toString());
         }
 
         if (abort) {

@@ -26,6 +26,7 @@ import org.geogit.api.plumbing.RevObjectParse;
 import org.geogit.cli.AbstractCommand;
 import org.geogit.cli.CLICommand;
 import org.geogit.cli.GeogitCLI;
+import org.geogit.cli.InvalidParameterException;
 import org.geogit.storage.FieldType;
 import org.opengis.feature.type.PropertyDescriptor;
 
@@ -125,7 +126,7 @@ public class Show extends AbstractCommand implements CLICommand {
         } else if (revObject instanceof RevFeatureType) {
             printFeatureType(ansi, (RevFeatureType) revObject, false);
         } else {
-            throw new IllegalArgumentException("Unknown object type: " + revObject.getType());
+            throw new InvalidParameterException("Unknown object type: " + revObject.getType());
         }
 
     }

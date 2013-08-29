@@ -26,6 +26,7 @@ import org.geogit.api.plumbing.RevParse;
 import org.geogit.cli.CLICommand;
 import org.geogit.cli.CommandFailedException;
 import org.geogit.cli.GeogitCLI;
+import org.geogit.cli.InvalidParameterException;
 import org.geogit.geotools.plumbing.ExportOp;
 import org.geogit.geotools.plumbing.GeoToolsOpException;
 import org.geotools.data.DataStore;
@@ -116,7 +117,7 @@ public class PGExport extends AbstractPGCommand implements CLICommand {
             }
         } else {
             if (!overwrite) {
-                throw new IllegalArgumentException(
+                throw new InvalidParameterException(
                         "The selected table already exists. Use -o to overwrite");
             }
         }
@@ -199,11 +200,11 @@ public class PGExport extends AbstractPGCommand implements CLICommand {
             if (revFeatureType.type() instanceof SimpleFeatureType) {
                 return (SimpleFeatureType) revFeatureType.type();
             } else {
-                throw new IllegalArgumentException(
+                throw new InvalidParameterException(
                         "Cannot find feature type for the specified path");
             }
         } else {
-            throw new IllegalArgumentException("Cannot find feature type for the specified path");
+            throw new InvalidParameterException("Cannot find feature type for the specified path");
         }
 
     }
