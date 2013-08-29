@@ -6,8 +6,8 @@
 package org.geogit.geotools.cli;
 
 import org.geogit.cli.CLICommandExtension;
-import org.geogit.geotools.porcelain.ShpExport;
-import org.geogit.geotools.porcelain.ShpImport;
+import org.geogit.geotools.cli.porcelain.ShpExport;
+import org.geogit.geotools.cli.porcelain.ShpImport;
 
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameters;
