@@ -263,8 +263,8 @@ public class TransactionStagingDatabase implements StagingDatabase {
     }
 
     @Override
-    public void deleteAll(Iterator<ObjectId> ids) {
-        database.deleteAll(ids);        
+    public long deleteAll(Iterator<ObjectId> ids) {
+        return database.deleteAll(ids);
     }
 
 }

@@ -442,8 +442,8 @@ public class JEStagingDatabase implements ObjectDatabase, StagingDatabase {
     }
 
     @Override
-    public void deleteAll(Iterator<ObjectId> ids) {
-        this.stagingDb.deleteAll(ids);
+    public long deleteAll(Iterator<ObjectId> ids) {
+        return this.stagingDb.deleteAll(ids);
     }
 
 }

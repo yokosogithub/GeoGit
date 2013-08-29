@@ -9,6 +9,7 @@ import static com.sleepycat.je.OperationStatus.SUCCESS;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.File;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -30,9 +31,10 @@ import org.geogit.api.RevObject;
 import org.geogit.storage.AbstractObjectDatabase;
 import org.geogit.storage.ObjectDatabase;
 import org.geogit.storage.ObjectSerializingFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Preconditions;
-import com.google.common.base.Stopwatch;
 import com.google.common.base.Throwables;
 import com.google.common.collect.Iterators;
 import com.google.common.collect.Lists;
@@ -55,6 +57,8 @@ import com.sleepycat.je.TransactionConfig;
  * @TODO: extract interface
  */
 public class JEObjectDatabase extends AbstractObjectDatabase implements ObjectDatabase {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(JEObjectDatabase.class);
 
     private EnvironmentBuilder envProvider;
 
@@ -93,29 +97,32 @@ public class JEObjectDatabase extends AbstractObjectDatabase implements ObjectDa
     private ExecutorService service;
 
     @Override
-    public void close() {
+    public synchronized void close() {
+        if (env == null) {
+            LOGGER.trace("Database already closed.");
+            return;
+        }
+        final File envHome = env.getHome();
+        LOGGER.debug("Closing object database at {}", envHome);
         service.shutdownNow();
         try {
             while (!service.awaitTermination(5, TimeUnit.SECONDS)) {
-                System.err.println("Awaiting termination of bulk insert thread pool...");
+                LOGGER.trace("Awaiting termination of bulk insert thread pool...");
             }
         } catch (InterruptedException e) {
-            Throwables.propagate(e);
+            LOGGER.info("Caught interrupted exception waiting for thread pool termination. "
+                    + "Ignoring in order to proceed with closing the databse");
         }
 
-        // System.err.println("CLOSE");
-        if (objectDb != null) {
-            objectDb.close();
-            objectDb = null;
-        }
-        if (env != null) {
-            // System.err.println("--> " + env.getHome());
-            // env.evictMemory();
-            env.cleanLog();
-            env.sync();
-            env.close();
-            env = null;
-        }
+        objectDb.close();
+        objectDb = null;
+        LOGGER.trace("ObjectDatabase closed. Closing environment...");
+
+        env.cleanLog();
+        env.sync();
+        env.close();
+        env = null;
+        LOGGER.debug("Database {} closed.", envHome);
     }
 
     @Override
@@ -124,10 +131,14 @@ public class JEObjectDatabase extends AbstractObjectDatabase implements ObjectDa
     }
 
     @Override
-    public void open() {
+    public synchronized void open() {
         if (isOpen()) {
+            LOGGER.trace("Environment {} already open", env.getHome());
             return;
         }
+        // System.err.println("OPEN");
+        Environment environment = getEnvironment();
+        LOGGER.debug("Opening ObjectDatabase at {}", env.getHome());
         {
             // REVISIT: make thread pool size configurable?
             final int nThreads = Math.max(2, Runtime.getRuntime().availableProcessors() / 2);
@@ -143,10 +154,10 @@ public class JEObjectDatabase extends AbstractObjectDatabase implements ObjectDa
             ThreadPoolExecutor.CallerRunsPolicy rejectedExecutionHandler = new ThreadPoolExecutor.CallerRunsPolicy();
             service = new ThreadPoolExecutor(corePoolSize, maximumPoolSize, keepAliveTime,
                     timeUnit, queue, threadFactory, rejectedExecutionHandler);
+            LOGGER.trace("Created bulk insert thread pool for {} with {} threads.",
+                    environment.getHome(), nThreads);
         }
-        // System.err.println("OPEN");
-        Environment environment = getEnvironment();
-        // System.err.println("--> " + environment.getHome());
+
         txn = CurrentTransaction.getInstance(environment);
 
         DatabaseConfig dbConfig = new DatabaseConfig();
@@ -158,6 +169,8 @@ public class JEObjectDatabase extends AbstractObjectDatabase implements ObjectDa
         dbConfig.setTransactional(transactional);
         Database database = environment.openDatabase(null, "ObjectDatabase", dbConfig);
         this.objectDb = database;
+        LOGGER.debug("Object database opened at {}. Transactional: {}", environment.getHome(),
+                transactional);
     }
 
     @Override
@@ -336,12 +349,13 @@ public class JEObjectDatabase extends AbstractObjectDatabase implements ObjectDa
                 cursor.close();
                 if (transactional) {
                     if (handleTx) {
-                        // System.err.printf("committed %s (%s)\n", partition.size(), Thread
-                        // .currentThread().getName());
+                        LOGGER.trace("Committed {} inserts to {}", partition.size(), objectDb
+                                .getEnvironment().getHome());
                         txn.commitTransaction();
                     } else {
-                        // System.err.println("inserted " + partition.size()
-                        // + " not committed, transaction not owned by this bulk inserter");
+                        LOGGER.trace(
+                                "Inserted {} objects, not committed, transaction not owned by this bulk inserter",
+                                partition.size());
                     }
                 } else {
                     // finally force an environment checkpoint to ensure durability
@@ -394,8 +408,7 @@ public class JEObjectDatabase extends AbstractObjectDatabase implements ObjectDa
     }
 
     @Override
-    public void deleteAll(Iterator<ObjectId> ids) {
-        Stopwatch sw = new Stopwatch().start();
+    public long deleteAll(Iterator<ObjectId> ids) {
         long count = 0;
 
         CursorConfig cconfig = new CursorConfig();
@@ -420,7 +433,9 @@ public class JEObjectDatabase extends AbstractObjectDatabase implements ObjectDa
                     OperationStatus status = cursor.getSearchKey(key, data, LockMode.DEFAULT);
                     if (OperationStatus.SUCCESS.equals(status)) {
                         OperationStatus delete = cursor.delete();
-                        count++;
+                        if (OperationStatus.SUCCESS.equals(delete)) {
+                            count++;
+                        }
                     }
                 }
                 cursor.close();
@@ -435,8 +450,6 @@ public class JEObjectDatabase extends AbstractObjectDatabase implements ObjectDa
                 transaction.commit();
             }
         }
-        sw.stop();
-        // REVISIT when we have logging
-        // System.err.printf("Deleted %s objects in %s\n", count, sw);
+        return count;
     }
 }

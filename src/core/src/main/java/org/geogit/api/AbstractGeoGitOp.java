@@ -111,23 +111,4 @@ public abstract class AbstractGeoGitOp<T> implements Callable<T> {
         return getCommandLocator().getRefDatabase();
     }
 
-    protected void debug(String format, Object... args) {
-        // TODO: properly. Temporary measure to aid in manual testing
-        String prop = System.getProperty("debuglevel");
-        if (prop == null)
-            prop = System.getenv("debuglevel");
-        if ("debug".equals(prop)) {
-            System.err.println(String.format(format, args));
-        }
-    }
-
-    protected void info(String format, Object... args) {
-        // TODO: properly. Temporary measure to aid in manual testing
-        String prop = System.getProperty("debuglevel");
-        if (prop == null)
-            prop = System.getenv("debuglevel");
-        if ("info".equals(prop) || "debug".equals(prop)) {
-            System.err.println(String.format(format, args));
-        }
-    }
 }
