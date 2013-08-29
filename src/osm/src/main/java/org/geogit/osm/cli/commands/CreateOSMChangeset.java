@@ -16,7 +16,6 @@ import org.geogit.api.GeoGIT;
 import org.geogit.cli.AbstractCommand;
 import org.geogit.cli.CLICommand;
 import org.geogit.cli.GeogitCLI;
-import org.geogit.cli.RequiresRepository;
 import org.geogit.osm.internal.CreateOSMChangesetOp;
 import org.openstreetmap.osmosis.core.container.v0_6.ChangeContainer;
 import org.openstreetmap.osmosis.xml.v0_6.XmlChangeWriter;
@@ -28,7 +27,6 @@ import com.google.common.collect.Lists;
 /**
  * Imports data from OSM using the Overpass API
  */
-@RequiresRepository
 @Parameters(commandNames = "create-changeset", commandDescription = "Save diff between versions as OSM changeset")
 public class CreateOSMChangeset extends AbstractCommand implements CLICommand {
 

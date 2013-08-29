@@ -22,6 +22,7 @@ import org.geogit.cli.CLICommand;
 import org.geogit.cli.CommandFailedException;
 import org.geogit.cli.GeogitCLI;
 import org.geogit.cli.InvalidParameterException;
+import org.geogit.cli.RequiresRepository;
 
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.Parameters;
@@ -49,6 +50,7 @@ import com.google.common.base.Optional;
  * 
  * @see ConfigOp
  */
+@RequiresRepository(false)
 @Parameters(commandNames = "config", commandDescription = "Get and set repository or global options")
 public class Config extends AbstractCommand implements CLICommand {
 

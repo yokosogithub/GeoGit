@@ -11,7 +11,6 @@ import java.util.Map.Entry;
 import org.geogit.cli.CLICommand;
 import org.geogit.cli.CommandFailedException;
 import org.geogit.cli.GeogitCLI;
-import org.geogit.cli.RequiresRepository;
 import org.geogit.geotools.plumbing.DescribeOp;
 import org.geogit.geotools.plumbing.GeoToolsOpException;
 import org.geotools.data.DataStore;
@@ -20,7 +19,6 @@ import com.beust.jcommander.Parameter;
 import com.beust.jcommander.Parameters;
 import com.google.common.base.Optional;
 
-@RequiresRepository
 @Parameters(commandNames = "describe", commandDescription = "Describe a SQL Server table")
 public class SQLServerDescribe extends AbstractSQLServerCommand implements CLICommand {
 

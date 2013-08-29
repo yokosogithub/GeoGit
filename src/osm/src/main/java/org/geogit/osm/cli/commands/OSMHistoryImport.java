@@ -47,7 +47,6 @@ import org.geogit.cli.AbstractCommand;
 import org.geogit.cli.CLICommand;
 import org.geogit.cli.CommandFailedException;
 import org.geogit.cli.GeogitCLI;
-import org.geogit.cli.RequiresRepository;
 import org.geogit.osm.internal.history.Change;
 import org.geogit.osm.internal.history.Changeset;
 import org.geogit.osm.internal.history.HistoryDownloader;
@@ -89,7 +88,6 @@ import com.vividsolutions.jts.geom.Point;
 /**
  *
  */
-@RequiresRepository
 @Parameters(commandNames = "import-history", commandDescription = "Import OpenStreetmap history")
 public class OSMHistoryImport extends AbstractCommand implements CLICommand {
 

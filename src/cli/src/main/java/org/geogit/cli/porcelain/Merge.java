@@ -30,7 +30,6 @@ import org.geogit.cli.AbstractCommand;
 import org.geogit.cli.CLICommand;
 import org.geogit.cli.CommandFailedException;
 import org.geogit.cli.GeogitCLI;
-import org.geogit.cli.RequiresRepository;
 
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.Parameters;
@@ -51,7 +50,6 @@ import com.google.common.collect.Lists;
  * 
  * @see MergeOp
  */
-@RequiresRepository
 @Parameters(commandNames = "merge", commandDescription = "Merge two or more histories into one")
 public class Merge extends AbstractCommand implements CLICommand {
 

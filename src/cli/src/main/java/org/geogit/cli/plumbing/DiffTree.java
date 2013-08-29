@@ -15,7 +15,6 @@ import org.geogit.api.porcelain.DiffOp;
 import org.geogit.cli.AbstractCommand;
 import org.geogit.cli.CLICommand;
 import org.geogit.cli.GeogitCLI;
-import org.geogit.cli.RequiresRepository;
 
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.Parameters;
@@ -27,7 +26,6 @@ import com.google.common.collect.Lists;
  * 
  * @see DiffOp
  */
-@RequiresRepository
 @Parameters(commandNames = "diff-tree", commandDescription = "Show changes between commits")
 public class DiffTree extends AbstractCommand implements CLICommand {
 

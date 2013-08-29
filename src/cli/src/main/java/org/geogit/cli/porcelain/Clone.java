@@ -23,6 +23,7 @@ import org.geogit.api.porcelain.InitOp;
 import org.geogit.cli.AbstractCommand;
 import org.geogit.cli.CLICommand;
 import org.geogit.cli.GeogitCLI;
+import org.geogit.cli.RequiresRepository;
 import org.geogit.repository.Repository;
 import org.neo4j.kernel.impl.util.FileUtils;
 
@@ -52,6 +53,7 @@ import com.google.common.base.Throwables;
  * 
  * @see CloneOp
  */
+@RequiresRepository(false)
 @Parameters(commandNames = "clone", commandDescription = "Clone a repository into a new directory")
 public class Clone extends AbstractCommand implements CLICommand {
 

@@ -13,7 +13,6 @@ import org.geogit.cli.AbstractCommand;
 import org.geogit.cli.CLICommand;
 import org.geogit.cli.CommandFailedException;
 import org.geogit.cli.GeogitCLI;
-import org.geogit.cli.RequiresRepository;
 import org.geogit.osm.internal.EmptyOSMDownloadException;
 import org.geogit.osm.internal.Mapping;
 import org.geogit.osm.internal.OSMDownloadReport;
@@ -27,7 +26,6 @@ import com.google.common.collect.Lists;
 /**
  * Imports data from an OSM file
  */
-@RequiresRepository
 @Parameters(commandNames = "import", commandDescription = "Import OpenStreetMap data from a file")
 public class OSMImport extends AbstractCommand implements CLICommand {
 

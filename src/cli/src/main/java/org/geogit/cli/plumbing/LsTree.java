@@ -17,7 +17,6 @@ import org.geogit.api.plumbing.LsTreeOp.Strategy;
 import org.geogit.cli.AbstractCommand;
 import org.geogit.cli.CLICommand;
 import org.geogit.cli.GeogitCLI;
-import org.geogit.cli.RequiresRepository;
 
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.Parameters;
@@ -28,7 +27,6 @@ import com.google.common.collect.Lists;
 /**
  *
  */
-@RequiresRepository
 @Parameters(commandNames = "ls-tree", commandDescription = "Obtain information about features in the index and the working tree.")
 public class LsTree extends AbstractCommand implements CLICommand {
 

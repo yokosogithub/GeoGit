@@ -26,7 +26,6 @@ import org.geogit.api.plumbing.RevParse;
 import org.geogit.cli.CLICommand;
 import org.geogit.cli.CommandFailedException;
 import org.geogit.cli.GeogitCLI;
-import org.geogit.cli.RequiresRepository;
 import org.geogit.geotools.plumbing.ExportOp;
 import org.geogit.geotools.plumbing.GeoToolsOpException;
 import org.geotools.data.DataStore;
@@ -46,7 +45,6 @@ import com.google.common.base.Optional;
  * 
  * @see ExportOp
  */
-@RequiresRepository
 @Parameters(commandNames = "export", commandDescription = "Export to SpatiaLite")
 public class SLExport extends AbstractSLCommand implements CLICommand {
 

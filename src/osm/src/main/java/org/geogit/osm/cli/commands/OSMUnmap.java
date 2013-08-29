@@ -16,7 +16,6 @@ import org.geogit.cli.AbstractCommand;
 import org.geogit.cli.CLICommand;
 import org.geogit.cli.CommandFailedException;
 import org.geogit.cli.GeogitCLI;
-import org.geogit.cli.RequiresRepository;
 import org.geogit.osm.internal.Mapping;
 import org.geogit.osm.internal.OSMUnmapOp;
 
@@ -29,7 +28,6 @@ import com.beust.jcommander.Parameters;
  * 
  * @see OSMUnmapOp
  */
-@RequiresRepository
 @Parameters(commandNames = "unmap", commandDescription = "Updates the raw OSM data, unmapping the mapped OSM data in a given tree in the working tree")
 public class OSMUnmap extends AbstractCommand implements CLICommand {
 

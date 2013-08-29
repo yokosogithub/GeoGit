@@ -16,7 +16,6 @@ import org.geogit.cli.AbstractCommand;
 import org.geogit.cli.CLICommand;
 import org.geogit.cli.CommandFailedException;
 import org.geogit.cli.GeogitCLI;
-import org.geogit.cli.RequiresRepository;
 import org.geogit.osm.internal.Mapping;
 import org.geogit.osm.internal.OSMMapOp;
 
@@ -29,7 +28,6 @@ import com.beust.jcommander.Parameters;
  * 
  * @see OSMMapOp
  */
-@RequiresRepository
 @Parameters(commandNames = "map", commandDescription = "Create new data in the repository, applying a mapping to the current OSM data")
 public class OSMMap extends AbstractCommand implements CLICommand {
 

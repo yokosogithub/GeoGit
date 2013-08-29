@@ -25,7 +25,6 @@ import org.geogit.cli.AbstractCommand;
 import org.geogit.cli.CLICommand;
 import org.geogit.cli.CommandFailedException;
 import org.geogit.cli.GeogitCLI;
-import org.geogit.cli.RequiresRepository;
 
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.Parameters;
@@ -46,7 +45,6 @@ import com.beust.jcommander.Parameters;
  * 
  * @see PullOp
  */
-@RequiresRepository
 @Parameters(commandNames = "pull", commandDescription = "Fetch from and merge with another repository or a local branch")
 public class Pull extends AbstractCommand implements CLICommand {
 

@@ -18,7 +18,6 @@ import org.geogit.api.plumbing.RevObjectParse;
 import org.geogit.cli.AbstractCommand;
 import org.geogit.cli.CLICommand;
 import org.geogit.cli.GeogitCLI;
-import org.geogit.cli.RequiresRepository;
 
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.Parameters;
@@ -28,7 +27,6 @@ import com.google.common.base.Optional;
  * Outputs the common ancestor of 2 commits
  * 
  */
-@RequiresRepository
 @Parameters(commandNames = "merge-base", commandDescription = "Outputs the common ancestor of 2 commits")
 public class MergeBase extends AbstractCommand implements CLICommand {
 

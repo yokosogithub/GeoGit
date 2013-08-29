@@ -25,7 +25,6 @@ import org.geogit.api.porcelain.BlameReport;
 import org.geogit.api.porcelain.ValueAndCommit;
 import org.geogit.cli.AbstractCommand;
 import org.geogit.cli.GeogitCLI;
-import org.geogit.cli.RequiresRepository;
 import org.geogit.storage.text.TextValueSerializer;
 
 import com.beust.jcommander.Parameter;
@@ -37,7 +36,6 @@ import com.google.common.base.Optional;
  * given feature
  * 
  */
-@RequiresRepository
 @Parameters(commandNames = "blame", commandDescription = "Shows information about authors of modifications for a single feature")
 public class Blame extends AbstractCommand {
 

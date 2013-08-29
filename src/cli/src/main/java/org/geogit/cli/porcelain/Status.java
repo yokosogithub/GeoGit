@@ -26,7 +26,6 @@ import org.geogit.api.plumbing.merge.ConflictsReadOp;
 import org.geogit.cli.AbstractCommand;
 import org.geogit.cli.CLICommand;
 import org.geogit.cli.GeogitCLI;
-import org.geogit.cli.RequiresRepository;
 import org.geogit.repository.StagingArea;
 import org.geogit.repository.WorkingTree;
 
@@ -48,7 +47,6 @@ import com.google.common.base.Optional;
  * @see Commit
  * @see Add
  */
-@RequiresRepository
 @Parameters(commandNames = "status", commandDescription = "Show the working tree status")
 public class Status extends AbstractCommand implements CLICommand {
 

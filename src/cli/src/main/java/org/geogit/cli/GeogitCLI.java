@@ -371,6 +371,21 @@ public class GeogitCLI {
             JCommander jCommander = mainCommander.getCommands().get(parsedCommand);
             List<Object> objects = jCommander.getObjects();
             CLICommand cliCommand = (CLICommand) objects.get(0);
+            Class<? extends CLICommand> cmdClass = cliCommand.getClass();
+            if (cmdClass.isAnnotationPresent(RequiresRepository.class)
+                    && cmdClass.getAnnotation(RequiresRepository.class).value()) {
+                String workingDir;
+                Platform platform = getPlatform();
+                if (platform == null || platform.pwd() == null) {
+                    workingDir = "Couln't determine working directory.";
+                } else {
+                    workingDir = platform.pwd().getAbsolutePath();
+                }
+                if (getGeogit() == null) {
+                    throw new CommandFailedException("Not in a geogit repository: " + workingDir);
+                }
+            }
+
             cliCommand.run(this);
             getConsole().flush();
         }

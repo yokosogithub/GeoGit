@@ -34,7 +34,6 @@ import org.geogit.cli.AbstractCommand;
 import org.geogit.cli.CLICommand;
 import org.geogit.cli.GeogitCLI;
 import org.geogit.cli.InvalidParameterException;
-import org.geogit.cli.RequiresRepository;
 import org.geotools.util.Range;
 
 import com.beust.jcommander.Parameters;
@@ -59,7 +58,6 @@ import com.google.common.collect.ImmutableSet;
  * 
  * @see org.geogit.api.porcelain.LogOp
  */
-@RequiresRepository
 @Parameters(commandNames = "log", commandDescription = "Show commit logs")
 public class Log extends AbstractCommand implements CLICommand {
 

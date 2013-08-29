@@ -25,7 +25,6 @@ import org.geogit.cli.AbstractCommand;
 import org.geogit.cli.CLICommand;
 import org.geogit.cli.CommandFailedException;
 import org.geogit.cli.GeogitCLI;
-import org.geogit.cli.RequiresRepository;
 import org.geogit.osm.internal.AddOSMLogEntry;
 import org.geogit.osm.internal.EmptyOSMDownloadException;
 import org.geogit.osm.internal.Mapping;
@@ -59,7 +58,6 @@ import com.google.common.io.Files;
  * elements modified/added since the last import (which is stored on the OSM log file)
  * 
  */
-@RequiresRepository
 @Parameters(commandNames = "download", commandDescription = "Download OpenStreetMap data")
 public class OSMDownload extends AbstractCommand implements CLICommand {
 

@@ -14,7 +14,6 @@ import org.geogit.cli.AbstractCommand;
 import org.geogit.cli.CLICommand;
 import org.geogit.cli.CommandFailedException;
 import org.geogit.cli.GeogitCLI;
-import org.geogit.cli.RequiresRepository;
 
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.Parameters;
@@ -34,7 +33,6 @@ import com.google.common.collect.ImmutableList;
  * 
  * @see RemoteListOp
  */
-@RequiresRepository
 @Parameters(commandNames = "list", commandDescription = "List all remotes for the current repository")
 public class RemoteList extends AbstractCommand implements CLICommand {
 

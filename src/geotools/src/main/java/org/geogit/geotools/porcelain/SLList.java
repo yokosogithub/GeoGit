@@ -11,7 +11,6 @@ import java.util.List;
 import org.geogit.cli.CLICommand;
 import org.geogit.cli.CommandFailedException;
 import org.geogit.cli.GeogitCLI;
-import org.geogit.cli.RequiresRepository;
 import org.geogit.geotools.plumbing.GeoToolsOpException;
 import org.geogit.geotools.plumbing.ListOp;
 import org.geotools.data.DataStore;
@@ -26,7 +25,6 @@ import com.google.common.base.Optional;
  * 
  * @see ListOp
  */
-@RequiresRepository
 @Parameters(commandNames = "list", commandDescription = "List available feature types in a database")
 public class SLList extends AbstractSLCommand implements CLICommand {
 

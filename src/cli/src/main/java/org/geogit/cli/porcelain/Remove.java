@@ -19,7 +19,6 @@ import org.geogit.cli.AbstractCommand;
 import org.geogit.cli.CLICommand;
 import org.geogit.cli.CommandFailedException;
 import org.geogit.cli.GeogitCLI;
-import org.geogit.cli.RequiresRepository;
 import org.geogit.repository.Repository;
 
 import com.beust.jcommander.Parameter;
@@ -29,7 +28,6 @@ import com.google.common.base.Optional;
 /**
  *
  */
-@RequiresRepository
 @Parameters(commandNames = "rm", commandDescription = "Remove features or trees")
 public class Remove extends AbstractCommand implements CLICommand {
 

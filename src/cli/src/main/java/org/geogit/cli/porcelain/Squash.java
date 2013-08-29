@@ -15,7 +15,6 @@ import org.geogit.api.porcelain.SquashOp;
 import org.geogit.cli.AbstractCommand;
 import org.geogit.cli.CLICommand;
 import org.geogit.cli.GeogitCLI;
-import org.geogit.cli.RequiresRepository;
 
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.Parameters;
@@ -34,7 +33,6 @@ import com.google.common.collect.Lists;
  * 
  * @see org.geogit.api.porcelain.LogOp
  */
-@RequiresRepository
 @Parameters(commandNames = "squash", commandDescription = "Squash commits")
 public class Squash extends AbstractCommand implements CLICommand {
 

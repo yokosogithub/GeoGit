@@ -21,14 +21,12 @@ import org.geogit.api.plumbing.diff.DiffEntry.ChangeType;
 import org.geogit.api.porcelain.CleanOp;
 import org.geogit.cli.AbstractCommand;
 import org.geogit.cli.GeogitCLI;
-import org.geogit.cli.RequiresRepository;
 import org.geogit.repository.Repository;
 
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.Parameters;
 import com.google.common.base.Optional;
 
-@RequiresRepository
 @Parameters(commandNames = "clean", commandDescription = "Deletes untracked features from working tree")
 public class Clean extends AbstractCommand {
 

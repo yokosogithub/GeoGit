@@ -17,7 +17,6 @@ import org.geogit.api.plumbing.WalkGraphOp;
 import org.geogit.cli.AbstractCommand;
 import org.geogit.cli.CLICommand;
 import org.geogit.cli.GeogitCLI;
-import org.geogit.cli.RequiresRepository;
 import org.geogit.storage.Deduplicator;
 
 import com.beust.jcommander.Parameter;
@@ -29,7 +28,6 @@ import com.google.common.collect.Lists;
 /**
  *
  */
-@RequiresRepository
 @Parameters(commandNames = "walk-graph", commandDescription = "Visit objects in history graph in post order (referenced objects before referring objects)")
 public class WalkGraph extends AbstractCommand implements CLICommand {
 

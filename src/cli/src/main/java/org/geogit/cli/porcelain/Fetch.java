@@ -20,7 +20,6 @@ import org.geogit.cli.AbstractCommand;
 import org.geogit.cli.CLICommand;
 import org.geogit.cli.CommandFailedException;
 import org.geogit.cli.GeogitCLI;
-import org.geogit.cli.RequiresRepository;
 
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.Parameters;
@@ -41,7 +40,6 @@ import com.beust.jcommander.Parameters;
  * 
  * @see FetchOp
  */
-@RequiresRepository
 @Parameters(commandNames = "fetch", commandDescription = "Download objects and refs from another repository")
 public class Fetch extends AbstractCommand implements CLICommand {
 

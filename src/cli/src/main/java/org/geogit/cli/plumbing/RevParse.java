@@ -18,7 +18,6 @@ import org.geogit.api.ObjectId;
 import org.geogit.api.plumbing.ResolveGeogitDir;
 import org.geogit.cli.AbstractCommand;
 import org.geogit.cli.GeogitCLI;
-import org.geogit.cli.RequiresRepository;
 
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.Parameters;
@@ -37,7 +36,6 @@ import com.google.common.collect.Lists;
  * geogit repository and print out the repository location
  * </ul>
  */
-@RequiresRepository
 @Parameters(commandNames = "rev-parse", commandDescription = "Resolve parameters according to the arguments")
 public class RevParse extends AbstractCommand {
 

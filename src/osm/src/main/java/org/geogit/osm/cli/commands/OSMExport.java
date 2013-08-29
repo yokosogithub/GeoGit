@@ -28,7 +28,6 @@ import org.geogit.cli.AbstractCommand;
 import org.geogit.cli.CLICommand;
 import org.geogit.cli.CommandFailedException;
 import org.geogit.cli.GeogitCLI;
-import org.geogit.cli.RequiresRepository;
 import org.geogit.geotools.plumbing.ExportOp;
 import org.geogit.osm.internal.EntityConverter;
 import org.geogit.osm.internal.OSMUtils;
@@ -62,7 +61,6 @@ import crosby.binary.osmosis.OsmosisSerializer;
  * 
  * @see ExportOp
  */
-@RequiresRepository
 @Parameters(commandNames = "export", commandDescription = "Export to OSM format")
 public class OSMExport extends AbstractCommand implements CLICommand {
 

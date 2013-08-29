@@ -14,7 +14,6 @@ import javax.annotation.Nullable;
 import jline.Terminal;
 
 import org.fusesource.jansi.Ansi;
-import org.geogit.api.Platform;
 import org.geogit.cli.porcelain.ColorArg;
 
 import com.beust.jcommander.JCommander;
@@ -27,10 +26,9 @@ import com.google.common.base.Throwables;
  * <p>
  * Services provided to subclasses:
  * <ul>
- * <li>Check for the presence of the {@link RequiresRepository @RequiresRepository} class annotation
- * and call on {@link #runInternal(GeogitCLI) runInternal(cli)} with a guaranteed non null
- * {@link GeogitCLI#getGeogit() cli.getGeogit()}, or fail fast with an {@link IllegalStateException}
- * if no repository is in place.
+ * <li>Defines {@link RequiresRepository @RequiresRepository(true)} so its inherited by subclasses
+ * and they need only to declare it if they don't require a repository present (which is the least
+ * of the cases).
  * <li>Out of the box support for the {@code --help} argument
  * <li>Out of the box support for the hidden {@code --color} argument, allowing any command to
  * seamlessly support output text coloring or disabling it (see {@link ColorArg})
@@ -40,6 +38,7 @@ import com.google.common.base.Throwables;
  * </p>
  * 
  */
+@RequiresRepository(true)
 public abstract class AbstractCommand implements CLICommand {
 
     @Parameter(names = "--help", help = true, hidden = true)
@@ -54,18 +53,6 @@ public abstract class AbstractCommand implements CLICommand {
         if (help) {
             printUsage();
             return;
-        }
-        if (getClass().isAnnotationPresent(RequiresRepository.class)) {
-            String workingDir;
-            Platform platform = cli.getPlatform();
-            if (platform == null || platform.pwd() == null) {
-                workingDir = "Couln't determine working directory.";
-            } else {
-                workingDir = platform.pwd().getAbsolutePath();
-            }
-            if (cli.getGeogit() == null) {
-                throw new CommandFailedException("Not in a geogit repository: " + workingDir);
-            }
         }
 
         try {

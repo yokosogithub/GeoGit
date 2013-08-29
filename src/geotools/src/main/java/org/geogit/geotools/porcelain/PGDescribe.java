@@ -12,7 +12,6 @@ import java.util.Map.Entry;
 import org.geogit.cli.CLICommand;
 import org.geogit.cli.CommandFailedException;
 import org.geogit.cli.GeogitCLI;
-import org.geogit.cli.RequiresRepository;
 import org.geogit.geotools.plumbing.DescribeOp;
 import org.geogit.geotools.plumbing.GeoToolsOpException;
 import org.geotools.data.DataStore;
@@ -28,7 +27,6 @@ import com.google.common.base.Optional;
  * 
  * @see DescribeOp
  */
-@RequiresRepository
 @Parameters(commandNames = "describe", commandDescription = "Describe a PostGIS table")
 public class PGDescribe extends AbstractPGCommand implements CLICommand {
 

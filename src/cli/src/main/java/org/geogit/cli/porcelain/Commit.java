@@ -29,7 +29,6 @@ import org.geogit.cli.AbstractCommand;
 import org.geogit.cli.CLICommand;
 import org.geogit.cli.CommandFailedException;
 import org.geogit.cli.GeogitCLI;
-import org.geogit.cli.RequiresRepository;
 
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.Parameters;
@@ -50,7 +49,6 @@ import com.google.common.collect.Lists;
  * 
  * @see CommitOp
  */
-@RequiresRepository
 @Parameters(commandNames = "commit", commandDescription = "Record staged changes to the repository")
 public class Commit extends AbstractCommand implements CLICommand {
 

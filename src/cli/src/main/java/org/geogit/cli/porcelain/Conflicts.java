@@ -28,7 +28,6 @@ import org.geogit.api.porcelain.MergeOp;
 import org.geogit.cli.AbstractCommand;
 import org.geogit.cli.CLICommand;
 import org.geogit.cli.GeogitCLI;
-import org.geogit.cli.RequiresRepository;
 
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.Parameters;
@@ -43,7 +42,6 @@ import com.google.common.collect.Lists;
  */
 
 // Currently it just print conflict descriptions, so they can be used by another tool instead.
-@RequiresRepository
 @Parameters(commandNames = "conflicts", commandDescription = "Shows existing conflicts")
 public class Conflicts extends AbstractCommand implements CLICommand {
 

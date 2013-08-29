@@ -23,7 +23,6 @@ import org.geogit.api.porcelain.LogOp;
 import org.geogit.cli.AbstractCommand;
 import org.geogit.cli.CLICommand;
 import org.geogit.cli.GeogitCLI;
-import org.geogit.cli.RequiresRepository;
 import org.geotools.util.Range;
 
 import com.beust.jcommander.Parameters;
@@ -35,7 +34,6 @@ import com.google.common.base.Optional;
  * 
  * @see org.geogit.api.porcelain.LogOp
  */
-@RequiresRepository
 @Parameters(commandNames = "rev-list", commandDescription = "Show list of commits")
 public class RevList extends AbstractCommand implements CLICommand {
 

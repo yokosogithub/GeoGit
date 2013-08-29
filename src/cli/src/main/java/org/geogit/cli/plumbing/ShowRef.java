@@ -16,7 +16,6 @@ import org.geogit.api.plumbing.ForEachRef;
 import org.geogit.cli.AbstractCommand;
 import org.geogit.cli.CLICommand;
 import org.geogit.cli.GeogitCLI;
-import org.geogit.cli.RequiresRepository;
 
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.Parameters;
@@ -27,7 +26,6 @@ import com.google.common.collect.ImmutableSet;
  * Displays a list of refs in a repository
  * 
  */
-@RequiresRepository
 @Parameters(commandNames = "show-ref", commandDescription = "Shows a list of refs")
 public class ShowRef extends AbstractCommand implements CLICommand {
 

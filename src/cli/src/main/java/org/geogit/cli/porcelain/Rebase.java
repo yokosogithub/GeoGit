@@ -21,7 +21,6 @@ import org.geogit.cli.AbstractCommand;
 import org.geogit.cli.CLICommand;
 import org.geogit.cli.CommandFailedException;
 import org.geogit.cli.GeogitCLI;
-import org.geogit.cli.RequiresRepository;
 
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.Parameters;
@@ -53,7 +52,6 @@ import com.google.common.base.Suppliers;
  * 
  * @see RebaseOp
  */
-@RequiresRepository
 @Parameters(commandNames = { "rebase" }, commandDescription = "Forward-port local commits to the updated upstream head")
 public class Rebase extends AbstractCommand implements CLICommand {
 

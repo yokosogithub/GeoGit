@@ -17,6 +17,7 @@ import org.geogit.api.porcelain.InitOp;
 import org.geogit.cli.AbstractCommand;
 import org.geogit.cli.CLICommand;
 import org.geogit.cli.GeogitCLI;
+import org.geogit.cli.RequiresRepository;
 import org.geogit.repository.Repository;
 
 import com.beust.jcommander.Parameter;
@@ -36,6 +37,7 @@ import com.beust.jcommander.Parameters;
  * 
  * @see InitOp
  */
+@RequiresRepository(false)
 @Parameters(commandNames = "init", commandDescription = "Create an empty geogit repository or reinitialize an existing one")
 public class Init extends AbstractCommand implements CLICommand {
 
