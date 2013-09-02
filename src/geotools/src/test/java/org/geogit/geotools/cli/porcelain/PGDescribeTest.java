@@ -19,7 +19,6 @@ import jline.console.ConsoleReader;
 import org.geogit.api.Platform;
 import org.geogit.cli.CommandFailedException;
 import org.geogit.cli.GeogitCLI;
-import org.geogit.geotools.cli.porcelain.PGDescribe;
 import org.geotools.data.AbstractDataStoreFactory;
 import org.junit.After;
 import org.junit.Assert;
@@ -112,19 +111,6 @@ public class PGDescribeTest extends Assert {
         PGDescribe describeCommand = new PGDescribe();
         describeCommand.table = "table1";
         describeCommand.dataStoreFactory = TestHelper.createNullTestFactory();
-        exception.expect(CommandFailedException.class);
-        describeCommand.run(cli);
-    }
-
-    @Test
-    public void testNoRepository() throws Exception {
-        ConsoleReader consoleReader = new ConsoleReader(System.in, System.out,
-                new UnsupportedTerminal());
-        cli = new GeogitCLI(consoleReader);
-
-        PGDescribe describeCommand = new PGDescribe();
-        describeCommand.table = "table1";
-        describeCommand.dataStoreFactory = factory;
         exception.expect(CommandFailedException.class);
         describeCommand.run(cli);
     }

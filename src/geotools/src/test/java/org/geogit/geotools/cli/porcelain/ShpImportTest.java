@@ -19,7 +19,6 @@ import org.geogit.api.Platform;
 import org.geogit.cli.CommandFailedException;
 import org.geogit.cli.GeogitCLI;
 import org.geogit.cli.InvalidParameterException;
-import org.geogit.geotools.cli.porcelain.ShpImport;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -85,19 +84,6 @@ public class ShpImportTest extends Assert {
         ShpImport importCommand = new ShpImport();
         importCommand.shapeFile = new ArrayList<String>();
         exception.expect(InvalidParameterException.class);
-        importCommand.run(cli);
-    }
-
-    @Test
-    public void testNoRepository() throws Exception {
-        ConsoleReader consoleReader = new ConsoleReader(System.in, System.out,
-                new UnsupportedTerminal());
-        cli = new GeogitCLI(consoleReader);
-
-        ShpImport importCommand = new ShpImport();
-        importCommand.shapeFile = new ArrayList<String>();
-        importCommand.shapeFile.add(ShpImport.class.getResource("shape.shp").getFile());
-        exception.expect(CommandFailedException.class);
         importCommand.run(cli);
     }
 

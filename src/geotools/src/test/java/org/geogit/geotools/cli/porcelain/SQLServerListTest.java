@@ -17,7 +17,6 @@ import jline.console.ConsoleReader;
 import org.geogit.api.Platform;
 import org.geogit.cli.CommandFailedException;
 import org.geogit.cli.GeogitCLI;
-import org.geogit.geotools.cli.porcelain.SQLServerList;
 import org.geotools.data.AbstractDataStoreFactory;
 import org.junit.After;
 import org.junit.Assert;
@@ -78,18 +77,6 @@ public class SQLServerListTest extends Assert {
     public void testInvalidDatabaseParams() throws Exception {
         SQLServerList listCommand = new SQLServerList();
         listCommand.commonArgs.host = "nonexistent";
-        exception.expect(CommandFailedException.class);
-        listCommand.run(cli);
-    }
-
-    @Test
-    public void testNoRepository() throws Exception {
-        ConsoleReader consoleReader = new ConsoleReader(System.in, System.out,
-                new UnsupportedTerminal());
-        cli = new GeogitCLI(consoleReader);
-
-        SQLServerList listCommand = new SQLServerList();
-        listCommand.dataStoreFactory = factory;
         exception.expect(CommandFailedException.class);
         listCommand.run(cli);
     }

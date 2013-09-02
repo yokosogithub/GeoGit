@@ -19,7 +19,6 @@ import jline.console.ConsoleReader;
 import org.geogit.api.Platform;
 import org.geogit.cli.CommandFailedException;
 import org.geogit.cli.GeogitCLI;
-import org.geogit.geotools.cli.porcelain.SQLServerDescribe;
 import org.geotools.data.AbstractDataStoreFactory;
 import org.junit.After;
 import org.junit.Assert;
@@ -102,19 +101,6 @@ public class SQLServerDescribeTest extends Assert {
         SQLServerDescribe describeCommand = new SQLServerDescribe();
         describeCommand.table = "table1";
         describeCommand.dataStoreFactory = TestHelper.createNullTestFactory();
-        exception.expect(CommandFailedException.class);
-        describeCommand.run(cli);
-    }
-
-    @Test
-    public void testNoRepository() throws Exception {
-        ConsoleReader consoleReader = new ConsoleReader(System.in, System.out,
-                new UnsupportedTerminal());
-        cli = new GeogitCLI(consoleReader);
-
-        SQLServerDescribe describeCommand = new SQLServerDescribe();
-        describeCommand.table = "table1";
-        describeCommand.dataStoreFactory = factory;
         exception.expect(CommandFailedException.class);
         describeCommand.run(cli);
     }

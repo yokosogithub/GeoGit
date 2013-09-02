@@ -17,7 +17,6 @@ import jline.console.ConsoleReader;
 import org.geogit.api.Platform;
 import org.geogit.cli.CommandFailedException;
 import org.geogit.cli.GeogitCLI;
-import org.geogit.geotools.cli.porcelain.SQLServerImport;
 import org.geotools.data.AbstractDataStoreFactory;
 import org.junit.After;
 import org.junit.Before;
@@ -82,19 +81,6 @@ public class SQLServerImportTest {
         SQLServerImport importCommand = new SQLServerImport();
         importCommand.all = true;
         importCommand.table = "table1";
-        importCommand.dataStoreFactory = factory;
-        exception.expect(CommandFailedException.class);
-        importCommand.run(cli);
-    }
-
-    @Test
-    public void testNoRepository() throws Exception {
-        ConsoleReader consoleReader = new ConsoleReader(System.in, System.out,
-                new UnsupportedTerminal());
-        cli = new GeogitCLI(consoleReader);
-
-        SQLServerImport importCommand = new SQLServerImport();
-        importCommand.all = true;
         importCommand.dataStoreFactory = factory;
         exception.expect(CommandFailedException.class);
         importCommand.run(cli);
