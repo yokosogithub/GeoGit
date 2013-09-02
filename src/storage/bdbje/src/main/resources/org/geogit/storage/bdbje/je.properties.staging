@@ -1,5 +1,7 @@
 
-#je.log.fileMax=100000000
+# Use a rather small log file size for the staging db as it gets a lot of deletes
+# 67108864 = 64MB
+je.log.fileMax=67108864
 
 
 ############################

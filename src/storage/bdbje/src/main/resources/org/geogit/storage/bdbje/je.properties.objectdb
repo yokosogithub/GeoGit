@@ -1,5 +1,8 @@
 
-#je.log.fileMax=100000000
+# Use a rather large log file size for the object db as it rarely gets deletes but its mostly used to append
+# contents and in read only mode.
+# 268435456 = 256MB
+je.log.fileMax=268435456
 
 
 ############################
