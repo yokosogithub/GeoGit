@@ -91,7 +91,7 @@ public class Merge extends AbstractCommand implements CLICommand {
             }
 
             geogit.command(ResetOp.class).setMode(ResetMode.HARD)
-                    .setCommit(Suppliers.ofInstance(ref.get().getObjectId()));
+                    .setCommit(Suppliers.ofInstance(ref.get().getObjectId())).call();
             console.println("Merge aborted successfully.");
             return;
         }

@@ -88,7 +88,9 @@ Feature: "merge" command
     Given I have a repository
       And I have a merge conflict state
      When I run the command "merge branch1 --abort"
-     Then the response should contain "Merge aborted successfully"     
+     Then the response should contain "Merge aborted successfully"
+     When I run the command "status"
+     Then the response should contain "nothing to commit"        
      
   Scenario: Try to abort when there is no conflict
     Given I have a repository
