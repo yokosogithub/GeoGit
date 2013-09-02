@@ -13,41 +13,24 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
-import java.util.Map.Entry;
-import java.util.Set;
 
 import jline.console.ConsoleReader;
 
-import org.geogit.api.FeatureInfo;
 import org.geogit.api.GeoGIT;
-import org.geogit.api.NodeRef;
-import org.geogit.api.ObjectId;
-import org.geogit.api.Ref;
-import org.geogit.api.RevFeature;
-import org.geogit.api.RevFeatureType;
-import org.geogit.api.RevObject;
-import org.geogit.api.plumbing.RevObjectParse;
-import org.geogit.api.plumbing.diff.AttributeDiff;
-import org.geogit.api.plumbing.diff.FeatureDiff;
-import org.geogit.api.plumbing.diff.FeatureTypeDiff;
 import org.geogit.api.plumbing.diff.Patch;
 import org.geogit.api.plumbing.diff.PatchSerializer;
+import org.geogit.api.plumbing.diff.VerifyPatchOp;
+import org.geogit.api.plumbing.diff.VerifyPatchResults;
 import org.geogit.api.porcelain.ApplyPatchOp;
 import org.geogit.api.porcelain.CannotApplyPatchException;
 import org.geogit.cli.AbstractCommand;
 import org.geogit.cli.CommandFailedException;
 import org.geogit.cli.GeogitCLI;
-import org.geogit.repository.DepthSearch;
-import org.opengis.feature.type.PropertyDescriptor;
 
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.Parameters;
 import com.google.common.base.Charsets;
-import com.google.common.base.Objects;
-import com.google.common.base.Optional;
-import com.google.common.collect.ImmutableList;
 import com.google.common.io.Closeables;
 import com.google.common.io.Files;
 
@@ -74,13 +57,6 @@ public class Apply extends AbstractCommand {
 
     @Parameter(names = { "--reverse" }, description = "apply the patch in reverse")
     private boolean reverse;
-
-    /**
-     * Apply directly on index, not on working tree. (temporarily disabled)
-     */
-    // @Parameter(names = { "--cached" }, description =
-    // "Apply directly on index, not on working tree")
-    // private boolean cached;
 
     /**
      * Whether to apply the patch partially and generate new patch file with rejected changes, or
@@ -127,17 +103,18 @@ public class Apply extends AbstractCommand {
         if (summary) {
             console.println(patch.toString());
         } else if (check) {
-            Patch applicable = new Patch();
-            Patch rejected = new Patch();
-            checkPatch(geogit, patch, applicable, rejected);
-            if (rejected.isEmpty()) {
+            VerifyPatchResults verify = cli.getGeogit().command(VerifyPatchOp.class)
+                    .setPatch(patch).call();
+            Patch toReject = verify.getToReject();
+            Patch toApply = verify.getToApply();
+            if (toReject.isEmpty()) {
                 console.println("Patch can be applied.");
             } else {
                 console.println("Error: Patch cannot be applied\n");
                 console.println("Applicable entries:\n");
-                console.println(applicable.toString());
+                console.println(toApply.toString());
                 console.println("\nConflicting entries:\n");
-                console.println(rejected.toString());
+                console.println(toReject.toString());
             }
         } else {
             try {
@@ -172,124 +149,4 @@ public class Apply extends AbstractCommand {
 
     }
 
-    private void checkPatch(GeoGIT geogit, Patch originalPatch, Patch toApply, Patch rejected) {
-        for (RevFeatureType ft : originalPatch.getFeatureTypes()) {
-            toApply.addFeatureType(ft);
-            rejected.addFeatureType(ft);
-        }
-        String path;
-        Optional<RevObject> obj;
-        List<FeatureDiff> diffs = originalPatch.getModifiedFeatures();
-        for (FeatureDiff diff : diffs) {
-            path = diff.getPath();
-            String refSpec = Ref.WORK_HEAD + ":" + path;
-            obj = geogit.command(RevObjectParse.class).setRefSpec(refSpec).call();
-            if (!obj.isPresent()) {
-                rejected.addModifiedFeature(diff);
-                continue;
-            }
-            RevFeature feature = (RevFeature) obj.get();
-
-            DepthSearch depthSearch = new DepthSearch(geogit.getRepository().getIndex()
-                    .getDatabase());
-            Optional<NodeRef> noderef = depthSearch.find(geogit.getRepository().getWorkingTree()
-                    .getTree(), path);
-            RevFeatureType featureType = geogit.command(RevObjectParse.class)
-                    .setObjectId(noderef.get().getMetadataId()).call(RevFeatureType.class).get();
-            ImmutableList<PropertyDescriptor> descriptors = featureType.sortedDescriptors();
-            Set<Entry<PropertyDescriptor, AttributeDiff>> attrDiffs = diff.getDiffs().entrySet();
-            boolean ok = true;
-            for (Iterator<Entry<PropertyDescriptor, AttributeDiff>> iterator = attrDiffs.iterator(); iterator
-                    .hasNext();) {
-                Entry<PropertyDescriptor, AttributeDiff> entry = iterator.next();
-                AttributeDiff attrDiff = entry.getValue();
-                PropertyDescriptor descriptor = entry.getKey();
-                switch (attrDiff.getType()) {
-                case ADDED:
-                    if (descriptors.contains(descriptor)) {
-                        ok = false;
-                    }
-                    break;
-                case REMOVED:
-                case MODIFIED:
-                    if (!descriptors.contains(descriptor)) {
-                        ok = false;
-                        break;
-                    }
-                    for (int i = 0; i < descriptors.size(); i++) {
-                        if (descriptors.get(i).equals(descriptor)) {
-                            Optional<Object> value = feature.getValues().get(i);
-                            if (!attrDiff.canBeAppliedOn(value)) {
-                                ok = false;
-                            }
-                            break;
-                        }
-                    }
-                }
-                if (!ok) {
-                    break;
-                }
-            }
-            if (!ok) {
-                rejected.addModifiedFeature(diff);
-            } else {
-                toApply.addModifiedFeature(diff);
-            }
-        }
-        List<FeatureInfo> added = originalPatch.getAddedFeatures();
-        for (FeatureInfo feature : added) {
-            String refSpec = Ref.WORK_HEAD + ":" + feature.getPath();
-            obj = geogit.command(RevObjectParse.class).setRefSpec(refSpec).call();
-            if (obj.isPresent()) {
-                rejected.addAddedFeature(feature.getPath(), feature.getFeature(),
-                        feature.getFeatureType());
-            } else {
-                toApply.addAddedFeature(feature.getPath(), feature.getFeature(),
-                        feature.getFeatureType());
-            }
-
-        }
-
-        List<FeatureInfo> removed = originalPatch.getRemovedFeatures();
-        for (FeatureInfo feature : removed) {
-            String refSpec = Ref.WORK_HEAD + ":" + feature.getPath();
-            obj = geogit.command(RevObjectParse.class).setRefSpec(refSpec).call();
-            if (!obj.isPresent()) {
-                rejected.addRemovedFeature(feature.getPath(), feature.getFeature(),
-                        feature.getFeatureType());
-            } else {
-                RevFeature revFeature = (RevFeature) obj.get();
-                DepthSearch depthSearch = new DepthSearch(geogit.getRepository().getIndex()
-                        .getDatabase());
-                Optional<NodeRef> noderef = depthSearch.find(geogit.getRepository()
-                        .getWorkingTree().getTree(), feature.getPath());
-                RevFeatureType revFeatureType = geogit.command(RevObjectParse.class)
-                        .setObjectId(noderef.get().getMetadataId()).call(RevFeatureType.class)
-                        .get();
-                if (revFeature.equals(feature.getFeature())
-                        && revFeatureType.equals(feature.getFeatureType())) {
-                    toApply.addRemovedFeature(feature.getPath(), feature.getFeature(),
-                            feature.getFeatureType());
-                } else {
-                    rejected.addRemovedFeature(feature.getPath(), feature.getFeature(),
-                            feature.getFeatureType());
-                }
-            }
-        }
-
-        ImmutableList<FeatureTypeDiff> alteredTrees = originalPatch.getAlteredTrees();
-        for (FeatureTypeDiff diff : alteredTrees) {
-            DepthSearch depthSearch = new DepthSearch(geogit.getRepository().getObjectDatabase());
-            Optional<NodeRef> noderef = depthSearch.find(geogit.getRepository().getWorkingTree()
-                    .getTree(), diff.getPath());
-            ObjectId metadataId = noderef.isPresent() ? noderef.get().getMetadataId()
-                    : ObjectId.NULL;
-            if (Objects.equal(metadataId, diff.getOldFeatureType())) {
-                toApply.addAlteredTree(diff);
-            } else {
-                rejected.addAlteredTree(diff);
-            }
-        }
-
-    }
 }
