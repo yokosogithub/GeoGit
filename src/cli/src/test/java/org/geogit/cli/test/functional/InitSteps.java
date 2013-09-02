@@ -133,14 +133,12 @@ public class InitSteps extends AbstractGeogitFunctionalTest {
     @Then("^the response should contain \"([^\"]*)\"$")
     public void the_response_should_contain(String expected) throws Throwable {
         String actual = stdOut.toString().replaceAll(LINE_SEPARATOR, "").replaceAll("\\\\", "/");
-        expected.replaceAll("\\\\", "/");
         assertTrue(actual, actual.contains(expected));
     }
 
     @Then("^the response should not contain \"([^\"]*)\"$")
     public void the_response_should_not_contain(String expected) throws Throwable {
         String actual = stdOut.toString().replaceAll(LINE_SEPARATOR, "").replaceAll("\\\\", "/");
-        expected.replaceAll("\\\\", "/");
         assertFalse(actual, actual.contains(expected));
     }
 
