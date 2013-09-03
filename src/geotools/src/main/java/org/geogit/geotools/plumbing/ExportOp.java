@@ -5,8 +5,13 @@
 
 package org.geogit.geotools.plumbing;
 
+import static com.google.common.base.Preconditions.checkArgument;
+
 import java.io.IOException;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.annotation.Nullable;
 
@@ -15,14 +20,12 @@ import org.geogit.api.FeatureBuilder;
 import org.geogit.api.NodeRef;
 import org.geogit.api.ObjectId;
 import org.geogit.api.RevFeature;
-import org.geogit.api.RevFeatureBuilder;
 import org.geogit.api.RevFeatureType;
 import org.geogit.api.RevObject;
 import org.geogit.api.RevObject.TYPE;
 import org.geogit.api.RevTree;
 import org.geogit.api.plumbing.FindTreeChild;
 import org.geogit.api.plumbing.ResolveTreeish;
-import org.geogit.api.plumbing.RevObjectParse;
 import org.geogit.api.plumbing.diff.DepthTreeIterator;
 import org.geogit.api.plumbing.diff.DepthTreeIterator.Strategy;
 import org.geogit.geotools.plumbing.GeoToolsOpException.StatusCode;
@@ -32,18 +35,28 @@ import org.geotools.data.DefaultTransaction;
 import org.geotools.data.Transaction;
 import org.geotools.data.simple.SimpleFeatureStore;
 import org.geotools.factory.Hints;
-import org.geotools.feature.DefaultFeatureCollection;
+import org.geotools.feature.FeatureCollection;
+import org.geotools.feature.FeatureIterator;
+import org.geotools.feature.collection.BaseFeatureCollection;
+import org.geotools.feature.collection.DelegateFeatureIterator;
 import org.opengis.feature.Feature;
 import org.opengis.feature.simple.SimpleFeature;
+import org.opengis.feature.simple.SimpleFeatureType;
 import org.opengis.feature.type.PropertyDescriptor;
+import org.opengis.util.ProgressListener;
 
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
-import com.google.common.base.Preconditions;
+import com.google.common.base.Predicate;
+import com.google.common.base.Predicates;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
+import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Iterators;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
+import com.google.common.collect.UnmodifiableIterator;
 import com.google.inject.Inject;
 
 /**
@@ -52,13 +65,7 @@ import com.google.inject.Inject;
  */
 public class ExportOp extends AbstractGeoGitOp<SimpleFeatureStore> {
 
-    private String path;
-
-    private Supplier<SimpleFeatureStore> featureStore;
-
-    private ObjectDatabase database;
-
-    private Function<Feature, Optional<Feature>> function = new Function<Feature, Optional<Feature>>() {
+    private static final Function<Feature, Optional<Feature>> IDENTITY = new Function<Feature, Optional<Feature>>() {
 
         @Override
         @Nullable
@@ -68,11 +75,21 @@ public class ExportOp extends AbstractGeoGitOp<SimpleFeatureStore> {
 
     };
 
-    private ObjectId featureTypeId;
+    private String path;
+
+    private Supplier<SimpleFeatureStore> targetStoreProvider;
+
+    private StagingDatabase database;
+
+    private Function<Feature, Optional<Feature>> function = IDENTITY;
+
+    private ObjectId filterFeatureTypeId;
 
     private boolean forceExportDefaultFeatureType;
 
     private boolean alter;
+
+    private boolean transactional;
 
     /**
      * Constructs a new export operation.
@@ -80,6 +97,7 @@ public class ExportOp extends AbstractGeoGitOp<SimpleFeatureStore> {
     @Inject
     public ExportOp(StagingDatabase database) {
         this.database = database;
+        this.transactional = true;
     }
 
     /**
@@ -91,166 +109,290 @@ public class ExportOp extends AbstractGeoGitOp<SimpleFeatureStore> {
     @Override
     public SimpleFeatureStore call() {
 
-        SimpleFeatureStore fs;
-        try {
-            fs = featureStore.get();
-        } catch (Exception e) {
-            throw new GeoToolsOpException(StatusCode.CANNOT_CREATE_FEATURESTORE);
-        }
-        if (fs == null) {
-            throw new GeoToolsOpException(StatusCode.CANNOT_CREATE_FEATURESTORE);
+        if (filterFeatureTypeId != null) {
+            RevObject filterType = database.getIfPresent(filterFeatureTypeId);
+            checkArgument(filterType instanceof RevFeatureType,
+                    "Provided filter feature type is does not exist");
         }
 
+        final SimpleFeatureStore targetStore = getTargetStore();
+
+        final String refspec = resolveRefSpec();
+        final String treePath = refspec.substring(refspec.indexOf(':') + 1);
+        final RevTree rootTree = resolveRootTree(refspec);
+        final NodeRef typeTreeRef = resolTypeTreeRef(refspec, treePath, rootTree);
+
+        final ObjectId defaultMetadataId = typeTreeRef.getMetadataId();
+
+        final RevTree typeTree = database.getTree(typeTreeRef.objectId());
+
+        final ProgressListener progressListener = getProgressListener();
+
+        progressListener.started();
+        progressListener.setDescription("Exporting " + path + "... ");
+
+        FeatureCollection<SimpleFeatureType, SimpleFeature> asFeatureCollection = new BaseFeatureCollection<SimpleFeatureType, SimpleFeature>() {
+
+            @Override
+            public FeatureIterator<SimpleFeature> features() {
+
+                final Iterator<SimpleFeature> plainFeatures = getFeatures(typeTree, database,
+                        defaultMetadataId, progressListener);
+
+                Iterator<SimpleFeature> adaptedFeatures = adaptToArguments(plainFeatures,
+                        defaultMetadataId);
+
+                Iterator<Optional<Feature>> transformed = Iterators.transform(adaptedFeatures,
+                        ExportOp.this.function);
+
+                Iterator<SimpleFeature> filtered = Iterators.filter(Iterators.transform(
+                        transformed, new Function<Optional<Feature>, SimpleFeature>() {
+                            @Override
+                            public SimpleFeature apply(Optional<Feature> input) {
+                                return (SimpleFeature) (input.isPresent() ? input.get() : null);
+                            }
+                        }), Predicates.notNull());
+
+                return new DelegateFeatureIterator<SimpleFeature>(filtered);
+            }
+        };
+
+        // add the feature collection to the feature store
+        final Transaction transaction;
+        if (transactional) {
+            transaction = new DefaultTransaction("create");
+        } else {
+            transaction = Transaction.AUTO_COMMIT;
+        }
+        try {
+            targetStore.setTransaction(transaction);
+            try {
+                targetStore.addFeatures(asFeatureCollection);
+                transaction.commit();
+            } catch (final Exception e) {
+                if (transactional) {
+                    transaction.rollback();
+                }
+                Throwables.propagateIfInstanceOf(e, GeoToolsOpException.class);
+                throw new GeoToolsOpException(e, StatusCode.UNABLE_TO_ADD);
+            } finally {
+                transaction.close();
+            }
+        } catch (IOException e) {
+            throw new GeoToolsOpException(e, StatusCode.UNABLE_TO_ADD);
+        }
+
+        progressListener.complete();
+
+        return targetStore;
+
+    }
+
+    private static Iterator<SimpleFeature> getFeatures(final RevTree typeTree,
+            final ObjectDatabase database, final ObjectId defaultMetadataId,
+            final ProgressListener progressListener) {
+
+        Iterator<NodeRef> nodes = new DepthTreeIterator("", defaultMetadataId, typeTree, database,
+                Strategy.FEATURES_ONLY);
+
+        // progress reporting
+        nodes = Iterators.transform(nodes, new Function<NodeRef, NodeRef>() {
+
+            private AtomicInteger count = new AtomicInteger();
+
+            @Override
+            public NodeRef apply(NodeRef input) {
+                progressListener.progress((count.incrementAndGet() * 100.f) / typeTree.size());
+                return input;
+            }
+        });
+
+        Function<NodeRef, SimpleFeature> asFeature = new Function<NodeRef, SimpleFeature>() {
+
+            private Map<ObjectId, FeatureBuilder> ftCache = Maps.newHashMap();
+
+            @Override
+            @Nullable
+            public SimpleFeature apply(final NodeRef input) {
+                final ObjectId metadataId = input.getMetadataId();
+                final RevFeature revFeature = database.getFeature(input.objectId());
+
+                FeatureBuilder featureBuilder = getBuilderFor(metadataId);
+                Feature feature = featureBuilder.build(input.name(), revFeature);
+                feature.getUserData().put(Hints.USE_PROVIDED_FID, true);
+                feature.getUserData().put(RevFeature.class, revFeature);
+                feature.getUserData().put(RevFeatureType.class, featureBuilder.getType());
+
+                if (feature instanceof SimpleFeature) {
+                    return (SimpleFeature) feature;
+                }
+                return null;
+            }
+
+            private FeatureBuilder getBuilderFor(final ObjectId metadataId) {
+                FeatureBuilder featureBuilder = ftCache.get(metadataId);
+                if (featureBuilder == null) {
+                    RevFeatureType revFtype = database.getFeatureType(metadataId);
+                    featureBuilder = new FeatureBuilder(revFtype);
+                    ftCache.put(metadataId, featureBuilder);
+                }
+                return featureBuilder;
+            }
+        };
+
+        Iterator<SimpleFeature> asFeatures = Iterators.transform(nodes, asFeature);
+
+        UnmodifiableIterator<SimpleFeature> filterNulls = Iterators.filter(asFeatures,
+                Predicates.notNull());
+
+        return filterNulls;
+    }
+
+    private Iterator<SimpleFeature> adaptToArguments(final Iterator<SimpleFeature> plainFeatures,
+            final ObjectId defaultMetadataId) {
+
+        Iterator<SimpleFeature> features = plainFeatures;
+
+        if (alter) {
+            ObjectId featureTypeId = this.filterFeatureTypeId == null ? defaultMetadataId
+                    : this.filterFeatureTypeId;
+            features = alter(features, featureTypeId);
+
+        } else if (forceExportDefaultFeatureType) {
+
+            features = filter(features, defaultMetadataId);
+
+        } else if (this.filterFeatureTypeId != null) {
+
+            features = filter(features, filterFeatureTypeId);
+
+        } else {
+
+            features = force(features, defaultMetadataId);
+
+        }
+
+        return features;
+    }
+
+    private Iterator<SimpleFeature> force(Iterator<SimpleFeature> plainFeatures,
+            final ObjectId forceMetadataId) {
+
+        return Iterators.filter(plainFeatures, new Predicate<SimpleFeature>() {
+            @Override
+            public boolean apply(SimpleFeature input) {
+                RevFeatureType type;
+                type = (RevFeatureType) input.getUserData().get(RevFeatureType.class);
+                ObjectId metadataId = type.getId();
+                if (!forceMetadataId.equals(metadataId)) {
+                    throw new GeoToolsOpException(StatusCode.MIXED_FEATURE_TYPES);
+                }
+                return true;
+            }
+        });
+    }
+
+    private Iterator<SimpleFeature> filter(Iterator<SimpleFeature> plainFeatures,
+            final ObjectId filterFeatureTypeId) {
+
+        return Iterators.filter(plainFeatures, new Predicate<SimpleFeature>() {
+            @Override
+            public boolean apply(SimpleFeature input) {
+                RevFeatureType type;
+                type = (RevFeatureType) input.getUserData().get(RevFeatureType.class);
+                ObjectId metadataId = type.getId();
+                boolean applies = filterFeatureTypeId.equals(metadataId);
+                return applies;
+            }
+        });
+    }
+
+    private Iterator<SimpleFeature> alter(Iterator<SimpleFeature> plainFeatures,
+            final ObjectId targetFeatureTypeId) {
+
+        final RevFeatureType targetType = database.getFeatureType(targetFeatureTypeId);
+
+        Function<SimpleFeature, SimpleFeature> alterFunction = new Function<SimpleFeature, SimpleFeature>() {
+            @Override
+            public SimpleFeature apply(SimpleFeature input) {
+                final RevFeatureType oldFeatureType;
+                oldFeatureType = (RevFeatureType) input.getUserData().get(RevFeatureType.class);
+
+                final ObjectId metadataId = oldFeatureType.getId();
+                if (targetType.getId().equals(metadataId)) {
+                    return input;
+                }
+
+                final RevFeature oldFeature;
+                oldFeature = (RevFeature) input.getUserData().get(RevFeature.class);
+
+                ImmutableList<PropertyDescriptor> oldAttributes = oldFeatureType
+                        .sortedDescriptors();
+                ImmutableList<PropertyDescriptor> newAttributes = targetType.sortedDescriptors();
+
+                ImmutableList<Optional<Object>> oldValues = oldFeature.getValues();
+                List<Optional<Object>> newValues = Lists.newArrayList();
+                for (int i = 0; i < newAttributes.size(); i++) {
+                    int idx = oldAttributes.indexOf(newAttributes.get(i));
+                    if (idx != -1) {
+                        Optional<Object> oldValue = oldValues.get(idx);
+                        newValues.add(oldValue);
+                    } else {
+                        newValues.add(Optional.absent());
+                    }
+                }
+                RevFeature newFeature = RevFeature.build(ImmutableList.copyOf(newValues));
+                FeatureBuilder featureBuilder = new FeatureBuilder(targetType);
+                SimpleFeature feature = (SimpleFeature) featureBuilder.build(input.getID(),
+                        newFeature);
+                return feature;
+            }
+        };
+        return Iterators.transform(plainFeatures, alterFunction);
+    }
+
+    private NodeRef resolTypeTreeRef(final String refspec, final String treePath,
+            final RevTree rootTree) {
+        Optional<NodeRef> typeTreeRef = command(FindTreeChild.class).setIndex(true)
+                .setParent(rootTree).setChildPath(treePath).call();
+        checkArgument(typeTreeRef.isPresent(), "Type tree %s does not exist", refspec);
+        checkArgument(TYPE.TREE.equals(typeTreeRef.get().getType()),
+                "%s did not resolve to a tree", refspec);
+        return typeTreeRef.get();
+    }
+
+    private RevTree resolveRootTree(final String refspec) {
+        Optional<ObjectId> rootTreeId = command(ResolveTreeish.class).setTreeish(
+                refspec.substring(0, refspec.indexOf(':'))).call();
+
+        checkArgument(rootTreeId.isPresent(), "Invalid tree spec: %s",
+                refspec.substring(0, refspec.indexOf(':')));
+
+        RevTree rootTree = database.getTree(rootTreeId.get());
+        return rootTree;
+    }
+
+    private String resolveRefSpec() {
         final String refspec;
         if (path.contains(":")) {
             refspec = path;
         } else {
             refspec = "WORK_HEAD:" + path;
         }
-        final String treePath = refspec.substring(refspec.indexOf(':') + 1);
-
-        Optional<ObjectId> tree = command(ResolveTreeish.class).setTreeish(
-                refspec.substring(0, refspec.indexOf(':'))).call();
-
-        Preconditions.checkArgument(tree.isPresent(), "Invalid tree spec: %s",
-                refspec.substring(0, refspec.indexOf(':')));
-
-        Optional<RevTree> revTree = command(RevObjectParse.class).setObjectId(tree.get()).call(
-                RevTree.class);
-
-        Preconditions.checkArgument(revTree.isPresent(), "Tree ref spec could not be resolved.");
-
-        Optional<NodeRef> typeTreeRef = command(FindTreeChild.class).setIndex(true)
-                .setParent(revTree.get()).setChildPath(treePath).call();
-
-        ObjectId parentMetadataId = null;
-        if (typeTreeRef.isPresent()) {
-            parentMetadataId = typeTreeRef.get().getMetadataId();
-        }
-
-        if (forceExportDefaultFeatureType || (alter && featureTypeId == null)) {
-            featureTypeId = parentMetadataId;
-        }
-
-        Optional<RevObject> revObject = command(RevObjectParse.class).setRefSpec(refspec).call(
-                RevObject.class);
-
-        Preconditions.checkArgument(revObject.isPresent(), "Invalid reference: %s", refspec);
-        Preconditions.checkArgument(revObject.get().getType() == TYPE.TREE,
-                "%s did not resolve to a tree", refspec);
-
-        DepthTreeIterator iter = new DepthTreeIterator(treePath, parentMetadataId,
-                (RevTree) revObject.get(), database, Strategy.FEATURES_ONLY);
-
-        // Create a FeatureCollection
-
-        getProgressListener().started();
-        getProgressListener().setDescription("Exporting " + path + "... ");
-        DefaultFeatureCollection features = new DefaultFeatureCollection();
-
-        boolean featureTypeWasSpecified = featureTypeId != null;
-        featureTypeId = featureTypeId == null ? parentMetadataId : featureTypeId;
-        FeatureBuilder featureBuilder = null;
-        // FeatureType featureType = null;
-        int i = 1;
-        while (iter.hasNext()) {
-            NodeRef nodeRef = iter.next();
-            if (nodeRef.getType() == TYPE.FEATURE) {
-                RevFeature revFeature = command(RevObjectParse.class)
-                        .setObjectId(nodeRef.objectId()).call(RevFeature.class).get();
-                if (!nodeRef.getMetadataId().equals(featureTypeId)) {
-                    // we skip features with a different feature type, but only if a featuretype was
-                    // specified. If alter is used, then we convert them
-                    if (!featureTypeWasSpecified) {
-                        throw new GeoToolsOpException(StatusCode.MIXED_FEATURE_TYPES);
-                    } else if (alter) {
-                        RevFeatureType revFeatureType = command(RevObjectParse.class)
-                                .setObjectId(featureTypeId).call(RevFeatureType.class).get();
-                        // featureType = revFeatureType.type();
-                        featureBuilder = new FeatureBuilder(revFeatureType);
-                        revFeature = new RevFeatureBuilder().build(alter(nodeRef, revFeatureType));
-                    } else {
-                        continue;
-                    }
-                }
-                if (featureBuilder == null) {
-                    RevFeatureType revFeatureType = command(RevObjectParse.class)
-                            .setObjectId(featureTypeId).call(RevFeatureType.class).get();
-                    // featureType = revFeatureType.type();
-                    featureBuilder = new FeatureBuilder(revFeatureType);
-                }
-                Feature feature = featureBuilder.build(nodeRef.getNode().getName(), revFeature);
-                feature.getUserData().put(Hints.USE_PROVIDED_FID, true);
-                Optional<Feature> validFeature = function.apply(feature);
-                if (validFeature.isPresent()) {
-                    features.add((SimpleFeature) validFeature.get());
-                }
-                getProgressListener().progress((i * 100.f) / revTree.get().size());
-                i++;
-            }
-        }
-
-        if (featureBuilder == null) {
-            throw new GeoToolsOpException(StatusCode.UNABLE_TO_GET_FEATURES);
-        }
-
-        // add the feature collection to the feature store
-        final Transaction transaction = new DefaultTransaction("create");
-        try {
-            fs.setTransaction(transaction);
-            try {
-                fs.addFeatures(features);
-                transaction.commit();
-            } catch (final Exception e) {
-                transaction.rollback();
-                throw new GeoToolsOpException(StatusCode.UNABLE_TO_ADD);
-            } finally {
-                features = null;
-                transaction.close();
-            }
-        } catch (IOException e) {
-            throw new GeoToolsOpException(StatusCode.UNABLE_TO_ADD);
-        }
-
-        getProgressListener().complete();
-
-        return fs;
-
+        return refspec;
     }
 
-    /**
-     * Translates a feature pointed by a node from its original feature type to a given one, using
-     * values from those attributes that exist in both original and destination feature type. New
-     * attributes are populated with null values
-     * 
-     * @param node The node that points to the feature. No checking is performed to ensure the node
-     *        points to a feature instead of other type
-     * @param featureType the destination feature type
-     * @return a feature with the passed feature type and data taken from the input feature
-     */
-    private Feature alter(NodeRef node, RevFeatureType featureType) {
-        RevFeature oldFeature = command(RevObjectParse.class).setObjectId(node.objectId())
-                .call(RevFeature.class).get();
-        RevFeatureType oldFeatureType;
-        oldFeatureType = command(RevObjectParse.class).setObjectId(node.getMetadataId())
-                .call(RevFeatureType.class).get();
-        ImmutableList<PropertyDescriptor> oldAttributes = oldFeatureType.sortedDescriptors();
-        ImmutableList<PropertyDescriptor> newAttributes = featureType.sortedDescriptors();
-        ImmutableList<Optional<Object>> oldValues = oldFeature.getValues();
-        List<Optional<Object>> newValues = Lists.newArrayList();
-        for (int i = 0; i < newAttributes.size(); i++) {
-            int idx = oldAttributes.indexOf(newAttributes.get(i));
-            if (idx != -1) {
-                Optional<Object> oldValue = oldValues.get(idx);
-                newValues.add(oldValue);
-            } else {
-                newValues.add(Optional.absent());
-            }
+    private SimpleFeatureStore getTargetStore() {
+        SimpleFeatureStore targetStore;
+        try {
+            targetStore = targetStoreProvider.get();
+        } catch (Exception e) {
+            throw new GeoToolsOpException(StatusCode.CANNOT_CREATE_FEATURESTORE);
         }
-        RevFeature newFeature = RevFeature.build(ImmutableList.copyOf(newValues));
-        FeatureBuilder featureBuilder = new FeatureBuilder(featureType);
-        Feature feature = featureBuilder.build(node.name(), newFeature);
-        return feature;
+        if (targetStore == null) {
+            throw new GeoToolsOpException(StatusCode.CANNOT_CREATE_FEATURESTORE);
+        }
+        return targetStore;
     }
 
     /**
@@ -259,7 +401,7 @@ public class ExportOp extends AbstractGeoGitOp<SimpleFeatureStore> {
      * @return
      */
     public ExportOp setFeatureStore(Supplier<SimpleFeatureStore> featureStore) {
-        this.featureStore = featureStore;
+        this.targetStoreProvider = featureStore;
         return this;
     }
 
@@ -269,7 +411,7 @@ public class ExportOp extends AbstractGeoGitOp<SimpleFeatureStore> {
      * @return
      */
     public ExportOp setFeatureStore(SimpleFeatureStore featureStore) {
-        this.featureStore = Suppliers.ofInstance(featureStore);
+        this.targetStoreProvider = Suppliers.ofInstance(featureStore);
         return this;
     }
 
@@ -289,8 +431,8 @@ public class ExportOp extends AbstractGeoGitOp<SimpleFeatureStore> {
      *        will be throw to warn about it
      * @return {@code this}
      */
-    public ExportOp setFeatureTypeId(ObjectId featureTypeId) {
-        this.featureTypeId = featureTypeId;
+    public ExportOp setFilterFeatureTypeId(ObjectId featureTypeId) {
+        this.filterFeatureTypeId = featureTypeId;
         return this;
     }
 
@@ -341,7 +483,16 @@ public class ExportOp extends AbstractGeoGitOp<SimpleFeatureStore> {
      * @return {@code this}
      */
     public ExportOp setFeatureTypeConversionFunction(Function<Feature, Optional<Feature>> function) {
-        this.function = function;
+        this.function = function == null ? IDENTITY : function;
+        return this;
+    }
+
+    /**
+     * @param transactional whether to use a geotools transaction for the operation, defaults to
+     *        {@code true}
+     */
+    public ExportOp setTransactional(boolean transactional) {
+        this.transactional = transactional;
         return this;
     }
 }

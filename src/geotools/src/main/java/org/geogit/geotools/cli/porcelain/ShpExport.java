@@ -89,7 +89,8 @@ public class ShpExport extends AbstractShpCommand implements CLICommand {
 
         Map<String, Serializable> params = new HashMap<String, Serializable>();
         params.put(ShapefileDataStoreFactory.URLP.key, new File(shapefile).toURI().toURL());
-        params.put(ShapefileDataStoreFactory.CREATE_SPATIAL_INDEX.key, Boolean.TRUE);
+        params.put(ShapefileDataStoreFactory.CREATE_SPATIAL_INDEX.key, Boolean.FALSE);
+        params.put(ShapefileDataStoreFactory.ENABLE_SPATIAL_INDEX.key, Boolean.FALSE);
 
         ShapefileDataStore dataStore = (ShapefileDataStore) dataStoreFactory
                 .createNewDataStore(params);
@@ -126,7 +127,9 @@ public class ShpExport extends AbstractShpCommand implements CLICommand {
         }
         final SimpleFeatureStore featureStore = (SimpleFeatureStore) featureSource;
         ExportOp op = cli.getGeogit().command(ExportOp.class).setFeatureStore(featureStore)
-                .setPath(path).setFeatureTypeId(featureTypeId).setAlter(alter);
+                .setPath(path).setFilterFeatureTypeId(featureTypeId).setAlter(alter);
+        // shapefile transactions are memory bound, so avoid them
+        op.setTransactional(false);
         if (defaultType) {
             op.exportDefaultFeatureType();
         }

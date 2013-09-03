@@ -138,7 +138,7 @@ public class PGExport extends AbstractPGCommand implements CLICommand {
                 }
             }
             ExportOp op = cli.getGeogit().command(ExportOp.class).setFeatureStore(featureStore)
-                    .setPath(path).setFeatureTypeId(featureTypeId).setAlter(alter);
+                    .setPath(path).setFilterFeatureTypeId(featureTypeId).setAlter(alter);
             if (defaultType) {
                 op.exportDefaultFeatureType();
             }
