@@ -19,6 +19,7 @@ import static org.junit.Assert.fail;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.IOException;
+import java.nio.charset.Charset;
 import java.util.List;
 import java.util.Map;
 
@@ -233,6 +234,16 @@ public class InitSteps extends AbstractGeogitFunctionalTest {
         geogit.command(CommitOp.class).call();
 
         geogit.command(CheckoutOp.class).setSource("master").call();
+    }
+
+    @Given("^I set up a hook$")
+    public void I_set_up_a_hook() throws Throwable {
+        File hooksDir = new File(currentDirectory, ".geogit/hooks");
+        File hook = new File(hooksDir, "pre_commit.py");
+        String script = "if len(params['message']) < 5:\n"
+                + "\tconsole.println('Commit messages must have at least 5 letters')\n"
+                + "\tresult = False";
+        Files.write(script, hook, Charset.forName("UTF-8"));
     }
 
     @Given("^there is a remote repository$")

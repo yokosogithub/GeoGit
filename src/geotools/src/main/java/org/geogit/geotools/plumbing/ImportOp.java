@@ -18,6 +18,7 @@ import org.geogit.api.RevTree;
 import org.geogit.api.plumbing.LsTreeOp;
 import org.geogit.api.plumbing.LsTreeOp.Strategy;
 import org.geogit.api.plumbing.RevObjectParse;
+import org.geogit.api.hooks.Hookable;
 import org.geogit.geotools.plumbing.GeoToolsOpException.StatusCode;
 import org.geotools.data.DataStore;
 import org.geotools.data.simple.SimpleFeatureCollection;
@@ -46,6 +47,7 @@ import com.google.inject.Inject;
  * 
  * @see DataStore
  */
+@Hookable(name = "import")
 public class ImportOp extends AbstractGeoGitOp<RevTree> {
 
     private boolean all = false;

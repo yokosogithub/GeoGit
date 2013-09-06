@@ -38,3 +38,4 @@ Contents:
   console
   osm
   web-api
+  hooks
