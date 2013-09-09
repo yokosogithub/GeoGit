@@ -239,10 +239,12 @@ public class InitSteps extends AbstractGeogitFunctionalTest {
     @Given("^I set up a hook$")
     public void I_set_up_a_hook() throws Throwable {
         File hooksDir = new File(currentDirectory, ".geogit/hooks");
-        File hook = new File(hooksDir, "pre_commit.py");
-        String script = "if len(params['message']) < 5:\n"
-                + "\tconsole.println('Commit messages must have at least 5 letters')\n"
-                + "\tresult = False";
+        File hook = new File(hooksDir, "pre_commit.js");
+        String script = "exception = Packages.org.geogit.api.hooks.CannotRunGeogitOperationException;\n"
+                + "msg = params.get(\"message\");\n"
+                + "if (msg.length() < 5){\n"
+                + "\tthrow new exception(\"Commit messages must have at least 5 letters\");\n"
+                + "}\n" + "params.put(\"message\", msg.toLowerCase());";
         Files.write(script, hook, Charset.forName("UTF-8"));
     }
 

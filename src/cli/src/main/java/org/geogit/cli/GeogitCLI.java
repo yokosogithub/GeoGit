@@ -48,6 +48,7 @@ import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Key;
 import com.google.inject.Module;
+
 //import org.python.core.exceptions;
 
 /**
@@ -284,6 +285,10 @@ public class GeogitCLI {
 
             consoleMessage = paramValidationError.getMessage();
 
+        } catch (CannotRunGeogitOperationException cannotRun) {
+
+            consoleMessage = cannotRun.getMessage();
+
         } catch (CommandFailedException cmdFailed) {
             if (null == cmdFailed.getMessage()) {
                 // this is intentional, see the javadoc for CommandFailedException
@@ -319,7 +324,7 @@ public class GeogitCLI {
      * @throws exceptions thrown by the executed commands.
      */
     public void execute(String... args) throws ParameterException, CommandFailedException,
-            IOException {
+            IOException, CannotRunGeogitOperationException {
 
         JCommander mainCommander = newCommandParser();
         if (null == args || args.length == 0) {
