@@ -20,7 +20,6 @@ import org.geogit.api.RevFeatureType;
 import org.geogit.api.RevObject;
 import org.geogit.api.RevObject.TYPE;
 import org.geogit.api.RevTree;
-import org.geogit.api.hooks.Hookable;
 import org.geogit.api.plumbing.FindTreeChild;
 import org.geogit.api.plumbing.ResolveTreeish;
 import org.geogit.api.plumbing.RevObjectParse;
@@ -51,7 +50,7 @@ import com.google.inject.Inject;
  * Internal operation for creating a FeatureCollection from a tree content.
  * 
  */
-@Hookable(name = "export")
+
 public class ExportOp extends AbstractGeoGitOp<SimpleFeatureStore> {
 
     private String path;
