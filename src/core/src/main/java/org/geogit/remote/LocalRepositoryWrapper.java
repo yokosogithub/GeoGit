@@ -34,7 +34,7 @@ class LocalRepositoryWrapper implements RepositoryWrapper {
      */
     @Override
     public boolean objectExists(ObjectId objectId) {
-        return localRepository.getObjectDatabase().exists(objectId);
+        return objectId.isNull() || localRepository.getObjectDatabase().exists(objectId);
     }
 
     /**
