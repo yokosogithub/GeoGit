@@ -40,9 +40,13 @@ public abstract class BlueprintsGraphDatabase<DB extends IndexableGraph & Transa
         extends AbstractGraphDatabase {
 
     protected DB graphDB = null;
+
     protected String dbPath;
+
     protected static Map<String, ServiceContainer<?>> databaseServices = new ConcurrentHashMap<String, ServiceContainer<?>>();
+
     protected final Platform platform;
+
     private Vertex root;
 
     protected enum CommitRelationshipTypes implements RelationshipType {
@@ -50,8 +54,7 @@ public abstract class BlueprintsGraphDatabase<DB extends IndexableGraph & Transa
     }
 
     /**
-     * Container class for the database service to keep track of reference
-     * counts.
+     * Container class for the database service to keep track of reference counts.
      */
     static protected class ServiceContainer<DB extends Graph> {
         private DB dbService;
@@ -179,8 +182,8 @@ public abstract class BlueprintsGraphDatabase<DB extends IndexableGraph & Transa
     protected abstract DB getGraphDatabase();
 
     /**
-     * Destroy the graph database service. This will only happen when the ref
-     * count for the database service is 0.
+     * Destroy the graph database service. This will only happen when the ref count for the database
+     * service is 0.
      */
     protected void destroyGraphDatabase() {
         File graphPath = new File(dbPath);
@@ -217,8 +220,7 @@ public abstract class BlueprintsGraphDatabase<DB extends IndexableGraph & Transa
     /**
      * Determines if the given commit exists in the graph database.
      * 
-     * @param commitId
-     *            the commit id to search for
+     * @param commitId the commit id to search for
      * @return true if the commit exists, false otherwise
      */
     @Override
@@ -255,8 +257,7 @@ public abstract class BlueprintsGraphDatabase<DB extends IndexableGraph & Transa
     /**
      * Retrieves all of the parents for the given commit.
      * 
-     * @param commitid
-     *            the commit whose parents should be returned
+     * @param commitid the commit whose parents should be returned
      * @return a list of the parents of the provided commit
      * @throws IllegalArgumentException
      */
@@ -295,8 +296,7 @@ public abstract class BlueprintsGraphDatabase<DB extends IndexableGraph & Transa
     /**
      * Retrieves all of the children for the given commit.
      * 
-     * @param commitid
-     *            the commit whose children should be returned
+     * @param commitid the commit whose children should be returned
      * @return a list of the children of the provided commit
      * @throws IllegalArgumentException
      */
@@ -333,17 +333,16 @@ public abstract class BlueprintsGraphDatabase<DB extends IndexableGraph & Transa
     }
 
     /**
-     * Adds a commit to the database with the given parents. If a commit with
-     * the same id already exists, it will not be inserted.
+     * Adds a commit to the database with the given parents. If a commit with the same id already
+     * exists, it will not be inserted.
      * 
-     * @param commitId
-     *            the commit id to insert
-     * @param parentIds
-     *            the commit ids of the commit's parents
-     * @return true if the commit id was inserted, false otherwise
+     * @param commitId the commit id to insert
+     * @param parentIds the commit ids of the commit's parents
+     * @return true if the commit id was inserted or updated, false if it was already there
      */
     @Override
     public boolean put(ObjectId commitId, ImmutableList<ObjectId> parentIds) {
+        boolean updated = false;
         try {
             // See if it already exists
             Vertex commitNode = getOrAddNode(commitId);
@@ -354,10 +353,9 @@ public abstract class BlueprintsGraphDatabase<DB extends IndexableGraph & Transa
                                 CommitRelationshipTypes.TOROOT.name()).iterator().hasNext()) {
                     // Attach this node to the root node
                     commitNode.addEdge(CommitRelationshipTypes.TOROOT.name(), root);
+                    updated = true;
                 }
-            }
-
-            if (!commitNode
+            } else if (!commitNode
                     .getEdges(com.tinkerpop.blueprints.Direction.OUT,
                             CommitRelationshipTypes.PARENT.name()).iterator().hasNext()) {
                 // Don't make relationships if they have been created already
@@ -365,23 +363,21 @@ public abstract class BlueprintsGraphDatabase<DB extends IndexableGraph & Transa
                     Vertex parentNode = getOrAddNode(parent);
                     commitNode.addEdge(CommitRelationshipTypes.PARENT.name(), parentNode);
                 }
+                updated = true;
             }
             graphDB.commit();
         } catch (Exception e) {
             graphDB.rollback();
             throw Throwables.propagate(e);
         }
-        return true;
+        return updated;
     }
 
     /**
-     * Maps a commit to another original commit. This is used in sparse
-     * repositories.
+     * Maps a commit to another original commit. This is used in sparse repositories.
      * 
-     * @param mapped
-     *            the id of the mapped commit
-     * @param original
-     *            the commit to map to
+     * @param mapped the id of the mapped commit
+     * @param original the commit to map to
      */
     @Override
     public void map(final ObjectId mapped, final ObjectId original) {
@@ -413,8 +409,7 @@ public abstract class BlueprintsGraphDatabase<DB extends IndexableGraph & Transa
     /**
      * Gets the id of the commit that this commit is mapped to.
      * 
-     * @param commitId
-     *            the commit to find the mapping of
+     * @param commitId the commit to find the mapping of
      * @return the mapped commit id
      */
     public ObjectId getMapping(final ObjectId commitId) {
@@ -454,8 +449,8 @@ public abstract class BlueprintsGraphDatabase<DB extends IndexableGraph & Transa
     }
 
     /**
-     * Gets a node or adds it if it doesn't exist. Note, this must be called
-     * within a {@link Transaction}.
+     * Gets a node or adds it if it doesn't exist. Note, this must be called within a
+     * {@link Transaction}.
      * 
      * @param commitId
      * @return
@@ -484,11 +479,10 @@ public abstract class BlueprintsGraphDatabase<DB extends IndexableGraph & Transa
     }
 
     /**
-     * Gets the number of ancestors of the commit until it reaches one with no
-     * parents, for example the root or an orphaned commit.
+     * Gets the number of ancestors of the commit until it reaches one with no parents, for example
+     * the root or an orphaned commit.
      * 
-     * @param commitId
-     *            the commit id to start from
+     * @param commitId the commit id to start from
      * @return the depth of the commit
      */
     @Override
@@ -556,13 +550,11 @@ public abstract class BlueprintsGraphDatabase<DB extends IndexableGraph & Transa
     }
 
     /**
-     * Determines if there are any sparse commits between the start commit and
-     * the end commit, not including the end commit.
+     * Determines if there are any sparse commits between the start commit and the end commit, not
+     * including the end commit.
      * 
-     * @param start
-     *            the start commit
-     * @param end
-     *            the end commit
+     * @param start the start commit
+     * @param end the end commit
      * @return true if there are any sparse commits between start and end
      */
     public boolean isSparsePath(final ObjectId start, final ObjectId end) {
@@ -626,8 +618,7 @@ public abstract class BlueprintsGraphDatabase<DB extends IndexableGraph & Transa
     /**
      * Set a property on the provided commit node.
      * 
-     * @param commitId
-     *            the id of the commit
+     * @param commitId the id of the commit
      */
     public void setProperty(ObjectId commitId, String propertyName, String propertyValue) {
         com.tinkerpop.blueprints.Index<Vertex> idIndex = graphDB.getIndex("identifiers",
@@ -649,13 +640,10 @@ public abstract class BlueprintsGraphDatabase<DB extends IndexableGraph & Transa
     /**
      * Finds the lowest common ancestor of two commits.
      * 
-     * @param leftId
-     *            the commit id of the left commit
-     * @param rightId
-     *            the commit id of the right commit
-     * @return An {@link Optional} of the lowest common ancestor of the two
-     *         commits, or {@link Optional#absent()} if a common ancestor could
-     *         not be found.
+     * @param leftId the commit id of the left commit
+     * @param rightId the commit id of the right commit
+     * @return An {@link Optional} of the lowest common ancestor of the two commits, or
+     *         {@link Optional#absent()} if a common ancestor could not be found.
      */
     @Override
     public Optional<ObjectId> findLowestCommonAncestor(ObjectId leftId, ObjectId rightId) {
