@@ -11,6 +11,7 @@ import java.net.URL;
 import org.geogit.api.AbstractGeoGitOp;
 import org.geogit.api.Platform;
 
+import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
 import com.google.inject.Inject;
 
@@ -67,6 +68,9 @@ public class ResolveGeogitDir extends AbstractGeoGitOp<URL> {
                 return file.toURI().toURL();
             }
             File[] contents = file.listFiles();
+            Preconditions.checkNotNull(contents,
+                    "Either '%s' is not a directory or an I/O error ocurred listing its contents",
+                    file.getAbsolutePath());
             for (File dir : contents) {
                 if (dir.isDirectory() && dir.getName().equals(".geogit")) {
                     return lookupGeogitDirectory(dir);
