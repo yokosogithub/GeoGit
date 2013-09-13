@@ -211,6 +211,9 @@ public class GeogitConsole {
         while (true) {
             try {
                 String line = consoleReader.readLine();
+                if(line == null){
+                    return;
+                }
                 if (line.trim().length() == 0) {
                     continue;
                 }
