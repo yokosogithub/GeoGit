@@ -246,7 +246,7 @@ public class FileObjectDatabase extends AbstractObjectDatabase implements Object
     }
 
     @Override
-    public void deleteAll(Iterator<ObjectId> ids) {
+    public long deleteAll(Iterator<ObjectId> ids) {
         throw new UnsupportedOperationException(
                 "This method is not yet implemented");        
     }

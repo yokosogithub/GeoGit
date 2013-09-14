@@ -30,6 +30,8 @@ import org.geogit.api.porcelain.CommitOp;
 import org.geogit.storage.ObjectDatabase;
 import org.geogit.storage.StagingDatabase;
 import org.opengis.util.ProgressListener;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
@@ -65,6 +67,8 @@ import com.google.inject.Inject;
  * @see DeepMove
  */
 public class WriteTree2 extends AbstractGeoGitOp<ObjectId> {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(WriteTree2.class);
 
     private ObjectDatabase repositoryDatabase;
 
@@ -157,7 +161,7 @@ public class WriteTree2 extends AbstractGeoGitOp<ObjectId> {
         ObjectId newRootId = newRoot.getId();
 
         sw.stop();
-        info("WriteTree2 took %s", sw);
+        LOGGER.debug("WriteTree2 took {}", sw);
         return newRootId;
     }
 
@@ -221,7 +225,7 @@ public class WriteTree2 extends AbstractGeoGitOp<ObjectId> {
                     leftTree.forceChild(ref.getParentPath(), newNode);
                 }
             } else {
-                debug("Creating new tree %s", path);
+                LOGGER.trace("Creating new tree {}", path);
                 deepMove(ref.getNode());
                 MutableTree leftTree = treeDifference.getLeftTree();
                 String parentPath = ref.getParentPath();
@@ -255,7 +259,7 @@ public class WriteTree2 extends AbstractGeoGitOp<ObjectId> {
             if (!filterMatchesOrIsParent(newPath)) {
                 continue;// filter doesn't apply to the renamed tree as a whole
             }
-            debug("Handling rename of %s as %s", oldValue.path(), newPath);
+            LOGGER.trace("Handling rename of {} as {}", oldValue.path(), newPath);
             MutableTree leftTree = treeDifference.getLeftTree();
             leftTree.removeChild(oldValue.path());
             leftTree.setChild(newValue.getParentPath(), newValue.getNode());

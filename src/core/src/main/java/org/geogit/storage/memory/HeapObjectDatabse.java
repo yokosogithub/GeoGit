@@ -137,10 +137,15 @@ public class HeapObjectDatabse extends AbstractObjectDatabase implements ObjectD
     }
 
     @Override
-    public void deleteAll(Iterator<ObjectId> ids) {
-        while(ids.hasNext()){
-            this.objects.remove(ids.next());
+    public long deleteAll(Iterator<ObjectId> ids) {
+        long count = 0;
+        while (ids.hasNext()) {
+            byte[] removed = this.objects.remove(ids.next());
+            if (removed != null) {
+                count++;
+            }
         }
+        return count;
     }
 
 }

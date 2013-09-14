@@ -130,6 +130,8 @@ public class GeogitConsole {
         consoleReader.getTerminal().setEchoEnabled(true);
 
         final GeogitCLI cli = new GeogitCLI(consoleReader);
+        cli.tryConfigureLogging();
+        
         final JCommander globalCommandParser = cli.newCommandParser();
 
         final Map<String, JCommander> commands = globalCommandParser.getCommands();

@@ -156,6 +156,6 @@ public interface ObjectDatabase {
      */
     public void putAll(Iterator<? extends RevObject> objects);
 
-    public void deleteAll(Iterator<ObjectId> ids);
+    public long deleteAll(Iterator<ObjectId> ids);
 
 }
