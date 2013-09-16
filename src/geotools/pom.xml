@@ -63,11 +63,10 @@
       <version>${gt.version}</version>
     </dependency>
       
-      <dependency>
-          <groupId>org.xerial</groupId>
-          <artifactId>sqlite-jdbc</artifactId>
-          <version>3.7.2</version>
-      </dependency>
+    <dependency>
+      <groupId>org.xerial</groupId>
+      <artifactId>sqlite-jdbc</artifactId>
+    </dependency>
 
     <dependency>
       <groupId>org.ini4j</groupId>
@@ -78,14 +77,12 @@
       <!-- http://jcommander.org/ -->
       <groupId>com.beust</groupId>
       <artifactId>jcommander</artifactId>
-      <version>1.27</version>
     </dependency>
 
     <dependency>
       <!-- https://github.com/jline/jline2 -->
       <groupId>jline</groupId>
       <artifactId>jline</artifactId>
-      <version>2.6</version>
     </dependency>
 
     <!-- Test scope dependencies -->
@@ -142,7 +139,6 @@
         <dependency>
           <groupId>com.microsoft</groupId>
           <artifactId>sqljdbc4</artifactId> 
-          <version>3.0</version>
         </dependency>
       </dependencies>
     </profile>
@@ -152,7 +148,6 @@
         <dependency>
           <groupId>com.microsoft</groupId>
           <artifactId>sqljdbc4</artifactId>
-          <version>3.0</version>
         </dependency>
       </dependencies>
       <build>
