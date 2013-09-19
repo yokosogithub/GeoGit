@@ -269,6 +269,9 @@ public class GeogitCLI {
         // some logging events before having configured logging
         final URL geogitDirUrl = new ResolveGeogitDir(getPlatform()).call();
         if (geogitDirUrl == null) {
+            // redirect java.util.logging to SLF4J anyways
+            SLF4JBridgeHandler.removeHandlersForRootLogger();
+            SLF4JBridgeHandler.install();
             return;
         }
         if (!"file".equalsIgnoreCase(geogitDirUrl.getProtocol())) {
