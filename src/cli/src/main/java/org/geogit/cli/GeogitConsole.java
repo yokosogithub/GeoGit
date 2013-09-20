@@ -24,6 +24,8 @@ import jline.console.completer.StringsCompleter;
 import org.geogit.api.Ref;
 import org.geogit.api.SymRef;
 import org.geogit.api.plumbing.RefParse;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.ParameterDescription;
@@ -38,6 +40,8 @@ import com.google.common.io.Files;
  * the command line interface.
  */
 public class GeogitConsole {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(GeogitConsole.class);
 
     /**
      * Constructs the GeogitConsole
@@ -131,7 +135,7 @@ public class GeogitConsole {
 
         final GeogitCLI cli = new GeogitCLI(consoleReader);
         cli.tryConfigureLogging();
-        
+
         final JCommander globalCommandParser = cli.newCommandParser();
 
         final Map<String, JCommander> commands = globalCommandParser.getCommands();
@@ -213,7 +217,7 @@ public class GeogitConsole {
         while (true) {
             try {
                 String line = consoleReader.readLine();
-                if(line == null){
+                if (line == null) {
                     return;
                 }
                 if (line.trim().length() == 0) {
@@ -234,16 +238,21 @@ public class GeogitConsole {
                 cli.execute(args);
                 setPrompt(cli);// in case HEAD has changed
             } catch (ParameterException pe) {
-                consoleReader.print("Error: " + pe.getMessage());
-                consoleReader.println();
-            } catch (IllegalArgumentException e) {
-                consoleReader.print(Optional.fromNullable(e.getMessage()).or("Uknown error"));
-                consoleReader.println();
-            } catch (IllegalStateException e) {
-                consoleReader.print(Optional.fromNullable(e.getMessage()).or("Uknown error"));
-                consoleReader.println();
+                consoleReader.println(Optional.fromNullable(pe.getMessage()).or(
+                        "Unknown parameter error."));
+                LOGGER.info("Parameter exception", pe);
+            } catch (CommandFailedException ce) {
+                String msg = "Command failed. "
+                        + Optional.fromNullable(ce.getMessage()).or(
+                                "Unknown reason. Check logs for detail.");
+                consoleReader.println(msg);
+                LOGGER.error(msg, ce);
             } catch (Exception e) {
-                throw Throwables.propagate(e);
+                String msg = String.format(
+                        "An unhandled error occurred: %s. See the log for more details.",
+                        e.getMessage());
+                LOGGER.error(msg, e);
+                consoleReader.println(msg);
             }
         }
     }
