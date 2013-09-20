@@ -15,6 +15,7 @@ import org.geogit.cli.InvalidParameterException;
 import org.geogit.geotools.plumbing.GeoToolsOpException;
 import org.geogit.geotools.plumbing.ImportOp;
 import org.geotools.data.DataStore;
+import org.opengis.feature.type.AttributeDescriptor;
 import org.opengis.util.ProgressListener;
 
 import com.beust.jcommander.Parameter;
@@ -56,6 +57,12 @@ public class ShpImport extends AbstractShpCommand implements CLICommand {
     String destTable;
 
     /**
+     * The attribute to use to create the feature Id
+     */
+    @Parameter(names = { "--fid-attrib" }, description = "Use the specified attribute to create the feature Id")
+    String fidAttribute;
+
+    /**
      * Executes the import command using the provided options.
      */
     @Override
@@ -72,6 +79,14 @@ public class ShpImport extends AbstractShpCommand implements CLICommand {
                         "The shapefile '" + shp + "' could not be found, skipping...");
                 continue;
             }
+            if (fidAttribute != null) {
+                AttributeDescriptor attrib = dataStore.getSchema(dataStore.getNames().get(0))
+                        .getDescriptor(fidAttribute);
+                if (attrib == null) {
+                    throw new InvalidParameterException(
+                            "The specified attribute does not exist in the selected shapefile");
+                }
+            }
 
             try {
                 cli.getConsole().println("Importing from shapefile " + shp);
@@ -79,7 +94,7 @@ public class ShpImport extends AbstractShpCommand implements CLICommand {
                 ProgressListener progressListener = cli.getProgressListener();
                 cli.getGeogit().command(ImportOp.class).setAll(true).setTable(null).setAlter(alter)
                         .setOverwrite(!add).setDestinationPath(destTable).setDataStore(dataStore)
-                        .setProgressListener(progressListener).call();
+                        .setFidAttribute(fidAttribute).setProgressListener(progressListener).call();
 
                 cli.getConsole().println(shp + " imported successfully.");
             } catch (GeoToolsOpException e) {

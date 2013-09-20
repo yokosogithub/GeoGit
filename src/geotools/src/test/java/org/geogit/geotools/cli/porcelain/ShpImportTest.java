@@ -150,4 +150,25 @@ public class ShpImportTest extends Assert {
 
         cli.setPlatform(platform);
     }
+
+    public void testImportWithFidAttribute() throws Exception {
+        ShpImport importCommand = new ShpImport();
+        importCommand.shapeFile = new ArrayList<String>();
+        importCommand.shapeFile.add(ShpImport.class.getResource("shape.shp").getFile());
+        importCommand.dataStoreFactory = TestHelper.createTestFactory();
+        importCommand.fidAttribute = "label";
+        importCommand.run(cli);
+    }
+
+    @Test
+    public void testImportWithWrongFidAttribute() throws Exception {
+        ShpImport importCommand = new ShpImport();
+        importCommand.shapeFile = new ArrayList<String>();
+        importCommand.shapeFile.add(ShpImport.class.getResource("shape.shp").getFile());
+        importCommand.dataStoreFactory = TestHelper.createTestFactory();
+        importCommand.fidAttribute = "wrong";
+        exception.expect(InvalidParameterException.class);
+        importCommand.run(cli);
+    }
+
 }

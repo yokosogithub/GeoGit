@@ -207,6 +207,12 @@ public class ImportOpTest extends RepositoryTestCase {
             set.add(node.getMetadataId());
         }
         assertEquals(3, set.size());
+        for (ObjectId metadataId : set) {
+            Optional<RevFeatureType> ft = geogit.command(RevObjectParse.class)
+                    .setObjectId(metadataId).call(RevFeatureType.class);
+            assertTrue(ft.isPresent());
+            assertEquals("dest", ft.get().getName().getLocalPart());
+        }
     }
 
     @Test
@@ -215,7 +221,7 @@ public class ImportOpTest extends RepositoryTestCase {
         builder.setCRS(CRS.decode("EPSG:4326"));
         builder.add("geom", Point.class);
         builder.add("label", String.class);
-        builder.setName("table1");
+        builder.setName("dest");
         SimpleFeatureType type = builder.buildFeatureType();
         GeometryFactory gf = new GeometryFactory();
         SimpleFeature feature = SimpleFeatureBuilder.build(type,
@@ -231,7 +237,12 @@ public class ImportOpTest extends RepositoryTestCase {
         ArrayList<NodeRef> list = Lists.newArrayList(features);
         assertEquals(5, list.size());
         TreeSet<ObjectId> set = Sets.newTreeSet();
+        ArrayList<RevFeatureType> ftlist = new ArrayList<RevFeatureType>();
         for (NodeRef node : list) {
+            Optional<RevFeatureType> ft = geogit.command(RevObjectParse.class)
+                    .setObjectId(node.getMetadataId()).call(RevFeatureType.class);
+            assertTrue(ft.isPresent());
+            ftlist.add(ft.get());
             set.add(node.getMetadataId());
         }
         assertEquals(3, set.size());
@@ -287,7 +298,8 @@ public class ImportOpTest extends RepositoryTestCase {
         Optional<RevFeatureType> featureType = geogit.command(RevObjectParse.class)
                 .setObjectId(set.iterator().next()).call(RevFeatureType.class);
         assertTrue(featureType.isPresent());
-        assertEquals("table2", featureType.get().getName().getLocalPart());
+        assertEquals("table1", featureType.get().getName().getLocalPart());
+        assertEquals("name", featureType.get().sortedDescriptors().get(1).getName().getLocalPart());
     }
 
     @Test
