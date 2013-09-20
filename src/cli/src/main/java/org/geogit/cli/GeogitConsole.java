@@ -241,6 +241,10 @@ public class GeogitConsole {
                 consoleReader.println(Optional.fromNullable(pe.getMessage()).or(
                         "Unknown parameter error."));
                 LOGGER.info("Parameter exception", pe);
+            } catch (InvalidParameterException ipe) {
+                consoleReader.println(Optional.fromNullable(ipe.getMessage()).or(
+                        "Unknown parameter error."));
+                LOGGER.info("Parameter exception", ipe);
             } catch (CommandFailedException ce) {
                 String msg = "Command failed. "
                         + Optional.fromNullable(ce.getMessage()).or(
