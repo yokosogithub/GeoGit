@@ -86,7 +86,6 @@ public class BlameReport {
                 Optional<Object> value = values.get(i);
                 changes.put(attr, new ValueAndCommit(value, commit));
             }
-            i++;
         }
 
     }
