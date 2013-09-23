@@ -64,8 +64,7 @@ public class DiffTree extends AbstractCommand implements CLICommand {
     @Override
     protected void runInternal(GeogitCLI cli) throws IOException {
         if (refSpec.size() > 2) {
-            cli.getConsole().println("Tree refspecs list is too long :" + refSpec);
-            throw new CommandFailedException();
+            throw new CommandFailedException("Tree refspecs list is too long :" + refSpec);
         }
 
         GeoGIT geogit = cli.getGeogit();
