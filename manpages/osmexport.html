@@ -1,0 +1,138 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en-US" xml:lang="en-US">
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  
+  <title>geogit-osmexport documentation &mdash; GeoGit 0.5 GeoGit man pages</title>
+  <link rel="stylesheet" href="_static/blueprint/screen.css" type="text/css" media="screen, projection" />
+  <link rel="stylesheet" href="_static/blueprint/print.css" type="text/css" media="print" /> 
+  <!--[if IE]>
+  <link rel="stylesheet" href="_static/blueprint/ie.css" type="text/css" media="screen, projection" />
+  <![endif]-->
+  <link rel="stylesheet" href="_static/default.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+  <script type="text/javascript">
+    var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '#',
+        VERSION:     '0.5',
+        COLLAPSE_MODINDEX: false,
+        FILE_SUFFIX: '.html'
+    };
+  </script>
+  <script type="text/javascript" src="_static/jquery.js"></script>
+  <script type="text/javascript" src="_static/doctools.js"></script>
+  <script type="text/javascript" src="_static/searchtools.js"></script>
+  <script type="text/javascript" src="searchindex.js"></script>
+      <link rel="top" title="GeoGit 0.5 GeoGit man pages" href="index.html" />
+</head>
+<body class="osmexport">
+  <div id="header" class="selfclear">
+    <div class="wrap selfclear">
+      <div id="logo"><a href="index.html">GeoGit 0.5 GeoGit man pages</a></div>
+      <ul id="top-nav">
+        <li class="first"><a href="https://github.com/opengeo/GeoGit/blob/master/README.rst">About</a></li>
+        <li><a href="http://sourceforge.net/projects/geogit">Download</a></li>
+        <li><a href="/docs/">Users Manual</a></li>
+        <li><a href="/technical/">Technical Manual</a></li>
+        <li><a href="/manpages/">Man Pages</a></li>
+      </ul>
+        <form id="quick-search" action="search.html" method="get">
+          <fieldset>
+            <input type="hidden" name="check_keywords" value="yes" />
+            <input type="hidden" name="area" value="default" />
+            <input id="quick-search-query" type="text" name="q" accessKey="q" name="searchQuery.queryString" size="25" value="Search Documentation&hellip;" size="20" tabindex="3" onblur="if(this.value=='') this.value='Search Documentation&hellip;';" onfocus="if(this.value=='Search Documentation&hellip;') this.value='';" />
+            <input id="quick-search-submit" type="image" value="Search" src="_static/chrome/search_icon_green.png" />
+          </fieldset>
+        </form>
+    </div><!-- /.wrap -->
+  </div><!-- /#header -->
+  <div id="main">
+    <div class="wrap selfclear">
+      <div id="content">
+<ul id="breadcrumbs">
+  
+  <li><a href="index.html">GeoGit 0.5 GeoGit man pages</a> &raquo;</li>
+  <li>geogit-osmexport documentation</li>
+</ul>
+<ul id="relatedlinks" class="selfclear">
+</ul>
+        
+  <div class="section" id="geogit-osmexport-documentation">
+<span id="geogit-export"></span><h1>geogit-osmexport documentation<a class="headerlink" href="#geogit-osmexport-documentation" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="synopsis">
+<h2>SYNOPSIS<a class="headerlink" href="#synopsis" title="Permalink to this headline">¶</a></h2>
+<p>geogit osm export &lt;file&gt; [commitish] [&#8211;bbox] [&#8211;overwrite]</p>
+</div>
+<div class="section" id="description">
+<h2>DESCRIPTION<a class="headerlink" href="#description" title="Permalink to this headline">¶</a></h2>
+<p>Exports a given commit to a file using an OSM export format. Only features in the canonical OSM trees (<tt class="docutils literal"><span class="pre">way</span></tt> and <a href="#id1"><span class="problematic" id="id2">``</span></a>node) are exported.</p>
+<p>If the output filename has the <tt class="docutils literal"><span class="pre">pbf</span></tt> extension, the pbf format will be used. Otherwise, the OSM XML format will be</p>
+</div>
+<div class="section" id="options">
+<h2>OPTIONS<a class="headerlink" href="#options" title="Permalink to this headline">¶</a></h2>
+<p>[commitish]                                                     A reference that resolves to the commit to export from. If not provided, the current HEAD is used.</p>
+<table class="docutils option-list" frame="void" rules="none">
+<col class="option" />
+<col class="description" />
+<tbody valign="top">
+<tr><td class="option-group" colspan="2">
+<kbd><span class="option">-b <var>&lt;N S E W&gt;</var></span>, <span class="option">--bbox <var>&lt;N S E W&gt;</var></span></kbd></td>
+</tr>
+<tr><td>&nbsp;</td><td>Exports only the features within a given bounding box, defined by its 4 boundary values.</td></tr>
+<tr><td class="option-group" colspan="2">
+<kbd><span class="option">--overwrite</span>, <span class="option">-o</span></kbd></td>
+</tr>
+<tr><td>&nbsp;</td><td>Overwrites the specified outut file if it already exists.</td></tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="see-also">
+<h2>SEE ALSO<a class="headerlink" href="#see-also" title="Permalink to this headline">¶</a></h2>
+<p><em class="xref std std-ref">geogit-osmexportpg</em>
+<a class="reference internal" href="osmexportshp.html#geogit-osmexportshp"><em>geogit-osm-export-shp documentation</em></a>
+<em class="xref std std-ref">geogit-osmexportsl</em></p>
+</div>
+<div class="section" id="bugs">
+<h2>BUGS<a class="headerlink" href="#bugs" title="Permalink to this headline">¶</a></h2>
+<p>Discussion is still open.</p>
+</div>
+</div>
+
+
+      </div><!-- /#content> -->
+  <div id="sidebar" class="contrast">
+      <div id="toc" class="section">
+        <h3 class="pngfix">Table Of Contents</h3>
+        <ul>
+<li><a class="reference internal" href="#">geogit-osmexport documentation</a><ul>
+<li><a class="reference internal" href="#synopsis">SYNOPSIS</a></li>
+<li><a class="reference internal" href="#description">DESCRIPTION</a></li>
+<li><a class="reference internal" href="#options">OPTIONS</a></li>
+<li><a class="reference internal" href="#see-also">SEE ALSO</a></li>
+<li><a class="reference internal" href="#bugs">BUGS</a></li>
+</ul>
+</li>
+</ul>
+
+        <div class="section-footer"></div>
+      </div>
+        <div class="section">
+        <h3>This Page</h3>
+        <ul class="this-page-menu">
+          <li><a href="_sources/osmexport.txt">Show Source</a></li>
+        </ul>
+        </div>
+  </div><!-- /#sidebar -->
+  </div><!-- /.wrap> -->
+</div><!-- /#main -->
+<div id="footer">
+  <div class="wrap">
+    &copy; Copyright OpenGeo <http://opengeo.org>.
+    Last updated on Oct 02, 2013.
+    Created using <a href="http://sphinx.pocoo.org/">Sphinx</a>.
+  </div><!-- /.wrap> -->
+</div><!-- /#footer -->
+  </body>
+</html>
