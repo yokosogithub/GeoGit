@@ -60,15 +60,18 @@ import com.mongodb.DBObject;
 import com.mongodb.MongoClient;
 import com.mongodb.WriteConcern;
 
-
-/**
- * @TODO: extract interface
- */
 public class MongoObjectDatabase implements ObjectDatabase {
+    private MongoConnectionManager manager;
+
     private MongoClient client = null;
     protected DB db = null;
     protected DBCollection collection = null;
     protected ObjectSerializingFactory serializers = new DataStreamSerializationFactory();
+
+    @Inject
+    public MongoObjectDatabase(MongoConnectionManager manager) {
+        this.manager = manager;
+    }
 
     private RevObject fromBytes(ObjectId id, byte[] buffer) {
         ByteArrayInputStream byteStream = new ByteArrayInputStream(buffer);
@@ -95,14 +98,10 @@ public class MongoObjectDatabase implements ObjectDatabase {
         if (client != null) {
             return;
         }
-        try {
-            client = new MongoClient("192.168.122.165", 27017);
-            db = client.getDB("geogit");
-            collection = db.getCollection(getCollectionName());
-            collection.ensureIndex("oid");
-        } catch (UnknownHostException e) {
-            throw new RuntimeException(e);
-        }
+        client = manager.acquire(new MongoAddress("192.168.122.165", 27017));
+        db = client.getDB("geogit");
+        collection = db.getCollection(getCollectionName());
+        collection.ensureIndex("oid");
     }
 
     public synchronized boolean isOpen() {
@@ -111,7 +110,7 @@ public class MongoObjectDatabase implements ObjectDatabase {
     
     public synchronized void close() { 
         if (client != null) {
-            client.close();
+            manager.release(client);
         }
         client = null;
         db = null;

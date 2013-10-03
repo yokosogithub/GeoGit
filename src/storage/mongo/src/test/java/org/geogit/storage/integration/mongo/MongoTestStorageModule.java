@@ -9,6 +9,7 @@ import org.geogit.storage.GraphDatabase;
 import org.geogit.storage.ObjectDatabase;
 import org.geogit.storage.StagingDatabase;
 import org.geogit.storage.TestNeo4JGraphDatabase;
+import org.geogit.storage.mongo.MongoConnectionManager;
 import org.geogit.storage.mongo.MongoObjectDatabase;
 import org.geogit.storage.mongo.MongoStagingDatabase;
 
@@ -18,7 +19,8 @@ import com.google.inject.Scopes;
 public class MongoTestStorageModule extends AbstractModule {
     @Override
     protected void configure() {
-        // BDB Mongo bindings for the different kinds of databases
+        // Mongo bindings for the different kinds of databases
+        bind(MongoConnectionManager.class).in(Scopes.SINGLETON);
         bind(ObjectDatabase.class).to(MongoObjectDatabase.class).in(Scopes.SINGLETON);
         bind(StagingDatabase.class).to(MongoStagingDatabase.class).in(Scopes.SINGLETON);
         bind(GraphDatabase.class).to(TestNeo4JGraphDatabase.class).in(Scopes.SINGLETON);

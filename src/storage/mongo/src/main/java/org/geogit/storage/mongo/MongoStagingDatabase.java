@@ -47,9 +47,9 @@ public class MongoStagingDatabase extends MongoObjectDatabase implements Staging
         return "staging";
     }
 
-
     @Inject
-    public MongoStagingDatabase(final ObjectSerializingFactory sfac, final ObjectDatabase repositoryDb) {
+    public MongoStagingDatabase(final MongoConnectionManager manager, final ObjectSerializingFactory sfac, final ObjectDatabase repositoryDb) {
+        super(manager);
         this.sfac = sfac;
         this.repositoryDb = repositoryDb;
     }
