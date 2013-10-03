@@ -17,5 +17,6 @@
 
   <modules>
    <module>bdbje</module>
+   <module>mongo</module>
   </modules>
 </project>
