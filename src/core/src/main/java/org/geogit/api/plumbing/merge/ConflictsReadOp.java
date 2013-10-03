@@ -4,15 +4,24 @@
  */
 package org.geogit.api.plumbing.merge;
 
+
+import java.net.URL;
+import java.util.Collections;
 import java.util.List;
 
 import org.geogit.api.AbstractGeoGitOp;
+import org.geogit.api.plumbing.ResolveGeogitDir;
+import com.google.common.base.Preconditions;
 
 public class ConflictsReadOp extends AbstractGeoGitOp<List<Conflict>> {
-
     @Override
     public List<Conflict> call() {
-        return getIndex().getDatabase().getConflicts(null, null);
+        final URL repoUrl = getCommandLocator().command(ResolveGeogitDir.class).call();
+        if (repoUrl == null) {
+            return Collections.emptyList();
+        } else {
+            getIndex().getDatabase().open();
+            return getIndex().getDatabase().getConflicts(null, null);
+        }
     }
-
 }

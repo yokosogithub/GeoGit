@@ -92,7 +92,6 @@ public class MongoObjectDatabase implements ObjectDatabase {
     }
 
     public synchronized void open() { 
-        System.out.println("Opened mongo database: " + getCollectionName());
         if (client != null) {
             return;
         }
@@ -100,7 +99,7 @@ public class MongoObjectDatabase implements ObjectDatabase {
             client = new MongoClient("192.168.122.165", 27017);
             db = client.getDB("geogit");
             collection = db.getCollection(getCollectionName());
-            collection.setWriteConcern(WriteConcern.JOURNALED);
+            collection.ensureIndex("oid");
         } catch (UnknownHostException e) {
             throw new RuntimeException(e);
         }
@@ -111,7 +110,6 @@ public class MongoObjectDatabase implements ObjectDatabase {
     }
     
     public synchronized void close() { 
-        System.out.println("Closed mongo database: " + getCollectionName());
         if (client != null) {
             client.close();
         }
