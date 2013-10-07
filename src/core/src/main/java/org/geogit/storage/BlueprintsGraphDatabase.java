@@ -30,13 +30,12 @@ import com.tinkerpop.blueprints.CloseableIterable;
 import com.tinkerpop.blueprints.Edge;
 import com.tinkerpop.blueprints.Graph;
 import com.tinkerpop.blueprints.IndexableGraph;
-import com.tinkerpop.blueprints.TransactionalGraph;
 import com.tinkerpop.blueprints.Vertex;
 import com.tinkerpop.gremlin.java.GremlinPipeline;
 import com.tinkerpop.pipes.PipeFunction;
 import com.tinkerpop.pipes.branch.LoopPipe.LoopBundle;
 
-public abstract class BlueprintsGraphDatabase<DB extends IndexableGraph & TransactionalGraph>
+public abstract class BlueprintsGraphDatabase<DB extends IndexableGraph>
         extends AbstractGraphDatabase {
 
     protected DB graphDB = null;
@@ -157,14 +156,14 @@ public abstract class BlueprintsGraphDatabase<DB extends IndexableGraph & Transa
             Iterator<Vertex> iter = results.iterator();
             if (iter.hasNext()) {
                 root = iter.next();
-                graphDB.rollback();
+                this.rollback();
             } else {
                 root = graphDB.addVertex(null);
                 root.setProperty("isroot", "true");
-                graphDB.commit();
+                this.commit();
             }
         } catch (Exception e) {
-            graphDB.rollback();
+            this.rollback();
             throw Throwables.propagate(e);
         } finally {
             results.close();
@@ -209,6 +208,7 @@ public abstract class BlueprintsGraphDatabase<DB extends IndexableGraph & Transa
             container.removeRef();
             if (container.getRefCount() <= 0) {
                 destroyGraphDatabase();
+                databaseServices.remove(dbPath);
             }
             graphDB = null;
         }
@@ -231,15 +231,7 @@ public abstract class BlueprintsGraphDatabase<DB extends IndexableGraph & Transa
                 results = idIndex.get("identifier", commitId.toString());
                 if (results.iterator().hasNext()) {
                     results.iterator().next();
-                    if (results.iterator().hasNext()) {
-                        throw new NoSuchElementException(); // strictly
-                                                            // following Neo4J's
-                                                            // getSingle
-                                                            // semantics; is
-                                                            // this necessary?
-                    } else {
-                        return true;
-                    }
+                    return true;
                 } else {
                     return false;
                 }
@@ -248,7 +240,7 @@ public abstract class BlueprintsGraphDatabase<DB extends IndexableGraph & Transa
                     results.close();
             }
         } finally {
-            graphDB.rollback();
+            this.rollback();
         }
     }
 
@@ -288,7 +280,7 @@ public abstract class BlueprintsGraphDatabase<DB extends IndexableGraph & Transa
             }
             return listBuilder.build();
         } finally {
-            graphDB.rollback();
+            this.rollback();
         }
     }
 
@@ -328,7 +320,7 @@ public abstract class BlueprintsGraphDatabase<DB extends IndexableGraph & Transa
             }
             return listBuilder.build();
         } finally {
-            graphDB.rollback();
+            this.rollback();
         }
     }
 
@@ -366,9 +358,9 @@ public abstract class BlueprintsGraphDatabase<DB extends IndexableGraph & Transa
                     commitNode.addEdge(CommitRelationshipTypes.PARENT.name(), parentNode);
                 }
             }
-            graphDB.commit();
+            this.commit();
         } catch (Exception e) {
-            graphDB.rollback();
+            this.rollback();
             throw Throwables.propagate(e);
         }
         return true;
@@ -403,9 +395,9 @@ public abstract class BlueprintsGraphDatabase<DB extends IndexableGraph & Transa
             // Don't make relationships if they have been created already
             Vertex originalNode = getOrAddNode(original);
             commitNode.addEdge(CommitRelationshipTypes.MAPPED_TO.name(), originalNode);
-            graphDB.commit();
+            this.commit();
         } catch (Exception e) {
-            graphDB.rollback();
+            this.rollback();
             throw Throwables.propagate(e);
         }
     }
@@ -438,7 +430,7 @@ public abstract class BlueprintsGraphDatabase<DB extends IndexableGraph & Transa
             }
             return mapped;
         } finally {
-            graphDB.rollback();
+            this.rollback();
         }
     }
 
@@ -551,7 +543,7 @@ public abstract class BlueprintsGraphDatabase<DB extends IndexableGraph & Transa
                 return 0;
             }
         } finally {
-            graphDB.rollback();
+            this.rollback();
         }
     }
 
@@ -619,7 +611,7 @@ public abstract class BlueprintsGraphDatabase<DB extends IndexableGraph & Transa
 
             return false;
         } finally {
-            graphDB.rollback();
+            this.rollback();
         }
     }
 
@@ -637,9 +629,9 @@ public abstract class BlueprintsGraphDatabase<DB extends IndexableGraph & Transa
             results = idIndex.get("identifier", commitId.toString());
             Vertex commitNode = results.iterator().next();
             commitNode.setProperty(propertyName, propertyValue);
-            graphDB.commit();
+            this.commit();
         } catch (Exception e) {
-            graphDB.rollback();
+            this.rollback();
         } finally {
             if (results != null)
                 results.close();
@@ -718,7 +710,7 @@ public abstract class BlueprintsGraphDatabase<DB extends IndexableGraph & Transa
             }
             return ancestor;
         } finally {
-            graphDB.rollback();
+            this.rollback();
         }
     }
 
@@ -794,5 +786,13 @@ public abstract class BlueprintsGraphDatabase<DB extends IndexableGraph & Transa
             }
         }
         potentialCommonAncestors.removeAll(falseAncestors);
+    }
+
+    protected void commit() {
+        // Stub for transactional graphdb to use
+    }
+
+    protected void rollback() {
+        // Stub for transactional graphdb to use
     }
 }

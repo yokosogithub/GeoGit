@@ -9,7 +9,7 @@ import org.geogit.storage.GraphDatabase;
 import org.geogit.storage.ObjectDatabase;
 import org.geogit.storage.RefDatabase;
 import org.geogit.storage.StagingDatabase;
-import org.geogit.storage.TestNeo4JGraphDatabase;
+import org.geogit.storage.memory.HeapGraphDatabase;
 import org.geogit.storage.memory.HeapObjectDatabse;
 import org.geogit.storage.memory.HeapRefDatabase;
 import org.geogit.storage.memory.HeapStagingDatabase;
@@ -39,7 +39,7 @@ public class MemoryModule extends AbstractModule {
         bind(ObjectDatabase.class).to(HeapObjectDatabse.class).in(Scopes.SINGLETON);
         bind(StagingDatabase.class).to(HeapStagingDatabase.class).in(Scopes.SINGLETON);
         bind(RefDatabase.class).to(HeapRefDatabase.class).in(Scopes.SINGLETON);
-        bind(GraphDatabase.class).to(TestNeo4JGraphDatabase.class).in(Scopes.SINGLETON);
+        bind(GraphDatabase.class).to(HeapGraphDatabase.class).in(Scopes.SINGLETON);
     }
 
 }
