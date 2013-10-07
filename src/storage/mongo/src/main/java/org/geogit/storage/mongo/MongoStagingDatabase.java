@@ -22,6 +22,7 @@ import org.geogit.api.RevObject;
 import org.geogit.api.RevTag;
 import org.geogit.api.RevTree;
 import org.geogit.api.plumbing.merge.Conflict;
+import org.geogit.storage.ConfigDatabase;
 import org.geogit.storage.ObjectDatabase;
 import org.geogit.storage.ObjectInserter;
 import org.geogit.storage.ObjectSerializingFactory;
@@ -48,8 +49,8 @@ public class MongoStagingDatabase extends MongoObjectDatabase implements Staging
     }
 
     @Inject
-    public MongoStagingDatabase(final MongoConnectionManager manager, final ObjectSerializingFactory sfac, final ObjectDatabase repositoryDb) {
-        super(manager);
+    public MongoStagingDatabase(final ConfigDatabase config, final MongoConnectionManager manager, final ObjectSerializingFactory sfac, final ObjectDatabase repositoryDb) {
+        super(config, manager);
         this.sfac = sfac;
         this.repositoryDb = repositoryDb;
     }

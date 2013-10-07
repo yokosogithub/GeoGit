@@ -34,6 +34,7 @@ import org.geogit.api.RevObject;
 import org.geogit.api.RevTag;
 import org.geogit.api.RevTree;
 import org.geogit.api.plumbing.merge.Conflict;
+import org.geogit.storage.ConfigDatabase;
 import org.geogit.storage.ObjectDatabase;
 import org.geogit.storage.ObjectInserter;
 import org.geogit.storage.ObjectReader;
@@ -61,7 +62,8 @@ import com.mongodb.MongoClient;
 import com.mongodb.WriteConcern;
 
 public class MongoObjectDatabase implements ObjectDatabase {
-    private MongoConnectionManager manager;
+    private final MongoConnectionManager manager;
+    private final ConfigDatabase config;
 
     private MongoClient client = null;
     protected DB db = null;
@@ -69,7 +71,8 @@ public class MongoObjectDatabase implements ObjectDatabase {
     protected ObjectSerializingFactory serializers = new DataStreamSerializationFactory();
 
     @Inject
-    public MongoObjectDatabase(MongoConnectionManager manager) {
+    public MongoObjectDatabase(ConfigDatabase config, MongoConnectionManager manager) {
+        this.config = config;
         this.manager = manager;
     }
 
@@ -98,7 +101,9 @@ public class MongoObjectDatabase implements ObjectDatabase {
         if (client != null) {
             return;
         }
-        client = manager.acquire(new MongoAddress("192.168.122.165", 27017));
+        String hostname = config.get("mongo.host").get();
+        int port = config.get("mongo.port", Integer.class).get();
+        client = manager.acquire(new MongoAddress(hostname, port));
         db = client.getDB("geogit");
         collection = db.getCollection(getCollectionName());
         collection.ensureIndex("oid");
