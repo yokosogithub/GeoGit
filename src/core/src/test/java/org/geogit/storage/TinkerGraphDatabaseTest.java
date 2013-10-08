@@ -5,12 +5,10 @@ import org.geogit.storage.GraphDatabaseTest;
 
 import com.google.inject.Guice;
 import com.google.inject.Injector;
-import com.google.inject.util.Modules;
 
-
-public class Neo4JGraphDatabaseTest extends GraphDatabaseTest {
+public class TinkerGraphDatabaseTest extends GraphDatabaseTest {
     protected Injector createInjector() {
-        return Guice.createInjector(
-            Modules.override(new GeogitModule()).with(new Neo4JTestModule()));
+        return Guice.createInjector(new GeogitModule()); // relies on TinkerGraph being default
     }
 }
+
