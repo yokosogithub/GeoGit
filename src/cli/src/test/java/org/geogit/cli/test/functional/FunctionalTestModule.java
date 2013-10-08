@@ -7,7 +7,6 @@ package org.geogit.cli.test.functional;
 
 import org.geogit.api.Platform;
 import org.geogit.storage.GraphDatabase;
-import org.geogit.storage.TestNeo4JGraphDatabase;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Scopes;
@@ -34,9 +33,6 @@ public class FunctionalTestModule extends AbstractModule {
         if (testPlatform != null) {
             bind(Platform.class).toInstance(testPlatform);
         }
-
-        // Use the testing neo4j graph db, otherwise functional tests are extremely slow
-        bind(GraphDatabase.class).to(TestNeo4JGraphDatabase.class).in(Scopes.SINGLETON);
     }
 
 }
