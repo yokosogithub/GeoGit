@@ -344,6 +344,7 @@ public abstract class BlueprintsGraphDatabase<DB extends IndexableGraph> extends
      */
     @Override
     public boolean put(ObjectId commitId, ImmutableList<ObjectId> parentIds) {
+        boolean updated = false;
         try {
             // See if it already exists
             Vertex commitNode = getOrAddNode(commitId);
@@ -353,6 +354,7 @@ public abstract class BlueprintsGraphDatabase<DB extends IndexableGraph> extends
                         .hasNext()) {
                     // Attach this node to the root node
                     commitNode.addEdge(CommitRelationshipTypes.TOROOT.name(), root);
+                    updated = true;
                 }
             }
 
@@ -363,13 +365,14 @@ public abstract class BlueprintsGraphDatabase<DB extends IndexableGraph> extends
                     Vertex parentNode = getOrAddNode(parent);
                     commitNode.addEdge(CommitRelationshipTypes.PARENT.name(), parentNode);
                 }
+                updated = true;
             }
             this.commit();
         } catch (Exception e) {
             this.rollback();
             throw Throwables.propagate(e);
         }
-        return true;
+        return updated;
     }
 
     /**
