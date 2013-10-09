@@ -3,9 +3,11 @@
  * application directory.
  */
 
-package org.geogit.storage;
+package org.geogit.storage.neo4j;
 
 import org.geogit.api.Platform;
+import org.geogit.storage.GraphDatabase;
+import org.geogit.storage.StagingDatabase;
 import org.geogit.storage.memory.HeapStagingDatabase;
 
 import com.google.inject.AbstractModule;

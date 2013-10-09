@@ -2,11 +2,12 @@
  * This code is licensed under the BSD New License, available at the root
  * application directory.
  */
-package org.geogit.storage;
+package org.geogit.storage.neo4j;
 
 import java.util.Map;
 
 import org.geogit.api.Platform;
+import org.geogit.storage.TransactionalBlueprintsGraphDatabase;
 
 import com.google.inject.Inject;
 import com.tinkerpop.blueprints.impls.neo4j.Neo4jGraph;
