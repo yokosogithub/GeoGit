@@ -150,15 +150,6 @@ public class Repository implements CommandLocator {
     }
 
     /**
-     * @param oid the {@link ObjectId} of the object to get
-     * @return the raw {@link InputStream} for the object data
-     * @throws IOException
-     */
-    public InputStream getRawObject(final ObjectId oid) throws IOException {
-        return getObjectDatabase().getRaw(oid);
-    }
-
-    /**
      * Test if a blob exists in the object database
      * 
      * @param id the ID of the blob in the object database

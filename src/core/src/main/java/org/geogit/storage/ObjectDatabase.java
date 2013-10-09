@@ -48,14 +48,6 @@ public interface ObjectDatabase {
     public boolean exists(final ObjectId id);
 
     /**
-     * Gets the raw input stream of the object with the given {@link ObjectId id}.
-     * 
-     * @param id the id of the object to get
-     * @return the input stream of the object
-     */
-    public InputStream getRaw(final ObjectId id);
-
-    /**
      * Searches the database for {@link ObjectId}s that match the given partial id.
      * 
      * @param partialId the partial id to search for
