@@ -26,11 +26,11 @@ import org.geogit.cli.CommandFailedException;
 import org.geogit.cli.GeogitCLI;
 import org.geogit.cli.RequiresRepository;
 import org.geogit.repository.Repository;
-import org.neo4j.kernel.impl.util.FileUtils;
 
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.Parameters;
 import com.google.common.base.Throwables;
+import com.google.common.io.Files;
 
 /**
  * Clones a repository into a newly created directory, creates remote-tracking branches for each
@@ -150,7 +150,7 @@ public class Clone extends AbstractCommand implements CLICommand {
                 }
                 File newFilterFile = new File(repoDir, FILTER_FILE);
 
-                FileUtils.copyFile(oldFilterFile, newFilterFile);
+                Files.copy(oldFilterFile, newFilterFile);
                 cli.getGeogit().command(ConfigOp.class).setAction(ConfigAction.CONFIG_SET)
                         .setName("sparse.filter").setValue(FILTER_FILE).setScope(ConfigScope.LOCAL)
                         .call();

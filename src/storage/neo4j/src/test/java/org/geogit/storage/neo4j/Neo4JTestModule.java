@@ -3,13 +3,14 @@
  * application directory.
  */
 
-package org.geogit.cli.test.functional;
+package org.geogit.storage.neo4j;
 
 import org.geogit.api.Platform;
 import org.geogit.storage.GraphDatabase;
+import org.geogit.storage.StagingDatabase;
+import org.geogit.storage.memory.HeapStagingDatabase;
 
 import com.google.inject.AbstractModule;
-import com.google.inject.Scopes;
 
 /**
  * Guice module with tweaks to run functional tests on the target {@link Platform}'s working
@@ -17,22 +18,12 @@ import com.google.inject.Scopes;
  * 
  * @see CLITestInjectorBuilder
  */
-public class FunctionalTestModule extends AbstractModule {
-
-    private Platform testPlatform;
-
-    /**
-     * @param testPlatform
-     */
-    public FunctionalTestModule(Platform testPlatform) {
-        this.testPlatform = testPlatform;
-    }
+public class Neo4JTestModule extends AbstractModule {
 
     @Override
     protected void configure() {
-        if (testPlatform != null) {
-            bind(Platform.class).toInstance(testPlatform);
-        }
+        bind(StagingDatabase.class).to(HeapStagingDatabase.class);
+        bind(GraphDatabase.class).to(TestNeo4JGraphDatabase.class);
     }
 
 }

@@ -135,7 +135,7 @@ public abstract class RepositoryTestCase extends Assert {
     // prevent recursion
     private boolean setup = false;
 
-    private static File envHome;
+    protected File envHome;
 
     private Injector injector;
 

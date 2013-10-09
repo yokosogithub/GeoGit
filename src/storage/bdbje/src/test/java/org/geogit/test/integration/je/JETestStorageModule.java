@@ -8,7 +8,6 @@ package org.geogit.test.integration.je;
 import org.geogit.storage.GraphDatabase;
 import org.geogit.storage.ObjectDatabase;
 import org.geogit.storage.StagingDatabase;
-import org.geogit.storage.TestNeo4JGraphDatabase;
 import org.geogit.storage.bdbje.EnvironmentBuilder;
 import org.geogit.storage.bdbje.JEObjectDatabase;
 import org.geogit.storage.bdbje.JEStagingDatabase;
@@ -30,8 +29,6 @@ public class JETestStorageModule extends AbstractModule {
         // this module's specific. Used by the JE*Databases to set up the db environment
         // A new instance of each db
         bind(EnvironmentBuilder.class).in(Scopes.NO_SCOPE);
-
-        bind(GraphDatabase.class).to(TestNeo4JGraphDatabase.class).in(Scopes.SINGLETON);
     }
 
 }

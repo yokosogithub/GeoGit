@@ -1,3 +1,7 @@
+/* Copyright (c) 2013 OpenPlans. All rights reserved.
+ * This code is licensed under the BSD New License, available at the root
+ * application directory.
+ */
 package org.geogit.storage;
 
 import java.io.IOException;
@@ -8,15 +12,24 @@ import org.junit.Test;
 
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
+import com.google.inject.Injector;
 
-public class Neo4JGraphDatabaseTest extends RepositoryTestCase {
+/**
+ * Abstract test suite for {@link GraphDatabase} implementations.
+ * <p>
+ * Create a concrete subclass of this test suite and implement {@link #createInjector()} so that
+ * {@code GraphDtabase.class} is bound to your implementation instance as a singleton.
+ */
+public abstract class GraphDatabaseTest extends RepositoryTestCase {
 
-    protected BlueprintsGraphDatabase database;
+    protected GraphDatabase database;
 
     @Override
     protected void setUpInternal() throws Exception {
-        database = (BlueprintsGraphDatabase) geogit.getRepository().getGraphDatabase();
+        database = (GraphDatabase) geogit.getRepository().getGraphDatabase();
     }
+
+    protected abstract Injector createInjector();
 
     @Test
     public void testNodes() throws IOException {
@@ -406,5 +419,4 @@ public class Neo4JGraphDatabaseTest extends RepositoryTestCase {
         assertEquals(4, database.getDepth(commit4));
         assertEquals(1, database.getDepth(commit11));
     }
-
 }
