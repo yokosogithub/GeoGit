@@ -118,4 +118,6 @@ public interface GraphDatabase {
      * @return true if there are any sparse commits between start and end
      */
     public boolean isSparsePath(ObjectId start, ObjectId end);
+
+    public void truncate();
 }

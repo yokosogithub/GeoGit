@@ -54,7 +54,7 @@ public final class RebuildGraphOp extends AbstractGeoGitOp<ImmutableList<ObjectI
                 .call();
 
         GraphDatabase graphDb = repository.getGraphDatabase();
-
+        
         for (Ref ref : branches) {
             Iterator<RevCommit> commits = command(LogOp.class).setUntil(ref.getObjectId()).call();
             while (commits.hasNext()) {

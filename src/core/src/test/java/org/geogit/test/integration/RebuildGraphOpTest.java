@@ -1,7 +1,5 @@
 package org.geogit.test.integration;
 
-import java.io.File;
-
 import org.geogit.api.ObjectId;
 import org.geogit.api.RevCommit;
 import org.geogit.api.plumbing.RebuildGraphOp;
@@ -11,7 +9,6 @@ import org.geogit.api.porcelain.CommitOp;
 import org.geogit.api.porcelain.ConfigOp;
 import org.geogit.api.porcelain.ConfigOp.ConfigAction;
 import org.geogit.storage.GraphDatabase;
-import org.geogit.test.integration.RepositoryTestCase;
 import org.junit.Test;
 
 import com.google.common.collect.ImmutableList;
@@ -60,9 +57,8 @@ public class RebuildGraphOpTest extends RepositoryTestCase {
         final RevCommit c4 = geogit.command(CommitOp.class).setMessage("commit for " + idL1).call();
 
         // Delete the graph
+        database.truncate();
         database.close();
-        File graphDir = new File(repositoryTempFolder.getRoot(), ".geogit/graph");
-        graphDir.delete();
         database.open();
 
         // Rebuild the graph
@@ -95,9 +91,8 @@ public class RebuildGraphOpTest extends RepositoryTestCase {
         final RevCommit c2 = geogit.command(CommitOp.class).setMessage("commit for " + idP2).call();
 
         // Delete the graph
+        database.truncate();
         database.close();
-        File graphDir = new File(repositoryTempFolder.getRoot(), ".geogit/graph");
-        graphDir.delete();
         database.open();
 
         // checkout master

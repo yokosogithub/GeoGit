@@ -769,6 +769,24 @@ public abstract class BlueprintsGraphDatabase<DB extends IndexableGraph> extends
         potentialCommonAncestors.removeAll(falseAncestors);
     }
 
+    @Override
+    public void truncate() {
+        try {
+            Iterator<Edge> edges = graphDB.getEdges().iterator();
+            while (edges.hasNext()) {
+                graphDB.removeEdge(edges.next());
+            }
+            Iterator<Vertex> vertices = graphDB.getVertices().iterator();
+            while (vertices.hasNext()) {
+                graphDB.removeVertex(vertices.next());
+            }
+            this.commit();
+        } catch (RuntimeException e) {
+            this.rollback();
+            throw e;
+        }
+    }
+
     /**
      * Template method for transactional graph db's to override and implement the commit action
      */

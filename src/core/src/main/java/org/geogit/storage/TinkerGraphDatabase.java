@@ -27,4 +27,5 @@ public class TinkerGraphDatabase extends BlueprintsGraphDatabase<TinkerGraph> {
     protected TinkerGraph getGraphDatabase() {
         return new TinkerGraph(dbPath, TinkerGraph.FileType.GML);
     }
+
 }
