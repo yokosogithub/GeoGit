@@ -9,8 +9,6 @@ import java.util.UUID;
 
 import org.geogit.storage.FieldType;
 
-import scala.collection.mutable.StringBuilder;
-
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import com.google.common.collect.Lists;

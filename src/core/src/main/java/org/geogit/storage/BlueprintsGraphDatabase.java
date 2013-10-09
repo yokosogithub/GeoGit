@@ -26,9 +26,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import org.geogit.api.ObjectId;
 import org.geogit.api.Platform;
 import org.geogit.api.plumbing.ResolveGeogitDir;
-import org.neo4j.graphdb.GraphDatabaseService;
-import org.neo4j.graphdb.RelationshipType;
-import org.neo4j.graphdb.Transaction;
 
 import com.google.common.base.Optional;
 import com.google.common.base.Throwables;
@@ -62,7 +59,7 @@ public abstract class BlueprintsGraphDatabase<DB extends IndexableGraph> extends
 
     private Vertex root;
 
-    protected enum CommitRelationshipTypes implements RelationshipType {
+    protected enum CommitRelationshipTypes {
         TOROOT, PARENT, MAPPED_TO
     }
 
@@ -190,7 +187,7 @@ public abstract class BlueprintsGraphDatabase<DB extends IndexableGraph> extends
     /**
      * Constructs the graph database service.
      * 
-     * @return the new {@link GraphDatabaseService}
+     * @return the new {@link IndexableGraph}
      */
     protected abstract DB getGraphDatabase();
 
@@ -448,8 +445,7 @@ public abstract class BlueprintsGraphDatabase<DB extends IndexableGraph> extends
     }
 
     /**
-     * Gets a node or adds it if it doesn't exist. Note, this must be called within a
-     * {@link Transaction}.
+     * Gets a node or adds it if it doesn't exist
      * 
      * @param commitId
      * @return
