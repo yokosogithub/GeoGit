@@ -86,6 +86,10 @@ h1, h2, h3, h4, h5 {
 	h1 {
 		text-shadow:  2px 2px 0px #333;
 	}
+
+	@media (max-width: @screen-sm) {
+		border-bottom: @ltblue 10px solid;
+	}
 }
 
 .navbar-brand {
@@ -134,7 +138,7 @@ h1, h2, h3, h4, h5 {
 	@media (max-width: 767px) {
 		position: relative;
 		.navbar-nav > li > a {
-			padding: 20px !important;
+			padding: 20px 20px 20px 60px !important;
 		}
 	}
 }
@@ -167,7 +171,7 @@ h1, h2, h3, h4, h5 {
 
 #main, #install, #docs, #participate {
 	p {
-		margin-bottom: 40px;
+		margin-bottom: 30px;
 		line-height: 1.8em;
 	}
 }
@@ -250,7 +254,6 @@ h1, h2, h3, h4, h5 {
 	padding-bottom: 60px;
 
 	h2 {
-		text-shadow: #999 2px 2px 0px;
 		padding-bottom: 20px;
 		font-size: 2.5em;
 	}
@@ -259,6 +262,59 @@ h1, h2, h3, h4, h5 {
 #install {
 	a {
 		color: @mdblue;
+	}
+
+	.quickstart_title {
+		display: block;
+		text-align: center;
+		margin: 0 20px;
+		padding: 5px 0;
+		border-radius: 5px 5px 0 0;
+		box-shadow: 0 3px 10px rgba(0,0,0,.5);
+		font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+		font-size: 16px;
+		font-weight: normal;
+		color: #444;
+		text-shadow: 0 1px 0 rgba(255,255,255,.5);
+		background: #f7f7f7;
+		background: url(data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiA/Pgo8c3ZnIHhtbG5zPSJod…IgaGVpZ2h0PSIxIiBmaWxsPSJ1cmwoI2dyYWQtdWNnZy1nZW5lcmF0ZWQpIiAvPgo8L3N2Zz4=);
+		background: -moz-linear-gradient(top, #f7f7f7 0%, #cfcfcf 7%, #aaaaaa 100%);
+		background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,#f7f7f7), color-stop(7%,#cfcfcf), color-stop(100%,#aaaaaa));
+		background: -webkit-linear-gradient(top, #f7f7f7 0%,#cfcfcf 7%,#aaaaaa 100%);
+		background: -o-linear-gradient(top, #f7f7f7 0%,#cfcfcf 7%,#aaaaaa 100%);
+		background: -ms-linear-gradient(top, #f7f7f7 0%,#cfcfcf 7%,#aaaaaa 100%);
+		background: linear-gradient(top, #f7f7f7 0%,#cfcfcf 7%,#aaaaaa 100%);
+		filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#f7f7f7', endColorstr='#aaaaaa',GradientType=0 );
+		border-bottom: 1px solid #111;
+	}
+
+	.quickstart_shell {
+		padding: 20px;
+		text-shadow: none;
+		margin: 0 20px 30px;
+		background: #3d3d3d;
+		border-radius: 0 0 5px 5px;
+		box-shadow: 0 5px 30px rgba(0,0,0,.3);
+		line-height: 1.5em;
+	}
+
+	.line {
+		display: block;
+		margin-bottom: 0;
+	}
+
+	.path {
+		color: #87ceeb;
+	}
+	.input {
+		color: #cd5c5c;
+		padding-left: 5px;
+	}
+	.command {
+		color: #f0e68c;
+	}
+	.output {
+		color: #888;
 	}
 }
 
@@ -269,9 +325,8 @@ h1, h2, h3, h4, h5 {
 	}
 
 	.workflow_diagram {
-		margin: 50px;
-		height: 300px;
-		width: 287px;
+		height: 420px;
+		width: 402px;
 		float: right;
 
 		@media (max-width: @screen-md) {

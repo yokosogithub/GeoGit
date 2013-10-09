@@ -39,10 +39,10 @@
       </div>
     </header>
 
-    <section class="subheading">
+    <section class="subheading hidden-xs">
       <div class="container">
         <div class="row">
-          <div class="col-md-12">
+          <div class="col-md-8">
             <p class="byline">An Open Source Geospatial Data Management Tool</p>
           </div>
         </div>
@@ -86,9 +86,52 @@
 
               <p>2. Unzip the <em>geogit-cli-app-0.5.0.zip</em> to an applications directory, and then add the unzipped <code>geogit/bin/</code> folder to your <strong>PATH</strong>.</p>
 
-              <p>3. Import your spatial data to get started: <a href="docs/quickstart.html">QuickStart Guide</a>.</p> 
+              <p>3. Import your spatial data to get started:
+
+                <p class="quickstart_title">QuickStart</p>
+                <div class="quickstart_shell">
+                  <p class="line">
+                    <span class="path">~$</span>
+                    <span class="command">geogit help</span>
+                  </p>
+                  <p class="line">
+                    <span class="output"> List geogit commands</span>
+                  </p>
+                  <p class="line">
+                    <span class="path">~/new-folder $</span>
+                    <span class="command">geogit init</span>
+                  </p>
+                  <p class="line">
+                    <span class="output"> Initialise a geogit repository in new-folder</span>
+                  </p>
+                  <p class="line">
+                    <span class="path">~/new-folder $</span>
+                    <span class="command">geogit shp import</span>
+                    <span class="input">your_shapefile</span>
+                  </p>
+                  <p class="line">
+                    <span class="output"> Import a .shp file (or try OSM, SpatialLite or PostGIS)</span>
+                  </p>
+                  <p class="line">
+                    <span class="path">~/new-folder $</span>
+                    <span class="command">geogit ls</span>
+                  </p>
+                  <p class="line">
+                    <span class="output"> What's in your geogit repository</span>
+                  </p>
+                  <p class="line">
+                    <span class="path">~/new-folder $</span>
+                    <span class="command">geogit status</span>
+                  </p>
+                  <p class="line">
+                    <span class="output"> What you can commit to a snapshot</span>
+                  </p>
+                </div>
+
+              <p>See more GeoGit instructions in our <a href="http://geogit.org/docs/quickstart.html">QuickStart Guide</a>.</p> </p>
+
               <p>4. Additional 
-              information on how GeoGit works is available at the full <a href="docs/index.html">Manual</a>.</p>
+              information on how GeoGit works is available at the full <a href="http://geogit.org/docs/index.html">User Manual</a>.</p>
             </div>
           </div>
         </div>
