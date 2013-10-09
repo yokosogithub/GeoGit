@@ -1,5 +1,10 @@
 package org.geogit.storage;
 
+import static com.google.common.io.Closeables.closeQuietly;
+import static com.tinkerpop.blueprints.Direction.BOTH;
+import static com.tinkerpop.blueprints.Direction.IN;
+import static com.tinkerpop.blueprints.Direction.OUT;
+
 import java.io.File;
 import java.net.URISyntaxException;
 import java.net.URL;
@@ -9,10 +14,9 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.NoSuchElementException;
+import java.util.Map.Entry;
 import java.util.Queue;
 import java.util.Set;
-import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.geogit.api.ObjectId;
@@ -35,13 +39,17 @@ import com.tinkerpop.gremlin.java.GremlinPipeline;
 import com.tinkerpop.pipes.PipeFunction;
 import com.tinkerpop.pipes.branch.LoopPipe.LoopBundle;
 
-public abstract class BlueprintsGraphDatabase<DB extends IndexableGraph>
-        extends AbstractGraphDatabase {
+public abstract class BlueprintsGraphDatabase<DB extends IndexableGraph> extends
+        AbstractGraphDatabase {
 
     protected DB graphDB = null;
+
     protected String dbPath;
+
     protected static Map<String, ServiceContainer<?>> databaseServices = new ConcurrentHashMap<String, ServiceContainer<?>>();
+
     protected final Platform platform;
+
     private Vertex root;
 
     protected enum CommitRelationshipTypes implements RelationshipType {
@@ -49,8 +57,7 @@ public abstract class BlueprintsGraphDatabase<DB extends IndexableGraph>
     }
 
     /**
-     * Container class for the database service to keep track of reference
-     * counts.
+     * Container class for the database service to keep track of reference counts.
      */
     static protected class ServiceContainer<DB extends Graph> {
         private DB dbService;
@@ -166,7 +173,7 @@ public abstract class BlueprintsGraphDatabase<DB extends IndexableGraph>
             this.rollback();
             throw Throwables.propagate(e);
         } finally {
-            results.close();
+            closeQuietly(results);
         }
     }
 
@@ -178,8 +185,8 @@ public abstract class BlueprintsGraphDatabase<DB extends IndexableGraph>
     protected abstract DB getGraphDatabase();
 
     /**
-     * Destroy the graph database service. This will only happen when the ref
-     * count for the database service is 0.
+     * Destroy the graph database service. This will only happen when the ref count for the database
+     * service is 0.
      */
     protected void destroyGraphDatabase() {
         File graphPath = new File(dbPath);
@@ -217,8 +224,7 @@ public abstract class BlueprintsGraphDatabase<DB extends IndexableGraph>
     /**
      * Determines if the given commit exists in the graph database.
      * 
-     * @param commitId
-     *            the commit id to search for
+     * @param commitId the commit id to search for
      * @return true if the commit exists, false otherwise
      */
     @Override
@@ -229,15 +235,15 @@ public abstract class BlueprintsGraphDatabase<DB extends IndexableGraph>
             CloseableIterable<Vertex> results = null;
             try {
                 results = idIndex.get("identifier", commitId.toString());
-                if (results.iterator().hasNext()) {
-                    results.iterator().next();
+                Iterator<Vertex> iterator = results.iterator();
+                if (iterator.hasNext()) {
+                    iterator.next();
                     return true;
                 } else {
                     return false;
                 }
             } finally {
-                if (results != null)
-                    results.close();
+                closeQuietly(results);
             }
         } finally {
             this.rollback();
@@ -247,8 +253,7 @@ public abstract class BlueprintsGraphDatabase<DB extends IndexableGraph>
     /**
      * Retrieves all of the parents for the given commit.
      * 
-     * @param commitid
-     *            the commit whose parents should be returned
+     * @param commitid the commit whose parents should be returned
      * @return a list of the parents of the provided commit
      * @throws IllegalArgumentException
      */
@@ -261,19 +266,19 @@ public abstract class BlueprintsGraphDatabase<DB extends IndexableGraph>
             CloseableIterable<Vertex> results = null;
             try {
                 results = idIndex.get("identifier", commitId.toString());
-                if (results.iterator().hasNext()) {
-                    node = results.iterator().next();
+                Iterator<Vertex> iterator = results.iterator();
+                if (iterator.hasNext()) {
+                    node = iterator.next();
                 }
             } finally {
-                results.close();
+                closeQuietly(results);
             }
 
             Builder<ObjectId> listBuilder = new ImmutableList.Builder<ObjectId>();
 
             if (node != null) {
-                for (Edge edge : node.getEdges(com.tinkerpop.blueprints.Direction.OUT,
-                        CommitRelationshipTypes.PARENT.name())) {
-                    Vertex parentNode = edge.getVertex(com.tinkerpop.blueprints.Direction.IN);
+                for (Edge edge : node.getEdges(OUT, CommitRelationshipTypes.PARENT.name())) {
+                    Vertex parentNode = edge.getVertex(IN);
                     listBuilder
                             .add(ObjectId.valueOf(parentNode.<String> getProperty("identifier")));
                 }
@@ -287,8 +292,7 @@ public abstract class BlueprintsGraphDatabase<DB extends IndexableGraph>
     /**
      * Retrieves all of the children for the given commit.
      * 
-     * @param commitid
-     *            the commit whose children should be returned
+     * @param commitid the commit whose children should be returned
      * @return a list of the children of the provided commit
      * @throws IllegalArgumentException
      */
@@ -301,20 +305,19 @@ public abstract class BlueprintsGraphDatabase<DB extends IndexableGraph>
             Vertex node = null;
             try {
                 results = idIndex.get("identifier", commitId.toString());
-                if (results.iterator().hasNext()) {
-                    node = results.iterator().next();
+                Iterator<Vertex> iterator = results.iterator();
+                if (iterator.hasNext()) {
+                    node = iterator.next();
                 }
             } finally {
-                if (results != null)
-                    results.close();
+                closeQuietly(results);
             }
 
             Builder<ObjectId> listBuilder = new ImmutableList.Builder<ObjectId>();
 
             if (node != null) {
-                for (Edge child : node.getEdges(com.tinkerpop.blueprints.Direction.IN,
-                        CommitRelationshipTypes.PARENT.name())) {
-                    Vertex childNode = child.getVertex(com.tinkerpop.blueprints.Direction.OUT);
+                for (Edge child : node.getEdges(IN, CommitRelationshipTypes.PARENT.name())) {
+                    Vertex childNode = child.getVertex(OUT);
                     listBuilder.add(ObjectId.valueOf(childNode.<String> getProperty("identifier")));
                 }
             }
@@ -325,13 +328,11 @@ public abstract class BlueprintsGraphDatabase<DB extends IndexableGraph>
     }
 
     /**
-     * Adds a commit to the database with the given parents. If a commit with
-     * the same id already exists, it will not be inserted.
+     * Adds a commit to the database with the given parents. If a commit with the same id already
+     * exists, it will not be inserted.
      * 
-     * @param commitId
-     *            the commit id to insert
-     * @param parentIds
-     *            the commit ids of the commit's parents
+     * @param commitId the commit id to insert
+     * @param parentIds the commit ids of the commit's parents
      * @return true if the commit id was inserted, false otherwise
      */
     @Override
@@ -341,17 +342,15 @@ public abstract class BlueprintsGraphDatabase<DB extends IndexableGraph>
             Vertex commitNode = getOrAddNode(commitId);
 
             if (parentIds.isEmpty()) {
-                if (!commitNode
-                        .getEdges(com.tinkerpop.blueprints.Direction.OUT,
-                                CommitRelationshipTypes.TOROOT.name()).iterator().hasNext()) {
+                if (!commitNode.getEdges(OUT, CommitRelationshipTypes.TOROOT.name()).iterator()
+                        .hasNext()) {
                     // Attach this node to the root node
                     commitNode.addEdge(CommitRelationshipTypes.TOROOT.name(), root);
                 }
             }
 
-            if (!commitNode
-                    .getEdges(com.tinkerpop.blueprints.Direction.OUT,
-                            CommitRelationshipTypes.PARENT.name()).iterator().hasNext()) {
+            if (!commitNode.getEdges(OUT, CommitRelationshipTypes.PARENT.name()).iterator()
+                    .hasNext()) {
                 // Don't make relationships if they have been created already
                 for (ObjectId parent : parentIds) {
                     Vertex parentNode = getOrAddNode(parent);
@@ -367,13 +366,10 @@ public abstract class BlueprintsGraphDatabase<DB extends IndexableGraph>
     }
 
     /**
-     * Maps a commit to another original commit. This is used in sparse
-     * repositories.
+     * Maps a commit to another original commit. This is used in sparse repositories.
      * 
-     * @param mapped
-     *            the id of the mapped commit
-     * @param original
-     *            the commit to map to
+     * @param mapped the id of the mapped commit
+     * @param original the commit to map to
      */
     @Override
     public void map(final ObjectId mapped, final ObjectId original) {
@@ -382,13 +378,11 @@ public abstract class BlueprintsGraphDatabase<DB extends IndexableGraph>
             // See if it already exists
             commitNode = getOrAddNode(mapped);
 
-            if (commitNode
-                    .getEdges(com.tinkerpop.blueprints.Direction.OUT,
-                            CommitRelationshipTypes.MAPPED_TO.name()).iterator().hasNext()) {
+            Iterator<Edge> mappedTo = commitNode.getEdges(OUT,
+                    CommitRelationshipTypes.MAPPED_TO.name()).iterator();
+            if (mappedTo.hasNext()) {
                 // Remove old mapping
-                Edge toRemove = commitNode
-                        .getEdges(com.tinkerpop.blueprints.Direction.OUT,
-                                CommitRelationshipTypes.MAPPED_TO.name()).iterator().next();
+                Edge toRemove = mappedTo.next();
                 graphDB.removeEdge(toRemove);
             }
 
@@ -405,8 +399,7 @@ public abstract class BlueprintsGraphDatabase<DB extends IndexableGraph>
     /**
      * Gets the id of the commit that this commit is mapped to.
      * 
-     * @param commitId
-     *            the commit to find the mapping of
+     * @param commitId the commit to find the mapping of
      * @return the mapped commit id
      */
     public ObjectId getMapping(final ObjectId commitId) {
@@ -419,8 +412,7 @@ public abstract class BlueprintsGraphDatabase<DB extends IndexableGraph>
                 results = idIndex.get("identifier", commitId.toString());
                 node = results.iterator().next();
             } finally {
-                if (results != null)
-                    results.close();
+                closeQuietly(results);
             }
 
             ObjectId mapped = ObjectId.NULL;
@@ -436,18 +428,18 @@ public abstract class BlueprintsGraphDatabase<DB extends IndexableGraph>
 
     private Vertex getMappedNode(final Vertex commitNode) {
         if (commitNode != null) {
-            Iterable<Edge> mappings = commitNode.getEdges(com.tinkerpop.blueprints.Direction.OUT,
+            Iterable<Edge> mappings = commitNode.getEdges(OUT,
                     CommitRelationshipTypes.MAPPED_TO.name());
             if (mappings.iterator().hasNext()) {
-                return mappings.iterator().next().getVertex(com.tinkerpop.blueprints.Direction.IN);
+                return mappings.iterator().next().getVertex(IN);
             }
         }
         return null;
     }
 
     /**
-     * Gets a node or adds it if it doesn't exist. Note, this must be called
-     * within a {@link Transaction}.
+     * Gets a node or adds it if it doesn't exist. Note, this must be called within a
+     * {@link Transaction}.
      * 
      * @param commitId
      * @return
@@ -467,8 +459,7 @@ public abstract class BlueprintsGraphDatabase<DB extends IndexableGraph>
                 results = index.get("identifier", commitIdStr);
                 v = results.iterator().next();
             } finally {
-                if (results != null)
-                    results.close();
+                closeQuietly(results);
             }
         }
 
@@ -476,11 +467,10 @@ public abstract class BlueprintsGraphDatabase<DB extends IndexableGraph>
     }
 
     /**
-     * Gets the number of ancestors of the commit until it reaches one with no
-     * parents, for example the root or an orphaned commit.
+     * Gets the number of ancestors of the commit until it reaches one with no parents, for example
+     * the root or an orphaned commit.
      * 
-     * @param commitId
-     *            the commit id to start from
+     * @param commitId the commit id to start from
      * @return the depth of the commit
      */
     @Override
@@ -494,14 +484,12 @@ public abstract class BlueprintsGraphDatabase<DB extends IndexableGraph>
                 results = idIndex.get("identifier", commitId.toString());
                 commitNode = results.iterator().next();
             } finally {
-                if (results != null)
-                    results.close();
+                closeQuietly(results);
             }
             PipeFunction<LoopBundle<Vertex>, Boolean> expandCriterion = new PipeFunction<LoopBundle<Vertex>, Boolean>() {
                 @Override
                 public Boolean compute(LoopBundle<Vertex> argument) {
-                    Iterable<Edge> edges = argument.getObject().getEdges(
-                            com.tinkerpop.blueprints.Direction.OUT,
+                    Iterable<Edge> edges = argument.getObject().getEdges(OUT,
                             CommitRelationshipTypes.PARENT.name());
                     return edges.iterator().hasNext();
                 }
@@ -509,8 +497,7 @@ public abstract class BlueprintsGraphDatabase<DB extends IndexableGraph>
             PipeFunction<LoopBundle<Vertex>, Boolean> emitCriterion = new PipeFunction<LoopBundle<Vertex>, Boolean>() {
                 @Override
                 public Boolean compute(LoopBundle<Vertex> argument) {
-                    Iterable<Edge> edges = argument.getObject().getEdges(
-                            com.tinkerpop.blueprints.Direction.OUT,
+                    Iterable<Edge> edges = argument.getObject().getEdges(OUT,
                             CommitRelationshipTypes.PARENT.name());
                     return !edges.iterator().hasNext();
                 }
@@ -548,13 +535,11 @@ public abstract class BlueprintsGraphDatabase<DB extends IndexableGraph>
     }
 
     /**
-     * Determines if there are any sparse commits between the start commit and
-     * the end commit, not including the end commit.
+     * Determines if there are any sparse commits between the start commit and the end commit, not
+     * including the end commit.
      * 
-     * @param start
-     *            the start commit
-     * @param end
-     *            the end commit
+     * @param start the start commit
+     * @param end the end commit
      * @return true if there are any sparse commits between start and end
      */
     public boolean isSparsePath(final ObjectId start, final ObjectId end) {
@@ -572,10 +557,8 @@ public abstract class BlueprintsGraphDatabase<DB extends IndexableGraph>
                 endResults = idIndex.get("identifier", end.toString());
                 endNode = endResults.iterator().next();
             } finally {
-                if (startResults != null)
-                    startResults.close();
-                if (endResults != null)
-                    endResults.close();
+                closeQuietly(startResults);
+                closeQuietly(endResults);
             }
 
             PipeFunction<LoopBundle<Vertex>, Boolean> whileFunction = new PipeFunction<LoopBundle<Vertex>, Boolean>() {
@@ -618,8 +601,7 @@ public abstract class BlueprintsGraphDatabase<DB extends IndexableGraph>
     /**
      * Set a property on the provided commit node.
      * 
-     * @param commitId
-     *            the id of the commit
+     * @param commitId the id of the commit
      */
     public void setProperty(ObjectId commitId, String propertyName, String propertyValue) {
         com.tinkerpop.blueprints.Index<Vertex> idIndex = graphDB.getIndex("identifiers",
@@ -633,21 +615,17 @@ public abstract class BlueprintsGraphDatabase<DB extends IndexableGraph>
         } catch (Exception e) {
             this.rollback();
         } finally {
-            if (results != null)
-                results.close();
+            closeQuietly(results);
         }
     }
 
     /**
      * Finds the lowest common ancestor of two commits.
      * 
-     * @param leftId
-     *            the commit id of the left commit
-     * @param rightId
-     *            the commit id of the right commit
-     * @return An {@link Optional} of the lowest common ancestor of the two
-     *         commits, or {@link Optional#absent()} if a common ancestor could
-     *         not be found.
+     * @param leftId the commit id of the left commit
+     * @param rightId the commit id of the right commit
+     * @return An {@link Optional} of the lowest common ancestor of the two commits, or
+     *         {@link Optional#absent()} if a common ancestor could not be found.
      */
     @Override
     public Optional<ObjectId> findLowestCommonAncestor(ObjectId leftId, ObjectId rightId) {
@@ -668,22 +646,19 @@ public abstract class BlueprintsGraphDatabase<DB extends IndexableGraph>
             try {
                 leftResults = idIndex.get("identifier", leftId.toString());
                 leftNode = leftResults.iterator().next();
-                if (!leftNode.getEdges(com.tinkerpop.blueprints.Direction.OUT).iterator().hasNext()) {
+                if (!leftNode.getEdges(OUT).iterator().hasNext()) {
                     return Optional.absent();
                 }
                 leftQueue.add(leftNode);
                 rightResults = idIndex.get("identifier", rightId.toString());
                 rightNode = rightResults.iterator().next();
-                if (!rightNode.getEdges(com.tinkerpop.blueprints.Direction.OUT).iterator()
-                        .hasNext()) {
+                if (!rightNode.getEdges(OUT).iterator().hasNext()) {
                     return Optional.absent();
                 }
                 rightQueue.add(rightNode);
             } finally {
-                if (leftResults != null)
-                    leftResults.close();
-                if (rightResults != null)
-                    rightResults.close();
+                closeQuietly(leftResults);
+                closeQuietly(rightResults);
             }
 
             List<Vertex> potentialCommonAncestors = new LinkedList<Vertex>();
@@ -722,10 +697,9 @@ public abstract class BlueprintsGraphDatabase<DB extends IndexableGraph>
                 stopAncestryPath(commit, theirQueue, theirSet);
                 return true;
             }
-            for (Edge parentEdge : commit.getEdges(com.tinkerpop.blueprints.Direction.OUT,
-                    CommitRelationshipTypes.PARENT.name())) {
-                Vertex parent = parentEdge.getVertex(com.tinkerpop.blueprints.Direction.IN);
-                if (parent.getEdges(com.tinkerpop.blueprints.Direction.OUT).iterator().hasNext()) {
+            for (Edge parentEdge : commit.getEdges(OUT, CommitRelationshipTypes.PARENT.name())) {
+                Vertex parent = parentEdge.getVertex(IN);
+                if (parent.getEdges(OUT).iterator().hasNext()) {
                     myQueue.add(parent);
                 }
             }
@@ -740,9 +714,8 @@ public abstract class BlueprintsGraphDatabase<DB extends IndexableGraph>
         List<Vertex> processed = new LinkedList<Vertex>();
         while (!ancestorQueue.isEmpty()) {
             Vertex ancestor = ancestorQueue.poll();
-            for (Edge parent : ancestor.getEdges(com.tinkerpop.blueprints.Direction.BOTH,
-                    CommitRelationshipTypes.PARENT.name())) {
-                Vertex parentNode = parent.getVertex(com.tinkerpop.blueprints.Direction.IN);
+            for (Edge parent : ancestor.getEdges(BOTH, CommitRelationshipTypes.PARENT.name())) {
+                Vertex parentNode = parent.getVertex(IN);
                 if (parentNode.getId() != ancestor.getId()) {
                     if (theirSet.contains(parentNode)) {
                         ancestorQueue.add(parentNode);
@@ -768,9 +741,8 @@ public abstract class BlueprintsGraphDatabase<DB extends IndexableGraph>
             ancestorQueue.add(v);
             while (!ancestorQueue.isEmpty()) {
                 Vertex ancestor = ancestorQueue.poll();
-                for (Edge parent : ancestor.getEdges(com.tinkerpop.blueprints.Direction.OUT,
-                        CommitRelationshipTypes.PARENT.name())) {
-                    Vertex parentNode = parent.getVertex(com.tinkerpop.blueprints.Direction.IN);
+                for (Edge parent : ancestor.getEdges(OUT, CommitRelationshipTypes.PARENT.name())) {
+                    Vertex parentNode = parent.getVertex(IN);
                     if (parentNode.getId() != ancestor.getId()) {
                         if (leftSet.contains(parentNode) || rightSet.contains(parentNode)) {
                             if (!processed.contains(parentNode)) {
