@@ -3,7 +3,7 @@
  * application directory.
  */
 
-package org.geogit.test.integration.mongo;
+package org.geogit.storage.integration.mongo;
 
 import org.geogit.storage.ConfigDatabase;
 import org.geogit.storage.GraphDatabase;
@@ -13,7 +13,7 @@ import org.geogit.storage.TestNeo4JGraphDatabase;
 import org.geogit.storage.mongo.MongoConnectionManager;
 import org.geogit.storage.mongo.MongoObjectDatabase;
 import org.geogit.storage.mongo.MongoStagingDatabase;
-import org.geogit.storage.mongo.TestConfigDatabase;
+import org.geogit.storage.integration.mongo.TestConfigDatabase;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Scopes;

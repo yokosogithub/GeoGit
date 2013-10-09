@@ -2,7 +2,7 @@
  * This code is licensed under the BSD New License, available at the root
  * application directory.
  */
-package org.geogit.test.integration.mongo;
+package org.geogit.storage.integration.mongo;
 
 import java.io.File;
 

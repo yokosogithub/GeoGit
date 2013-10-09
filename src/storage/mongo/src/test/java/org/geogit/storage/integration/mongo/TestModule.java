@@ -3,7 +3,7 @@
  * application directory.
  */
 
-package org.geogit.test.integration.mongo;
+package org.geogit.storage.integration.mongo;
 
 import org.geogit.api.Platform;
 
