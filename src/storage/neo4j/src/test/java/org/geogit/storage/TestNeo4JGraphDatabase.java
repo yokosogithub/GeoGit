@@ -23,17 +23,19 @@ public class TestNeo4JGraphDatabase extends Neo4JGraphDatabase {
 
     @Override
     protected Neo4jGraph getGraphDatabase() {
-    	TestGraphDatabaseFactory factory = new TestGraphDatabaseFactory();
-    	Map<String, String> settings = new HashMap<String, String>();
-    	GraphDatabaseService service = factory.newImpermanentDatabaseBuilder()
-    	       .setConfig(settings)
-    	       .newGraphDatabase();
-    	return new Neo4jGraph(service);
+        TestGraphDatabaseFactory factory = new TestGraphDatabaseFactory();
+        Map<String, String> settings = new HashMap<String, String>();
+        GraphDatabaseService service = factory.newImpermanentDatabaseBuilder().setConfig(settings)
+                .newGraphDatabase();
+        return new Neo4jGraph(service);
     }
 
     @Override
     protected void destroyGraphDatabase() {
-        graphDB.shutdown();
-        databaseServices.remove(dbPath);
+        try {
+            graphDB.shutdown();
+        } finally {
+            databaseServices.remove(dbPath);
+        }
     }
 }

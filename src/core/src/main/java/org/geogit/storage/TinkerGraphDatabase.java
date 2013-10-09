@@ -4,8 +4,6 @@
  */
 package org.geogit.storage;
 
-import java.util.Map;
-
 import org.geogit.api.Platform;
 
 import com.google.inject.Inject;
@@ -22,9 +20,10 @@ public class TinkerGraphDatabase extends BlueprintsGraphDatabase<TinkerGraph> {
      */
     @Inject
     public TinkerGraphDatabase(final Platform platform) {
-    	super(platform);
+        super(platform);
     }
-    
+
+    @Override
     protected TinkerGraph getGraphDatabase() {
         return new TinkerGraph(dbPath, TinkerGraph.FileType.GML);
     }

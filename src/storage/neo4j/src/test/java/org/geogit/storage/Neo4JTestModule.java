@@ -6,12 +6,9 @@
 package org.geogit.storage;
 
 import org.geogit.api.Platform;
-import org.geogit.storage.StagingDatabase;
 import org.geogit.storage.memory.HeapStagingDatabase;
-import org.geogit.storage.GraphDatabase;
 
 import com.google.inject.AbstractModule;
-import com.google.inject.Scopes;
 
 /**
  * Guice module with tweaks to run functional tests on the target {@link Platform}'s working
@@ -20,8 +17,6 @@ import com.google.inject.Scopes;
  * @see CLITestInjectorBuilder
  */
 public class Neo4JTestModule extends AbstractModule {
-
-    private Platform testPlatform;
 
     @Override
     protected void configure() {

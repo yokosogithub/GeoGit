@@ -1,23 +1,25 @@
+/* Copyright (c) 2013 OpenPlans. All rights reserved.
+ * This code is licensed under the BSD New License, available at the root
+ * application directory.
+ */
 package org.geogit.storage;
 
 import java.io.IOException;
 
-import org.geogit.api.GlobalInjectorBuilder;
 import org.geogit.api.ObjectId;
-import org.geogit.api.Platform;
-import org.geogit.api.TestPlatform;
-import org.geogit.di.GeogitModule;
-import org.geogit.storage.GraphDatabase;
 import org.geogit.test.integration.RepositoryTestCase;
-import org.geogit.test.integration.TestInjectorBuilder;
 import org.junit.Test;
 
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
-import com.google.inject.Guice;
 import com.google.inject.Injector;
-import com.google.inject.util.Modules;
 
+/**
+ * Abstract test suite for {@link GraphDatabase} implementations.
+ * <p>
+ * Create a concrete subclass of this test suite and implement {@link #createInjector()} so that
+ * {@code GraphDtabase.class} is bound to your implementation instance as a singleton.
+ */
 public abstract class GraphDatabaseTest extends RepositoryTestCase {
 
     protected GraphDatabase database;

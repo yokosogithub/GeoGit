@@ -4,8 +4,6 @@
  */
 package org.geogit.storage.memory;
 
-import java.util.Map;
-
 import org.geogit.api.Platform;
 import org.geogit.storage.BlueprintsGraphDatabase;
 
@@ -13,7 +11,8 @@ import com.google.inject.Inject;
 import com.tinkerpop.blueprints.impls.tg.TinkerGraph;
 
 /**
- * Provides an implementation of a GeoGit Graph Database using TinkerGraph.
+ * Provides an implementation of a GeoGit Graph Database using TinkerGraph's {@link TinkerGraph
+ * in-memory only database implementation}.
  */
 public class HeapGraphDatabase extends BlueprintsGraphDatabase<TinkerGraph> {
     /**
@@ -23,9 +22,10 @@ public class HeapGraphDatabase extends BlueprintsGraphDatabase<TinkerGraph> {
      */
     @Inject
     public HeapGraphDatabase(final Platform platform) {
-    	super(platform);
+        super(platform);
     }
-    
+
+    @Override
     protected TinkerGraph getGraphDatabase() {
         return new TinkerGraph();
     }

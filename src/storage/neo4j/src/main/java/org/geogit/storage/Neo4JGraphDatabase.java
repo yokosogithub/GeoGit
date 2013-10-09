@@ -22,11 +22,13 @@ public class Neo4JGraphDatabase extends TransactionalBlueprintsGraphDatabase<Neo
      */
     @Inject
     public Neo4JGraphDatabase(final Platform platform) {
-    	super(platform);
+        super(platform);
     }
-    
+
+    @Override
     protected Neo4jGraph getGraphDatabase() {
         Map<String, String> settings = new java.util.HashMap<String, String>();
+        // GR: please add a note on why this setting is needed
         settings.put("online_backup_enabled", "false");
         return new Neo4jGraph(dbPath, settings);
     }

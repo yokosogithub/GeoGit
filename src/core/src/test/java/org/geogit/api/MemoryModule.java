@@ -18,7 +18,10 @@ import com.google.inject.AbstractModule;
 import com.google.inject.Scopes;
 
 /**
- *
+ * @see HeapObjectDatabse
+ * @see HeapStagingDatabase
+ * @see HeapRefDatabase
+ * @see HeapGraphDatabase
  */
 public class MemoryModule extends AbstractModule {
 

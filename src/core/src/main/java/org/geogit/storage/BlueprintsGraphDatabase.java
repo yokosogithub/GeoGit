@@ -1,3 +1,7 @@
+/* Copyright (c) 2013 OpenPlans. All rights reserved.
+ * This code is licensed under the BSD New License, available at the root
+ * application directory.
+ */
 package org.geogit.storage;
 
 import static com.google.common.io.Closeables.closeQuietly;
@@ -39,6 +43,12 @@ import com.tinkerpop.gremlin.java.GremlinPipeline;
 import com.tinkerpop.pipes.PipeFunction;
 import com.tinkerpop.pipes.branch.LoopPipe.LoopBundle;
 
+/**
+ * An abstract implementation of {@link GraphDatabase} on top of the <a
+ * href="https://github.com/tinkerpop/blueprints/">blueprints</a> {@link IndexableGraph graph API}.
+ * 
+ * @param <DB>
+ */
 public abstract class BlueprintsGraphDatabase<DB extends IndexableGraph> extends
         AbstractGraphDatabase {
 
@@ -760,10 +770,16 @@ public abstract class BlueprintsGraphDatabase<DB extends IndexableGraph> extends
         potentialCommonAncestors.removeAll(falseAncestors);
     }
 
+    /**
+     * Template method for transactional graph db's to override and implement the commit action
+     */
     protected void commit() {
         // Stub for transactional graphdb to use
     }
 
+    /**
+     * Template method for transactional graph db's to override and implement the rollback action
+     */
     protected void rollback() {
         // Stub for transactional graphdb to use
     }
