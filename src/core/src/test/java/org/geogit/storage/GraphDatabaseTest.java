@@ -2,21 +2,32 @@ package org.geogit.storage;
 
 import java.io.IOException;
 
+import org.geogit.api.GlobalInjectorBuilder;
 import org.geogit.api.ObjectId;
+import org.geogit.api.Platform;
+import org.geogit.api.TestPlatform;
+import org.geogit.di.GeogitModule;
+import org.geogit.storage.GraphDatabase;
 import org.geogit.test.integration.RepositoryTestCase;
+import org.geogit.test.integration.TestInjectorBuilder;
 import org.junit.Test;
 
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
+import com.google.inject.Guice;
+import com.google.inject.Injector;
+import com.google.inject.util.Modules;
 
-public class Neo4JGraphDatabaseTest extends RepositoryTestCase {
+public abstract class GraphDatabaseTest extends RepositoryTestCase {
 
-    protected BlueprintsGraphDatabase database;
+    protected GraphDatabase database;
 
     @Override
     protected void setUpInternal() throws Exception {
-        database = (BlueprintsGraphDatabase) geogit.getRepository().getGraphDatabase();
+        database = (GraphDatabase) geogit.getRepository().getGraphDatabase();
     }
+
+    protected abstract Injector createInjector();
 
     @Test
     public void testNodes() throws IOException {
@@ -406,5 +417,4 @@ public class Neo4JGraphDatabaseTest extends RepositoryTestCase {
         assertEquals(4, database.getDepth(commit4));
         assertEquals(1, database.getDepth(commit11));
     }
-
 }

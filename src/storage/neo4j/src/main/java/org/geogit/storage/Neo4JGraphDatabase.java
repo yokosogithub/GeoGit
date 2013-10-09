@@ -14,7 +14,7 @@ import com.tinkerpop.blueprints.impls.neo4j.Neo4jGraph;
 /**
  * Provides an implementation of a GeoGit Graph Database using Neo4J.
  */
-public class Neo4JGraphDatabase extends BlueprintsGraphDatabase<Neo4jGraph> {
+public class Neo4JGraphDatabase extends TransactionalBlueprintsGraphDatabase<Neo4jGraph> {
     /**
      * Constructs a new {@code Neo4JGraphDatabase} using the given platform.
      * 
@@ -25,9 +25,9 @@ public class Neo4JGraphDatabase extends BlueprintsGraphDatabase<Neo4jGraph> {
     	super(platform);
     }
     
-	protected Neo4jGraph getGraphDatabase() {
-		Map<String, String> settings = new java.util.HashMap<String, String>();
-		settings.put("online_backup_enabled", "false");
-		return new Neo4jGraph(dbPath, settings);
-	}
+    protected Neo4jGraph getGraphDatabase() {
+        Map<String, String> settings = new java.util.HashMap<String, String>();
+        settings.put("online_backup_enabled", "false");
+        return new Neo4jGraph(dbPath, settings);
+    }
 }

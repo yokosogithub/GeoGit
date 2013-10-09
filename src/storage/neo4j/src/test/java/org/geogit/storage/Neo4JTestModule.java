@@ -3,9 +3,11 @@
  * application directory.
  */
 
-package org.geogit.cli.test.functional;
+package org.geogit.storage;
 
 import org.geogit.api.Platform;
+import org.geogit.storage.StagingDatabase;
+import org.geogit.storage.memory.HeapStagingDatabase;
 import org.geogit.storage.GraphDatabase;
 
 import com.google.inject.AbstractModule;
@@ -17,22 +19,14 @@ import com.google.inject.Scopes;
  * 
  * @see CLITestInjectorBuilder
  */
-public class FunctionalTestModule extends AbstractModule {
+public class Neo4JTestModule extends AbstractModule {
 
     private Platform testPlatform;
 
-    /**
-     * @param testPlatform
-     */
-    public FunctionalTestModule(Platform testPlatform) {
-        this.testPlatform = testPlatform;
-    }
-
     @Override
     protected void configure() {
-        if (testPlatform != null) {
-            bind(Platform.class).toInstance(testPlatform);
-        }
+        bind(StagingDatabase.class).to(HeapStagingDatabase.class);
+        bind(GraphDatabase.class).to(TestNeo4JGraphDatabase.class);
     }
 
 }
