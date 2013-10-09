@@ -11,7 +11,8 @@ import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.util.Modules;
 
-public class MongoRevTreeBuilderTest extends org.geogit.test.integration.RevTreeBuilderTest {
+public class MongoRevTreeBuilderTest extends
+        org.geogit.test.integration.RevTreeBuilderTest {
     @Override
     protected Injector createInjector() {
         return Guice.createInjector(Modules.override(new GeogitModule()).with(

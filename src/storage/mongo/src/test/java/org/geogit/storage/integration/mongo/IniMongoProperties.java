@@ -1,3 +1,7 @@
+/* Copyright (c) 2013 OpenPlans. All rights reserved.
+ * This code is licensed under the BSD New License, available at the root
+ * application directory.
+ */
 package org.geogit.storage.integration.mongo;
 
 import java.io.File;
@@ -30,7 +34,8 @@ public class IniMongoProperties {
     }
 
     private File config() {
-        File f = new File(System.getProperty("user.home"), ".geogit-mongo-tests.properties");
+        File f = new File(System.getProperty("user.home"),
+                ".geogit-mongo-tests.properties");
         try {
             if (!f.exists()) {
                 f.createNewFile();

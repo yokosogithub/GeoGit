@@ -1,3 +1,7 @@
+/* Copyright (c) 2013 OpenPlans. All rights reserved.
+ * This code is licensed under the BSD New License, available at the root
+ * application directory.
+ */
 package org.geogit.storage.integration.mongo;
 
 import java.io.File;
@@ -21,18 +25,17 @@ import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.util.Modules;
 
-
 public class MongoConflictsTest extends RepositoryTestCase {
 
     @Rule
     public TemporaryFolder mockWorkingDirTempFolder = new TemporaryFolder();
 
-    @Override 
+    @Override
     public void setUpInternal() {
-//      getRepository().command(ConfigOp.class).setAction(ConfigOp.ConfigAction.CONFIG_SET).setName("mongo.host")
-//              .setValue("192.168.122.165").call();
-//      getRepository().command(ConfigOp.class).setAction(ConfigOp.ConfigAction.CONFIG_SET).setName("mongo.port")
-//              .setValue("27017").call();
+        // getRepository().command(ConfigOp.class).setAction(ConfigOp.ConfigAction.CONFIG_SET).setName("mongo.host")
+        // .setValue("192.168.122.165").call();
+        // getRepository().command(ConfigOp.class).setAction(ConfigOp.ConfigAction.CONFIG_SET).setName("mongo.port")
+        // .setValue("27017").call();
     }
 
     @Override
@@ -56,8 +59,9 @@ public class MongoConflictsTest extends RepositoryTestCase {
         assertTrue(conflicts.isEmpty());
         Conflict conflict = new Conflict(idP1, ObjectId.forString("ancestor"),
                 ObjectId.forString("ours"), ObjectId.forString("theirs"));
-        Conflict conflict2 = new Conflict(idP2, ObjectId.forString("ancestor2"),
-                ObjectId.forString("ours2"), ObjectId.forString("theirs2"));
+        Conflict conflict2 = new Conflict(idP2,
+                ObjectId.forString("ancestor2"), ObjectId.forString("ours2"),
+                ObjectId.forString("theirs2"));
         db.addConflict(null, conflict);
         Optional<Conflict> returnedConflict = db.getConflict(null, idP1);
         assertTrue(returnedConflict.isPresent());

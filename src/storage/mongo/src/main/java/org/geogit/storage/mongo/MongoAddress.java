@@ -1,3 +1,7 @@
+/* Copyright (c) 2013 OpenPlans. All rights reserved.
+ * This code is licensed under the BSD New License, available at the root
+ * application directory.
+ */
 package org.geogit.storage.mongo;
 
 public class MongoAddress {
@@ -9,7 +13,7 @@ public class MongoAddress {
         this.port = port;
     }
 
-    public String getHost() { 
+    public String getHost() {
         return host;
     }
 

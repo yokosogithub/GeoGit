@@ -71,19 +71,22 @@ public class MongoObjectDatabase implements ObjectDatabase {
     protected ObjectSerializingFactory serializers = new DataStreamSerializationFactory();
 
     @Inject
-    public MongoObjectDatabase(ConfigDatabase config, MongoConnectionManager manager) {
+    public MongoObjectDatabase(ConfigDatabase config,
+            MongoConnectionManager manager) {
         this.config = config;
         this.manager = manager;
     }
 
     private RevObject fromBytes(ObjectId id, byte[] buffer) {
         ByteArrayInputStream byteStream = new ByteArrayInputStream(buffer);
-        RevObject result = serializers.createObjectReader().read(id, byteStream);
+        RevObject result = serializers.createObjectReader()
+                .read(id, byteStream);
         return result;
     }
 
     private byte[] toBytes(RevObject object) {
-        ObjectWriter<RevObject> writer = serializers.createObjectWriter(object.getType());
+        ObjectWriter<RevObject> writer = serializers.createObjectWriter(object
+                .getType());
         ByteArrayOutputStream byteStream = new ByteArrayOutputStream();
         try {
             writer.write(object, byteStream);
@@ -97,7 +100,7 @@ public class MongoObjectDatabase implements ObjectDatabase {
         return "objects";
     }
 
-    public synchronized void open() { 
+    public synchronized void open() {
         if (client != null) {
             return;
         }
@@ -112,8 +115,8 @@ public class MongoObjectDatabase implements ObjectDatabase {
     public synchronized boolean isOpen() {
         return client != null;
     }
-    
-    public synchronized void close() { 
+
+    public synchronized void close() {
         if (client != null) {
             manager.release(client);
         }
@@ -122,7 +125,7 @@ public class MongoObjectDatabase implements ObjectDatabase {
         collection = null;
     }
 
-    public boolean exists(ObjectId id) { 
+    public boolean exists(ObjectId id) {
         DBObject query = new BasicDBObject();
         query.put("oid", id.toString());
         return collection.find(query).hasNext();
@@ -154,7 +157,8 @@ public class MongoObjectDatabase implements ObjectDatabase {
             }
             return ids;
         } else {
-            throw new IllegalArgumentException("Prefix query must be done with hexadecimal values only");
+            throw new IllegalArgumentException(
+                    "Prefix query must be done with hexadecimal values only");
         }
     }
 
@@ -183,7 +187,7 @@ public class MongoObjectDatabase implements ObjectDatabase {
         }
     }
 
-    public <T extends RevObject> T getIfPresent(ObjectId id, Class<T> clazz) { 
+    public <T extends RevObject> T getIfPresent(ObjectId id, Class<T> clazz) {
         return clazz.cast(getIfPresent(id));
     }
 
@@ -213,21 +217,23 @@ public class MongoObjectDatabase implements ObjectDatabase {
         return collection.remove(query).getLastError().ok();
     }
 
-    public long deleteAll(Iterator<ObjectId> ids) { 
+    public long deleteAll(Iterator<ObjectId> ids) {
         long count = 0;
         while (ids.hasNext()) {
-            if (delete(ids.next())) count += 1;
+            if (delete(ids.next()))
+                count += 1;
         }
         return count;
     }
 
-    public boolean put(final RevObject object) { 
+    public boolean put(final RevObject object) {
         DBObject query = new BasicDBObject();
         query.put("oid", object.getId().toString());
         DBObject record = new BasicDBObject();
         record.put("oid", object.getId().toString());
         record.put("serialized_object", toBytes(object));
-        return collection.update(query, record, true, false).getLastError().ok();
+        return collection.update(query, record, true, false).getLastError()
+                .ok();
     }
 
     public boolean put(ObjectId objectId, InputStream raw) {
@@ -246,15 +252,16 @@ public class MongoObjectDatabase implements ObjectDatabase {
         DBObject record = new BasicDBObject();
         record.put("oid", objectId.toString());
         record.put("serialized_object", bytes.toByteArray());
-        return collection.update(query, record, true, false).getLastError().ok();
+        return collection.update(query, record, true, false).getLastError()
+                .ok();
     }
 
     public void putAll(final Iterator<? extends RevObject> objects) {
-        while (objects.hasNext()) put(objects.next());
+        while (objects.hasNext())
+            put(objects.next());
     }
 
-    public ObjectInserter newObjectInserter() { 
+    public ObjectInserter newObjectInserter() {
         return new ObjectInserter(this);
     }
 }
-

@@ -1,3 +1,7 @@
+/* Copyright (c) 2013 OpenPlans. All rights reserved.
+ * This code is licensed under the BSD New License, available at the root
+ * application directory.
+ */
 package org.geogit.storage.integration.mongo;
 
 import java.util.HashMap;
@@ -15,11 +19,13 @@ public class TestConfigDatabase implements ConfigDatabase {
     private ConfigDatabase delegate;
 
     private Map<String, String> overrides = new HashMap<String, String>();
-    
-    { 
+
+    {
         final IniMongoProperties properties = new IniMongoProperties();
-        final String port = properties.get("mongo.port", String.class).or("27017");
-        final String host = properties.get("mongo.host", String.class).or("localhost");
+        final String port = properties.get("mongo.port", String.class).or(
+                "27017");
+        final String host = properties.get("mongo.host", String.class).or(
+                "localhost");
         overrides.put("mongo.port", port);
         overrides.put("mongo.host", host);
     }
@@ -53,7 +59,7 @@ public class TestConfigDatabase implements ConfigDatabase {
             } else {
                 return Optional.absent();
             }
-        } 
+        }
         return delegate.get(key, c);
     }
 
@@ -73,7 +79,8 @@ public class TestConfigDatabase implements ConfigDatabase {
 
     public Map<String, String> getAllSection(String section) {
         Map<String, String> all = delegate.getAll();
-        if (section.equals("mongo")) all.putAll(overrides);
+        if (section.equals("mongo"))
+            all.putAll(overrides);
         return all;
     }
 
@@ -83,7 +90,8 @@ public class TestConfigDatabase implements ConfigDatabase {
 
     public List<String> getAllSubsections(String section) {
         List<String> all = delegate.getAllSubsections(section);
-        if (!all.contains("mongo")) all.add("mongo");
+        if (!all.contains("mongo"))
+            all.add("mongo");
         return all;
     }
 
@@ -110,9 +118,8 @@ public class TestConfigDatabase implements ConfigDatabase {
     public void removeSection(String key) {
         delegate.removeSection(key);
     }
-    
+
     public void removeSectionGlobal(String key) {
         delegate.removeSectionGlobal(key);
     }
 }
-

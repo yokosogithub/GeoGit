@@ -23,9 +23,12 @@ public class MongoTestStorageModule extends AbstractModule {
     protected void configure() {
         // Mongo bindings for the different kinds of databases
         bind(MongoConnectionManager.class).in(Scopes.SINGLETON);
-        bind(ObjectDatabase.class).to(MongoObjectDatabase.class).in(Scopes.SINGLETON);
-        bind(StagingDatabase.class).to(MongoStagingDatabase.class).in(Scopes.SINGLETON);
-        bind(GraphDatabase.class).to(TestNeo4JGraphDatabase.class).in(Scopes.SINGLETON);
+        bind(ObjectDatabase.class).to(MongoObjectDatabase.class).in(
+                Scopes.SINGLETON);
+        bind(StagingDatabase.class).to(MongoStagingDatabase.class).in(
+                Scopes.SINGLETON);
+        bind(GraphDatabase.class).to(TestNeo4JGraphDatabase.class).in(
+                Scopes.SINGLETON);
         bind(ConfigDatabase.class).to(TestConfigDatabase.class);
     }
 }

@@ -39,7 +39,8 @@ import com.mongodb.MongoClient;
 /**
  * @TODO: extract interface
  */
-public class MongoStagingDatabase extends MongoObjectDatabase implements StagingDatabase {
+public class MongoStagingDatabase extends MongoObjectDatabase implements
+        StagingDatabase {
     private ObjectSerializingFactory sfac;
     private ObjectDatabase repositoryDb;
     protected DBCollection conflicts;
@@ -49,19 +50,24 @@ public class MongoStagingDatabase extends MongoObjectDatabase implements Staging
     }
 
     @Inject
-    public MongoStagingDatabase(final ConfigDatabase config, final MongoConnectionManager manager, final ObjectSerializingFactory sfac, final ObjectDatabase repositoryDb) {
+    public MongoStagingDatabase(final ConfigDatabase config,
+            final MongoConnectionManager manager,
+            final ObjectSerializingFactory sfac,
+            final ObjectDatabase repositoryDb) {
         super(config, manager);
         this.sfac = sfac;
         this.repositoryDb = repositoryDb;
     }
 
-    @Override synchronized public void open() {
+    @Override
+    synchronized public void open() {
         super.open();
         conflicts = db.getCollection("conflicts");
         conflicts.ensureIndex("path");
     }
 
-    @Override synchronized public void close() {
+    @Override
+    synchronized public void close() {
         super.close();
         conflicts = null;
     }
@@ -82,10 +88,11 @@ public class MongoStagingDatabase extends MongoObjectDatabase implements Staging
 
     @Override
     public List<ObjectId> lookUp(final String partialId) {
-        Set<ObjectId> results = new HashSet<ObjectId>(); 
+        Set<ObjectId> results = new HashSet<ObjectId>();
         // Using a set because we were getting duplicates building a list
         // directly. Need to figure out why we are ending up with objects in
-        // both staging and object database... Maybe delete() is not working properly?
+        // both staging and object database... Maybe delete() is not working
+        // properly?
         results.addAll(super.lookUp(partialId));
         results.addAll(repositoryDb.lookUp(partialId));
         return new ArrayList(results);
@@ -101,7 +108,8 @@ public class MongoStagingDatabase extends MongoObjectDatabase implements Staging
         }
     }
 
-    public Optional<Conflict> getConflict(@Nullable String namespace, String path) { 
+    public Optional<Conflict> getConflict(@Nullable String namespace,
+            String path) {
         DBObject query = new BasicDBObject();
         query.put("path", path);
         if (namespace != null) {
@@ -111,14 +119,16 @@ public class MongoStagingDatabase extends MongoObjectDatabase implements Staging
         if (result == null) {
             return Optional.absent();
         } else {
-            ObjectId ancestor = ObjectId.valueOf((String) result.get("ancestor"));
+            ObjectId ancestor = ObjectId.valueOf((String) result
+                    .get("ancestor"));
             ObjectId ours = ObjectId.valueOf((String) result.get("ours"));
             ObjectId theirs = ObjectId.valueOf((String) result.get("theirs"));
             return Optional.of(new Conflict(path, ancestor, ours, theirs));
         }
     }
 
-    public List<Conflict> getConflicts(@Nullable String namespace, @Nullable String pathFilter) {
+    public List<Conflict> getConflicts(@Nullable String namespace,
+            @Nullable String pathFilter) {
         DBObject query = new BasicDBObject();
         if (namespace == null) {
             query.put("namespace", 0);
@@ -135,7 +145,8 @@ public class MongoStagingDatabase extends MongoObjectDatabase implements Staging
         while (cursor.hasNext()) {
             DBObject element = cursor.next();
             String path = (String) element.get("path");
-            ObjectId ancestor = ObjectId.valueOf((String) element.get("ancestor"));
+            ObjectId ancestor = ObjectId.valueOf((String) element
+                    .get("ancestor"));
             ObjectId ours = ObjectId.valueOf((String) element.get("ours"));
             ObjectId theirs = ObjectId.valueOf((String) element.get("theirs"));
             results.add(new Conflict(path, ancestor, ours, theirs));
