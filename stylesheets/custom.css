@@ -6219,9 +6219,13 @@ h5 {
 #participate h2 {
   padding-top: 60px;
 }
+#participate p {
+  margin-top: 30px;
+  margin-bottom: 30px;
+}
 #tree_img {
-  height: 1280px;
-  width: 530px;
+  height: 1174px;
+  width: 537px;
   background: url(../images/git_tree.png) no-repeat;
 }
 @media only screen and (-webkit-min-device-pixel-ratio: 2) {
