@@ -7,6 +7,7 @@ package org.geogit.remote;
 
 import java.io.File;
 import java.net.URI;
+import java.net.URL;
 
 import org.geogit.api.Remote;
 import org.geogit.repository.Repository;
@@ -39,18 +40,19 @@ public class RemoteUtils {
 
             IRemoteRepo remoteRepo = null;
             if (protocol == null || protocol.equals("file")) {
+                String filepath = new URL(remoteConfig.getFetchURL()).getFile();
                 if (remoteConfig.getMapped()) {
-                    remoteRepo = new LocalMappedRemoteRepo(injector, new File(
-                            remoteConfig.getFetchURL()), localRepository);
+                    remoteRepo = new LocalMappedRemoteRepo(injector, new File(filepath),
+                            localRepository);
                 } else {
-                    remoteRepo = new LocalRemoteRepo(injector,
-                            new File(remoteConfig.getFetchURL()), localRepository);
+                    remoteRepo = new LocalRemoteRepo(injector, new File(filepath), localRepository);
                 }
             } else if (protocol.equals("http")) {
                 if (remoteConfig.getMapped()) {
                     remoteRepo = new HttpMappedRemoteRepo(fetchURI.toURL(), localRepository);
                 } else {
-                    remoteRepo = new HttpRemoteRepo(fetchURI.toURL(), localRepository, deduplicationService);
+                    remoteRepo = new HttpRemoteRepo(fetchURI.toURL(), localRepository,
+                            deduplicationService);
                 }
             } else {
                 throw new UnsupportedOperationException(
@@ -64,5 +66,4 @@ public class RemoteUtils {
 
         return Optional.absent();
     }
-
 }
