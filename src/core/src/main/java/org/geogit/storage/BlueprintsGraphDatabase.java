@@ -364,8 +364,8 @@ public abstract class BlueprintsGraphDatabase<DB extends IndexableGraph> extends
                 for (ObjectId parent : parentIds) {
                     Vertex parentNode = getOrAddNode(parent);
                     commitNode.addEdge(CommitRelationshipTypes.PARENT.name(), parentNode);
+                    updated = true;
                 }
-                updated = true;
             }
             this.commit();
         } catch (Exception e) {
