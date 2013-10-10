@@ -5998,7 +5998,7 @@ header .navbar .nav > li > a {
 header .navbar .nav > li > a:hover,
 header .navbar .nav > li > a:focus {
   color: white;
-  background-color: #28728D;
+  background-color: #7eb5d3;
 }
 h1,
 h2,
@@ -6095,7 +6095,7 @@ h5 {
 #install p,
 #docs p,
 #participate p {
-  margin-bottom: 30px;
+  margin-bottom: 60px;
   line-height: 1.8em;
 }
 #main {
@@ -6106,7 +6106,7 @@ h5 {
 }
 #main .first {
   font-size: 1.3em;
-  padding-bottom: 20px;
+  padding-bottom: 10px;
 }
 #main .light {
   font-weight: 300;
@@ -6224,7 +6224,7 @@ h5 {
   margin: 0 20px 30px;
   background: #3d3d3d;
   border-radius: 0 0 5px 5px;
-  box-shadow: 0 5px 30px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 5px 30px rgba(0, 0, 0, 0.4);
   line-height: 1.5em;
 }
 #install .line {
