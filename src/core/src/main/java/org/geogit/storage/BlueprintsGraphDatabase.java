@@ -344,6 +344,7 @@ public abstract class BlueprintsGraphDatabase<DB extends IndexableGraph> extends
      */
     @Override
     public boolean put(ObjectId commitId, ImmutableList<ObjectId> parentIds) {
+        boolean updated = false;
         try {
             // See if it already exists
             Vertex commitNode = getOrAddNode(commitId);
@@ -353,6 +354,7 @@ public abstract class BlueprintsGraphDatabase<DB extends IndexableGraph> extends
                         .hasNext()) {
                     // Attach this node to the root node
                     commitNode.addEdge(CommitRelationshipTypes.TOROOT.name(), root);
+                    updated = true;
                 }
             }
 
@@ -362,6 +364,7 @@ public abstract class BlueprintsGraphDatabase<DB extends IndexableGraph> extends
                 for (ObjectId parent : parentIds) {
                     Vertex parentNode = getOrAddNode(parent);
                     commitNode.addEdge(CommitRelationshipTypes.PARENT.name(), parentNode);
+                    updated = true;
                 }
             }
             this.commit();
@@ -369,7 +372,7 @@ public abstract class BlueprintsGraphDatabase<DB extends IndexableGraph> extends
             this.rollback();
             throw Throwables.propagate(e);
         }
-        return true;
+        return updated;
     }
 
     /**
@@ -764,6 +767,24 @@ public abstract class BlueprintsGraphDatabase<DB extends IndexableGraph> extends
             }
         }
         potentialCommonAncestors.removeAll(falseAncestors);
+    }
+
+    @Override
+    public void truncate() {
+        try {
+            Iterator<Edge> edges = graphDB.getEdges().iterator();
+            while (edges.hasNext()) {
+                graphDB.removeEdge(edges.next());
+            }
+            Iterator<Vertex> vertices = graphDB.getVertices().iterator();
+            while (vertices.hasNext()) {
+                graphDB.removeVertex(vertices.next());
+            }
+            this.commit();
+        } catch (RuntimeException e) {
+            this.rollback();
+            throw e;
+        }
     }
 
     /**

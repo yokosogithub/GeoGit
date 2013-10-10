@@ -327,9 +327,7 @@ public class Repository implements CommandLocator {
     }
 
     /**
-     * Gets the depth of the repository, or {@link Optional#absent} if this is not a shallow clone.
-     * 
-     * @return the depth
+     * @return true if this is a sparse (mapped) clone.
      */
     public boolean isSparse() {
         Optional<Map<String, String>> sparseResult = command(ConfigOp.class)
