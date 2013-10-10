@@ -6156,7 +6156,6 @@ h5 {
   margin: 20px;
   text-align: left;
   padding-left: 40px;
-  background: url(../images/arrow.png) no-repeat;
 }
 #main .pagelink:hover {
   background: url(../images/arrow_hover.png) no-repeat;
@@ -6169,6 +6168,30 @@ h5 {
   }
   #main .pagelink:hover {
     background: url(../images/arrow@2x.png) no-repeat;
+  }
+}
+#main .link-docs {
+  background: url(../images/docs.png) no-repeat;
+}
+@media only screen and (-webkit-min-device-pixel-ratio: 2) {
+  #main .link-docs {
+    background: url(../images/docs@2x.png) no-repeat;
+  }
+}
+#main .link-participate {
+  background: url(../images/participate.png) no-repeat;
+}
+@media only screen and (-webkit-min-device-pixel-ratio: 2) {
+  #main .link-participate {
+    background: url(../images/participate@2x.png) no-repeat;
+  }
+}
+#main .link-install {
+  background: url(../images/install.png) no-repeat;
+}
+@media only screen and (-webkit-min-device-pixel-ratio: 2) {
+  #main .link-install {
+    background: url(../images/install@2x.png) no-repeat;
   }
 }
 #main .page-link {
