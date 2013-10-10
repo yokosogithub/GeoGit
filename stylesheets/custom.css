@@ -6008,15 +6008,6 @@ h5 {
   font-family: 'Proxima Nova', Helvetica, Arial, sans-serif;
   font-weight: bold;
 }
-.light {
-  font-weight: 300;
-}
-.copy {
-  font-size: 1.6em;
-  padding-bottom: 30px;
-  line-height: 1.2em;
-  text-transform: uppercase;
-}
 .navbar {
   margin-bottom: 0px;
 }
@@ -6025,7 +6016,7 @@ h5 {
 }
 @media (max-width: 768px) {
   .navbar {
-    border-bottom: #7eb5d3 10px solid;
+    border-bottom: #7eb5d3 7px solid;
   }
 }
 .navbar-brand {
@@ -6081,7 +6072,7 @@ h5 {
 }
 .subheading {
   background-color: #191818;
-  border-bottom: #7eb5d3 10px solid;
+  border-bottom: #7eb5d3 7px solid;
   margin-top: -35px;
 }
 .subheading .byline {
@@ -6090,7 +6081,7 @@ h5 {
   font-size: .8em;
   color: #777;
   text-transform: uppercase;
-  padding: 10px 10px 10px 85px;
+  padding: 10px 10px 10px 87px;
   margin: 0 10px 10px 25px;
   float: left;
 }
@@ -6108,17 +6099,31 @@ h5 {
   line-height: 1.8em;
 }
 #main {
-  padding-top: 30px;
+  padding-top: 50px;
   padding-bottom: 20px;
   background: #272727 url(../images/roadmap.png) no-repeat;
-  color: #a5a5a5;
+  color: #ddd;
+}
+#main .first {
+  font-size: 1.3em;
+  padding-bottom: 20px;
+}
+#main .light {
+  font-weight: 300;
+}
+#main .copy {
+  font-size: 1.6em;
+  padding-top: 30px;
+  padding-bottom: 10px;
+  line-height: 1.2em;
+  text-transform: uppercase;
 }
 #main .download {
   background: url(../images/zipfile.png) no-repeat 10%;
   border: #7eb5d3 4px solid;
   width: 250px;
   padding: 15px 10px 15px 80px;
-  margin: 50px 10px 40px 30px;
+  margin: 10px 10px 40px 30px;
   font-size: .75em;
   -webkit-border-radius: 5px;
   -moz-border-radius: 5px;
@@ -6145,7 +6150,7 @@ h5 {
 }
 #main .pagelink {
   display: block;
-  color: #999;
+  color: #ccc;
   height: 34px;
   width: 150px;
   margin: 20px;
@@ -6171,9 +6176,9 @@ h5 {
 }
 #main .alpha {
   text-align: left;
-  font-size: .9em;
+  font-size: .8em;
   padding-left: 25px;
-  padding-top: 70px;
+  padding-top: 40px;
 }
 #install,
 #docs,
