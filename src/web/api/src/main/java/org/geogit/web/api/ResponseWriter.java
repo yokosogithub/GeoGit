@@ -43,7 +43,7 @@ import org.geogit.api.plumbing.merge.MergeScenarioReport;
 import org.geogit.api.porcelain.FetchResult;
 import org.geogit.api.porcelain.FetchResult.ChangedRef;
 import org.geogit.api.porcelain.PullResult;
-import org.geogit.storage.GtEntityType;
+import org.geogit.storage.FieldType;
 import org.geogit.web.api.commands.BranchWebOp;
 import org.geogit.web.api.commands.LsTree;
 import org.geogit.web.api.commands.RefParseWeb;
@@ -612,8 +612,7 @@ public class ResponseWriter {
 
                             for (PropertyDescriptor attrib : attribs) {
                                 PropertyType attrType = attrib.getType();
-                                GtEntityType entityType = GtEntityType.fromBinding(attrType
-                                        .getBinding());
+                                FieldType entityType = FieldType.forBinding(attrType.getBinding());
                                 if (entityType.isGeometry() && attrType instanceof GeometryType) {
                                     GeometryType gt = (GeometryType) attrType;
                                     CoordinateReferenceSystem crs = gt
@@ -731,7 +730,7 @@ public class ResponseWriter {
 
                             for (PropertyDescriptor attrib : attribs) {
                                 PropertyType attrType = attrib.getType();
-                                GtEntityType entityType = GtEntityType.fromBinding(attrType
+                                FieldTypeType entityType = FieldTypeType.forBinding(attrType
                                         .getBinding());
                                 if (entityType.isGeometry() && attrType instanceof GeometryType) {
                                     GeometryType gt = (GeometryType) attrType;
@@ -802,7 +801,7 @@ public class ResponseWriter {
 
                         for (PropertyDescriptor attrib : attribs) {
                             PropertyType attrType = attrib.getType();
-                            GtEntityType entityType = GtEntityType.fromBinding(attrType
+                            FieldTypeType entityType = FieldTypeType.forBinding(attrType
                                     .getBinding());
                             if (entityType.isGeometry() && attrType instanceof GeometryType) {
                                 GeometryType gt = (GeometryType) attrType;

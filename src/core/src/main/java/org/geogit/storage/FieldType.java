@@ -9,6 +9,7 @@ import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.Date;
 import java.util.Map;
+import java.util.NoSuchElementException;
 
 import com.google.common.base.Optional;
 import com.google.common.collect.Maps;
@@ -27,41 +28,42 @@ import com.vividsolutions.jts.geom.Polygon;
  * 
  */
 public enum FieldType {
-
-    NULL(0x00, Void.class), //
-    BOOLEAN(0x01, Boolean.class), //
-    BYTE(0x02, Byte.class), //
-    SHORT(0x03, Short.class), //
-    INTEGER(0x04, Integer.class), //
-    LONG(0x05, Long.class), //
-    FLOAT(0x06, Float.class), //
-    DOUBLE(0x07, Double.class), //
-    STRING(0x08, String.class), //
-    BOOLEAN_ARRAY(0x09, boolean[].class), //
-    BYTE_ARRAY(0x0A, byte[].class), //
-    SHORT_ARRAY(0x0B, short[].class), //
-    INTEGER_ARRAY(0x0C, int[].class), //
-    LONG_ARRAY(0x0D, long[].class), //
-    FLOAT_ARRAY(0x0E, float[].class), //
-    DOUBLE_ARRAY(0x0F, double[].class), //
-    STRING_ARRAY(0x10, String[].class), //
-    POINT(0x11, Point.class), //
-    LINESTRING(0x12, LineString.class), //
-    POLYGON(0x13, Polygon.class), //
-    MULTIPOINT(0x14, MultiPoint.class), //
-    MULTILINESTRING(0x15, MultiLineString.class), //
-    MULTIPOLYGON(0x16, MultiPolygon.class), //
-    GEOMETRYCOLLECTION(0x17, GeometryCollection.class), //
-    GEOMETRY(0x18, Geometry.class), //
-    UUID(0x19, java.util.UUID.class), //
-    BIG_INTEGER(0x1A, BigInteger.class), //
-    BIG_DECIMAL(0x1B, BigDecimal.class), //
-    DATETIME(0x1C, Date.class), //
-    DATE(0x1D, java.sql.Date.class), //
-    TIME(0x1E, java.sql.Time.class), //
-    TIMESTAMP(0x1F, java.sql.Timestamp.class);
+    NULL(0x00, -1, Void.class), //
+    BOOLEAN(0x01, 1, Boolean.class), //
+    BYTE(0x02, 2, Byte.class), //
+    SHORT(0x03, -1, Short.class), //
+    INTEGER(0x04, 6, Integer.class), //
+    LONG(0x05, 8, Long.class), //
+    FLOAT(0x06, 5, Float.class), //
+    DOUBLE(0x07, 3, Double.class), //
+    STRING(0x08, 0, String.class), //
+    BOOLEAN_ARRAY(0x09, 9, boolean[].class), //
+    BYTE_ARRAY(0x0A, 10, byte[].class), //
+    SHORT_ARRAY(0x0B, -1, short[].class), //
+    INTEGER_ARRAY(0x0C, 14, int[].class), //
+    LONG_ARRAY(0x0D, 15, long[].class), //
+    FLOAT_ARRAY(0x0E, 13, float[].class), //
+    DOUBLE_ARRAY(0x0F, 12, double[].class), //
+    STRING_ARRAY(0x10, -1, String[].class), //
+    POINT(0x11, 16, Point.class), //
+    LINESTRING(0x12, 18,  LineString.class), //
+    POLYGON(0x13, 20, Polygon.class), //
+    MULTIPOINT(0x14, 17, MultiPoint.class), //
+    MULTILINESTRING(0x15, 19, MultiLineString.class), //
+    MULTIPOLYGON(0x16, 21, MultiPolygon.class), //
+    GEOMETRYCOLLECTION(0x17, 22, GeometryCollection.class), //
+    GEOMETRY(0x18, 23, Geometry.class), //
+    UUID(0x19, 26, java.util.UUID.class), //
+    BIG_INTEGER(0x1A, 7, BigInteger.class), //
+    BIG_DECIMAL(0x1B, 4, BigDecimal.class), //
+    DATETIME(0x1C, 27, Date.class), //
+    DATE(0x1D, 28, java.sql.Date.class), //
+    TIME(0x1E, 29, java.sql.Time.class), //
+    TIMESTAMP(0x1F, 30, java.sql.Timestamp.class), //
+    UNKNOWN(-1, 25, null);
 
     private final byte tagValue;
+    private final byte textTagValue;
 
     private final Class<?> binding;
 
@@ -72,8 +74,9 @@ public enum FieldType {
         }
     }
 
-    private FieldType(int tagValue, Class<?> binding) {
+    private FieldType(int tagValue, int textTagValue, Class<?> binding) {
         this.tagValue = (byte) tagValue;
+        this.textTagValue = (byte) textTagValue;
         this.binding = binding;
     }
 
@@ -85,8 +88,21 @@ public enum FieldType {
         return tagValue;
     }
 
+    public byte getTextTag() {
+        return textTagValue;
+    }
+
     public static FieldType valueOf(int i) {
         return values()[i];
+    }
+
+    public static FieldType valueFromText(int i) {
+        for (FieldType f : values()) {
+            if (f.getTextTag() == i) {
+                return f;
+            }
+        }
+        throw new NoSuchElementException();
     }
 
     public static FieldType forValue(Optional<Object> field) {
@@ -100,6 +116,7 @@ public enum FieldType {
     }
 
     public static FieldType forBinding(Class<?> binding) {
+        if (binding == null) return NULL;
         // try a hash lookup first
         FieldType fieldType = BINDING_MAPPING.get(binding);
         if (fieldType != null) {
@@ -109,11 +126,11 @@ public enum FieldType {
         // beware for this to work properly FieldTypes for super classes must be defined _after_
         // any subclass (i.e. Point before Geometry)
         for (FieldType t : values()) {
-            if (t.getBinding().isAssignableFrom(binding)) {
+            if (t.getBinding() != null && t.getBinding().isAssignableFrom(binding)) {
                 return t;
             }
         }
-        throw new IllegalArgumentException("Attempted to write unsupported field type " + binding);
+        return UNKNOWN;
     }
 
 }
