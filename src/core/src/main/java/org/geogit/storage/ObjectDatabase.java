@@ -4,7 +4,6 @@
  */
 package org.geogit.storage;
 
-import java.io.InputStream;
 import java.util.Iterator;
 import java.util.List;
 
@@ -135,13 +134,6 @@ public interface ObjectDatabase {
      * @return true if the object was deleted, false if it was not found
      */
     public boolean delete(ObjectId objectId);
-
-    /**
-     * @param objectId
-     * @param raw
-     * @return
-     */
-    public boolean put(ObjectId objectId, InputStream raw);
 
     /**
      * @param iterator

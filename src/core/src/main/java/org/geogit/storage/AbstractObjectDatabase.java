@@ -24,7 +24,6 @@ import org.geogit.api.RevTree;
 
 import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
-import com.google.common.io.ByteStreams;
 import com.google.common.io.Closeables;
 import com.ning.compress.lzf.LZFInputStream;
 import com.ning.compress.lzf.LZFOutputStream;
@@ -192,28 +191,6 @@ public abstract class AbstractObjectDatabase implements ObjectDatabase {
 
     protected abstract InputStream getRawInternal(ObjectId id, boolean failIfNotFound)
             throws IllegalArgumentException;
-
-    @Override
-    public boolean put(ObjectId objectId, InputStream raw) {
-        Preconditions.checkNotNull(objectId);
-        Preconditions.checkNotNull(raw);
-        Preconditions.checkArgument(!objectId.isNull(), "ObjectId is NULL");
-
-        ByteArrayOutputStream rawOut = new ByteArrayOutputStream();
-        LZFOutputStream cOut = new LZFOutputStream(rawOut);
-
-        try {
-            ByteStreams.copy(raw, cOut);
-            cOut.flush();
-            cOut.close();
-        } catch (IOException e) {
-            throw Throwables.propagate(e);
-        }
-
-        final byte[] rawData = rawOut.toByteArray();
-        final boolean inserted = putInternal(objectId, rawData);
-        return inserted;
-    }
 
     @Override
     public <T extends RevObject> boolean put(final T object) {

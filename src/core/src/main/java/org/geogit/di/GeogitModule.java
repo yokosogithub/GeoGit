@@ -6,7 +6,6 @@ package org.geogit.di;
 
 import static com.google.inject.matcher.Matchers.subclassesOf;
 
-import java.io.InputStream;
 import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.Iterator;
@@ -191,12 +190,9 @@ public class GeogitModule extends AbstractModule {
 
     private void bindCommitGraphInterceptor() {
         final Method putRevObject;
-        final Method putObjectIdInputStream;
         final Method putAll;
         try {
             putRevObject = ObjectDatabase.class.getMethod("put", RevObject.class);
-            putObjectIdInputStream = ObjectDatabase.class.getMethod("put", ObjectId.class,
-                    InputStream.class);
             putAll = ObjectDatabase.class.getMethod("putAll", Iterator.class);
         } catch (Exception e) {
             throw Throwables.propagate(e);
@@ -206,9 +202,7 @@ public class GeogitModule extends AbstractModule {
             @Override
             public boolean matches(Method t) {
                 if ("put".equals(t.getName())) {
-                    if (Arrays.equals(putRevObject.getParameterTypes(), t.getParameterTypes())
-                            || Arrays.equals(putObjectIdInputStream.getParameterTypes(),
-                                    t.getParameterTypes())) {
+                    if (Arrays.equals(putRevObject.getParameterTypes(), t.getParameterTypes())) {
                         return true;
                     }
                 } else if ("putAll".equals(t.getName())) {
@@ -231,7 +225,6 @@ public class GeogitModule extends AbstractModule {
         };
 
         bindInterceptor(subclassesOf(ObjectDatabase.class), methodMatcher,
-                new ObjectDatabasePutInterceptor(getProvider(GraphDatabase.class),
-                        getProvider(Repository.class)));
+                new ObjectDatabasePutInterceptor(getProvider(GraphDatabase.class)));
     }
 }

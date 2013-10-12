@@ -6,7 +6,6 @@ package org.geogit.storage.bdbje;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.ArrayList;
@@ -220,11 +219,6 @@ public class JEStagingDatabase implements ObjectDatabase, StagingDatabase {
     @Override
     public void putAll(Iterator<? extends RevObject> objects) {
         stagingDb.putAll(objects);
-    }
-
-    @Override
-    public boolean put(ObjectId objectId, InputStream raw) {
-        return stagingDb.put(objectId, raw);
     }
 
     @Override
