@@ -6,6 +6,7 @@ package org.geogit.api;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Ordering;
 
 /**
  * Base object type accessed during revision walking.
@@ -16,6 +17,16 @@ import com.google.common.collect.ImmutableMap;
  * @see RevTag
  */
 public interface RevObject {
+    /**
+     * A "natural order" {@link Ordering comparator} for revobject instances based on the
+     * {@link ObjectId}
+     */
+    public static final Ordering<RevObject> NATURAL_ORDER = new Ordering<RevObject>() {
+        @Override
+        public int compare(RevObject o1, RevObject o2) {
+            return o1.getId().compareTo(o2.getId());
+        }
+    };
 
     /**
      * {@code RevObject} types enumeration.

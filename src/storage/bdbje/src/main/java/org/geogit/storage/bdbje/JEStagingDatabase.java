@@ -4,6 +4,8 @@
  */
 package org.geogit.storage.bdbje;
 
+import static com.google.common.collect.Iterators.concat;
+
 import java.io.File;
 import java.io.IOException;
 import java.net.URISyntaxException;
@@ -26,6 +28,7 @@ import org.geogit.api.RevTag;
 import org.geogit.api.RevTree;
 import org.geogit.api.plumbing.ResolveGeogitDir;
 import org.geogit.api.plumbing.merge.Conflict;
+import org.geogit.storage.BulkOpListener;
 import org.geogit.repository.RepositoryConnectionException;
 import org.geogit.storage.ConfigDatabase;
 import org.geogit.storage.ObjectDatabase;
@@ -222,8 +225,8 @@ public class JEStagingDatabase implements ObjectDatabase, StagingDatabase {
     }
 
     @Override
-    public void putAll(Iterator<? extends RevObject> objects) {
-        stagingDb.putAll(objects);
+    public void putAll(Iterator<? extends RevObject> objects, final BulkOpListener listener) {
+        stagingDb.putAll(objects, listener);
     }
 
     @Override
@@ -249,6 +252,31 @@ public class JEStagingDatabase implements ObjectDatabase, StagingDatabase {
     @Override
     public RevTag getTag(ObjectId id) {
         return get(id, RevTag.class);
+    }
+
+    @Override
+    public long deleteAll(Iterator<ObjectId> ids, final BulkOpListener listener) {
+        return this.stagingDb.deleteAll(ids, listener);
+    }
+
+    @Override
+    public Iterator<RevObject> getAll(Iterable<ObjectId> ids, final BulkOpListener listener) {
+        return concat(this.stagingDb.getAll(ids, listener), this.repositoryDb.getAll(ids, listener));
+    }
+
+    @Override
+    public Iterator<RevObject> getAll(final Iterable<ObjectId> ids) {
+        return getAll(ids, BulkOpListener.NOOP_LISTENER);
+    }
+
+    @Override
+    public void putAll(Iterator<? extends RevObject> objects) {
+        putAll(objects, BulkOpListener.NOOP_LISTENER);
+    }
+
+    @Override
+    public long deleteAll(Iterator<ObjectId> ids) {
+        return deleteAll(ids, BulkOpListener.NOOP_LISTENER);
     }
 
     // TODO:
@@ -431,12 +459,6 @@ public class JEStagingDatabase implements ObjectDatabase, StagingDatabase {
             file.get().delete();
         }
     }
-
-    @Override
-    public long deleteAll(Iterator<ObjectId> ids) {
-        return this.stagingDb.deleteAll(ids);
-    }
-
     @Override
     public void configure() throws RepositoryConnectionException {
         RepositoryConnectionException.StorageType.STAGING.configure(configDB, "bdbje", "0.1");

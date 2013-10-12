@@ -146,11 +146,18 @@ public interface ObjectDatabase {
      */
     public boolean delete(ObjectId objectId);
 
+    public Iterator<RevObject> getAll(final Iterable<ObjectId> ids);
+
+    public Iterator<RevObject> getAll(final Iterable<ObjectId> ids, BulkOpListener listener);
+
     /**
      * @param iterator
      */
     public void putAll(Iterator<? extends RevObject> objects);
 
+    public void putAll(Iterator<? extends RevObject> objects, BulkOpListener listener);
+
     public long deleteAll(Iterator<ObjectId> ids);
 
+    public long deleteAll(Iterator<ObjectId> ids, BulkOpListener listener);
 }

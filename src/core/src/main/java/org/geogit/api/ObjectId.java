@@ -8,6 +8,7 @@ import java.nio.charset.Charset;
 import java.util.Arrays;
 
 import com.google.common.base.Preconditions;
+import com.google.common.collect.Ordering;
 import com.google.common.hash.HashCode;
 import com.google.common.hash.HashCodes;
 import com.google.common.hash.HashFunction;
@@ -17,6 +18,16 @@ import com.google.common.hash.Hashing;
  * A {@link RevObject} identifier backed by a hash function (SHA1 for instance)
  */
 public final class ObjectId implements Comparable<ObjectId> {
+
+    /**
+     * A "natural order" {@link Ordering comparator}
+     */
+    public static final Ordering<ObjectId> NATURAL_ORDER = new Ordering<ObjectId>() {
+        @Override
+        public int compare(ObjectId o1, ObjectId o2) {
+            return o1.compareTo(o2);
+        }
+    };
 
     /**
      * ObjectId instance that represents a NULL id.
