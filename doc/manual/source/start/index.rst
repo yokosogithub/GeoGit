@@ -1,7 +1,7 @@
 .. _start:
 
-Starting out
-============
+Starting out with GeoGit
+========================
 
 This section will introduce you to GeoGit, including installation and a tutorial.
 
