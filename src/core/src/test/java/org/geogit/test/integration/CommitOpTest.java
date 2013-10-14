@@ -130,7 +130,7 @@ public class CommitOpTest extends RepositoryTestCase {
             assertEquals(oId1_1, repo.getRootTreeChild(appendChild(pointsName, idP1)).get()
                     .getObjectId());
             // and check the objects were actually copied
-            assertNotNull(repo.getObjectDatabase().getRaw(oId1_1));
+            assertNotNull(repo.getObjectDatabase().get(oId1_1));
         }
         // insert and commit points2, points3 and lines1
         final ObjectId oId1_2 = insertAndAdd(points2);
@@ -153,9 +153,9 @@ public class CommitOpTest extends RepositoryTestCase {
             assertEquals(oId2_1, repo.getRootTreeChild(appendChild(linesName, idL1)).get()
                     .getObjectId());
             // and check the objects were actually copied
-            assertNotNull(repo.getObjectDatabase().getRaw(oId1_2));
-            assertNotNull(repo.getObjectDatabase().getRaw(oId1_3));
-            assertNotNull(repo.getObjectDatabase().getRaw(oId2_1));
+            assertNotNull(repo.getObjectDatabase().get(oId1_2));
+            assertNotNull(repo.getObjectDatabase().get(oId1_3));
+            assertNotNull(repo.getObjectDatabase().get(oId2_1));
 
             // as well as feature1_1 from the previous commit
             assertEquals(oId1_1, repo.getRootTreeChild(appendChild(pointsName, idP1)).get()
@@ -186,8 +186,8 @@ public class CommitOpTest extends RepositoryTestCase {
             assertEquals(oId2_2, repo.getRootTreeChild(appendChild(linesName, idL2)).get()
                     .getObjectId());
             // and check the objects were actually copied
-            assertNotNull(repo.getObjectDatabase().getRaw(oId1_2));
-            assertNotNull(repo.getObjectDatabase().getRaw(oId2_2));
+            assertNotNull(repo.getObjectDatabase().get(oId1_2));
+            assertNotNull(repo.getObjectDatabase().get(oId2_2));
         }
     }
 
@@ -551,7 +551,7 @@ public class CommitOpTest extends RepositoryTestCase {
             assertCommit(commit1, null, null, null);
             assertEquals(id, repo.getRootTreeChild(appendChild(pointsName, idP1)).get()
                     .getObjectId());
-            assertNotNull(repo.getObjectDatabase().getRaw(id));
+            assertNotNull(repo.getObjectDatabase().get(id));
         }
 
         final ObjectId id2 = insertAndAdd(points2);

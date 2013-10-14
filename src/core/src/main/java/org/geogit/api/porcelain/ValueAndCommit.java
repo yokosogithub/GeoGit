@@ -2,8 +2,6 @@ package org.geogit.api.porcelain;
 
 import org.geogit.api.RevCommit;
 
-import scala.collection.mutable.StringBuilder;
-
 import com.google.common.base.Optional;
 
 public class ValueAndCommit {

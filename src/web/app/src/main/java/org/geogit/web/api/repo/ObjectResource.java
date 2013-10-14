@@ -5,11 +5,13 @@
 package org.geogit.web.api.repo;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.OutputStream;
 
 import org.geogit.api.GeoGIT;
 import org.geogit.api.ObjectId;
+import org.geogit.api.RevObject;
+import org.geogit.storage.ObjectSerializingFactory;
+import org.geogit.storage.datastream.DataStreamSerializationFactory;
 import org.restlet.Request;
 import org.restlet.Response;
 import org.restlet.data.MediaType;
@@ -36,8 +38,10 @@ public class ObjectResource extends Finder {
         return super.find(request, response);
     }
 
-    private class ObjectRepresentation extends OutputRepresentation {
+    private static class ObjectRepresentation extends OutputRepresentation {
         private final ObjectId oid;
+
+        private static final ObjectSerializingFactory serialFac = new DataStreamSerializationFactory();
 
         private final GeoGIT ggit;
 
@@ -49,16 +53,8 @@ public class ObjectResource extends Finder {
 
         @Override
         public void write(OutputStream out) throws IOException {
-            InputStream rawObject = ggit.getRepository().getRawObject(oid);
-            try {
-                byte[] buff = new byte[8192];
-                int len = 0;
-                while ((len = rawObject.read(buff)) >= 0) {
-                    out.write(buff, 0, len);
-                }
-            } finally {
-                rawObject.close();
-            }
+            RevObject rawObject = ggit.getRepository().getObjectDatabase().get(oid);
+            serialFac.createObjectWriter(rawObject.getType()).write(rawObject, out);
         }
     }
 }

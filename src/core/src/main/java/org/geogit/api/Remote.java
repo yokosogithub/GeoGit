@@ -1,5 +1,8 @@
 package org.geogit.api;
 
+import java.io.File;
+import java.net.MalformedURLException;
+
 import javax.annotation.Nullable;
 
 import com.google.common.base.Optional;
@@ -34,11 +37,28 @@ public class Remote {
     public Remote(String name, String fetchurl, String pushurl, String fetch, boolean mapped,
             @Nullable String mappedBranch) {
         this.name = name;
-        this.fetchurl = fetchurl.replace("\\", "/");
-        this.pushurl = pushurl.replace("\\", "/");
+        this.fetchurl = checkURL(fetchurl);
+        this.pushurl = checkURL(pushurl);
         this.fetch = fetch;
         this.mapped = mapped;
         this.mappedBranch = Optional.fromNullable(mappedBranch).or("*");
+    }
+
+    private String checkURL(String url) {
+        url = url.replace("\\", "/");
+        if (url.startsWith("file:")) {
+            return url;
+        }
+        File file = new File(url);
+        if (file.exists()) {
+            try {
+                return file.toURI().toURL().toExternalForm();
+            } catch (MalformedURLException e) {
+                // shouldn't reach here, since the file exists and the path should then be correct
+                return url;
+            }
+        }
+        return url;
     }
 
     /**

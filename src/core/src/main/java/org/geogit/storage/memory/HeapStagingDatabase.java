@@ -4,7 +4,6 @@
  */
 package org.geogit.storage.memory;
 
-import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -26,13 +25,11 @@ import org.geogit.storage.StagingDatabase;
 
 import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
-import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterators;
 import com.google.common.collect.Maps;
 import com.google.common.collect.UnmodifiableIterator;
 import com.google.inject.Inject;
-import com.ning.compress.lzf.LZFInputStream;
 
 /**
  * Provides an implementation of a GeoGit staging database that utilizes the heap for the storage of
@@ -64,25 +61,6 @@ public class HeapStagingDatabase extends HeapObjectDatabse implements StagingDat
             exists = repositoryDb.exists(id);
         }
         return exists;
-    }
-
-    /**
-     * Gets the raw input stream of the object with the given {@link ObjectId id}.
-     * 
-     * @param id the id of the object to get
-     * @return the input stream of the object
-     */
-    @Override
-    public final InputStream getRaw(final ObjectId id) throws IllegalArgumentException {
-        InputStream in = getRawInternal(id, false);
-        if (in != null) {
-            try {
-                return new LZFInputStream(in);
-            } catch (IOException e) {
-                throw Throwables.propagate(e);
-            }
-        }
-        return repositoryDb.getRaw(id);
     }
 
     @Override

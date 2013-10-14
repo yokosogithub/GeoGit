@@ -90,14 +90,6 @@ public class TransactionStagingDatabase implements StagingDatabase {
      * Pass through to the original {@link StagingDatabase}.
      */
     @Override
-    public InputStream getRaw(ObjectId id) {
-        return database.getRaw(id);
-    }
-
-    /**
-     * Pass through to the original {@link StagingDatabase}.
-     */
-    @Override
     public List<ObjectId> lookUp(String partialId) {
         return database.lookUp(partialId);
     }

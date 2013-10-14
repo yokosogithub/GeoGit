@@ -43,8 +43,8 @@ import org.geogit.api.plumbing.merge.MergeScenarioReport;
 import org.geogit.api.porcelain.FetchResult;
 import org.geogit.api.porcelain.FetchResult.ChangedRef;
 import org.geogit.api.porcelain.PullResult;
-import org.geogit.storage.GtEntityType;
 import org.geogit.web.api.commands.BranchWebOp;
+import org.geogit.web.api.commands.Commit;
 import org.geogit.web.api.commands.LsTree;
 import org.geogit.web.api.commands.RefParseWeb;
 import org.geogit.web.api.commands.RemoteWebOp;
@@ -574,8 +574,8 @@ public class ResponseWriter {
      * @param diff - a DiffEntry iterator to build the response from
      * @throws XMLStreamException
      */
-    public void writeGeometryChanges(final CommandLocator geogit, Iterator<DiffEntry> diff, int page,
-            int elementsPerPage) throws XMLStreamException {
+    public void writeGeometryChanges(final CommandLocator geogit, Iterator<DiffEntry> diff,
+            int page, int elementsPerPage) throws XMLStreamException {
 
         advance(diff, page * elementsPerPage);
         int counter = 0;
@@ -612,9 +612,7 @@ public class ResponseWriter {
 
                             for (PropertyDescriptor attrib : attribs) {
                                 PropertyType attrType = attrib.getType();
-                                GtEntityType entityType = GtEntityType.fromBinding(attrType
-                                        .getBinding());
-                                if (entityType.isGeometry() && attrType instanceof GeometryType) {
+                                if (attrType instanceof GeometryType) {
                                     GeometryType gt = (GeometryType) attrType;
                                     CoordinateReferenceSystem crs = gt
                                             .getCoordinateReferenceSystem();
@@ -731,9 +729,7 @@ public class ResponseWriter {
 
                             for (PropertyDescriptor attrib : attribs) {
                                 PropertyType attrType = attrib.getType();
-                                GtEntityType entityType = GtEntityType.fromBinding(attrType
-                                        .getBinding());
-                                if (entityType.isGeometry() && attrType instanceof GeometryType) {
+                                if (attrType instanceof GeometryType) {
                                     GeometryType gt = (GeometryType) attrType;
                                     CoordinateReferenceSystem crs = gt
                                             .getCoordinateReferenceSystem();
@@ -802,9 +798,7 @@ public class ResponseWriter {
 
                         for (PropertyDescriptor attrib : attribs) {
                             PropertyType attrType = attrib.getType();
-                            GtEntityType entityType = GtEntityType.fromBinding(attrType
-                                    .getBinding());
-                            if (entityType.isGeometry() && attrType instanceof GeometryType) {
+                            if (attrType instanceof GeometryType) {
                                 GeometryType gt = (GeometryType) attrType;
                                 CoordinateReferenceSystem crs = gt.getCoordinateReferenceSystem();
                                 if (crs != null) {

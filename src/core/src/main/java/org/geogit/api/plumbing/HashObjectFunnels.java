@@ -27,7 +27,7 @@ import org.geogit.api.RevObject.TYPE;
 import org.geogit.api.RevPerson;
 import org.geogit.api.RevTag;
 import org.geogit.api.RevTree;
-import org.geogit.storage.GtEntityType;
+import org.geogit.storage.FieldType;
 import org.geotools.referencing.CRS;
 import org.opengis.feature.type.GeometryDescriptor;
 import org.opengis.feature.type.Name;
@@ -378,8 +378,8 @@ class HashObjectFunnels {
             PropertyType attrType = descriptor.getType();
             NameFunnel.funnel(attrType.getName(), into);
 
-            GtEntityType type = GtEntityType.fromBinding(attrType.getBinding());
-            into.putInt(type.getValue());
+            FieldType type = FieldType.forBinding(attrType.getBinding());
+            into.putInt(type.getTextTag());
             into.putBoolean(descriptor.isNillable());
 
             into.putInt(descriptor.getMaxOccurs());

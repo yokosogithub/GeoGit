@@ -157,14 +157,6 @@ public class JEStagingDatabase implements ObjectDatabase, StagingDatabase {
     }
 
     @Override
-    public InputStream getRaw(ObjectId id) {
-        if (stagingDb.exists(id)) {
-            return stagingDb.getRaw(id);
-        }
-        return repositoryDb.getRaw(id);
-    }
-
-    @Override
     public List<ObjectId> lookUp(String partialId) {
         Set<ObjectId> lookUp = new HashSet<ObjectId>(stagingDb.lookUp(partialId));
         lookUp.addAll(repositoryDb.lookUp(partialId));

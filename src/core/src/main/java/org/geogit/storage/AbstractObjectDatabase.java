@@ -176,18 +176,6 @@ public abstract class AbstractObjectDatabase implements ObjectDatabase {
         return TYPE.valueOf(clazz);
     }
 
-    /**
-     * Gets the raw input stream of the object with the given {@link ObjectId id}.
-     * 
-     * @param id the id of the object to get
-     * @return the input stream of the object
-     * @see org.geogit.storage.ObjectDatabase#getRaw(org.geogit.api.ObjectId)
-     */
-    @Override
-    public InputStream getRaw(final ObjectId id) throws IllegalArgumentException {
-        return getRaw(id, true);
-    }
-
     @Nullable
     private InputStream getRaw(final ObjectId id, boolean failIfNotFound)
             throws IllegalArgumentException {
@@ -277,7 +265,7 @@ public abstract class AbstractObjectDatabase implements ObjectDatabase {
             }
         }
         int size = ((ByteArrayOutputStream) target).size();
-        //System.err.printf("%d,%s,%s\n", size, object.getId(), object.getType());
+        // System.err.printf("%d,%s,%s\n", size, object.getId(), object.getType());
     }
 
     /**
