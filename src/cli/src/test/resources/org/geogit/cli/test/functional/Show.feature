@@ -3,6 +3,16 @@ Feature: "show" command
     As a Geogit User
     I want to display information about it
 
+Scenario: Try to show the description of a feature using only its path
+    Given I have a repository
+      And I stage 6 features
+      And I run the command "commit -m TestCommit"
+     When I run the command "show Points/Points.1"
+     Then the response should contain "ATTRIBUTES"
+      And the response should contain "sp"
+      And the response should contain "pp"
+      And the response should contain "ip"   
+      
 Scenario: Try to show the description of a commit
     Given I have a repository
       And I stage 6 features
@@ -31,4 +41,16 @@ Scenario: Try to show the description of a feature
       And the response should contain "sp"
       And the response should contain "pp"
       And the response should contain "ip"     
+      
+Scenario: Try to show the description of a feature using its SHA-1
+    Given I have a repository
+      And I stage 6 features
+      And I run the command "commit -m TestCommit"
+     When I run the command "show a47ca38e5c3e92c94dec9e8ea597c642003ec878"     
+     Then the response should contain "FEATURE"
+      And the response should contain "STRING"
+      And the response should contain "INTEGER"
+      And the response should contain "POINT"    
+      
+         
       
