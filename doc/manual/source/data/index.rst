@@ -10,7 +10,7 @@ This section will discuss working with data, including commits.
 
    adding
    checkout
-   committing
+   commiting
    diffs
    exporting
    history
