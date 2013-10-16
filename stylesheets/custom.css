@@ -6014,7 +6014,7 @@ h5 {
 .navbar h1 {
   text-shadow: 2px 2px 0px #333;
 }
-@media (max-width: 768px) and (-webkit-max-device-pixel-ratio: 1) {
+@media (max-width: 768px) and (-webkit-device-pixel-ratio: 1) {
   .navbar {
     border-bottom: #7eb5d3 7px solid;
   }
@@ -6074,7 +6074,7 @@ h5 {
   background-color: #191818;
   margin-top: -35px;
 }
-@media (min-width: 768px) {
+@media (min-width: 768px) and (-webkit-device-pixel-ratio: 1) {
   .subheading {
     border-bottom: #7eb5d3 7px solid;
   }
