@@ -6014,9 +6014,14 @@ h5 {
 .navbar h1 {
   text-shadow: 2px 2px 0px #333;
 }
-@media (max-width: 992px) and (-webkit-min-device-pixel-ratio: 1) {
+@media (max-width: 768px) {
   .navbar {
     border-bottom: #7eb5d3 7px solid;
+  }
+}
+@media (max-width: 768px) and (-webkit-min-device-pixel-ratio: 2) {
+  .navbar {
+    border-bottom: none;
   }
 }
 .navbar-brand {
