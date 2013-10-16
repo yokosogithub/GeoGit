@@ -1,3 +1,7 @@
+/* Copyright (c) 2013 OpenPlans. All rights reserved.
+ * This code is licensed under the BSD New License, available at the root
+ * application directory.
+ */
 package org.geogit.web.api.commands;
 
 import org.geogit.api.GeoGIT;
@@ -8,6 +12,12 @@ import org.geogit.web.api.CommandContext;
 import org.geogit.web.api.CommandResponse;
 import org.geogit.web.api.CommandSpecException;
 import org.geogit.web.api.ResponseWriter;
+
+/**
+ * The interface for the TransactionBegin operation in GeoGit.
+ * 
+ * Web interface for {@link TransactionBegin}
+ */
 
 public class BeginTransaction extends AbstractWebAPICommand {
 

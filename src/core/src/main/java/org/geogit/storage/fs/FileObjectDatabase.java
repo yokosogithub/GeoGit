@@ -15,6 +15,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.util.Iterator;
 import java.util.List;
 
 import org.geogit.api.ObjectId;
@@ -242,5 +243,11 @@ public class FileObjectDatabase extends AbstractObjectDatabase implements Object
     protected List<ObjectId> lookUpInternal(byte[] raw) {
         throw new UnsupportedOperationException(
                 "This method should not be called, we override lookUp(String) directly");
+    }
+
+    @Override
+    public long deleteAll(Iterator<ObjectId> ids) {
+        throw new UnsupportedOperationException(
+                "This method is not yet implemented");        
     }
 }

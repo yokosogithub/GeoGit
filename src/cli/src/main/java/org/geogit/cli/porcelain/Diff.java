@@ -5,6 +5,7 @@
 
 package org.geogit.cli.porcelain;
 
+import java.io.IOException;
 import java.util.Iterator;
 import java.util.List;
 
@@ -55,20 +56,11 @@ public class Diff extends AbstractCommand implements CLICommand {
 
     /**
      * Executes the diff command with the specified options.
-     * 
-     * @param cli
-     * @throws Exception
-     * @see org.geogit.cli.AbstractCommand#runInternal(org.geogit.cli.GeogitCLI)
      */
     @Override
-    protected void runInternal(GeogitCLI cli) throws Exception {
-        if (refSpec.size() > 2) {
-            throw new IllegalArgumentException("Commit list is too long :" + refSpec);
-        }
-
-        if (nogeom && summary) {
-            throw new IllegalArgumentException("Only one printing mode allowed");
-        }
+    protected void runInternal(GeogitCLI cli) throws IOException {
+        checkParameter(refSpec.size() <= 2, "Commit list is too long :%s", refSpec);
+        checkParameter(!(nogeom && summary), "Only one printing mode allowed");
 
         GeoGIT geogit = cli.getGeogit();
 

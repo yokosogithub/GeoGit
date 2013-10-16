@@ -1,3 +1,7 @@
+/* Copyright (c) 2013 OpenPlans. All rights reserved.
+ * This code is licensed under the BSD New License, available at the root
+ * application directory.
+ */
 package org.geogit.storage;
 
 import java.util.Iterator;
@@ -13,6 +17,7 @@ import org.geogit.api.RevTree;
 import org.geogit.api.plumbing.TransactionBegin;
 import org.geogit.api.plumbing.TransactionEnd;
 import org.geogit.api.plumbing.diff.DiffEntry;
+import org.geogit.api.plumbing.diff.DiffObjectCount;
 import org.geogit.api.plumbing.merge.Conflict;
 import org.geogit.repository.StagingArea;
 import org.opengis.util.ProgressListener;
@@ -99,7 +104,7 @@ public class TransactionStagingArea implements StagingArea {
      * Pass through to the original {@link StagingArea}.
      */
     @Override
-    public long countStaged(@Nullable List<String> pathFilters) {
+    public DiffObjectCount countStaged(@Nullable List<String> pathFilters) {
         return index.countStaged(pathFilters);
     }
 
@@ -121,6 +126,11 @@ public class TransactionStagingArea implements StagingArea {
     @Override
     public List<Conflict> getConflicted(@Nullable String pathFilter) {
         return database.getConflicts(null, pathFilter);
+    }
+
+    @Override
+    public boolean isClean() {
+        return index.isClean();
     }
 
 }

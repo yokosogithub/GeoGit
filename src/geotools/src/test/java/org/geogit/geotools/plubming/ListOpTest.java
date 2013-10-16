@@ -1,3 +1,7 @@
+/* Copyright (c) 2013 OpenPlans. All rights reserved.
+ * This code is licensed under the BSD New License, available at the root
+ * application directory.
+ */
 package org.geogit.geotools.plubming;
 
 import static org.junit.Assert.assertFalse;
@@ -5,9 +9,9 @@ import static org.junit.Assert.assertTrue;
 
 import java.util.List;
 
+import org.geogit.geotools.cli.porcelain.TestHelper;
 import org.geogit.geotools.plumbing.GeoToolsOpException;
 import org.geogit.geotools.plumbing.ListOp;
-import org.geogit.geotools.porcelain.TestHelper;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;

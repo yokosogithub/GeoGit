@@ -5,8 +5,7 @@
 
 package org.geogit.cli.porcelain;
 
-import static com.google.common.base.Preconditions.checkState;
-
+import java.io.IOException;
 import java.util.List;
 import java.util.Map.Entry;
 
@@ -19,12 +18,11 @@ import org.geogit.api.porcelain.FetchResult.ChangedRef.ChangeTypes;
 import org.geogit.api.porcelain.SynchronizationException;
 import org.geogit.cli.AbstractCommand;
 import org.geogit.cli.CLICommand;
+import org.geogit.cli.CommandFailedException;
 import org.geogit.cli.GeogitCLI;
-import org.geogit.storage.DeduplicationService;
 
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.Parameters;
-import com.google.inject.Inject;
 
 /**
  * Fetches named heads or tags from one or more other repositories, along with the objects necessary
@@ -59,70 +57,72 @@ public class Fetch extends AbstractCommand implements CLICommand {
 
     @Parameter(description = "[<repository>...]")
     private List<String> args;
-    
+
     /**
      * Executes the fetch command using the provided options.
-     * 
-     * @param cli
-     * @see org.geogit.cli.AbstractCommand#runInternal(org.geogit.cli.GeogitCLI)
      */
     @Override
-    public void runInternal(GeogitCLI cli) throws Exception {
-        checkState(cli.getGeogit() != null, "Not a geogit repository: " + cli.getPlatform().pwd());
-        checkState(depth > 0 ? !fulldepth : true,
+    public void runInternal(GeogitCLI cli) throws IOException {
+        checkParameter(depth > 0 ? !fulldepth : true,
                 "Cannot specify a depth and full depth.  Use --depth <depth> or --fulldepth.");
 
         if (depth > 0 || fulldepth) {
-            checkState(cli.getGeogit().getRepository().getDepth().isPresent(),
+            checkParameter(cli.getGeogit().getRepository().getDepth().isPresent(),
                     "Depth operations can only be used on a shallow clone.");
         }
 
-        FetchOp fetch = cli.getGeogit().command(FetchOp.class);
-        fetch.setProgressListener(cli.getProgressListener());
-        fetch.setAll(all).setPrune(prune).setFullDepth(fulldepth);
-        fetch.setDepth(depth);
-
-        if (args != null) {
-            for (String repo : args) {
-                fetch.addRemote(repo);
-            }
-        }
-
+        FetchResult result;
         try {
-            FetchResult result = fetch.call();
-            ConsoleReader console = cli.getConsole();
-            if (result.getChangedRefs().entrySet().size() > 0) {
-                for (Entry<String, List<ChangedRef>> entry : result.getChangedRefs().entrySet()) {
-                    console.println("From " + entry.getKey());
+            FetchOp fetch = cli.getGeogit().command(FetchOp.class);
+            fetch.setProgressListener(cli.getProgressListener());
+            fetch.setAll(all).setPrune(prune).setFullDepth(fulldepth);
+            fetch.setDepth(depth);
 
-                    for (ChangedRef ref : entry.getValue()) {
-                        String line;
-                        if (ref.getType() == ChangeTypes.CHANGED_REF) {
-                            line = "   " + ref.getOldRef().getObjectId().toString().substring(0, 7)
-                                    + ".."
-                                    + ref.getNewRef().getObjectId().toString().substring(0, 7)
-                                    + "     " + ref.getOldRef().localName() + " -> "
-                                    + ref.getOldRef().getName();
-                        } else if (ref.getType() == ChangeTypes.ADDED_REF) {
-                            line = " * [new branch]     " + ref.getNewRef().localName() + " -> "
-                                    + ref.getNewRef().getName();
-                        } else if (ref.getType() == ChangeTypes.REMOVED_REF) {
-                            line = " x [deleted]        (none) -> " + ref.getOldRef().getName();
-                        } else {
-                            line = "   [deepened]       " + ref.getNewRef().localName();
-                        }
-                        console.println(line);
-                    }
+            if (args != null) {
+                for (String repo : args) {
+                    fetch.addRemote(repo);
                 }
-            } else {
-                console.println("Already up to date.");
             }
+
+            result = fetch.call();
         } catch (SynchronizationException e) {
             switch (e.statusCode) {
             case HISTORY_TOO_SHALLOW:
             default:
-                cli.getConsole().println("Unable to fetch, the remote history is shallow.");
+                throw new CommandFailedException("Unable to fetch, the remote history is shallow.",
+                        e);
             }
+        } catch (IllegalArgumentException iae) {
+            throw new CommandFailedException(iae.getMessage(), iae);
+        } catch (IllegalStateException ise) {
+            throw new CommandFailedException(ise.getMessage(), ise);
+        }
+
+        ConsoleReader console = cli.getConsole();
+        if (result.getChangedRefs().entrySet().size() > 0) {
+            for (Entry<String, List<ChangedRef>> entry : result.getChangedRefs().entrySet()) {
+                console.println("From " + entry.getKey());
+
+                for (ChangedRef ref : entry.getValue()) {
+                    String line;
+                    if (ref.getType() == ChangeTypes.CHANGED_REF) {
+                        line = "   " + ref.getOldRef().getObjectId().toString().substring(0, 7)
+                                + ".." + ref.getNewRef().getObjectId().toString().substring(0, 7)
+                                + "     " + ref.getOldRef().localName() + " -> "
+                                + ref.getOldRef().getName();
+                    } else if (ref.getType() == ChangeTypes.ADDED_REF) {
+                        line = " * [new branch]     " + ref.getNewRef().localName() + " -> "
+                                + ref.getNewRef().getName();
+                    } else if (ref.getType() == ChangeTypes.REMOVED_REF) {
+                        line = " x [deleted]        (none) -> " + ref.getOldRef().getName();
+                    } else {
+                        line = "   [deepened]       " + ref.getNewRef().localName();
+                    }
+                    console.println(line);
+                }
+            }
+        } else {
+            console.println("Already up to date.");
         }
     }
 }

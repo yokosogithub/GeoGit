@@ -1,5 +1,8 @@
 
-#je.log.fileMax=100000000
+# Use a rather large log file size for the object db as it rarely gets deletes but its mostly used to append
+# contents and in read only mode.
+# 268435456 = 256MB
+je.log.fileMax=268435456
 
 
 ############################
@@ -81,3 +84,5 @@ je.evictor.nodesPerScan = 100
 # Needs to be true if the environment is on a NFS mount
 je.log.useODSYNC = false
 
+# Force statistics logging off as it causes problems in GeoGit unit tests.
+je.stats.collect = false

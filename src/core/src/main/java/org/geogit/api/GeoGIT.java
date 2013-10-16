@@ -10,6 +10,7 @@ import java.io.File;
 import java.net.URL;
 
 import org.geogit.api.plumbing.ResolveGeogitDir;
+import org.geogit.api.plumbing.diff.DiffObjectCount;
 import org.geogit.api.porcelain.InitOp;
 import org.geogit.repository.Repository;
 
@@ -157,4 +158,11 @@ public class GeoGIT {
         return injector.getInstance(CommandLocator.class);
     }
 
+    public DiffObjectCount countUnstaged() {
+        return getRepository().getWorkingTree().countUnstaged(null);
+    }
+
+    public DiffObjectCount countStaged() {
+        return getRepository().getIndex().countStaged(null);
+    }
 }

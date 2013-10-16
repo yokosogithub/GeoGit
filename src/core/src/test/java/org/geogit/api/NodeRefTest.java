@@ -85,6 +85,8 @@ public class NodeRefTest {
 
         assertTrue(isDirectChild("path/to", "path/to/node"));
 
+        assertTrue(isDirectChild("roads", "roads/highway"));
+        assertFalse(isDirectChild("roads/highway", "roads"));
     }
 
     /**

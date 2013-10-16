@@ -5,8 +5,7 @@
 
 package org.geogit.cli.plumbing;
 
-import static com.google.common.base.Preconditions.checkState;
-
+import java.io.IOException;
 import java.util.Iterator;
 import java.util.List;
 
@@ -39,8 +38,7 @@ public class WalkGraph extends AbstractCommand implements CLICommand {
     private boolean verbose;
 
     @Override
-    public void runInternal(GeogitCLI cli) throws Exception {
-        checkState(cli.getGeogit() != null, "Not a geogit repository: " + cli.getPlatform().pwd());
+    public void runInternal(GeogitCLI cli) throws IOException {
         String ref;
         if (refList.isEmpty()) {
             ref = null;
@@ -49,41 +47,41 @@ public class WalkGraph extends AbstractCommand implements CLICommand {
         }
         Deduplicator deduplicator = cli.getGeogit().command(CreateDeduplicator.class).call();
         try {
-	        Iterator<RevObject> iter = cli.getGeogit() //
-	                .command(WalkGraphOp.class).setReference(ref) //
-	                .setDeduplicator(deduplicator) //
-	                // .setStrategy(lsStrategy) //
-	                .call();
-	
-	        final ConsoleReader console = cli.getConsole();
-	        if (!iter.hasNext()) {
-	            if (ref == null) {
-	                console.println("The working tree is empty");
-	            } else {
-	                console.println("The specified path is empty");
-	            }
-	            return;
-	        }
-	
-	        Function<RevObject, CharSequence> printFunctor = new Function<RevObject, CharSequence>() {
-	            @Override
-	            public CharSequence apply(RevObject input) {
-	                if (verbose) {
-	                    return String.format("%s: %s %s", input.getId(), input.getType(), input);
-	                } else {
-	                    return String.format("%s: %s", input.getId(), input.getType());
-	                }
-	            }
-	        };
-	
-	        Iterator<CharSequence> lines = Iterators.transform(iter, printFunctor);
-	
-	        while (lines.hasNext()) {
-	            console.println(lines.next());
-	        }
-	        console.flush();
+            Iterator<RevObject> iter = cli.getGeogit() //
+                    .command(WalkGraphOp.class).setReference(ref) //
+                    .setDeduplicator(deduplicator) //
+                    // .setStrategy(lsStrategy) //
+                    .call();
+
+            final ConsoleReader console = cli.getConsole();
+            if (!iter.hasNext()) {
+                if (ref == null) {
+                    console.println("The working tree is empty");
+                } else {
+                    console.println("The specified path is empty");
+                }
+                return;
+            }
+
+            Function<RevObject, CharSequence> printFunctor = new Function<RevObject, CharSequence>() {
+                @Override
+                public CharSequence apply(RevObject input) {
+                    if (verbose) {
+                        return String.format("%s: %s %s", input.getId(), input.getType(), input);
+                    } else {
+                        return String.format("%s: %s", input.getId(), input.getType());
+                    }
+                }
+            };
+
+            Iterator<CharSequence> lines = Iterators.transform(iter, printFunctor);
+
+            while (lines.hasNext()) {
+                console.println(lines.next());
+            }
+            console.flush();
         } finally {
-        	deduplicator.release();
+            deduplicator.release();
         }
     }
 }

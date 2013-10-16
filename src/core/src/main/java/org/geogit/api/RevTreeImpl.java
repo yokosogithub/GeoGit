@@ -171,7 +171,7 @@ public abstract class RevTreeImpl extends AbstractRevObject implements RevTree {
         return new NodeTree(id, size, childTreeCount, innerTrees);
     }
 
-    static RevTreeImpl create(ObjectId id, long size, RevTree unidentified) {
+    public static RevTreeImpl create(ObjectId id, long size, RevTree unidentified) {
         if (unidentified.buckets().isPresent()) {
             return new NodeTree(id, size, unidentified.numTrees(), unidentified.buckets().get());
         }

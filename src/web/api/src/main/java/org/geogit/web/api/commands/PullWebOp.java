@@ -1,3 +1,7 @@
+/* Copyright (c) 2013 OpenPlans. All rights reserved.
+ * This code is licensed under the BSD New License, available at the root
+ * application directory.
+ */
 package org.geogit.web.api.commands;
 
 import java.util.Iterator;
@@ -24,6 +28,12 @@ import org.geogit.web.api.CommandResponse;
 import org.geogit.web.api.ResponseWriter;
 
 import com.google.common.base.Optional;
+
+/**
+ * Interface for the Pull operation in GeoGit.
+ * 
+ * Web interface for {@link PullOp}
+ */
 
 public class PullWebOp extends AbstractWebAPICommand {
 
@@ -78,6 +88,11 @@ public class PullWebOp extends AbstractWebAPICommand {
         this.authorEmail = Optional.fromNullable(authorEmail);
     }
 
+    /**
+     * Runs the command and builds the appropriate response.
+     * 
+     * @param context - the context to use for this command
+     */
     @Override
     public void run(CommandContext context) {
         final CommandLocator geogit = this.getCommandLocator(context);

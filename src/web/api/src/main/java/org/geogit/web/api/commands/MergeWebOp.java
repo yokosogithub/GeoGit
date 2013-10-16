@@ -1,3 +1,7 @@
+/* Copyright (c) 2013 OpenPlans. All rights reserved.
+ * This code is licensed under the BSD New License, available at the root
+ * application directory.
+ */
 package org.geogit.web.api.commands;
 
 import javax.annotation.Nullable;
@@ -21,6 +25,12 @@ import org.geogit.web.api.ResponseWriter;
 
 import com.google.common.base.Optional;
 import com.google.common.base.Suppliers;
+
+/**
+ * Interface for the Merge operation in GeoGit.
+ * 
+ * Web interface for {@link MergeOp}
+ */
 
 public class MergeWebOp extends AbstractWebAPICommand {
 

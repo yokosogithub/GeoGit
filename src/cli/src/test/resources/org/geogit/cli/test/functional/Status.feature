@@ -6,7 +6,7 @@ Feature: "status" command
   Scenario: Try to get the status of an empty directory
     Given I am in an empty directory
      When I run the command "status"
-     Then the response should start with "Not a geogit repository"
+     Then the response should start with "Not in a geogit repository"
       And it should exit with non-zero exit code
      
   Scenario: Try to get the status of a repository with no changes
@@ -24,9 +24,9 @@ Feature: "status" command
       And I have unstaged "lines3"
      When I run the command "status"
      Then the response should contain "Changes not staged for commit"
-      And the response should contain "6 total."
+      And the response should contain "8 total."
       And the response should not contain "Changes to be committed"
-      And the response should contain 12 lines
+      And the response should contain 14 lines
       
   Scenario: Try to get the status of a repository with staged changes without using a limit
     Given I have a repository
@@ -38,9 +38,9 @@ Feature: "status" command
       And I have staged "lines3"
      When I run the command "status"
      Then the response should contain "Changes to be committed"
-      And the response should contain "6 total."
+      And the response should contain "8 total."
       And the response should not contain "Changes not staged for commit"
-      And the response should contain 12 lines
+      And the response should contain 14 lines
       
   Scenario: Try to get the status of a repository with staged and unstaged changes without using a limit
     Given I have a repository
@@ -53,10 +53,10 @@ Feature: "status" command
       And I modify a feature
      When I run the command "status"
      Then the response should contain "Changes to be committed"
-      And the response should contain "6 total."
+      And the response should contain "8 total."
       And the response should contain "Changes not staged for commit"
       And the response should contain "1 total."
-      And the response should contain 18 lines
+      And the response should contain 20 lines
       
   Scenario: Try to get the status of a repository with unstaged changes specifying all
     Given I have a repository
@@ -68,9 +68,9 @@ Feature: "status" command
       And I have unstaged "lines3"
      When I run the command "status --all"
      Then the response should contain "Changes not staged for commit"
-      And the response should contain "6 total."
+      And the response should contain "8 total."
       And the response should not contain "Changes to be committed"
-      And the response should contain 12 lines
+      And the response should contain 14 lines
       
   Scenario: Try to get the status of a repository with staged changes specifying all
     Given I have a repository
@@ -82,9 +82,9 @@ Feature: "status" command
       And I have staged "lines3"
      When I run the command "status --all"
      Then the response should contain "Changes to be committed"
-      And the response should contain "6 total."
+      And the response should contain "8 total."
       And the response should not contain "Changes not staged for commit"
-      And the response should contain 12 lines
+      And the response should contain 14 lines
       
   Scenario: Try to get the status of a repository with staged and unstaged changes specifying all
     Given I have a repository
@@ -97,10 +97,10 @@ Feature: "status" command
       And I modify a feature
      When I run the command "status --all"
      Then the response should contain "Changes to be committed"
-      And the response should contain "6 total."
+      And the response should contain "8 total."
       And the response should contain "Changes not staged for commit"
       And the response should contain "1 total."
-      And the response should contain 18 lines
+      And the response should contain 20 lines
       
    Scenario: Try to get the status of a repository with unstaged changes using a limit
     Given I have a repository
@@ -112,7 +112,7 @@ Feature: "status" command
       And I have unstaged "lines3"
      When I run the command "status --limit 3"
      Then the response should contain "Changes not staged for commit"
-      And the response should contain "6 total."
+      And the response should contain "8 total."
       And the response should contain 9 lines
 
    Scenario: Try to get the status of a repository with staged changes using a limit
@@ -125,7 +125,7 @@ Feature: "status" command
       And I have staged "lines3"
      When I run the command "status --limit 3"
      Then the response should contain "Changes to be committed"
-      And the response should contain "6 total."
+      And the response should contain "8 total."
       And the response should contain 9 lines
       
   Scenario: Try to get the status of a repository with staged and unstaged changes using a limit
@@ -139,7 +139,7 @@ Feature: "status" command
       And I modify a feature
      When I run the command "status --limit 0"
      Then the response should contain "Changes to be committed"
-      And the response should contain "6 total."
+      And the response should contain "8 total."
       And the response should contain "Changes not staged for commit"
       And the response should contain "1 total."
       And the response should contain 11 lines

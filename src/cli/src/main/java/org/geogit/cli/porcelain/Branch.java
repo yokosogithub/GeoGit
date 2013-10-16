@@ -5,13 +5,9 @@
 
 package org.geogit.cli.porcelain;
 
-import static com.google.common.base.Preconditions.checkArgument;
-import static com.google.common.base.Preconditions.checkState;
-
 import java.io.IOException;
 import java.util.List;
 
-import jline.Terminal;
 import jline.console.ConsoleReader;
 
 import org.fusesource.jansi.Ansi;
@@ -27,7 +23,6 @@ import org.geogit.api.porcelain.BranchDeleteOp;
 import org.geogit.api.porcelain.BranchListOp;
 import org.geogit.api.porcelain.BranchRenameOp;
 import org.geogit.cli.AbstractCommand;
-import org.geogit.cli.AnsiDecorator;
 import org.geogit.cli.CLICommand;
 import org.geogit.cli.GeogitCLI;
 
@@ -35,7 +30,6 @@ import com.beust.jcommander.Parameter;
 import com.beust.jcommander.Parameters;
 import com.google.common.base.Optional;
 import com.google.common.base.Strings;
-import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 
@@ -87,9 +81,6 @@ public class Branch extends AbstractCommand implements CLICommand {
     @Parameter(description = "<branch name> [<start point>]")
     private List<String> branchName = Lists.newArrayList();
 
-    @Parameter(names = "--color", description = "Whether to apply colored output. Possible values are auto|never|always.", converter = ColorArg.Converter.class)
-    private ColorArg color = ColorArg.auto;
-
     @Parameter(names = { "--checkout", "-c" }, description = "automatically checkout the new branch when the command is used to create a branch")
     private boolean checkout;
 
@@ -113,57 +104,45 @@ public class Branch extends AbstractCommand implements CLICommand {
     private boolean rename = false;
 
     @Override
-    public void runInternal(final GeogitCLI cli) throws Exception {
+    public void runInternal(final GeogitCLI cli) throws IOException {
         final GeoGIT geogit = cli.getGeogit();
-        checkState(geogit != null, "not in a geogit repository.");
 
         final ConsoleReader console = cli.getConsole();
 
         if (delete) {
-            if (branchName.isEmpty()) {
-                throw new IllegalArgumentException("no name specified for deletion");
-            }
+            checkParameter(!branchName.isEmpty(), "no name specified for deletion");
+
             for (String br : branchName) {
-                Optional<? extends Ref> deletedBranch = geogit.command(BranchDeleteOp.class)
-                        .setName(br).call();
-                if (deletedBranch.isPresent()) {
-                    console.println("Deleted branch '" + br + "'.");
-                } else {
-                    throw new IllegalArgumentException("No branch called '" + br + "'.");
-                }
+                Optional<? extends Ref> deletedBranch;
+                deletedBranch = geogit.command(BranchDeleteOp.class).setName(br).call();
+
+                checkParameter(deletedBranch.isPresent(), "No branch called '%s'.", br);
+
+                console.println(String.format("Deleted branch '%s'.", br));
             }
             return;
         }
 
-        checkArgument(branchName.size() < 3, "too many arguments: " + branchName.toString());
+        checkParameter(branchName.size() < 3, "too many arguments: %s", branchName);
 
         if (rename) {
-            if (branchName.isEmpty()) {
-                throw new IllegalArgumentException("You must specify a branch to rename.");
-            } else if (branchName.size() == 1) {
+            checkParameter(!branchName.isEmpty(), "You must specify a branch to rename.");
+
+            if (branchName.size() == 1) {
                 Optional<Ref> headRef = geogit.command(RefParse.class).setName(Ref.HEAD).call();
                 geogit.command(BranchRenameOp.class).setNewName(branchName.get(0)).setForce(force)
                         .call();
-                try {
-                    if (headRef.isPresent()) {
-                        console.println("renamed branch '"
-                                + ((SymRef) (headRef.get())).getTarget().substring(
-                                        Ref.HEADS_PREFIX.length()) + "' to '" + branchName.get(0)
-                                + "'");
-                    }
-
-                } catch (IOException e) {
-                    throw Throwables.propagate(e);
+                if (headRef.isPresent()) {
+                    SymRef ref = (SymRef) headRef.get();
+                    console.println("renamed branch '"
+                            + ref.getTarget().substring(Ref.HEADS_PREFIX.length()) + "' to '"
+                            + branchName.get(0) + "'");
                 }
             } else {
                 geogit.command(BranchRenameOp.class).setOldName(branchName.get(0))
                         .setNewName(branchName.get(1)).setForce(force).call();
-                try {
-                    console.println("renamed branch '" + branchName.get(0) + "' to '"
-                            + branchName.get(1) + "'");
-                } catch (IOException e) {
-                    throw Throwables.propagate(e);
-                }
+                console.println("renamed branch '" + branchName.get(0) + "' to '"
+                        + branchName.get(1) + "'");
             }
             return;
         }
@@ -179,14 +158,10 @@ public class Branch extends AbstractCommand implements CLICommand {
         Ref newBranch = geogit.command(BranchCreateOp.class).setName(branch).setForce(force)
                 .setAutoCheckout(checkout).setSource(origin).call();
 
-        try {
-            console.println("Created branch " + newBranch.getName());
-        } catch (IOException e) {
-            throw Throwables.propagate(e);
-        }
+        console.println("Created branch " + newBranch.getName());
     }
 
-    private void listBranches(GeogitCLI cli) {
+    private void listBranches(GeogitCLI cli) throws IOException {
         final ConsoleReader console = cli.getConsole();
         final GeoGIT geogit = cli.getGeogit();
 
@@ -196,19 +171,6 @@ public class Branch extends AbstractCommand implements CLICommand {
         ImmutableList<Ref> branches = geogit.command(BranchListOp.class).setLocal(local)
                 .setRemotes(remote).call();
 
-        final Terminal terminal = console.getTerminal();
-        boolean useColor;
-        switch (color) {
-        case never:
-            useColor = false;
-            break;
-        case always:
-            useColor = true;
-            break;
-        default:
-            useColor = terminal.isAnsiSupported();
-        }
-
         final Ref currentHead = geogit.command(RefParse.class).setName(Ref.HEAD).call().get();
 
         final int largest = verbose ? largestLenght(branches) : 0;
@@ -216,7 +178,7 @@ public class Branch extends AbstractCommand implements CLICommand {
         for (Ref branchRef : branches) {
             final String branchRefName = branchRef.getName();
 
-            Ansi ansi = AnsiDecorator.newAnsi(useColor);
+            Ansi ansi = newAnsi(console.getTerminal());
 
             if ((currentHead instanceof SymRef)
                     && ((SymRef) currentHead).getTarget().equals(branchRefName)) {
@@ -239,11 +201,7 @@ public class Branch extends AbstractCommand implements CLICommand {
                 }
             }
 
-            try {
-                console.println(ansi.toString());
-            } catch (IOException e) {
-                throw Throwables.propagate(e);
-            }
+            console.println(ansi.toString());
         }
     }
 

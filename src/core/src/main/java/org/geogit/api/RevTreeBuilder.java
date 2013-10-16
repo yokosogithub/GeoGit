@@ -212,7 +212,9 @@ public class RevTreeBuilder {
 
             if (unnamedTree.size() <= NORMALIZED_SIZE_LIMIT) {
                 this.bucketTreesByBucket.clear();
-                unnamedTree = moveBucketsToChildren(unnamedTree);
+                if (unnamedTree.buckets().isPresent()) {
+                    unnamedTree = moveBucketsToChildren(unnamedTree);
+                }
                 if (this.depth == 0) {
                     pendingWritesCache.clear();
                 }
@@ -477,6 +479,16 @@ public class RevTreeBuilder {
         ObjectId treeId = new HashObject().setObject(unnamedTree).call();
         RevTreeImpl namedTree = RevTreeImpl.create(treeId, unnamedTree.size(), unnamedTree);
         return namedTree;
+    }
+
+    /**
+     * Deletes all nodes that represent subtrees
+     * 
+     * @return {@code this}
+     */
+    public RevTreeBuilder clearSubtrees() {
+        this.treeChanges.clear();
+        return this;
     }
 
 }

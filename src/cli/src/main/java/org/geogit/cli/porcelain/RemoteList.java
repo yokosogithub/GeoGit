@@ -5,13 +5,14 @@
 
 package org.geogit.cli.porcelain;
 
-import static com.google.common.base.Preconditions.checkState;
+import java.io.IOException;
 
 import org.geogit.api.Remote;
 import org.geogit.api.porcelain.ConfigException;
 import org.geogit.api.porcelain.RemoteListOp;
 import org.geogit.cli.AbstractCommand;
 import org.geogit.cli.CLICommand;
+import org.geogit.cli.CommandFailedException;
 import org.geogit.cli.GeogitCLI;
 
 import com.beust.jcommander.Parameter;
@@ -40,20 +41,15 @@ public class RemoteList extends AbstractCommand implements CLICommand {
 
     /**
      * Executes the remote list command.
-     * 
-     * @param cli
-     * @see org.geogit.cli.AbstractCommand#runInternal(org.geogit.cli.GeogitCLI)
      */
     @Override
-    public void runInternal(GeogitCLI cli) throws Exception {
-        checkState(cli.getGeogit() != null, "Not a geogit repository: " + cli.getPlatform().pwd());
+    public void runInternal(GeogitCLI cli) throws IOException {
 
         final ImmutableList<Remote> remoteList;
         try {
             remoteList = cli.getGeogit().command(RemoteListOp.class).call();
         } catch (ConfigException e) {
-            cli.getConsole().println("Could not access the config database.");
-            return;
+            throw new CommandFailedException("Could not access the config database.", e);
         }
 
         for (Remote remote : remoteList) {

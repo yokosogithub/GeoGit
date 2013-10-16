@@ -1,3 +1,7 @@
+/* Copyright (c) 2013 OpenPlans. All rights reserved.
+ * This code is licensed under the BSD New License, available at the root
+ * application directory.
+ */
 package org.geogit.web.api.commands;
 
 import org.geogit.api.CommandLocator;
@@ -8,6 +12,11 @@ import org.geogit.web.api.CommandContext;
 import org.geogit.web.api.CommandResponse;
 import org.geogit.web.api.ResponseWriter;
 
+/**
+ * Interface for the Push operation in GeoGit.
+ * 
+ * Web interface for {@link PushOp}
+ */
 public class PushWebOp extends AbstractWebAPICommand {
     private String remoteName;
 
@@ -42,6 +51,11 @@ public class PushWebOp extends AbstractWebAPICommand {
         this.refSpec = refSpec;
     }
 
+    /**
+     * Runs the command and builds the appropriate response.
+     * 
+     * @param context - the context to use for this command
+     */
     @Override
     public void run(CommandContext context) {
         final CommandLocator geogit = this.getCommandLocator(context);

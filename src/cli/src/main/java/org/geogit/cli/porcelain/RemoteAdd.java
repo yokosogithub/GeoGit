@@ -5,8 +5,6 @@
 
 package org.geogit.cli.porcelain;
 
-import static com.google.common.base.Preconditions.checkState;
-
 import java.util.ArrayList;
 import java.util.List;
 
@@ -47,13 +45,9 @@ public class RemoteAdd extends AbstractCommand implements CLICommand {
 
     /**
      * Executes the remote add command using the provided options.
-     * 
-     * @param cli
-     * @see org.geogit.cli.AbstractCommand#runInternal(org.geogit.cli.GeogitCLI)
      */
     @Override
-    public void runInternal(GeogitCLI cli) throws Exception {
-        checkState(cli.getGeogit() != null, "Not a geogit repository: " + cli.getPlatform().pwd());
+    public void runInternal(GeogitCLI cli) {
         if (params == null || params.size() != 2) {
             printUsage();
             throw new CommandFailedException();
@@ -65,10 +59,10 @@ public class RemoteAdd extends AbstractCommand implements CLICommand {
         } catch (RemoteException e) {
             switch (e.statusCode) {
             case REMOTE_ALREADY_EXISTS:
-                throw new IllegalArgumentException("Could not add, a remote called '"
-                        + params.get(0) + "' already exists.", e);
+                throw new CommandFailedException("Could not add, a remote called '" + params.get(0)
+                        + "' already exists.", e);
             default:
-                throw new IllegalArgumentException(e);
+                throw new CommandFailedException(e);
             }
         }
 

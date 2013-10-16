@@ -18,7 +18,7 @@ import com.google.inject.Inject;
 /**
  * Provides a base implementation for internal GeoGit operations.
  * 
- * @param <T> the type of the result of the exectution of the command
+ * @param <T> the type of the result of the execution of the command
  */
 public abstract class AbstractGeoGitOp<T> implements Callable<T> {
 

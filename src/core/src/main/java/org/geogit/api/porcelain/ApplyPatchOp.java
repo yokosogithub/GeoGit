@@ -13,18 +13,17 @@ import java.util.Set;
 import org.geogit.api.AbstractGeoGitOp;
 import org.geogit.api.FeatureInfo;
 import org.geogit.api.NodeRef;
-import org.geogit.api.ObjectId;
 import org.geogit.api.Ref;
 import org.geogit.api.RevFeature;
-import org.geogit.api.RevFeatureBuilder;
 import org.geogit.api.RevFeatureType;
-import org.geogit.api.RevObject;
 import org.geogit.api.plumbing.RevObjectParse;
 import org.geogit.api.plumbing.diff.AttributeDiff;
 import org.geogit.api.plumbing.diff.AttributeDiff.TYPE;
 import org.geogit.api.plumbing.diff.FeatureDiff;
 import org.geogit.api.plumbing.diff.FeatureTypeDiff;
 import org.geogit.api.plumbing.diff.Patch;
+import org.geogit.api.plumbing.diff.VerifyPatchOp;
+import org.geogit.api.plumbing.diff.VerifyPatchResults;
 import org.geogit.repository.DepthSearch;
 import org.geogit.repository.WorkingTree;
 import org.geogit.storage.StagingDatabase;
@@ -36,7 +35,6 @@ import org.opengis.feature.type.AttributeDescriptor;
 import org.opengis.feature.type.Name;
 import org.opengis.feature.type.PropertyDescriptor;
 
-import com.google.common.base.Objects;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
@@ -130,19 +128,21 @@ public class ApplyPatchOp extends AbstractGeoGitOp<Patch> {
     public Patch call() throws RuntimeException {
         Preconditions.checkArgument(patch != null, "No patch file provided");
 
-        Patch toApply = new Patch();
-        Patch rejected = new Patch();
-        checkPatch(toApply, rejected);
+        VerifyPatchResults verify = command(VerifyPatchOp.class).setPatch(patch)
+                .setReverse(reverse).call();
+        Patch toReject = verify.getToReject();
+        Patch toApply = verify.getToApply();
+
         if (!applyPartial) {
-            if (!rejected.isEmpty()) {
-                throw new CannotApplyPatchException(rejected);
+            if (!toReject.isEmpty()) {
+                throw new CannotApplyPatchException(toReject);
             }
             applyPatch(toApply);
             return null;
 
         } else {
             applyPatch(toApply);
-            return rejected;
+            return toReject;
         }
 
     }
@@ -221,128 +221,6 @@ public class ApplyPatchOp extends AbstractGeoGitOp<Patch> {
             } else {
                 featureType = patch.getFeatureTypeFromId(diff.getNewFeatureType());
                 workTree.updateTypeTree(diff.getPath(), featureType.get().type());
-            }
-        }
-
-    }
-
-    /**
-     * Checks that the patch can be applied safely without overwriting changes that were made since
-     * the patch was created.
-     * 
-     * It separates accepted and rejected entries and fills the passed patches
-     * 
-     * @param toApply an empty patch that will be filled with the entries that can be applied
-     * @param rejected an empty patch that will be filled with the entries that cannot be applied
-     * 
-     * @throws CannotApplyPatchException
-     */
-    private void checkPatch(Patch toApply, Patch rejected) {
-        for (RevFeatureType ft : patch.getFeatureTypes()) {
-            toApply.addFeatureType(ft);
-            rejected.addFeatureType(ft);
-        }
-        String path;
-        Optional<RevObject> obj;
-        List<FeatureDiff> diffs = patch.getModifiedFeatures();
-        for (FeatureDiff diff : diffs) {
-            path = diff.getPath();
-            String refSpec = Ref.WORK_HEAD + ":" + path;
-            obj = command(RevObjectParse.class).setRefSpec(refSpec).call();
-            if (!obj.isPresent()) {
-                rejected.addModifiedFeature(diff);
-                break;
-            }
-            RevFeature feature = (RevFeature) obj.get();
-            DepthSearch depthSearch = new DepthSearch(indexDb);
-            Optional<NodeRef> noderef = depthSearch.find(workTree.getTree(), path);
-            RevFeatureType featureType = command(RevObjectParse.class)
-                    .setObjectId(noderef.get().getMetadataId()).call(RevFeatureType.class).get();
-            ImmutableList<PropertyDescriptor> descriptors = featureType.sortedDescriptors();
-            Set<Entry<PropertyDescriptor, AttributeDiff>> attrDiffs = diff.getDiffs().entrySet();
-            boolean ok = true;
-            for (Iterator<Entry<PropertyDescriptor, AttributeDiff>> iterator = attrDiffs.iterator(); iterator
-                    .hasNext();) {
-                Entry<PropertyDescriptor, AttributeDiff> entry = iterator.next();
-                AttributeDiff attrDiff = entry.getValue();
-                PropertyDescriptor descriptor = entry.getKey();
-                switch (attrDiff.getType()) {
-                case ADDED:
-                    if (descriptors.contains(descriptor)) {
-                        ok = false;
-                    }
-                    break;
-                case REMOVED:
-                case MODIFIED:
-                    if (!descriptors.contains(descriptor)) {
-                        ok = false;
-                        break;
-                    }
-                    for (int i = 0; i < descriptors.size(); i++) {
-                        if (descriptors.get(i).equals(descriptor)) {
-                            Optional<Object> value = feature.getValues().get(i);
-                            if (!attrDiff.canBeAppliedOn(value)) {
-                                ok = false;
-                            }
-                            break;
-                        }
-                    }
-                }
-            }
-            if (!ok) {
-                rejected.addModifiedFeature(diff);
-            } else {
-                toApply.addModifiedFeature(diff);
-            }
-        }
-        List<FeatureInfo> added = patch.getAddedFeatures();
-        for (FeatureInfo feature : added) {
-            String refSpec = Ref.WORK_HEAD + ":" + feature.getPath();
-            obj = command(RevObjectParse.class).setRefSpec(refSpec).call();
-            if (obj.isPresent()) {
-                rejected.addAddedFeature(feature.getPath(), feature.getFeature(),
-                        feature.getFeatureType());
-            } else {
-                toApply.addAddedFeature(feature.getPath(), feature.getFeature(),
-                        feature.getFeatureType());
-            }
-
-        }
-        List<FeatureInfo> removed = patch.getRemovedFeatures();
-        for (FeatureInfo feature : removed) {
-            String refSpec = Ref.WORK_HEAD + ":" + feature.getPath();
-            obj = command(RevObjectParse.class).setRefSpec(refSpec).call();
-            if (!obj.isPresent()) {
-                rejected.addRemovedFeature(feature.getPath(), feature.getFeature(),
-                        feature.getFeatureType());
-            } else {
-                RevFeature revFeature = (RevFeature) obj.get();
-                DepthSearch depthSearch = new DepthSearch(indexDb);
-                Optional<NodeRef> noderef = depthSearch.find(workTree.getTree(), feature.getPath());
-                RevFeatureType revFeatureType = command(RevObjectParse.class)
-                        .setObjectId(noderef.get().getMetadataId()).call(RevFeatureType.class)
-                        .get();
-                RevFeature patchRevFeature = new RevFeatureBuilder().build(feature.getFeature());
-                if (revFeature.equals(patchRevFeature)
-                        && revFeatureType.equals(feature.getFeatureType())) {
-                    toApply.addRemovedFeature(feature.getPath(), feature.getFeature(),
-                            feature.getFeatureType());
-                } else {
-                    rejected.addRemovedFeature(feature.getPath(), feature.getFeature(),
-                            feature.getFeatureType());
-                }
-            }
-        }
-        ImmutableList<FeatureTypeDiff> alteredTrees = patch.getAlteredTrees();
-        for (FeatureTypeDiff diff : alteredTrees) {
-            DepthSearch depthSearch = new DepthSearch(indexDb);
-            Optional<NodeRef> noderef = depthSearch.find(workTree.getTree(), diff.getPath());
-            ObjectId metadataId = noderef.isPresent() ? noderef.get().getMetadataId()
-                    : ObjectId.NULL;
-            if (Objects.equal(metadataId, diff.getOldFeatureType())) {
-                toApply.addAlteredTree(diff);
-            } else {
-                rejected.addAlteredTree(diff);
             }
         }
 

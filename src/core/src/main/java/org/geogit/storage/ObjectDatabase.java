@@ -4,7 +4,6 @@
  */
 package org.geogit.storage;
 
-import java.io.InputStream;
 import java.util.Iterator;
 import java.util.List;
 
@@ -46,14 +45,6 @@ public interface ObjectDatabase {
      * @return true if the object exists, false otherwise
      */
     public boolean exists(final ObjectId id);
-
-    /**
-     * Gets the raw input stream of the object with the given {@link ObjectId id}.
-     * 
-     * @param id the id of the object to get
-     * @return the input stream of the object
-     */
-    public InputStream getRaw(final ObjectId id);
 
     /**
      * Searches the database for {@link ObjectId}s that match the given partial id.
@@ -145,15 +136,10 @@ public interface ObjectDatabase {
     public boolean delete(ObjectId objectId);
 
     /**
-     * @param objectId
-     * @param raw
-     * @return
-     */
-    public boolean put(ObjectId objectId, InputStream raw);
-
-    /**
      * @param iterator
      */
     public void putAll(Iterator<? extends RevObject> objects);
+
+    public long deleteAll(Iterator<ObjectId> ids);
 
 }

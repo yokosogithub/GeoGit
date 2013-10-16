@@ -48,7 +48,7 @@ Feature: "reset" command
   Scenario: Try to reset from an empty directory
     Given I am in an empty directory
      When I run the command "reset"
-     Then it should answer "Not in a geogit repository."
+     Then the response should start with "Not in a geogit repository"
       And it should exit with non-zero exit code
      
   Scenario: Try to reset with no commits

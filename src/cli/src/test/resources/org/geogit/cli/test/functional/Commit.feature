@@ -3,6 +3,21 @@ Feature: "commit" command
     As a Geogit User
     I want to create a commit and add it to the repository
 
+    
+  Scenario: Try to commit with timestamp
+    Given I have a repository
+     And I have staged "points1"     
+     And I run the command "commit -t 2010-04-22T19:53:23Z -m msg"
+    When I run the command "log"
+    Then the response should contain "2010-04-22"
+    
+  Scenario: Try to commit with timestamp in millisecs
+    Given I have a repository
+     And I have staged "points1"     
+     And I run the command "commit -t 1000000000 -m msg"
+    When I run the command "log"
+    Then the response should contain "1970-01"    
+    
   Scenario: Try to commit current staged features
     Given I have a repository
       And I have staged "points1"
@@ -41,7 +56,7 @@ Feature: "commit" command
   Scenario: Try to commit from an empty directory
     Given I am in an empty directory
      When I run the command "commit -m Test"
-     Then the response should start with "Not a geogit repository"
+     Then the response should start with "Not in a geogit repository"
       And it should exit with non-zero exit code
      
   Scenario: Try to commit when no changes have been made
@@ -56,6 +71,20 @@ Feature: "commit" command
      When I run the command "commit -m Message"
      Then the response should contain "Cannot run operation while merge conflicts exist"
       And it should exit with non-zero exit code
+     
+  Scenario: Try to amend last commit
+    Given I have a repository
+      And I have staged "points1"
+      And I run the command "commit -m Test"
+      And I have staged "points2"
+     When I run the command "commit --amend"
+     Then the response should contain "2 features added"     
+     
+  Scenario: Try to amend last commit, when no previous commit has been made
+    Given I have a repository
+      And I have staged "points1"
+     When I run the command "commit --amend"
+     Then the response should contain "Cannot amend"        
      
   Scenario: Try to commit without message while solving a merge conflict
     Given I have a repository
@@ -76,3 +105,6 @@ Feature: "commit" command
      And I have staged "lines2"
     When I run the command "commit -m Test Points"
     Then the response should contain "2 features added"
+    
+
+         

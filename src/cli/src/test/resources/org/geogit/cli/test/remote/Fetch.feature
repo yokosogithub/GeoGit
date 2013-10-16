@@ -6,7 +6,7 @@ Feature: "fetch" command
   Scenario: Try to fetch from an empty directory
     Given I am in an empty directory
      When I run the command "fetch origin"
-     Then the response should start with "Not a geogit repository"
+     Then the response should start with "Not in a geogit repository"
       And it should exit with non-zero exit code
      
   Scenario: Try to fetch from origin

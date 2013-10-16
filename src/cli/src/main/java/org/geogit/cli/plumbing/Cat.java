@@ -1,12 +1,10 @@
-/* Copyright (c) 2011 TOPP - www.openplans.org. All rights reserved.
- * This code is licensed under the LGPL 2.1 license, available at the root
+/* Copyright (c) 2013 OpenPlans. All rights reserved.
+ * This code is licensed under the BSD New License, available at the root
  * application directory.
  */
 package org.geogit.cli.plumbing;
 
-import static com.google.common.base.Preconditions.checkArgument;
-import static com.google.common.base.Preconditions.checkState;
-
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -16,7 +14,7 @@ import org.geogit.api.GeoGIT;
 import org.geogit.api.RevObject;
 import org.geogit.api.plumbing.CatObject;
 import org.geogit.api.plumbing.RevObjectParse;
-import org.geogit.cli.CLICommand;
+import org.geogit.cli.AbstractCommand;
 import org.geogit.cli.GeogitCLI;
 import org.geogit.storage.ObjectSerializingFactory;
 import org.geogit.storage.ObjectWriter;
@@ -33,7 +31,7 @@ import com.google.common.base.Suppliers;
  * 
  */
 @Parameters(commandNames = "cat", commandDescription = "Describes a repository element")
-public class Cat implements CLICommand {
+public class Cat extends AbstractCommand {
 
     /**
      * The path to the element to display. Accepts all the notation types accepted by the RevParse
@@ -48,15 +46,10 @@ public class Cat implements CLICommand {
     @Parameter(names = { "--binary" }, description = "Produce binary output")
     private boolean binary;
 
-    /**
-     * @param cli
-     * @see org.geogit.cli.CLICommand#run(org.geogit.cli.GeogitCLI)
-     */
     @Override
-    public void run(GeogitCLI cli) throws Exception {
-        checkState(cli.getGeogit() != null, "Not a geogit repository: " + cli.getPlatform().pwd());
-        checkArgument(paths.size() < 2, "Only one refspec allowed");
-        checkArgument(!paths.isEmpty(), "A refspec must be specified");
+    public void runInternal(GeogitCLI cli) throws IOException {
+        checkParameter(paths.size() < 2, "Only one refspec allowed");
+        checkParameter(!paths.isEmpty(), "A refspec must be specified");
 
         ConsoleReader console = cli.getConsole();
         GeoGIT geogit = cli.getGeogit();
@@ -64,7 +57,7 @@ public class Cat implements CLICommand {
         String path = paths.get(0);
 
         Optional<RevObject> obj = geogit.command(RevObjectParse.class).setRefSpec(path).call();
-        checkState(obj.isPresent(), "refspec did not resolve to any object.");
+        checkParameter(obj.isPresent(), "refspec did not resolve to any object.");
         if (binary) {
             ObjectSerializingFactory factory = new DataStreamSerializationFactory();
             ObjectWriter<RevObject> writer = factory.createObjectWriter(obj.get().getType());

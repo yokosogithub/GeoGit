@@ -149,7 +149,7 @@ public abstract class RemoteRepositoryTestCase {
             injector = null;
         }
 
-        protected InjectorBuilder createInjectorBuilder() {
+        public InjectorBuilder createInjectorBuilder() {
             Platform testPlatform = new TestPlatform(envHome);
             return new TestInjectorBuilder(testPlatform);
         }
@@ -218,7 +218,8 @@ public abstract class RemoteRepositoryTestCase {
     protected FetchOp fetch() {
         FetchOp remoteRepoFetch = spy(localGeogit.geogit.command(FetchOp.class));
 
-        doReturn(Optional.of(remoteRepo)).when(remoteRepoFetch).getRemoteRepo(any(Remote.class), any(DeduplicationService.class));
+        doReturn(Optional.of(remoteRepo)).when(remoteRepoFetch).getRemoteRepo(any(Remote.class),
+                any(DeduplicationService.class));
         LsRemote lsRemote = lsremote();
         when(remoteRepoFetch.command(LsRemote.class)).thenReturn(lsRemote);
 

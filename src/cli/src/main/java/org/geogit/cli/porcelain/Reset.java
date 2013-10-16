@@ -5,8 +5,6 @@
 
 package org.geogit.cli.porcelain;
 
-import static com.google.common.base.Preconditions.checkState;
-
 import java.io.IOException;
 import java.util.Iterator;
 import java.util.List;
@@ -21,7 +19,9 @@ import org.geogit.api.porcelain.ResetOp;
 import org.geogit.api.porcelain.ResetOp.ResetMode;
 import org.geogit.cli.AbstractCommand;
 import org.geogit.cli.CLICommand;
+import org.geogit.cli.CommandFailedException;
 import org.geogit.cli.GeogitCLI;
+import org.geogit.cli.InvalidParameterException;
 
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.Parameters;
@@ -91,29 +91,32 @@ public class Reset extends AbstractCommand implements CLICommand {
     @Override
     public void runInternal(GeogitCLI cli) {
         final GeoGIT geogit = cli.getGeogit();
-        checkState(geogit != null, "Not in a geogit repository.");
 
         ResetMode mode = resolveResetMode();
 
         ResetOp reset = cli.getGeogit().command(ResetOp.class);
+        try {
+            for (int i = 0; args != null && i < args.size(); i++) {
+                reset.addPattern(args.get(i));
+            }
 
-        for (int i = 0; args != null && i < args.size(); i++) {
-            reset.addPattern(args.get(i));
+            if (commit != null && commit.size() > 0) {
+                Optional<ObjectId> commitId = geogit.command(RevParse.class)
+                        .setRefSpec(commit.get(0)).call();
+                checkParameter(commitId.isPresent(), "Commit could not be resolved.");
+                reset.setCommit(Suppliers.ofInstance(commitId.get()));
+            }
+
+            reset.setMode(mode);
+
+            reset.call();
+        } catch (IllegalArgumentException iae) {
+            throw new CommandFailedException(iae.getMessage(), iae);
+        } catch (IllegalStateException ise) {
+            throw new CommandFailedException(ise.getMessage(), ise);
         }
 
-        if (commit != null && commit.size() > 0) {
-            Optional<ObjectId> commitId = geogit.command(RevParse.class).setRefSpec(commit.get(0))
-                    .call();
-            checkState(commitId.isPresent(), "Commit could not be resolved.");
-            reset.setCommit(Suppliers.ofInstance(commitId.get()));
-        }
-
-        reset.setMode(mode);
-
-        reset.call();
-
-        final long countUnstaged = geogit.getRepository().getWorkingTree().countUnstaged(null);
-        if (countUnstaged > 0) {
+        if (!geogit.getRepository().getWorkingTree().isClean()) {
             try {
                 Iterator<DiffEntry> unstaged = geogit.command(DiffWorkTree.class).setFilter(null)
                         .call();
@@ -147,13 +150,13 @@ public class Reset extends AbstractCommand implements CLICommand {
         }
         if (mixed) {
             if (mode != ResetMode.NONE) {
-                throw new IllegalArgumentException("You may only specify one mode.");
+                throw new InvalidParameterException("You may only specify one mode.");
             }
             mode = ResetMode.MIXED;
         }
         if (soft) {
             if (mode != ResetMode.NONE) {
-                throw new IllegalArgumentException("You may only specify one mode.");
+                throw new InvalidParameterException("You may only specify one mode.");
             }
             mode = ResetMode.SOFT;
         }

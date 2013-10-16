@@ -5,7 +5,7 @@
 
   <groupId>org.geogit</groupId>
   <artifactId>geogit</artifactId>
-  <version>0.4-SNAPSHOT</version>
+  <version>0.6-SNAPSHOT</version>
   <packaging>pom</packaging>
   <name>GeoGit</name>
 
@@ -115,12 +115,33 @@
   </repositories>
 
   <properties>
-    <gt.version>9.0</gt.version>
+    <bdbje.version>5.0.84</bdbje.version>
+    <blueprints.version>2.4.0</blueprints.version>
+    <compress-lzf.version>0.9.8</compress-lzf.version>
+    <cucumber-java.version>1.0.14</cucumber-java.version>
     <gs.version>2.3.0</gs.version>
-    <osmosis.version>0.43-RELEASE</osmosis.version>
+    <gson.version>2.2.2</gson.version>
+    <gt.version>9.0</gt.version>
     <guava.version>13.0.1</guava.version>
+    <guice.version>3.0</guice.version>
+    <ini4j.version>0.5.2</ini4j.version>
+    <jcommander.version>1.30</jcommander.version>
+    <jettison.version>1.0.1</jettison.version>
+    <jline.version>2.11</jline.version>
     <jsr305.version>1.3.7</jsr305.version>
-    <bdbje.version>5.0.58</bdbje.version>
+    <jts.version>1.13</jts.version>
+    <junit.version>4.10</junit.version>
+    <logback.version>1.0.13</logback.version>
+    <mockito.version>1.9.5</mockito.version>
+    <mockrunner.version>0.3.6</mockrunner.version>
+    <neo4j.version>1.9.2</neo4j.version>
+    <restlet.version>2.0.15</restlet.version>
+    <slf4j.version>1.7.5</slf4j.version>
+    <sqljdbc4.version>3.0</sqljdbc4.version>
+    <sqlite-jdbc.version>3.7.2</sqlite-jdbc.version>
+    <osmosis.version>0.43-RELEASE</osmosis.version>
+    <xmlunit.version>1.3</xmlunit.version>
+    
     <test.maxHeapSize>256M</test.maxHeapSize>
     <maven.build.timestamp.format>dd-MMM-yyyy HH:mm</maven.build.timestamp.format>
     <build.timestamp>${maven.build.timestamp}</build.timestamp>
@@ -134,12 +155,12 @@
       <dependency>
         <groupId>com.google.inject</groupId>
         <artifactId>guice</artifactId>
-        <version>3.0</version>
+        <version>${guice.version}</version>
       </dependency>
       <dependency>
         <groupId>com.vividsolutions</groupId>
         <artifactId>jts</artifactId>
-        <version>1.13</version>
+        <version>${jts.version}</version>
       </dependency>
       <dependency>
         <groupId>org.geotools</groupId>
@@ -178,9 +199,19 @@
         </exclusions>
       </dependency>
       <dependency>
-        <groupId>com.fasterxml.uuid</groupId>
-        <artifactId>java-uuid-generator</artifactId>
-        <version>3.1.2</version>
+        <groupId>org.geoserver</groupId>
+        <artifactId>main</artifactId>
+        <version>${gs.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.geoserver</groupId>
+        <artifactId>wfs</artifactId>
+        <version>${gs.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.geoserver</groupId>
+        <artifactId>rest</artifactId>
+        <version>${gs.version}</version>
       </dependency>
       <dependency>
         <!-- Google Common Libraries. Featuring com.google.collect collection classes -->
@@ -197,24 +228,24 @@
       <dependency>
         <groupId>com.ning</groupId>
         <artifactId>compress-lzf</artifactId>
-        <version>0.9.5</version>
+        <version>${compress-lzf.version}</version>
       </dependency>
 
       <dependency>
         <groupId>org.ini4j</groupId>
         <artifactId>ini4j</artifactId>
-        <version>0.5.2</version>
+        <version>${ini4j.version}</version>
       </dependency>
 
       <dependency>
         <groupId>org.neo4j</groupId>
         <artifactId>neo4j</artifactId>
-        <version>1.9.RC2</version>
+        <version>${neo4j.version}</version>
       </dependency>
       <dependency>
         <groupId>org.neo4j</groupId>
         <artifactId>neo4j-kernel</artifactId>
-        <version>1.9.RC2</version>
+        <version>${neo4j.version}</version>
         <type>test-jar</type>
       </dependency>
 
@@ -229,27 +260,89 @@
         <!-- http://jcommander.org/ -->
         <groupId>com.beust</groupId>
         <artifactId>jcommander</artifactId>
-        <version>1.27</version>
+        <version>${jcommander.version}</version>
       </dependency>
 
       <dependency>
         <!-- https://github.com/jline/jline2 -->
         <groupId>jline</groupId>
         <artifactId>jline</artifactId>
-        <version>2.9</version>
+        <version>${jline.version}</version>
       </dependency>
- 
+
+      <!-- Logging -->
+      <dependency>
+        <groupId>ch.qos.logback</groupId>
+        <artifactId>logback-core</artifactId>
+        <version>${logback.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>ch.qos.logback</groupId>
+        <artifactId>logback-classic</artifactId>
+        <version>${logback.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.slf4j</groupId>
+        <artifactId>slf4j-api</artifactId>
+        <version>${slf4j.version}</version>
+      </dependency> 
+      <dependency>
+        <groupId>org.slf4j</groupId>
+        <artifactId>jul-to-slf4j</artifactId>
+        <version>${slf4j.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>com.microsoft</groupId>
+        <artifactId>sqljdbc4</artifactId>
+        <version>${sqljdbc4.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.xerial</groupId>
+        <artifactId>sqlite-jdbc</artifactId>
+        <version>${sqlite-jdbc.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.codehaus.jettison</groupId>
+        <artifactId>jettison</artifactId>
+        <version>${jettison.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>com.tinkerpop.blueprints</groupId>
+        <artifactId>blueprints-core</artifactId>
+        <version>${blueprints.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>com.tinkerpop.gremlin</groupId>
+        <artifactId>gremlin-java</artifactId>
+        <version>${blueprints.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>com.tinkerpop.blueprints</groupId>
+        <artifactId>blueprints-neo4j-graph</artifactId>
+        <version>${blueprints.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.restlet.jse</groupId>
+        <artifactId>org.restlet.ext.jetty</artifactId>
+        <version>${restlet.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.restlet.jee</groupId>
+        <artifactId>org.restlet.ext.servlet</artifactId>
+        <version>${restlet.version}</version>
+      </dependency>
+
       <!-- Test scope dependencies -->
       <dependency>
         <groupId>junit</groupId>
         <artifactId>junit</artifactId>
-        <version>4.10</version>
+        <version>${junit.version}</version>
         <scope>test</scope>
       </dependency>
       <dependency>
         <groupId>org.mockito</groupId>
         <artifactId>mockito-all</artifactId>
-        <version>1.9.0</version>
+        <version>${mockito.version}</version>
         <scope>test</scope>
       </dependency>
       <dependency>
@@ -263,26 +356,46 @@
         -->
         <groupId>info.cukes</groupId>
         <artifactId>cucumber-java</artifactId>
-        <version>1.0.14</version>
+        <version>${cucumber-java.version}</version>
+        <scope>test</scope>
+      </dependency>
+      <dependency>
+        <groupId>info.cukes</groupId>
+        <artifactId>cucumber-junit</artifactId>
+        <version>${cucumber-java.version}</version>
         <scope>test</scope>
       </dependency>
       <dependency>
         <groupId>com.google.code.gson</groupId>
         <artifactId>gson</artifactId>
-        <version>2.2.2</version>
+        <version>${gson.version}</version>
       </dependency>
       <dependency>
-        <groupId>info.cukes</groupId>
-        <artifactId>cucumber-junit</artifactId>
-        <version>1.0.14</version>
+        <groupId>xmlunit</groupId>
+        <artifactId>xmlunit</artifactId>
+        <version>${xmlunit.version}</version>
         <scope>test</scope>
       </dependency>
       <dependency>
-       <groupId>xmlunit</groupId>
-       <artifactId>xmlunit</artifactId>
-       <version>1.3</version>
+        <groupId>org.geoserver</groupId>
+        <artifactId>main</artifactId>
+        <version>${gs.version}</version>
+        <classifier>tests</classifier>
         <scope>test</scope>
       </dependency>
+      <dependency>
+        <groupId>org.geoserver</groupId>
+        <artifactId>wfs</artifactId>
+        <version>${gs.version}</version>
+        <classifier>tests</classifier>
+        <scope>test</scope>
+      </dependency>
+      <dependency>
+        <groupId>com.mockrunner</groupId>
+        <artifactId>mockrunner</artifactId>
+        <version>${mockrunner.version}</version>
+        <scope>test</scope>
+     </dependency>
     </dependencies>
   </dependencyManagement>
 
@@ -315,6 +428,16 @@
           <artifactId>appassembler-maven-plugin</artifactId>
           <version>1.2.2</version>
         </plugin>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-war-plugin</artifactId>
+          <version>2.4</version>
+        </plugin>
+        <plugin>
+          <groupId>org.mortbay.jetty</groupId>
+          <artifactId>jetty-maven-plugin</artifactId>
+          <version>7.1.6.v20100715</version>
+        </plugin>
       </plugins>
     </pluginManagement>
 
@@ -322,6 +445,7 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-surefire-plugin</artifactId>
+        <version>2.16</version>
         <configuration>
           <includes>
             <include>**/*Test.java</include>
@@ -335,7 +459,17 @@
         </configuration>
       </plugin>
       <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-jar-plugin</artifactId>
+        <version>2.4</version>
+          <configuration>
+            <archive>
+              <manifest>
+                <addDefaultImplementationEntries>true</addDefaultImplementationEntries>
+                <addDefaultSpecificationEntries>true</addDefaultSpecificationEntries>
+              </manifest>
+            </archive>
+          </configuration>
         <executions>
           <execution>
             <phase>package</phase>
@@ -348,6 +482,7 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-compiler-plugin</artifactId>
+        <version>3.1</version>
         <configuration>
           <source>1.6</source>
           <target>1.6</target>
@@ -358,6 +493,7 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-resources-plugin</artifactId>
+        <version>2.6</version>
         <configuration>
           <encoding>UTF-8</encoding>
         </configuration>
@@ -366,6 +502,7 @@
         <inherited>true</inherited>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-source-plugin</artifactId>
+        <version>2.2.1</version>
         <configuration>
           <attach>true</attach>
         </configuration>
@@ -382,6 +519,7 @@
       <plugin>
         <groupId>org.codehaus.mojo</groupId>
         <artifactId>cobertura-maven-plugin</artifactId>
+        <version>2.6</version>
         <configuration>
           <instrumentation>
             <!-- ignores> <ignore>**/*Exception.class</ignore> </ignores -->
@@ -390,6 +528,28 @@
             </excludes>
             <!-- includes> <include>**/*Test.class</include> </includes -->
           </instrumentation>
+        </configuration>
+      </plugin>
+      <plugin>
+        <groupId>pl.project13.maven</groupId>
+        <artifactId>git-commit-id-plugin</artifactId>
+        <version>2.1.5</version>
+        <executions>
+          <execution>
+            <goals>
+              <goal>revision</goal>
+            </goals>
+          </execution>
+        </executions>
+        <configuration>
+          <prefix>git</prefix>
+          <dateFormat>MMMM dd, yyyy 'at' HH:mm:ss z</dateFormat>
+          <failOnNoGitDirectory>false</failOnNoGitDirectory>
+          <dotGitDirectory>${project.basedir}/../../.git</dotGitDirectory>
+          <skipPoms>false</skipPoms>
+          <verbose>false</verbose>
+          <generateGitPropertiesFile>true</generateGitPropertiesFile>
+          <generateGitPropertiesFilename>src/main/resources/git.properties</generateGitPropertiesFilename>
         </configuration>
       </plugin>
     </plugins>

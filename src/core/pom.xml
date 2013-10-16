@@ -6,32 +6,20 @@
   <parent>
     <groupId>org.geogit</groupId>
     <artifactId>geogit</artifactId>
-    <version>0.4-SNAPSHOT</version>
+    <version>0.6-SNAPSHOT</version>
     <relativePath>../parent/pom.xml</relativePath>
   </parent>
 
   <artifactId>geogit-core</artifactId>
   <packaging>jar</packaging>
   <name>GeoGit Core</name>
-  <!--
-  
-  Build Instructions and Profiles
-  
-  Handled as a normal maven java project:
-    
-    mvn clean install
-  
-  Online tests available using:
-    
-    mvn -Ponline
-  
-  Corertura is configured for a test coverage report:
-    
-    mvn cobertura:cobertura
-    open target/site/cobertura/index.html
-  
-  -->
+  <!-- Build Instructions and Profiles Handled as a normal maven java project: mvn clean install Online tests available using: 
+    mvn -Ponline Corertura is configured for a test coverage report: mvn cobertura:cobertura open target/site/cobertura/index.html -->
   <dependencies>
+    <dependency>
+      <groupId>org.slf4j</groupId>
+      <artifactId>slf4j-api</artifactId>
+    </dependency>
     <dependency>
       <groupId>com.vividsolutions</groupId>
       <artifactId>jts</artifactId>
@@ -56,12 +44,12 @@
       <groupId>org.geotools</groupId>
       <artifactId>gt-cql</artifactId>
     </dependency>
-    
+
     <dependency>
       <groupId>org.ini4j</groupId>
       <artifactId>ini4j</artifactId>
     </dependency>
-    
+
     <dependency>
       <!-- Google Common Libraries. Featuring com.google.collect collection classes -->
       <groupId>com.google.guava</groupId>
@@ -81,23 +69,33 @@
       <groupId>com.google.code.gson</groupId>
       <artifactId>gson</artifactId>
     </dependency>
-    
+
     <dependency>
       <groupId>com.ning</groupId>
       <artifactId>compress-lzf</artifactId>
     </dependency>
 
     <dependency>
-      <groupId>org.neo4j</groupId>
-      <artifactId>neo4j</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.neo4j</groupId>
-      <artifactId>neo4j-kernel</artifactId>
-      <type>test-jar</type>
+      <groupId>com.tinkerpop.blueprints</groupId>
+      <artifactId>blueprints-core</artifactId>
     </dependency>
 
+    <dependency>
+      <groupId>com.tinkerpop.gremlin</groupId>
+      <artifactId>gremlin-java</artifactId>
+    </dependency>
+    
     <!-- Test scope dependencies -->
+    <dependency>
+      <groupId>ch.qos.logback</groupId>
+      <artifactId>logback-core</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>ch.qos.logback</groupId>
+      <artifactId>logback-classic</artifactId>
+      <scope>test</scope>
+    </dependency>
     <dependency>
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>

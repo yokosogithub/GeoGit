@@ -19,6 +19,7 @@ import static org.junit.Assert.fail;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.IOException;
+import java.nio.charset.Charset;
 import java.util.List;
 import java.util.Map;
 
@@ -40,6 +41,7 @@ import org.geogit.api.porcelain.BranchCreateOp;
 import org.geogit.api.porcelain.CheckoutOp;
 import org.geogit.api.porcelain.CommitOp;
 import org.geogit.api.porcelain.MergeOp;
+import org.geogit.repository.WorkingTree;
 import org.junit.Rule;
 import org.junit.rules.TemporaryFolder;
 import org.opengis.feature.Feature;
@@ -132,14 +134,12 @@ public class InitSteps extends AbstractGeogitFunctionalTest {
     @Then("^the response should contain \"([^\"]*)\"$")
     public void the_response_should_contain(String expected) throws Throwable {
         String actual = stdOut.toString().replaceAll(LINE_SEPARATOR, "").replaceAll("\\\\", "/");
-        expected.replaceAll("\\\\", "/");
         assertTrue(actual, actual.contains(expected));
     }
 
     @Then("^the response should not contain \"([^\"]*)\"$")
     public void the_response_should_not_contain(String expected) throws Throwable {
         String actual = stdOut.toString().replaceAll(LINE_SEPARATOR, "").replaceAll("\\\\", "/");
-        expected.replaceAll("\\\\", "/");
         assertFalse(actual, actual.contains(expected));
     }
 
@@ -234,6 +234,18 @@ public class InitSteps extends AbstractGeogitFunctionalTest {
         geogit.command(CommitOp.class).call();
 
         geogit.command(CheckoutOp.class).setSource("master").call();
+    }
+
+    @Given("^I set up a hook$")
+    public void I_set_up_a_hook() throws Throwable {
+        File hooksDir = new File(currentDirectory, ".geogit/hooks");
+        File hook = new File(hooksDir, "pre_commit.js");
+        String script = "exception = Packages.org.geogit.api.hooks.CannotRunGeogitOperationException;\n"
+                + "msg = params.get(\"message\");\n"
+                + "if (msg.length() < 5){\n"
+                + "\tthrow new exception(\"Commit messages must have at least 5 letters\");\n"
+                + "}\n" + "params.put(\"message\", msg.toLowerCase());";
+        Files.write(script, hook, Charset.forName("UTF-8"));
     }
 
     @Given("^there is a remote repository$")
@@ -333,6 +345,13 @@ public class InitSteps extends AbstractGeogitFunctionalTest {
         } else {
             throw new Exception("Unknown Feature");
         }
+    }
+
+    @Given("^I have unstaged an empty feature type$")
+    public void I_have_unstaged_an_empty_feature_type() throws Throwable {
+        insert(points1);
+        final WorkingTree workTree = geogit.getRepository().getWorkingTree();
+        workTree.delete(pointsName, idP1);
     }
 
     @Given("^I stage 6 features$")

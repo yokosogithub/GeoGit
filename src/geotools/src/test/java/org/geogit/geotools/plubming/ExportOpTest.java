@@ -1,9 +1,14 @@
+/* Copyright (c) 2013 OpenPlans. All rights reserved.
+ * This code is licensed under the BSD New License, available at the root
+ * application directory.
+ */
 package org.geogit.geotools.plubming;
 
 import java.util.List;
 
 import javax.annotation.Nullable;
 
+import org.geogit.api.ObjectId;
 import org.geogit.api.RevFeatureType;
 import org.geogit.api.porcelain.AddOp;
 import org.geogit.api.porcelain.CommitOp;
@@ -246,8 +251,8 @@ public class ExportOpTest extends RepositoryTestCase {
         SimpleFeatureSource featureSource = dataStore.getFeatureSource(typeName);
         SimpleFeatureStore featureStore = (SimpleFeatureStore) featureSource;
         geogit.command(ExportOp.class).setFeatureStore(featureStore).setPath(pointsName)
-                .setAlter(true).setFeatureTypeId(RevFeatureType.build(modifiedPointsType).getId())
-                .call();
+                .setAlter(true)
+                .setFilterFeatureTypeId(RevFeatureType.build(modifiedPointsType).getId()).call();
         featureSource = dataStore.getFeatureSource(typeName);
         featureStore = (SimpleFeatureStore) featureSource;
         SimpleFeatureCollection featureCollection = featureStore.getFeatures();
@@ -272,7 +277,7 @@ public class ExportOpTest extends RepositoryTestCase {
         SimpleFeatureSource featureSource = dataStore.getFeatureSource(typeName);
         SimpleFeatureStore featureStore = (SimpleFeatureStore) featureSource;
         geogit.command(ExportOp.class).setFeatureStore(featureStore).setPath(pointsName)
-                .setFeatureTypeId(RevFeatureType.build(modifiedPointsType).getId()).call();
+                .setFilterFeatureTypeId(RevFeatureType.build(modifiedPointsType).getId()).call();
         featureSource = dataStore.getFeatureSource(typeName);
         featureStore = (SimpleFeatureStore) featureSource;
         SimpleFeatureCollection featureCollection = featureStore.getFeatures();
@@ -293,11 +298,10 @@ public class ExportOpTest extends RepositoryTestCase {
         SimpleFeatureStore featureStore = (SimpleFeatureStore) featureSource;
         try {
             geogit.command(ExportOp.class).setFeatureStore(featureStore).setPath(pointsName)
-                    .setFeatureTypeId(RevFeatureType.build(linesType).getId()).call();
+                    .setFilterFeatureTypeId(ObjectId.forString("fake")).call();
             fail();
-        } catch (GeoToolsOpException e) {
-            assertEquals(GeoToolsOpException.StatusCode.UNABLE_TO_GET_FEATURES, e.statusCode);
-
+        } catch (IllegalArgumentException e) {
+            assertTrue(e.getMessage(), e.getMessage().contains("filter feature type"));
         }
 
     }

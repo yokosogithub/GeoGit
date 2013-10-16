@@ -125,9 +125,7 @@ public class SquashOp extends AbstractGeoGitOp<ObjectId> {
         final SymRef headRef = (SymRef) currHead.get();
         final String currentBranch = headRef.getTarget();
 
-        long staged = getIndex().countStaged(null);
-        long unstaged = getWorkTree().countUnstaged(null);
-        Preconditions.checkState((staged == 0 && unstaged == 0),
+        Preconditions.checkState(getIndex().isClean() && getWorkTree().isClean(),
                 "You must have a clean working tree and index to perform a squash.");
 
         Optional<RevCommit> ancestor = command(FindCommonAncestor.class).setLeft(since)

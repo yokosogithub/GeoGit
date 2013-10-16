@@ -12,8 +12,6 @@ import java.io.InputStream;
 
 import javax.xml.stream.XMLStreamException;
 
-import org.geogit.osm.internal.history.Changeset;
-import org.geogit.osm.internal.history.ChangesetScanner;
 import org.junit.Assert;
 import org.junit.Test;
 

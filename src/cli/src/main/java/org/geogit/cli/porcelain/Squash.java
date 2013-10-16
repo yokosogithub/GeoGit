@@ -5,12 +5,10 @@
 
 package org.geogit.cli.porcelain;
 
-import java.io.IOException;
 import java.util.List;
 
 import org.geogit.api.GeoGIT;
 import org.geogit.api.ObjectId;
-import org.geogit.api.Platform;
 import org.geogit.api.RevCommit;
 import org.geogit.api.plumbing.RevParse;
 import org.geogit.api.porcelain.SquashOp;
@@ -21,7 +19,6 @@ import org.geogit.cli.GeogitCLI;
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.Parameters;
 import com.google.common.base.Optional;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 
 /**
@@ -46,32 +43,25 @@ public class Squash extends AbstractCommand implements CLICommand {
     private String message;
 
     /**
-     * Executes the log command using the provided options.
-     * 
-     * @param cli
-     * @throws IOException
-     * @see org.geogit.cli.AbstractCommand#runInternal(org.geogit.cli.GeogitCLI)
+     * Executes the squash command using the provided options.
      */
     @Override
-    public void runInternal(GeogitCLI cli) throws Exception {
-        final Platform platform = cli.getPlatform();
-        Preconditions.checkState(cli.getGeogit() != null, "Not a geogit repository: "
-                + platform.pwd().getAbsolutePath());
-        Preconditions.checkArgument(commits.size() == 2, "2 commit references must be supplied");
+    public void runInternal(GeogitCLI cli) {
+        checkParameter(commits.size() == 2, "2 commit references must be supplied");
 
         final GeoGIT geogit = cli.getGeogit();
 
         Optional<ObjectId> sinceId = geogit.command(RevParse.class).setRefSpec(commits.get(0))
                 .call();
-        Preconditions.checkArgument(sinceId.isPresent(), "'since' reference cannot be found");
-        Preconditions.checkArgument(geogit.getRepository().commitExists(sinceId.get()),
+        checkParameter(sinceId.isPresent(), "'since' reference cannot be found");
+        checkParameter(geogit.getRepository().commitExists(sinceId.get()),
                 "'since' reference does not resolve to a commit");
         RevCommit sinceCommit = geogit.getRepository().getCommit(sinceId.get());
 
         Optional<ObjectId> untilId = geogit.command(RevParse.class).setRefSpec(commits.get(1))
                 .call();
-        Preconditions.checkArgument(untilId.isPresent(), "'until' reference cannot be found");
-        Preconditions.checkArgument(geogit.getRepository().commitExists(untilId.get()),
+        checkParameter(untilId.isPresent(), "'until' reference cannot be found");
+        checkParameter(geogit.getRepository().commitExists(untilId.get()),
                 "'until' reference does not resolve to a commit");
         RevCommit untilCommit = geogit.getRepository().getCommit(untilId.get());
 

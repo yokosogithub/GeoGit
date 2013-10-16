@@ -42,7 +42,7 @@ Feature: "merge" command
   Scenario: Try to merge from an empty directory
     Given I am in an empty directory
      When I run the command "merge branch1"
-     Then the response should start with "Not a geogit repository"
+     Then the response should start with "Not in a geogit repository"
       And it should exit with non-zero exit code
 
   Scenario: Try to merge two conflicting branches
@@ -88,7 +88,9 @@ Feature: "merge" command
     Given I have a repository
       And I have a merge conflict state
      When I run the command "merge branch1 --abort"
-     Then the response should contain "Merge aborted successfully"     
+     Then the response should contain "Merge aborted successfully"
+     When I run the command "status"
+     Then the response should contain "nothing to commit"        
      
   Scenario: Try to abort when there is no conflict
     Given I have a repository

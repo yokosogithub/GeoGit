@@ -6,7 +6,7 @@ Feature: "push" command
   Scenario: Try to push from an empty directory
     Given I am in an empty directory
      When I run the command "push origin"
-     Then the response should start with "Not a geogit repository"
+     Then the response should start with "Not in a geogit repository"
      
   Scenario: Try to push to origin
     Given I am in an empty directory

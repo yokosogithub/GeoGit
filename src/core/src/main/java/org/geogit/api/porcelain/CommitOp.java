@@ -28,7 +28,7 @@ import org.geogit.api.plumbing.ResolveTreeish;
 import org.geogit.api.plumbing.RevObjectParse;
 import org.geogit.api.plumbing.UpdateRef;
 import org.geogit.api.plumbing.UpdateSymRef;
-import org.geogit.api.plumbing.WriteTree;
+import org.geogit.api.plumbing.WriteTree2;
 import org.geogit.api.plumbing.merge.Conflict;
 import org.geogit.api.plumbing.merge.ConflictsReadOp;
 import org.geogit.api.plumbing.merge.ReadMergeCommitMessageOp;
@@ -36,6 +36,7 @@ import org.geogit.di.CanRunDuringConflict;
 import org.geogit.storage.ObjectDatabase;
 
 import com.google.common.base.Optional;
+import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.Lists;
@@ -85,6 +86,8 @@ public class CommitOp extends AbstractGeoGitOp<RevCommit> {
     private String committerEmail;
 
     private RevCommit commit;
+
+    private boolean amend;
 
     private final List<String> pathFilters = Lists.newLinkedList();
 
@@ -225,6 +228,17 @@ public class CommitOp extends AbstractGeoGitOp<RevCommit> {
     }
 
     /**
+     * Sets whether the operation should ammend the last commit instead of creating a new one
+     * 
+     * @param amend
+     * @return
+     */
+    public CommitOp setAmend(boolean amend) {
+        this.amend = amend;
+        return this;
+    }
+
+    /**
      * Executes the commit operation.
      * 
      * @return the commit just applied, or {@code null} if
@@ -247,7 +261,11 @@ public class CommitOp extends AbstractGeoGitOp<RevCommit> {
         float writeTreeProgress = 99f;
         if (all) {
             writeTreeProgress = 50f;
-            command(AddOp.class).setUpdateOnly(true).setProgressListener(subProgress(49f)).call();
+            AddOp op = command(AddOp.class);
+            for (String st : pathFilters) {
+                op.addPattern(st);
+            }
+            op.setUpdateOnly(true).setProgressListener(subProgress(49f)).call();
         }
         if (getProgressListener().isCanceled()) {
             return null;
@@ -266,8 +284,25 @@ public class CommitOp extends AbstractGeoGitOp<RevCommit> {
 
         final String currentBranch = ((SymRef) headRef).getTarget();
         final ObjectId currHeadCommitId = headRef.getObjectId();
+
+        Supplier<RevTree> oldRoot = resolveOldRoot();
         if (!currHeadCommitId.isNull()) {
-            parents.add(0, currHeadCommitId);
+            if (amend) {
+                RevCommit headCommit = command(RevObjectParse.class).setObjectId(currHeadCommitId)
+                        .call(RevCommit.class).get();
+                parents.addAll(headCommit.getParentIds());
+                if (message == null || message.isEmpty()) {
+                    message = headCommit.getMessage();
+                }
+                RevTree commitTree = command(RevObjectParse.class)
+                        .setObjectId(headCommit.getTreeId()).call(RevTree.class).get();
+                oldRoot = Suppliers.ofInstance(commitTree);
+            } else {
+                parents.add(0, currHeadCommitId);
+            }
+        } else {
+            Preconditions.checkArgument(!amend,
+                    "Cannot amend. There is no previous commit to amend");
         }
 
         // additional operations in case we are committing after a conflicted merge
@@ -282,12 +317,15 @@ public class CommitOp extends AbstractGeoGitOp<RevCommit> {
             }
         }
 
-        for (String st : pathFilters) {
-            command(AddOp.class).addPattern(st).call();
+        ObjectId newTreeId;
+        {
+            WriteTree2 writeTree = command(WriteTree2.class);
+            writeTree.setOldRoot(oldRoot).setProgressListener(subProgress(writeTreeProgress));
+            if (!pathFilters.isEmpty()) {
+                writeTree.setPathFilter(pathFilters);
+            }
+            newTreeId = writeTree.call();
         }
-        ObjectId newTreeId = command(WriteTree.class).setOldRoot(resolveOldRoot())
-                .setPathFilter(pathFilters).setProgressListener(subProgress(writeTreeProgress))
-                .call();
 
         if (getProgressListener().isCanceled()) {
             return null;
@@ -327,6 +365,7 @@ public class CommitOp extends AbstractGeoGitOp<RevCommit> {
             }
             commit = cb.build();
         }
+
         if (getProgressListener().isCanceled()) {
             return null;
         }
@@ -466,4 +505,5 @@ public class CommitOp extends AbstractGeoGitOp<RevCommit> {
         this.allowEmpty = allowEmptyCommit;
         return this;
     }
+
 }

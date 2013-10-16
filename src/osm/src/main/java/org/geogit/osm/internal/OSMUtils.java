@@ -1,3 +1,7 @@
+/* Copyright (c) 2013 OpenPlans. All rights reserved.
+ * This code is licensed under the BSD New License, available at the root
+ * application directory.
+ */
 package org.geogit.osm.internal;
 
 import java.util.Collection;
@@ -15,6 +19,14 @@ import com.google.common.base.Throwables;
 import com.google.common.collect.Lists;
 
 public class OSMUtils {
+
+    public static final String OSM_FETCH_BRANCH = "OSM_FETCH";
+
+    public static final String DEFAULT_API_ENDPOINT = "http://overpass-api.de/api/interpreter";
+
+    public static final String FR_API_ENDPOINT = "http://api.openstreetmap.fr/oapi/interpreter/";
+
+    public static final String RU_API_ENDPOINT = "http://overpass.osm.rambler.ru/";
 
     public static final String NODE_TYPE_NAME = "node";
 

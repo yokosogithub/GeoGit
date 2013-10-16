@@ -1,8 +1,11 @@
+/* Copyright (c) 2013 OpenPlans. All rights reserved.
+ * This code is licensed under the BSD New License, available at the root
+ * application directory.
+ */
 package org.geogit.storage;
 
 import static org.geogit.api.Ref.append;
 
-import java.io.InputStream;
 import java.util.Iterator;
 import java.util.List;
 import java.util.UUID;
@@ -84,14 +87,6 @@ public class TransactionStagingDatabase implements StagingDatabase {
     @Override
     public boolean exists(ObjectId id) {
         return database.exists(id);
-    }
-
-    /**
-     * Pass through to the original {@link StagingDatabase}.
-     */
-    @Override
-    public InputStream getRaw(ObjectId id) {
-        return database.getRaw(id);
     }
 
     /**
@@ -205,14 +200,6 @@ public class TransactionStagingDatabase implements StagingDatabase {
      * Pass through to the original {@link StagingDatabase}.
      */
     @Override
-    public boolean put(ObjectId objectId, InputStream raw) {
-        return database.put(objectId, raw);
-    }
-
-    /**
-     * Pass through to the original {@link StagingDatabase}.
-     */
-    @Override
     public void putAll(Iterator<? extends RevObject> objects) {
         database.putAll(objects);
     }
@@ -260,6 +247,11 @@ public class TransactionStagingDatabase implements StagingDatabase {
     @Override
     public void removeConflicts(@Nullable String namespace) {
         database.removeConflicts(txNamespace);
+    }
+
+    @Override
+    public long deleteAll(Iterator<ObjectId> ids) {
+        return database.deleteAll(ids);
     }
 
 }

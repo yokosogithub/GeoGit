@@ -5,8 +5,7 @@
 
 package org.geogit.cli.porcelain;
 
-import static com.google.common.base.Preconditions.checkState;
-
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -18,13 +17,13 @@ import org.geogit.api.plumbing.FindTreeChild;
 import org.geogit.api.porcelain.RemoveOp;
 import org.geogit.cli.AbstractCommand;
 import org.geogit.cli.CLICommand;
+import org.geogit.cli.CommandFailedException;
 import org.geogit.cli.GeogitCLI;
 import org.geogit.repository.Repository;
 
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.Parameters;
 import com.google.common.base.Optional;
-import com.google.common.base.Preconditions;
 
 /**
  *
@@ -44,15 +43,14 @@ public class Remove extends AbstractCommand implements CLICommand {
     private List<String> pathsToRemove = new ArrayList<String>();
 
     @Override
-    public void runInternal(GeogitCLI cli) throws Exception {
-        checkState(cli.getGeogit() != null, "Not a geogit repository: " + cli.getPlatform().pwd());
+    public void runInternal(GeogitCLI cli) throws IOException {
 
         ConsoleReader console = cli.getConsole();
 
         // check that there is something to remove
         if (pathsToRemove.isEmpty()) {
             printUsage();
-            return;
+            throw new CommandFailedException();
         }
 
         /*
@@ -67,11 +65,11 @@ public class Remove extends AbstractCommand implements CLICommand {
             Optional<NodeRef> node = repository.command(FindTreeChild.class)
                     .setParent(repository.getWorkingTree().getTree()).setIndex(true)
                     .setChildPath(pathToRemove).call();
-            Preconditions.checkState(node.isPresent(),
-                    "pathspec '%s' did not match any feature or tree", pathToRemove);
+            checkParameter(node.isPresent(), "pathspec '%s' did not match any feature or tree",
+                    pathToRemove);
             NodeRef nodeRef = node.get();
             if (nodeRef.getType() == TYPE.TREE) {
-                checkState(recursive, "Cannot remove tree %s if -r is not specified",
+                checkParameter(recursive, "Cannot remove tree %s if -r is not specified",
                         nodeRef.path());
                 trees.add(pathToRemove);
             }

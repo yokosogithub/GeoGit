@@ -5,8 +5,7 @@
 
 package org.geogit.cli.plumbing;
 
-import static com.google.common.base.Preconditions.checkState;
-
+import java.io.IOException;
 import java.util.Iterator;
 import java.util.List;
 
@@ -47,8 +46,7 @@ public class LsTree extends AbstractCommand implements CLICommand {
     private boolean verbose;
 
     @Override
-    public void runInternal(GeogitCLI cli) throws Exception {
-        checkState(cli.getGeogit() != null, "Not a geogit repository: " + cli.getPlatform().pwd());
+    public void runInternal(GeogitCLI cli) throws IOException {
         String ref;
         if (refList.isEmpty()) {
             ref = null;

@@ -11,16 +11,18 @@ import jline.UnsupportedTerminal;
 import jline.console.ConsoleReader;
 
 import org.geogit.api.Platform;
+import org.geogit.api.RevTree;
 import org.geogit.api.TestPlatform;
+import org.geogit.api.plumbing.RevObjectParse;
 import org.geogit.cli.GeogitCLI;
-import org.geogit.osm.cli.commands.OSMMap;
 import org.geogit.osm.internal.OSMImportOp;
-import org.geogit.repository.WorkingTree;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
+
+import com.google.common.base.Optional;
 
 public class OSMExportShpTest extends Assert {
 
@@ -49,11 +51,16 @@ public class OSMExportShpTest extends Assert {
         String filename = OSMImportOp.class.getResource("ways.xml").getFile();
         File file = new File(filename);
         cli.execute("osm", "import", file.getAbsolutePath());
-        WorkingTree workTree = cli.getGeogit().getRepository().getWorkingTree();
-        long unstaged = workTree.countUnstaged("way");
-        assertTrue(unstaged > 0);
-        unstaged = workTree.countUnstaged("node");
-        assertTrue(unstaged > 0);
+        cli.execute("add");
+        cli.execute("commit", "-m", "message");
+        Optional<RevTree> tree = cli.getGeogit().command(RevObjectParse.class)
+                .setRefSpec("HEAD:node").call(RevTree.class);
+        assertTrue(tree.isPresent());
+        assertTrue(tree.get().size() > 0);
+        tree = cli.getGeogit().command(RevObjectParse.class).setRefSpec("HEAD:way")
+                .call(RevTree.class);
+        assertTrue(tree.isPresent());
+        assertTrue(tree.get().size() > 0);
         String mappingFilename = OSMMap.class.getResource("mapping.json").getFile();
         File mappingFile = new File(mappingFilename);
         File exportFile = new File(tempFolder.getRoot(), "export.shp");
@@ -61,7 +68,7 @@ public class OSMExportShpTest extends Assert {
                 mappingFile.getAbsolutePath());
         assertTrue(exportFile.exists());
         cli.execute("shp", "import", "-d", "mapped", exportFile.getAbsolutePath());
-        unstaged = workTree.countUnstaged("mapped");
+        long unstaged = cli.getGeogit().getRepository().getWorkingTree().countUnstaged("mapped").getCount();
         assertTrue(unstaged > 0);
     }
 
@@ -70,11 +77,16 @@ public class OSMExportShpTest extends Assert {
         String filename = OSMImportOp.class.getResource("ways.xml").getFile();
         File file = new File(filename);
         cli.execute("osm", "import", file.getAbsolutePath());
-        WorkingTree workTree = cli.getGeogit().getRepository().getWorkingTree();
-        long unstaged = workTree.countUnstaged("way");
-        assertTrue(unstaged > 0);
-        unstaged = workTree.countUnstaged("node");
-        assertTrue(unstaged > 0);
+        cli.execute("add");
+        cli.execute("commit", "-m", "message");
+        Optional<RevTree> tree = cli.getGeogit().command(RevObjectParse.class)
+                .setRefSpec("HEAD:node").call(RevTree.class);
+        assertTrue(tree.isPresent());
+        assertTrue(tree.get().size() > 0);
+        tree = cli.getGeogit().command(RevObjectParse.class).setRefSpec("HEAD:way")
+                .call(RevTree.class);
+        assertTrue(tree.isPresent());
+        assertTrue(tree.get().size() > 0);
         String mappingFilename = OSMMap.class.getResource("no_geometry_mapping.json").getFile();
         File mappingFile = new File(mappingFilename);
         File exportFile = new File(tempFolder.getRoot(), "export.shp");

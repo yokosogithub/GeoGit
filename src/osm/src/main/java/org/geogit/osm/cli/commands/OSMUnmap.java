@@ -5,6 +5,7 @@
 
 package org.geogit.osm.cli.commands;
 
+import java.io.IOException;
 import java.util.List;
 
 import jline.console.ConsoleReader;
@@ -15,7 +16,6 @@ import org.geogit.cli.AbstractCommand;
 import org.geogit.cli.CLICommand;
 import org.geogit.cli.CommandFailedException;
 import org.geogit.cli.GeogitCLI;
-import org.geogit.osm.internal.Mapping;
 import org.geogit.osm.internal.OSMUnmapOp;
 
 import com.beust.jcommander.Parameter;
@@ -33,22 +33,13 @@ public class OSMUnmap extends AbstractCommand implements CLICommand {
     @Parameter(description = "<path>")
     public List<String> args;
 
-    @Parameter(names = { "--mapping" }, description = "The file that contains the data mapping to use")
-    public String mappingFile;
-
     private GeoGIT geogit;
 
     /**
      * Executes the map command using the provided options.
-     * 
-     * @param cli
      */
     @Override
-    protected void runInternal(GeogitCLI cli) throws Exception {
-        if (cli.getGeogit() == null) {
-            cli.getConsole().println("Not a geogit repository: " + cli.getPlatform().pwd());
-            return;
-        }
+    protected void runInternal(GeogitCLI cli) throws IOException{
 
         if (args == null || args.isEmpty() || args.size() != 1) {
             printUsage();
@@ -61,13 +52,7 @@ public class OSMUnmap extends AbstractCommand implements CLICommand {
 
         ObjectId oldTreeId = geogit.getRepository().getWorkingTree().getTree().getId();
 
-        Mapping mapping = null;
-        if (mappingFile != null) {
-            mapping = Mapping.fromFile(mappingFile);
-        }
-
-        ObjectId newTreeId = geogit.command(OSMUnmapOp.class).setPath(path).setMapping(mapping)
-                .call().getId();
+        ObjectId newTreeId = geogit.command(OSMUnmapOp.class).setPath(path).call().getId();
 
         ConsoleReader console = cli.getConsole();
         if (newTreeId.equals(oldTreeId)) {

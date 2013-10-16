@@ -1,3 +1,7 @@
+/* Copyright (c) 2013 OpenPlans. All rights reserved.
+ * This code is licensed under the BSD New License, available at the root
+ * application directory.
+ */
 package org.geogit.web.api.commands;
 
 import java.util.List;
@@ -15,9 +19,9 @@ import org.geogit.web.api.CommandSpecException;
 import org.geogit.web.api.ResponseWriter;
 
 /**
- * Interface for the Remote operations in GeoGit. Currently only supports listing of remotes.
+ * Interface for the Remote operations in GeoGit.
  * 
- * Web interface for {@link RemoteListOp}
+ * Web interface for {@link RemoteListOp}, {@link RemoteRemoveOp}, {@link RemoteAddOp}
  */
 
 public class RemoteWebOp extends AbstractWebAPICommand {

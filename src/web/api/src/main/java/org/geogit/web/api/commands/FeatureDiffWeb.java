@@ -1,3 +1,7 @@
+/* Copyright (c) 2013 OpenPlans. All rights reserved.
+ * This code is licensed under the BSD New License, available at the root
+ * application directory.
+ */
 package org.geogit.web.api.commands;
 
 import java.util.HashMap;
@@ -115,6 +119,8 @@ public class FeatureDiffWeb extends AbstractWebAPICommand {
 
     /**
      * Runs the command and builds the appropriate response
+     * 
+     * @param context - the context to use for this command
      * 
      * @throws CommandSpecException
      */

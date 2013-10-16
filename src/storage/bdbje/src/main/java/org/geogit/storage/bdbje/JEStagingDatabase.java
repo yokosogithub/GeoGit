@@ -6,7 +6,6 @@ package org.geogit.storage.bdbje;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.ArrayList;
@@ -157,14 +156,6 @@ public class JEStagingDatabase implements ObjectDatabase, StagingDatabase {
     }
 
     @Override
-    public InputStream getRaw(ObjectId id) {
-        if (stagingDb.exists(id)) {
-            return stagingDb.getRaw(id);
-        }
-        return repositoryDb.getRaw(id);
-    }
-
-    @Override
     public List<ObjectId> lookUp(String partialId) {
         Set<ObjectId> lookUp = new HashSet<ObjectId>(stagingDb.lookUp(partialId));
         lookUp.addAll(repositoryDb.lookUp(partialId));
@@ -228,11 +219,6 @@ public class JEStagingDatabase implements ObjectDatabase, StagingDatabase {
     @Override
     public void putAll(Iterator<? extends RevObject> objects) {
         stagingDb.putAll(objects);
-    }
-
-    @Override
-    public boolean put(ObjectId objectId, InputStream raw) {
-        return stagingDb.put(objectId, raw);
     }
 
     @Override
@@ -439,6 +425,11 @@ public class JEStagingDatabase implements ObjectDatabase, StagingDatabase {
         if (file.isPresent()) {
             file.get().delete();
         }
+    }
+
+    @Override
+    public long deleteAll(Iterator<ObjectId> ids) {
+        return this.stagingDb.deleteAll(ids);
     }
 
 }

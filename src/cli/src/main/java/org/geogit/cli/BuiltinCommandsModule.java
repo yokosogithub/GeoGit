@@ -8,6 +8,7 @@ import org.geogit.cli.plumbing.Cat;
 import org.geogit.cli.plumbing.DiffTree;
 import org.geogit.cli.plumbing.LsTree;
 import org.geogit.cli.plumbing.MergeBase;
+import org.geogit.cli.plumbing.RebuildGraph;
 import org.geogit.cli.plumbing.RevList;
 import org.geogit.cli.plumbing.RevParse;
 import org.geogit.cli.plumbing.ShowRef;
@@ -42,6 +43,7 @@ import org.geogit.cli.porcelain.Show;
 import org.geogit.cli.porcelain.Squash;
 import org.geogit.cli.porcelain.Status;
 import org.geogit.cli.porcelain.Tag;
+import org.geogit.cli.porcelain.Version;
 
 import com.google.inject.AbstractModule;
 
@@ -74,6 +76,8 @@ import com.google.inject.AbstractModule;
  * @see Pull
  * @see Show
  * @see Fetch
+ * @see Version
+ * @see RebuildGraph
  */
 public class BuiltinCommandsModule extends AbstractModule implements CLIModule {
 
@@ -118,6 +122,8 @@ public class BuiltinCommandsModule extends AbstractModule implements CLIModule {
         bind(Squash.class);
         bind(Tag.class);
         bind(WalkGraph.class);
+        bind(Version.class);
+        bind(RebuildGraph.class);
     }
 
 }

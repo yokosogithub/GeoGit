@@ -4,11 +4,10 @@
  */
 package org.geogit.cli.porcelain;
 
-import static com.google.common.base.Preconditions.checkArgument;
-import static com.google.common.base.Preconditions.checkState;
 import static org.fusesource.jansi.Ansi.Color.GREEN;
 import static org.fusesource.jansi.Ansi.Color.YELLOW;
 
+import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -24,6 +23,7 @@ import org.geogit.api.RevCommit;
 import org.geogit.api.porcelain.BlameOp;
 import org.geogit.api.porcelain.BlameReport;
 import org.geogit.api.porcelain.ValueAndCommit;
+import org.geogit.cli.AbstractCommand;
 import org.geogit.cli.AnsiDecorator;
 import org.geogit.cli.CLICommand;
 import org.geogit.cli.GeogitCLI;
@@ -39,7 +39,7 @@ import com.google.common.base.Optional;
  * 
  */
 @Parameters(commandNames = "blame", commandDescription = "Shows information about authors of modifications for a single feature")
-public class Blame implements CLICommand {
+public class Blame extends AbstractCommand {
 
     /**
      * The path to the element to analyze.
@@ -53,15 +53,10 @@ public class Blame implements CLICommand {
     @Parameter(names = { "--no-values" }, description = "Do not show values, only attribute names")
     private boolean noValues = false;
 
-    /**
-     * @param cli
-     * @see org.geogit.cli.CLICommand#run(org.geogit.cli.GeogitCLI)
-     */
     @Override
-    public void run(GeogitCLI cli) throws Exception {
-        checkState(cli.getGeogit() != null, "Not a geogit repository: " + cli.getPlatform().pwd());
-        checkArgument(paths.size() < 2, "Only one path allowed");
-        checkArgument(!paths.isEmpty(), "A path must be specified");
+    public void runInternal(GeogitCLI cli) throws IOException {
+        checkParameter(paths.size() < 2, "Only one path allowed");
+        checkParameter(!paths.isEmpty(), "A path must be specified");
 
         ConsoleReader console = cli.getConsole();
         GeoGIT geogit = cli.getGeogit();
@@ -91,7 +86,7 @@ public class Blame implements CLICommand {
                 }
                 console.println(sb.toString());
             } else {
-                Ansi ansi = AnsiDecorator.newAnsi(console.getTerminal().isAnsiSupported());
+                Ansi ansi = newAnsi(console.getTerminal());
                 ansi.fg(GREEN).a(attrib + ": ").reset();
                 if (!noValues) {
                     String s = value.isPresent() ? value.get().toString() : "NULL";

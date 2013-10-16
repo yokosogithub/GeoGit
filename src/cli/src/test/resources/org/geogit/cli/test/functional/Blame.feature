@@ -50,4 +50,4 @@ Feature: "blame" command
   Scenario: Try to reset from an empty directory
     Given I am in an empty directory
      When I run the command "blame"
-     Then the response should contain "Not a geogit repository"          
+     Then the response should contain "Not in a geogit repository"          

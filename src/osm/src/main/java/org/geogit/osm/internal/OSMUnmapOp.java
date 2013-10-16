@@ -13,12 +13,18 @@ import java.util.Set;
 
 import org.geogit.api.AbstractGeoGitOp;
 import org.geogit.api.NodeRef;
+import org.geogit.api.ObjectId;
 import org.geogit.api.RevFeature;
 import org.geogit.api.RevFeatureType;
 import org.geogit.api.RevTree;
+import org.geogit.api.plumbing.DiffTree;
 import org.geogit.api.plumbing.LsTreeOp;
 import org.geogit.api.plumbing.LsTreeOp.Strategy;
 import org.geogit.api.plumbing.RevObjectParse;
+import org.geogit.api.plumbing.diff.DiffEntry;
+import org.geogit.osm.internal.log.OSMMappingLogEntry;
+import org.geogit.osm.internal.log.ReadOSMMapping;
+import org.geogit.osm.internal.log.ReadOSMMappingLogEntry;
 import org.geotools.feature.simple.SimpleFeatureBuilder;
 import org.opengis.feature.Property;
 import org.opengis.feature.simple.SimpleFeature;
@@ -101,21 +107,17 @@ public class OSMUnmapOp extends AbstractGeoGitOp<RevTree> {
         return this;
     }
 
-    /**
-     * Sets the mapping to use, which has to be the same used to create the mapped tree to be
-     * unmapped. This mapping is used to resolve field aliases to original tag names. If no mapping
-     * is set, field names are assumed to be tag names
-     * 
-     * @param mapping
-     * @return
-     */
-    public OSMUnmapOp setMapping(Mapping mapping) {
-        this.mapping = mapping;
-        return this;
-    }
-
     @Override
     public RevTree call() {
+
+        Optional<OSMMappingLogEntry> entry = command(ReadOSMMappingLogEntry.class).setPath(path)
+                .call();
+        if (entry.isPresent()) {
+            Optional<Mapping> opt = command(ReadOSMMapping.class).setEntry(entry.get()).call();
+            if (opt.isPresent()) {
+                mapping = opt.get();
+            }
+        }
 
         Iterator<NodeRef> iter = command(LsTreeOp.class).setReference(path)
                 .setStrategy(Strategy.FEATURES_ONLY).call();
@@ -145,7 +147,51 @@ public class OSMUnmapOp extends AbstractGeoGitOp<RevTree> {
             unmapFeature(feature, flusher);
 
         }
+
         flusher.flushAll();
+
+        // The above code will unmap all added or modified elements, but not deleted ones.
+        // We now process the deletions, by comparing the current state of the mapped tree
+        // with its state just after the mapping was created.
+
+        if (entry.isPresent()) {
+            Iterator<DiffEntry> diffs = command(DiffTree.class).setFilterPath(path)
+                    .setNewTree(getWorkTree().getTree().getId())
+                    .setOldTree(entry.get().getPostMappingId()).call();
+
+            while (diffs.hasNext()) {
+                DiffEntry diff = diffs.next();
+                if (diff.changeType().equals(DiffEntry.ChangeType.REMOVED)) {
+
+                    ObjectId featureId = diff.getOldObject().getNode().getObjectId();
+                    RevFeature revFeature = command(RevObjectParse.class).setObjectId(featureId)
+                            .call(RevFeature.class).get();
+                    RevFeatureType revFeatureType = command(RevObjectParse.class)
+                            .setObjectId(diff.getOldObject().getMetadataId())
+                            .call(RevFeatureType.class).get();
+                    List<PropertyDescriptor> descriptors = revFeatureType.sortedDescriptors();
+                    ImmutableList<Optional<Object>> values = revFeature.getValues();
+                    SimpleFeatureBuilder featureBuilder = new SimpleFeatureBuilder(
+                            (SimpleFeatureType) revFeatureType.type());
+                    String id = null;
+                    for (int i = 0; i < descriptors.size(); i++) {
+                        PropertyDescriptor descriptor = descriptors.get(i);
+                        if (descriptor.getName().getLocalPart().equals("id")) {
+                            id = values.get(i).get().toString();
+                        }
+                        Optional<Object> value = values.get(i);
+                        featureBuilder.set(descriptor.getName(), value.orNull());
+                    }
+                    Preconditions.checkNotNull(id, "No 'id' attribute found");
+                    SimpleFeature feature = featureBuilder.buildFeature(id);
+                    Class<?> clazz = feature.getDefaultGeometryProperty().getType().getBinding();
+                    String deletePath = clazz.equals(Point.class) ? OSMUtils.NODE_TYPE_NAME
+                            : OSMUtils.WAY_TYPE_NAME;
+                    getWorkTree().delete(deletePath, id);
+                }
+            }
+        }
+
         return getWorkTree().getTree();
 
     }

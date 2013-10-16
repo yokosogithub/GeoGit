@@ -63,7 +63,7 @@ public interface GraphDatabase {
      * 
      * @param commitId the commit id to insert
      * @param parentIds the commit ids of the commit's parents
-     * @return true if the commit id was inserted, false otherwise
+     * @return true if the commit id was inserted or updated, false if it was already there
      */
     public boolean put(final ObjectId commitId, ImmutableList<ObjectId> parentIds);
 
@@ -118,4 +118,6 @@ public interface GraphDatabase {
      * @return true if there are any sparse commits between start and end
      */
     public boolean isSparsePath(ObjectId start, ObjectId end);
+
+    public void truncate();
 }

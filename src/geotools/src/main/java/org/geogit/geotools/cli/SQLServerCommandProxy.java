@@ -6,10 +6,10 @@
 package org.geogit.geotools.cli;
 
 import org.geogit.cli.CLICommandExtension;
-import org.geogit.geotools.porcelain.SQLServerDescribe;
-import org.geogit.geotools.porcelain.SQLServerExport;
-import org.geogit.geotools.porcelain.SQLServerImport;
-import org.geogit.geotools.porcelain.SQLServerList;
+import org.geogit.geotools.cli.porcelain.SQLServerDescribe;
+import org.geogit.geotools.cli.porcelain.SQLServerExport;
+import org.geogit.geotools.cli.porcelain.SQLServerImport;
+import org.geogit.geotools.cli.porcelain.SQLServerList;
 
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameters;

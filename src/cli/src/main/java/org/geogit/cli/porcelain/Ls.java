@@ -1,12 +1,11 @@
-/* Copyright (c) 2011 TOPP - www.openplans.org. All rights reserved.
- * This code is licensed under the LGPL 2.1 license, available at the root
+/* Copyright (c) 2013 OpenPlans. All rights reserved.
+ * This code is licensed under the BSD New License, available at the root
  * application directory.
  */
 
 package org.geogit.cli.porcelain;
 
-import static com.google.common.base.Preconditions.checkState;
-
+import java.io.IOException;
 import java.util.Iterator;
 import java.util.List;
 
@@ -53,8 +52,7 @@ public class Ls extends AbstractCommand implements CLICommand {
     private Integer abbrev;
 
     @Override
-    public void runInternal(GeogitCLI cli) throws Exception {
-        checkState(cli.getGeogit() != null, "Not a geogit repository: " + cli.getPlatform().pwd());
+    public void runInternal(GeogitCLI cli) throws IOException {
         String ref;
         if (refList.isEmpty()) {
             ref = null;

@@ -35,7 +35,7 @@ class HttpRepositoryWrapper implements RepositoryWrapper {
      */
     @Override
     public boolean objectExists(ObjectId objectId) {
-        return HttpUtils.networkObjectExists(repositoryURL, objectId);
+        return objectId.isNull() || HttpUtils.networkObjectExists(repositoryURL, objectId);
     }
 
     /**

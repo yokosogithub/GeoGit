@@ -5,11 +5,12 @@
 
 package org.geogit.api.plumbing;
 
-import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.HashMap;
+
+import javax.xml.datatype.DatatypeConfigurationException;
 
 import org.geogit.api.AbstractGeoGitOp;
 import org.geogit.api.Platform;
@@ -22,8 +23,11 @@ import com.google.inject.Inject;
  * 
  * Supported formats are:
  * 
- * - Standard format supported by the DateFormat class in the current locale - git-like time strings
- * (yesterday, 2.days.ago, etc) - a long representing miliseconds since the standard UNIX epoch
+ * <ul>
+ * <li>Standard format supported by the DateFormat class in the current locale
+ * <li>git-like time strings (yesterday, 2.days.ago, etc)
+ * <li>a {@code long} representing miliseconds since the standard UNIX epoch
+ * </ul>
  * 
  */
 public class ParseTimestamp extends AbstractGeoGitOp<Long> {
@@ -128,14 +132,15 @@ public class ParseTimestamp extends AbstractGeoGitOp<Long> {
         }
 
         // finally, try to parse it as a Date object
-        DateFormat df = DateFormat.getDateTimeInstance(DateFormat.SHORT, DateFormat.SHORT);
         try {
-            Date date = df.parse(string);
-            return date.getTime();
-        } catch (ParseException e) {
+            long time = javax.xml.datatype.DatatypeFactory.newInstance()
+                    .newXMLGregorianCalendar(string).toGregorianCalendar().getTimeInMillis();
+            return time;
+        } catch (DatatypeConfigurationException e) {
+        } catch (IllegalArgumentException e) {
         }
 
         throw new IllegalArgumentException("Invalid timestamp string: " + string);
-    }
 
+    }
 }

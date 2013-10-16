@@ -6,7 +6,7 @@ Feature: "sl describe" command
   Scenario: Try describing a SpatiaLite table from an empty directory
     Given I am in an empty directory
      When I run the command "sl describe --table Regions" on the SpatiaLite database
-     Then the response should start with "Not a geogit repository:"
+     Then the response should start with "Not in a geogit repository"
       
   Scenario: Try describing a SpatiaLite table
     Given I have a repository

@@ -6,7 +6,6 @@ package org.geogit.di;
 
 import static com.google.inject.matcher.Matchers.subclassesOf;
 
-import java.io.InputStream;
 import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.Iterator;
@@ -25,16 +24,18 @@ import org.geogit.storage.CachingObjectDatabaseGetInterceptor;
 import org.geogit.storage.ConfigDatabase;
 import org.geogit.storage.DeduplicationService;
 import org.geogit.storage.GraphDatabase;
-import org.geogit.storage.Neo4JGraphDatabase;
 import org.geogit.storage.ObjectDatabase;
 import org.geogit.storage.ObjectDatabasePutInterceptor;
 import org.geogit.storage.ObjectSerializingFactory;
 import org.geogit.storage.RefDatabase;
+import org.geogit.storage.StagingDatabase;
+import org.geogit.storage.TinkerGraphDatabase;
 import org.geogit.storage.datastream.DataStreamSerializationFactory;
 import org.geogit.storage.fs.FileObjectDatabase;
 import org.geogit.storage.fs.FileRefDatabase;
 import org.geogit.storage.fs.IniConfigDatabase;
 import org.geogit.storage.memory.HeapDeduplicationService;
+import org.geogit.storage.memory.HeapStagingDatabase;
 
 import com.google.common.base.Throwables;
 import com.google.inject.AbstractModule;
@@ -51,8 +52,11 @@ import com.google.inject.matcher.Matcher;
  * @see StagingArea
  * @see WorkingTree
  * @see ObjectDatabase
+ * @see StagingDatabase
  * @see RefDatabase
+ * @see GraphDatabase
  * @see ObjectSerializingFactory
+ * @see DeduplicationService
  */
 
 public class GeogitModule extends AbstractModule {
@@ -70,15 +74,16 @@ public class GeogitModule extends AbstractModule {
         bind(Repository.class).in(Scopes.SINGLETON);
         bind(ConfigDatabase.class).to(IniConfigDatabase.class).in(Scopes.SINGLETON);
         bind(StagingArea.class).to(Index.class).in(Scopes.SINGLETON);
+        bind(StagingDatabase.class).to(HeapStagingDatabase.class).in(Scopes.SINGLETON);
         bind(WorkingTree.class).in(Scopes.SINGLETON);
-        bind(GraphDatabase.class).to(Neo4JGraphDatabase.class).in(Scopes.SINGLETON);
+        bind(GraphDatabase.class).to(TinkerGraphDatabase.class).in(Scopes.SINGLETON);
 
         bind(ObjectDatabase.class).to(FileObjectDatabase.class).in(Scopes.SINGLETON);
         bind(RefDatabase.class).to(FileRefDatabase.class).in(Scopes.SINGLETON);
 
         bind(ObjectSerializingFactory.class).to(DataStreamSerializationFactory.class).in(
                 Scopes.SINGLETON);
-        
+
         bind(DeduplicationService.class).to(HeapDeduplicationService.class).in(Scopes.SINGLETON);
 
         bindRevObjectCachingDatabaseInterceptor();
@@ -124,6 +129,7 @@ public class GeogitModule extends AbstractModule {
 
         bindInterceptor(subclassesOf(ObjectDatabase.class), methodMatcher,
                 new CachingObjectDatabaseGetInterceptor());
+
     }
 
     private void bindConflictCheckingInterceptor() {
@@ -184,12 +190,9 @@ public class GeogitModule extends AbstractModule {
 
     private void bindCommitGraphInterceptor() {
         final Method putRevObject;
-        final Method putObjectIdInputStream;
         final Method putAll;
         try {
             putRevObject = ObjectDatabase.class.getMethod("put", RevObject.class);
-            putObjectIdInputStream = ObjectDatabase.class.getMethod("put", ObjectId.class,
-                    InputStream.class);
             putAll = ObjectDatabase.class.getMethod("putAll", Iterator.class);
         } catch (Exception e) {
             throw Throwables.propagate(e);
@@ -199,9 +202,7 @@ public class GeogitModule extends AbstractModule {
             @Override
             public boolean matches(Method t) {
                 if ("put".equals(t.getName())) {
-                    if (Arrays.equals(putRevObject.getParameterTypes(), t.getParameterTypes())
-                            || Arrays.equals(putObjectIdInputStream.getParameterTypes(),
-                                    t.getParameterTypes())) {
+                    if (Arrays.equals(putRevObject.getParameterTypes(), t.getParameterTypes())) {
                         return true;
                     }
                 } else if ("putAll".equals(t.getName())) {
@@ -224,7 +225,6 @@ public class GeogitModule extends AbstractModule {
         };
 
         bindInterceptor(subclassesOf(ObjectDatabase.class), methodMatcher,
-                new ObjectDatabasePutInterceptor(getProvider(GraphDatabase.class),
-                        getProvider(Repository.class)));
+                new ObjectDatabasePutInterceptor(getProvider(GraphDatabase.class)));
     }
 }

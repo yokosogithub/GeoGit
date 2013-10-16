@@ -1,3 +1,7 @@
+/* Copyright (c) 2013 OpenPlans. All rights reserved.
+ * This code is licensed under the BSD New License, available at the root
+ * application directory.
+ */
 package org.geogit.web.api.commands;
 
 import org.geogit.api.CommandLocator;
@@ -7,7 +11,14 @@ import org.geogit.api.porcelain.SynchronizationException;
 import org.geogit.web.api.AbstractWebAPICommand;
 import org.geogit.web.api.CommandContext;
 import org.geogit.web.api.CommandResponse;
+import org.geogit.web.api.CommandSpecException;
 import org.geogit.web.api.ResponseWriter;
+
+/**
+ * This is the interface for the Fetch operation in GeoGit.
+ * 
+ * Web interface for {@link FetchOp}
+ */
 
 public class FetchWebOp extends AbstractWebAPICommand {
     private boolean prune;
@@ -43,6 +54,13 @@ public class FetchWebOp extends AbstractWebAPICommand {
         this.remote = remote;
     }
 
+    /**
+     * Runs the command and builds the appropriate response
+     * 
+     * @param context - the context to use for this command
+     * 
+     * @throws CommandSpecException
+     */
     @Override
     public void run(CommandContext context) {
         final CommandLocator geogit = this.getCommandLocator(context);

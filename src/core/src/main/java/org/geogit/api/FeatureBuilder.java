@@ -34,15 +34,22 @@ public class FeatureBuilder {
 
     private BiMap<Integer, Integer> typeToRevTypeIndex;
 
+    private RevFeatureType type;
+
     /**
      * Constructs a new {@code FeatureBuilder} with the given {@link RevFeatureType feature type}.
      * 
      * @param type the feature type of the features that will be built
      */
     public FeatureBuilder(RevFeatureType type) {
+        this.type = type;
         this.featureType = type.type();
         this.attNameToRevTypeIndex = GeogitSimpleFeature.buildAttNameToRevTypeIndex(type);
         this.typeToRevTypeIndex = GeogitSimpleFeature.buildTypeToRevTypeIndex(type);
+    }
+
+    public RevFeatureType getType() {
+        return type;
     }
 
     /**

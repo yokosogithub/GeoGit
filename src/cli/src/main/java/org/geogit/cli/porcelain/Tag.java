@@ -5,8 +5,6 @@
 
 package org.geogit.cli.porcelain;
 
-import static com.google.common.base.Preconditions.checkState;
-
 import java.io.IOException;
 import java.util.List;
 
@@ -53,16 +51,12 @@ public class Tag extends AbstractCommand implements CLICommand {
 
     /**
      * Executes the commit command using the provided options.
-     * 
-     * @param cli
-     * @see org.geogit.cli.AbstractCommand#runInternal(org.geogit.cli.GeogitCLI)
      */
     @Override
-    public void runInternal(GeogitCLI cli) throws Exception {
-        checkState(cli.getGeogit() != null, "Not a geogit repository: " + cli.getPlatform().pwd());
-        checkState((message != null && !message.trim().isEmpty()) || nameAndCommit.isEmpty()
+    public void runInternal(GeogitCLI cli) throws IOException {
+        checkParameter((message != null && !message.trim().isEmpty()) || nameAndCommit.isEmpty()
                 || delete, "No tag message provided");
-        checkState(nameAndCommit.size() < 2 || (nameAndCommit.size() == 2 && !delete),
+        checkParameter(nameAndCommit.size() < 2 || (nameAndCommit.size() == 2 && !delete),
                 "Too many parameters provided");
 
         if (nameAndCommit.isEmpty()) {
@@ -82,7 +76,7 @@ public class Tag extends AbstractCommand implements CLICommand {
             console.println("Deleted tag " + name);
         } else {
             Optional<ObjectId> commitId = geogit.command(RevParse.class).setRefSpec(commit).call();
-            checkState(commitId.isPresent(), "Wrong reference: " + commit);
+            checkParameter(commitId.isPresent(), "Wrong reference: " + commit);
             RevTag tag = geogit.command(TagCreateOp.class).setName(name).setMessage(message)
                     .setCommitId(commitId.get()).call();
             console.println("Created tag " + name + " -> " + tag.getCommitId());

@@ -66,7 +66,7 @@ abstract class AbstractRemoteRepo implements IRemoteRepo {
         }
 
         @Override
-        protected ImmutableList<ObjectId> getParents(ObjectId commitId) {
+        protected ImmutableList<ObjectId> getParentsInternal(ObjectId commitId) {
             return source.getParents(commitId);
         }
 
@@ -119,7 +119,7 @@ abstract class AbstractRemoteRepo implements IRemoteRepo {
         }
 
         @Override
-        protected ImmutableList<ObjectId> getParents(ObjectId commitId) {
+        protected ImmutableList<ObjectId> getParentsInternal(ObjectId commitId) {
             return source.getParents(commitId);
         }
 
@@ -155,7 +155,7 @@ abstract class AbstractRemoteRepo implements IRemoteRepo {
         }
 
         @Override
-        protected ImmutableList<ObjectId> getParents(ObjectId commitId) {
+        protected ImmutableList<ObjectId> getParentsInternal(ObjectId commitId) {
             return source.getParents(commitId);
         }
 

@@ -46,6 +46,7 @@ import com.google.inject.Inject;
  * 
  * @see DataStore
  */
+
 public class ImportOp extends AbstractGeoGitOp<RevTree> {
 
     private boolean all = false;
@@ -113,7 +114,7 @@ public class ImportOp extends AbstractGeoGitOp<RevTree> {
             throw new GeoToolsOpException(StatusCode.ALTER_AND_ALL_DEFINED);
         }
 
-        if (alter || (all && destPath != null)) {
+        if (alter) {
             overwrite = false;
         }
 

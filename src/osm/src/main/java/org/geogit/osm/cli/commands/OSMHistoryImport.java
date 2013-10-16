@@ -5,9 +5,6 @@
 
 package org.geogit.osm.cli.commands;
 
-import static com.google.common.base.Preconditions.checkArgument;
-import static com.google.common.base.Preconditions.checkState;
-
 import java.io.File;
 import java.io.IOException;
 import java.net.URISyntaxException;
@@ -48,6 +45,7 @@ import org.geogit.api.porcelain.AddOp;
 import org.geogit.api.porcelain.CommitOp;
 import org.geogit.cli.AbstractCommand;
 import org.geogit.cli.CLICommand;
+import org.geogit.cli.CommandFailedException;
 import org.geogit.cli.GeogitCLI;
 import org.geogit.osm.internal.history.Change;
 import org.geogit.osm.internal.history.Changeset;
@@ -108,9 +106,8 @@ public class OSMHistoryImport extends AbstractCommand implements CLICommand {
     public HistoryImportArgs args = new HistoryImportArgs();
 
     @Override
-    protected void runInternal(GeogitCLI cli) throws Exception {
-        checkState(cli.getGeogit() != null, "Not a geogit repository: " + cli.getPlatform().pwd());
-        checkArgument(args.numThreads > 0 && args.numThreads < 7,
+    protected void runInternal(GeogitCLI cli) throws IOException {
+        checkParameter(args.numThreads > 0 && args.numThreads < 7,
                 "numthreads must be between 1 and 6");
 
         ConsoleReader console = cli.getConsole();
@@ -146,7 +143,11 @@ public class OSMHistoryImport extends AbstractCommand implements CLICommand {
             importOsmHistory(cli, console, downloader);
         } finally {
             executor.shutdownNow();
-            executor.awaitTermination(30, TimeUnit.SECONDS);
+            try {
+                executor.awaitTermination(30, TimeUnit.SECONDS);
+            } catch (InterruptedException e) {
+                throw new CommandFailedException(e);
+            }
         }
     }
 
@@ -183,8 +184,9 @@ public class OSMHistoryImport extends AbstractCommand implements CLICommand {
     }
 
     private void importOsmHistory(GeogitCLI cli, ConsoleReader console, HistoryDownloader downloader)
-            throws IOException, InterruptedException {
+            throws IOException {
         Optional<Changeset> set;
+
         while ((set = downloader.fetchNextChangeset()).isPresent()) {
             Changeset changeset = set.get();
 
@@ -292,7 +294,9 @@ public class OSMHistoryImport extends AbstractCommand implements CLICommand {
 
     private SymRef getHead(GeoGIT geogit) {
         final Ref currentHead = geogit.command(RefParse.class).setName(Ref.HEAD).call().get();
-        Preconditions.checkState(currentHead instanceof SymRef);
+        if (!(currentHead instanceof SymRef)) {
+            throw new CommandFailedException("Cannot run on a dettached HEAD");
+        }
         return (SymRef) currentHead;
     }
 

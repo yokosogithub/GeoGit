@@ -11,8 +11,6 @@ import java.util.List;
 
 import org.geogit.api.porcelain.AddOp;
 import org.geogit.api.porcelain.CommitOp;
-import org.geogit.osm.internal.CreateOSMChangesetOp;
-import org.geogit.osm.internal.OSMImportOp;
 import org.geogit.test.integration.RepositoryTestCase;
 import org.junit.Rule;
 import org.junit.Test;
@@ -40,14 +38,14 @@ public class CreateOSMChangesetOpTest extends RepositoryTestCase {
         String filename = getClass().getResource("nodes_for_changeset.xml").getFile();
         File file = new File(filename);
         geogit.command(OSMImportOp.class).setDataSource(file.getAbsolutePath()).call();
-        long unstaged = geogit.getRepository().getWorkingTree().countUnstaged("node");
+        long unstaged = geogit.getRepository().getWorkingTree().countUnstaged("node").getCount();
         assertTrue(unstaged > 0);
         geogit.command(AddOp.class).call();
         geogit.command(CommitOp.class).setMessage("commit1").call();
         filename = getClass().getResource("nodes_for_changeset2.xml").getFile();
         file = new File(filename);
         geogit.command(OSMImportOp.class).setDataSource(file.getAbsolutePath()).call();
-        unstaged = geogit.getRepository().getWorkingTree().countUnstaged("node");
+        unstaged = geogit.getRepository().getWorkingTree().countUnstaged("node").getCount();
         assertTrue(unstaged > 0);
         geogit.command(AddOp.class).call();
         geogit.command(CommitOp.class).setMessage("commit2").call();

@@ -1,8 +1,10 @@
+/* Copyright (c) 2013 OpenPlans. All rights reserved.
+ * This code is licensed under the BSD New License, available at the root
+ * application directory.
+ */
 package org.geogit.cli.porcelain;
 
-import static com.google.common.base.Preconditions.checkArgument;
-import static com.google.common.base.Preconditions.checkState;
-
+import java.io.IOException;
 import java.util.List;
 
 import org.geogit.api.GeoGIT;
@@ -12,6 +14,7 @@ import org.geogit.api.porcelain.RevertConflictsException;
 import org.geogit.api.porcelain.RevertOp;
 import org.geogit.cli.AbstractCommand;
 import org.geogit.cli.CLICommand;
+import org.geogit.cli.CommandFailedException;
 import org.geogit.cli.GeogitCLI;
 
 import com.beust.jcommander.Parameter;
@@ -52,22 +55,18 @@ public class Revert extends AbstractCommand implements CLICommand {
 
     /**
      * Executes the revert command.
-     * 
-     * @param cli
-     * @see org.geogit.cli.AbstractCommand#runInternal(org.geogit.cli.GeogitCLI)
      */
     @Override
-    protected void runInternal(GeogitCLI cli) throws Exception {
-        final GeoGIT geogit = cli.getGeogit();
-        checkState(geogit != null, "not in a geogit repository.");
-        checkArgument(commits.size() > 0 || abort || continueRevert,
+    protected void runInternal(GeogitCLI cli) throws IOException {
+        checkParameter(commits.size() > 0 || abort || continueRevert,
                 "nothing specified for reverting");
 
+        final GeoGIT geogit = cli.getGeogit();
         RevertOp revert = geogit.command(RevertOp.class);
 
         for (String st : commits) {
             Optional<ObjectId> commitId = geogit.command(RevParse.class).setRefSpec(st).call();
-            checkState(commitId.isPresent(), "Couldn't resolve '" + st
+            checkParameter(commitId.isPresent(), "Couldn't resolve '" + st
                     + "' to a commit, aborting revert.");
             revert.addCommit(Suppliers.ofInstance(commitId.get()));
         }
@@ -78,7 +77,7 @@ public class Revert extends AbstractCommand implements CLICommand {
             sb.append(e.getMessage() + "\n");
             sb.append("When you have fixed these conflicts, run 'geogit revert --continue' to continue the revert operation.\n");
             sb.append("To abort the revert operation, run 'geogit revert --abort'\n");
-            throw new IllegalStateException(sb.toString());
+            throw new CommandFailedException(sb.toString());
         }
 
         if (abort) {

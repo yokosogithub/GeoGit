@@ -50,10 +50,6 @@ public class LogArgs {
     @Parameter(names = { "--path", "-p" }, description = "Print only commits that have modified the given path(s)", variableArity = true)
     public List<String> pathNames = Lists.newArrayList();
 
-    @Parameter(names = "--color", description = "Whether to apply colored output. Possible values are auto|never|always.", converter = ColorArg.Converter.class)
-    @Nullable
-    public ColorArg color = ColorArg.auto;
-
     @Parameter(names = "--raw", description = "Show raw contents for commits")
     @Nullable
     public boolean raw;

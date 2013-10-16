@@ -5,6 +5,10 @@
 
 package org.geogit.osm.cli.commands;
 
+import java.io.IOException;
+import static com.google.common.base.Preconditions.checkState;
+
+import java.io.File;
 import java.util.List;
 
 import jline.console.ConsoleReader;
@@ -33,24 +37,24 @@ public class OSMMap extends AbstractCommand implements CLICommand {
     @Parameter(description = "<file>")
     public List<String> args;
 
+    @Parameter(names = { "--message", "-m" }, description = "The message for the commit to create")
+    public String message;
+
     private GeoGIT geogit;
 
     /**
      * Executes the map command using the provided options.
-     * 
-     * @param cli
      */
     @Override
-    protected void runInternal(GeogitCLI cli) throws Exception {
-        if (cli.getGeogit() == null) {
-            cli.getConsole().println("Not a geogit repository: " + cli.getPlatform().pwd());
-            return;
-        }
-
+    protected void runInternal(GeogitCLI cli) throws IOException {
         if (args == null || args.isEmpty() || args.size() != 1) {
             printUsage();
             throw new CommandFailedException();
         }
+
+        checkState(cli.getGeogit().getRepository().getIndex().isClean()
+                && cli.getGeogit().getRepository().getWorkingTree().isClean(),
+                "Working tree and index are not clean");
 
         String mappingFilepath = args.get(0);
 
@@ -60,11 +64,15 @@ public class OSMMap extends AbstractCommand implements CLICommand {
 
         ObjectId oldTreeId = geogit.getRepository().getWorkingTree().getTree().getId();
 
-        ObjectId newTreeId = geogit.command(OSMMapOp.class).setMapping(mapping).call().getId();
+        message = message == null ? "Applied mapping " + new File(mappingFilepath).getName()
+                : message;
+
+        ObjectId newTreeId = geogit.command(OSMMapOp.class).setMapping(mapping).setMessage(message)
+                .call().getId();
 
         ConsoleReader console = cli.getConsole();
         if (newTreeId.equals(oldTreeId)) {
-            console.println("No features matched the specified filter.\n"
+            console.println("No features matched the specified filter, or they provided no updated data.\n"
                     + "No changes have been made to the working tree");
         } else {
             // print something?

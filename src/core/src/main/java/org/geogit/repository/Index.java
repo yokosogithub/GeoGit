@@ -28,6 +28,7 @@ import org.geogit.api.plumbing.RevObjectParse;
 import org.geogit.api.plumbing.UpdateRef;
 import org.geogit.api.plumbing.WriteBack;
 import org.geogit.api.plumbing.diff.DiffEntry;
+import org.geogit.api.plumbing.diff.DiffObjectCount;
 import org.geogit.api.plumbing.merge.Conflict;
 import org.geogit.storage.StagingDatabase;
 import org.opengis.util.ProgressListener;
@@ -148,6 +149,16 @@ public class Index implements StagingArea {
         } else {
             return Optional.absent();
         }
+    }
+
+    /**
+     * Returns true if there are no unstaged changes, false otherwise
+     */
+    public boolean isClean() {
+        Optional<ObjectId> resolved = commandLocator.command(ResolveTreeish.class)
+                .setTreeish(Ref.HEAD).call();
+        ObjectId indexTreeId = resolved.get();
+        return getTree().getId().equals(indexTreeId);
     }
 
     /**
@@ -291,11 +302,11 @@ public class Index implements StagingArea {
      * @return the number differences between STAGE_HEAD and HEAD based on the path filter.
      */
     @Override
-    public long countStaged(final @Nullable List<String> pathFilters) {
-        Long count = commandLocator.command(DiffCount.class).setOldVersion(Ref.HEAD)
+    public DiffObjectCount countStaged(final @Nullable List<String> pathFilters) {
+        DiffObjectCount count = commandLocator.command(DiffCount.class).setOldVersion(Ref.HEAD)
                 .setNewVersion(Ref.STAGE_HEAD).setReportTrees(true).setFilter(pathFilters).call();
 
-        return count.longValue();
+        return count;
     }
 
     @Override

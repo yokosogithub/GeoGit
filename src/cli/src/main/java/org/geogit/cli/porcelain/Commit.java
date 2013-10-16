@@ -5,8 +5,7 @@
 
 package org.geogit.cli.porcelain;
 
-import static com.google.common.base.Preconditions.checkState;
-
+import java.io.IOException;
 import java.util.Iterator;
 import java.util.List;
 
@@ -18,6 +17,7 @@ import org.geogit.api.GeoGIT;
 import org.geogit.api.ObjectId;
 import org.geogit.api.RevCommit;
 import org.geogit.api.RevObject.TYPE;
+import org.geogit.api.plumbing.ParseTimestamp;
 import org.geogit.api.plumbing.ResolveObjectType;
 import org.geogit.api.plumbing.RevParse;
 import org.geogit.api.plumbing.diff.DiffEntry;
@@ -26,7 +26,6 @@ import org.geogit.api.porcelain.CommitOp;
 import org.geogit.api.porcelain.DiffOp;
 import org.geogit.api.porcelain.NothingToCommitException;
 import org.geogit.cli.AbstractCommand;
-import org.geogit.cli.AnsiDecorator;
 import org.geogit.cli.CLICommand;
 import org.geogit.cli.CommandFailedException;
 import org.geogit.cli.GeogitCLI;
@@ -59,6 +58,12 @@ public class Commit extends AbstractCommand implements CLICommand {
     @Parameter(names = "-c", description = "Commit to reuse")
     private String commitToReuse;
 
+    @Parameter(names = "-t", description = "Commit timestamp")
+    private String commitTimestamp;
+
+    @Parameter(names = "--amend", description = "Amends last commit")
+    private boolean amend;
+
     @Parameter(description = "<pathFilter>  [<paths_to_commit]...")
     private List<String> pathFilters = Lists.newLinkedList();
 
@@ -69,39 +74,43 @@ public class Commit extends AbstractCommand implements CLICommand {
      * @see org.geogit.cli.AbstractCommand#runInternal(org.geogit.cli.GeogitCLI)
      */
     @Override
-    public void runInternal(GeogitCLI cli) throws Exception {
-        checkState(cli.getGeogit() != null, "Not a geogit repository: " + cli.getPlatform().pwd());
+    public void runInternal(GeogitCLI cli) throws IOException {
 
         final GeoGIT geogit = cli.getGeogit();
 
         if (message == null || Strings.isNullOrEmpty(message)) {
             message = geogit.command(ReadMergeCommitMessageOp.class).call();
         }
-        checkState(!Strings.isNullOrEmpty(message) || commitToReuse != null,
+        checkParameter(!Strings.isNullOrEmpty(message) || commitToReuse != null || amend,
                 "No commit message provided");
 
         ConsoleReader console = cli.getConsole();
 
-        Ansi ansi = AnsiDecorator.newAnsi(console.getTerminal().isAnsiSupported());
+        Ansi ansi = newAnsi(console.getTerminal());
 
         RevCommit commit;
         try {
-            CommitOp commitOp = geogit.command(CommitOp.class).setMessage(message);
+            CommitOp commitOp = geogit.command(CommitOp.class).setMessage(message).setAmend(amend);
+            if (commitTimestamp != null && !Strings.isNullOrEmpty(commitTimestamp)) {
+                Long millis = geogit.command(ParseTimestamp.class).setString(commitTimestamp)
+                        .call();
+                commitOp.setCommitterTimestamp(millis.longValue());
+            }
+
             if (commitToReuse != null) {
                 Optional<ObjectId> commitId = geogit.command(RevParse.class)
                         .setRefSpec(commitToReuse).call();
-                checkState(commitId.isPresent(), "Provided reference does not exist");
+                checkParameter(commitId.isPresent(), "Provided reference does not exist");
                 TYPE type = geogit.command(ResolveObjectType.class).setObjectId(commitId.get())
                         .call();
-                checkState(TYPE.COMMIT.equals(type),
+                checkParameter(TYPE.COMMIT.equals(type),
                         "Provided reference does not resolve to a commit");
                 commitOp.setCommit(geogit.getRepository().getCommit(commitId.get()));
             }
             commit = commitOp.setPathFilters(pathFilters)
                     .setProgressListener(cli.getProgressListener()).call();
         } catch (NothingToCommitException noChanges) {
-            console.println(ansi.fg(Color.RED).a(noChanges.getMessage()).reset().toString());
-            throw new CommandFailedException();
+            throw new CommandFailedException(noChanges.getMessage(), noChanges);
         }
         final ObjectId parentId = commit.parentN(0).or(ObjectId.NULL);
 

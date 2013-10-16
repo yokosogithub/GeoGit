@@ -1,3 +1,7 @@
+/* Copyright (c) 2013 OpenPlans. All rights reserved.
+ * This code is licensed under the BSD New License, available at the root
+ * application directory.
+ */
 package org.geogit.storage.text;
 
 import java.math.BigDecimal;
@@ -8,8 +12,6 @@ import java.util.Map;
 import java.util.UUID;
 
 import org.geogit.storage.FieldType;
-
-import scala.collection.mutable.StringBuilder;
 
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;

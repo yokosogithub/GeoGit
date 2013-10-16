@@ -6,6 +6,7 @@
 package org.geogit.osm.cli.commands;
 
 import java.io.File;
+import java.io.IOException;
 import java.io.Serializable;
 import java.util.HashMap;
 import java.util.List;
@@ -16,9 +17,9 @@ import javax.annotation.Nullable;
 import org.geogit.cli.CLICommand;
 import org.geogit.cli.CommandFailedException;
 import org.geogit.cli.GeogitCLI;
+import org.geogit.geotools.cli.porcelain.AbstractShpCommand;
 import org.geogit.geotools.plumbing.ExportOp;
 import org.geogit.geotools.plumbing.GeoToolsOpException;
-import org.geogit.geotools.porcelain.AbstractShpCommand;
 import org.geogit.osm.internal.MappedFeature;
 import org.geogit.osm.internal.Mapping;
 import org.geogit.osm.internal.MappingRule;
@@ -56,16 +57,9 @@ public class OSMExportShp extends AbstractShpCommand implements CLICommand {
 
     /**
      * Executes the export command using the provided options.
-     * 
-     * @param cli
      */
     @Override
-    protected void runInternal(GeogitCLI cli) throws Exception {
-        if (cli.getGeogit() == null) {
-            cli.getConsole().println("Not a geogit repository: " + cli.getPlatform().pwd());
-            return;
-        }
-
+    protected void runInternal(GeogitCLI cli) throws IOException {
         Preconditions.checkNotNull(mappingFile != null, "A data mapping file must be specified");
 
         if (args == null || args.isEmpty() || args.size() != 1) {
@@ -77,13 +71,13 @@ public class OSMExportShp extends AbstractShpCommand implements CLICommand {
 
         File file = new File(shapefile);
         if (file.exists() && !overwrite) {
-            cli.getConsole().println("The selected shapefile already exists. Use -o to overwrite");
-            throw new CommandFailedException();
+            throw new CommandFailedException(
+                    "The selected shapefile already exists. Use -o to overwrite");
         }
 
         final Mapping mapping = Mapping.fromFile(mappingFile);
         List<MappingRule> rules = mapping.getRules();
-        Preconditions.checkArgument(!rules.isEmpty(),
+        checkParameter(!rules.isEmpty(),
                 "No rules are defined in the specified mapping");
         Function<Feature, Optional<Feature>> function = new Function<Feature, Optional<Feature>>() {
 
@@ -112,22 +106,22 @@ public class OSMExportShp extends AbstractShpCommand implements CLICommand {
 
         final String typeName = dataStore.getTypeNames()[0];
         final SimpleFeatureSource featureSource = dataStore.getFeatureSource(typeName);
-        if (featureSource instanceof SimpleFeatureStore) {
-            final SimpleFeatureStore featureStore = (SimpleFeatureStore) featureSource;
-            ExportOp op = cli.getGeogit().command(ExportOp.class).setFeatureStore(featureStore)
-                    .setPath(path).setFeatureTypeConversionFunction(function);
-            try {
-                op.setProgressListener(cli.getProgressListener()).call();
-                cli.getConsole().println("OSM data exported successfully to " + shapefile);
-            } catch (GeoToolsOpException e) {
-                cli.getConsole().println("Could not export. Error:" + e.statusCode.name());
-                file.delete();
-                throw new CommandFailedException();
-            }
-
-        } else {
-            cli.getConsole().println("Could not create feature store.");
-            throw new CommandFailedException();
+        if (!(featureSource instanceof SimpleFeatureStore)) {
+            throw new CommandFailedException(
+                    "Could not create feature store. Shapefile may be read only");
+        }
+        final SimpleFeatureStore featureStore = (SimpleFeatureStore) featureSource;
+        ExportOp op = cli.getGeogit().command(ExportOp.class).setFeatureStore(featureStore)
+                .setPath(path).setFeatureTypeConversionFunction(function);
+        try {
+            op.setProgressListener(cli.getProgressListener()).call();
+            cli.getConsole().println("OSM data exported successfully to " + shapefile);
+        } catch (IllegalArgumentException iae) {
+            file.delete();
+            throw new org.geogit.cli.InvalidParameterException(iae.getMessage(), iae);
+        } catch (GeoToolsOpException e) {
+            file.delete();
+            throw new CommandFailedException("Could not export. Error:" + e.statusCode.name(), e);
         }
 
     }

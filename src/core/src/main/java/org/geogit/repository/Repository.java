@@ -16,6 +16,7 @@ import org.geogit.api.ObjectId;
 import org.geogit.api.Ref;
 import org.geogit.api.RevCommit;
 import org.geogit.api.RevFeature;
+import org.geogit.api.RevObject;
 import org.geogit.api.RevTree;
 import org.geogit.api.plumbing.FindTreeChild;
 import org.geogit.api.plumbing.RefParse;
@@ -149,15 +150,6 @@ public class Repository implements CommandLocator {
     }
 
     /**
-     * @param oid the {@link ObjectId} of the object to get
-     * @return the raw {@link InputStream} for the object data
-     * @throws IOException
-     */
-    public InputStream getRawObject(final ObjectId oid) throws IOException {
-        return getObjectDatabase().getRaw(oid);
-    }
-
-    /**
      * Test if a blob exists in the object database
      * 
      * @param id the ID of the blob in the object database
@@ -192,12 +184,11 @@ public class Repository implements CommandLocator {
      */
     public boolean commitExists(final ObjectId id) {
         try {
-            getObjectDatabase().getCommit(id);
+            RevObject revObject = getObjectDatabase().get(id);
+            return revObject instanceof RevCommit;
         } catch (IllegalArgumentException e) {
             return false;
         }
-
-        return true;
     }
 
     /**
@@ -336,9 +327,7 @@ public class Repository implements CommandLocator {
     }
 
     /**
-     * Gets the depth of the repository, or {@link Optional#absent} if this is not a shallow clone.
-     * 
-     * @return the depth
+     * @return true if this is a sparse (mapped) clone.
      */
     public boolean isSparse() {
         Optional<Map<String, String>> sparseResult = command(ConfigOp.class)

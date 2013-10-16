@@ -35,7 +35,6 @@ import org.geogit.api.RevPerson;
 import org.geogit.api.RevTree;
 import org.geogit.api.RevTreeImpl;
 import org.geogit.storage.FieldType;
-import org.geogit.storage.GtEntityType;
 import org.geogit.storage.ObjectReader;
 import org.geogit.storage.ObjectSerializingFactory;
 import org.geogit.storage.ObjectWriter;
@@ -402,8 +401,7 @@ public class TextSerializationFactory implements ObjectSerializingFactory {
             print(w, "\t");
             print(w, Boolean.toString(attrib.isNillable()));
             PropertyType attrType = attrib.getType();
-            GtEntityType type = GtEntityType.fromBinding(attrType.getBinding());
-            if (type.isGeometry() && attrType instanceof GeometryType) {
+            if (attrType instanceof GeometryType) {
                 GeometryType gt = (GeometryType) attrType;
                 CoordinateReferenceSystem crs = gt.getCoordinateReferenceSystem();
                 String srsName;

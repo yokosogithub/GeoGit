@@ -21,6 +21,10 @@ import org.geogit.api.plumbing.LsTreeOp;
 import org.geogit.api.plumbing.LsTreeOp.Strategy;
 import org.geogit.api.plumbing.RevObjectParse;
 import org.geogit.api.plumbing.RevParse;
+import org.geogit.api.porcelain.AddOp;
+import org.geogit.api.porcelain.CommitOp;
+import org.geogit.osm.internal.log.OSMMappingLogEntry;
+import org.geogit.osm.internal.log.WriteOSMMappingEntries;
 import org.geotools.feature.simple.SimpleFeatureBuilder;
 import org.opengis.feature.Feature;
 import org.opengis.feature.simple.SimpleFeature;
@@ -29,6 +33,7 @@ import org.opengis.feature.type.PropertyDescriptor;
 
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterators;
 
@@ -47,6 +52,11 @@ public class OSMMapOp extends AbstractGeoGitOp<RevTree> {
     private Mapping mapping;
 
     /**
+     * The message to use for the commit to create
+     */
+    private String message;
+
+    /**
      * Sets the mapping to use
      * 
      * @param mapping the mapping to use
@@ -57,10 +67,28 @@ public class OSMMapOp extends AbstractGeoGitOp<RevTree> {
         return this;
     }
 
+    /**
+     * Sets the message to use for the commit is created
+     * 
+     * @param message the commit message
+     * @return {@code this}
+     */
+    public OSMMapOp setMessage(String message) {
+        this.message = message;
+        return this;
+    }
+
     @Override
     public RevTree call() {
 
         checkNotNull(mapping);
+
+        long staged = getIndex().countStaged(null).getCount();
+        long unstaged = getWorkTree().countUnstaged(null).getCount();
+        Preconditions.checkState((staged == 0 && unstaged == 0),
+                "You must have a clean working tree and index to perform a mapping.");
+
+        ObjectId oldTreeId = getWorkTree().getTree().getId();
 
         Iterator<Feature> nodes;
         if (mapping.canUseNodes()) {
@@ -76,17 +104,29 @@ public class OSMMapOp extends AbstractGeoGitOp<RevTree> {
         }
         Iterator<Feature> iterator = Iterators.concat(nodes, ways);
 
-        FeatureMapFlusher insertsByParent = new FeatureMapFlusher(getWorkTree());
-        while (iterator.hasNext()) {
-            Feature feature = iterator.next();
-            Optional<MappedFeature> newFeature = mapping.map(feature);
-            if (newFeature.isPresent()) {
-                String path = newFeature.get().getPath();
-                SimpleFeature sf = (SimpleFeature) newFeature.get().getFeature();
-                insertsByParent.put(path, sf);
+        if (iterator.hasNext()) {
+            FeatureMapFlusher insertsByParent = new FeatureMapFlusher(getWorkTree());
+            while (iterator.hasNext()) {
+                Feature feature = iterator.next();
+                Optional<MappedFeature> newFeature = mapping.map(feature);
+                if (newFeature.isPresent()) {
+                    String path = newFeature.get().getPath();
+                    SimpleFeature sf = (SimpleFeature) newFeature.get().getFeature();
+                    insertsByParent.put(path, sf);
+                }
             }
+            insertsByParent.flushAll();
+
+            ObjectId newTreeId = getWorkTree().getTree().getId();
+            // If the mapping generates the same mapped features that already exist, we do nothing
+            if (!newTreeId.equals(oldTreeId)) {
+                command(AddOp.class).call();
+                command(CommitOp.class).setMessage(message).call();
+                command(WriteOSMMappingEntries.class).setMapping(mapping)
+                        .setMappingLogEntry(new OSMMappingLogEntry(oldTreeId, newTreeId)).call();
+            }
+
         }
-        insertsByParent.flushAll();
 
         return getWorkTree().getTree();
 

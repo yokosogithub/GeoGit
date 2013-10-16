@@ -20,12 +20,7 @@ import javax.xml.stream.XMLInputFactory;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;
 
-import org.geogit.osm.internal.history.Change;
-import org.geogit.osm.internal.history.Node;
-import org.geogit.osm.internal.history.Primitive;
-import org.geogit.osm.internal.history.Relation;
 import org.geogit.osm.internal.history.Relation.Member;
-import org.geogit.osm.internal.history.Way;
 import org.junit.Assert;
 import org.junit.Test;
 

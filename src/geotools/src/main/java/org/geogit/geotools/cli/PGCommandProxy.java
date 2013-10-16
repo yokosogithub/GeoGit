@@ -6,10 +6,10 @@
 package org.geogit.geotools.cli;
 
 import org.geogit.cli.CLICommandExtension;
-import org.geogit.geotools.porcelain.PGDescribe;
-import org.geogit.geotools.porcelain.PGExport;
-import org.geogit.geotools.porcelain.PGImport;
-import org.geogit.geotools.porcelain.PGList;
+import org.geogit.geotools.cli.porcelain.PGDescribe;
+import org.geogit.geotools.cli.porcelain.PGExport;
+import org.geogit.geotools.cli.porcelain.PGImport;
+import org.geogit.geotools.cli.porcelain.PGList;
 
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameters;

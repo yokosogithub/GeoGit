@@ -24,6 +24,7 @@ import org.geogit.di.CanRunDuringConflict;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
+import com.google.common.base.Supplier;
 import com.google.common.collect.Iterators;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
@@ -37,7 +38,8 @@ import com.google.inject.Inject;
  * specified, the root of the current working tree is assumed.
  */
 @CanRunDuringConflict
-public class LsTreeOp extends AbstractGeoGitOp<Iterator<NodeRef>> {
+public class LsTreeOp extends AbstractGeoGitOp<Iterator<NodeRef>> implements
+        Supplier<Iterator<NodeRef>> {
 
     /**
      * Enumeration of the possible results of the {@link LsTreeOp} operation, indicating whether to
@@ -68,8 +70,8 @@ public class LsTreeOp extends AbstractGeoGitOp<Iterator<NodeRef>> {
          */
         DEPTHFIRST_ONLY_FEATURES,
         /**
-         * Recursively list the contents of a tree in depth-first order, but do not report TREE
-         * entries, only FEATURE ones
+         * Recursively list the contents of a tree in depth-first order, but do not report FEATURE
+         * entries, only TREE ones
          */
         DEPTHFIRST_ONLY_TREES
     }
@@ -211,5 +213,13 @@ public class LsTreeOp extends AbstractGeoGitOp<Iterator<NodeRef>> {
             throw new IllegalArgumentException(String.format("Invalid reference: %s", ref));
         }
 
+    }
+
+    /**
+     * Implements {@link Supplier#get()} by deferring to {@link #call()}
+     */
+    @Override
+    public Iterator<NodeRef> get() {
+        return call();
     }
 }

@@ -1,3 +1,7 @@
+/* Copyright (c) 2013 OpenPlans. All rights reserved.
+ * This code is licensed under the BSD New License, available at the root
+ * application directory.
+ */
 package org.geogit.web.api.commands;
 
 import org.geogit.api.CommandLocator;
@@ -8,6 +12,12 @@ import org.geogit.web.api.CommandContext;
 import org.geogit.web.api.CommandResponse;
 import org.geogit.web.api.CommandSpecException;
 import org.geogit.web.api.ResponseWriter;
+
+/**
+ * Interface for the TransactionEnd operation in GeoGit.
+ * 
+ * Web interface for {@link TransactionEnd}
+ */
 
 public class EndTransaction extends AbstractWebAPICommand {
 

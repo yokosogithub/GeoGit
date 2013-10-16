@@ -1,3 +1,7 @@
+/* Copyright (c) 2013 OpenPlans. All rights reserved.
+ * This code is licensed under the BSD New License, available at the root
+ * application directory.
+ */
 package org.geogit.geotools.plubming;
 
 import static org.mockito.Matchers.any;
@@ -14,14 +18,16 @@ import org.geogit.api.NodeRef;
 import org.geogit.api.ObjectId;
 import org.geogit.api.RevFeature;
 import org.geogit.api.RevFeatureType;
+import org.geogit.api.RevObject;
 import org.geogit.api.RevTree;
 import org.geogit.api.plumbing.FindTreeChild;
 import org.geogit.api.plumbing.LsTreeOp;
 import org.geogit.api.plumbing.LsTreeOp.Strategy;
 import org.geogit.api.plumbing.RevObjectParse;
+import org.geogit.api.porcelain.AddOp;
+import org.geogit.geotools.cli.porcelain.TestHelper;
 import org.geogit.geotools.plumbing.GeoToolsOpException;
 import org.geogit.geotools.plumbing.ImportOp;
-import org.geogit.geotools.porcelain.TestHelper;
 import org.geogit.repository.WorkingTree;
 import org.geogit.test.integration.RepositoryTestCase;
 import org.geotools.feature.simple.SimpleFeatureBuilder;
@@ -148,6 +154,21 @@ public class ImportOpTest extends RepositoryTestCase {
         ref = geogit.command(FindTreeChild.class).setParent(newWorkingTree)
                 .setChildPath("table1/feature2").setIndex(true).call();
         assertTrue(ref.isPresent());
+    }
+
+    @Test
+    public void testImportTableWithNoFeatures() throws Exception {
+
+        ImportOp importOp = geogit.command(ImportOp.class);
+        importOp.setDataStore(TestHelper.createTestFactory().createDataStore(null));
+        importOp.setAll(false);
+        importOp.setTable("table4");
+        importOp.call();
+
+        geogit.command(AddOp.class).call();
+        Optional<RevObject> ft = geogit.command(RevObjectParse.class)
+                .setRefSpec("WORK_HEAD:table4").call();
+        assertTrue(ft.isPresent());
     }
 
     @Test

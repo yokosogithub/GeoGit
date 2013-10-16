@@ -12,6 +12,7 @@ import java.util.List;
 import javax.annotation.Nullable;
 
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.vividsolutions.jts.geom.Envelope;
 
@@ -248,7 +249,7 @@ public class NodeRef implements Bounded, Comparable<NodeRef> {
         if (parentPath.isEmpty()) {
             return !nodePath.isEmpty() && idx == -1;
         }
-        return idx == parentPath.length();
+        return idx == parentPath.length() && nodePath.substring(0, idx).equals(parentPath);
     }
 
     /**
@@ -293,6 +294,21 @@ public class NodeRef implements Bounded, Comparable<NodeRef> {
     }
 
     /**
+     * Splits the given tree {@code path} into its node name components
+     * 
+     * @param path non null, possibly empty path
+     * @return a list of path steps, or an empty list if the path is empty
+     */
+    public static ImmutableList<String> split(final String path) {
+        checkNotNull(path);
+        if (path.isEmpty()) {
+            return ImmutableList.of();
+        }
+        final String[] steps = path.split("" + PATH_SEPARATOR);
+        return ImmutableList.copyOf(steps);
+    }
+
+    /**
      * Constructs a new path by appending a child name to an existing parent path.
      * 
      * @param parentTreePath full parent path
@@ -317,4 +333,23 @@ public class NodeRef implements Bounded, Comparable<NodeRef> {
         node.expand(env);
     }
 
+    /**
+     * @return the depth of the given path, being zero if the path is the root path (i.e. the empty
+     *         string) or > 0 depending on how many steps compose the path
+     */
+    public static int depth(String path) {
+        return split(path).size();
+    }
+
+    public static String removeParent(final String parentPath, final String childPath) {
+        checkArgument(isChild(parentPath, childPath));
+        ImmutableList<String> parent = split(parentPath);
+        ImmutableList<String> child = split(childPath);
+        child = child.subList(parent.size(), child.size());
+        String strippedChildPath = child.get(0);
+        for (int i = 1; i < child.size(); i++) {
+            appendChild(strippedChildPath, child.get(i));
+        }
+        return strippedChildPath;
+    }
 }

@@ -6,16 +6,17 @@
   <parent>
     <groupId>org.geogit</groupId>
     <artifactId>geogit</artifactId>
-    <version>0.4-SNAPSHOT</version>
+    <version>0.6-SNAPSHOT</version>
     <relativePath>../parent/pom.xml</relativePath>
   </parent>
 
   <artifactId>storage</artifactId>
-  <version>0.4-SNAPSHOT</version>
+  <version>0.6-SNAPSHOT</version>
   <packaging>pom</packaging>
   <name>Storage backends</name>
 
   <modules>
    <module>bdbje</module>
+   <module>neo4j</module>
   </modules>
 </project>

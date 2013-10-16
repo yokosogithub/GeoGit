@@ -11,9 +11,12 @@ import java.util.Iterator;
 import jline.UnsupportedTerminal;
 import jline.console.ConsoleReader;
 
+import org.geogit.api.GeoGIT;
 import org.geogit.api.ObjectId;
 import org.geogit.api.Platform;
+import org.geogit.api.RevTree;
 import org.geogit.api.TestPlatform;
+import org.geogit.api.plumbing.RevObjectParse;
 import org.geogit.api.plumbing.RevParse;
 import org.geogit.api.plumbing.diff.DiffEntry;
 import org.geogit.api.porcelain.AddOp;
@@ -21,6 +24,7 @@ import org.geogit.api.porcelain.CommitOp;
 import org.geogit.api.porcelain.DiffOp;
 import org.geogit.cli.GeogitCLI;
 import org.geogit.osm.internal.OSMImportOp;
+import org.geogit.repository.WorkingTree;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Rule;
@@ -56,8 +60,12 @@ public class OSMExportTest extends Assert {
         String filename = OSMImportOp.class.getResource("nodes.xml").getFile();
         File file = new File(filename);
         cli.execute("osm", "import", file.getAbsolutePath());
-        long unstaged = cli.getGeogit().getRepository().getWorkingTree().countUnstaged("node");
-        assertTrue(unstaged > 0);
+        cli.execute("add");
+        cli.execute("commit", "-m", "message");
+        Optional<RevTree> tree = cli.getGeogit().command(RevObjectParse.class)
+                .setRefSpec("HEAD:node").call(RevTree.class);
+        assertTrue(tree.isPresent());
+        assertTrue(tree.get().size() > 0);
         File exportFile = new File(tempFolder.getRoot(), "export.xml");
         cli.execute("osm", "export", exportFile.getAbsolutePath());
     }
@@ -69,28 +77,33 @@ public class OSMExportTest extends Assert {
         cli.execute("osm", "import", filterFile.getAbsolutePath());
         cli.execute("add");
         cli.execute("commit", "-m", "message");
-        Optional<ObjectId> id = cli.getGeogit().command(RevParse.class).setRefSpec("HEAD:node")
-                .call();
+        GeoGIT geogit = cli.getGeogit();
+        Optional<ObjectId> id = geogit.command(RevParse.class).setRefSpec("HEAD:node").call();
         assertTrue(id.isPresent());
-        id = cli.getGeogit().command(RevParse.class).setRefSpec("HEAD:way").call();
+        id = geogit.command(RevParse.class).setRefSpec("HEAD:way").call();
         assertTrue(id.isPresent());
         File file = new File(tempFolder.getRoot(), "export.xml");
         cli.execute("osm", "export", file.getAbsolutePath());
-        cli.getGeogit().getRepository().getWorkingTree().delete("node");
-        cli.getGeogit().getRepository().getWorkingTree().delete("way");
-        cli.getGeogit().command(AddOp.class).call();
-        cli.getGeogit().command(CommitOp.class).setMessage("Deleted OSM data").call();
-        id = cli.getGeogit().command(RevParse.class).setRefSpec("HEAD:node").call();
+        WorkingTree workingTree = geogit.getRepository().getWorkingTree();
+        workingTree.delete("node");
+        workingTree.delete("way");
+        geogit.command(AddOp.class).call();
+        geogit.command(CommitOp.class).setMessage("Deleted OSM data").call();
+        id = geogit.command(RevParse.class).setRefSpec("HEAD:node").call();
         assertFalse(id.isPresent());
-        id = cli.getGeogit().command(RevParse.class).setRefSpec("HEAD:way").call();
+        id = geogit.command(RevParse.class).setRefSpec("HEAD:way").call();
         assertFalse(id.isPresent());
         cli.execute("osm", "import", file.getAbsolutePath());
-        long unstaged = cli.getGeogit().getRepository().getWorkingTree().countUnstaged("node");
-        assertTrue(unstaged > 0);
-        unstaged = cli.getGeogit().getRepository().getWorkingTree().countUnstaged("way");
-        assertTrue(unstaged > 0);
-        cli.getGeogit().command(AddOp.class).call();
-        cli.getGeogit().command(CommitOp.class).setMessage("Reimported").call();
+        cli.execute("add");
+        cli.execute("commit", "-m", "reimport");
+        Optional<RevTree> tree = cli.getGeogit().command(RevObjectParse.class)
+                .setRefSpec("HEAD:node").call(RevTree.class);
+        assertTrue(tree.isPresent());
+        assertTrue(tree.get().size() > 0);
+        tree = cli.getGeogit().command(RevObjectParse.class).setRefSpec("HEAD:way")
+                .call(RevTree.class);
+        assertTrue(tree.isPresent());
+        assertTrue(tree.get().size() > 0);
         Iterator<DiffEntry> diffs = cli.getGeogit().command(DiffOp.class).setNewVersion("HEAD")
                 .setOldVersion("HEAD~2").call();
         assertFalse(diffs.hasNext());
@@ -101,23 +114,35 @@ public class OSMExportTest extends Assert {
         String filename = OSMImportOp.class.getResource("ways.xml").getFile();
         File file = new File(filename);
         cli.execute("osm", "import", file.getAbsolutePath());
-        long unstaged = cli.getGeogit().getRepository().getWorkingTree().countUnstaged("node");
-        assertTrue(unstaged > 0);
-        unstaged = cli.getGeogit().getRepository().getWorkingTree().countUnstaged("way");
-        assertTrue(unstaged > 0);
+        cli.execute("add");
+        cli.execute("commit", "-m", "message");
+        Optional<RevTree> tree = cli.getGeogit().command(RevObjectParse.class)
+                .setRefSpec("HEAD:node").call(RevTree.class);
+        assertTrue(tree.isPresent());
+        assertTrue(tree.get().size() > 0);
+        tree = cli.getGeogit().command(RevObjectParse.class).setRefSpec("HEAD:way")
+                .call(RevTree.class);
+        assertTrue(tree.isPresent());
+        assertTrue(tree.get().size() > 0);
         File exportFile = new File(tempFolder.getRoot(), "export.xml");
         cli.execute("osm", "export", exportFile.getAbsolutePath(), "WORK_HEAD");
         cli.getGeogit().getRepository().getWorkingTree().delete("node");
         cli.getGeogit().getRepository().getWorkingTree().delete("way");
-        unstaged = cli.getGeogit().getRepository().getWorkingTree().countUnstaged("node");
-        assertFalse(unstaged > 0);
-        unstaged = cli.getGeogit().getRepository().getWorkingTree().countUnstaged("way");
-        assertFalse(unstaged > 0);
+        tree = cli.getGeogit().command(RevObjectParse.class).setRefSpec("WORK_HEAD:node")
+                .call(RevTree.class);
+        assertFalse(tree.isPresent());
+        tree = cli.getGeogit().command(RevObjectParse.class).setRefSpec("WORK_HEAD:way")
+                .call(RevTree.class);
+        assertFalse(tree.isPresent());
         cli.execute("osm", "import", exportFile.getAbsolutePath());
-        unstaged = cli.getGeogit().getRepository().getWorkingTree().countUnstaged("node");
-        assertTrue(unstaged > 0);
-        unstaged = cli.getGeogit().getRepository().getWorkingTree().countUnstaged("way");
-        assertTrue(unstaged > 0);
+        tree = cli.getGeogit().command(RevObjectParse.class).setRefSpec("HEAD:node")
+                .call(RevTree.class);
+        assertTrue(tree.isPresent());
+        assertTrue(tree.get().size() > 0);
+        tree = cli.getGeogit().command(RevObjectParse.class).setRefSpec("HEAD:way")
+                .call(RevTree.class);
+        assertTrue(tree.isPresent());
+        assertTrue(tree.get().size() > 0);
     }
 
     @Test
@@ -127,26 +152,33 @@ public class OSMExportTest extends Assert {
         cli.execute("osm", "import", filterFile.getAbsolutePath());
         cli.execute("add");
         cli.execute("commit", "-m", "message");
-        Optional<ObjectId> id = cli.getGeogit().command(RevParse.class).setRefSpec("HEAD:node")
-                .call();
+        GeoGIT geogit = cli.getGeogit();
+        Optional<ObjectId> id = geogit.command(RevParse.class).setRefSpec("HEAD:node").call();
         assertTrue(id.isPresent());
-        id = cli.getGeogit().command(RevParse.class).setRefSpec("HEAD:way").call();
+        id = geogit.command(RevParse.class).setRefSpec("HEAD:way").call();
         assertTrue(id.isPresent());
         File file = new File(tempFolder.getRoot(), "export.pbf");
         cli.execute("osm", "export", file.getAbsolutePath());
-        cli.getGeogit().getRepository().getWorkingTree().delete("node");
-        cli.getGeogit().getRepository().getWorkingTree().delete("way");
-        cli.getGeogit().command(AddOp.class).call();
-        cli.getGeogit().command(CommitOp.class).setMessage("Deleted OSM data").call();
-        id = cli.getGeogit().command(RevParse.class).setRefSpec("HEAD:node").call();
+        WorkingTree workingTree = geogit.getRepository().getWorkingTree();
+        workingTree.delete("node");
+        workingTree.delete("way");
+        geogit.command(AddOp.class).call();
+        geogit.command(CommitOp.class).setMessage("Deleted OSM data").call();
+        id = geogit.command(RevParse.class).setRefSpec("HEAD:node").call();
         assertFalse(id.isPresent());
-        id = cli.getGeogit().command(RevParse.class).setRefSpec("HEAD:way").call();
+        id = geogit.command(RevParse.class).setRefSpec("HEAD:way").call();
         assertFalse(id.isPresent());
         cli.execute("osm", "import", file.getAbsolutePath());
-        long unstaged = cli.getGeogit().getRepository().getWorkingTree().countUnstaged("node");
-        assertTrue(unstaged > 0);
-        unstaged = cli.getGeogit().getRepository().getWorkingTree().countUnstaged("way");
-        assertTrue(unstaged > 0);
+        cli.execute("add");
+        cli.execute("commit", "-m", "reimport");
+        Optional<RevTree> tree = cli.getGeogit().command(RevObjectParse.class)
+                .setRefSpec("HEAD:node").call(RevTree.class);
+        assertTrue(tree.isPresent());
+        assertTrue(tree.get().size() > 0);
+        tree = cli.getGeogit().command(RevObjectParse.class).setRefSpec("HEAD:way")
+                .call(RevTree.class);
+        assertTrue(tree.isPresent());
+        assertTrue(tree.get().size() > 0);
     }
 
 }

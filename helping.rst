@@ -45,4 +45,4 @@ Issues to help out on are at our `issue tracker <https://github.com/opengeo/GeoG
 
 In all cases, please let us know about your work in advance. Write to the GeoGit google group or talk to someone on the IRC channel, so we can better coordinate all efforts.
 
-Our build is `actively monitored using hudson <http://hudson.opengeo.org/hudson/view/geogit/>`_.
+Our build is `actively monitored using Jenkins <http://ares.opengeo.org:8080/view/geogit/>`_.

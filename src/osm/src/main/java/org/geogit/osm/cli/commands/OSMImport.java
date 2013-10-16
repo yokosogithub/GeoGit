@@ -5,14 +5,13 @@
 
 package org.geogit.osm.cli.commands;
 
-import static com.google.common.base.Preconditions.checkArgument;
-import static com.google.common.base.Preconditions.checkState;
-
 import java.io.File;
+import java.io.IOException;
 import java.util.List;
 
 import org.geogit.cli.AbstractCommand;
 import org.geogit.cli.CLICommand;
+import org.geogit.cli.CommandFailedException;
 import org.geogit.cli.GeogitCLI;
 import org.geogit.osm.internal.EmptyOSMDownloadException;
 import org.geogit.osm.internal.Mapping;
@@ -42,12 +41,17 @@ public class OSMImport extends AbstractCommand implements CLICommand {
     @Parameter(names = { "--mapping" }, description = "The file that contains the data mapping to use")
     public String mappingFile;
 
+    @Parameter(names = "--message", description = "Message for the commit to create.")
+    public String message;
+
     @Override
-    protected void runInternal(GeogitCLI cli) throws Exception {
-        checkState(cli.getGeogit() != null, "Not a geogit repository: " + cli.getPlatform().pwd());
-        checkArgument(apiUrl != null && apiUrl.size() == 1, "One file must be specified");
+    protected void runInternal(GeogitCLI cli) throws IOException {
+        checkParameter(apiUrl != null && apiUrl.size() == 1, "One file must be specified");
         File importFile = new File(apiUrl.get(0));
-        checkArgument(importFile.exists(), "The specified OSM data file does not exist");
+        checkParameter(importFile.exists(), "The specified OSM data file does not exist");
+        checkParameter(!(message != null && noRaw), "cannot use --message if using --no-raw");
+        checkParameter(message == null || mappingFile != null,
+                "Cannot use --message if not using --mapping");
 
         Mapping mapping = null;
         if (mappingFile != null) {
@@ -55,10 +59,11 @@ public class OSMImport extends AbstractCommand implements CLICommand {
         }
 
         try {
+            message = message == null ? "Updated OSM data" : message;
             Optional<OSMDownloadReport> report = cli.getGeogit().command(OSMImportOp.class)
                     .setDataSource(importFile.getAbsolutePath()).setMapping(mapping)
-                    .setNoRaw(noRaw).setAdd(add).setProgressListener(cli.getProgressListener())
-                    .call();
+                    .setMessage(message).setNoRaw(noRaw).setAdd(add)
+                    .setProgressListener(cli.getProgressListener()).call();
             if (report.isPresent() && report.get().getUnpprocessedCount() > 0) {
                 cli.getConsole().println(
                         "Some elements in the by specified file could not be processed.\nProcessed entities: "
@@ -71,7 +76,7 @@ public class OSMImport extends AbstractCommand implements CLICommand {
                     "The specified filter did not contain any valid element.\n"
                             + "No changes were made to the repository.\n");
         } catch (RuntimeException e) {
-            new IllegalStateException("Error importing OSM data: " + e.getMessage(), e);
+            throw new CommandFailedException("Error importing OSM data: " + e.getMessage(), e);
         }
 
     }

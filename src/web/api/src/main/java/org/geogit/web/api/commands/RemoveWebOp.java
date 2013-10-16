@@ -1,3 +1,7 @@
+/* Copyright (c) 2013 OpenPlans. All rights reserved.
+ * This code is licensed under the BSD New License, available at the root
+ * application directory.
+ */
 package org.geogit.web.api.commands;
 
 import org.geogit.api.CommandLocator;
@@ -12,6 +16,12 @@ import org.geogit.web.api.CommandSpecException;
 import org.geogit.web.api.ResponseWriter;
 
 import com.google.common.base.Optional;
+
+/**
+ * Interface for the Remove operation in GeoGit.
+ * 
+ * Web interface for {@link RemoveOp}
+ */
 
 public class RemoveWebOp extends AbstractWebAPICommand {
 
@@ -37,6 +47,13 @@ public class RemoveWebOp extends AbstractWebAPICommand {
         this.recursive = recursive;
     }
 
+    /**
+     * Runs the command and builds the appropriate response.
+     * 
+     * @param context - the context to use for this command
+     * 
+     * @throws CommandSpecException
+     */
     @Override
     public void run(CommandContext context) {
         if (this.getTransactionId() == null) {

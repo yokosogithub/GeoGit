@@ -5,17 +5,21 @@
 
 package org.geogit.cli.porcelain;
 
-import static com.google.common.base.Preconditions.checkState;
-
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
 import jline.console.ConsoleReader;
 
+import org.geogit.api.GeoGIT;
+import org.geogit.api.plumbing.diff.DiffObjectCount;
+import org.geogit.api.plumbing.merge.Conflict;
+import org.geogit.api.plumbing.merge.ConflictsReadOp;
 import org.geogit.api.porcelain.AddOp;
 import org.geogit.cli.AbstractCommand;
 import org.geogit.cli.CLICommand;
 import org.geogit.cli.GeogitCLI;
+import org.geogit.cli.InvalidParameterException;
 import org.geogit.repository.WorkingTree;
 
 import com.beust.jcommander.Parameter;
@@ -64,30 +68,33 @@ public class Add extends AbstractCommand implements CLICommand {
      * @see org.geogit.cli.AbstractCommand#runInternal(org.geogit.cli.GeogitCLI)
      */
     @Override
-    public void runInternal(GeogitCLI cli) throws Exception {
-        checkState(cli.getGeogit() != null, "Not a geogit repository: " + cli.getPlatform().pwd());
+    public void runInternal(GeogitCLI cli) throws IOException {
+        final GeoGIT geogit = cli.getGeogit();
 
-        ConsoleReader console = cli.getConsole();
+        final ConsoleReader console = cli.getConsole();
 
         String pathFilter = null;
         if (patterns.size() == 1) {
             pathFilter = patterns.get(0);
         } else if (patterns.size() > 1) {
-            throw new IllegalArgumentException("Only a single path is supported so far");
+            throw new InvalidParameterException("Only a single path is supported so far");
         }
 
-        console.print("Counting unstaged features...");
-        long unstaged = cli.getGeogit().getRepository().getWorkingTree().countUnstaged(pathFilter);
-        if (0 == unstaged) {
+        List<Conflict> conflicts = geogit.command(ConflictsReadOp.class).call();
+
+        console.print("Counting unstaged elements...");
+        DiffObjectCount unstaged = geogit.getRepository().getWorkingTree()
+                .countUnstaged(pathFilter);
+        if (0 == unstaged.getCount() && conflicts.isEmpty()) {
             console.println();
-            console.println("No unstaged features, exiting.");
+            console.println("No unstaged elements, exiting.");
             return;
         } else {
-            console.println(String.valueOf(unstaged));
+            console.println(String.valueOf(unstaged.getCount()));
         }
 
         console.println("Staging changes...");
-        AddOp op = cli.getGeogit().command(AddOp.class);
+        AddOp op = geogit.command(AddOp.class);
         if (patterns.size() == 1) {
             op.addPattern(patterns.get(0));
         }
@@ -95,11 +102,13 @@ public class Add extends AbstractCommand implements CLICommand {
         WorkingTree workTree = op.setUpdateOnly(updateOnly)
                 .setProgressListener(cli.getProgressListener()).call();
 
-        long staged = cli.getGeogit().getRepository().getIndex().countStaged(null);
+        DiffObjectCount staged = geogit.getRepository().getIndex().countStaged(null);
         unstaged = workTree.countUnstaged(null);
 
-        console.println(staged + " features staged for commit");
-        console.println(unstaged + " features not staged for commit");
+        console.println(staged.getFeaturesCount() + " features and " + staged.getTreesCount()
+                + " trees staged for commit");
+        console.println(unstaged.getFeaturesCount() + " features and " + unstaged.getTreesCount()
+                + " trees not staged for commit");
     }
 
 }

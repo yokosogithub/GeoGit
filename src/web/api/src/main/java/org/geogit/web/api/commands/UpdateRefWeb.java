@@ -1,3 +1,7 @@
+/* Copyright (c) 2013 OpenPlans. All rights reserved.
+ * This code is licensed under the BSD New License, available at the root
+ * application directory.
+ */
 package org.geogit.web.api.commands;
 
 import org.geogit.api.CommandLocator;
@@ -68,7 +72,7 @@ public class UpdateRefWeb extends AbstractWebAPICommand {
     public void run(CommandContext context) {
         if (name == null) {
             throw new CommandSpecException("No name was given.");
-        } else if (!(delete) && newValue.equals(ObjectId.NULL)) {
+        } else if (!(delete) && newValue == null) {
             throw new CommandSpecException(
                     "Nothing specified to update with, must specify either deletion or new value to update to.");
         }

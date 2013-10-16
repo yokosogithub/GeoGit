@@ -11,11 +11,9 @@ import java.util.Map;
 
 import org.geogit.api.Node;
 import org.geogit.api.RevFeature;
+import org.geogit.api.RevTree;
 import org.geogit.api.plumbing.RevObjectParse;
-import org.geogit.osm.internal.AttributeDefinition;
-import org.geogit.osm.internal.Mapping;
-import org.geogit.osm.internal.MappingRule;
-import org.geogit.osm.internal.OSMImportOp;
+import org.geogit.osm.internal.log.ResolveOSMMappingLogFolder;
 import org.geogit.storage.FieldType;
 import org.geogit.test.integration.RepositoryTestCase;
 import org.junit.Rule;
@@ -46,9 +44,9 @@ public class OSMImportOpTest extends RepositoryTestCase {
         String filename = getClass().getResource("ways.xml").getFile();
         File file = new File(filename);
         geogit.command(OSMImportOp.class).setDataSource(file.getAbsolutePath()).call();
-        long unstaged = geogit.getRepository().getWorkingTree().countUnstaged("node");
+        long unstaged = geogit.getRepository().getWorkingTree().countUnstaged("node").getCount();
         assertTrue(unstaged > 0);
-        unstaged = geogit.getRepository().getWorkingTree().countUnstaged("way");
+        unstaged = geogit.getRepository().getWorkingTree().countUnstaged("way").getCount();
         assertTrue(unstaged > 0);
     }
 
@@ -63,9 +61,9 @@ public class OSMImportOpTest extends RepositoryTestCase {
         file = new File(filename);
         geogit.command(OSMImportOp.class).setDataSource(file.getAbsolutePath()).setAdd(true).call();
         // Check that the working tree contains elements from both imports
-        long unstaged = geogit.getRepository().getWorkingTree().countUnstaged("node");
+        long unstaged = geogit.getRepository().getWorkingTree().countUnstaged("node").getCount();
         assertEquals(30, unstaged);
-        unstaged = geogit.getRepository().getWorkingTree().countUnstaged("way");
+        unstaged = geogit.getRepository().getWorkingTree().countUnstaged("way").getCount();
         assertEquals(4, unstaged);
     }
 
@@ -88,13 +86,18 @@ public class OSMImportOpTest extends RepositoryTestCase {
         // import with mapping and check import went ok
         geogit.command(OSMImportOp.class).setDataSource(file.getAbsolutePath()).setMapping(mapping)
                 .call();
-        long unstaged = geogit.getRepository().getWorkingTree().countUnstaged("node");
-        assertTrue(unstaged > 0);
-        unstaged = geogit.getRepository().getWorkingTree().countUnstaged("way");
-        assertTrue(unstaged > 0);
+        Optional<RevTree> tree = geogit.command(RevObjectParse.class).setRefSpec("HEAD:node")
+                .call(RevTree.class);
+        assertTrue(tree.isPresent());
+        assertTrue(tree.get().size() > 0);
+        tree = geogit.command(RevObjectParse.class).setRefSpec("HEAD:way").call(RevTree.class);
+        assertTrue(tree.isPresent());
+        assertTrue(tree.get().size() > 0);
         // check that the tree with the mapping exist and is not empty
-        unstaged = geogit.getRepository().getWorkingTree().countUnstaged("onewaystreets");
-        assertEquals(1, unstaged);
+        tree = geogit.command(RevObjectParse.class).setRefSpec("HEAD:onewaystreets")
+                .call(RevTree.class);
+        assertTrue(tree.isPresent());
+        assertTrue(tree.get().size() > 0);
 
         // check that the mapping was correctly performed
         Optional<Node> feature = geogit.getRepository().getWorkingTree()
@@ -108,6 +111,7 @@ public class OSMImportOpTest extends RepositoryTestCase {
         assertEquals(wkt, values.get(2).get().toString());
         assertEquals("31045880", values.get(0).get().toString());
         assertEquals("yes", values.get(1).get());
+
     }
 
     @Test
@@ -129,11 +133,12 @@ public class OSMImportOpTest extends RepositoryTestCase {
         // import with mapping and check import went ok and canonical folders were not created
         geogit.command(OSMImportOp.class).setDataSource(file.getAbsolutePath()).setMapping(mapping)
                 .setNoRaw(true).call();
-        long unstaged = geogit.getRepository().getWorkingTree().countUnstaged("node");
+        long unstaged = geogit.getRepository().getWorkingTree().countUnstaged("node").getCount();
         assertEquals(0, unstaged);
-        unstaged = geogit.getRepository().getWorkingTree().countUnstaged("way");
+        unstaged = geogit.getRepository().getWorkingTree().countUnstaged("way").getCount();
         assertEquals(0, unstaged);
-        unstaged = geogit.getRepository().getWorkingTree().countUnstaged("onewaystreets");
+        unstaged = geogit.getRepository().getWorkingTree().countUnstaged("onewaystreets")
+                .getCount();
         assertEquals(1, unstaged);
         Optional<Node> feature = geogit.getRepository().getWorkingTree()
                 .findUnstaged("onewaystreets/31045880");
@@ -148,6 +153,14 @@ public class OSMImportOpTest extends RepositoryTestCase {
         assertEquals(wkt, values.get(2).get().toString());
         assertEquals("31045880", values.get(0).get().toString());
         assertEquals("yes", values.get(1).get());
+
+        // check it has not created mapping log files
+        File osmMapFolder = geogit.command(ResolveOSMMappingLogFolder.class).call();
+        file = new File(osmMapFolder, "onewaystreets");
+        assertFalse(file.exists());
+        file = new File(osmMapFolder, geogit.getRepository().getWorkingTree().getTree().getId()
+                .toString());
+        assertFalse(file.exists());
     }
 
 }

@@ -99,18 +99,37 @@ public class Mapping {
             throw new IllegalArgumentException("Error reading mapping file:" + e.getMessage(), e);
         }
 
+        return fromString(mappingJson);
+
+    }
+
+    /**
+     * Creates a Mapping object from its JSON representation
+     * 
+     * @param s the JSON representation
+     * @return the created mapping
+     */
+    public static Mapping fromString(String s) {
         GsonBuilder gsonBuilder = new GsonBuilder().excludeFieldsWithoutExposeAnnotation();
         Gson gson = gsonBuilder.create();
         Mapping mapping;
         try {
-            mapping = gson.fromJson(mappingJson, Mapping.class);
+            mapping = gson.fromJson(s, Mapping.class);
         } catch (JsonSyntaxException e) {
             throw new IllegalArgumentException("Error parsing mapping definition: "
                     + e.getMessage(), e);
         }
 
         return mapping;
+    }
 
+    /**
+     * Returns the JSON representation of this mapping
+     */
+    public String toString() {
+        GsonBuilder gsonBuilder = new GsonBuilder().excludeFieldsWithoutExposeAnnotation();
+        Gson gson = gsonBuilder.create();
+        return gson.toJson(this);
     }
 
     private static String readFile(File file) throws IOException {

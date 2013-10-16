@@ -4,8 +4,6 @@
  */
 package org.geogit.cli.porcelain;
 
-import static com.google.common.base.Preconditions.checkState;
-
 import java.io.IOException;
 import java.util.Iterator;
 import java.util.List;
@@ -25,7 +23,7 @@ import org.geogit.api.plumbing.diff.DiffEntry;
 import org.geogit.api.plumbing.diff.DiffEntry.ChangeType;
 import org.geogit.api.plumbing.merge.Conflict;
 import org.geogit.api.plumbing.merge.ConflictsReadOp;
-import org.geogit.cli.AnsiDecorator;
+import org.geogit.cli.AbstractCommand;
 import org.geogit.cli.CLICommand;
 import org.geogit.cli.GeogitCLI;
 import org.geogit.repository.StagingArea;
@@ -34,7 +32,6 @@ import org.geogit.repository.WorkingTree;
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.Parameters;
 import com.google.common.base.Optional;
-import com.google.common.base.Preconditions;
 
 /**
  * Displays features that have differences between the index and the current HEAD commit and
@@ -51,10 +48,7 @@ import com.google.common.base.Preconditions;
  * @see Add
  */
 @Parameters(commandNames = "status", commandDescription = "Show the working tree status")
-public class Status implements CLICommand {
-
-    @Parameter(names = "--color", description = "Whether to apply colored output. Possible values are auto|never|always.", converter = ColorArg.Converter.class)
-    private ColorArg coloredOutput = ColorArg.auto;
+public class Status extends AbstractCommand implements CLICommand {
 
     @Parameter(names = "--limit", description = "Limit number of displayed changes. Must be >= 0.")
     private Integer limit = 50;
@@ -64,15 +58,10 @@ public class Status implements CLICommand {
 
     /**
      * Executes the status command using the provided options.
-     * 
-     * @param cli
-     * @see org.geogit.cli.CLICommand#run(org.geogit.cli.GeogitCLI)
      */
     @Override
-    public void run(GeogitCLI cli) throws Exception {
-        checkState(cli.getGeogit() != null, "Not a geogit repository: " + cli.getPlatform().pwd());
-
-        Preconditions.checkArgument(limit >= 0, "Limit must be 0 or greater.");
+    public void runInternal(GeogitCLI cli) throws IOException {
+        checkParameter(limit >= 0, "Limit must be 0 or greater.");
 
         ConsoleReader console = cli.getConsole();
         GeoGIT geogit = cli.getGeogit();
@@ -81,12 +70,12 @@ public class Status implements CLICommand {
 
         final WorkingTree workTree = geogit.getRepository().getWorkingTree();
 
-        final long countStaged = index.countStaged(null);
+        final long countStaged = index.countStaged(null).getCount();
         final int countConflicted = index.countConflicted(null);
-        final long countUnstaged = workTree.countUnstaged(null);
+        final long countUnstaged = workTree.countUnstaged(null).getCount();
 
         final Optional<Ref> currHead = geogit.command(RefParse.class).setName(Ref.HEAD).call();
-        Preconditions.checkState(currHead.isPresent(), "Repository has no HEAD.");
+        checkParameter(currHead.isPresent(), "Repository has no HEAD.");
         if (currHead.get() instanceof SymRef) {
             final SymRef headRef = (SymRef) currHead.get();
             console.println("# On branch " + Ref.localName(headRef.getTarget()));
@@ -100,8 +89,8 @@ public class Status implements CLICommand {
         }
 
         if (countStaged > 0) {
-            Iterator<DiffEntry> staged = geogit.command(DiffIndex.class).call();
-
+            Iterator<DiffEntry> staged = geogit.command(DiffIndex.class).setReportTrees(true)
+                    .call();
             console.println("# Changes to be committed:");
             console.println("#   (use \"geogit reset HEAD <path/to/fid>...\" to unstage)");
             console.println("#");
@@ -119,7 +108,8 @@ public class Status implements CLICommand {
         }
 
         if (countUnstaged > 0) {
-            Iterator<DiffEntry> unstaged = geogit.command(DiffWorkTree.class).call();
+            Iterator<DiffEntry> unstaged = geogit.command(DiffWorkTree.class).setReportTrees(true)
+                    .call();
             console.println("# Changes not staged for commit:");
             console.println("#   (use \"geogit add <path/to/fid>...\" to update what will be committed");
             console.println("#   (use \"geogit checkout -- <path/to/fid>...\" to discard changes in working directory");
@@ -146,36 +136,27 @@ public class Status implements CLICommand {
 
         StringBuilder sb = new StringBuilder();
 
-        boolean useColor;
-        switch (this.coloredOutput) {
-        case never:
-            useColor = false;
-            break;
-        case always:
-            useColor = true;
-            break;
-        default:
-            useColor = console.getTerminal().isAnsiSupported();
-        }
-
-        Ansi ansi = AnsiDecorator.newAnsi(useColor, sb);
+        Ansi ansi = newAnsi(console.getTerminal(), sb);
 
         DiffEntry entry;
         ChangeType type;
         String path;
         int cnt = 0;
-        while (changes.hasNext() && cnt < limit) {
-            ++cnt;
+        if (limit > 0) {
+            Iterator<DiffEntry> changesIterator = changes;
+            while (changesIterator.hasNext() && cnt < limit) {
+                ++cnt;
 
-            entry = changes.next();
-            type = entry.changeType();
-            path = formatPath(entry);
+                entry = changesIterator.next();
+                type = entry.changeType();
+                path = formatPath(entry);
 
-            sb.setLength(0);
-            ansi.a("#      ").fg(color).a(type.toString().toLowerCase()).a("  ").a(path).reset();
-            console.println(ansi.toString());
+                sb.setLength(0);
+                ansi.a("#      ").fg(color).a(type.toString().toLowerCase()).a("  ").a(path)
+                        .reset();
+                console.println(ansi.toString());
+            }
         }
-
         sb.setLength(0);
         ansi.a("# ").a(total).reset().a(" total.");
         console.println(ansi.toString());
@@ -188,19 +169,7 @@ public class Status implements CLICommand {
 
         StringBuilder sb = new StringBuilder();
 
-        boolean useColor;
-        switch (this.coloredOutput) {
-        case never:
-            useColor = false;
-            break;
-        case always:
-            useColor = true;
-            break;
-        default:
-            useColor = console.getTerminal().isAnsiSupported();
-        }
-
-        Ansi ansi = AnsiDecorator.newAnsi(useColor, sb);
+        Ansi ansi = newAnsi(console.getTerminal(), sb);
 
         String path;
         for (int i = 0; i < conflicts.size() && i < limit; i++) {

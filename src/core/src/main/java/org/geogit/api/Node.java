@@ -121,6 +121,10 @@ public abstract class Node implements Bounded, Comparable<Node> {
         return create(name, oid, metadataId, type, null);
     }
 
+    public static Node tree(final String name, final ObjectId oid, final ObjectId metadataId) {
+        return create(name, oid, metadataId, TYPE.TREE, null);
+    }
+
     public static Node create(final String name, final ObjectId oid, final ObjectId metadataId,
             final TYPE type, @Nullable final Envelope bounds) {
 

@@ -19,9 +19,9 @@ This document is a short introduction to the main ideas and elements of GeoGit. 
 Installation
 -------------
 
-Download `Version 0.3.0 <http://sourceforge.net/projects/geogit/files/geogit-0.3.0/geogit-cli-app-0.3.0.zip/download>`_ from SourceForge. Full documentation is available for download and online.
+Download `Version 0.5.0 <http://sourceforge.net/projects/geogit/files/geogit-0.5.0/geogit-cli-app-0.5.0.zip/download>`_ from SourceForge. Full documentation is available for download and online.
 
-To install unzip the *geogit-cli-app-0.3.0.zip* to an applications directory, and then add the unzipped geogit/bin/ folder to your ``PATH``.
+To install unzip the *geogit-cli-app-0.5.0.zip* to an applications directory, and then add the unzipped geogit/bin/ folder to your ``PATH``.
 
 To test that GeoGit is ready to be used, open a console and type ``geogit help``. You should see a list of available commands like the one shown below.
 
@@ -72,7 +72,7 @@ Importing data
 
 To version a dataset, it has to be imported into the repository. Data in different formats can be imported into GeoGit. 
 
-Download the data in `this zip file <https://raw.github.com/opengeo/GeoGit/0.3.0/doc/manual/sample_data/quickstart_data.zip>`_. It contains several folders, each of them with a snapshot of the dataset. We will use them to create our GeoGit repository, simulating the edition and creation of all the versions it contains. 
+Download the data in `this zip file <https://raw.github.com/opengeo/GeoGit/0.5.0/doc/manual/sample_data/quickstart_data.zip>`_. It contains several folders, each of them with a snapshot of the dataset. We will use them to create our GeoGit repository, simulating the edition and creation of all the versions it contains. 
 
 We will start by importing the ``snapshot1/parks.shp`` shapefile, using the following command::
 

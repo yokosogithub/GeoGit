@@ -116,7 +116,7 @@ class GeogitFeatureStore extends ContentFeatureStore {
     }
 
     @Override
-    public Transaction getTransaction() {
+    public synchronized Transaction getTransaction() {
         return delegate.getTransaction();
     }
 
@@ -326,9 +326,8 @@ class GeogitFeatureStore extends ContentFeatureStore {
         Iterator<SimpleFeature> features = modifyingFeatureIterator(names, values, filter);
         /*
          * Make sure to transform the incoming features to the native schema to avoid situations
-         * where geogit would change the metadataId of the RevFeature nodes due to small
-         * differences in the default and incoming schema such as namespace or missing
-         * properties
+         * where geogit would change the metadataId of the RevFeature nodes due to small differences
+         * in the default and incoming schema such as namespace or missing properties
          */
         final SimpleFeatureType nativeSchema = delegate.getNativeType();
 

@@ -5,8 +5,7 @@
 
 package org.geogit.cli.porcelain;
 
-import static com.google.common.base.Preconditions.checkState;
-
+import java.io.IOException;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map.Entry;
@@ -24,6 +23,7 @@ import org.geogit.api.porcelain.PullResult;
 import org.geogit.api.porcelain.SynchronizationException;
 import org.geogit.cli.AbstractCommand;
 import org.geogit.cli.CLICommand;
+import org.geogit.cli.CommandFailedException;
 import org.geogit.cli.GeogitCLI;
 
 import com.beust.jcommander.Parameter;
@@ -65,19 +65,17 @@ public class Pull extends AbstractCommand implements CLICommand {
 
     /**
      * Executes the pull command using the provided options.
-     * 
-     * @param cli
-     * @see org.geogit.cli.AbstractCommand#runInternal(org.geogit.cli.GeogitCLI)
      */
     @Override
-    public void runInternal(GeogitCLI cli) throws Exception {
-        checkState(cli.getGeogit() != null, "Not a geogit repository: " + cli.getPlatform().pwd());
-        checkState(depth > 0 ? !fulldepth : true,
+    public void runInternal(GeogitCLI cli) throws IOException {
+        checkParameter(depth > 0 ? !fulldepth : true,
                 "Cannot specify a depth and full depth.  Use --depth <depth> or --fulldepth.");
 
         if (depth > 0 || fulldepth) {
-            checkState(cli.getGeogit().getRepository().getDepth().isPresent(),
-                    "Depth operations can only be used on a shallow clone.");
+            if (!cli.getGeogit().getRepository().getDepth().isPresent()) {
+                throw new CommandFailedException(
+                        "Depth operations can only be used on a shallow clone.");
+            }
         }
 
         PullOp pull = cli.getGeogit().command(PullOp.class);
@@ -161,7 +159,8 @@ public class Pull extends AbstractCommand implements CLICommand {
             switch (e.statusCode) {
             case HISTORY_TOO_SHALLOW:
             default:
-                cli.getConsole().println("Unable to pull, the remote history is shallow.");
+                throw new CommandFailedException("Unable to pull, the remote history is shallow.",
+                        e);
             }
         }
 
