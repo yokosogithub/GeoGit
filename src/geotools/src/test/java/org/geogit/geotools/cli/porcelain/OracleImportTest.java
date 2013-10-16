@@ -3,7 +3,7 @@
  * application directory.
  */
 
-package org.geogit.geotools.porcelain;
+package org.geogit.geotools.cli.porcelain;
 
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
@@ -82,19 +82,6 @@ public class OracleImportTest {
         importCommand.table = "table1";
         importCommand.dataStoreFactory = factory;
         exception.expect(CommandFailedException.class);
-        importCommand.run(cli);
-    }
-
-    @Test
-    public void testNoRepository() throws Exception {
-        ConsoleReader consoleReader = new ConsoleReader(System.in, System.out,
-                new UnsupportedTerminal());
-        cli = new GeogitCLI(consoleReader);
-
-        OracleImport importCommand = new OracleImport();
-        importCommand.all = true;
-        importCommand.dataStoreFactory = factory;
-        exception.expect(IllegalStateException.class);
         importCommand.run(cli);
     }
 

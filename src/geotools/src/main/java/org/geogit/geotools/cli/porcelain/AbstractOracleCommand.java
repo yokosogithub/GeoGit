@@ -2,14 +2,17 @@
  * This code is licensed under the BSD New License, available at the root
  * application directory.
  */
-package org.geogit.geotools.porcelain;
+package org.geogit.geotools.cli.porcelain;
 
+import java.io.IOException;
 import java.io.Serializable;
 import java.net.ConnectException;
 import java.sql.Connection;
 import java.util.Map;
 
+import org.geogit.cli.AbstractCommand;
 import org.geogit.cli.CLICommand;
+import org.geogit.cli.CommandFailedException;
 import org.geogit.cli.GeogitCLI;
 import org.geotools.data.AbstractDataStoreFactory;
 import org.geotools.data.DataStore;
@@ -27,13 +30,7 @@ import com.google.common.collect.Maps;
  * 
  * @see CLICommand
  */
-public abstract class AbstractOracleCommand implements CLICommand {
-
-    /**
-     * Flag for displaying help for the command.
-     */
-    @Parameter(names = "--help", help = true, hidden = true)
-    public boolean help;
+public abstract class AbstractOracleCommand extends AbstractCommand implements CLICommand {
 
     /**
      * Common arguments for Oracle commands.
@@ -51,45 +48,13 @@ public abstract class AbstractOracleCommand implements CLICommand {
     public AbstractDataStoreFactory dataStoreFactory = new OracleNGDataStoreFactory();
 
     /**
-     * Executes the command.
-     * 
-     * @param cli
-     * @throws Exception
-     * @see org.geogit.cli.CLICommand#run(org.geogit.cli.GeogitCLI)
-     */
-    @Override
-    public void run(GeogitCLI cli) throws Exception {
-        if (help) {
-            printUsage();
-            return;
-        }
-        runInternal(cli);
-    }
-
-    /**
-     * Prints the correct usage of the geogit oracle command.
-     */
-    protected void printUsage() {
-        JCommander jc = new JCommander(this);
-        String commandName = this.getClass().getAnnotation(Parameters.class).commandNames()[0];
-        jc.setProgramName("geogit oracle " + commandName);
-        jc.usage();
-    }
-
-    /**
-     * Subclasses shall implement to do the real work, will not be called if the command was invoked
-     * with {@code --help}
-     */
-    protected abstract void runInternal(GeogitCLI cli) throws Exception;
-
-    /**
      * Constructs a new Oracle data store using connection parameters from {@link OracleCommonArgs}.
      * 
      * @return the constructed data store
      * @throws Exception
      * @see DataStore
      */
-    protected DataStore getDataStore() throws Exception {
+    protected DataStore getDataStore() {
         Map<String, Serializable> params = Maps.newHashMap();
         params.put(OracleNGDataStoreFactory.DBTYPE.key, "oracle");
         params.put(OracleNGDataStoreFactory.HOST.key, commonArgs.host);
@@ -98,17 +63,23 @@ public abstract class AbstractOracleCommand implements CLICommand {
         params.put(OracleNGDataStoreFactory.DATABASE.key, commonArgs.database);
         params.put(OracleNGDataStoreFactory.USER.key, commonArgs.username);
         params.put(OracleNGDataStoreFactory.PASSWD.key, commonArgs.password);
-        //params.put(OracleNGDataStoreFactory.ESTIMATED_EXTENTS.key, commonArgs.estimatedExtent);
-        //params.put(OracleNGDataStoreFactory.LOOSEBBOX.key, commonArgs.looseBbox);
-//        if (!commonArgs.geometryMetadataTable.equals(""))
-//            params.put(OracleNGDataStoreFactory.GEOMETRY_METADATA_TABLE.key,
-//                    commonArgs.geometryMetadataTable);
-        //params.put(OracleNGDataStoreFactory.FETCHSIZE.key, 1000);
+        // params.put(OracleNGDataStoreFactory.ESTIMATED_EXTENTS.key, commonArgs.estimatedExtent);
+        // params.put(OracleNGDataStoreFactory.LOOSEBBOX.key, commonArgs.looseBbox);
+        // if (!commonArgs.geometryMetadataTable.equals(""))
+        // params.put(OracleNGDataStoreFactory.GEOMETRY_METADATA_TABLE.key,
+        // commonArgs.geometryMetadataTable);
+        // params.put(OracleNGDataStoreFactory.FETCHSIZE.key, 1000);
 
-        DataStore dataStore = dataStoreFactory.createDataStore(params);
-
+        DataStore dataStore;
+        try {
+            dataStore = dataStoreFactory.createDataStore(params);
+        } catch (IOException e) {
+            throw new CommandFailedException(
+                    "Unable to connect using the specified database parameters.", e);
+        }
         if (dataStore == null) {
-            throw new ConnectException();
+            throw new CommandFailedException(
+                    "No suitable data store found for the provided parameters");
         }
 
         if (dataStore instanceof JDBCDataStore) {
@@ -116,10 +87,11 @@ public abstract class AbstractOracleCommand implements CLICommand {
             try {
                 con = ((JDBCDataStore) dataStore).getDataSource().getConnection();
             } catch (Exception e) {
-                throw new ConnectException();
+                throw new CommandFailedException("Error validating the database connection", e);
             }
             ((JDBCDataStore) dataStore).closeSafe(con);
         }
+
         return dataStore;
     }
 

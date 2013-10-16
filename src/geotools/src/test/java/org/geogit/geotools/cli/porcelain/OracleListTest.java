@@ -3,7 +3,7 @@
  * application directory.
  */
 
-package org.geogit.geotools.porcelain;
+package org.geogit.geotools.cli.porcelain;
 
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
@@ -17,6 +17,7 @@ import jline.console.ConsoleReader;
 import org.geogit.api.Platform;
 import org.geogit.cli.CommandFailedException;
 import org.geogit.cli.GeogitCLI;
+import org.geogit.geotools.cli.porcelain.OracleList;
 import org.geotools.data.AbstractDataStoreFactory;
 import org.junit.After;
 import org.junit.Assert;
@@ -78,18 +79,6 @@ public class OracleListTest extends Assert {
         OracleList listCommand = new OracleList();
         listCommand.commonArgs.host = "nonexistent";
         exception.expect(CommandFailedException.class);
-        listCommand.run(cli);
-    }
-
-    @Test
-    public void testNoRepository() throws Exception {
-        ConsoleReader consoleReader = new ConsoleReader(System.in, System.out,
-                new UnsupportedTerminal());
-        cli = new GeogitCLI(consoleReader);
-
-        OracleList listCommand = new OracleList();
-        listCommand.dataStoreFactory = factory;
-        exception.expect(IllegalStateException.class);
         listCommand.run(cli);
     }
 

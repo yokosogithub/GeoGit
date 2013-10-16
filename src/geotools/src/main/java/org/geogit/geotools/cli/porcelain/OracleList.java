@@ -3,11 +3,9 @@
  * application directory.
  */
 
-package org.geogit.geotools.porcelain;
+package org.geogit.geotools.cli.porcelain;
 
-import static com.google.common.base.Preconditions.checkState;
-
-import java.net.ConnectException;
+import java.io.IOException;
 import java.util.List;
 
 import org.geogit.cli.CLICommand;
@@ -34,19 +32,12 @@ public class OracleList extends AbstractOracleCommand implements CLICommand {
      * Executes the list command using the provided options.
      * 
      * @param cli
-     * @see org.geogit.cli.AbstractOracleCommand#runInternal(org.geogit.cli.GeogitCLI)
+     * @see org.geogit.geotools.cli.porcelain.AbstractOracleCommand#runInternal(org.geogit.cli.GeogitCLI)
      */
     @Override
-    protected void runInternal(GeogitCLI cli) throws Exception {
-        checkState(cli.getGeogit() != null, "Not a geogit repository: " + cli.getPlatform().pwd());
+    protected void runInternal(GeogitCLI cli) throws IOException {
 
-        DataStore dataStore = null;
-        try {
-            dataStore = getDataStore();
-        } catch (ConnectException e) {
-            cli.getConsole().println("Unable to connect using the specified database parameters.");
-            throw new CommandFailedException();
-        }
+        DataStore dataStore = getDataStore();
 
         try {
             cli.getConsole().println("Fetching feature types...");
@@ -59,12 +50,11 @@ public class OracleList extends AbstractOracleCommand implements CLICommand {
                     cli.getConsole().println(" - " + featureType);
                 }
             } else {
-                cli.getConsole().println("No features types were found in the specified database.");
-                throw new CommandFailedException();
+                throw new CommandFailedException(
+                        "No features types were found in the specified database.");
             }
         } catch (GeoToolsOpException e) {
-            cli.getConsole().println("Unable to get feature types from the database.");
-            throw new CommandFailedException();
+            throw new CommandFailedException("Unable to get feature types from the database.");
         } finally {
             dataStore.dispose();
             cli.getConsole().flush();

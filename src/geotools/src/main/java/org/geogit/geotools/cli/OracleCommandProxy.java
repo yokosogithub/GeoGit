@@ -6,10 +6,10 @@
 package org.geogit.geotools.cli;
 
 import org.geogit.cli.CLICommandExtension;
-import org.geogit.geotools.porcelain.OracleDescribe;
-import org.geogit.geotools.porcelain.OracleExport;
-import org.geogit.geotools.porcelain.OracleImport;
-import org.geogit.geotools.porcelain.OracleList;
+import org.geogit.geotools.cli.porcelain.OracleDescribe;
+import org.geogit.geotools.cli.porcelain.OracleExport;
+import org.geogit.geotools.cli.porcelain.OracleImport;
+import org.geogit.geotools.cli.porcelain.OracleList;
 
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameters;

@@ -3,7 +3,7 @@
  * application directory.
  */
 
-package org.geogit.geotools.porcelain;
+package org.geogit.geotools.cli.porcelain;
 
 import java.util.Arrays;
 
@@ -13,6 +13,8 @@ import jline.console.ConsoleReader;
 import org.geogit.api.porcelain.CommitOp;
 import org.geogit.cli.CommandFailedException;
 import org.geogit.cli.GeogitCLI;
+import org.geogit.cli.InvalidParameterException;
+import org.geogit.geotools.cli.porcelain.OracleExport;
 import org.geogit.test.integration.RepositoryTestCase;
 import org.geotools.data.AbstractDataStoreFactory;
 import org.junit.BeforeClass;
@@ -115,7 +117,7 @@ public class OracleExportTest extends RepositoryTestCase {
         OracleExport exportCommand = new OracleExport();
         exportCommand.args = Arrays.asList("invalidType", "invalidTable");
         exportCommand.dataStoreFactory = factory;
-        exception.expect(IllegalArgumentException.class);
+        exception.expect(InvalidParameterException.class);
         exportCommand.run(cli);
     }
 
@@ -124,7 +126,7 @@ public class OracleExportTest extends RepositoryTestCase {
         OracleExport exportCommand = new OracleExport();
         exportCommand.args = Arrays.asList("Points", null);
         exportCommand.dataStoreFactory = factory;
-        exception.expect(IllegalArgumentException.class);
+        exception.expect(InvalidParameterException.class);
         exportCommand.run(cli);
     }
 
@@ -133,7 +135,7 @@ public class OracleExportTest extends RepositoryTestCase {
         OracleExport exportCommand = new OracleExport();
         exportCommand.args = Arrays.asList("", "invalidTable");
         exportCommand.dataStoreFactory = factory;
-        exception.expect(IllegalArgumentException.class);
+        exception.expect(InvalidParameterException.class);
         exportCommand.run(cli);
     }
 
@@ -142,7 +144,7 @@ public class OracleExportTest extends RepositoryTestCase {
         OracleExport exportCommand = new OracleExport();
         exportCommand.args = Arrays.asList("", "invalidTable");
         exportCommand.dataStoreFactory = factory;
-        exception.expect(IllegalArgumentException.class);
+        exception.expect(InvalidParameterException.class);
         exportCommand.run(cli);
     }
 
@@ -151,7 +153,7 @@ public class OracleExportTest extends RepositoryTestCase {
         OracleExport exportCommand = new OracleExport();
         exportCommand.args = Arrays.asList("Points", "");
         exportCommand.dataStoreFactory = factory;
-        exception.expect(IllegalArgumentException.class);
+        exception.expect(InvalidParameterException.class);
         exportCommand.run(cli);
     }
 
@@ -160,7 +162,7 @@ public class OracleExportTest extends RepositoryTestCase {
         OracleExport exportCommand = new OracleExport();
         exportCommand.args = Arrays.asList("Points/Points.1", "invalidTable");
         exportCommand.dataStoreFactory = factory;
-        exception.expect(IllegalArgumentException.class);
+        exception.expect(InvalidParameterException.class);
         exportCommand.run(cli);
     }
 

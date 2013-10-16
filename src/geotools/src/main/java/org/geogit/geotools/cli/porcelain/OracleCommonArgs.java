@@ -3,7 +3,7 @@
  * application directory.
  */
 
-package org.geogit.geotools.porcelain;
+package org.geogit.geotools.cli.porcelain;
 
 import com.beust.jcommander.Parameter;
 

@@ -2,10 +2,11 @@
  * This code is licensed under the BSD New License, available at the root
  * application directory.
  */
-package org.geogit.geotools.porcelain;
+package org.geogit.geotools.cli.porcelain;
 
 import static com.google.common.base.Preconditions.checkState;
 
+import java.io.IOException;
 import java.net.ConnectException;
 
 import org.geogit.cli.CLICommand;
@@ -68,16 +69,9 @@ public class OracleImport extends AbstractOracleCommand implements CLICommand {
      * @see org.geogit.cli.AbstractOracleCommand#runInternal(org.geogit.cli.GeogitCLI)
      */
     @Override
-    protected void runInternal(GeogitCLI cli) throws Exception {
-        checkState(cli.getGeogit() != null, "Not a geogit repository: " + cli.getPlatform().pwd());
+    protected void runInternal(GeogitCLI cli) throws IOException {
 
-        DataStore dataStore = null;
-        try {
-            dataStore = getDataStore();
-        } catch (ConnectException e) {
-            cli.getConsole().println("Unable to connect using the specified database parameters.");
-            throw new CommandFailedException();
-        }
+        DataStore dataStore = getDataStore();
 
         try {
             cli.getConsole().println("Importing from database " + commonArgs.database);

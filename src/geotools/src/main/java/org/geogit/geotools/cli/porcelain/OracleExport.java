@@ -3,13 +3,9 @@
  * application directory.
  */
 
-package org.geogit.geotools.porcelain;
-
-import static com.google.common.base.Preconditions.checkArgument;
-import static com.google.common.base.Preconditions.checkState;
+package org.geogit.geotools.cli.porcelain;
 
 import java.io.IOException;
-import java.net.ConnectException;
 import java.util.Arrays;
 import java.util.List;
 
@@ -30,6 +26,7 @@ import org.geogit.api.plumbing.RevParse;
 import org.geogit.cli.CLICommand;
 import org.geogit.cli.CommandFailedException;
 import org.geogit.cli.GeogitCLI;
+import org.geogit.cli.InvalidParameterException;
 import org.geogit.geotools.plumbing.ExportOp;
 import org.geogit.geotools.plumbing.GeoToolsOpException;
 import org.geotools.data.DataStore;
@@ -43,7 +40,6 @@ import org.opengis.filter.Filter;
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.Parameters;
 import com.google.common.base.Optional;
-import com.google.common.base.Preconditions;
 
 /**
  * Exports features from a feature type into a Oracle database.
@@ -76,9 +72,7 @@ public class OracleExport extends AbstractOracleCommand implements CLICommand {
      * @param cli
      */
     @Override
-    protected void runInternal(GeogitCLI cli) throws Exception {
-        checkState(cli.getGeogit() != null, "Not a geogit repository: " + cli.getPlatform().pwd());
-
+    protected void runInternal(GeogitCLI cli) throws IOException {
         if (args.isEmpty()) {
             printUsage();
             throw new CommandFailedException();
@@ -87,15 +81,9 @@ public class OracleExport extends AbstractOracleCommand implements CLICommand {
         String path = args.get(0);
         String tableName = args.get(1);
 
-        checkArgument(tableName != null && !tableName.isEmpty(), "No table name specified");
+        checkParameter(tableName != null && !tableName.isEmpty(), "No table name specified");
 
-        DataStore dataStore = null;
-        try {
-            dataStore = getDataStore();
-        } catch (ConnectException e) {
-            cli.getConsole().println("Unable to connect using the specified database parameters.");
-            throw new CommandFailedException();
-        }
+        DataStore dataStore = getDataStore();
 
         ObjectId featureTypeId = null;
         if (!Arrays.asList(dataStore.getTypeNames()).contains(tableName)) {
@@ -104,11 +92,10 @@ public class OracleExport extends AbstractOracleCommand implements CLICommand {
                 // Check the feature type id string is a correct id
                 Optional<ObjectId> id = cli.getGeogit().command(RevParse.class)
                         .setRefSpec(sFeatureTypeId).call();
-                Preconditions.checkArgument(id.isPresent(), "Invalid feature type reference",
-                        sFeatureTypeId);
+                checkParameter(id.isPresent(), "Invalid feature type reference", sFeatureTypeId);
                 TYPE type = cli.getGeogit().command(ResolveObjectType.class).setObjectId(id.get())
                         .call();
-                Preconditions.checkArgument(type.equals(TYPE.FEATURETYPE),
+                checkParameter(type.equals(TYPE.FEATURETYPE),
                         "Provided reference does not resolve to a feature type: ", sFeatureTypeId);
                 outputFeatureType = (SimpleFeatureType) cli.getGeogit()
                         .command(RevObjectParse.class).setObjectId(id.get())
@@ -122,60 +109,62 @@ public class OracleExport extends AbstractOracleCommand implements CLICommand {
                             sft.isAbstract(), sft.getRestrictions(), sft.getSuper(),
                             sft.getDescription());
                 } catch (GeoToolsOpException e) {
-                    cli.getConsole().println("No features to export.");
-                    throw new CommandFailedException();
+                    throw new CommandFailedException("No features to export.", e);
                 }
             }
             try {
                 dataStore.createSchema(outputFeatureType);
             } catch (IOException e) {
-                cli.getConsole().println("Cannot create new table in database");
-                throw new CommandFailedException();
+                throw new CommandFailedException("Cannot create new table in database", e);
             }
         } else {
             if (!overwrite) {
-                cli.getConsole().println("The selected table already exists. Use -o to overwrite");
-                throw new CommandFailedException();
+                throw new CommandFailedException(
+                        "The selected table already exists. Use -o to overwrite");
             }
         }
 
         SimpleFeatureSource featureSource = dataStore.getFeatureSource(tableName);
-        if (featureSource instanceof SimpleFeatureStore) {
-            SimpleFeatureStore featureStore = (SimpleFeatureStore) featureSource;
-            if (overwrite) {
-                featureStore.removeFeatures(Filter.INCLUDE);
-            }
-            ExportOp op = cli.getGeogit().command(ExportOp.class).setFeatureStore(featureStore)
-                    .setPath(path).setFeatureTypeId(featureTypeId).setAlter(alter);
-            if (defaultType) {
-                op.exportDefaultFeatureType();
-            }
-            try {
-                op.setProgressListener(cli.getProgressListener()).call();
-            } catch (GeoToolsOpException e) {
-                switch (e.statusCode) {
-                case MIXED_FEATURE_TYPES:
-                    cli.getConsole()
-                            .println(
-                                    "The selected tree contains mixed feature types. Use --defaulttype or --featuretype <feature_type_ref> to export.");
-                    throw new CommandFailedException();
-                default:
-                    cli.getConsole().println("Could not export. Error:" + e.statusCode.name());
-                    throw new CommandFailedException();
-                }
-            }
-
-            cli.getConsole().println(path + " exported successfully to " + tableName);
-        } else {
-            cli.getConsole().println("Can't write to the selected table");
-            throw new CommandFailedException();
+        if (!(featureSource instanceof SimpleFeatureStore)) {
+            throw new CommandFailedException("Can't write to the selected table");
         }
+        SimpleFeatureStore featureStore = (SimpleFeatureStore) featureSource;
+        if (overwrite) {
+            try {
+                featureStore.removeFeatures(Filter.INCLUDE);
+            } catch (IOException e) {
+                throw new CommandFailedException("Error accessing table: " + e.getMessage(), e);
+            }
+        }
+        ExportOp op = cli.getGeogit().command(ExportOp.class).setFeatureStore(featureStore)
+                .setPath(path).setFilterFeatureTypeId(featureTypeId).setAlter(alter);
+        if (defaultType) {
+            op.exportDefaultFeatureType();
+        }
+        try {
+            op.setProgressListener(cli.getProgressListener()).call();
+        } catch (IllegalArgumentException iae) {
+            throw new org.geogit.cli.InvalidParameterException(iae.getMessage(), iae);
+        } catch (GeoToolsOpException e) {
+            switch (e.statusCode) {
+            case MIXED_FEATURE_TYPES:
+
+                throw new CommandFailedException(
+                        "The selected tree contains mixed feature types. Use --defaulttype or --featuretype <feature_type_ref> to export.",
+                        e);
+            default:
+                throw new CommandFailedException("Could not export. Error:" + e.statusCode.name(),
+                        e);
+            }
+        }
+
+        cli.getConsole().println(path + " exported successfully to " + tableName);
 
     }
 
     private SimpleFeatureType getFeatureType(String path, GeogitCLI cli) {
 
-        checkArgument(path != null, "No path specified.");
+        checkParameter(path != null, "No path specified.");
 
         String refspec;
         if (path.contains(":")) {
@@ -184,20 +173,21 @@ public class OracleExport extends AbstractOracleCommand implements CLICommand {
             refspec = "WORK_HEAD:" + path;
         }
 
-        checkArgument(!refspec.endsWith(":"), "No path specified.");
+        checkParameter(!refspec.endsWith(":"), "No path specified.");
 
         final GeoGIT geogit = cli.getGeogit();
 
         Optional<ObjectId> rootTreeId = geogit.command(ResolveTreeish.class)
                 .setTreeish(refspec.split(":")[0]).call();
 
-        checkState(rootTreeId.isPresent(), "Couldn't resolve '" + refspec + "' to a treeish object");
+        checkParameter(rootTreeId.isPresent(), "Couldn't resolve '" + refspec
+                + "' to a treeish object");
 
         RevTree rootTree = geogit.getRepository().getTree(rootTreeId.get());
         Optional<NodeRef> featureTypeTree = geogit.command(FindTreeChild.class)
                 .setChildPath(refspec.split(":")[1]).setParent(rootTree).setIndex(true).call();
 
-        checkArgument(featureTypeTree.isPresent(), "pathspec '" + refspec.split(":")[1]
+        checkParameter(featureTypeTree.isPresent(), "pathspec '" + refspec.split(":")[1]
                 + "' did not match any valid path");
 
         Optional<RevObject> revObject = cli.getGeogit().command(RevObjectParse.class)
@@ -207,12 +197,11 @@ public class OracleExport extends AbstractOracleCommand implements CLICommand {
             if (revFeatureType.type() instanceof SimpleFeatureType) {
                 return (SimpleFeatureType) revFeatureType.type();
             } else {
-                throw new IllegalArgumentException(
+                throw new InvalidParameterException(
                         "Cannot find feature type for the specified path");
             }
         } else {
-            throw new IllegalArgumentException("Cannot find feature type for the specified path");
+            throw new InvalidParameterException("Cannot find feature type for the specified path");
         }
-
     }
 }
