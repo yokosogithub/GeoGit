@@ -6019,11 +6019,6 @@ h5 {
     border-bottom: #7eb5d3 7px solid;
   }
 }
-@media (max-width: 768px) and (-webkit-min-device-pixel-ratio: 2) {
-  .navbar {
-    border-bottom: none !important;
-  }
-}
 .navbar-brand {
   background: url(../images/logo.png) no-repeat 10% 100%;
   padding-left: 125px;
@@ -6079,7 +6074,7 @@ h5 {
   background-color: #191818;
   margin-top: -35px;
 }
-@media (min-width: 480px) {
+@media (min-width: 768px) {
   .subheading {
     border-bottom: #7eb5d3 7px solid;
   }
