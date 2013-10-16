@@ -82,7 +82,7 @@ public class MongoStagingDatabase extends MongoObjectDatabase implements
         try {
             return super.getRaw(id);
         } catch (NoSuchElementException e) {
-            return repositoryDb.getRaw(id);
+            return null; // repositoryDb.getRaw(id);
         }
     }
 
