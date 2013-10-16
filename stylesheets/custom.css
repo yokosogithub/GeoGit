@@ -6268,8 +6268,8 @@ h5 {
   color: #000;
 }
 #docs .workflow_diagram {
-  height: 420px;
-  width: 402px;
+  height: 500px;
+  width: 428px;
   float: right;
 }
 @media (max-width: 992px) {
