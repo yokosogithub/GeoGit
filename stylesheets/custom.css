@@ -6072,8 +6072,12 @@ h5 {
 }
 .subheading {
   background-color: #191818;
-  border-bottom: #7eb5d3 7px solid;
   margin-top: -35px;
+}
+@media (min-width: 768px) {
+  .subheading {
+    border-bottom: #7eb5d3 7px solid;
+  }
 }
 .subheading .byline {
   font-family: 'Proxima Nova', Helvetica, Arial, sans-serif;

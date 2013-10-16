@@ -138,8 +138,12 @@ h1, h2, h3, h4, h5 {
 
 .subheading {
 	background-color: @black;
-	border-bottom: @ltblue 7px solid;
+	
 	margin-top: -35px;
+
+	@media (min-width: @screen-sm) {
+		border-bottom: @ltblue 7px solid;
+	} 
 
 	.byline {
 		font-family: 'Proxima Nova', Helvetica, Arial, sans-serif;
