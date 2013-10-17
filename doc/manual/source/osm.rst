@@ -268,7 +268,26 @@ To get all entities that have a given tag, no matter which value the tag gas, ju
  	  }
  	]}
 
-The format of the ``fields`` entries is a little tricky: the initial key is the tag to read from, and the value is a hash giving the field name and type to write to. So: ``"my_tag":{"name":"my_field", "type":"FIELD_TYPE"}``
+Any way/node that matches any of the supplied filters will pass through the rule. For instance, to get a subset of buildings and air terminals (a special case of building) use:
+
+::
+
+ 	{"rules":[
+    {
+      "name":"buildings",
+      "filter":{
+        "building":["residential","house","garage","detached","terrace","apartments"],
+        "aeroway":["terminal"]
+      },
+      "fields":{
+        "geom":{"name":"way","type":"POLYGON"},
+        "building":{"name":"building", "type":"STRING"},
+        "aeroway":{"name":"aeroway", "type":"STRING"}
+      }
+    }
+  }
+
+The format of the ``fields`` entries is a little tricky: the initial key is the tag to read from, and the value is a hash giving the field name and field type to write to. So: ``"my_tag":{"name":"my_field", "type":"FIELD_TYPE"}``
 
 Usually, ``my_tag`` and ``my_field`` will be identical, so the name of the tag is used as the field name. However, you can use a different name for the field, which will act as an alias for the tag.
 
