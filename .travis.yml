@@ -8,3 +8,8 @@ services:
 before_script: sh ./mongo_setup.sh
 notifications:
   email: false
+  irc:
+    channels:
+      - "chat.freenode.net#geogit"
+    on_success: never
+    on_failure: always
