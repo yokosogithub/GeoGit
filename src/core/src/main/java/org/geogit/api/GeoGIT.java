@@ -9,6 +9,8 @@ import static com.google.common.base.Preconditions.checkState;
 import java.io.File;
 import java.net.URL;
 
+import javax.annotation.Nullable;
+
 import org.geogit.api.plumbing.ResolveGeogitDir;
 import org.geogit.api.plumbing.diff.DiffObjectCount;
 import org.geogit.api.porcelain.InitOp;
@@ -67,9 +69,11 @@ public class GeoGIT {
      * @param workingDir the working directory for this instance of GeoGit
      * @see Injector
      */
-    public GeoGIT(final Injector injector, final File workingDir) {
+    public GeoGIT(final Injector injector, @Nullable final File workingDir) {
         this.injector = injector;
-        injector.getInstance(Platform.class).setWorkingDir(workingDir);
+        if (workingDir != null) {
+            injector.getInstance(Platform.class).setWorkingDir(workingDir);
+        }
     }
 
     /**
