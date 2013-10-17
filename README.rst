@@ -1,3 +1,5 @@
+.. image:: https://travis-ci.org/boundlessgeo/GeoGit.png?branch=master   :target: https://travis-ci.org/boundlessgeo/GeoGit
+
 ######################################################
 GeoGit - Geospatial Distributed Version Control System
 ######################################################
