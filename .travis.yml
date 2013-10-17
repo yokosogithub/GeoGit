@@ -5,7 +5,6 @@ jdk:
   - oraclejdk7
 services:
   - mongodb
-before_script: sh ./mongo_setup.sh
 notifications:
   email: false
   irc:
