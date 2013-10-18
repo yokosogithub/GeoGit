@@ -1,0 +1,6 @@
+language: java
+before_install: 
+  - cd src/parent
+  - sudo apt-get install libspatialite-dev
+
+
