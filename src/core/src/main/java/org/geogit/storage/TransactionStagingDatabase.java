@@ -1,8 +1,11 @@
+/* Copyright (c) 2013 OpenPlans. All rights reserved.
+ * This code is licensed under the BSD New License, available at the root
+ * application directory.
+ */
 package org.geogit.storage;
 
 import static org.geogit.api.Ref.append;
 
-import java.io.InputStream;
 import java.util.Iterator;
 import java.util.List;
 import java.util.UUID;
@@ -191,14 +194,6 @@ public class TransactionStagingDatabase implements StagingDatabase {
     @Override
     public boolean delete(ObjectId objectId) {
         return database.delete(objectId);
-    }
-
-    /**
-     * Pass through to the original {@link StagingDatabase}.
-     */
-    @Override
-    public boolean put(ObjectId objectId, InputStream raw) {
-        return database.put(objectId, raw);
     }
 
     /**

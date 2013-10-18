@@ -45,8 +45,7 @@ import com.tinkerpop.pipes.branch.LoopPipe.LoopBundle;
  * 
  * @param <DB>
  */
-public abstract class BlueprintsGraphDatabase<DB extends KeyIndexableGraph> extends
-        AbstractGraphDatabase {
+public abstract class BlueprintsGraphDatabase<DB extends KeyIndexableGraph> implements GraphDatabase {
 
     protected DB graphDB = null;
 

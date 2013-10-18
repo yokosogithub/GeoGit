@@ -13,7 +13,6 @@ import org.aopalliance.intercept.MethodInvocation;
 import org.geogit.api.ObjectId;
 import org.geogit.api.RevCommit;
 import org.geogit.api.RevObject;
-import org.geogit.repository.Repository;
 
 import com.google.common.base.Function;
 import com.google.common.collect.ImmutableList;
@@ -29,24 +28,15 @@ public class ObjectDatabasePutInterceptor implements MethodInterceptor {
 
     private Provider<GraphDatabase> graphDb;
 
-    private Provider<Repository> repository;
-
-    public ObjectDatabasePutInterceptor(Provider<GraphDatabase> graphDb,
-            Provider<Repository> repository) {
+    public ObjectDatabasePutInterceptor(Provider<GraphDatabase> graphDb) {
         this.graphDb = graphDb;
-        this.repository = repository;
     }
 
     @Override
     public Object invoke(MethodInvocation invocation) throws Throwable {
         final String methodName = invocation.getMethod().getName();
         if (methodName.equals("put")) {
-            if (invocation.getArguments()[0].getClass().equals(ObjectId.class)) {
-                return putObjectIdInputStreamInterceptor(invocation);
-            } else {
-                return putRevObjectInterceptor(invocation);
-            }
-
+            return putRevObjectInterceptor(invocation);
         } else if (methodName.equals("putAll")) {
             return putAllInterceptor(invocation);
         }
@@ -86,31 +76,15 @@ public class ObjectDatabasePutInterceptor implements MethodInterceptor {
         return result;
     }
 
-    private Object putObjectIdInputStreamInterceptor(MethodInvocation invocation) throws Throwable {
-        final ObjectId objectId = (ObjectId) invocation.getArguments()[0];
-        Object result = invocation.proceed();
-
-        if (repository.get().commitExists(objectId)) {
-            RevCommit commit = repository.get().getCommit(objectId);
-            ObjectId commitId = commit.getId();
-            ImmutableList<ObjectId> parentIds = commit.getParentIds();
-            graphDb.get().put(commitId, parentIds);
-        }
-
-        return result;
-    }
-
     private Object putRevObjectInterceptor(MethodInvocation invocation) throws Throwable {
         final RevObject revObject = (RevObject) invocation.getArguments()[0];
 
-        if (revObject.getType() == RevObject.TYPE.COMMIT) {
-            // add to graph database
-            RevCommit commit = (RevCommit) revObject;
-            ObjectId commitId = commit.getId();
-            ImmutableList<ObjectId> parentIds = commit.getParentIds();
-            graphDb.get().put(commitId, parentIds);
-        }
+        final boolean inserted = ((Boolean) invocation.proceed()).booleanValue();
 
-        return invocation.proceed();
+        if (inserted && RevObject.TYPE.COMMIT.equals(revObject.getType())) {
+            RevCommit commit = (RevCommit) revObject;
+            graphDb.get().put(commit.getId(), commit.getParentIds());
+        }
+        return Boolean.valueOf(inserted);
     }
 }
