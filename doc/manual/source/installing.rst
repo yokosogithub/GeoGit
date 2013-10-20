@@ -27,6 +27,12 @@ No packaged versions are currently available for GeoGit, and it has to be build 
 
 - GeoGit should now be built, and scripts ready to be run should be available in the `src/cli-app/target/geogit/bin` folder. Add that folders to your PATH environment variable, so your system can find it and you can call GeoGit from the console.
 
+-To skip the tests during build process, use the following.
+
+::
+
+	$mvn clean install -DskipTests
+
 -To test that GeoGit is ready to be used, open a console and type ``geogit help``. You should see a list of available commands like the one shown below.
 
 ::
