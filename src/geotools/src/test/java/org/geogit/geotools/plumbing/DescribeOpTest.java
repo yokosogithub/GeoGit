@@ -2,7 +2,7 @@
  * This code is licensed under the BSD New License, available at the root
  * application directory.
  */
-package org.geogit.geotools.plubming;
+package org.geogit.geotools.plumbing;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;

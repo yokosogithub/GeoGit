@@ -4,8 +4,6 @@
  */
 package org.geogit.repository;
 
-import java.io.IOException;
-import java.io.InputStream;
 import java.util.Map;
 
 import org.geogit.api.AbstractGeoGitOp;

@@ -8,19 +8,17 @@ import java.io.File;
 
 public class TestPlatform extends DefaultPlatform implements Platform {
 
-    private File workingDirectory;
-
     private File userHomeDirectory;
 
     public TestPlatform(final File workingDirectory) {
-        this.workingDirectory = workingDirectory;
+        super.workingDir= workingDirectory;
         this.userHomeDirectory = new File(workingDirectory, "userhome");
         this.userHomeDirectory.mkdir();
     }
 
     @Override
     public File pwd() {
-        return workingDirectory;
+        return workingDir;
     }
 
     @Override
