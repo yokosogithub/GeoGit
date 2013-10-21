@@ -29,11 +29,13 @@ import javax.annotation.Nullable;
 import org.geogit.api.ObjectId;
 import org.geogit.api.RevObject;
 import org.geogit.storage.AbstractObjectDatabase;
+import org.geogit.storage.ConfigDatabase;
 import org.geogit.storage.ObjectDatabase;
 import org.geogit.storage.ObjectSerializingFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
 import com.google.common.collect.Iterators;
@@ -69,13 +71,19 @@ public class JEObjectDatabase extends AbstractObjectDatabase implements ObjectDa
 
     private Database objectDb;
 
+    private ConfigDatabase configDB;
+
     @Nullable
     private CurrentTransaction txn;
 
     @Inject
-    public JEObjectDatabase(final ObjectSerializingFactory serialFactory,
-            final EnvironmentBuilder envProvider) {
+    public JEObjectDatabase(
+        final ConfigDatabase configDB,
+        final ObjectSerializingFactory serialFactory,
+        final EnvironmentBuilder envProvider)
+    {
         super(serialFactory);
+        this.configDB = configDB;
         this.envProvider = envProvider;
     }
 
@@ -137,6 +145,10 @@ public class JEObjectDatabase extends AbstractObjectDatabase implements ObjectDa
             return;
         }
         // System.err.println("OPEN");
+        String configuredDB = configDB.get("storage.objects", String.class).orNull();
+        if (!"bdbje".equals(configuredDB)) {
+            throw new IllegalStateException("Configured database is not BDBJE: " + configuredDB);
+        }
         Environment environment = getEnvironment();
         LOGGER.debug("Opening ObjectDatabase at {}", env.getHome());
         {
@@ -452,4 +464,15 @@ public class JEObjectDatabase extends AbstractObjectDatabase implements ObjectDa
         }
         return count;
     }
+
+	@Override
+	public void configure() {
+		Optional<String> storageName = configDB.get("storage.objects");
+		Optional<String> storageVersion = configDB.get("bdbje.version");
+		if (storageName.isPresent() || storageVersion.isPresent()) {
+			throw new IllegalStateException("Cannot initialize object database, it is already initialized");
+		}
+		configDB.put("storage.objects", "bdbje");
+		configDB.put("bdbje.veresion", "0.1");
+	}
 }

@@ -23,10 +23,15 @@ import org.geogit.api.RevTree;
 public interface ObjectDatabase {
 
     /**
-     * Initializes/opens the databse. It's safe to call this method multiple times, and only the
+     * Opens the database. It's safe to call this method multiple times, and only the
      * first call shall take effect.
      */
     public void open();
+
+    /**
+     * Performs any setup required before first open, including setting default configuration.
+     */
+    public void configure();
 
     /**
      * @return true if the database is open, false otherwise

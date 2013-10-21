@@ -432,4 +432,9 @@ public class JEStagingDatabase implements ObjectDatabase, StagingDatabase {
         return this.stagingDb.deleteAll(ids);
     }
 
+	@Override
+	public void configure() {
+		// TODO Auto-generated method stub
+		
+	}
 }

@@ -22,9 +22,11 @@ import org.geogit.api.ObjectId;
 import org.geogit.api.Platform;
 import org.geogit.api.plumbing.ResolveGeogitDir;
 import org.geogit.storage.AbstractObjectDatabase;
+import org.geogit.storage.ConfigDatabase;
 import org.geogit.storage.ObjectDatabase;
 import org.geogit.storage.ObjectSerializingFactory;
 
+import com.google.common.base.Optional;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableList.Builder;
@@ -39,6 +41,8 @@ import com.google.inject.Inject;
 public class FileObjectDatabase extends AbstractObjectDatabase implements ObjectDatabase {
 
     private final Platform platform;
+    
+    private final ConfigDatabase configDB;
 
     private final String databaseName;
 
@@ -52,17 +56,18 @@ public class FileObjectDatabase extends AbstractObjectDatabase implements Object
      * @param platform the platform to use.
      */
     @Inject
-    public FileObjectDatabase(final Platform platform, final ObjectSerializingFactory serialFactory) {
-        this(platform, "objects", serialFactory);
+    public FileObjectDatabase(final Platform platform, final ObjectSerializingFactory serialFactory, final ConfigDatabase configDB) {
+        this(platform, "objects", serialFactory, configDB);
     }
 
     protected FileObjectDatabase(final Platform platform, final String databaseName,
-            final ObjectSerializingFactory serialFactory) {
+            final ObjectSerializingFactory serialFactory, final ConfigDatabase configDB) {
         super(serialFactory);
         checkNotNull(platform);
         checkNotNull(databaseName);
         this.platform = platform;
         this.databaseName = databaseName;
+        this.configDB = configDB;
     }
 
     protected File getDataRoot() {
@@ -250,4 +255,18 @@ public class FileObjectDatabase extends AbstractObjectDatabase implements Object
         throw new UnsupportedOperationException(
                 "This method is not yet implemented");        
     }
+
+	@Override
+	public void configure() {
+		Optional<String> storageName = configDB.get("storage.objects");
+		Optional<String> storageVersion = configDB.get("filestorage.version");
+		if (storageName.isPresent()) {
+			throw new IllegalStateException("Trying to initialize already initialized ObjectDatabase");
+		}
+		if (storageVersion.isPresent() && !"1.0".equals(storageVersion.get())) {
+			throw new IllegalStateException("Trying to initialize already initialized ObjectDatabase");
+		}
+		configDB.put("storage.objects", "file");
+		configDB.put("filestorage.version", "1.0");
+	}
 }

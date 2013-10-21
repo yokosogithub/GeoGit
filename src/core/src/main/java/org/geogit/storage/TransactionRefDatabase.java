@@ -274,4 +274,9 @@ public class TransactionRefDatabase implements RefDatabase {
         return txValue;
     }
 
+	@Override
+	public void configure() {
+		// No-op
+	}
+
 }

@@ -22,6 +22,11 @@ public interface GraphDatabase {
     public void open();
 
     /**
+     * Perform GeoGit configuration before the first connection to the database.
+     */
+    public void configure();
+
+    /**
      * @return true if the database is open, false otherwise
      */
     public boolean isOpen();

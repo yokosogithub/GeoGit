@@ -21,7 +21,9 @@ import org.geogit.api.ObjectId;
 import org.geogit.api.Platform;
 import org.geogit.api.plumbing.ResolveGeogitDir;
 import org.geogit.storage.AbstractRefDatabase;
+import org.geogit.storage.ConfigDatabase;
 
+import com.google.common.base.Optional;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
@@ -36,7 +38,9 @@ public class FileRefDatabase extends AbstractRefDatabase {
 
     private static final Charset CHARSET = Charset.forName("UTF-8");
 
-    private Platform platform;
+    private final Platform platform;
+
+	private final ConfigDatabase configDB;
 
     /**
      * Constructs a new {@code FileRefDatabase} with the given platform.
@@ -44,8 +48,9 @@ public class FileRefDatabase extends AbstractRefDatabase {
      * @param platform the platform to use
      */
     @Inject
-    public FileRefDatabase(Platform platform) {
+    public FileRefDatabase(Platform platform, ConfigDatabase configDB) {
         this.platform = platform;
+        this.configDB = configDB;
     }
 
     /**
@@ -316,4 +321,14 @@ public class FileRefDatabase extends AbstractRefDatabase {
         }
     }
 
+	@Override
+	public void configure() {
+		Optional<String> storageName = configDB.get("storage.refs");
+		Optional<String> storageVersion = configDB.get("filestorage.version");
+		if (storageName.isPresent() || storageVersion.isPresent()) {
+			throw new IllegalStateException("Trying to initialize already initialized RefDatbase");
+		}
+		configDB.put("storage.refs", "file");
+		configDB.put("filestorage.version", "1.0");
+	}
 }
