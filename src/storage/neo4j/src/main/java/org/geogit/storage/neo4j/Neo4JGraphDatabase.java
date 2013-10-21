@@ -7,6 +7,7 @@ package org.geogit.storage.neo4j;
 import java.util.Map;
 
 import org.geogit.api.Platform;
+import org.geogit.repository.RepositoryConnectionException;
 import org.geogit.storage.ConfigDatabase;
 import org.geogit.storage.TransactionalBlueprintsGraphDatabase;
 
@@ -41,32 +42,11 @@ public class Neo4JGraphDatabase extends TransactionalBlueprintsGraphDatabase<Neo
 
 	@Override
 	public void configure() {
-		Optional<String> storageName = configDB.get("storage.graph");
-		Optional<String> storageVersion = configDB.get("neo4j.version");
-		if (storageName.isPresent()) {
-			throw new IllegalStateException("Initializing already initialized graph database");
-		}
-		if (storageVersion.isPresent() && !"0.1".equals(storageVersion.get())) {
-			throw new IllegalStateException("Initializing already initialized graph database");
-		}
-		configDB.put("storage.graph", "neo4j");
-		configDB.put("neo4j.version", "0.1");
+	    RepositoryConnectionException.StorageType.GRAPH.configure(configDB, "neo4j", "0.1");
 	}
 	
     @Override
     public void checkConfig() {
-        Optional<String> storageName = configDB.get("storage.graph");
-        Optional<String> storageVersion = configDB.get("neo4j.version");
-        boolean unset = !(storageName.isPresent() || storageVersion.isPresent());
-        boolean valid = 
-                storageName.isPresent() && "neo4j".equals(storageName.get()) &&
-                storageVersion.isPresent() && "0.1".equals(storageVersion.get());
-        if (!(unset || valid)) {
-            throw new IllegalStateException(
-                    "Cannot open staging database with format: neo4j and version: 0.1, found format: "
-                            + storageName.orNull()
-                            + ", version: "
-                            + storageVersion.orNull());
-        }
+        RepositoryConnectionException.StorageType.GRAPH.verify(configDB,  "neo4j", "0.1");
     }
 }

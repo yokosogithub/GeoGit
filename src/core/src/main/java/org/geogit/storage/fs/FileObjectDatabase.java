@@ -21,6 +21,7 @@ import java.util.List;
 import org.geogit.api.ObjectId;
 import org.geogit.api.Platform;
 import org.geogit.api.plumbing.ResolveGeogitDir;
+import org.geogit.repository.RepositoryConnectionException;
 import org.geogit.storage.AbstractObjectDatabase;
 import org.geogit.storage.ConfigDatabase;
 import org.geogit.storage.ObjectDatabase;
@@ -258,32 +259,11 @@ public class FileObjectDatabase extends AbstractObjectDatabase implements Object
 
 	@Override
 	public void configure() {
-		Optional<String> storageName = configDB.get("storage.objects");
-		Optional<String> storageVersion = configDB.get("filestorage.version");
-		if (storageName.isPresent()) {
-			throw new IllegalStateException("Trying to initialize already initialized ObjectDatabase");
-		}
-		if (storageVersion.isPresent() && !"1.0".equals(storageVersion.get())) {
-			throw new IllegalStateException("Trying to initialize already initialized ObjectDatabase");
-		}
-		configDB.put("storage.objects", "file");
-		configDB.put("filestorage.version", "1.0");
+	    RepositoryConnectionException.StorageType.OBJECT.configure(configDB, "file", "1.0");
 	}
 	
 	@Override
 	public void checkConfig() {
-		Optional<String> storageName = configDB.get("storage.objects");
-		Optional<String> storageVersion = configDB.get("filestorage.version");
-		boolean unset = !storageName.isPresent() || !storageVersion.isPresent();
-		boolean valid =
-				 storageName.isPresent() && "file".equals(storageName.get()) &&
-				 storageVersion.isPresent() && "1.0".equals(storageVersion.get());
-		if (!unset && !valid) {
-			throw new IllegalStateException(
-					"Attempting to open object database with wrong reader. Have format: file, version: 1.0, but found format: "
-							+ storageName.orNull()
-							+ ", version: "
-							+ storageVersion.orNull());
-		}
+	    RepositoryConnectionException.StorageType.OBJECT.verify(configDB, "file", "1.0");
 	}
 }

@@ -26,6 +26,7 @@ import org.geogit.api.RevTag;
 import org.geogit.api.RevTree;
 import org.geogit.api.plumbing.ResolveGeogitDir;
 import org.geogit.api.plumbing.merge.Conflict;
+import org.geogit.repository.RepositoryConnectionException;
 import org.geogit.storage.ConfigDatabase;
 import org.geogit.storage.ObjectDatabase;
 import org.geogit.storage.ObjectInserter;
@@ -439,33 +440,11 @@ public class JEStagingDatabase implements ObjectDatabase, StagingDatabase {
 
     @Override
     public void configure() {
-        Optional<String> storageName = configDB.get("storage.staging");
-        Optional<String> storageVersion = configDB.get("bdbje.version");
-        if (storageName.isPresent()) {
-            throw new IllegalStateException("Cannot initialize staging database, it is already initialized" + storageName + storageVersion);
-        }
-        if (storageVersion.isPresent() && !"0.1".equals(storageVersion.get())) {
-            throw new IllegalStateException("Cannot initialize staging database, it is already initialized" + storageName + storageVersion);
-        }
-
-        configDB.put("storage.staging", "bdbje");
-        configDB.put("bdbje.version", "0.1");
+        RepositoryConnectionException.StorageType.STAGING.configure(configDB, "bdbje", "0.1");
     }
     
     @Override
     public void checkConfig() {
-        Optional<String> storageName = configDB.get("storage.staging");
-        Optional<String> storageVersion = configDB.get("bdbje.version");
-        boolean unset = !(storageName.isPresent() || storageVersion.isPresent());
-        boolean valid = 
-                storageName.isPresent() && "bdbje".equals(storageName.get()) &&
-                storageVersion.isPresent() && "0.1".equals(storageVersion.get());
-        if (!(unset || valid)) {
-            throw new IllegalStateException(
-                    "Cannot open staging database with format: bdbje and version: 0.1, found format: "
-                            + storageName.orNull()
-                            + ", version: "
-                            + storageVersion.orNull());
-        }
+        RepositoryConnectionException.StorageType.STAGING.verify(configDB, "bdbje", "0.1");
     }
 }

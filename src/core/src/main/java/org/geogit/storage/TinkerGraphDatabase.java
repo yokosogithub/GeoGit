@@ -5,6 +5,7 @@
 package org.geogit.storage;
 
 import org.geogit.api.Platform;
+import org.geogit.repository.RepositoryConnectionException;
 
 import com.google.common.base.Optional;
 import com.google.inject.Inject;
@@ -34,29 +35,11 @@ public class TinkerGraphDatabase extends BlueprintsGraphDatabase<TinkerGraph> {
     
     @Override
     public void configure() {
-    	Optional<String> storageName = configDB.get("storage.graph");
-    	Optional<String> storageVersion = configDB.get("tinkergraph.version");
-    	if (storageName.isPresent() || storageVersion.isPresent()) {
-    		throw new IllegalStateException("Initializing graph database when it is already initialized!");
-    	}
-    	configDB.put("storage.graph", "tinkergraph");
-    	configDB.put("tinkergraph.version", "0.1");
+        RepositoryConnectionException.StorageType.GRAPH.configure(configDB, "tinkergraph", "0.1");
     }
     
     @Override
     public void checkConfig() {
-        Optional<String> storageName = configDB.get("storage.graph");
-        Optional<String> storageVersion = configDB.get("tinkergraph.version");
-        boolean unset = !(storageName.isPresent() || storageVersion.isPresent());
-        boolean valid = 
-                storageName.isPresent() && "tinkergraph".equals(storageName.get()) &&
-                storageVersion.isPresent() && "0.1".equals(storageVersion.get());
-        if (!(unset || valid)) {
-            throw new IllegalStateException(
-                    "Cannot open staging database with format: tinkergraph and version: 0.1, found format: "
-                            + storageName.orNull()
-                            + ", version: "
-                            + storageVersion.orNull());
-        }
+        RepositoryConnectionException.StorageType.GRAPH.verify(configDB, "tinkergraph", "0.1");
     }
 }
