@@ -42,4 +42,21 @@ public class TinkerGraphDatabase extends BlueprintsGraphDatabase<TinkerGraph> {
     	configDB.put("storage.graph", "tinkergraph");
     	configDB.put("tinkergraph.version", "0.1");
     }
+    
+    @Override
+    public void checkConfig() {
+        Optional<String> storageName = configDB.get("storage.graph");
+        Optional<String> storageVersion = configDB.get("tinkergraph.version");
+        boolean unset = !(storageName.isPresent() || storageVersion.isPresent());
+        boolean valid = 
+                storageName.isPresent() && "tinkergraph".equals(storageName.get()) &&
+                storageVersion.isPresent() && "0.1".equals(storageVersion.get());
+        if (!(unset || valid)) {
+            throw new IllegalStateException(
+                    "Cannot open staging database with format: tinkergraph and version: 0.1, found format: "
+                            + storageName.orNull()
+                            + ", version: "
+                            + storageVersion.orNull());
+        }
+    }
 }

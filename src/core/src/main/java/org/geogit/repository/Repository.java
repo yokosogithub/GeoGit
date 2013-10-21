@@ -83,6 +83,10 @@ public class Repository implements CommandLocator {
     }
 
     public void open() {
+    	refDatabase.checkConfig();
+    	objectDatabase.checkConfig();
+    	graphDatabase.checkConfig();
+    	index.getDatabase().checkConfig();
         refDatabase.create();
         objectDatabase.open();
         graphDatabase.open();

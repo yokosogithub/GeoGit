@@ -145,10 +145,6 @@ public class JEObjectDatabase extends AbstractObjectDatabase implements ObjectDa
             return;
         }
         // System.err.println("OPEN");
-        String configuredDB = configDB.get("storage.objects", String.class).orNull();
-        if (!"bdbje".equals(configuredDB)) {
-            throw new IllegalStateException("Configured database is not BDBJE: " + configuredDB);
-        }
         Environment environment = getEnvironment();
         LOGGER.debug("Opening ObjectDatabase at {}", env.getHome());
         {
@@ -469,10 +465,31 @@ public class JEObjectDatabase extends AbstractObjectDatabase implements ObjectDa
 	public void configure() {
 		Optional<String> storageName = configDB.get("storage.objects");
 		Optional<String> storageVersion = configDB.get("bdbje.version");
-		if (storageName.isPresent() || storageVersion.isPresent()) {
-			throw new IllegalStateException("Cannot initialize object database, it is already initialized");
+		if (storageName.isPresent()) {
+			throw new IllegalStateException("Cannot initialize object database, it is already initialized" + storageName + storageVersion);
 		}
+		if (storageVersion.isPresent() && !"0.1".equals(storageVersion.get())) {
+		    throw new IllegalStateException("Cannot initialize object database, it is already initialized" + storageName + storageVersion);
+		}
+
 		configDB.put("storage.objects", "bdbje");
-		configDB.put("bdbje.veresion", "0.1");
+		configDB.put("bdbje.version", "0.1");
+	}
+	
+	@Override
+	public void checkConfig() {
+	    Optional<String> storageName = configDB.get("storage.objects");
+	    Optional<String> storageVersion = configDB.get("bdbje.version");
+	    boolean unset = !(storageName.isPresent() || storageVersion.isPresent());
+	    boolean valid = 
+	            storageName.isPresent() && "bdbje".equals(storageName.get()) &&
+	            storageVersion.isPresent() && "0.1".equals(storageVersion.get());
+	    if (!(unset || valid)) {
+            throw new IllegalStateException(
+                    "Cannot open object database with format: bdbje and version: 0.1, found format: "
+                            + storageName.orNull()
+                            + ", version: "
+                            + storageVersion.orNull());
+	    }
 	}
 }

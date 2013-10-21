@@ -24,6 +24,11 @@ public interface RefDatabase {
     public abstract void configure();
 
     /**
+     * Verify the configuration before opening.
+     */
+	public abstract void checkConfig();
+
+    /**
      * Unlocks access to the main repository refs.
      */
     public abstract void unlock();

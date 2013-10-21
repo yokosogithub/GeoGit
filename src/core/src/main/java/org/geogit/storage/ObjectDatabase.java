@@ -34,6 +34,11 @@ public interface ObjectDatabase {
     public void configure();
 
     /**
+     * Verify the configuration before opening the database.
+     */
+    public void checkConfig();
+    
+    /**
      * @return true if the database is open, false otherwise
      */
     public boolean isOpen();

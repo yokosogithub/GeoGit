@@ -269,4 +269,21 @@ public class FileObjectDatabase extends AbstractObjectDatabase implements Object
 		configDB.put("storage.objects", "file");
 		configDB.put("filestorage.version", "1.0");
 	}
+	
+	@Override
+	public void checkConfig() {
+		Optional<String> storageName = configDB.get("storage.objects");
+		Optional<String> storageVersion = configDB.get("filestorage.version");
+		boolean unset = !storageName.isPresent() || !storageVersion.isPresent();
+		boolean valid =
+				 storageName.isPresent() && "file".equals(storageName.get()) &&
+				 storageVersion.isPresent() && "1.0".equals(storageVersion.get());
+		if (!unset && !valid) {
+			throw new IllegalStateException(
+					"Attempting to open object database with wrong reader. Have format: file, version: 1.0, but found format: "
+							+ storageName.orNull()
+							+ ", version: "
+							+ storageVersion.orNull());
+		}
+	}
 }

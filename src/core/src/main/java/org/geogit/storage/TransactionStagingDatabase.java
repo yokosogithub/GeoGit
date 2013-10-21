@@ -258,4 +258,9 @@ public class TransactionStagingDatabase implements StagingDatabase {
 	public void configure() {
 		// No-op
 	}
+	
+	@Override
+	public void checkConfig() {
+	    // No-op
+	}
 }

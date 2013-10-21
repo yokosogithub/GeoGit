@@ -168,4 +168,9 @@ public class HeapRefDatabase extends AbstractRefDatabase {
     public void configure() {
         // No-op
     }
+    
+    @Override
+    public void checkConfig() {
+        // No-op
+    }
 }

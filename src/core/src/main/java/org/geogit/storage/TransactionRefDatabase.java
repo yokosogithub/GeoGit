@@ -278,5 +278,9 @@ public class TransactionRefDatabase implements RefDatabase {
 	public void configure() {
 		// No-op
 	}
-
+	
+	@Override
+	public void checkConfig() {
+	    // No-op
+	}
 }

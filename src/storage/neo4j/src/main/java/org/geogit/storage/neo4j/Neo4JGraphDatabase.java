@@ -52,4 +52,21 @@ public class Neo4JGraphDatabase extends TransactionalBlueprintsGraphDatabase<Neo
 		configDB.put("storage.graph", "neo4j");
 		configDB.put("neo4j.version", "0.1");
 	}
+	
+    @Override
+    public void checkConfig() {
+        Optional<String> storageName = configDB.get("storage.graph");
+        Optional<String> storageVersion = configDB.get("neo4j.version");
+        boolean unset = !(storageName.isPresent() || storageVersion.isPresent());
+        boolean valid = 
+                storageName.isPresent() && "neo4j".equals(storageName.get()) &&
+                storageVersion.isPresent() && "0.1".equals(storageVersion.get());
+        if (!(unset || valid)) {
+            throw new IllegalStateException(
+                    "Cannot open staging database with format: neo4j and version: 0.1, found format: "
+                            + storageName.orNull()
+                            + ", version: "
+                            + storageVersion.orNull());
+        }
+    }
 }

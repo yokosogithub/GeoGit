@@ -26,6 +26,7 @@ import org.geogit.api.RevTag;
 import org.geogit.api.RevTree;
 import org.geogit.api.plumbing.ResolveGeogitDir;
 import org.geogit.api.plumbing.merge.Conflict;
+import org.geogit.storage.ConfigDatabase;
 import org.geogit.storage.ObjectDatabase;
 import org.geogit.storage.ObjectInserter;
 import org.geogit.storage.ObjectSerializingFactory;
@@ -96,6 +97,8 @@ public class JEStagingDatabase implements ObjectDatabase, StagingDatabase {
 
     private Platform platform;
 
+    private ConfigDatabase configDB;
+
     /**
      * @param referenceDatabase the repository reference database, used to get the head re
      * @param repoDb
@@ -104,12 +107,14 @@ public class JEStagingDatabase implements ObjectDatabase, StagingDatabase {
     @Inject
     public JEStagingDatabase(final ObjectSerializingFactory sfac,
             final ObjectDatabase repositoryDb, final EnvironmentBuilder envBuilder,
-            final Platform platform) {
+            final Platform platform,
+            final ConfigDatabase configDB) {
         this.sfac = sfac;
         this.repositoryDb = repositoryDb;
         this.envProvider = envBuilder;
         this.platform = platform;
         this.envProvider.setIsStagingDatabase(true);
+        this.configDB = configDB;
     }
 
     @Override
@@ -432,9 +437,35 @@ public class JEStagingDatabase implements ObjectDatabase, StagingDatabase {
         return this.stagingDb.deleteAll(ids);
     }
 
-	@Override
-	public void configure() {
-		// TODO Auto-generated method stub
-		
-	}
+    @Override
+    public void configure() {
+        Optional<String> storageName = configDB.get("storage.staging");
+        Optional<String> storageVersion = configDB.get("bdbje.version");
+        if (storageName.isPresent()) {
+            throw new IllegalStateException("Cannot initialize staging database, it is already initialized" + storageName + storageVersion);
+        }
+        if (storageVersion.isPresent() && !"0.1".equals(storageVersion.get())) {
+            throw new IllegalStateException("Cannot initialize staging database, it is already initialized" + storageName + storageVersion);
+        }
+
+        configDB.put("storage.staging", "bdbje");
+        configDB.put("bdbje.version", "0.1");
+    }
+    
+    @Override
+    public void checkConfig() {
+        Optional<String> storageName = configDB.get("storage.staging");
+        Optional<String> storageVersion = configDB.get("bdbje.version");
+        boolean unset = !(storageName.isPresent() || storageVersion.isPresent());
+        boolean valid = 
+                storageName.isPresent() && "bdbje".equals(storageName.get()) &&
+                storageVersion.isPresent() && "0.1".equals(storageVersion.get());
+        if (!(unset || valid)) {
+            throw new IllegalStateException(
+                    "Cannot open staging database with format: bdbje and version: 0.1, found format: "
+                            + storageName.orNull()
+                            + ", version: "
+                            + storageVersion.orNull());
+        }
+    }
 }
