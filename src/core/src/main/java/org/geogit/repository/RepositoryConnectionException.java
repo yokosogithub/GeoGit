@@ -45,11 +45,11 @@ public class RepositoryConnectionException extends RuntimeException {
             Optional<String> storageVersion = configDB.get(formatName + ".version");                              
             boolean unset = !(storageName.isPresent() || storageVersion.isPresent());
             boolean valid = 
-                    storageName.isPresent() && key.equals(storageName.get()) &&
+                    storageName.isPresent() && formatName.equals(storageName.get()) &&
                     storageVersion.isPresent() && version.equals(storageVersion.get());
             if (!(unset || valid)) {
                 throw new RepositoryConnectionException(
-                        "Cannot open " + key + "database with format: " + key + " and version: " + version + ", found format: "
+                        "Cannot open " + key + " database with format: " + formatName + " and version: " + version + ", found format: "
                                 + storageName.orNull()
                                 + ", version: "
                                 + storageVersion.orNull());
