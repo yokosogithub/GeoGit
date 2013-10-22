@@ -158,9 +158,6 @@
 {%- block extrahead %}{% endblock %}
 </head>
 <body class="{{pagename}}">
-
-
-  <body>
     <div id="blacktop"></div>
     <header id="masthead">
       <div class="navbar">
@@ -194,7 +191,8 @@
       </div>
     </section>
     
-    <section id="main">
+
+  <div id="main">
     <div class="wrap selfclear">
       <div id="content">
       {%- block breadcrumbbar %}{{ breadcrumbs() }}{% endblock %}
@@ -215,9 +213,9 @@
       </div><!-- /#content> -->
 {%- block sidebar %}{{ sidebar() }}{% endblock %}
   </div><!-- /.wrap> -->
+</div><!-- /#main -->
 
-    </section>
-
+{%- block footer %}
     <footer>
       <div class="container">
         <div class="row">
@@ -225,7 +223,7 @@
         </div>
       </div>
     </footer>
-
+{%- endblock %}
 
      <!-- Bootstrap core JavaScript -->
     <script src="{{ pathto('_static/jquery.js', 1) }}" ></script>
