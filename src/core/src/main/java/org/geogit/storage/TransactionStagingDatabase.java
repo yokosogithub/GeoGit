@@ -176,7 +176,7 @@ public class TransactionStagingDatabase implements StagingDatabase {
      * Pass through to the original {@link StagingDatabase}.
      */
     @Override
-    public <T extends RevObject> boolean put(T object) {
+    public boolean put(RevObject object) {
         return database.put(object);
     }
 
