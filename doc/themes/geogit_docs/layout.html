@@ -193,9 +193,12 @@
     </section>
     
 
-  <div id="main">
+ <div id="main">
     <div class="wrap selfclear">
       <div id="content">
+      <div class="container">
+        <div class="row">
+          <div class="col-md-7"> 
       {%- block breadcrumbbar %}{{ breadcrumbs() }}{% endblock %}
       {%- block rellinkbar %}{{ rellinkbar() }}{% endblock %}
       {%- block document %}
@@ -214,6 +217,7 @@
       </div><!-- /#content> -->
 {%- block sidebar %}{{ sidebar() }}{% endblock %}
   </div><!-- /.wrap> -->
+</div></div>
 </div><!-- /#main -->
 
 {%- block footer %}
