@@ -119,6 +119,7 @@
     };
   </script>
   <script type="text/javascript" src="{{ pathto('_static/jquery.js', 1) }}"></script>
+  <script type="text/javascript" src="{{ pathto('_static/bootstrap.js', 1) }}" ></script>
   <script type="text/javascript" src="{{ pathto('_static/doctools.js', 1) }}"></script>
   <script type="text/javascript" src="{{ pathto('_static/searchtools.js', 1) }}"></script>
   <script type="text/javascript" src="{{ pathto('searchindex.js', 1) }}"></script>
@@ -192,9 +193,12 @@
     </section>
     
 
-  <div id="main">
+ <div id="main">
     <div class="wrap selfclear">
       <div id="content">
+      <div class="container">
+        <div class="row">
+          <div class="col-md-7"> 
       {%- block breadcrumbbar %}{{ breadcrumbs() }}{% endblock %}
       {%- block rellinkbar %}{{ rellinkbar() }}{% endblock %}
       {%- block document %}
@@ -213,6 +217,7 @@
       </div><!-- /#content> -->
 {%- block sidebar %}{{ sidebar() }}{% endblock %}
   </div><!-- /.wrap> -->
+</div></div>
 </div><!-- /#main -->
 
 {%- block footer %}
@@ -225,9 +230,6 @@
     </footer>
 {%- endblock %}
 
-     <!-- Bootstrap core JavaScript -->
-    <script src="{{ pathto('_static/jquery.js', 1) }}" ></script>
-    <script src="{{ pathto('_static/bootstrap.js', 1) }}" ></script>
   </body>
 </html>
 
