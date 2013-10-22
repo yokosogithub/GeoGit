@@ -1,7 +1,7 @@
-.. _installing:
+.. _start.installation:
 
 Installation
-=============
+============
 
 This section describes the steps needed to install GeoGit.
 

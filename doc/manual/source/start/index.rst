@@ -9,5 +9,5 @@ This section will introduce you to GeoGit, including installation and a tutorial
    :maxdepth: 2
 
    intro
-   installing
-   quickstart
+   installation
+   tutorial
