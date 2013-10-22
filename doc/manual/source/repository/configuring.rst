@@ -1,7 +1,7 @@
-.. _configuring:
+.. _advconfig:
 
 Advanced configuration
-========================
+======================
 
 This section describes some advanced ideas to configure GeoGit.
 

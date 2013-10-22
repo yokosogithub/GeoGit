@@ -190,7 +190,9 @@ The ``merge`` command accepts more than one single branch name as entry. If seve
 If you are in one of the above cases, you will have to merge branches individually, solving conflicts for each of them before merging the next branch. Notice that, as it was mentioned, this might be the case even if there are no conflicts but the same feature has been modified by several branches.
 
 Notice that, in the case of an octopus merge, the merge process is not even started, so non-conflicting changes are not added, and there will be no unmerged elements in the index. The check is performed before the actual merge operation starts, and the current scenario has some of the situations mentioned above, GeoGit stops and tells the user that the operation should be run separately for each branch.
-It uses the same syntax as the ``diff`` command, which is described in the `Showing differences`_  section. This makes it easier to see why the conflict arises and how to solve it.
+It uses the same syntax as the ``diff`` command, which is described in the showing differences section. This makes it easier to see why the conflict arises and how to solve it.
+
+.. todo:: Add link to "Showing differences" section.
 
 
 Staging a merged version of an unmerged (conflicted) element. 
