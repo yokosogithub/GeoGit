@@ -21,8 +21,8 @@ The following is a brief introduction to how GeoGit works and how it handles you
 GeoGit stores its content in a repository which has three areas: the **working tree**, the **staging area**, and the **database**.
 
 * The **working tree** is the area of the repository where the work is actually done on the data. Data in the working tree is not part of a defined version, but instead can be edited and altered before turning it into a new version that will be safely stored. This means that if you put data on the working tree and then edit it (without copying it to the repository database), the version prior to those edits cannot be recovered.
-- The **staging area**, sometimes also referred as the "index," is an intermediate area where data is stored before moving it to the database. Data in the staging area is said to be "staged for committing.""
-- The **database** is where the history of the repository is stored, and also all the versions that have been defined.
+* The **staging area**, sometimes also referred as the "index," is an intermediate area where data is stored before moving it to the database. Data in the staging area is said to be "staged for committing."
+* The **database** is where the history of the repository is stored, and also all the versions that have been defined.
 
 Workflow
 --------
@@ -52,7 +52,6 @@ For features not modified from one version to another, the corresponding objects
 
 .. todo:: The following figure explains this idea. 
 
-
 Collaboration
 -------------
 
@@ -64,6 +63,6 @@ The following image shows an extended version of the GeoGit workflow presented b
 
 **GeoGit works independently of the storage format that you use for your data.** It handles only the versioning, ensuring that each revision is stored safely and can be recovered when needed it.
 
-.. todo:: This statement is unclear: Your repository might share data with the repository of another collaborator, and you can both edit that data and work on it separately. Once your work is complete and your data ready to be included in a new version, GeoGit will do its work, since it integrates orthogonally with applications and data formats.
+.. todo:: This statement is unclear: "Your repository might share data with the repository of another collaborator, and you can both edit that data and work on it separately. Once your work is complete and your data ready to be included in a new version, GeoGit will do its work, since it integrates orthogonally with applications and data formats."
 
 
