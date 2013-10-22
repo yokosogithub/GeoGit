@@ -33,6 +33,7 @@ import org.geogit.api.Platform;
 import org.geogit.api.plumbing.ResolveGeogitDir;
 import org.geogit.api.porcelain.ConfigException;
 import org.geogit.api.porcelain.ConfigGet;
+import org.geogit.repository.RepositoryConnectionException;
 import org.geotools.util.DefaultProgressListener;
 import org.opengis.util.ProgressListener;
 import org.slf4j.Logger;
@@ -493,7 +494,11 @@ public class GeogitCLI {
                 }
             }
 
-            cliCommand.run(this);
+            try {
+                cliCommand.run(this);
+            } catch (RepositoryConnectionException e) {
+                throw new CommandFailedException(e.getMessage(), e);
+            }
             getConsole().flush();
         }
     }
