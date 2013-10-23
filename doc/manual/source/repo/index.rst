@@ -9,8 +9,8 @@ This section will discuss working with GeoGit repositories.
    :maxdepth: 2
 
    init
-   branches
    config
+   branches
    configuring
    exploring
    hooks
@@ -18,4 +18,4 @@ This section will discuss working with GeoGit repositories.
    modifying
    partial_cloning
    remotes
-   structure
+   elements
