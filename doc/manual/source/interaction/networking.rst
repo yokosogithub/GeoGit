@@ -72,8 +72,8 @@ GeoServer can be built with GeoGit support enabling a GeoGit repository to be ex
 Building GeoServer/GeoTools GeoGit Extension
 --------------------------------------------
 
-The GeoGit module is not currently included in GeoServers community extensions, so you must build in this support by using OpenGeo's fork of GeoServer in the geogit branch https://github.com/opengeo/geoserver/tree/geogit or by adding the following dependencies to your own pom.xml.
-::
+The GeoGit module is not currently included in GeoServers community extensions, so you must build in this support by using OpenGeo's fork of GeoServer in the geogit branch https://github.com/opengeo/geoserver/tree/geogit or by adding the following dependencies to your own pom.xml::
+
      <dependencies>
         <dependency>
           <groupId>org.geogit</groupId>

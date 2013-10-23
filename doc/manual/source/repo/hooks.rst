@@ -86,16 +86,16 @@ Geogit support hooks for the following operations:
 
 	Parameters:
 
-		- ``all``: true if it should import all tables from the datastore. It is always true in the case of importing from shapefiles
-		- ``table``: the name of the single table to import.  It equals ``null`` in the case of importing from shapefiles
-		- ``dataStore``: the GeoTools datastore to import from
+    - ``all``: true if it should import all tables from the datastore. It is always true in the case of importing from shapefiles
+    - ``table``: the name of the single table to import.  It equals ``null`` in the case of importing from shapefiles
+    - ``dataStore``: the GeoTools datastore to import from
 
 - ``export``	
 
 	Parameters:
 
-		``featureTypeName``: the path of the feature type to export
-    	``featureStore``: an instance of ``Supplier<SimpleFeatureStore>`` containing the GeoTools feature store to export to
+    - ``featureTypeName``: the path of the feature type to export
+    - ``featureStore``: an instance of ``Supplier<SimpleFeatureStore>`` containing the GeoTools feature store to export to
 
 
 The GeoGit scripting API

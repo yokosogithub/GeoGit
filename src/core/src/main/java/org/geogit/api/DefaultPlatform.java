@@ -15,7 +15,7 @@ import java.util.TimeZone;
  */
 public class DefaultPlatform implements Platform {
 
-    private File workingDir;
+    protected File workingDir;
 
     /**
      * @return the working directory

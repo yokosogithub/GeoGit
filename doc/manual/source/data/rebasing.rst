@@ -3,7 +3,7 @@ Rebasing
 
 Apart from the merge operation, GeoGit provides a different way of combining to histories: rebasing. The difference between rebasing and  merging can be seen in the following figure.
 
-.. figure:: rebasevsmerge.png
+.. todo:: rebasevsmerge.png
 
 
 As you see, the commits from the branch that is combined with the current branch are not put on top of that, but on top of the common ancestor of both branches instead. The commits that were made to the current branch before the other branch was created are then added on top of that already merged branch.

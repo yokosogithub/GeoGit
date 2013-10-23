@@ -162,7 +162,7 @@ In the cloned repo, the first commit (1) is replaced by a new one (1') that just
 
 If your cloned repository was to be used just by itself and never had any interaction with the original repository from where it comes from, or with other cloned ones (whether partial or complete), then a partial clone could be created just creating new commits that resulted in a partial repository. However, since interaction is important, a partial clone has to keep track of commits in the original repository, because otherwise it wouldn't be able to interact with it. 
 
-The explanations that follow assume that you understand the structure of a GeoGit repository and you are familiar with the concepts introduced in the :ref:`intro` section, since they are basically an extension of those ideas. Please review the corresponding chapter in case you need to refresh those concepts.
+The explanations that follow assume that you understand the structure of a GeoGit repository and you are familiar with the concepts introduced in the :ref:`start.intro` section, since they are basically an extension of those ideas. Please review the corresponding chapter in case you need to refresh those concepts.
 
 Let's see why additional information is needed to keep the link between the original and the partially cloned repository. We will go back to the first example with just two commits. Here you can see the two histories, with the corresponding abbreviated Id's of their commits.
 

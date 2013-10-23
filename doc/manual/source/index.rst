@@ -1,41 +1,13 @@
-.. GeoGit documentation master file, created by
-   sphinx-quickstart on Mon Feb 25 13:44:22 2013.
-   You can adapt this file completely to your liking, but it should at least
-   contain the root `toctree` directive.
-
 GeoGit User Manual
-================================================
+==================
 
-Contents:
+Welcome to the GeoGit User Manual
 
 .. toctree::
+   :maxdepth: 2
 
-  intro
-  quickstart
-  installing
-  init
-  config
-  import
-  adding 
-  commiting
-  structure
-  referencing  
-  exploring  
-  updating
-  exporting
-  diffs  
-  branches
-  checkout
-  history
-  merging
-  picking
-  reverting
-  remotes
-  modifying
-  patches
-  partial_cloning
-  configuration
-  console
-  osm
-  web-api
-  hooks
+   start/index
+   repository/index
+   data/index
+   interaction/index
+   exercise
