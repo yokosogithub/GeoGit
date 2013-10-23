@@ -193,7 +193,7 @@ public abstract class AbstractObjectDatabase implements ObjectDatabase {
             throws IllegalArgumentException;
 
     @Override
-    public <T extends RevObject> boolean put(final T object) {
+    public boolean put(final RevObject object) {
         Preconditions.checkNotNull(object);
         Preconditions.checkArgument(!object.getId().isNull(), "ObjectId is NULL %s", object);
 
