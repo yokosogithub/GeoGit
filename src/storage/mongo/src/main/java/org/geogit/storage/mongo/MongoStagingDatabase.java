@@ -4,44 +4,32 @@
  */
 package org.geogit.storage.mongo;
 
-import java.io.ByteArrayInputStream;
-import java.io.InputStream;
-import java.net.UnknownHostException;
 import java.util.ArrayList;
-import java.util.List;
 import java.util.HashSet;
-import java.util.Iterator;
-import java.util.NoSuchElementException;
+import java.util.List;
 import java.util.Set;
+
 import javax.annotation.Nullable;
+
 import org.geogit.api.ObjectId;
-import org.geogit.api.RevCommit;
-import org.geogit.api.RevFeature;
-import org.geogit.api.RevFeatureType;
 import org.geogit.api.RevObject;
-import org.geogit.api.RevTag;
-import org.geogit.api.RevTree;
 import org.geogit.api.plumbing.merge.Conflict;
 import org.geogit.storage.ConfigDatabase;
 import org.geogit.storage.ObjectDatabase;
-import org.geogit.storage.ObjectInserter;
-import org.geogit.storage.ObjectSerializingFactory;
 import org.geogit.storage.StagingDatabase;
+
 import com.google.common.base.Optional;
 import com.google.inject.Inject;
 import com.mongodb.BasicDBObject;
-import com.mongodb.DB;
 import com.mongodb.DBCollection;
 import com.mongodb.DBCursor;
 import com.mongodb.DBObject;
-import com.mongodb.MongoClient;
 
 /**
- * @TODO: extract interface
+ * A staging database that uses a MongoDB server for persistence.
  */
 public class MongoStagingDatabase extends MongoObjectDatabase implements
         StagingDatabase {
-    private ObjectSerializingFactory sfac;
     private ObjectDatabase repositoryDb;
     protected DBCollection conflicts;
 
@@ -52,10 +40,8 @@ public class MongoStagingDatabase extends MongoObjectDatabase implements
     @Inject
     public MongoStagingDatabase(final ConfigDatabase config,
             final MongoConnectionManager manager,
-            final ObjectSerializingFactory sfac,
             final ObjectDatabase repositoryDb) {
         super(config, manager);
-        this.sfac = sfac;
         this.repositoryDb = repositoryDb;
     }
 
@@ -78,15 +64,6 @@ public class MongoStagingDatabase extends MongoObjectDatabase implements
     }
 
     @Override
-    public InputStream getRaw(ObjectId id) {
-        try {
-            return super.getRaw(id);
-        } catch (NoSuchElementException e) {
-            return null; // repositoryDb.getRaw(id);
-        }
-    }
-
-    @Override
     public List<ObjectId> lookUp(final String partialId) {
         Set<ObjectId> results = new HashSet<ObjectId>();
         // Using a set because we were getting duplicates building a list
@@ -95,7 +72,7 @@ public class MongoStagingDatabase extends MongoObjectDatabase implements
         // properly?
         results.addAll(super.lookUp(partialId));
         results.addAll(repositoryDb.lookUp(partialId));
-        return new ArrayList(results);
+        return new ArrayList<ObjectId>(results);
     }
 
     @Override
@@ -108,6 +85,7 @@ public class MongoStagingDatabase extends MongoObjectDatabase implements
         }
     }
 
+    @Override
     public Optional<Conflict> getConflict(@Nullable String namespace,
             String path) {
         DBObject query = new BasicDBObject();
@@ -127,6 +105,7 @@ public class MongoStagingDatabase extends MongoObjectDatabase implements
         }
     }
 
+    @Override
     public List<Conflict> getConflicts(@Nullable String namespace,
             @Nullable String pathFilter) {
         DBObject query = new BasicDBObject();
@@ -154,6 +133,7 @@ public class MongoStagingDatabase extends MongoObjectDatabase implements
         return results;
     }
 
+    @Override
     public void addConflict(@Nullable String namespace, Conflict conflict) {
         DBObject query = new BasicDBObject();
         query.put("path", conflict.getPath());
@@ -175,6 +155,7 @@ public class MongoStagingDatabase extends MongoObjectDatabase implements
         conflicts.update(query, record, true, false);
     }
 
+    @Override
     public void removeConflict(@Nullable String namespace, String path) {
         DBObject query = new BasicDBObject();
         if (namespace == null) {
@@ -186,6 +167,7 @@ public class MongoStagingDatabase extends MongoObjectDatabase implements
         conflicts.remove(query);
     }
 
+    @Override
     public void removeConflicts(@Nullable String namespace) {
         DBObject query = new BasicDBObject();
         if (namespace == null) {

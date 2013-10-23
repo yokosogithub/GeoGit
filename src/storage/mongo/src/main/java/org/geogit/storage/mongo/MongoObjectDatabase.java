@@ -6,25 +6,11 @@ package org.geogit.storage.mongo;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
-import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
-import java.net.UnknownHostException;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
 import java.util.NoSuchElementException;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Future;
-import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.ThreadFactory;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
-
-import javax.annotation.Nullable;
 
 import org.geogit.api.ObjectId;
 import org.geogit.api.RevCommit;
@@ -33,34 +19,26 @@ import org.geogit.api.RevFeatureType;
 import org.geogit.api.RevObject;
 import org.geogit.api.RevTag;
 import org.geogit.api.RevTree;
-import org.geogit.api.plumbing.merge.Conflict;
 import org.geogit.storage.ConfigDatabase;
 import org.geogit.storage.ObjectDatabase;
 import org.geogit.storage.ObjectInserter;
-import org.geogit.storage.ObjectReader;
 import org.geogit.storage.ObjectSerializingFactory;
 import org.geogit.storage.ObjectWriter;
 import org.geogit.storage.datastream.DataStreamSerializationFactory;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Optional;
-import com.google.common.base.Preconditions;
-import com.google.common.base.Throwables;
-import com.google.common.collect.Iterators;
-import com.google.common.collect.Lists;
-import com.google.common.collect.UnmodifiableIterator;
-import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.inject.Inject;
-
 import com.mongodb.BasicDBObject;
 import com.mongodb.DB;
 import com.mongodb.DBCollection;
 import com.mongodb.DBCursor;
 import com.mongodb.DBObject;
 import com.mongodb.MongoClient;
-import com.mongodb.WriteConcern;
 
+/**
+ * An Object database that uses a MongoDB server for persistence.
+ * 
+ * @see http://mongodb.com/
+ */
 public class MongoObjectDatabase implements ObjectDatabase {
     private final MongoConnectionManager manager;
     private final ConfigDatabase config;
@@ -100,6 +78,7 @@ public class MongoObjectDatabase implements ObjectDatabase {
         return "objects";
     }
 
+    @Override
     public synchronized void open() {
         if (client != null) {
             return;
@@ -112,10 +91,12 @@ public class MongoObjectDatabase implements ObjectDatabase {
         collection.ensureIndex("oid");
     }
 
+    @Override
     public synchronized boolean isOpen() {
         return client != null;
     }
 
+    @Override
     public synchronized void close() {
         if (client != null) {
             manager.release(client);
@@ -125,23 +106,14 @@ public class MongoObjectDatabase implements ObjectDatabase {
         collection = null;
     }
 
+    @Override
     public boolean exists(ObjectId id) {
         DBObject query = new BasicDBObject();
         query.put("oid", id.toString());
         return collection.find(query).hasNext();
     }
 
-    public InputStream getRaw(ObjectId id) {
-        DBObject query = new BasicDBObject();
-        query.put("oid", id.toString());
-        DBObject result = collection.findOne(query);
-        if (result == null) {
-            throw new NoSuchElementException("No object found for raw query");
-        }
-        byte[] bytes = (byte[]) result.get("serialized_object");
-        return new ByteArrayInputStream(bytes);
-    }
-
+    @Override
     public List<ObjectId> lookUp(final String partialId) {
         if (partialId.matches("[a-fA-F0-9]+")) {
             DBObject regex = new BasicDBObject();
@@ -162,6 +134,7 @@ public class MongoObjectDatabase implements ObjectDatabase {
         }
     }
 
+    @Override
     public RevObject get(ObjectId id) {
         RevObject result = getIfPresent(id);
         if (result != null) {
@@ -171,10 +144,12 @@ public class MongoObjectDatabase implements ObjectDatabase {
         }
     }
 
+    @Override
     public <T extends RevObject> T get(ObjectId id, Class<T> clazz) {
         return clazz.cast(get(id));
     }
 
+    @Override
     public RevObject getIfPresent(ObjectId id) {
         DBObject query = new BasicDBObject();
         query.put("oid", id.toString());
@@ -187,36 +162,44 @@ public class MongoObjectDatabase implements ObjectDatabase {
         }
     }
 
+    @Override
     public <T extends RevObject> T getIfPresent(ObjectId id, Class<T> clazz) {
         return clazz.cast(getIfPresent(id));
     }
 
+    @Override
     public RevTree getTree(ObjectId id) {
         return getIfPresent(id, RevTree.class);
     }
 
+    @Override
     public RevFeature getFeature(ObjectId id) {
         return getIfPresent(id, RevFeature.class);
     }
 
+    @Override
     public RevFeatureType getFeatureType(ObjectId id) {
         return getIfPresent(id, RevFeatureType.class);
     }
 
+    @Override
     public RevCommit getCommit(ObjectId id) {
         return getIfPresent(id, RevCommit.class);
     }
 
+    @Override
     public RevTag getTag(ObjectId id) {
         return getIfPresent(id, RevTag.class);
     }
 
+    @Override
     public boolean delete(ObjectId id) {
         DBObject query = new BasicDBObject();
         query.put("oid", id.toString());
         return collection.remove(query).getLastError().ok();
     }
 
+    @Override
     public long deleteAll(Iterator<ObjectId> ids) {
         long count = 0;
         while (ids.hasNext()) {
@@ -226,6 +209,7 @@ public class MongoObjectDatabase implements ObjectDatabase {
         return count;
     }
 
+    @Override
     public boolean put(final RevObject object) {
         DBObject query = new BasicDBObject();
         query.put("oid", object.getId().toString());
@@ -236,31 +220,13 @@ public class MongoObjectDatabase implements ObjectDatabase {
                 .ok();
     }
 
-    public boolean put(ObjectId objectId, InputStream raw) {
-        ByteArrayOutputStream bytes = new java.io.ByteArrayOutputStream();
-        try {
-            byte[] buff = new byte[4096];
-            int len;
-            while ((len = (raw.read(buff))) >= 0) {
-                bytes.write(buff, 0, len);
-            }
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-        DBObject query = new BasicDBObject();
-        query.put("oid", objectId.toString());
-        DBObject record = new BasicDBObject();
-        record.put("oid", objectId.toString());
-        record.put("serialized_object", bytes.toByteArray());
-        return collection.update(query, record, true, false).getLastError()
-                .ok();
-    }
-
+    @Override
     public void putAll(final Iterator<? extends RevObject> objects) {
         while (objects.hasNext())
             put(objects.next());
     }
 
+    @Override
     public ObjectInserter newObjectInserter() {
         return new ObjectInserter(this);
     }

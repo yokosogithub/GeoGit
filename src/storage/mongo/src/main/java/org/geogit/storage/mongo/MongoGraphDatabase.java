@@ -9,6 +9,9 @@ import com.mongodb.MongoClient;
 import com.mongodb.DB;
 import com.mongodb.DBCollection;
 
+/**
+ * A graph database that uses a MongoDB server for persistence.
+ */
 public class MongoGraphDatabase extends BlueprintsGraphDatabase<MongoGraph> {
     private final MongoConnectionManager manager;
     private final ConfigDatabase config;

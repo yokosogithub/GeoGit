@@ -8,6 +8,9 @@ import java.net.UnknownHostException;
 import org.geogit.storage.ConnectionManager;
 import com.mongodb.MongoClient;
 
+/**
+ * A connection manager for MongoDB-backed storage objects.
+ */
 public final class MongoConnectionManager extends
         ConnectionManager<MongoAddress, MongoClient> {
     @Override

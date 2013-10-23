@@ -4,7 +4,17 @@
  */
 package org.geogit.storage.mongo;
 
-public class MongoAddress {
+import com.google.common.base.Objects;
+
+/**
+ * A value object containing connection info for Mongo databases.
+ * These are used as keys for the connection managers.
+ * 
+ * @see MongoObjectDatabase
+ * @see MongoGraphDatabase
+ * @see MongoStagingDatabase
+ */
+final class MongoAddress {
     private final String host;
     private final int port;
 
@@ -19,5 +29,16 @@ public class MongoAddress {
 
     public int getPort() {
         return port;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hashCode(host, port);
+    }
+
+    @Override
+    public String toString() {
+        return Objects.toStringHelper(MongoAddress.class).addValue(host)
+                .addValue(port).toString();
     }
 }
