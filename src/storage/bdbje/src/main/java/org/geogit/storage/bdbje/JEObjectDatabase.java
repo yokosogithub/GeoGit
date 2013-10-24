@@ -54,7 +54,7 @@ import com.sleepycat.je.Transaction;
 import com.sleepycat.je.TransactionConfig;
 
 /**
- * @TODO: extract interface
+ * 
  */
 public class JEObjectDatabase extends AbstractObjectDatabase implements ObjectDatabase {
 
