@@ -26,13 +26,18 @@ import org.geogit.storage.ObjectSerializingFactory;
 import org.geogit.storage.ObjectWriter;
 import org.geogit.storage.datastream.DataStreamSerializationFactory;
 
+import com.google.common.base.Functions;
+import com.google.common.collect.Iterators;
+import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.mongodb.BasicDBObject;
+import com.mongodb.BasicDBObjectBuilder;
 import com.mongodb.DB;
 import com.mongodb.DBCollection;
 import com.mongodb.DBCursor;
 import com.mongodb.DBObject;
 import com.mongodb.MongoClient;
+import com.mongodb.WriteResult;
 
 /**
  * An Object database that uses a MongoDB server for persistence.
@@ -169,29 +174,41 @@ public class MongoObjectDatabase implements ObjectDatabase {
 
     @Override
     public RevTree getTree(ObjectId id) {
-        return getIfPresent(id, RevTree.class);
+        return get(id, RevTree.class);
     }
 
     @Override
     public RevFeature getFeature(ObjectId id) {
-        return getIfPresent(id, RevFeature.class);
+        return get(id, RevFeature.class);
     }
 
     @Override
     public RevFeatureType getFeatureType(ObjectId id) {
-        return getIfPresent(id, RevFeatureType.class);
+        return get(id, RevFeatureType.class);
     }
 
     @Override
     public RevCommit getCommit(ObjectId id) {
-        return getIfPresent(id, RevCommit.class);
+        return get(id, RevCommit.class);
     }
 
     @Override
     public RevTag getTag(ObjectId id) {
-        return getIfPresent(id, RevTag.class);
+        return get(id, RevTag.class);
     }
 
+    private long deleteChunk(List<ObjectId> ids) {
+        List<String> idStrings = Lists.transform(ids, Functions.toStringFunction());
+        DBObject query = 
+                BasicDBObjectBuilder.start()
+                .push("oid")
+                .add("$in", idStrings)
+                .pop()
+                .get();
+        WriteResult result = collection.remove(query);
+        return result.getN();
+    }
+    
     @Override
     public boolean delete(ObjectId id) {
         DBObject query = new BasicDBObject();
@@ -201,10 +218,10 @@ public class MongoObjectDatabase implements ObjectDatabase {
 
     @Override
     public long deleteAll(Iterator<ObjectId> ids) {
+        Iterator<List<ObjectId>> chunks = Iterators.partition(ids, 500);
         long count = 0;
-        while (ids.hasNext()) {
-            if (delete(ids.next()))
-                count += 1;
+        while (chunks.hasNext()) {
+            count += deleteChunk(chunks.next());
         }
         return count;
     }
