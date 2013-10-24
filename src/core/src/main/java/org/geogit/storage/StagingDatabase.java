@@ -4,10 +4,13 @@
  */
 package org.geogit.storage;
 
+import java.util.Iterator;
 import java.util.List;
 
 import javax.annotation.Nullable;
 
+import org.geogit.api.ObjectId;
+import org.geogit.api.RevObject;
 import org.geogit.api.plumbing.merge.Conflict;
 
 import com.google.common.base.Optional;
@@ -17,6 +20,30 @@ import com.google.common.base.Optional;
  * 
  */
 public interface StagingDatabase extends ObjectDatabase {
+
+    @Override
+    public void open();
+
+    @Override
+    public void close();
+
+    @Override
+    public boolean exists(final ObjectId id);
+
+    @Override
+    public RevObject get(ObjectId id) throws IllegalArgumentException;
+
+    @Override
+    public boolean put(final RevObject object);
+
+    @Override
+    public boolean delete(ObjectId objectId);
+
+    @Override
+    public void putAll(Iterator<? extends RevObject> objects);
+
+    @Override
+    public long deleteAll(Iterator<ObjectId> ids);
 
     /**
      * Gets the specified conflict from the database.

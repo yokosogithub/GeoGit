@@ -69,17 +69,25 @@ public class Repository implements CommandLocator {
 
     public static final String DEPTH_CONFIG_KEY = "core.depth";
 
-    /**
-     * Creates the repository.
-     */
-    public Repository() {
+    Repository() {
+        //
     }
 
-    public void open() {
+    public synchronized void open() {
         refDatabase.create();
         objectDatabase.open();
         graphDatabase.open();
         index.getDatabase().open();
+    }
+
+    /**
+     * Closes the repository.
+     */
+    public synchronized void close() {
+        refDatabase.close();
+        objectDatabase.close();
+        graphDatabase.close();
+        index.getDatabase().close();
     }
 
     /**
@@ -117,16 +125,6 @@ public class Repository implements CommandLocator {
     @Override
     public StagingArea getIndex() {
         return index;
-    }
-
-    /**
-     * Closes the repository.
-     */
-    public void close() {
-        refDatabase.close();
-        objectDatabase.close();
-        graphDatabase.close();
-        index.getDatabase().close();
     }
 
     /**

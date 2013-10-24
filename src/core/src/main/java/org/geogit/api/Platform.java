@@ -33,6 +33,11 @@ public interface Platform {
     public long currentTimeMillis();
 
     /**
+     * @see System#nanoTime()
+     */
+    public long nanoTime();
+
+    /**
      * @return the user's home directory
      */
     public File getUserHome();

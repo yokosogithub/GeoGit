@@ -68,4 +68,9 @@ public class DefaultPlatform implements Platform {
         return TimeZone.getDefault().getOffset(timeStamp);
     }
 
+    @Override
+    public long nanoTime() {
+        return System.nanoTime();
+    }
+
 }
