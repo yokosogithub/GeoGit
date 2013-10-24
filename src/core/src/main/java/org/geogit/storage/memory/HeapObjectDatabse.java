@@ -7,6 +7,7 @@ package org.geogit.storage.memory;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.io.ByteArrayInputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.util.Collections;
 import java.util.Iterator;
@@ -21,10 +22,12 @@ import org.geogit.storage.ObjectDatabase;
 import org.geogit.storage.ObjectSerializingFactory;
 
 import com.google.common.base.Preconditions;
+import com.google.common.base.Throwables;
 import com.google.common.collect.AbstractIterator;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.inject.Inject;
+import com.ning.compress.lzf.LZFInputStream;
 
 /**
  * Provides an implementation of a GeoGit object database that utilizes the heap for the storage of
@@ -161,6 +164,7 @@ public class HeapObjectDatabse extends AbstractObjectDatabase implements ObjectD
 
     @Override
     public Iterator<RevObject> getAll(final Iterable<ObjectId> ids, final BulkOpListener listener) {
+
         return new AbstractIterator<RevObject>() {
             final Iterator<ObjectId> iterator = ids.iterator();
 
@@ -173,8 +177,12 @@ public class HeapObjectDatabse extends AbstractObjectDatabase implements ObjectD
                     id = iterator.next();
                     raw = objects.get(id);
                     if (raw != null) {
-                        found = serializationFactory.createObjectReader().read(id,
-                                new ByteArrayInputStream(raw));
+                        try {
+                            found = serializationFactory.createObjectReader().read(id,
+                                    new LZFInputStream(new ByteArrayInputStream(raw)));
+                        } catch (IOException e) {
+                            throw Throwables.propagate(e);
+                        }
                         listener.found(found, raw.length);
                     } else {
                         listener.notFound(id);
