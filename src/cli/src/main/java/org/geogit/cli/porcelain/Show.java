@@ -62,7 +62,6 @@ public class Show extends AbstractCommand implements CLICommand {
     public void runInternal(GeogitCLI cli) throws IOException {
         checkParameter(refs.size() < 2, "Only one refspec allowed");
         checkParameter(!refs.isEmpty(), "A refspec must be specified");
-
         if (raw) {
             printRaw(cli);
         } else {
@@ -76,24 +75,35 @@ public class Show extends AbstractCommand implements CLICommand {
         GeoGIT geogit = cli.getGeogit();
         for (String ref : refs) {
             Optional<RevObject> obj = geogit.command(RevObjectParse.class).setRefSpec(ref).call();
+            if (!obj.isPresent()) {
+                ref = getFullRef(ref);
+                obj = geogit.command(RevObjectParse.class).setRefSpec(ref).call();
+            }
             checkParameter(obj.isPresent(), "refspec did not resolve to any object.");
             RevObject revObject = obj.get();
             if (revObject instanceof RevFeature) {
-                RevFeatureType ft = geogit.command(ResolveFeatureType.class).setRefSpec(ref).call()
-                        .get();
-                ImmutableList<PropertyDescriptor> attribs = ft.sortedDescriptors();
-                RevFeature feature = (RevFeature) revObject;
-                Ansi ansi = super.newAnsi(console.getTerminal());
-                ansi.a(ref).newline();
-                ansi.a(feature.getId().toString()).newline();
-                ImmutableList<Optional<Object>> values = feature.getValues();
-                int i = 0;
-                for (Optional<Object> value : values) {
-                    ansi.a(attribs.get(i).getName()).newline();
-                    ansi.a(value.or("[NULL]").toString()).newline();
-                    i++;
+                Optional<RevFeatureType> opt = geogit.command(ResolveFeatureType.class)
+                        .setRefSpec(ref).call();
+                if (opt.isPresent()) {
+                    RevFeatureType ft = opt.get();
+                    ImmutableList<PropertyDescriptor> attribs = ft.sortedDescriptors();
+                    RevFeature feature = (RevFeature) revObject;
+                    Ansi ansi = super.newAnsi(console.getTerminal());
+                    ansi.a(ref).newline();
+                    ansi.a(feature.getId().toString()).newline();
+                    ImmutableList<Optional<Object>> values = feature.getValues();
+                    int i = 0;
+                    for (Optional<Object> value : values) {
+                        ansi.a(attribs.get(i).getName()).newline();
+                        ansi.a(value.or("[NULL]").toString()).newline();
+                        i++;
+                    }
+                    console.println(ansi.toString());
+                } else {
+                    CharSequence s = geogit.command(CatObject.class)
+                            .setObject(Suppliers.ofInstance(revObject)).call();
+                    console.println(s);
                 }
-                console.println(ansi.toString());
             } else {
                 CharSequence s = geogit.command(CatObject.class)
                         .setObject(Suppliers.ofInstance(revObject)).call();
@@ -107,26 +117,37 @@ public class Show extends AbstractCommand implements CLICommand {
         GeoGIT geogit = cli.getGeogit();
         for (String ref : refs) {
             Optional<RevObject> obj = geogit.command(RevObjectParse.class).setRefSpec(ref).call();
+            if (!obj.isPresent()) {
+                ref = getFullRef(ref);
+                obj = geogit.command(RevObjectParse.class).setRefSpec(ref).call();
+            }
             checkParameter(obj.isPresent(), "refspec did not resolve to any object.");
             RevObject revObject = obj.get();
             if (revObject instanceof RevFeature) {
-                RevFeatureType ft = geogit.command(ResolveFeatureType.class).setRefSpec(ref).call()
-                        .get();
-                ImmutableList<PropertyDescriptor> attribs = ft.sortedDescriptors();
-                RevFeature feature = (RevFeature) revObject;
-                Ansi ansi = super.newAnsi(console.getTerminal());
-                ansi.newline().fg(Color.YELLOW).a("ID:  ").reset().a(feature.getId().toString())
-                        .newline().newline();
-                ansi.a("ATTRIBUTES  ").newline();
-                ansi.a("----------  ").newline();
-                ImmutableList<Optional<Object>> values = feature.getValues();
-                int i = 0;
-                for (Optional<Object> value : values) {
-                    ansi.fg(Color.YELLOW).a(attribs.get(i).getName() + ": ").reset();
-                    ansi.a(value.or("[NULL]").toString()).newline();
-                    i++;
+                Optional<RevFeatureType> opt = geogit.command(ResolveFeatureType.class)
+                        .setRefSpec(ref).call();
+                if (opt.isPresent()) {
+                    RevFeatureType ft = opt.get();
+                    ImmutableList<PropertyDescriptor> attribs = ft.sortedDescriptors();
+                    RevFeature feature = (RevFeature) revObject;
+                    Ansi ansi = super.newAnsi(console.getTerminal());
+                    ansi.newline().fg(Color.YELLOW).a("ID:  ").reset()
+                            .a(feature.getId().toString()).newline().newline();
+                    ansi.a("ATTRIBUTES  ").newline();
+                    ansi.a("----------  ").newline();
+                    ImmutableList<Optional<Object>> values = feature.getValues();
+                    int i = 0;
+                    for (Optional<Object> value : values) {
+                        ansi.fg(Color.YELLOW).a(attribs.get(i).getName() + ": ").reset();
+                        ansi.a(value.or("[NULL]").toString()).newline();
+                        i++;
+                    }
+                    console.println(ansi.toString());
+                } else {
+                    CharSequence s = geogit.command(CatObject.class)
+                            .setObject(Suppliers.ofInstance(revObject)).call();
+                    console.println(s);
                 }
-                console.println(ansi.toString());
 
             } else if (revObject instanceof RevTree) {
                 RevTree tree = (RevTree) revObject;
@@ -176,6 +197,20 @@ public class Show extends AbstractCommand implements CLICommand {
             console.println();
         }
 
+    }
+
+    /**
+     * Completes a refspec in case it is just a path, assuming it refers to the working tree and
+     * appending WORK_HEAD
+     * 
+     * @param ref the refspec
+     * @return the full refspec from the passed one
+     */
+    private String getFullRef(String ref) {
+        if (!ref.contains(":")) {
+            ref = "WORK_HEAD:" + ref;
+        }
+        return ref;
     }
 
     private void printFeatureType(Ansi ansi, RevFeatureType ft, boolean useDefaultKeyword) {
