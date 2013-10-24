@@ -66,7 +66,7 @@ public class IniConfigDatabase implements ConfigDatabase {
         }
     }
 
-    private File config() {
+    private Wini config() {
         final URL url = new ResolveGeogitDir(platform).call();
 
         if (url == null) {
@@ -90,10 +90,17 @@ public class IniConfigDatabase implements ConfigDatabase {
             throw new ConfigException(e, StatusCode.CANNOT_WRITE);
         }
 
-        return f;
+        Wini ini;
+        try {
+            ini = new Wini(f);
+        } catch (Exception e) {
+            throw new ConfigException(e, StatusCode.INVALID_LOCATION);
+        }
+
+        return ini;
     }
 
-    private File globalConfig() {
+    private Wini globalConfig() {
         File home = platform.getUserHome();
 
         if (home == null) {
@@ -106,17 +113,22 @@ public class IniConfigDatabase implements ConfigDatabase {
         } catch (IOException e) {
             throw new ConfigException(e, StatusCode.CANNOT_WRITE);
         }
-        return f;
+        Wini ini;
+        try {
+            ini = new Wini(f);
+        } catch (Exception e) {
+            throw new ConfigException(e, StatusCode.INVALID_LOCATION);
+        }
+        return ini;
     }
 
-    private <T> Optional<T> get(String key, File file, Class<T> c) {
+    private <T> Optional<T> get(String key, Wini ini, Class<T> c) {
         if (key == null) {
             throw new ConfigException(StatusCode.SECTION_OR_NAME_NOT_PROVIDED);
         }
 
         final SectionOptionPair pair = new SectionOptionPair(key);
         try {
-            final Wini ini = new Wini(file);
             T value = ini.get(pair.section.replace(".", "\\"), pair.option, c);
 
             if (value == null)
@@ -133,9 +145,8 @@ public class IniConfigDatabase implements ConfigDatabase {
         }
     }
 
-    private Map<String, String> getAll(File file) {
+    private Map<String, String> getAll(Wini ini) {
         try {
-            final Wini ini = new Wini(file);
 
             Map<String, String> results = new LinkedHashMap<String, String>();
 
@@ -153,9 +164,8 @@ public class IniConfigDatabase implements ConfigDatabase {
         }
     }
 
-    private Map<String, String> getAllSection(String section, File file) {
+    private Map<String, String> getAllSection(String section, Wini ini) {
         try {
-            final Wini ini = new Wini(file);
 
             Map<String, String> results = new LinkedHashMap<String, String>();
 
@@ -184,10 +194,8 @@ public class IniConfigDatabase implements ConfigDatabase {
         }
     }
 
-    private List<String> getAllSubsections(String section, File file) {
+    private List<String> getAllSubsections(String section, Wini ini) {
         try {
-            final Wini ini = new Wini(file);
-
             List<String> results = null;
 
             Section iniSection = ini.get(section);
@@ -206,10 +214,9 @@ public class IniConfigDatabase implements ConfigDatabase {
         }
     }
 
-    private void put(String key, Object value, File file) {
+    private void put(String key, Object value, Wini ini) {
         final SectionOptionPair pair = new SectionOptionPair(key);
         try {
-            final Wini ini = new Wini(file);
             String[] sections = pair.section.split("\\.");
             Section section = ini.get(sections[0]);
             if (section == null) {
@@ -230,10 +237,9 @@ public class IniConfigDatabase implements ConfigDatabase {
         }
     }
 
-    private void remove(String key, File file) {
+    private void remove(String key, Wini ini) {
         final SectionOptionPair pair = new SectionOptionPair(key);
         try {
-            final Wini ini = new Wini(file);
             ini.remove(pair.section.replace(".", "\\"), pair.option);
             ini.store();
         } catch (Exception e) {
@@ -241,14 +247,7 @@ public class IniConfigDatabase implements ConfigDatabase {
         }
     }
 
-    private void removeSection(String key, File file) {
-        Wini ini;
-        try {
-            ini = new Wini(file);
-        } catch (Exception e) {
-            throw new ConfigException(e, StatusCode.INVALID_LOCATION);
-        }
-
+    private void removeSection(String key, Wini ini) {
         Section sectionToRemove = ini.get(key.replace(".", "\\"));
 
         if (sectionToRemove == null)
