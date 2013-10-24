@@ -44,6 +44,7 @@ public class PushOp extends AbstractGeoGitOp<Void> {
     private Supplier<Optional<Remote>> remote;
 
     private Repository localRepository;
+
     private final DeduplicationService deduplicationService;
 
     /**
@@ -101,6 +102,7 @@ public class PushOp extends AbstractGeoGitOp<Void> {
      * @return {@code null}
      * @see org.geogit.api.AbstractGeoGitOp#call()
      */
+    @Override
     public Void call() {
         if (remote == null) {
             setRemote("origin");
@@ -215,7 +217,7 @@ public class PushOp extends AbstractGeoGitOp<Void> {
      * @return an interface for the remote repository
      */
     public Optional<IRemoteRepo> getRemoteRepo(Remote remote) {
-        return RemoteUtils
-                .newRemote(GlobalInjectorBuilder.builder.build(), remote, localRepository, deduplicationService);
+        return RemoteUtils.newRemote(GlobalInjectorBuilder.builder.build(), remote,
+                localRepository, deduplicationService);
     }
 }

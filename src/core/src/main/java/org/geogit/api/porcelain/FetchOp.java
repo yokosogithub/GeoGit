@@ -55,7 +55,7 @@ public class FetchOp extends AbstractGeoGitOp<FetchResult> {
     private Repository localRepository;
 
     private Optional<Integer> depth = Optional.absent();
-    
+
     private final DeduplicationService deduplicationService;
 
     /**
@@ -139,6 +139,7 @@ public class FetchOp extends AbstractGeoGitOp<FetchResult> {
      * @return {@code null}
      * @see org.geogit.api.AbstractGeoGitOp#call()
      */
+    @Override
     public FetchResult call() {
         if (all) {
             // Add all remotes to list.
@@ -209,7 +210,7 @@ public class FetchOp extends AbstractGeoGitOp<FetchResult> {
                     }
                 }
             }
-            
+
             Optional<IRemoteRepo> remoteRepo = getRemoteRepo(remote, deduplicationService);
 
             Preconditions.checkState(remoteRepo.isPresent(), "Failed to connect to the remote.");
@@ -288,9 +289,10 @@ public class FetchOp extends AbstractGeoGitOp<FetchResult> {
      * @param remote the remote to get
      * @return an interface for the remote repository
      */
-    public Optional<IRemoteRepo> getRemoteRepo(Remote remote, DeduplicationService deduplicationService) {
-        return RemoteUtils
-                .newRemote(GlobalInjectorBuilder.builder.build(), remote, localRepository, deduplicationService);
+    public Optional<IRemoteRepo> getRemoteRepo(Remote remote,
+            DeduplicationService deduplicationService) {
+        return RemoteUtils.newRemote(GlobalInjectorBuilder.builder.build(), remote,
+                localRepository, deduplicationService);
     }
 
     private Ref updateLocalRef(Ref remoteRef, Remote remote, ImmutableSet<Ref> localRemoteRefs) {

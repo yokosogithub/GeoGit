@@ -343,8 +343,7 @@ public class MergeOp extends AbstractGeoGitOp<MergeOp.MergeReport> {
 
         RevCommit mergeCommit = commit(fastForward);
 
-        MergeReport result = new MergeReport(mergeCommit, mergeScenario, oursId,
-                pairs);
+        MergeReport result = new MergeReport(mergeCommit, mergeScenario, oursId, pairs);
 
         return result;
 
