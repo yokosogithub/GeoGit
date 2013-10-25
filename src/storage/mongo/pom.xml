@@ -55,13 +55,6 @@
       <classifier>tests</classifier>
     </dependency>
     <dependency>
-      <groupId>org.geogit</groupId>
-      <artifactId>geogit-neo4j</artifactId>
-      <version>${project.version}</version>
-      <scope>test</scope>
-      <classifier>tests</classifier>
-    </dependency>
-    <dependency>
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>
       <scope>test</scope>
