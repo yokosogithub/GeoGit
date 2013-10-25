@@ -19,6 +19,7 @@ import org.geogit.api.RevFeatureType;
 import org.geogit.api.RevObject;
 import org.geogit.api.RevTag;
 import org.geogit.api.RevTree;
+import org.geogit.repository.RepositoryConnectionException;
 import org.geogit.storage.ConfigDatabase;
 import org.geogit.storage.ObjectDatabase;
 import org.geogit.storage.ObjectInserter;
@@ -99,6 +100,16 @@ public class MongoObjectDatabase implements ObjectDatabase {
     @Override
     public synchronized boolean isOpen() {
         return client != null;
+    }
+
+    @Override
+    public void configure() throws RepositoryConnectionException {
+        RepositoryConnectionException.StorageType.OBJECT.configure(config, "mongodb", "0.1");
+    }
+
+    @Override
+    public void checkConfig() throws RepositoryConnectionException {
+        RepositoryConnectionException.StorageType.OBJECT.verify(config, "mongodb", "0.1");
     }
 
     @Override
