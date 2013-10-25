@@ -35,6 +35,14 @@ public class IniConfigDatabase implements ConfigDatabase {
 
     final private Platform platform;
 
+    private WiniCache localWini;
+
+    private File lastKnownWorkingDirectory;
+
+    private WiniCache globalWini;
+
+    private File lastKnownHomeDir;
+
     /**
      * Constructs a new {@code IniConfigDatabase} with the given platform.
      * 
@@ -67,59 +75,48 @@ public class IniConfigDatabase implements ConfigDatabase {
     }
 
     private Wini config() {
-        final URL url = new ResolveGeogitDir(platform).call();
+        if (localWini == null || !lastKnownWorkingDirectory.equals(platform.pwd())) {
+            final URL url = new ResolveGeogitDir(platform).call();
 
-        if (url == null) {
-            throw new ConfigException(StatusCode.INVALID_LOCATION);
+            if (url == null) {
+                throw new ConfigException(StatusCode.INVALID_LOCATION);
+            }
+
+            /*
+             * See http://weblogs.java.net/blog/kohsuke/archive/2007/04/how_to_convert.html for
+             * explanation on this idiom.
+             */
+            File localConfigFile;
+            try {
+                localConfigFile = new File(new File(url.toURI()), "config");
+            } catch (URISyntaxException e) {
+                localConfigFile = new File(url.getPath(), "config");
+            }
+
+            lastKnownWorkingDirectory = platform.pwd();
+            localWini = new WiniCache(localConfigFile);
         }
-
-        /*
-         * See http://weblogs.java.net/blog/kohsuke/archive/2007/04/how_to_convert.html for
-         * explanation on this idiom.
-         */
-        File f;
-        try {
-            f = new File(new File(url.toURI()), "config");
-        } catch (URISyntaxException e) {
-            f = new File(url.getPath(), "config");
-        }
-
-        try {
-            f.createNewFile();
-        } catch (IOException e) {
-            throw new ConfigException(e, StatusCode.CANNOT_WRITE);
-        }
-
-        Wini ini;
-        try {
-            ini = new Wini(f);
-        } catch (Exception e) {
-            throw new ConfigException(e, StatusCode.INVALID_LOCATION);
-        }
-
-        return ini;
+        return localWini.getWini();
     }
 
     private Wini globalConfig() {
-        File home = platform.getUserHome();
+        if (globalWini == null || !lastKnownHomeDir.equals(platform.getUserHome())) {
+            File home = platform.getUserHome();
 
-        if (home == null) {
-            throw new ConfigException(StatusCode.USERHOME_NOT_SET);
-        }
+            if (home == null) {
+                throw new ConfigException(StatusCode.USERHOME_NOT_SET);
+            }
 
-        File f = new File(home.getPath(), ".geogitconfig");
-        try {
-            f.createNewFile();
-        } catch (IOException e) {
-            throw new ConfigException(e, StatusCode.CANNOT_WRITE);
+            File globalConfig = new File(home.getPath(), ".geogitconfig");
+            try {
+                globalConfig.createNewFile();
+            } catch (IOException e) {
+                throw new ConfigException(e, StatusCode.CANNOT_WRITE);
+            }
+            this.lastKnownHomeDir = home;
+            this.globalWini = new WiniCache(globalConfig);
         }
-        Wini ini;
-        try {
-            ini = new Wini(f);
-        } catch (Exception e) {
-            throw new ConfigException(e, StatusCode.INVALID_LOCATION);
-        }
-        return ini;
+        return globalWini.getWini();
     }
 
     private <T> Optional<T> get(String key, Wini ini, Class<T> c) {
@@ -450,4 +447,34 @@ public class IniConfigDatabase implements ConfigDatabase {
         removeSection(key, globalConfig());
     }
 
+    private static class WiniCache {
+        private Wini ini;
+
+        private long lastModified;
+
+        private File configFile;
+
+        public WiniCache(final File configFile) {
+            try {
+                configFile.createNewFile();
+            } catch (IOException e) {
+                throw new ConfigException(e, StatusCode.CANNOT_WRITE);
+            }
+            this.configFile = configFile;
+            getWini();
+        }
+
+        public synchronized Wini getWini() {
+            if (lastModified != configFile.lastModified()) {
+                try {
+                    this.ini = new Wini(configFile);
+                    this.lastModified = configFile.lastModified();
+                } catch (Exception e) {
+                    throw new ConfigException(e, StatusCode.INVALID_LOCATION);
+                }
+            }
+            return ini;
+        }
+
+    }
 }
