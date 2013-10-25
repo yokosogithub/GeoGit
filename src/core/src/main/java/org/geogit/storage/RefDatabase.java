@@ -19,6 +19,16 @@ public interface RefDatabase {
     public abstract void lock() throws TimeoutException;
 
     /**
+     * Performs any setup required before first open() including default configuration
+     */
+    public abstract void configure();
+
+    /**
+     * Verify the configuration before opening.
+     */
+	public abstract void checkConfig();
+
+    /**
      * Unlocks access to the main repository refs.
      */
     public abstract void unlock();

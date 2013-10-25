@@ -26,6 +26,8 @@ import org.geogit.api.RevTag;
 import org.geogit.api.RevTree;
 import org.geogit.api.plumbing.ResolveGeogitDir;
 import org.geogit.api.plumbing.merge.Conflict;
+import org.geogit.repository.RepositoryConnectionException;
+import org.geogit.storage.ConfigDatabase;
 import org.geogit.storage.ObjectDatabase;
 import org.geogit.storage.ObjectInserter;
 import org.geogit.storage.ObjectSerializingFactory;
@@ -96,6 +98,8 @@ public class JEStagingDatabase implements ObjectDatabase, StagingDatabase {
 
     private Platform platform;
 
+    private ConfigDatabase configDB;
+
     /**
      * @param referenceDatabase the repository reference database, used to get the head re
      * @param repoDb
@@ -104,12 +108,14 @@ public class JEStagingDatabase implements ObjectDatabase, StagingDatabase {
     @Inject
     public JEStagingDatabase(final ObjectSerializingFactory sfac,
             final ObjectDatabase repositoryDb, final EnvironmentBuilder envBuilder,
-            final Platform platform) {
+            final Platform platform,
+            final ConfigDatabase configDB) {
         this.sfac = sfac;
         this.repositoryDb = repositoryDb;
         this.envProvider = envBuilder;
         this.platform = platform;
         this.envProvider.setIsStagingDatabase(true);
+        this.configDB = configDB;
     }
 
     @Override
@@ -432,4 +438,13 @@ public class JEStagingDatabase implements ObjectDatabase, StagingDatabase {
         return this.stagingDb.deleteAll(ids);
     }
 
+    @Override
+    public void configure() {
+        RepositoryConnectionException.StorageType.STAGING.configure(configDB, "bdbje", "0.1");
+    }
+    
+    @Override
+    public void checkConfig() {
+        RepositoryConnectionException.StorageType.STAGING.verify(configDB, "bdbje", "0.1");
+    }
 }

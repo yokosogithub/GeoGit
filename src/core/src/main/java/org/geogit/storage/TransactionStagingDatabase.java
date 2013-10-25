@@ -254,4 +254,13 @@ public class TransactionStagingDatabase implements StagingDatabase {
         return database.deleteAll(ids);
     }
 
+	@Override
+	public void configure() {
+		// No-op
+	}
+	
+	@Override
+	public void checkConfig() {
+	    // No-op
+	}
 }

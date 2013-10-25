@@ -112,6 +112,9 @@ public class InitOp extends AbstractGeoGitOp<Repository> {
         Repository repository;
         try {
             repository = injector.getInstance(Repository.class);
+            if (!repoExisted) {
+                repository.configure();
+            }
             repository.open();
             createSampleHooks(envHome);
         } catch (RuntimeException e) {
