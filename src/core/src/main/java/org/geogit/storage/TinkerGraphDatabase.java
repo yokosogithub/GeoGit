@@ -7,7 +7,6 @@ package org.geogit.storage;
 import org.geogit.api.Platform;
 import org.geogit.repository.RepositoryConnectionException;
 
-import com.google.common.base.Optional;
 import com.google.inject.Inject;
 import com.tinkerpop.blueprints.impls.tg.TinkerGraph;
 
@@ -17,7 +16,7 @@ import com.tinkerpop.blueprints.impls.tg.TinkerGraph;
 public class TinkerGraphDatabase extends BlueprintsGraphDatabase<TinkerGraph> {
     private final ConfigDatabase configDB;
 
-	/**
+    /**
      * Constructs a new {@code TinkerGraphDatabase} using the given platform.
      * 
      * @param platform the platform to use.
@@ -32,14 +31,14 @@ public class TinkerGraphDatabase extends BlueprintsGraphDatabase<TinkerGraph> {
     protected TinkerGraph getGraphDatabase() {
         return new TinkerGraph(dbPath, TinkerGraph.FileType.GML);
     }
-    
+
     @Override
-    public void configure() {
+    public void configure() throws RepositoryConnectionException {
         RepositoryConnectionException.StorageType.GRAPH.configure(configDB, "tinkergraph", "0.1");
     }
-    
+
     @Override
-    public void checkConfig() {
+    public void checkConfig() throws RepositoryConnectionException {
         RepositoryConnectionException.StorageType.GRAPH.verify(configDB, "tinkergraph", "0.1");
     }
 }

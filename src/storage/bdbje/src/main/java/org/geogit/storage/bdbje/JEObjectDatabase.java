@@ -36,7 +36,6 @@ import org.geogit.storage.ObjectSerializingFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
 import com.google.common.collect.Iterators;
@@ -78,11 +77,8 @@ public class JEObjectDatabase extends AbstractObjectDatabase implements ObjectDa
     private CurrentTransaction txn;
 
     @Inject
-    public JEObjectDatabase(
-        final ConfigDatabase configDB,
-        final ObjectSerializingFactory serialFactory,
-        final EnvironmentBuilder envProvider)
-    {
+    public JEObjectDatabase(final ConfigDatabase configDB,
+            final ObjectSerializingFactory serialFactory, final EnvironmentBuilder envProvider) {
         super(serialFactory);
         this.configDB = configDB;
         this.envProvider = envProvider;
@@ -463,12 +459,12 @@ public class JEObjectDatabase extends AbstractObjectDatabase implements ObjectDa
     }
 
     @Override
-    public void configure() {
+    public void configure() throws RepositoryConnectionException {
         RepositoryConnectionException.StorageType.OBJECT.configure(configDB, "bdbje", "0.1");
     }
 
     @Override
-    public void checkConfig() {
+    public void checkConfig() throws RepositoryConnectionException {
         RepositoryConnectionException.StorageType.OBJECT.verify(configDB, "bdbje", "0.1");
     }
 }

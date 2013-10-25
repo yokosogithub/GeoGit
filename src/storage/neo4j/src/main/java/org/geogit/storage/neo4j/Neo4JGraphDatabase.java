@@ -11,7 +11,6 @@ import org.geogit.repository.RepositoryConnectionException;
 import org.geogit.storage.ConfigDatabase;
 import org.geogit.storage.TransactionalBlueprintsGraphDatabase;
 
-import com.google.common.base.Optional;
 import com.google.inject.Inject;
 import com.tinkerpop.blueprints.impls.neo4j.Neo4jGraph;
 
@@ -21,7 +20,7 @@ import com.tinkerpop.blueprints.impls.neo4j.Neo4jGraph;
 public class Neo4JGraphDatabase extends TransactionalBlueprintsGraphDatabase<Neo4jGraph> {
     private final ConfigDatabase configDB;
 
-	/**
+    /**
      * Constructs a new {@code Neo4JGraphDatabase} using the given platform.
      * 
      * @param platform the platform to use.
@@ -40,13 +39,13 @@ public class Neo4JGraphDatabase extends TransactionalBlueprintsGraphDatabase<Neo
         return new Neo4jGraph(dbPath, settings);
     }
 
-	@Override
-	public void configure() {
-	    RepositoryConnectionException.StorageType.GRAPH.configure(configDB, "neo4j", "0.1");
-	}
-	
     @Override
-    public void checkConfig() {
-        RepositoryConnectionException.StorageType.GRAPH.verify(configDB,  "neo4j", "0.1");
+    public void configure() throws RepositoryConnectionException {
+        RepositoryConnectionException.StorageType.GRAPH.configure(configDB, "neo4j", "0.1");
+    }
+
+    @Override
+    public void checkConfig() throws RepositoryConnectionException {
+        RepositoryConnectionException.StorageType.GRAPH.verify(configDB, "neo4j", "0.1");
     }
 }

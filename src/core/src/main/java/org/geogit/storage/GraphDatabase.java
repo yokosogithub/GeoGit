@@ -5,6 +5,7 @@
 package org.geogit.storage;
 
 import org.geogit.api.ObjectId;
+import org.geogit.repository.RepositoryConnectionException;
 
 import com.google.common.annotations.Beta;
 import com.google.common.base.Optional;
@@ -24,12 +25,12 @@ public interface GraphDatabase {
     /**
      * Perform GeoGit configuration before the first connection to the database.
      */
-    public void configure();
+    public void configure() throws RepositoryConnectionException;
 
     /**
      * Verify the configuration before opening the database
      */
-	public void checkConfig();
+    public void checkConfig() throws RepositoryConnectionException;
 
     /**
      * @return true if the database is open, false otherwise

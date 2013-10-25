@@ -24,7 +24,6 @@ import org.geogit.repository.RepositoryConnectionException;
 import org.geogit.storage.AbstractRefDatabase;
 import org.geogit.storage.ConfigDatabase;
 
-import com.google.common.base.Optional;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
@@ -41,7 +40,7 @@ public class FileRefDatabase extends AbstractRefDatabase {
 
     private final Platform platform;
 
-	private final ConfigDatabase configDB;
+    private final ConfigDatabase configDB;
 
     /**
      * Constructs a new {@code FileRefDatabase} with the given platform.
@@ -322,13 +321,13 @@ public class FileRefDatabase extends AbstractRefDatabase {
         }
     }
 
-	@Override
-	public void configure() {
-	    RepositoryConnectionException.StorageType.REF.configure(configDB, "file", "1.0");
-	}
+    @Override
+    public void configure() throws RepositoryConnectionException {
+        RepositoryConnectionException.StorageType.REF.configure(configDB, "file", "1.0");
+    }
 
-	@Override
-	public void checkConfig() {
-	    RepositoryConnectionException.StorageType.REF.verify(configDB, "file", "1.0");
-	}
+    @Override
+    public void checkConfig() throws RepositoryConnectionException {
+        RepositoryConnectionException.StorageType.REF.verify(configDB, "file", "1.0");
+    }
 }

@@ -16,6 +16,7 @@ import org.geogit.api.RevFeatureType;
 import org.geogit.api.RevObject;
 import org.geogit.api.RevTag;
 import org.geogit.api.RevTree;
+import org.geogit.repository.RepositoryConnectionException;
 
 /**
  * Provides an interface for implementations of GeoGit object databases.
@@ -23,21 +24,21 @@ import org.geogit.api.RevTree;
 public interface ObjectDatabase {
 
     /**
-     * Opens the database. It's safe to call this method multiple times, and only the
-     * first call shall take effect.
+     * Opens the database. It's safe to call this method multiple times, and only the first call
+     * shall take effect.
      */
     public void open();
 
     /**
      * Performs any setup required before first open, including setting default configuration.
      */
-    public void configure();
+    public void configure() throws RepositoryConnectionException;
 
     /**
      * Verify the configuration before opening the database.
      */
-    public void checkConfig();
-    
+    public void checkConfig() throws RepositoryConnectionException;
+
     /**
      * @return true if the database is open, false otherwise
      */

@@ -108,8 +108,7 @@ public class JEStagingDatabase implements ObjectDatabase, StagingDatabase {
     @Inject
     public JEStagingDatabase(final ObjectSerializingFactory sfac,
             final ObjectDatabase repositoryDb, final EnvironmentBuilder envBuilder,
-            final Platform platform,
-            final ConfigDatabase configDB) {
+            final Platform platform, final ConfigDatabase configDB) {
         this.sfac = sfac;
         this.repositoryDb = repositoryDb;
         this.envProvider = envBuilder;
@@ -439,12 +438,12 @@ public class JEStagingDatabase implements ObjectDatabase, StagingDatabase {
     }
 
     @Override
-    public void configure() {
+    public void configure() throws RepositoryConnectionException {
         RepositoryConnectionException.StorageType.STAGING.configure(configDB, "bdbje", "0.1");
     }
-    
+
     @Override
-    public void checkConfig() {
+    public void checkConfig() throws RepositoryConnectionException {
         RepositoryConnectionException.StorageType.STAGING.verify(configDB, "bdbje", "0.1");
     }
 }

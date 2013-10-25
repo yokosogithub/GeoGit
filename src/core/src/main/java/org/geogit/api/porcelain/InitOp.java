@@ -24,6 +24,7 @@ import org.geogit.api.plumbing.ResolveGeogitDir;
 import org.geogit.api.plumbing.UpdateRef;
 import org.geogit.api.plumbing.UpdateSymRef;
 import org.geogit.repository.Repository;
+import org.geogit.repository.RepositoryConnectionException;
 
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
@@ -113,11 +114,23 @@ public class InitOp extends AbstractGeoGitOp<Repository> {
         try {
             repository = injector.getInstance(Repository.class);
             if (!repoExisted) {
-                repository.configure();
+                try {
+                    repository.configure();
+                } catch (RepositoryConnectionException e) {
+                    throw new IllegalStateException(
+                            "Unable to initialize repository for the first time: " + e.getMessage(),
+                            e);
+                }
             }
-            repository.open();
+            try {
+                repository.open();
+            } catch (RepositoryConnectionException e) {
+                throw new IllegalStateException("Error opening repository databases: "
+                        + e.getMessage(), e);
+            }
             createSampleHooks(envHome);
         } catch (RuntimeException e) {
+            Throwables.propagateIfInstanceOf(e, IllegalStateException.class);
             throw new IllegalStateException("Can't access repository at '"
                     + envHome.getAbsolutePath() + "'", e);
         }

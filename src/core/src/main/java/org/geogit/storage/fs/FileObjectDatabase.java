@@ -27,7 +27,6 @@ import org.geogit.storage.ConfigDatabase;
 import org.geogit.storage.ObjectDatabase;
 import org.geogit.storage.ObjectSerializingFactory;
 
-import com.google.common.base.Optional;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableList.Builder;
@@ -42,7 +41,7 @@ import com.google.inject.Inject;
 public class FileObjectDatabase extends AbstractObjectDatabase implements ObjectDatabase {
 
     private final Platform platform;
-    
+
     private final ConfigDatabase configDB;
 
     private final String databaseName;
@@ -57,7 +56,8 @@ public class FileObjectDatabase extends AbstractObjectDatabase implements Object
      * @param platform the platform to use.
      */
     @Inject
-    public FileObjectDatabase(final Platform platform, final ObjectSerializingFactory serialFactory, final ConfigDatabase configDB) {
+    public FileObjectDatabase(final Platform platform,
+            final ObjectSerializingFactory serialFactory, final ConfigDatabase configDB) {
         this(platform, "objects", serialFactory, configDB);
     }
 
@@ -253,17 +253,16 @@ public class FileObjectDatabase extends AbstractObjectDatabase implements Object
 
     @Override
     public long deleteAll(Iterator<ObjectId> ids) {
-        throw new UnsupportedOperationException(
-                "This method is not yet implemented");        
+        throw new UnsupportedOperationException("This method is not yet implemented");
     }
 
-	@Override
-	public void configure() {
-	    RepositoryConnectionException.StorageType.OBJECT.configure(configDB, "file", "1.0");
-	}
-	
-	@Override
-	public void checkConfig() {
-	    RepositoryConnectionException.StorageType.OBJECT.verify(configDB, "file", "1.0");
-	}
+    @Override
+    public void configure() throws RepositoryConnectionException {
+        RepositoryConnectionException.StorageType.OBJECT.configure(configDB, "file", "1.0");
+    }
+
+    @Override
+    public void checkConfig() throws RepositoryConnectionException {
+        RepositoryConnectionException.StorageType.OBJECT.verify(configDB, "file", "1.0");
+    }
 }
