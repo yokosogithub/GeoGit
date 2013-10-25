@@ -7,6 +7,7 @@ package org.geogit.api.plumbing.merge;
 import org.geogit.api.ObjectId;
 
 import com.google.common.base.Preconditions;
+import com.google.common.base.Objects;
 
 /**
  * A class to store a merge conflict. It stores the information needed to solve the conflict, saving
@@ -16,7 +17,7 @@ import com.google.common.base.Preconditions;
  * A null ObjectId indicates that, for the corresponding version, the element did not exist
  * 
  */
-public class Conflict {
+public final class Conflict {
 
     private ObjectId ancestor;
 
@@ -47,6 +48,22 @@ public class Conflict {
 
     public String getPath() {
         return path;
+    }
+
+    public boolean equals(Object x) {
+        if (x instanceof Conflict) {
+            Conflict that = (Conflict) x;
+            return Objects.equal(this.ancestor, that.ancestor) &&
+                   Objects.equal(this.theirs, that.theirs) &&
+                   Objects.equal(this.ours, that.ours) &&
+                   Objects.equal(this.path, that.path);
+        } else {
+            return false;
+        }
+    }
+
+    public int hashCode() {
+        return Objects.hashCode(ancestor, theirs, ours, path);
     }
 
     public String toString() {
