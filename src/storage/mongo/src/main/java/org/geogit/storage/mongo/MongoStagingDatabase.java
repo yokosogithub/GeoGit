@@ -14,6 +14,7 @@ import javax.annotation.Nullable;
 import org.geogit.api.ObjectId;
 import org.geogit.api.RevObject;
 import org.geogit.api.plumbing.merge.Conflict;
+import org.geogit.repository.RepositoryConnectionException;
 import org.geogit.storage.ConfigDatabase;
 import org.geogit.storage.ObjectDatabase;
 import org.geogit.storage.StagingDatabase;
@@ -176,5 +177,15 @@ public class MongoStagingDatabase extends MongoObjectDatabase implements
             query.put("namespace", namespace);
         }
         conflicts.remove(query);
+    }
+
+    @Override
+    public void configure() throws RepositoryConnectionException {
+        RepositoryConnectionException.StorageType.STAGING.configure(config, "mongodb", "0.1");
+    }
+
+    @Override
+    public void checkConfig() throws RepositoryConnectionException {
+        RepositoryConnectionException.StorageType.STAGING.verify(config, "mongodb", "0.1");
     }
 }
