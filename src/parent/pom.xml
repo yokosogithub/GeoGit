@@ -526,6 +526,7 @@
         <artifactId>cobertura-maven-plugin</artifactId>
         <version>2.6</version>
         <configuration>
+          <aggregate>true</aggregate>
           <instrumentation>
             <!-- ignores> <ignore>**/*Exception.class</ignore> </ignores -->
             <excludes>
