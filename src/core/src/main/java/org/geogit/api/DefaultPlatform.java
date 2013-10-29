@@ -15,7 +15,7 @@ import java.util.TimeZone;
  */
 public class DefaultPlatform implements Platform {
 
-    private File workingDir;
+    protected File workingDir;
 
     /**
      * @return the working directory
@@ -66,6 +66,11 @@ public class DefaultPlatform implements Platform {
     @Override
     public int timeZoneOffset(long timeStamp) {
         return TimeZone.getDefault().getOffset(timeStamp);
+    }
+
+    @Override
+    public long nanoTime() {
+        return System.nanoTime();
     }
 
 }

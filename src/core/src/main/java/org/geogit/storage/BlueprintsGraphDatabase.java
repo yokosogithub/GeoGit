@@ -4,7 +4,6 @@
  */
 package org.geogit.storage;
 
-import static com.google.common.io.Closeables.closeQuietly;
 import static com.tinkerpop.blueprints.Direction.BOTH;
 import static com.tinkerpop.blueprints.Direction.IN;
 import static com.tinkerpop.blueprints.Direction.OUT;
@@ -34,7 +33,7 @@ import com.google.common.collect.ImmutableList.Builder;
 import com.tinkerpop.blueprints.CloseableIterable;
 import com.tinkerpop.blueprints.Edge;
 import com.tinkerpop.blueprints.Graph;
-import com.tinkerpop.blueprints.IndexableGraph;
+import com.tinkerpop.blueprints.KeyIndexableGraph;
 import com.tinkerpop.blueprints.Vertex;
 import com.tinkerpop.gremlin.java.GremlinPipeline;
 import com.tinkerpop.pipes.PipeFunction;
@@ -46,7 +45,7 @@ import com.tinkerpop.pipes.branch.LoopPipe.LoopBundle;
  * 
  * @param <DB>
  */
-public abstract class BlueprintsGraphDatabase<DB extends IndexableGraph> implements GraphDatabase {
+public abstract class BlueprintsGraphDatabase<DB extends KeyIndexableGraph> implements GraphDatabase {
 
     protected DB graphDB = null;
 
@@ -159,12 +158,10 @@ public abstract class BlueprintsGraphDatabase<DB extends IndexableGraph> impleme
             databaseServices.put(dbPath, newContainer);
         }
 
-        com.tinkerpop.blueprints.Index<Vertex> idIndex = graphDB.getIndex("identifiers",
-                Vertex.class);
-        if (idIndex == null) {
-            idIndex = graphDB.createIndex("identifiers", Vertex.class);
+        if (!graphDB.getIndexedKeys(Vertex.class).contains("identifier")) {
+            graphDB.createKeyIndex("identifiers", Vertex.class);
         }
-        CloseableIterable<Vertex> results = idIndex.get("isroot", "true");
+        Iterable<Vertex> results = graphDB.getVertices("identifier", "root");
         try {
             Iterator<Vertex> iter = results.iterator();
             if (iter.hasNext()) {
@@ -172,14 +169,12 @@ public abstract class BlueprintsGraphDatabase<DB extends IndexableGraph> impleme
                 this.rollback();
             } else {
                 root = graphDB.addVertex(null);
-                root.setProperty("isroot", "true");
+                root.setProperty("identifier", "root");
                 this.commit();
             }
         } catch (Exception e) {
             this.rollback();
             throw Throwables.propagate(e);
-        } finally {
-            closeQuietly(results);
         }
     }
 
@@ -236,20 +231,13 @@ public abstract class BlueprintsGraphDatabase<DB extends IndexableGraph> impleme
     @Override
     public boolean exists(ObjectId commitId) {
         try {
-            com.tinkerpop.blueprints.Index<Vertex> idIndex = graphDB.getIndex("identifiers",
-                    Vertex.class);
-            CloseableIterable<Vertex> results = null;
-            try {
-                results = idIndex.get("identifier", commitId.toString());
-                Iterator<Vertex> iterator = results.iterator();
-                if (iterator.hasNext()) {
-                    iterator.next();
-                    return true;
-                } else {
-                    return false;
-                }
-            } finally {
-                closeQuietly(results);
+            Iterable<Vertex> results = graphDB.getVertices("identifier", commitId.toString());
+            Iterator<Vertex> iterator = results.iterator();
+            if (iterator.hasNext()) {
+                iterator.next();
+                return true;
+            } else {
+                return false;
             }
         } finally {
             this.rollback();
@@ -266,18 +254,11 @@ public abstract class BlueprintsGraphDatabase<DB extends IndexableGraph> impleme
     @Override
     public ImmutableList<ObjectId> getParents(ObjectId commitId) throws IllegalArgumentException {
         try {
-            com.tinkerpop.blueprints.Index<Vertex> idIndex = graphDB.getIndex("identifiers",
-                    Vertex.class);
             Vertex node = null;
-            CloseableIterable<Vertex> results = null;
-            try {
-                results = idIndex.get("identifier", commitId.toString());
-                Iterator<Vertex> iterator = results.iterator();
-                if (iterator.hasNext()) {
-                    node = iterator.next();
-                }
-            } finally {
-                closeQuietly(results);
+            Iterable<Vertex> results = graphDB.getVertices("identifier", commitId.toString());
+            Iterator<Vertex> iterator = results.iterator();
+            if (iterator.hasNext()) {
+                node = iterator.next();
             }
 
             Builder<ObjectId> listBuilder = new ImmutableList.Builder<ObjectId>();
@@ -305,18 +286,11 @@ public abstract class BlueprintsGraphDatabase<DB extends IndexableGraph> impleme
     @Override
     public ImmutableList<ObjectId> getChildren(ObjectId commitId) throws IllegalArgumentException {
         try {
-            com.tinkerpop.blueprints.Index<Vertex> idIndex = graphDB.getIndex("identifiers",
-                    Vertex.class);
-            CloseableIterable<Vertex> results = null;
+            Iterable<Vertex> results = graphDB.getVertices("identifier", commitId.toString());
             Vertex node = null;
-            try {
-                results = idIndex.get("identifier", commitId.toString());
-                Iterator<Vertex> iterator = results.iterator();
-                if (iterator.hasNext()) {
-                    node = iterator.next();
-                }
-            } finally {
-                closeQuietly(results);
+            Iterator<Vertex> iterator = results.iterator();
+            if (iterator.hasNext()) {
+                node = iterator.next();
             }
 
             Builder<ObjectId> listBuilder = new ImmutableList.Builder<ObjectId>();
@@ -413,16 +387,9 @@ public abstract class BlueprintsGraphDatabase<DB extends IndexableGraph> impleme
      */
     public ObjectId getMapping(final ObjectId commitId) {
         try {
-            com.tinkerpop.blueprints.Index<Vertex> idIndex = graphDB.getIndex("identifiers",
-                    Vertex.class);
             Vertex node = null;
-            CloseableIterable<Vertex> results = null;
-            try {
-                results = idIndex.get("identifier", commitId.toString());
-                node = results.iterator().next();
-            } finally {
-                closeQuietly(results);
-            }
+            Iterable<Vertex> results = graphDB.getVertices("identifier", commitId.toString());
+            node = results.iterator().next();
 
             ObjectId mapped = ObjectId.NULL;
             Vertex mappedNode = getMappedNode(node);
@@ -454,24 +421,15 @@ public abstract class BlueprintsGraphDatabase<DB extends IndexableGraph> impleme
      */
     private Vertex getOrAddNode(ObjectId commitId) {
         final String commitIdStr = commitId.toString();
-        com.tinkerpop.blueprints.Index<Vertex> index = graphDB
-                .getIndex("identifiers", Vertex.class);
-        Vertex v;
-        if (index.count("identifier", commitId.toString()) == 0) {
-            v = graphDB.addVertex(null);
-            v.setProperty("identifier", commitIdStr);
-            index.put("identifier", commitId.toString(), v);
+        Iterable<Vertex> matches = graphDB.getVertices("identifier", commitIdStr);
+        Iterator<Vertex> iterator = matches.iterator();
+        if (iterator.hasNext()) {
+            return iterator.next();
         } else {
-            CloseableIterable<Vertex> results = null;
-            try {
-                results = index.get("identifier", commitIdStr);
-                v = results.iterator().next();
-            } finally {
-                closeQuietly(results);
-            }
+            Vertex v = graphDB.addVertex(null);
+            v.setProperty("identifier", commitIdStr);
+            return v;
         }
-
-        return v;
     }
 
     /**
@@ -484,16 +442,9 @@ public abstract class BlueprintsGraphDatabase<DB extends IndexableGraph> impleme
     @Override
     public int getDepth(final ObjectId commitId) {
         try {
-            com.tinkerpop.blueprints.Index<Vertex> idIndex = graphDB.getIndex("identifiers",
-                    Vertex.class);
             Vertex commitNode = null;
-            CloseableIterable<Vertex> results = null;
-            try {
-                results = idIndex.get("identifier", commitId.toString());
-                commitNode = results.iterator().next();
-            } finally {
-                closeQuietly(results);
-            }
+            Iterable<Vertex> results = graphDB.getVertices("identifier", commitId.toString());
+            commitNode = results.iterator().next();
             PipeFunction<LoopBundle<Vertex>, Boolean> expandCriterion = new PipeFunction<LoopBundle<Vertex>, Boolean>() {
                 @Override
                 public Boolean compute(LoopBundle<Vertex> argument) {
@@ -552,22 +503,12 @@ public abstract class BlueprintsGraphDatabase<DB extends IndexableGraph> impleme
      */
     public boolean isSparsePath(final ObjectId start, final ObjectId end) {
         try {
-            com.tinkerpop.blueprints.Index<Vertex> idIndex = graphDB.getIndex("identifiers",
-                    Vertex.class);
-            // Index<Node> idIndex = graphDB.index().forNodes("identifiers");
             Vertex startNode = null;
             Vertex endNode = null;
-            CloseableIterable<Vertex> startResults = null;
-            CloseableIterable<Vertex> endResults = null;
-            try {
-                startResults = idIndex.get("identifier", start.toString());
-                startNode = startResults.iterator().next();
-                endResults = idIndex.get("identifier", end.toString());
-                endNode = endResults.iterator().next();
-            } finally {
-                closeQuietly(startResults);
-                closeQuietly(endResults);
-            }
+            Iterable<Vertex> startResults = graphDB.getVertices("identifier", start.toString());
+            startNode = startResults.iterator().next();
+            Iterable<Vertex> endResults = graphDB.getVertices("identifier", end.toString());
+            endNode = endResults.iterator().next();
 
             PipeFunction<LoopBundle<Vertex>, Boolean> whileFunction = new PipeFunction<LoopBundle<Vertex>, Boolean>() {
                 @Override
@@ -612,18 +553,13 @@ public abstract class BlueprintsGraphDatabase<DB extends IndexableGraph> impleme
      * @param commitId the id of the commit
      */
     public void setProperty(ObjectId commitId, String propertyName, String propertyValue) {
-        com.tinkerpop.blueprints.Index<Vertex> idIndex = graphDB.getIndex("identifiers",
-                Vertex.class);
-        CloseableIterable<Vertex> results = null;
         try {
-            results = idIndex.get("identifier", commitId.toString());
+            Iterable<Vertex> results = graphDB.getVertices("identifier", commitId.toString());
             Vertex commitNode = results.iterator().next();
             commitNode.setProperty(propertyName, propertyValue);
             this.commit();
         } catch (Exception e) {
             this.rollback();
-        } finally {
-            closeQuietly(results);
         }
     }
 
@@ -638,9 +574,6 @@ public abstract class BlueprintsGraphDatabase<DB extends IndexableGraph> impleme
     @Override
     public Optional<ObjectId> findLowestCommonAncestor(ObjectId leftId, ObjectId rightId) {
         try {
-            com.tinkerpop.blueprints.Index<Vertex> idIndex = graphDB.getIndex("identifiers",
-                    Vertex.class);
-
             Set<Vertex> leftSet = new HashSet<Vertex>();
             Set<Vertex> rightSet = new HashSet<Vertex>();
 
@@ -649,25 +582,18 @@ public abstract class BlueprintsGraphDatabase<DB extends IndexableGraph> impleme
 
             Vertex leftNode;
             Vertex rightNode;
-            CloseableIterable<Vertex> leftResults = null;
-            CloseableIterable<Vertex> rightResults = null;
-            try {
-                leftResults = idIndex.get("identifier", leftId.toString());
-                leftNode = leftResults.iterator().next();
-                if (!leftNode.getEdges(OUT).iterator().hasNext()) {
-                    return Optional.absent();
-                }
-                leftQueue.add(leftNode);
-                rightResults = idIndex.get("identifier", rightId.toString());
-                rightNode = rightResults.iterator().next();
-                if (!rightNode.getEdges(OUT).iterator().hasNext()) {
-                    return Optional.absent();
-                }
-                rightQueue.add(rightNode);
-            } finally {
-                closeQuietly(leftResults);
-                closeQuietly(rightResults);
+            Iterable<Vertex> leftResults = graphDB.getVertices("identifier", leftId.toString());
+            leftNode = leftResults.iterator().next();
+            if (!leftNode.getEdges(OUT).iterator().hasNext()) {
+                return Optional.absent();
             }
+            leftQueue.add(leftNode);
+            Iterable<Vertex> rightResults = graphDB.getVertices("identifier", rightId.toString());
+            rightNode = rightResults.iterator().next();
+            if (!rightNode.getEdges(OUT).iterator().hasNext()) {
+                return Optional.absent();
+            }
+            rightQueue.add(rightNode);
 
             List<Vertex> potentialCommonAncestors = new LinkedList<Vertex>();
             while (!leftQueue.isEmpty() || !rightQueue.isEmpty()) {
@@ -724,7 +650,7 @@ public abstract class BlueprintsGraphDatabase<DB extends IndexableGraph> impleme
             Vertex ancestor = ancestorQueue.poll();
             for (Edge parent : ancestor.getEdges(BOTH, CommitRelationshipTypes.PARENT.name())) {
                 Vertex parentNode = parent.getVertex(IN);
-                if (parentNode.getId() != ancestor.getId()) {
+                if (!parentNode.getId().equals(ancestor.getId())) {
                     if (theirSet.contains(parentNode)) {
                         ancestorQueue.add(parentNode);
                         processed.add(parentNode);

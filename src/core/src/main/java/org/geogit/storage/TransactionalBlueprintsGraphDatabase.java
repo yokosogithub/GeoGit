@@ -6,7 +6,7 @@ package org.geogit.storage;
 
 import org.geogit.api.Platform;
 
-import com.tinkerpop.blueprints.IndexableGraph;
+import com.tinkerpop.blueprints.KeyIndexableGraph;
 import com.tinkerpop.blueprints.TransactionalGraph;
 
 /**
@@ -15,7 +15,7 @@ import com.tinkerpop.blueprints.TransactionalGraph;
  * 
  * @param <DB>
  */
-public abstract class TransactionalBlueprintsGraphDatabase<DB extends IndexableGraph & TransactionalGraph>
+public abstract class TransactionalBlueprintsGraphDatabase<DB extends KeyIndexableGraph & TransactionalGraph>
         extends BlueprintsGraphDatabase<DB> {
     public TransactionalBlueprintsGraphDatabase(Platform platform) {
         super(platform);

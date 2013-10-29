@@ -176,7 +176,7 @@ public class TransactionStagingDatabase implements StagingDatabase {
      * Pass through to the original {@link StagingDatabase}.
      */
     @Override
-    public <T extends RevObject> boolean put(T object) {
+    public boolean put(RevObject object) {
         return database.put(object);
     }
 
@@ -254,4 +254,13 @@ public class TransactionStagingDatabase implements StagingDatabase {
         return database.deleteAll(ids);
     }
 
+	@Override
+	public void configure() {
+		// No-op
+	}
+	
+	@Override
+	public void checkConfig() {
+	    // No-op
+	}
 }

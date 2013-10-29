@@ -392,6 +392,7 @@ public class GeogitCLI {
                 // this is intentional, see the javadoc for CommandFailedException
                 printError = false;
             } else {
+                LOGGER.error(consoleMessage, cmdFailed.getCause());
                 consoleMessage = cmdFailed.getMessage();
             }
         } catch (RuntimeException e) {

@@ -7,6 +7,8 @@ package org.geogit.storage;
 import java.util.Map;
 import java.util.concurrent.TimeoutException;
 
+import org.geogit.repository.RepositoryConnectionException;
+
 /**
  * Provides an interface for GeoGit reference databases.
  * 
@@ -17,6 +19,16 @@ public interface RefDatabase {
      * Locks access to the main repository refs.
      */
     public abstract void lock() throws TimeoutException;
+
+    /**
+     * Performs any setup required before first open() including default configuration
+     */
+    public abstract void configure() throws RepositoryConnectionException;
+
+    /**
+     * Verify the configuration before opening.
+     */
+    public abstract void checkConfig() throws RepositoryConnectionException;
 
     /**
      * Unlocks access to the main repository refs.

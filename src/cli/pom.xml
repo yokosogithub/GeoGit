@@ -25,6 +25,11 @@
       <artifactId>geogit-bdbje</artifactId>
       <version>${project.version}</version>
     </dependency>
+    <dependency>
+      <groupId>org.geogit</groupId>
+      <artifactId>geogit-metrics</artifactId>
+      <version>${project.version}</version>
+    </dependency>
 
     <dependency>
       <groupId>ch.qos.logback</groupId>

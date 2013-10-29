@@ -54,12 +54,19 @@ public class Conflicts extends AbstractCommand implements CLICommand {
     @Parameter(names = { "--ids-only" }, description = "Just show ids of elements")
     private boolean idsOnly;
 
+    @Parameter(names = { "--refspecs-only" }, description = "Just show refspecs of elements")
+    private boolean refspecsOnly;
+
     private GeoGIT geogit;
 
     @Override
     public void runInternal(GeogitCLI cli) throws IOException {
         checkParameter(!(idsOnly && previewDiff),
                 "Cannot use --diff and --ids-only at the same time");
+        checkParameter(!(refspecsOnly && previewDiff),
+                "Cannot use --diff and --refspecs-only at the same time");
+        checkParameter(!(refspecsOnly && idsOnly),
+                "Cannot use --ids-only and --refspecs-only at the same time");
 
         geogit = cli.getGeogit();
         List<Conflict> conflicts = geogit.command(ConflictsReadOp.class).call();
@@ -74,11 +81,37 @@ public class Conflicts extends AbstractCommand implements CLICommand {
                     printConflictDiff(conflict, cli.getConsole(), geogit);
                 } else if (idsOnly) {
                     cli.getConsole().println(conflict.toString());
+                } else if (refspecsOnly) {
+                    printRefspecs(conflict, cli.getConsole(), geogit);
                 } else {
                     printConflict(conflict, cli.getConsole(), geogit);
                 }
             }
         }
+    }
+
+    private void printRefspecs(Conflict conflict, ConsoleReader console, GeoGIT geogit)
+            throws IOException {
+        ObjectId mergeHeadId = geogit.command(RefParse.class).setName(Ref.MERGE_HEAD).call().get()
+                .getObjectId();
+        Optional<RevCommit> mergeHead = geogit.command(RevObjectParse.class)
+                .setObjectId(mergeHeadId).call(RevCommit.class);
+        ObjectId origHeadId = geogit.command(RefParse.class).setName(Ref.ORIG_HEAD).call().get()
+                .getObjectId();
+        Optional<RevCommit> origHead = geogit.command(RevObjectParse.class).setObjectId(origHeadId)
+                .call(RevCommit.class);
+        Optional<RevCommit> commonAncestor = geogit.command(FindCommonAncestor.class)
+                .setLeft(mergeHead.get()).setRight(origHead.get()).call();
+        String ancestorPath = commonAncestor.get().getId().toString() + ":" + conflict.getPath();
+        StringBuilder sb = new StringBuilder();
+        sb.append(conflict.getPath());
+        sb.append(" ");
+        sb.append(ancestorPath);
+        sb.append(" ");
+        sb.append(origHeadId.toString() + ":" + conflict.getPath());
+        sb.append(" ");
+        sb.append(mergeHeadId.toString() + ":" + conflict.getPath());
+        console.println(sb.toString());
     }
 
     private void printConflictDiff(Conflict conflict, ConsoleReader console, GeoGIT geogit)

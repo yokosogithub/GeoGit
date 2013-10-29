@@ -8,6 +8,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.geogit.api.Platform;
+import org.geogit.storage.ConfigDatabase;
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.test.TestGraphDatabaseFactory;
 
@@ -17,8 +18,8 @@ import com.tinkerpop.blueprints.impls.neo4j.Neo4jGraph;
 public class TestNeo4JGraphDatabase extends Neo4JGraphDatabase {
 
     @Inject
-    public TestNeo4JGraphDatabase(Platform platform) {
-        super(platform);
+    public TestNeo4JGraphDatabase(Platform platform, ConfigDatabase configDB) {
+        super(platform, configDB);
     }
 
     @Override

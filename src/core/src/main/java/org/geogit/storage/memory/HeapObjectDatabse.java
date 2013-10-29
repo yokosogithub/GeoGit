@@ -152,4 +152,13 @@ public class HeapObjectDatabse extends AbstractObjectDatabase implements ObjectD
         return count;
     }
 
+    @Override
+    public void configure() {
+        // No-op
+    }
+    
+    @Override
+	public void checkConfig() {
+		// No-op
+	}
 }

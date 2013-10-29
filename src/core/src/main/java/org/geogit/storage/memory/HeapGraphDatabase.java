@@ -29,4 +29,14 @@ public class HeapGraphDatabase extends BlueprintsGraphDatabase<TinkerGraph> {
     protected TinkerGraph getGraphDatabase() {
         return new TinkerGraph();
     }
+    
+    @Override
+    public void configure() {
+        // No-op
+    }
+    
+    @Override
+    public void checkConfig() {
+        // No-op
+    }
 }
