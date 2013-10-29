@@ -20,6 +20,7 @@ import org.geogit.api.RevObject;
 import org.geogit.api.RevTag;
 import org.geogit.api.RevTree;
 import org.geogit.repository.RepositoryConnectionException;
+import org.geogit.storage.BulkOpListener;
 import org.geogit.storage.ConfigDatabase;
 import org.geogit.storage.ObjectDatabase;
 import org.geogit.storage.ObjectInserter;
@@ -28,6 +29,7 @@ import org.geogit.storage.ObjectWriter;
 import org.geogit.storage.datastream.DataStreamSerializationFactory;
 
 import com.google.common.base.Functions;
+import com.google.common.collect.AbstractIterator;
 import com.google.common.collect.Iterators;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
@@ -47,30 +49,30 @@ import com.mongodb.WriteResult;
  */
 public class MongoObjectDatabase implements ObjectDatabase {
     private final MongoConnectionManager manager;
-    protected final ConfigDatabase config;
+    private final ConfigDatabase config;
 
     private MongoClient client = null;
+
     protected DB db = null;
+
     protected DBCollection collection = null;
+
     protected ObjectSerializingFactory serializers = new DataStreamSerializationFactory();
 
     @Inject
-    public MongoObjectDatabase(ConfigDatabase config,
-            MongoConnectionManager manager) {
+    public MongoObjectDatabase(ConfigDatabase config, MongoConnectionManager manager) {
         this.config = config;
         this.manager = manager;
     }
 
     private RevObject fromBytes(ObjectId id, byte[] buffer) {
         ByteArrayInputStream byteStream = new ByteArrayInputStream(buffer);
-        RevObject result = serializers.createObjectReader()
-                .read(id, byteStream);
+        RevObject result = serializers.createObjectReader().read(id, byteStream);
         return result;
     }
 
     private byte[] toBytes(RevObject object) {
-        ObjectWriter<RevObject> writer = serializers.createObjectWriter(object
-                .getType());
+        ObjectWriter<RevObject> writer = serializers.createObjectWriter(object.getType());
         ByteArrayOutputStream byteStream = new ByteArrayOutputStream();
         try {
             writer.write(object, byteStream);
@@ -210,16 +212,11 @@ public class MongoObjectDatabase implements ObjectDatabase {
 
     private long deleteChunk(List<ObjectId> ids) {
         List<String> idStrings = Lists.transform(ids, Functions.toStringFunction());
-        DBObject query = 
-                BasicDBObjectBuilder.start()
-                .push("oid")
-                .add("$in", idStrings)
-                .pop()
-                .get();
+        DBObject query = BasicDBObjectBuilder.start().push("oid").add("$in", idStrings).pop().get();
         WriteResult result = collection.remove(query);
         return result.getN();
     }
-    
+
     @Override
     public boolean delete(ObjectId id) {
         DBObject query = new BasicDBObject();
@@ -229,6 +226,11 @@ public class MongoObjectDatabase implements ObjectDatabase {
 
     @Override
     public long deleteAll(Iterator<ObjectId> ids) {
+        return deleteAll(ids, BulkOpListener.NOOP_LISTENER);
+    }
+
+    @Override
+    public long deleteAll(Iterator<ObjectId> ids, BulkOpListener listener) {
         Iterator<List<ObjectId>> chunks = Iterators.partition(ids, 500);
         long count = 0;
         while (chunks.hasNext()) {
@@ -244,18 +246,58 @@ public class MongoObjectDatabase implements ObjectDatabase {
         DBObject record = new BasicDBObject();
         record.put("oid", object.getId().toString());
         record.put("serialized_object", toBytes(object));
-        return collection.update(query, record, true, false).getLastError()
-                .ok();
+        return collection.update(query, record, true, false).getLastError().ok();
     }
 
     @Override
     public void putAll(final Iterator<? extends RevObject> objects) {
-        while (objects.hasNext())
-            put(objects.next());
+        putAll(objects, BulkOpListener.NOOP_LISTENER);
+    }
+
+    @Override
+    public void putAll(Iterator<? extends RevObject> objects, BulkOpListener listener) {
+        while (objects.hasNext()) {
+            RevObject object = objects.next();
+            boolean put = put(object);
+            if (put) {
+                listener.inserted(object, null);
+            }
+        }
     }
 
     @Override
     public ObjectInserter newObjectInserter() {
         return new ObjectInserter(this);
+    }
+
+    @Override
+    public Iterator<RevObject> getAll(Iterable<ObjectId> ids) {
+        return getAll(ids, BulkOpListener.NOOP_LISTENER);
+    }
+
+    @Override
+    public Iterator<RevObject> getAll(final Iterable<ObjectId> ids, final BulkOpListener listener) {
+
+        return new AbstractIterator<RevObject>() {
+            final Iterator<ObjectId> queryIds = ids.iterator();
+
+            @Override
+            protected RevObject computeNext() {
+                RevObject obj = null;
+                while (obj == null) {
+                    if (!queryIds.hasNext()) {
+                        return endOfData();
+                    }
+                    ObjectId id = queryIds.next();
+                    obj = getIfPresent(id);
+                    if (obj == null) {
+                        listener.notFound(id);
+                    } else {
+                        listener.found(obj, null);
+                    }
+                }
+                return obj == null ? endOfData() : obj;
+            }
+        };
     }
 }
