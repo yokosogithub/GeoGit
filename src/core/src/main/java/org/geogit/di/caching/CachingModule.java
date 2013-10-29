@@ -13,6 +13,7 @@ import java.util.Iterator;
 import org.geogit.api.ObjectId;
 import org.geogit.di.GeogitModule;
 import org.geogit.di.MethodMatcher;
+import org.geogit.storage.BulkOpListener;
 import org.geogit.storage.ConfigDatabase;
 import org.geogit.storage.ObjectDatabase;
 import org.geogit.storage.StagingDatabase;
@@ -49,7 +50,7 @@ public class CachingModule extends AbstractModule {
                 ObjectId.class);
 
         final Matcher<Method> deleteAllMatcher = new MethodMatcher(ObjectDatabase.class,
-                "deleteAll", Iterator.class);
+                "deleteAll", Iterator.class, BulkOpListener.class);
 
         // bind separate caches for the object and staging databases
 
