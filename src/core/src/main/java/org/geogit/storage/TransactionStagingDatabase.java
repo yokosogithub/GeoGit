@@ -259,15 +259,16 @@ public class TransactionStagingDatabase implements StagingDatabase {
         return database.deleteAll(ids, listener);
     }
 
-	@Override
-	public void configure() {
-		// No-op
-	}
-	
-	@Override
-	public void checkConfig() {
-	    // No-op
-	}
+    @Override
+    public void configure() {
+        // No-op
+    }
+
+    @Override
+    public void checkConfig() {
+        // No-op
+    }
+
     @Override
     public Iterator<RevObject> getAll(final Iterable<ObjectId> ids) {
         return getAll(ids, BulkOpListener.NOOP_LISTENER);

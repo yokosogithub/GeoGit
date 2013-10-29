@@ -197,9 +197,9 @@ public class HeapObjectDatabse extends AbstractObjectDatabase implements ObjectD
     public void configure() {
         // No-op
     }
-    
+
     @Override
-	public void checkConfig() {
-		// No-op
-	}
+    public void checkConfig() {
+        // No-op
+    }
 }
