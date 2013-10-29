@@ -24,10 +24,10 @@ public class TestConfigDatabase implements ConfigDatabase {
         final IniMongoProperties properties = new IniMongoProperties();
         final String port = properties.get("mongo.port", String.class).or(
                 "27017");
-        final String host = properties.get("mongo.host", String.class).or(
+        final String host = properties.get("mongodb.host", String.class).or(
                 "localhost");
         overrides.put("mongo.port", port);
-        overrides.put("mongo.host", host);
+        overrides.put("mongodb.host", host);
     }
 
     @Inject

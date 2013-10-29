@@ -89,8 +89,8 @@ public class MongoObjectDatabase implements ObjectDatabase {
         if (client != null) {
             return;
         }
-        String hostname = config.get("mongo.host").get();
-        int port = config.get("mongo.port", Integer.class).get();
+        String hostname = config.get("mongodb.host").get();
+        int port = config.get("mongodb.port", Integer.class).get();
         client = manager.acquire(new MongoAddress(hostname, port));
         db = client.getDB("geogit");
         collection = db.getCollection(getCollectionName());
@@ -105,6 +105,8 @@ public class MongoObjectDatabase implements ObjectDatabase {
     @Override
     public void configure() throws RepositoryConnectionException {
         RepositoryConnectionException.StorageType.OBJECT.configure(config, "mongodb", "0.1");
+        config.put("mongodb.host", "localhost");
+        config.put("mongodb.port", 27017);
     }
 
     @Override
