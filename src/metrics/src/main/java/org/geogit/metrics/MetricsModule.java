@@ -6,12 +6,16 @@ package org.geogit.metrics;
 
 import static com.google.inject.matcher.Matchers.subclassesOf;
 
+import java.lang.management.ManagementFactory;
 import java.util.Iterator;
 
+import org.aopalliance.intercept.MethodInterceptor;
+import org.aopalliance.intercept.MethodInvocation;
 import org.geogit.api.AbstractGeoGitOp;
 import org.geogit.api.Platform;
 import org.geogit.di.GeogitModule;
 import org.geogit.di.MethodMatcher;
+import org.geogit.repository.Repository;
 import org.geogit.storage.ConfigDatabase;
 import org.geogit.storage.ObjectDatabase;
 import org.geogit.storage.StagingDatabase;
@@ -48,6 +52,10 @@ import com.google.inject.matcher.Matchers;
  * </code>
  * </pre>
  * 
+ * <li>{@code org.geogit.metrics.memory}: used to log heap and non heap memory usage, every two
+ * seconds, in the format
+ * {@code <timestamp>,<heap memory usage in MB>,<non heap mem usage in MB>,<estimated number of objects pending finalization> }
+ * 
  * </ul>
  * 
  */
@@ -57,6 +65,12 @@ public class MetricsModule extends AbstractModule {
 
     public static final Logger COMMAND_STACK_LOGGER = LoggerFactory
             .getLogger("org.geogit.metrics.stack");
+
+    public static final Logger MEMORY_LOGGER = LoggerFactory.getLogger("org.geogit.metrics.memory");
+
+    public static final String METRICS_ENABLED = "metrics.enabled";
+
+    public static final long startTimeSecs = ManagementFactory.getRuntimeMXBean().getStartTime() / 1000;
 
     @SuppressWarnings("rawtypes")
     @Override
@@ -78,5 +92,28 @@ public class MetricsModule extends AbstractModule {
         bindInterceptor(stagingDatabase, new MethodMatcher(StagingDatabase.class, "putAll",
                 Iterator.class), new NamedMeteredInterceptor(platform, configDb,
                 "StagingDatabase.putAll"));
+
+        final HeapMemoryMetricsService jvmMetricsService = new HeapMemoryMetricsService(
+                getProvider(Platform.class), getProvider(ConfigDatabase.class));
+
+        bindInterceptor(Matchers.subclassesOf(Repository.class), new MethodMatcher(
+                Repository.class, "open"), new MethodInterceptor() {
+
+            @Override
+            public Object invoke(MethodInvocation invocation) throws Throwable {
+                jvmMetricsService.start();
+                return invocation.proceed();
+            }
+        });
+
+        bindInterceptor(Matchers.subclassesOf(Repository.class), new MethodMatcher(
+                Repository.class, "close"), new MethodInterceptor() {
+
+            @Override
+            public Object invoke(MethodInvocation invocation) throws Throwable {
+                jvmMetricsService.stop();
+                return invocation.proceed();
+            }
+        });
     }
 }

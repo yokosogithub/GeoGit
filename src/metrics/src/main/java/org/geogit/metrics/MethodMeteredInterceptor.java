@@ -5,6 +5,7 @@
 package org.geogit.metrics;
 
 import static org.geogit.metrics.MetricsModule.COMMAND_STACK_LOGGER;
+import static org.geogit.metrics.MetricsModule.METRICS_ENABLED;
 import static org.geogit.metrics.MetricsModule.METRICS_LOGGER;
 
 import java.util.concurrent.TimeUnit;
@@ -39,7 +40,7 @@ abstract class MethodMeteredInterceptor implements MethodInterceptor {
     public Object invoke(MethodInvocation invocation) throws Throwable {
         Boolean enabled;
         try {
-            enabled = configDb.get().get("metrics.enabled", Boolean.class).or(Boolean.FALSE);
+            enabled = configDb.get().get(METRICS_ENABLED, Boolean.class).or(Boolean.FALSE);
         } catch (ConfigException e) {
             if (StatusCode.INVALID_LOCATION.equals(e.statusCode)) {
                 enabled = Boolean.FALSE;
