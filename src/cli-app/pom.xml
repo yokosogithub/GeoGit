@@ -130,9 +130,19 @@
     </plugins>
   </build>
 
-  <profiles>
+ <profiles>
     <profile>
-      <id>sqlServerDriver</id>
+      <id>oracle</id>
+      <dependencies>
+        <dependency>
+          <groupId>com.oracle</groupId>
+          <artifactId>ojdbc14</artifactId> 
+          <version>10.2.0.3.0</version>
+        </dependency>
+      </dependencies>
+    </profile>
+    <profile>
+      <id>sqlServer</id>
       <dependencies>
         <dependency>
           <groupId>com.microsoft</groupId>
