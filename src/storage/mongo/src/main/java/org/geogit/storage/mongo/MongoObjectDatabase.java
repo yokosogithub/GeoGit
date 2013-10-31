@@ -49,7 +49,7 @@ import com.mongodb.WriteResult;
  */
 public class MongoObjectDatabase implements ObjectDatabase {
     private final MongoConnectionManager manager;
-    private final ConfigDatabase config;
+    protected final ConfigDatabase config;
 
     private MongoClient client = null;
 
