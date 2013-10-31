@@ -146,18 +146,69 @@ public interface ObjectDatabase {
      */
     public boolean delete(ObjectId objectId);
 
+    /**
+     * Shorthand for {@link #getAll(Iterable, BulkOpListener)} with
+     * {@link BulkOpListener#NOOP_LISTENER} as second argument
+     */
     public Iterator<RevObject> getAll(final Iterable<ObjectId> ids);
 
+    /**
+     * Query method to retrieve a collection of objects from the database, given a collection of
+     * object identifiers.
+     * <p>
+     * The returned iterator may not preserve the order of the argument list of ids.
+     * <p>
+     * The {@link BulkOpListener#found(RevObject, Integer) listener.found} method is going to be
+     * called for each object found as the returned iterator is traversed.
+     * <p>
+     * The {@link BulkOpListener#notFound(ObjectId) listener.notFound} method is to be called for
+     * each object not found as the iterator is traversed.
+     * 
+     * @param ids an iterable holding the list of ids to remove from the database
+     * @param listener a listener that gets notified of {@link BulkOpListener#deleted(ObjectId)
+     *        deleted} and {@link BulkOpListener#notFound(ObjectId) not found} items
+     * @return an iterator with the objects <b>found</b> on the database, in no particular order
+     */
     public Iterator<RevObject> getAll(final Iterable<ObjectId> ids, BulkOpListener listener);
 
     /**
-     * @param iterator
+     * Shorthand for {@link #putAll(Iterator, BulkOpListener)} with
+     * {@link BulkOpListener#NOOP_LISTENER} as second argument
      */
     public void putAll(Iterator<? extends RevObject> objects);
 
+    /**
+     * Requests to insert all objects into the object database
+     * <p>
+     * Objects already present (given its {@link RevObject#getId() id} shall not be inserted.
+     * <p>
+     * For each object that gets actually inserted (i.e. an object with the same id didn't
+     * previously exist), {@link BulkOpListener#inserted(RevObject, Integer) listener.inserted}
+     * method is called.
+     * 
+     * @param objects the objects to request for insertion into the object database
+     * @param listener a listener to get notifications of actually inserted objects
+     */
     public void putAll(Iterator<? extends RevObject> objects, BulkOpListener listener);
 
+    /**
+     * Shorthand for {@link #deleteAll(Iterator, BulkOpListener)} with
+     * {@link BulkOpListener#NOOP_LISTENER} as second argument
+     */
     public long deleteAll(Iterator<ObjectId> ids);
 
+    /**
+     * Requests to delete all objects in the argument list of object ids from the object database.
+     * <p>
+     * For each object found and deleted, the {@link BulkOpListener#deleted(ObjectId)
+     * listener.deleted} method will be called
+     * <p>
+     * For each object not found, the {@link BulkOpListener#notFound(ObjectId) listener.notFound}
+     * method will be called
+     * 
+     * @param ids the identifiers of objects to delete
+     * @param listener a listener to receive notifications of deleted and not found objects
+     * @return the number of objects actually deleted
+     */
     public long deleteAll(Iterator<ObjectId> ids, BulkOpListener listener);
 }

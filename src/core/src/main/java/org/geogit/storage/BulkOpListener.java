@@ -15,7 +15,8 @@ public abstract class BulkOpListener {
     };
 
     /**
-     * Signals each object found at {@link ObjectDatabase#getAll(Iterable, BulkOpListener)}
+     * Signals each object found at {@link ObjectDatabase#getAll(Iterable, BulkOpListener)} as the
+     * returned iterator is traversed
      * 
      * @param object the object found
      * @param storageSizeBytes <b>optional</b> the object storage size, if known.
