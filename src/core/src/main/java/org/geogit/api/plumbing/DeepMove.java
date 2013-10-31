@@ -141,32 +141,28 @@ public class DeepMove extends AbstractGeoGitOp<ObjectId> {
     }
 
     private void moveObjects(final ObjectDatabase from, final ObjectDatabase to,
-            Supplier<Iterator<Node>> nodesToMove, final Set<ObjectId> metadataIds) {
+            final Supplier<Iterator<Node>> nodesToMove, final Set<ObjectId> metadataIds) {
 
-        Function<Node, ObjectId> asIds = new Function<Node, ObjectId>() {
-            @Override
-            public ObjectId apply(Node input) {
-                return input.getObjectId();
-            }
-        };
-        Function<Node, RevObject> asObjects = new Function<Node, RevObject>() {
-            @Override
-            public RevObject apply(Node input) {
-                if (input.getMetadataId().isPresent()) {
-                    metadataIds.add(input.getMetadataId().get());
+        Iterable<ObjectId> ids = new Iterable<ObjectId>() {
+
+            final Function<Node, ObjectId> asId = new Function<Node, ObjectId>() {
+                @Override
+                public ObjectId apply(Node input) {
+                    return input.getObjectId();
                 }
-                return from.get(input.getObjectId());
+            };
+
+            @Override
+            public Iterator<ObjectId> iterator() {
+                Iterator<Node> iterator = nodesToMove.get();
+                Iterator<ObjectId> ids = Iterators.transform(iterator, asId);
+
+                return ids;
             }
         };
 
-        Iterator<Node> iterator;
-        iterator = nodesToMove.get();
-        if (iterator.hasNext()) {
-            to.putAll(Iterators.transform(iterator, asObjects));
-
-            iterator = nodesToMove.get();
-            from.deleteAll(Iterators.transform(iterator, asIds));
-        }
+        to.putAll(from.getAll(ids));
+        from.deleteAll(ids.iterator());
     }
 
     /**

@@ -218,32 +218,95 @@ Mappings are defined in a mapping file, using JSON syntax, as in the following e
 
 ::
 
-	{"rules":[{"name":"onewaystreets","filter":{"oneway":["yes"]},"fields":{"lit":{"name":"lit", "type":STRING"},"geom":{"name":"geom", "type":LINESTRING"}}]}
+	{"rules":[
+	  {
+	    "name":"onewaystreets",
+	    "filter":{
+	      "oneway":["yes"]
+	    },
+	    "fields":{
+	      "highway":{"name":"highway", "type":"STRING"},
+	      "geom":{"name":"geom", "type":"LINESTRING"}
+	    }
+	  }
+	]}
 
 A mapping description is an array of mapping rules, each of them with the following fields:
  
- - ``name`` defines the name of the mapping, which is used as the destination tree.
- - ``filter`` is a set of tags and values, which define the entities to use for the tree. All entities which have any of the specified values for any of the given tags will be used. And empty filter will cause all entities to be used.
+- ``name`` defines the name of the mapping, and is used as the name of the destination tree.
+- ``filter`` is a set of tags and values, which define the entities to use for the tree. All entities which have any of the specified values for any of the given tags will be used. And empty filter will cause all entities to be used.
+- ``fields`` is a set of tags and destination column names and types.
 
- The following mapping will cause all ways to be be mapped, to a feature type that just contains the geometry of the way:
-
- ::
-
- 	{"rules":[{"filter":{},"fields":{"geom":{"name":geom","type":"LINESTRING"}},"name":"all_ways"}]}
-
- To get all entities that have a given tag, no matter which value the tag gas, just use an empty list for the accepted values. For instance, to get all the nodes with the tag ``power`` (can be ``power=tower``, ``power=pole``, etc.), use the following mapping:
-
+The following mapping will copy all ways to a feature type that only contains the geometry of the way:
 
 ::
 
- 	{"rules":[{"filter":{"power":[]},"fields":{"geom":{"name":"geom","type":POINT"},"name":"power"}]}
+	{"rules":[
+	  {
+      "name":"all_ways",
+	    "filter":{},
+	    "fields":{
+	      "geom":{"name":"geom","type":"LINESTRING"}
+	    }
+	  }
+	]}
 
+To get all entities that have a given tag, no matter which value the tag gas, just use an empty list for the accepted values. For instance, to get all the nodes with the tag ``power`` (can be ``power=tower``, ``power=pole``, etc.), use the following mapping:
 
+::
 
- - ``fields`` describes the attributes for the feature type, as ``tag_name:{"name":field_name, "type":field_type}`` values. Usually, ``tag_name`` and ``field_name`` will be identical, so the name of the tag is used as the field name. However, you can use a different name for the field, which will act as an alias for the tag.
-  Valid types for the ``field_type`` are ``INTEGER, FLOAT, DOUBLE, LONG SHORT, POINT LINE, POLYGON, STRING, DATE``. Only one of the geometry types can be used for a field in a mapping rule. This defines the type of entities that will be used, so it acts as a filter as well. So, if you add a field of type ``POINT``, it will use only those entities represented as a points. That is, it will use only nodes. ``LINESTRING``  and ``POLYGON`` will cause only ways to be used. In both cases, all ways are used, even if they are not closed (they will be automatically closed to create the polygon). It is up to you to define the criteria for a way to be suitable for creating a polygon, such as, for instance, requiring the ``area=yes`` or "building=yes" tag/value pair.
+ 	{"rules":[
+ 	  {
+      "name":"power",
+ 	    "filter":{
+ 	      "power":[]
+ 	    },
+ 	    "fields":{
+ 	      "geom":{"name":"geom", "type":"POINT"},
+ 	      "power":{"name":"powertype", "type":"STRING"}
+ 	    }
+ 	  }
+ 	]}
 
-  Apart from the fields that you add to the feature type in your mapping definition, GeoGit will always add an ``id`` field with the OSM Id of the entity. This is used to track the Id and allow for unmapping, as we will later see. In the case of ways, another field is added, ``nodes``, which contains the Id's of nodes that belong to the way. You should avoid using ``id`` or ``nodes`` as names of your fields, as that might cause problems.
+Any way/node that matches any of the supplied filters will pass through the rule. For instance, to get a subset of buildings and air terminals (a special case of building) use:
+
+::
+
+ 	{"rules":[
+    {
+      "name":"buildings",
+      "filter":{
+        "building":["residential","house","garage","detached","terrace","apartments"],
+        "aeroway":["terminal"]
+      },
+      "fields":{
+        "geom":{"name":"way","type":"POLYGON"},
+        "building":{"name":"building", "type":"STRING"},
+        "aeroway":{"name":"aeroway", "type":"STRING"}
+      }
+    }
+  }
+
+The format of the ``fields`` entries is a little tricky: the initial key is the tag to read from, and the value is a hash giving the field name and field type to write to. So: ``"my_tag":{"name":"my_field", "type":"FIELD_TYPE"}``
+
+Usually, ``my_tag`` and ``my_field`` will be identical, so the name of the tag is used as the field name. However, you can use a different name for the field, which will act as an alias for the tag.
+
+Valid types for the ``FIELD_TYPE`` are
+
+* ``INTEGER``
+* ``FLOAT``
+* ``DOUBLE``
+* ``LONG``
+* ``SHORT``
+* ``POINT``
+* ``LINESTRING``
+* ``POLYGON``
+* ``STRING``
+* ``DATE``
+
+Each tree has only one geometry type, so the geometry type you choose to write out will act as an implicit filter: if you use a field of type ``POINT``, only nodes will be read; if you use a field of type ``LINESTRING`` or ``POLYGON``, only ways will be read. When you use a field of type ``POLYGON`` all ways will be read and automatically closed, is it is important to define the criteria for a way to be suitable for creating a polygon, such as, for instance, requiring the ``area=yes`` or ``building=yes`` tag/value pair.
+
+Apart from the fields that you add to the feature type in your mapping definition, GeoGit will always add an ``id`` field with the OSM Id of the entity. This is used to track the Id and allow for unmapping, as we will later see. In the case of ways, another field is added, ``nodes``, which contains the Id's of nodes that belong to the way. You should avoid using ``id`` or ``nodes`` as names of your fields, as that might cause problems.
 
 .. note:: [Explain this better and in more in detail]
 
@@ -282,13 +345,13 @@ if ``--mapping`` is used and the ``--no-raw`` switch is not, the working tree an
 
 Also in this case, as mentioned above, a commit will be created after the mapping, and the working tree and index have to be clean before performing the mapping operation. The ``--message`` option can be used as well to set a given commit message.
 
-- When exporting OSM data. OSM data can be exported to OSM formats using the ``osm export`` command, and also to other formats using commands such as ``shp export`` or ``pg export``. In these two last cases, the feature type created in the destination file or database is the same one used it the ``way`` or ``node`` tree. That is, the default one used for storing the *raw* OSM data in GeoGit. Additional commands are available to export a mapped set of features.
+When exporting OSM data. OSM data can be exported to OSM formats using the ``osm export`` command, and also to other formats using commands such as ``shp export`` or ``pg export``. In these two last cases, the feature type created in the destination file or database is the same one used it the ``way`` or ``node`` tree. That is, the default one used for storing the *raw* OSM data in GeoGit. Additional commands are available to export a mapped set of features.
 
-	- `osm export-shp``. Export to a shapefile
-	- `osm export-pg``. Export to a PostGIS database
-	- `osm export-sl``. Export to a Spatialite database.
+- ``osm export-shp``. Export to a shapefile
+- ``osm export-pg``. Export to a PostGIS database
+- ``osm export-sl``. Export to a Spatialite database.
 
- .. note:: only shp and pg export currently implemented
+.. note:: only shp and pg export currently implemented
 
 These commands all have a syntax similar to the equivalent export commands such as ``shp export`` or ``pg export``, but without the ``--alter``, ``--defaulttype`` and ``--featuretype`` options. Instead, the ``--mapping`` option must be used to specify the file that contains the mapping to use. Also, a path cannot be specified, since the operation will always take the OSM data from the default *raw* locations at the ``way`` and ``node`` trees.
 
@@ -327,19 +390,28 @@ For instance, imagine that you have an OSM entity with the following tags
 
 ::
 
-    amenity:fire_station
-    name:Unnamed fire station
-    phone:5555986154
+  amenity:fire_station
+  name:Unnamed fire station
+  phone:5555986154
     
-
 Let's say that you have run the ``export-pg`` command to export your nodes to a postGIS database, with the following mapping
 
 ::
 
-	 {"rules":[{"filter":{"amenity":["fire_station"]},"fields":{"geom":{"name":"geom", "type":POINT"}, "name":"{"name":"name", "type":"STRING"}},"name":"firestations"}]}
+	{"rules":[
+	  {
+      "name":"firestations",
+	    "filter":{
+	      "amenity":["fire_station"]
+	    },
+	    "fields":{
+	      "geom":{"name":"geom", "type":"POINT"}, 
+	      "name":"{"name":"name", "type":"STRING"}
+	    }
+	  }
+	]}
 
 Basically, you are mapping all fire stations to a new feature type which just contains the station name and its location.
-
 
 Now, in your exported data, you modified the name of the above firestation from "Unnamed fire station" to "Central fire station". After that, you imported the data to a ``fire_stations`` tree using the ``pg import`` command.
 
@@ -353,9 +425,9 @@ The corresponding feature will be updated, and will have the following tags.
 
 ::
 
-    amenity:fire_station
-    name:Central fire station
-    phone:5555986154
+  amenity:fire_station
+  name:Central fire station
+  phone:5555986154
 
 Although the ``phone`` tag was not present in the mapped data, it will continue to appear here, since it is taken from the previous version of the feature that was stored in the ``node`` tree.
 
@@ -368,7 +440,7 @@ The unmapping operation also considers deleted features, by comparing with the s
 An OSM workflow using GeoGit
 -----------------------------
 
-The following is a short exercise demostrating how GeoGit can be used as part of a workflow involving OSM data.
+The following is a short exercise demonstrating how GeoGit can be used as part of a workflow involving OSM data.
 
 First, let's initialize the repository.
 
@@ -434,7 +506,18 @@ Create a file named ``mapping.json`` in your GeoGit repository folder, with the 
 
 ::
 	
-	{"rules":[{"filter":{"power":["tower", "pole"]},"fields":{"coord":"POINT", "power":"STRING"},"name":"power"}]}
+	{"rules":[
+	  {
+      "name":"power",
+	    "filter":{
+	      "power":["tower", "pole"]
+	    },
+	    "fields":{
+	      "coord":{"name":"coord", "type":"POINT"},
+	      "power":{"name":"power", "type":"STRING"}
+	    }
+	  }
+	]}
 
 Now export the OSM data that you downloaded, using the above mapping. 
 
@@ -525,8 +608,6 @@ To merge those changes (no matter which one of the above method you have used to
 
 If there are conflicts, the operation will be stopped and you should resolve them as usual. If not, the, changes will merged with the changes you just added when importing the xml file. If there are no changes since the last time you fetched data from the OSM server, no commit will be made, and the repository will not be changed by the update operation.
 
-
-
 Finally, you can export the new changes that you have introduced, as a changeset, ready to be contributed to the OSM planet. The commits to compare depend on the workflow that you have followed. In the case above, you can get them by comparing the current HEAD with its second parent, which corresponds to the branch that was created with the changes downloaded in the update operation, in case there were changes (otherwise, there would be no merge operation, since it was not necessary).
 
 ::
@@ -538,3 +619,38 @@ Or you can just compare your current HEAD to what you had after your first impor
 ::
 
 	$ geogit create-changeset 58b84cee8f4 HEAD -f changeset.xml
+
+
+
+IDEAS & ISSUES FOR FUTURE DEVELOPMENT
+=====================================
+
+Problems to solve / Things to consider  about OSM commands in GeoGit
+---------------------------------------------------------------------
+
+# Updating. The current update command just re-downloads with the last filter, but is not a smart download, and downloads everything. The overpass API allows to fetch only features newer than a given data, but that cannot be used if there are deletions, since it does not report deleted elements.
+
+  The OSM API allows to download history, including deletions, but does not support filters.
+
+  Ideally, a mix of both functionalities would be needed for geogit to work optimally
+
+# Unmapping of ways. When a way is unmapped, its geometry is used to re-create the list of nodes. The best way would be to take the coords of the nodes and check if a node exist in each coordinate, and if so, take the node id, otherwise, add a new node. This is, however, not possible now, since it would not be efficient. GeoGit has no spatial indexing, and searching a feature by its coordinates is not an available operation.
+
+  The current implementation just retrieves the nodes that belonged to the way in the last version, and check the current geometry against them. This is fine if all new nodes are actually new, but if the way uses a node that it did not use before but that exists already, that node will not be used (since there is no way of retrieving the id of the node in that coord), and a new one in that same position is added.
+
+# Updating new entities. When a new node is added (whether by the user, who created it in something like JOSM, or by an unmap operation), new entities get a negative ID, as it seems customary in OSM before commiting them. Once submitted, they get a valid ID, and when later updating, the Id's will not match, so GeoGit will not replace them, leaving both versions.
+
+  This is, in fact, not a problem now, since the update operation just deletes and updates everything (see (1)), but once we get a more efficient update strategy, this problem will surface.
+
+
+OSM paths
+----------
+
+..  note:: [This is just an idea, not implemented yet. Is it a good idea??]
+
+The default paths for OSM data are ``way`` and ``node``. they should contain just OSM data imported using the corresponding GeoGit commands. To use those paths for different data and avoid problem with OSM commands, the default paths can be changed using the ``config`` command. Default paths are kept in the ``osm.nodepath`` and ``osm.waypath`` config parameters, which can be configured as shown in the example below.
+
+::
+
+	$ geogit config osm.nodepath osmnode
+	$ geogit config osm.waypath osmway

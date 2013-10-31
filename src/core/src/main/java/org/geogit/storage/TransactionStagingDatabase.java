@@ -200,8 +200,13 @@ public class TransactionStagingDatabase implements StagingDatabase {
      * Pass through to the original {@link StagingDatabase}.
      */
     @Override
-    public void putAll(Iterator<? extends RevObject> objects) {
-        database.putAll(objects);
+    public void putAll(Iterator<? extends RevObject> objects, final BulkOpListener listener) {
+        database.putAll(objects, listener);
+    }
+
+    @Override
+    public Iterator<RevObject> getAll(Iterable<ObjectId> ids, final BulkOpListener listener) {
+        return database.getAll(ids, listener);
     }
 
     /**
@@ -250,8 +255,32 @@ public class TransactionStagingDatabase implements StagingDatabase {
     }
 
     @Override
-    public long deleteAll(Iterator<ObjectId> ids) {
-        return database.deleteAll(ids);
+    public long deleteAll(Iterator<ObjectId> ids, final BulkOpListener listener) {
+        return database.deleteAll(ids, listener);
     }
 
+    @Override
+    public void configure() {
+        // No-op
+    }
+
+    @Override
+    public void checkConfig() {
+        // No-op
+    }
+
+    @Override
+    public Iterator<RevObject> getAll(final Iterable<ObjectId> ids) {
+        return getAll(ids, BulkOpListener.NOOP_LISTENER);
+    }
+
+    @Override
+    public void putAll(Iterator<? extends RevObject> objects) {
+        putAll(objects, BulkOpListener.NOOP_LISTENER);
+    }
+
+    @Override
+    public long deleteAll(Iterator<ObjectId> ids) {
+        return deleteAll(ids, BulkOpListener.NOOP_LISTENER);
+    }
 }

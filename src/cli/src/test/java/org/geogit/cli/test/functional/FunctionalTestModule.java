@@ -6,10 +6,8 @@
 package org.geogit.cli.test.functional;
 
 import org.geogit.api.Platform;
-import org.geogit.storage.GraphDatabase;
 
 import com.google.inject.AbstractModule;
-import com.google.inject.Scopes;
 
 /**
  * Guice module with tweaks to run functional tests on the target {@link Platform}'s working

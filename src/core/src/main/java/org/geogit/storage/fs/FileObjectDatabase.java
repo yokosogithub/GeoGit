@@ -20,8 +20,12 @@ import java.util.List;
 
 import org.geogit.api.ObjectId;
 import org.geogit.api.Platform;
+import org.geogit.api.RevObject;
 import org.geogit.api.plumbing.ResolveGeogitDir;
+import org.geogit.repository.RepositoryConnectionException;
 import org.geogit.storage.AbstractObjectDatabase;
+import org.geogit.storage.BulkOpListener;
+import org.geogit.storage.ConfigDatabase;
 import org.geogit.storage.ObjectDatabase;
 import org.geogit.storage.ObjectSerializingFactory;
 
@@ -40,6 +44,8 @@ public class FileObjectDatabase extends AbstractObjectDatabase implements Object
 
     private final Platform platform;
 
+    private final ConfigDatabase configDB;
+
     private final String databaseName;
 
     private File dataRoot;
@@ -52,17 +58,19 @@ public class FileObjectDatabase extends AbstractObjectDatabase implements Object
      * @param platform the platform to use.
      */
     @Inject
-    public FileObjectDatabase(final Platform platform, final ObjectSerializingFactory serialFactory) {
-        this(platform, "objects", serialFactory);
+    public FileObjectDatabase(final Platform platform,
+            final ObjectSerializingFactory serialFactory, final ConfigDatabase configDB) {
+        this(platform, "objects", serialFactory, configDB);
     }
 
     protected FileObjectDatabase(final Platform platform, final String databaseName,
-            final ObjectSerializingFactory serialFactory) {
+            final ObjectSerializingFactory serialFactory, final ConfigDatabase configDB) {
         super(serialFactory);
         checkNotNull(platform);
         checkNotNull(databaseName);
         this.platform = platform;
         this.databaseName = databaseName;
+        this.configDB = configDB;
     }
 
     protected File getDataRoot() {
@@ -246,8 +254,23 @@ public class FileObjectDatabase extends AbstractObjectDatabase implements Object
     }
 
     @Override
-    public long deleteAll(Iterator<ObjectId> ids) {
-        throw new UnsupportedOperationException(
-                "This method is not yet implemented");        
+    public Iterator<RevObject> getAll(Iterable<ObjectId> ids, BulkOpListener listener) {
+        throw new UnsupportedOperationException("This method is not yet implemented");
     }
+
+    @Override
+    public long deleteAll(Iterator<ObjectId> ids, final BulkOpListener listener) {
+        throw new UnsupportedOperationException("This method is not yet implemented");
+    }
+
+    @Override
+    public void configure() throws RepositoryConnectionException {
+        RepositoryConnectionException.StorageType.OBJECT.configure(configDB, "file", "1.0");
+    }
+
+    @Override
+    public void checkConfig() throws RepositoryConnectionException {
+        RepositoryConnectionException.StorageType.OBJECT.verify(configDB, "file", "1.0");
+    }
+
 }

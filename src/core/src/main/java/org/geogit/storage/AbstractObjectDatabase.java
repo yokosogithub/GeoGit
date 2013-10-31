@@ -210,7 +210,7 @@ public abstract class AbstractObjectDatabase implements ObjectDatabase {
      * subclasses may override if appropriate.
      */
     @Override
-    public void putAll(Iterator<? extends RevObject> objects) {
+    public void putAll(Iterator<? extends RevObject> objects, final BulkOpListener listener) {
 
         ByteArrayOutputStream rawOut = new ByteArrayOutputStream();
         while (objects.hasNext()) {
@@ -221,7 +221,10 @@ public abstract class AbstractObjectDatabase implements ObjectDatabase {
             final byte[] rawData = rawOut.toByteArray();
 
             final ObjectId id = object.getId();
-            putInternal(id, rawData);
+            final boolean added = putInternal(id, rawData);
+            if (added) {
+                listener.inserted(object, rawData.length);
+            }
         }
     }
 
@@ -258,5 +261,20 @@ public abstract class AbstractObjectDatabase implements ObjectDatabase {
     @Override
     public ObjectInserter newObjectInserter() {
         return new ObjectInserter(this);
+    }
+
+    @Override
+    public Iterator<RevObject> getAll(final Iterable<ObjectId> ids) {
+        return getAll(ids, BulkOpListener.NOOP_LISTENER);
+    }
+
+    @Override
+    public void putAll(Iterator<? extends RevObject> objects) {
+        putAll(objects, BulkOpListener.NOOP_LISTENER);
+    }
+
+    @Override
+    public long deleteAll(Iterator<ObjectId> ids) {
+        return deleteAll(ids, BulkOpListener.NOOP_LISTENER);
     }
 }

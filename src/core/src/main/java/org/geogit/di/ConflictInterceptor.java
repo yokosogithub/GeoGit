@@ -16,7 +16,7 @@ import org.geogit.api.plumbing.merge.ConflictsReadOp;
  * An interceptor to avoid incompatible running commands while merge conflicts exist
  * 
  */
-public class ConflictInterceptor implements MethodInterceptor {
+class ConflictInterceptor implements MethodInterceptor {
 
     @Override
     public Object invoke(MethodInvocation invocation) throws Throwable {

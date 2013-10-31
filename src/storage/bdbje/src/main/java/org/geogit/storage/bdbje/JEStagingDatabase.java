@@ -8,32 +8,25 @@ import java.io.File;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.net.URL;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
-import java.util.Set;
 
 import javax.annotation.Nullable;
 
-import org.geogit.api.ObjectId;
 import org.geogit.api.Platform;
-import org.geogit.api.RevCommit;
-import org.geogit.api.RevFeature;
-import org.geogit.api.RevFeatureType;
-import org.geogit.api.RevObject;
-import org.geogit.api.RevTag;
 import org.geogit.api.RevTree;
 import org.geogit.api.plumbing.ResolveGeogitDir;
 import org.geogit.api.plumbing.merge.Conflict;
+import org.geogit.repository.RepositoryConnectionException;
+import org.geogit.storage.ConfigDatabase;
+import org.geogit.storage.ForwardingStagingDatabase;
 import org.geogit.storage.ObjectDatabase;
-import org.geogit.storage.ObjectInserter;
 import org.geogit.storage.ObjectSerializingFactory;
-import org.geogit.storage.StagingDatabase;
 
 import com.google.common.base.Charsets;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Supplier;
+import com.google.common.base.Suppliers;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
@@ -65,36 +58,11 @@ import com.sleepycat.je.Environment;
  * list of staged objects.
  * 
  */
-public class JEStagingDatabase implements ObjectDatabase, StagingDatabase {
-
-    /**
-     * do not use it for anything else than constructing the delegate JEObjectDatabase or it'll open
-     * a new environment for the same db each time
-     */
-    private final EnvironmentBuilder envProvider;
-
-    /**
-     * The db environment, created at open(), nullified at close(), owned by the delegate
-     * JEObjectDatabase
-     */
-    private Environment environment;
-
-    // /////////////////////////////////////////
-    /**
-     * The staging area object database, contains only differences between the index and the
-     * repository
-     */
-    private ObjectDatabase stagingDb;
-
-    /**
-     * The persistent repository objects. Lookup operations delegate to this one for any object not
-     * found on the {@link #stagingDb}
-     */
-    private ObjectDatabase repositoryDb;
-
-    private ObjectSerializingFactory sfac;
+public class JEStagingDatabase extends ForwardingStagingDatabase {
 
     private Platform platform;
+
+    private ConfigDatabase configDB;
 
     /**
      * @param referenceDatabase the repository reference database, used to get the head re
@@ -104,146 +72,28 @@ public class JEStagingDatabase implements ObjectDatabase, StagingDatabase {
     @Inject
     public JEStagingDatabase(final ObjectSerializingFactory sfac,
             final ObjectDatabase repositoryDb, final EnvironmentBuilder envBuilder,
-            final Platform platform) {
-        this.sfac = sfac;
-        this.repositoryDb = repositoryDb;
-        this.envProvider = envBuilder;
+            final Platform platform, final ConfigDatabase configDB) {
+
+        super(Suppliers.ofInstance(repositoryDb), stagingDbSupplier(sfac, envBuilder));
+
         this.platform = platform;
-        this.envProvider.setIsStagingDatabase(true);
+        this.configDB = configDB;
     }
 
-    @Override
-    public boolean isOpen() {
-        return stagingDb != null;
-    }
+    private static Supplier<JEObjectDatabase> stagingDbSupplier(
+            final ObjectSerializingFactory sfac, final EnvironmentBuilder envProvider) {
 
-    @Override
-    public void open() {
-        if (isOpen()) {
-            return;
-        }
-        envProvider.setRelativePath("index");
-        environment = envProvider.get();
-        stagingDb = new JEObjectDatabase(sfac, environment);
-        stagingDb.open();
-        // {
-        // DatabaseConfig stagedDbConfig = new DatabaseConfig();
-        // stagedDbConfig.setAllowCreate(true);
-        // stagedDbConfig.setTransactional(environment.getConfig().getTransactional());
-        // // stagedDbConfig.setDeferredWrite(true);
-        // stagedDbConfig.setSortedDuplicates(false);
-        // }
-    }
+        return Suppliers.memoize(new Supplier<JEObjectDatabase>() {
 
-    @Override
-    public void close() {
-        if (stagingDb != null) {
-            stagingDb.close();// this closes the environment since it took control over it
-            stagingDb = null;
-            environment = null;
-        }
-    }
-
-    // /////////////////////////////////////////////////////////////////////
-
-    @Override
-    public boolean exists(ObjectId id) {
-        boolean exists = stagingDb.exists(id);
-        if (!exists) {
-            exists = repositoryDb.exists(id);
-        }
-        return exists;
-    }
-
-    @Override
-    public List<ObjectId> lookUp(String partialId) {
-        Set<ObjectId> lookUp = new HashSet<ObjectId>(stagingDb.lookUp(partialId));
-        lookUp.addAll(repositoryDb.lookUp(partialId));
-        return new ArrayList<ObjectId>(lookUp);
-    }
-
-    @Override
-    public <T extends RevObject> T get(ObjectId id, Class<T> type) {
-        T obj = getIfPresent(id, type);
-        if (obj == null) {
-            obj = repositoryDb.get(id, type);
-        }
-        return obj;
-    }
-
-    @Override
-    public RevObject get(ObjectId id) {
-        RevObject obj = stagingDb.getIfPresent(id);
-        if (obj == null) {
-            obj = repositoryDb.get(id);
-        }
-        return obj;
-    }
-
-    @Override
-    @Nullable
-    public RevObject getIfPresent(ObjectId id) {
-        RevObject obj = stagingDb.getIfPresent(id);
-        if (obj == null) {
-            obj = repositoryDb.getIfPresent(id);
-        }
-        return obj;
-    }
-
-    @Override
-    @Nullable
-    public <T extends RevObject> T getIfPresent(ObjectId id, Class<T> type)
-            throws IllegalArgumentException {
-        T obj = stagingDb.getIfPresent(id, type);
-        if (obj == null) {
-            obj = repositoryDb.getIfPresent(id, type);
-        }
-        return obj;
-    }
-
-    @Override
-    public ObjectInserter newObjectInserter() {
-        return stagingDb.newObjectInserter();
-    }
-
-    @Override
-    public boolean delete(ObjectId objectId) {
-        return stagingDb.delete(objectId);
-    }
-
-    @Override
-    public boolean put(RevObject object) {
-        return stagingDb.put(object);
-    }
-
-    @Override
-    public void putAll(Iterator<? extends RevObject> objects) {
-        stagingDb.putAll(objects);
-    }
-
-    @Override
-    public RevTree getTree(ObjectId id) {
-        return get(id, RevTree.class);
-    }
-
-    @Override
-    public RevFeature getFeature(ObjectId id) {
-        return get(id, RevFeature.class);
-    }
-
-    @Override
-    public RevFeatureType getFeatureType(ObjectId id) {
-        return get(id, RevFeatureType.class);
-    }
-
-    @Override
-    public RevCommit getCommit(ObjectId id) {
-        return get(id, RevCommit.class);
-    }
-
-    @Override
-    public RevTag getTag(ObjectId id) {
-        return get(id, RevTag.class);
+            @Override
+            public JEObjectDatabase get() {
+                envProvider.setRelativePath("index");
+                envProvider.setIsStagingDatabase(true);
+                Environment env = envProvider.get();
+                JEObjectDatabase db = new JEObjectDatabase(sfac, env);
+                return db;
+            }
+        });
     }
 
     // TODO:
@@ -392,7 +242,7 @@ public class JEStagingDatabase implements ObjectDatabase, StagingDatabase {
             namespace = "conflicts";
         }
         Optional<File> conflicts = Optional.absent();
-        if (environment != null) {
+        if (isOpen()) {
             URL repoPath = new ResolveGeogitDir(platform).call();
             File file = null;
             try {
@@ -428,8 +278,13 @@ public class JEStagingDatabase implements ObjectDatabase, StagingDatabase {
     }
 
     @Override
-    public long deleteAll(Iterator<ObjectId> ids) {
-        return this.stagingDb.deleteAll(ids);
+    public void configure() throws RepositoryConnectionException {
+        RepositoryConnectionException.StorageType.STAGING.configure(configDB, "bdbje", "0.1");
+    }
+
+    @Override
+    public void checkConfig() throws RepositoryConnectionException {
+        RepositoryConnectionException.StorageType.STAGING.verify(configDB, "bdbje", "0.1");
     }
 
 }
