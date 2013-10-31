@@ -22,12 +22,7 @@ public final class ObjectId implements Comparable<ObjectId> {
     /**
      * A "natural order" {@link Ordering comparator}
      */
-    public static final Ordering<ObjectId> NATURAL_ORDER = new Ordering<ObjectId>() {
-        @Override
-        public int compare(ObjectId o1, ObjectId o2) {
-            return o1.compareTo(o2);
-        }
-    };
+    public static final Ordering<ObjectId> NATURAL_ORDER = Ordering.<ObjectId> natural();
 
     /**
      * ObjectId instance that represents a NULL id.
