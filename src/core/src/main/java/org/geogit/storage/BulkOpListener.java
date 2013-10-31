@@ -61,7 +61,7 @@ public abstract class BulkOpListener {
     /**
      * Returns a composite listener that dispatches each signal to both listeners
      */
-    public BulkOpListener composite(final BulkOpListener b1, final BulkOpListener b2) {
+    public static BulkOpListener composite(final BulkOpListener b1, final BulkOpListener b2) {
         if (b1 == NOOP_LISTENER) {
             return b2;
         }
@@ -93,5 +93,34 @@ public abstract class BulkOpListener {
                 b2.notFound(id);
             }
         };
+    }
+
+    public static class ForwardingListener extends BulkOpListener {
+
+        private BulkOpListener target;
+
+        public ForwardingListener(BulkOpListener target) {
+            this.target = target;
+        }
+
+        @Override
+        public void found(RevObject object, @Nullable Integer storageSizeBytes) {
+            target.found(object, storageSizeBytes);
+        }
+
+        public void inserted(RevObject object, @Nullable Integer storageSizeBytes) {
+            target.inserted(object, storageSizeBytes);
+        }
+
+        @Override
+        public void deleted(ObjectId id) {
+            target.deleted(id);
+        }
+
+        @Override
+        public void notFound(ObjectId id) {
+            target.notFound(id);
+        }
+
     }
 }

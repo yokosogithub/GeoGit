@@ -4,24 +4,19 @@
  */
 package org.geogit.storage.memory;
 
-import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.HashSet;
+import static com.google.common.base.Suppliers.ofInstance;
+
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import javax.annotation.Nullable;
 
-import org.geogit.api.ObjectId;
-import org.geogit.api.RevObject;
 import org.geogit.api.plumbing.merge.Conflict;
+import org.geogit.repository.RepositoryConnectionException;
 import org.geogit.storage.AbstractObjectDatabase;
+import org.geogit.storage.ForwardingStagingDatabase;
 import org.geogit.storage.ObjectDatabase;
-import org.geogit.storage.ObjectInserter;
-import org.geogit.storage.ObjectReader;
 import org.geogit.storage.ObjectSerializingFactory;
-import org.geogit.storage.StagingDatabase;
 
 import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
@@ -37,9 +32,8 @@ import com.google.inject.Inject;
  * 
  * @see AbstractObjectDatabase
  */
-public class HeapStagingDatabase extends HeapObjectDatabse implements StagingDatabase {
-
-    private ObjectDatabase repositoryDb;
+public class HeapStagingDatabase extends ForwardingStagingDatabase {
+    private Map<String, Map<String, Conflict>> conflicts = Maps.newHashMap();
 
     /**
      * @param repositoryDb the repository reference database, used to get delegate read operations
@@ -48,107 +42,18 @@ public class HeapStagingDatabase extends HeapObjectDatabse implements StagingDat
     @Inject
     public HeapStagingDatabase(final ObjectDatabase repositoryDb,
             final ObjectSerializingFactory serialFactory) {
-        super(serialFactory);
-        this.repositoryDb = repositoryDb;
-    }
-
-    // /////////////////////////////////////////
-
-    @Override
-    public boolean exists(ObjectId id) {
-        boolean exists = super.exists(id);
-        if (!exists) {
-            exists = repositoryDb.exists(id);
-        }
-        return exists;
+        super(ofInstance(repositoryDb), ofInstance(new HeapObjectDatabse(serialFactory)));
     }
 
     @Override
-    protected InputStream getRawInternal(final ObjectId id, final boolean failIfNotFound)
-            throws IllegalArgumentException {
-
-        return super.getRawInternal(id, failIfNotFound);
-    }
-
-    /**
-     * Searches the database for {@link ObjectId}s that match the given partial id.
-     * 
-     * @param partialId the partial id to search for
-     * @return a list of matching results
-     */
-    @Override
-    public List<ObjectId> lookUp(String partialId) {
-        Set<ObjectId> lookUp = new HashSet<ObjectId>(super.lookUp(partialId));
-        lookUp.addAll(repositoryDb.lookUp(partialId));
-        return new ArrayList<ObjectId>(lookUp);
-    }
-
-    /**
-     * Reads an object with the given {@link ObjectId id} out of the database.
-     * 
-     * @param id the id of the object to read
-     * @param reader the reader of the object
-     * @return the object, as read in from the {@link ObjectReader}
-     */
-    @Override
-    public <T extends RevObject> T get(ObjectId id, Class<T> type) {
-        T obj = super.getIfPresent(id, type);
-        if (null == obj) {
-            obj = repositoryDb.get(id, type);
-        }
-        return obj;
+    public void configure() throws RepositoryConnectionException {
+        // No-op
     }
 
     @Override
-    @Nullable
-    public <T extends RevObject> T getIfPresent(ObjectId id, Class<T> clazz)
-            throws IllegalArgumentException {
-        T obj = super.getIfPresent(id, clazz);
-        if (null == obj) {
-            obj = repositoryDb.getIfPresent(id, clazz);
-        }
-        return obj;
+    public void checkConfig() throws RepositoryConnectionException {
+        // No-op
     }
-
-    @Override
-    public RevObject get(ObjectId id) {
-        RevObject obj = super.getIfPresent(id);
-        if (null == obj) {
-            obj = repositoryDb.get(id);
-        }
-        return obj;
-    }
-
-    @Override
-    public @Nullable
-    RevObject getIfPresent(ObjectId id) {
-        RevObject obj = super.getIfPresent(id);
-        if (null == obj) {
-            obj = repositoryDb.getIfPresent(id);
-        }
-        return obj;
-    }
-
-    /**
-     * @return a newly constructed {@link ObjectInserter} for this database
-     */
-    @Override
-    public ObjectInserter newObjectInserter() {
-        return super.newObjectInserter();
-    }
-
-    /**
-     * Deletes the object with the provided {@link ObjectId id} from the database.
-     * 
-     * @param objectId the id of the object to delete
-     * @return true if the object was deleted, false if it was not found
-     */
-    @Override
-    public boolean delete(ObjectId objectId) {
-        return super.delete(objectId);
-    }
-
-    private Map<String, Map<String, Conflict>> conflicts = Maps.newHashMap();
 
     /**
      * Gets all conflicts that match the specified path filter.
@@ -248,5 +153,4 @@ public class HeapStagingDatabase extends HeapObjectDatabse implements StagingDat
         }
         conflicts.remove(namespace);
     }
-
 }

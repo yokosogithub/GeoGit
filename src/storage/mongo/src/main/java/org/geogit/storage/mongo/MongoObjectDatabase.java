@@ -59,10 +59,17 @@ public class MongoObjectDatabase implements ObjectDatabase {
 
     protected ObjectSerializingFactory serializers = new DataStreamSerializationFactory();
 
+    private String collectionName;
+
     @Inject
     public MongoObjectDatabase(ConfigDatabase config, MongoConnectionManager manager) {
+        this(config, manager, "objects");
+    }
+
+    MongoObjectDatabase(ConfigDatabase config, MongoConnectionManager manager, String collectionName) {
         this.config = config;
         this.manager = manager;
+        this.collectionName = collectionName;
     }
 
     private RevObject fromBytes(ObjectId id, byte[] buffer) {
@@ -83,7 +90,7 @@ public class MongoObjectDatabase implements ObjectDatabase {
     }
 
     protected String getCollectionName() {
-        return "objects";
+        return collectionName;
     }
 
     @Override
@@ -299,5 +306,9 @@ public class MongoObjectDatabase implements ObjectDatabase {
                 return obj == null ? endOfData() : obj;
             }
         };
+    }
+
+    public DBCollection getCollection(String name) {
+        return db.getCollection(name);
     }
 }

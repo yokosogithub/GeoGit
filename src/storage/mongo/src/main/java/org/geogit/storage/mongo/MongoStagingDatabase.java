@@ -5,21 +5,20 @@
 package org.geogit.storage.mongo;
 
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 import javax.annotation.Nullable;
 
 import org.geogit.api.ObjectId;
-import org.geogit.api.RevObject;
 import org.geogit.api.plumbing.merge.Conflict;
 import org.geogit.repository.RepositoryConnectionException;
 import org.geogit.storage.ConfigDatabase;
+import org.geogit.storage.ForwardingStagingDatabase;
 import org.geogit.storage.ObjectDatabase;
 import org.geogit.storage.StagingDatabase;
 
 import com.google.common.base.Optional;
+import com.google.common.base.Suppliers;
 import com.google.inject.Inject;
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBCollection;
@@ -29,27 +28,24 @@ import com.mongodb.DBObject;
 /**
  * A staging database that uses a MongoDB server for persistence.
  */
-public class MongoStagingDatabase extends MongoObjectDatabase implements
-        StagingDatabase {
-    private ObjectDatabase repositoryDb;
+public class MongoStagingDatabase extends ForwardingStagingDatabase implements StagingDatabase {
+
     protected DBCollection conflicts;
 
-    protected String getCollectionName() {
-        return "staging";
-    }
+    private ConfigDatabase config;
 
     @Inject
-    public MongoStagingDatabase(final ConfigDatabase config,
-            final MongoConnectionManager manager,
+    public MongoStagingDatabase(final ConfigDatabase config, final MongoConnectionManager manager,
             final ObjectDatabase repositoryDb) {
-        super(config, manager);
-        this.repositoryDb = repositoryDb;
+        super(Suppliers.ofInstance(repositoryDb), Suppliers.ofInstance(new MongoObjectDatabase(
+                config, manager, "staging")));
+        this.config = config;
     }
 
     @Override
     synchronized public void open() {
         super.open();
-        conflicts = db.getCollection("conflicts");
+        conflicts = ((MongoObjectDatabase) super.stagingDb).getCollection("conflicts");
         conflicts.ensureIndex("path");
     }
 
@@ -60,35 +56,7 @@ public class MongoStagingDatabase extends MongoObjectDatabase implements
     }
 
     @Override
-    public boolean exists(ObjectId id) {
-        return super.exists(id) || repositoryDb.exists(id);
-    }
-
-    @Override
-    public List<ObjectId> lookUp(final String partialId) {
-        Set<ObjectId> results = new HashSet<ObjectId>();
-        // Using a set because we were getting duplicates building a list
-        // directly. Need to figure out why we are ending up with objects in
-        // both staging and object database... Maybe delete() is not working
-        // properly?
-        results.addAll(super.lookUp(partialId));
-        results.addAll(repositoryDb.lookUp(partialId));
-        return new ArrayList<ObjectId>(results);
-    }
-
-    @Override
-    public RevObject getIfPresent(ObjectId id) {
-        RevObject result = super.getIfPresent(id);
-        if (result != null) {
-            return result;
-        } else {
-            return repositoryDb.getIfPresent(id);
-        }
-    }
-
-    @Override
-    public Optional<Conflict> getConflict(@Nullable String namespace,
-            String path) {
+    public Optional<Conflict> getConflict(@Nullable String namespace, String path) {
         DBObject query = new BasicDBObject();
         query.put("path", path);
         if (namespace != null) {
@@ -98,8 +66,7 @@ public class MongoStagingDatabase extends MongoObjectDatabase implements
         if (result == null) {
             return Optional.absent();
         } else {
-            ObjectId ancestor = ObjectId.valueOf((String) result
-                    .get("ancestor"));
+            ObjectId ancestor = ObjectId.valueOf((String) result.get("ancestor"));
             ObjectId ours = ObjectId.valueOf((String) result.get("ours"));
             ObjectId theirs = ObjectId.valueOf((String) result.get("theirs"));
             return Optional.of(new Conflict(path, ancestor, ours, theirs));
@@ -107,8 +74,7 @@ public class MongoStagingDatabase extends MongoObjectDatabase implements
     }
 
     @Override
-    public List<Conflict> getConflicts(@Nullable String namespace,
-            @Nullable String pathFilter) {
+    public List<Conflict> getConflicts(@Nullable String namespace, @Nullable String pathFilter) {
         DBObject query = new BasicDBObject();
         if (namespace == null) {
             query.put("namespace", 0);
@@ -125,8 +91,7 @@ public class MongoStagingDatabase extends MongoObjectDatabase implements
         while (cursor.hasNext()) {
             DBObject element = cursor.next();
             String path = (String) element.get("path");
-            ObjectId ancestor = ObjectId.valueOf((String) element
-                    .get("ancestor"));
+            ObjectId ancestor = ObjectId.valueOf((String) element.get("ancestor"));
             ObjectId ours = ObjectId.valueOf((String) element.get("ours"));
             ObjectId theirs = ObjectId.valueOf((String) element.get("theirs"));
             results.add(new Conflict(path, ancestor, ours, theirs));
