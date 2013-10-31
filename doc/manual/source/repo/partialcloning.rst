@@ -1,29 +1,29 @@
+.. _repo.partialcloning:
+
 Partial cloning
-===========================
+===============
 
-A GeoGit repository might contain more data than what you actually need to work. While GeoGit can handle large amounts of data efficiently, a full repository might take a large space in your hard drive and cause simple operations to take a longer time. In this situation, it is a better idea to work with a reduced clone of the original repository, so the size of that cloned repository is smaller and thus more efficient.
+While GeoGit can handle large amounts of data efficiently, a full repository might take a large space in your hard drive and cause simple operations to take a longer time. In this situation, it is a better idea to work with a reduced or "partial" clone of the original repository, so the size of that cloned repository is smaller and thus more efficient.
 
-Such a repository can mostly be used just like any other repository clone. That means that new data can be added, new changes can be pulled from other repositories, and also additional changes can be pushed to the original repository. However, some limitations exist, which makes it important to understand how partial cloning works, in order to work correctly on it and avoid troublesome situations.
+Such a repository can mostly be used just like any other repository clone. New data can be added, new changes can be pulled from other repositories, and also additional changes can be pushed to the original repository. However, some limitations exist, which makes it important to understand how partial cloning works, in order to work correctly on it and avoid troublesome situations.
 
-This chapter deals with partial cloning, explaining how the cloning mechanism operates and discussing particular cases in which a partial repository behaves differently than a regular complete one.
+This section deals with partial cloning, explaining how the cloning mechanism operates and discussing particular cases in which a partial repository behaves differently than a regular complete one.
 
 
 Types of partial clones
----------------------------
+-----------------------
 
-There are basically two ways of partially cloning a repository, although their mechanisms are rather different.
+There are two ways of partially cloning a repository:
 
-The first type of partial clone is the so-called *shallow* clone. A shallow clone just contains a subset of the history of the repo, so not all the snapshots are available. It will contain all the features currently stored in the most actual revision, but you will not be able to track the history of those feature beyond a certain point. 
+The first type of partial clone is the **shallow clone**. A shallow clone contains *all of the features* currently stored in the most recent revision, but only a subset of the *history* of the repository. If you are not interested in having all the history of the repository features and trees, then a shallow clone will reduce the size of the cloned repository, but will have full detail in those snapshots that are within the selected history range.
 
-If you are not interested in having all the history of the repository features and trees, then a shallow clone will reduce the size of the cloned repository, but will have full detail in those snapshots that are within the selected history range.
 
-The second type of partial clone is the so-called *sparse* clone. A sparse clone of a repository contains just a subset of the features that are contained in the full repository, and that subset is defined by a filter. In the most usual case, the filter is a spatial one, which constraints the set of features managed in the cloned repository to those that pass that filter and are within a given region. Features outside of the region (those that do not fulfill the condition defined by the filter), are left aside and not included in the cloned repository.
-
+The second type of partial clone is the **sparse clone**. A sparse clone of a repository contains *a subset of the features*  contained in the full repository, as defined by a filter, most often a spatial filter.
 
 Shallow cloning
------------------
+---------------
 
-A shallow clone is a repository created by limiting the depth of the history that is cloned from an original repository. The depth of the cloned repository, which is selected when the cloning operation is performed, defined the number of total commits that the linear history of the repository will contain. That is, for a given depth equal to *n*, you will not have more than *n* commits in the linear history of your branch.
+A shallow clone is a repository created by limiting the depth of the history that is cloned from an original repository. The depth of the cloned repository, which is selected when the cloning operation is performed, is defined as the number of total commits that the linear history of the repository will contain. 
 
 A shallow clone is created using the ``--depth`` option when calling the ``clone`` command, followed by the number of commits that you want to retrieve from the remote repository.
 
@@ -33,11 +33,11 @@ Below you can see the history of a repository with some commits and branches.
 
 The following command will create a shallow clone with a depth of 3 commits.
 
-::
+.. code-block:: console
 
-	$geogit clone path/to/repo --depth 3
+   geogit clone path/to/repo --depth 3
 
-If cloning the repository with the history graph shown above, the history of the cloned repository will be like the one show in the next figure.
+If cloning the repository with the history graph shown above, the history of the cloned repository will be like the one shown in the next figure.
 
 .. figure:: ../img/shallow_clone.png
 
@@ -47,21 +47,19 @@ If your repository has branches other than ``master``, that can cause some speci
 
 Here you can see an example of this case, obtained by cloning the original repository, but this time with a depth of 2 commits instead of 3.
 
-::
+.. code-block:: console
 
-	$geogit clone path/to/repo --depth 2
+   geogit clone path/to/repo --depth 2
 
 .. figure:: ../img/shallow_orphan_branch.png
 
-``branch1`` and ``master`` are disconnected from each other, since the history doesn't go back to the point where they diverged.
+The ``branch1`` and ``master`` branches are disconnected from each other now, since the history doesn't go back to the point where they diverged. Operations such as ``merge`` and ``rebase`` cannot be performed in this cloned repository for the ``branch1`` branch, since there is no common ancestor between ``master`` and ``branch1``.
 
-Operations such as ``merge`` and ``rebase`` cannot be performed in this cloned repository for the ``branch1`` branch, since there is no common ancestor between ``master`` and ``branch1``.
-
-Notice that, in a strict sense, a shallow repository is itself orphaned, since there is a part that is missing and there is no connection between the origin of the repository and the oldest commit in the shallow clone (the one that appears in the last place when running ``log``). Although being the oldest commit that you can find in your shallow clone, it has an older ancestor. The problem is that you cannot find that older commit in your cloned repository, since it is beyond the depth specified when the shallow clone was created.
+.. note:: Technically, a shallow clone is itself orphaned, since there is a part that is missing and there is no connection between the origin of the repository and the oldest commit in the shallow clone.
 
 For shorter branches, the specified depth might cause the cloning operation to go into the parent branch and fetch some commits that, for that parent branch, are deeper than the specified depth.
 
-Consider the following situation. 
+Consider the following situation:
 
 .. figure:: ../img/shallow_deeper_with_branches.png
 
@@ -82,7 +80,7 @@ If you run the ``log`` command on the master branch of that repository, you will
 Althought the depth of the clone is just 3, you can, however, see more that 3 commits. That is because the two last commits are not actually part of the shallow clone of the ``master`` branch, but part of the cloned ``branch1`` branch.
 
 Working with a shallow clone
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 On a shallow clone, operations such as ``pull`` and ``push`` can be performed as usual, since they all work on the tip of the branches (the most recent commits). A shallow clone always contains those commits, and ignores the older ones beyond the specified depth, so it should have no problems when pushing and pulling to the full remote repository from which it has been cloned, or to any other clone, whether regular or shallow.
 
@@ -198,7 +196,7 @@ In the case of a shallow clone, as we have already seen, there are also some mis
 
 If we go down the history of the spare cloned repository, we cannot find any commit that is also found in the original repository, which makes it impossible to apply our changes, or, at least, to apply them cleanly.
 
-The case is similar to what was explained in the :ref:`modifying_history` section, when the problems caused by rewriting the history of a repository were discussed. Basically, when a sparse clone is created, it implies a full rewriting of the history of the cloned original repository.
+The case is similar to what was explained in the :ref:`repo.history` section, when the problems caused by rewriting the history of a repository were discussed. Basically, when a sparse clone is created, it implies a full rewriting of the history of the cloned original repository.
 
 To allow push and pull operations to be used without problems GeoGit solves this situation by keeping a mapping between the commits in the cloned repository and the ones in the original repository. This way, it can *translate* between Id's when it performs remote operations such as pull or push.
 
@@ -266,7 +264,7 @@ The filter file is an Ini file which contains filters to be applied to all featu
 
 There are two filters in this file. Both filters are CQL (Common Query Language) filters. The first one will be applied to all features, while the second one will only be appplied to features with the ``roads`` feature type.
 
-Notice that filtering is done based on attributes, in this case a geometry attribute named ``way``. In case you need more information, remember that you can run the ``show`` command passing a tree path as parameter, and you will get a description of the feature type of that tree, which includes information about its attributes. To know more, check the :ref:`exploring` section of this manual.
+Notice that filtering is done based on attributes, in this case a geometry attribute named ``way``. In case you need more information, remember that you can run the ``show`` command passing a tree path as parameter, and you will get a description of the feature type of that tree, which includes information about its attributes.
 
 You can find more information about the CQL syntax in the `this page <http://docs.geoserver.org/latest/en/user/tutorials/cql/cql_tutorial.html>`_ at the GeoServer website.
 

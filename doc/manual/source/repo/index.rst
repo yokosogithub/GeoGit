@@ -1,21 +1,21 @@
 .. _repo:
 
-GeoGit repositories
-===================
+Working with repositories
+=========================
 
 This section will discuss working with GeoGit repositories.
 
 .. toctree::
    :maxdepth: 2
 
+   elements
    init
    config
-   branches
-   configuring
    exploring
-   hooks
+   branches
    merging
-   modifying
-   partial_cloning
    remotes
-   elements
+   history
+   hooks
+   partialcloning
+   commandaliases
