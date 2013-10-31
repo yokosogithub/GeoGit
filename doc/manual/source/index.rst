@@ -1,8 +1,6 @@
 GeoGit User Manual
 ==================
 
-Welcome to the GeoGit User Manual
-
 .. toctree::
    :maxdepth: 2
 
