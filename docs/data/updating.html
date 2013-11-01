@@ -1,0 +1,203 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  
+  <title>Updating the repository data. &mdash; GeoGit 0.6-SNAPSHOT documentation</title>
+  <link rel="stylesheet" href="../_static/screen.css" type="text/css" media="screen, projection" />
+  <link rel="stylesheet" href="../_static/print.css" type="text/css" media="print" /> 
+  <!--[if IE]>
+  <link rel="stylesheet" href="../_static/blueprint/ie.css" type="text/css" media="screen, projection" />
+  <![endif]-->
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+  <script type="text/javascript">
+    var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '0.6-SNAPSHOT',
+        COLLAPSE_MODINDEX: false,
+        FILE_SUFFIX: '.html'
+    };
+  </script>
+  <script type="text/javascript" src="../_static/jquery.js"></script>
+  <script type="text/javascript" src="../_static/bootstrap.js" ></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+  <script type="text/javascript" src="../_static/doctools.js"></script>
+  <script type="text/javascript" src="../_static/searchtools.js"></script>
+  <script type="text/javascript" src="../searchindex.js"></script>
+      <link rel="top" title="GeoGit 0.6-SNAPSHOT documentation" href="../index.html" />
+      <link rel="up" title="Data and commits" href="index.html" />
+      <link rel="next" title="Other ways to interact with GeoGit" href="../interaction/index.html" />
+      <link rel="prev" title="Reverting changes" href="reverting.html" />
+</head>
+<body class="data/updating">
+    <div id="blacktop"></div>
+    <header id="masthead">
+      <div class="navbar">
+        <div class="container">
+          <div class="navbar-header">
+            <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+              <span class="icon-bar"></span>
+              <span class="icon-bar"></span>
+              <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="http://geogit.org"><h1>GeoGit</h1></a>
+          </div>
+          <div class="navbar-collapse collapse navbar-right">
+            <ul class="nav navbar-nav">
+              <li><a href="http://geogit.org/docs/quickstart.html">Quick Start</a></li>
+              <li><a href="http://geogit.org/docs/index.html">Documentation</a></li>
+              <li><a href="https://github.com/boundlessgeo/GeoGit">On Github</a></li>
+            </ul>
+          </div><!--/.navbar-collapse -->
+        </div>
+      </div>
+    </header>
+
+    <section class="subheading hidden-xs">
+      <div class="container">
+        <div class="row">
+          <div class="col-md-8">
+            <p class="byline">A Tool for Geospatial Data Management</p>
+          </div>
+        </div>
+      </div>
+    </section>
+    
+
+ <div id="main">
+    <div class="wrap selfclear">
+      <div id="content">
+      <div class="container">
+        <div class="row">
+          <div class="col-md-8">
+<ul id="breadcrumbs">
+  
+  <li><a href="../index.html">GeoGit 0.6-SNAPSHOT documentation</a> &raquo;</li>
+  <li><a href="index.html" accesskey="U">Data and commits</a> &raquo;</li>
+  <li>Updating the repository data.</li>
+</ul>
+<ul id="relatedlinks" class="selfclear">
+  <li class="first">
+    <a href="../genindex.html" title="General Index"
+       accesskey="I">index</a></li>
+  <li>
+    <a href="../interaction/index.html" title="Other ways to interact with GeoGit"
+       accesskey="N">next</a>|</li>
+  <li>
+    <a href="reverting.html" title="Reverting changes"
+       accesskey="P">previous</a>|</li>
+</ul>
+        
+  <div class="section" id="updating-the-repository-data">
+<span id="updating"></span><h1>Updating the repository data.<a class="headerlink" href="#updating-the-repository-data" title="Permalink to this headline">¶</a></h1>
+<p>If you have modified your original data, you should update the data in the GeoGit repository, so it is kept synchronized. This section extends what we have already seen about importing data, by considering some special situations that might arise when importing into a repository that already has some previous data. Along with the next section, which covers the GeoGit commands used for exporting data from the GeoGit repository to a file or database, they describe all the tools and commands needed to set a bidirectional communication between a GeoGit repository and external files and databases. These files and databases keep a snapshot of the repository accessible to external applications such as a desktop GIS, which can work on them and modify them.</p>
+<p>Let&#8217;s assume that our GeoGit repository already has some data, which has been imported from a shapefile. That puts the data in the GeoGit working tree, and we have after that staged and committed it to the repository database. Now we have changed the original shapefile adding some new features and editing the old ones, and we want that to be reflected in the GeoGit repository, creating a new version of the data it stores. The way to do this is re-importing the shapefile, running the <tt class="docutils literal"><span class="pre">geogit</span> <span class="pre">shp</span> <span class="pre">import</span></tt> command as we did in the first import.</p>
+<p>Importing without additional options actually removes the previous tree at the path you specify (or, if you specify no path, the path taken from the data source, into which where feature are to be imported), and then adds those features from the data source. Remember that this is happening only in the working tree, your previous data is safely stored in the repository database.</p>
+<p>However, you might want to perform a different modification of the working tree, such as adding a set of new features from a different shapefile or table. An import without additional options will cause the previous data to be removed, but in this case, we do not want that to happen, since we want both the previous data, and the newly imported one to be merged in the working tree. In that case, and to perform a safe import and add new features without removing he previous ones, the <tt class="docutils literal"><span class="pre">--add</span></tt> option has to be used. Only additions will be reflected in the working tree. This option is to be used basically when you want to extend the data under a given tree, adding extra features.</p>
+<div class="section" id="combining-different-feature-types">
+<h2>Combining different feature types<a class="headerlink" href="#combining-different-feature-types" title="Permalink to this headline">¶</a></h2>
+<p>We have assumed that the new features to import have the same feature type as the ones already in the import path, but, as we know, features under the same path do not have to necessarily share the same feature type. In the case of shapefiles, several shapefiles containing features with different feature types can be imported to the same path. In the case of importing from a database, several tables can be imported into the same path in the GeoGit repository.</p>
+<p>Imagine that you already imported a shapefile containing polygons with a given set of attributes, and now you want to import into the same path another shapefile with polygons, which contain the same attributes but with an extra one containing the area of each polygon. In that case, feature types do not match, and the situation is different, but GeoGit provide tools to solve it. Apart from the <tt class="docutils literal"><span class="pre">--add</span></tt> option, an additional option is available to control how the import command should behave when importing features with a feature type different to the default feature type of the specified path: <tt class="docutils literal"><span class="pre">--alter</span></tt>.</p>
+<p>If none of these modifiers is used, GeoGit will import features overwriting the features that already existed. In that case, unmatching feature types are not a problem, since we are just going to remove the previous ones and replace them with the content of the new shapefile.</p>
+<p>If <tt class="docutils literal"><span class="pre">--add</span></tt> is used, features are imported, regardless of their feature type. The default feature type remains unchanged and the tree will contain features of several different feature types.</p>
+<p>If <tt class="docutils literal"><span class="pre">--alter</span></tt> is used, the feature type of the features to import will be set as the new default feature type of the destination tree. All the features that already existed in it will be modified to match that feature type. After this type of import operation, all features in the destination path will have the path&#8217;s default feature type. If the new imported features have extra attributes, the features already in the repository will have null values for those fields. If attributes in the features already in the repository do not exist in the new imported attributes, they will be deleted.</p>
+<p>Here is an example to help you understand the above ideas. Let&#8217;s assume we have a tree named <tt class="docutils literal"><span class="pre">points</span></tt> with one single feature, with the following attributes:</p>
+<ul class="simple">
+<li><tt class="docutils literal"><span class="pre">xcoord:</span> <span class="pre">25</span></tt></li>
+<li><tt class="docutils literal"><span class="pre">ycoord:</span> <span class="pre">30</span></tt></li>
+<li><tt class="docutils literal"><span class="pre">elevation:</span> <span class="pre">332.3</span></tt></li>
+</ul>
+<p>Now we import a shapefile into that tree, which contains just another point with the following attributes:</p>
+<ul class="simple">
+<li><tt class="docutils literal"><span class="pre">xcoord:</span> <span class="pre">55</span></tt></li>
+<li><tt class="docutils literal"><span class="pre">ycoord:</span> <span class="pre">10</span></tt></li>
+<li><tt class="docutils literal"><span class="pre">name:</span> <span class="pre">point.1</span></tt></li>
+</ul>
+<p>Using no options, you will have a tree with just one feature, namely the one in the shapefile you have just imported.</p>
+<p>Using the <tt class="docutils literal"><span class="pre">--add</span></tt> option, you will end up having both elements in your tree. That is,</p>
+<ul class="simple">
+<li><tt class="docutils literal"><span class="pre">xcoord:</span> <span class="pre">25</span></tt></li>
+<li><tt class="docutils literal"><span class="pre">ycoord:</span> <span class="pre">30</span></tt></li>
+<li><tt class="docutils literal"><span class="pre">elevation:</span> <span class="pre">332.3</span></tt></li>
+<li><tt class="docutils literal"><span class="pre">xcoord:</span> <span class="pre">55</span></tt></li>
+<li><tt class="docutils literal"><span class="pre">ycoord:</span> <span class="pre">10</span></tt></li>
+<li><tt class="docutils literal"><span class="pre">name:</span> <span class="pre">point.1</span></tt></li>
+</ul>
+<p>No element is changed, and the default feature also remains unchanged and set to the feature type of the first feature.</p>
+<p>Using the <tt class="docutils literal"><span class="pre">--alter</span></tt> option instead, you will end up with the tree containing the elements shown below</p>
+<ul class="simple">
+<li><tt class="docutils literal"><span class="pre">xcoord:</span> <span class="pre">25</span></tt></li>
+<li><tt class="docutils literal"><span class="pre">ycoord:</span> <span class="pre">30</span></tt></li>
+<li><tt class="docutils literal"><span class="pre">name:</span> <span class="pre">NULL</span></tt></li>
+<li><tt class="docutils literal"><span class="pre">xcoord:</span> <span class="pre">55</span></tt></li>
+<li><tt class="docutils literal"><span class="pre">ycoord:</span> <span class="pre">10</span></tt></li>
+<li><tt class="docutils literal"><span class="pre">name:</span> <span class="pre">point.1</span></tt></li>
+</ul>
+<p>The feature that was already in the tree has been changed to adapt to the feature type of the newly imported feature. That feature type is now the default feature type of the tree.</p>
+<p>When importing from a database, if the &#8220;&#8211;all&#8221; option is selected and a destination path is supplied, the <tt class="docutils literal"><span class="pre">--add</span></tt> option is automatically added. Otherwise, importing each table would overwrite the features imported previously, and only features from the last table would appear on the selected path after importing. The <tt class="docutils literal"><span class="pre">--alter</span></tt> and <tt class="docutils literal"><span class="pre">--add</span></tt> options cannot be used simultaneously</p>
+</div>
+</div>
+
+
+      <div class="selfclear pagination-nav">
+          <div class="leftwise"><strong>Previous</strong>: <a href="reverting.html" title="previous chapter">Reverting changes</a></div>
+          <div class="rightwise"><strong>Next</strong>: <a href="../interaction/index.html" title="next chapter">Other ways to interact with GeoGit</a></div>
+      </div>
+      </div><!-- /#content> -->
+  <div id="sidebar" class="contrast col-md-4">
+
+    <div>
+         <form id="quick-search" action="search.html" method="get" style="width: 100%;">
+          <fieldset>
+            <input type="hidden" name="check_keywords" value="yes" />
+            <input type="hidden" name="area" value="default" />
+            <input id="quick-search-query" type="text" name="q" accessKey="q" name="searchQuery.queryString" size="25" value="Search Documentation&hellip;" size="20" tabindex="3" onblur="if(this.value=='') this.value='Search Documentation&hellip;';" onfocus="if(this.value=='Search Documentation&hellip;') this.value='';" />
+          </fieldset>
+        </form>
+
+
+        <div class="btn-group-vertical" id="docs_toc"> 
+          <button type="button" class="btn btn-default"><a href="/docs/">User Manual</a></button>
+          <button type="button" class="btn btn-default"><a href="/technical/">Technical Manual</a></button>
+          <button type="button" class="btn btn-default"><a href="/manpages/">Man Pages</a></button>
+      </div>
+      <h3 class="pngfix">Table Of Contents</h3>
+        <ul>
+<li><a class="reference internal" href="#">Updating the repository data.</a><ul>
+<li><a class="reference internal" href="#combining-different-feature-types">Combining different feature types</a></li>
+</ul>
+</li>
+</ul>
+
+        <div class="section-footer"></div>
+      </div>
+        <div class="section">
+          <h3>Continue Reading</h3>
+          <ul>
+            <li>Previous: <a href="reverting.html" title="previous chapter">Reverting changes</a></li>
+            <li>Next: <a href="../interaction/index.html" title="next chapter">Other ways to interact with GeoGit</a></li>
+          </ul>
+        </div>
+        <div class="section">
+        <h3>This Page</h3>
+        <ul class="this-page-menu">
+          <li><a href="../_sources/data/updating.txt">Show Source</a></li>
+        </ul>
+        </div>
+
+  </div><!-- /#sidebar -->
+  </div><!-- /.wrap> -->
+</div></div>
+</div><!-- /#main -->
+    <footer>
+      <div class="container">
+        <div class="row">
+          <div class=""><p class="repo-owner"><a href="https://github.com/boundlessgeo/GeoGit">GeoGit</a> is maintained by <a href="https://github.com/boundlessgeo"><img src="../_static/Boundless_Logo.png" alt="Boundless"></a></p></div>
+        </div>
+      </div>
+    </footer>
+
+  </body>
+</html>

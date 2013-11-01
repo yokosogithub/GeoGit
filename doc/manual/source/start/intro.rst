@@ -39,8 +39,6 @@ The following figure summarizes the above concepts.
 
 .. figure:: ../img/geogit_workflow.png
 
-   GeoGit workflow
-
 The names in the arrows indicate the corresponding commands for each operation. All commands will be described in the following sections.
 
 Versions

@@ -1,0 +1,167 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  
+  <title>Initializing a repository &mdash; GeoGit 0.6-SNAPSHOT documentation</title>
+  <link rel="stylesheet" href="../_static/screen.css" type="text/css" media="screen, projection" />
+  <link rel="stylesheet" href="../_static/print.css" type="text/css" media="print" /> 
+  <!--[if IE]>
+  <link rel="stylesheet" href="../_static/blueprint/ie.css" type="text/css" media="screen, projection" />
+  <![endif]-->
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+  <script type="text/javascript">
+    var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '0.6-SNAPSHOT',
+        COLLAPSE_MODINDEX: false,
+        FILE_SUFFIX: '.html'
+    };
+  </script>
+  <script type="text/javascript" src="../_static/jquery.js"></script>
+  <script type="text/javascript" src="../_static/bootstrap.js" ></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+  <script type="text/javascript" src="../_static/doctools.js"></script>
+  <script type="text/javascript" src="../_static/searchtools.js"></script>
+  <script type="text/javascript" src="../searchindex.js"></script>
+      <link rel="top" title="GeoGit 0.6-SNAPSHOT documentation" href="../index.html" />
+      <link rel="up" title="Working with repositories" href="index.html" />
+      <link rel="next" title="Configuring a GeoGit repository" href="config.html" />
+      <link rel="prev" title="Repository elements" href="elements.html" />
+</head>
+<body class="repo/init">
+    <div id="blacktop"></div>
+    <header id="masthead">
+      <div class="navbar">
+        <div class="container">
+          <div class="navbar-header">
+            <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+              <span class="icon-bar"></span>
+              <span class="icon-bar"></span>
+              <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="http://geogit.org"><h1>GeoGit</h1></a>
+          </div>
+          <div class="navbar-collapse collapse navbar-right">
+            <ul class="nav navbar-nav">
+              <li><a href="http://geogit.org/docs/quickstart.html">Quick Start</a></li>
+              <li><a href="http://geogit.org/docs/index.html">Documentation</a></li>
+              <li><a href="https://github.com/boundlessgeo/GeoGit">On Github</a></li>
+            </ul>
+          </div><!--/.navbar-collapse -->
+        </div>
+      </div>
+    </header>
+
+    <section class="subheading hidden-xs">
+      <div class="container">
+        <div class="row">
+          <div class="col-md-8">
+            <p class="byline">A Tool for Geospatial Data Management</p>
+          </div>
+        </div>
+      </div>
+    </section>
+    
+
+ <div id="main">
+    <div class="wrap selfclear">
+      <div id="content">
+      <div class="container">
+        <div class="row">
+          <div class="col-md-8">
+<ul id="breadcrumbs">
+  
+  <li><a href="../index.html">GeoGit 0.6-SNAPSHOT documentation</a> &raquo;</li>
+  <li><a href="index.html" accesskey="U">Working with repositories</a> &raquo;</li>
+  <li>Initializing a repository</li>
+</ul>
+<ul id="relatedlinks" class="selfclear">
+  <li class="first">
+    <a href="../genindex.html" title="General Index"
+       accesskey="I">index</a></li>
+  <li>
+    <a href="config.html" title="Configuring a GeoGit repository"
+       accesskey="N">next</a>|</li>
+  <li>
+    <a href="elements.html" title="Repository elements"
+       accesskey="P">previous</a>|</li>
+</ul>
+        
+  <div class="section" id="initializing-a-repository">
+<span id="init"></span><h1>Initializing a repository<a class="headerlink" href="#initializing-a-repository" title="Permalink to this headline">¶</a></h1>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">This page is about creating a new repository. For creating a copy of an already-existing repository, see Cloning.</p>
+</div>
+<p>The first step when starting out verisioning data is to initialize a new GeoGit repository. A repository keeps your data and all the different versions of it, so you can go revert to any given version at any time.</p>
+<p>GeoGit is a command-line application, and it is run from the console typing commands in the form of:</p>
+<div class="highlight-console"><div class="highlight"><pre><span class="go">geogit &lt;command&gt; &lt;options&gt;</span>
+</pre></div>
+</div>
+<p>To create a new repository, the <tt class="docutils literal"><span class="pre">init</span></tt> command is used.</p>
+<div class="highlight-console"><div class="highlight"><pre><span class="go">geogit init</span>
+</pre></div>
+</div>
+<p>This command will create a new directory called <tt class="docutils literal"><span class="pre">.geogit</span></tt> in the current directory, which will contain all your data, both the current version and the entire history of all older versions. Other than that, GeoGit will put nothing else in that directory.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">In GeoGit, the working tree is not the folder where the <tt class="docutils literal"><span class="pre">.geogit</span></tt> subfolder is located. The working tree itself is also located within the <tt class="docutils literal"><span class="pre">.geogit</span></tt> folder. This is a difference from <tt class="docutils literal"><span class="pre">git</span></tt>, where the working tree is the directory where the <tt class="docutils literal"><span class="pre">.git</span></tt> directory is located.</p>
+</div>
+<p>All GeoGit commands have to be run from within a valid GeoGit repository. The only exception to this rule is the <tt class="docutils literal"><span class="pre">init</span></tt> command itself. In case you have several repositories on your system, the operations you execute will affect just the repository in the current working directory from where the commands are invoked.</p>
+<p>The GeoGit repository that is just created is empty. Even if the folder where the repository has been created previously contained some files, those are not considered part of the repository, and will be ignored, unless files in the directory are later imported into the working tree.</p>
+</div>
+
+
+      <div class="selfclear pagination-nav">
+          <div class="leftwise"><strong>Previous</strong>: <a href="elements.html" title="previous chapter">Repository elements</a></div>
+          <div class="rightwise"><strong>Next</strong>: <a href="config.html" title="next chapter">Configuring a GeoGit repository</a></div>
+      </div>
+      </div><!-- /#content> -->
+  <div id="sidebar" class="contrast col-md-4">
+
+    <div>
+         <form id="quick-search" action="search.html" method="get" style="width: 100%;">
+          <fieldset>
+            <input type="hidden" name="check_keywords" value="yes" />
+            <input type="hidden" name="area" value="default" />
+            <input id="quick-search-query" type="text" name="q" accessKey="q" name="searchQuery.queryString" size="25" value="Search Documentation&hellip;" size="20" tabindex="3" onblur="if(this.value=='') this.value='Search Documentation&hellip;';" onfocus="if(this.value=='Search Documentation&hellip;') this.value='';" />
+          </fieldset>
+        </form>
+
+
+        <div class="btn-group-vertical" id="docs_toc"> 
+          <button type="button" class="btn btn-default"><a href="/docs/">User Manual</a></button>
+          <button type="button" class="btn btn-default"><a href="/technical/">Technical Manual</a></button>
+          <button type="button" class="btn btn-default"><a href="/manpages/">Man Pages</a></button>
+      </div>
+        <div class="section">
+          <h3>Continue Reading</h3>
+          <ul>
+            <li>Previous: <a href="elements.html" title="previous chapter">Repository elements</a></li>
+            <li>Next: <a href="config.html" title="next chapter">Configuring a GeoGit repository</a></li>
+          </ul>
+        </div>
+        <div class="section">
+        <h3>This Page</h3>
+        <ul class="this-page-menu">
+          <li><a href="../_sources/repo/init.txt">Show Source</a></li>
+        </ul>
+        </div>
+
+  </div><!-- /#sidebar -->
+  </div><!-- /.wrap> -->
+</div></div>
+</div><!-- /#main -->
+    <footer>
+      <div class="container">
+        <div class="row">
+          <div class=""><p class="repo-owner"><a href="https://github.com/boundlessgeo/GeoGit">GeoGit</a> is maintained by <a href="https://github.com/boundlessgeo"><img src="../_static/Boundless_Logo.png" alt="Boundless"></a></p></div>
+        </div>
+      </div>
+    </footer>
+
+  </body>
+</html>

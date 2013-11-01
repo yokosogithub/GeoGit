@@ -1,0 +1,181 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  
+  <title>Configuring a GeoGit repository &mdash; GeoGit 0.6-SNAPSHOT documentation</title>
+  <link rel="stylesheet" href="../_static/screen.css" type="text/css" media="screen, projection" />
+  <link rel="stylesheet" href="../_static/print.css" type="text/css" media="print" /> 
+  <!--[if IE]>
+  <link rel="stylesheet" href="../_static/blueprint/ie.css" type="text/css" media="screen, projection" />
+  <![endif]-->
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+  <script type="text/javascript">
+    var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '0.6-SNAPSHOT',
+        COLLAPSE_MODINDEX: false,
+        FILE_SUFFIX: '.html'
+    };
+  </script>
+  <script type="text/javascript" src="../_static/jquery.js"></script>
+  <script type="text/javascript" src="../_static/bootstrap.js" ></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+  <script type="text/javascript" src="../_static/doctools.js"></script>
+  <script type="text/javascript" src="../_static/searchtools.js"></script>
+  <script type="text/javascript" src="../searchindex.js"></script>
+      <link rel="top" title="GeoGit 0.6-SNAPSHOT documentation" href="../index.html" />
+      <link rel="up" title="Working with repositories" href="index.html" />
+      <link rel="next" title="Exploring a repository" href="exploring.html" />
+      <link rel="prev" title="Initializing a repository" href="init.html" />
+</head>
+<body class="repo/config">
+    <div id="blacktop"></div>
+    <header id="masthead">
+      <div class="navbar">
+        <div class="container">
+          <div class="navbar-header">
+            <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+              <span class="icon-bar"></span>
+              <span class="icon-bar"></span>
+              <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="http://geogit.org"><h1>GeoGit</h1></a>
+          </div>
+          <div class="navbar-collapse collapse navbar-right">
+            <ul class="nav navbar-nav">
+              <li><a href="http://geogit.org/docs/quickstart.html">Quick Start</a></li>
+              <li><a href="http://geogit.org/docs/index.html">Documentation</a></li>
+              <li><a href="https://github.com/boundlessgeo/GeoGit">On Github</a></li>
+            </ul>
+          </div><!--/.navbar-collapse -->
+        </div>
+      </div>
+    </header>
+
+    <section class="subheading hidden-xs">
+      <div class="container">
+        <div class="row">
+          <div class="col-md-8">
+            <p class="byline">A Tool for Geospatial Data Management</p>
+          </div>
+        </div>
+      </div>
+    </section>
+    
+
+ <div id="main">
+    <div class="wrap selfclear">
+      <div id="content">
+      <div class="container">
+        <div class="row">
+          <div class="col-md-8">
+<ul id="breadcrumbs">
+  
+  <li><a href="../index.html">GeoGit 0.6-SNAPSHOT documentation</a> &raquo;</li>
+  <li><a href="index.html" accesskey="U">Working with repositories</a> &raquo;</li>
+  <li>Configuring a GeoGit repository</li>
+</ul>
+<ul id="relatedlinks" class="selfclear">
+  <li class="first">
+    <a href="../genindex.html" title="General Index"
+       accesskey="I">index</a></li>
+  <li>
+    <a href="exploring.html" title="Exploring a repository"
+       accesskey="N">next</a>|</li>
+  <li>
+    <a href="init.html" title="Initializing a repository"
+       accesskey="P">previous</a>|</li>
+</ul>
+        
+  <div class="section" id="configuring-a-geogit-repository">
+<span id="repo-config"></span><h1>Configuring a GeoGit repository<a class="headerlink" href="#configuring-a-geogit-repository" title="Permalink to this headline">¶</a></h1>
+<p>Once the repository is initialized, some further configuration is recommended to ease further work.</p>
+<p>GeoGit configuration parameters are set using the <tt class="docutils literal"><span class="pre">geogit</span> <span class="pre">config</span></tt> command, which, in the case of setting a new value, has the following syntax:</p>
+<div class="highlight-console"><div class="highlight"><pre><span class="go">geogit config &lt;--global&gt; param_name param_value</span>
+</pre></div>
+</div>
+<p>Parameters are divided in sections, and they are referred to in the form <tt class="docutils literal"><span class="pre">section.parameter</span></tt>.</p>
+<p>When creating a new repository, we recommend that you set two parameters in the <tt class="docutils literal"><span class="pre">user</span></tt> section, which will identify you as the user of the repository. This is especially useful when sharing changes with others. When you later add changes to the repository to create new versions of your data, GeoGit will know who you are, so you will not have to enter this information manually each time.</p>
+<p>To define your user, you have to configure a name and an email address, using the <tt class="docutils literal"><span class="pre">user.name</span></tt> and <tt class="docutils literal"><span class="pre">user.email</span></tt> parameter.  Substitute the values in quotes with your own name and email address.</p>
+<div class="highlight-console"><div class="highlight"><pre><span class="go">geogit config user.name &quot;Author&quot;</span>
+<span class="go">geogit config user.email &quot;author@example.com&quot;</span>
+</pre></div>
+</div>
+<p>You can get a display of all the configured values by using the <tt class="docutils literal"><span class="pre">-l</span></tt> option.</p>
+<div class="highlight-console"><div class="highlight"><pre><span class="go">geogit config -l</span>
+</pre></div>
+</div>
+<div class="highlight-console"><div class="highlight"><pre><span class="go">user.name=Author</span>
+<span class="go">user.email=author@example.com</span>
+</pre></div>
+</div>
+<p>These parameters are valid just for this particular repository. You can also configure global parameters as well, which will apply to all repositories created, unless overwritten by a local parameter.</p>
+<p>To set the global value of a parameter, use the <tt class="docutils literal"><span class="pre">--global</span></tt> option.</p>
+<div class="highlight-console"><div class="highlight"><pre><span class="go">geogit config --global user.name &quot;Author&quot;</span>
+<span class="go">geogit config --global user.email &quot;author@example.com&quot;</span>
+</pre></div>
+</div>
+<p>You can also get a display of all the configured global values by using the <tt class="docutils literal"><span class="pre">-l</span></tt> option.</p>
+<div class="highlight-console"><div class="highlight"><pre><span class="go">geogit config -l --global</span>
+</pre></div>
+</div>
+<div class="highlight-console"><div class="highlight"><pre><span class="go">user.name=Author</span>
+<span class="go">user.email=author@example.com</span>
+</pre></div>
+</div>
+</div>
+
+
+      <div class="selfclear pagination-nav">
+          <div class="leftwise"><strong>Previous</strong>: <a href="init.html" title="previous chapter">Initializing a repository</a></div>
+          <div class="rightwise"><strong>Next</strong>: <a href="exploring.html" title="next chapter">Exploring a repository</a></div>
+      </div>
+      </div><!-- /#content> -->
+  <div id="sidebar" class="contrast col-md-4">
+
+    <div>
+         <form id="quick-search" action="search.html" method="get" style="width: 100%;">
+          <fieldset>
+            <input type="hidden" name="check_keywords" value="yes" />
+            <input type="hidden" name="area" value="default" />
+            <input id="quick-search-query" type="text" name="q" accessKey="q" name="searchQuery.queryString" size="25" value="Search Documentation&hellip;" size="20" tabindex="3" onblur="if(this.value=='') this.value='Search Documentation&hellip;';" onfocus="if(this.value=='Search Documentation&hellip;') this.value='';" />
+          </fieldset>
+        </form>
+
+
+        <div class="btn-group-vertical" id="docs_toc"> 
+          <button type="button" class="btn btn-default"><a href="/docs/">User Manual</a></button>
+          <button type="button" class="btn btn-default"><a href="/technical/">Technical Manual</a></button>
+          <button type="button" class="btn btn-default"><a href="/manpages/">Man Pages</a></button>
+      </div>
+        <div class="section">
+          <h3>Continue Reading</h3>
+          <ul>
+            <li>Previous: <a href="init.html" title="previous chapter">Initializing a repository</a></li>
+            <li>Next: <a href="exploring.html" title="next chapter">Exploring a repository</a></li>
+          </ul>
+        </div>
+        <div class="section">
+        <h3>This Page</h3>
+        <ul class="this-page-menu">
+          <li><a href="../_sources/repo/config.txt">Show Source</a></li>
+        </ul>
+        </div>
+
+  </div><!-- /#sidebar -->
+  </div><!-- /.wrap> -->
+</div></div>
+</div><!-- /#main -->
+    <footer>
+      <div class="container">
+        <div class="row">
+          <div class=""><p class="repo-owner"><a href="https://github.com/boundlessgeo/GeoGit">GeoGit</a> is maintained by <a href="https://github.com/boundlessgeo"><img src="../_static/Boundless_Logo.png" alt="Boundless"></a></p></div>
+        </div>
+      </div>
+    </footer>
+
+  </body>
+</html>

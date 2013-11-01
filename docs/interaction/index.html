@@ -1,0 +1,187 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  
+  <title>Other ways to interact with GeoGit &mdash; GeoGit 0.6-SNAPSHOT documentation</title>
+  <link rel="stylesheet" href="../_static/screen.css" type="text/css" media="screen, projection" />
+  <link rel="stylesheet" href="../_static/print.css" type="text/css" media="print" /> 
+  <!--[if IE]>
+  <link rel="stylesheet" href="../_static/blueprint/ie.css" type="text/css" media="screen, projection" />
+  <![endif]-->
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+  <script type="text/javascript">
+    var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '0.6-SNAPSHOT',
+        COLLAPSE_MODINDEX: false,
+        FILE_SUFFIX: '.html'
+    };
+  </script>
+  <script type="text/javascript" src="../_static/jquery.js"></script>
+  <script type="text/javascript" src="../_static/bootstrap.js" ></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+  <script type="text/javascript" src="../_static/doctools.js"></script>
+  <script type="text/javascript" src="../_static/searchtools.js"></script>
+  <script type="text/javascript" src="../searchindex.js"></script>
+      <link rel="top" title="GeoGit 0.6-SNAPSHOT documentation" href="../index.html" />
+      <link rel="next" title="The GeoGit Console" href="console.html" />
+      <link rel="prev" title="Updating the repository data." href="../data/updating.html" />
+</head>
+<body class="interaction/index">
+    <div id="blacktop"></div>
+    <header id="masthead">
+      <div class="navbar">
+        <div class="container">
+          <div class="navbar-header">
+            <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+              <span class="icon-bar"></span>
+              <span class="icon-bar"></span>
+              <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="http://geogit.org"><h1>GeoGit</h1></a>
+          </div>
+          <div class="navbar-collapse collapse navbar-right">
+            <ul class="nav navbar-nav">
+              <li><a href="http://geogit.org/docs/quickstart.html">Quick Start</a></li>
+              <li><a href="http://geogit.org/docs/index.html">Documentation</a></li>
+              <li><a href="https://github.com/boundlessgeo/GeoGit">On Github</a></li>
+            </ul>
+          </div><!--/.navbar-collapse -->
+        </div>
+      </div>
+    </header>
+
+    <section class="subheading hidden-xs">
+      <div class="container">
+        <div class="row">
+          <div class="col-md-8">
+            <p class="byline">A Tool for Geospatial Data Management</p>
+          </div>
+        </div>
+      </div>
+    </section>
+    
+
+ <div id="main">
+    <div class="wrap selfclear">
+      <div id="content">
+      <div class="container">
+        <div class="row">
+          <div class="col-md-8">
+<ul id="breadcrumbs">
+  
+  <li><a href="../index.html">GeoGit 0.6-SNAPSHOT documentation</a> &raquo;</li>
+  <li>Other ways to interact with GeoGit</li>
+</ul>
+<ul id="relatedlinks" class="selfclear">
+  <li class="first">
+    <a href="../genindex.html" title="General Index"
+       accesskey="I">index</a></li>
+  <li>
+    <a href="console.html" title="The GeoGit Console"
+       accesskey="N">next</a>|</li>
+  <li>
+    <a href="../data/updating.html" title="Updating the repository data."
+       accesskey="P">previous</a>|</li>
+</ul>
+        
+  <div class="section" id="other-ways-to-interact-with-geogit">
+<span id="interaction"></span><h1>Other ways to interact with GeoGit<a class="headerlink" href="#other-ways-to-interact-with-geogit" title="Permalink to this headline">¶</a></h1>
+<p>This section will discuss alternate ways of interacting with GeoGit, both local and remote.</p>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="console.html">The GeoGit Console</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="console.html#running-geogit-console-in-batch-mode">Running GeoGit console in batch mode</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="networking.html">GeoGit Networking</a></li>
+<li class="toctree-l1"><a class="reference internal" href="networking.html#standalone-testing-server">Standalone Testing Server</a></li>
+<li class="toctree-l1"><a class="reference internal" href="networking.html#geoserver">GeoServer</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="networking.html#building-geoserver-geotools-geogit-extension">Building GeoServer/GeoTools GeoGit Extension</a></li>
+<li class="toctree-l2"><a class="reference internal" href="networking.html#configuring-a-geogit-store-in-geoserver">Configuring a GeoGit Store in GeoServer</a></li>
+<li class="toctree-l2"><a class="reference internal" href="networking.html#cloning-pushing-and-pulling">Cloning Pushing and Pulling</a></li>
+<li class="toctree-l2"><a class="reference internal" href="networking.html#automated-repository-synchronization">Automated Repository Synchronization</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="networking.html#current-limitations">Current Limitations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="web-api.html">Web-Api Documentation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="web-api.html#porcelain-commands-supported">Porcelain Commands Supported</a></li>
+<li class="toctree-l2"><a class="reference internal" href="web-api.html#plumbing-commands-supported">Plumbing Commands Supported</a></li>
+<li class="toctree-l2"><a class="reference internal" href="web-api.html#web-api-specific">Web-Api Specific</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="web-api.html#issues">Issues</a></li>
+<li class="toctree-l1"><a class="reference internal" href="osm.html">Using GeoGit with OpenStreetMap data</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="osm.html#importing-osm-data">Importing OSM data</a></li>
+<li class="toctree-l2"><a class="reference internal" href="osm.html#downloading-data-from-an-osm-server">Downloading data from an OSM Server</a></li>
+<li class="toctree-l2"><a class="reference internal" href="osm.html#updating-osm-data">Updating OSM data</a></li>
+<li class="toctree-l2"><a class="reference internal" href="osm.html#exporting-to-osm-formats">Exporting to OSM formats</a></li>
+<li class="toctree-l2"><a class="reference internal" href="osm.html#exporting-differences-as-changesets">Exporting differences as changesets</a></li>
+<li class="toctree-l2"><a class="reference internal" href="osm.html#data-mapping">Data mapping</a></li>
+<li class="toctree-l2"><a class="reference internal" href="osm.html#data-unmapping">Data unmapping</a></li>
+<li class="toctree-l2"><a class="reference internal" href="osm.html#an-osm-workflow-using-geogit">An OSM workflow using GeoGit</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="osm.html#ideas-issues-for-future-development">IDEAS &amp; ISSUES FOR FUTURE DEVELOPMENT</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="osm.html#problems-to-solve-things-to-consider-about-osm-commands-in-geogit">Problems to solve / Things to consider  about OSM commands in GeoGit</a></li>
+<li class="toctree-l2"><a class="reference internal" href="osm.html#osm-paths">OSM paths</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</div>
+
+
+      <div class="selfclear pagination-nav">
+          <div class="leftwise"><strong>Previous</strong>: <a href="../data/updating.html" title="previous chapter">Updating the repository data.</a></div>
+          <div class="rightwise"><strong>Next</strong>: <a href="console.html" title="next chapter">The GeoGit Console</a></div>
+      </div>
+      </div><!-- /#content> -->
+  <div id="sidebar" class="contrast col-md-4">
+
+    <div>
+         <form id="quick-search" action="search.html" method="get" style="width: 100%;">
+          <fieldset>
+            <input type="hidden" name="check_keywords" value="yes" />
+            <input type="hidden" name="area" value="default" />
+            <input id="quick-search-query" type="text" name="q" accessKey="q" name="searchQuery.queryString" size="25" value="Search Documentation&hellip;" size="20" tabindex="3" onblur="if(this.value=='') this.value='Search Documentation&hellip;';" onfocus="if(this.value=='Search Documentation&hellip;') this.value='';" />
+          </fieldset>
+        </form>
+
+
+        <div class="btn-group-vertical" id="docs_toc"> 
+          <button type="button" class="btn btn-default"><a href="/docs/">User Manual</a></button>
+          <button type="button" class="btn btn-default"><a href="/technical/">Technical Manual</a></button>
+          <button type="button" class="btn btn-default"><a href="/manpages/">Man Pages</a></button>
+      </div>
+        <div class="section">
+          <h3>Continue Reading</h3>
+          <ul>
+            <li>Previous: <a href="../data/updating.html" title="previous chapter">Updating the repository data.</a></li>
+            <li>Next: <a href="console.html" title="next chapter">The GeoGit Console</a></li>
+          </ul>
+        </div>
+        <div class="section">
+        <h3>This Page</h3>
+        <ul class="this-page-menu">
+          <li><a href="../_sources/interaction/index.txt">Show Source</a></li>
+        </ul>
+        </div>
+
+  </div><!-- /#sidebar -->
+  </div><!-- /.wrap> -->
+</div></div>
+</div><!-- /#main -->
+    <footer>
+      <div class="container">
+        <div class="row">
+          <div class=""><p class="repo-owner"><a href="https://github.com/boundlessgeo/GeoGit">GeoGit</a> is maintained by <a href="https://github.com/boundlessgeo"><img src="../_static/Boundless_Logo.png" alt="Boundless"></a></p></div>
+        </div>
+      </div>
+    </footer>
+
+  </body>
+</html>
