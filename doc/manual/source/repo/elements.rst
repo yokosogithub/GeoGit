@@ -41,7 +41,7 @@ Whenever you make a commit and add new data to the GeoGit repository, the ``HEAD
 
 Some GeoGit commands will create other refs as part of their operations.
 
-On the relationship between trees, features, and feature types
+Trees, features, and feature types
 --------------------------------------------------------------
 
 A feature contains a set of attributes, and these attributes must correspond to a given feature type, also stored in the GeoGit repository. For this reason features are stored along with the ID pointing to their feature type.

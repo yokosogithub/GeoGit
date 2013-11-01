@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-# GeoGit documentation documentation build configuration file, created by
+# GeoGit documentation build configuration file, created by
 # sphinx-quickstart on Mon Feb 25 13:44:22 2013.
 #
 # This file is execfile()d with the current directory set to its containing dir.
@@ -40,7 +40,7 @@ source_suffix = '.rst'
 master_doc = 'index'
 
 # General information about the project.
-project = u'GeoGit documentation'
+project = u'GeoGit'
 copyright = u'2013, OpenGeo'
 
 # The version info for the project you're documenting, acts as replacement for
@@ -91,7 +91,7 @@ pygments_style = 'sphinx'
 
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
-html_theme = 'geogit'
+html_theme = 'geogit_docs'
 html_theme_path = ['../../themes/']
 
 # Theme options are theme-specific and customize the look and feel of a theme
@@ -101,7 +101,7 @@ html_theme_path = ['../../themes/']
 
 # The name for this set of Sphinx documents.  If None, it defaults to
 # "<project> v<release> documentation".
-#html_title = None
+#html_title = None 
 
 # A shorter title for the navigation bar.  Default is the same as html_title.
 #html_short_title = None
@@ -113,7 +113,7 @@ html_theme_path = ['../../themes/']
 # The name of an image file (within the static path) to use as favicon of the
 # docs.  This file should be a Windows icon file (.ico) being 16x16 or 32x32
 # pixels large.
-#html_favicon = None
+#html_favicon = favicon.ico 
 
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
@@ -136,10 +136,10 @@ html_theme_path = ['../../themes/']
 #html_additional_pages = {}
 
 # If false, no module index is generated.
-#html_domain_indices = True
+#html_domain_indices = True 
 
 # If false, no index is generated.
-#html_use_index = True
+#html_use_index = True 
 
 # If true, the index is split into individual pages for each letter.
 #html_split_index = False
@@ -156,7 +156,7 @@ html_theme_path = ['../../themes/']
 # If true, an OpenSearch description file will be output, and all pages will
 # contain a <link> tag referring to it.  The value of this option must be the
 # base URL from which the finished HTML is served.
-#html_use_opensearch = ''
+#html_use_opensearch =  'http://geogit.org'
 
 # This is the file name suffix for HTML files (e.g. ".xhtml").
 #html_file_suffix = None
