@@ -1,59 +1,77 @@
-
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml" lang="en-US" xml:lang="en-US">
+<html>
 <head>
   <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
   
-  <title>geogit-remote documentation &mdash; GeoGit 0.5 GeoGit man pages</title>
-  <link rel="stylesheet" href="_static/blueprint/screen.css" type="text/css" media="screen, projection" />
-  <link rel="stylesheet" href="_static/blueprint/print.css" type="text/css" media="print" /> 
+  <title>geogit-remote documentation &mdash; GeoGit 0.6 GeoGit man pages</title>
+  <link rel="stylesheet" href="_static/screen.css" type="text/css" media="screen, projection" />
+  <link rel="stylesheet" href="_static/print.css" type="text/css" media="print" /> 
   <!--[if IE]>
   <link rel="stylesheet" href="_static/blueprint/ie.css" type="text/css" media="screen, projection" />
   <![endif]-->
-  <link rel="stylesheet" href="_static/default.css" type="text/css" />
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
   <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
   <script type="text/javascript">
     var DOCUMENTATION_OPTIONS = {
-        URL_ROOT:    '#',
-        VERSION:     '0.5',
+        URL_ROOT:    './',
+        VERSION:     '0.6',
         COLLAPSE_MODINDEX: false,
         FILE_SUFFIX: '.html'
     };
   </script>
   <script type="text/javascript" src="_static/jquery.js"></script>
+  <script type="text/javascript" src="_static/bootstrap.js" ></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
   <script type="text/javascript" src="_static/doctools.js"></script>
   <script type="text/javascript" src="_static/searchtools.js"></script>
   <script type="text/javascript" src="searchindex.js"></script>
-      <link rel="top" title="GeoGit 0.5 GeoGit man pages" href="index.html" />
+      <link rel="top" title="GeoGit 0.6 GeoGit man pages" href="index.html" />
 </head>
 <body class="remote">
-  <div id="header" class="selfclear">
-    <div class="wrap selfclear">
-      <div id="logo"><a href="index.html">GeoGit 0.5 GeoGit man pages</a></div>
-      <ul id="top-nav">
-        <li class="first"><a href="https://github.com/opengeo/GeoGit/blob/master/README.rst">About</a></li>
-        <li><a href="http://sourceforge.net/projects/geogit">Download</a></li>
-        <li><a href="/docs/">Users Manual</a></li>
-        <li><a href="/technical/">Technical Manual</a></li>
-        <li><a href="/manpages/">Man Pages</a></li>
-      </ul>
-        <form id="quick-search" action="search.html" method="get">
-          <fieldset>
-            <input type="hidden" name="check_keywords" value="yes" />
-            <input type="hidden" name="area" value="default" />
-            <input id="quick-search-query" type="text" name="q" accessKey="q" name="searchQuery.queryString" size="25" value="Search Documentation&hellip;" size="20" tabindex="3" onblur="if(this.value=='') this.value='Search Documentation&hellip;';" onfocus="if(this.value=='Search Documentation&hellip;') this.value='';" />
-            <input id="quick-search-submit" type="image" value="Search" src="_static/chrome/search_icon_green.png" />
-          </fieldset>
-        </form>
-    </div><!-- /.wrap -->
-  </div><!-- /#header -->
-  <div id="main">
+    <div id="blacktop"></div>
+    <header id="masthead">
+      <div class="navbar">
+        <div class="container">
+          <div class="navbar-header">
+            <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+              <span class="icon-bar"></span>
+              <span class="icon-bar"></span>
+              <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="http://geogit.org"><h1>GeoGit</h1></a>
+          </div>
+          <div class="navbar-collapse collapse navbar-right">
+            <ul class="nav navbar-nav">
+              <li><a href="http://geogit.org/docs/quickstart.html">Quick Start</a></li>
+              <li><a href="http://geogit.org/docs/index.html">Documentation</a></li>
+              <li><a href="https://github.com/boundlessgeo/GeoGit">On Github</a></li>
+            </ul>
+          </div><!--/.navbar-collapse -->
+        </div>
+      </div>
+    </header>
+
+    <section class="subheading hidden-xs">
+      <div class="container">
+        <div class="row">
+          <div class="col-md-8">
+            <p class="byline">A Tool for Geospatial Data Management</p>
+          </div>
+        </div>
+      </div>
+    </section>
+    
+
+ <div id="main">
     <div class="wrap selfclear">
       <div id="content">
+      <div class="container">
+        <div class="row">
+          <div class="col-md-8">
 <ul id="breadcrumbs">
   
-  <li><a href="index.html">GeoGit 0.5 GeoGit man pages</a> &raquo;</li>
+  <li><a href="index.html">GeoGit 0.6 GeoGit man pages</a> &raquo;</li>
   <li>geogit-remote documentation</li>
 </ul>
 <ul id="relatedlinks" class="selfclear">
@@ -120,13 +138,15 @@
         </div>
   </div><!-- /#sidebar -->
   </div><!-- /.wrap> -->
+</div></div>
 </div><!-- /#main -->
-<div id="footer">
-  <div class="wrap">
-    &copy; Copyright OpenGeo <http://opengeo.org>.
-    Last updated on Oct 02, 2013.
-    Created using <a href="http://sphinx.pocoo.org/">Sphinx</a>.
-  </div><!-- /.wrap> -->
-</div><!-- /#footer -->
+    <footer>
+      <div class="container">
+        <div class="row">
+          <div class=""><p class="repo-owner"><a href="https://github.com/boundlessgeo/GeoGit">GeoGit</a> is maintained by <a href="https://github.com/boundlessgeo"><img src="_static/Boundless_Logo.png" alt="Boundless"></a></p></div>
+        </div>
+      </div>
+    </footer>
+
   </body>
 </html>

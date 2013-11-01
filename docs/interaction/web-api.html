@@ -1,0 +1,1042 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  
+  <title>Web-Api Documentation &mdash; GeoGit 0.6-SNAPSHOT documentation</title>
+  <link rel="stylesheet" href="../_static/screen.css" type="text/css" media="screen, projection" />
+  <link rel="stylesheet" href="../_static/print.css" type="text/css" media="print" /> 
+  <!--[if IE]>
+  <link rel="stylesheet" href="../_static/blueprint/ie.css" type="text/css" media="screen, projection" />
+  <![endif]-->
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+  <script type="text/javascript">
+    var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '0.6-SNAPSHOT',
+        COLLAPSE_MODINDEX: false,
+        FILE_SUFFIX: '.html'
+    };
+  </script>
+  <script type="text/javascript" src="../_static/jquery.js"></script>
+  <script type="text/javascript" src="../_static/bootstrap.js" ></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+  <script type="text/javascript" src="../_static/doctools.js"></script>
+  <script type="text/javascript" src="../_static/searchtools.js"></script>
+  <script type="text/javascript" src="../searchindex.js"></script>
+      <link rel="top" title="GeoGit 0.6-SNAPSHOT documentation" href="../index.html" />
+      <link rel="up" title="Other ways to interact with GeoGit" href="index.html" />
+      <link rel="next" title="Using GeoGit with OpenStreetMap data" href="osm.html" />
+      <link rel="prev" title="GeoGit Networking" href="networking.html" />
+</head>
+<body class="interaction/web-api">
+    <div id="blacktop"></div>
+    <header id="masthead">
+      <div class="navbar">
+        <div class="container">
+          <div class="navbar-header">
+            <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+              <span class="icon-bar"></span>
+              <span class="icon-bar"></span>
+              <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="http://geogit.org"><h1>GeoGit</h1></a>
+          </div>
+          <div class="navbar-collapse collapse navbar-right">
+            <ul class="nav navbar-nav">
+              <li><a href="http://geogit.org/docs/quickstart.html">Quick Start</a></li>
+              <li><a href="http://geogit.org/docs/index.html">Documentation</a></li>
+              <li><a href="https://github.com/boundlessgeo/GeoGit">On Github</a></li>
+            </ul>
+          </div><!--/.navbar-collapse -->
+        </div>
+      </div>
+    </header>
+
+    <section class="subheading hidden-xs">
+      <div class="container">
+        <div class="row">
+          <div class="col-md-8">
+            <p class="byline">A Tool for Geospatial Data Management</p>
+          </div>
+        </div>
+      </div>
+    </section>
+    
+
+ <div id="main">
+    <div class="wrap selfclear">
+      <div id="content">
+      <div class="container">
+        <div class="row">
+          <div class="col-md-8">
+<ul id="breadcrumbs">
+  
+  <li><a href="../index.html">GeoGit 0.6-SNAPSHOT documentation</a> &raquo;</li>
+  <li><a href="index.html" accesskey="U">Other ways to interact with GeoGit</a> &raquo;</li>
+  <li>Web-Api Documentation</li>
+</ul>
+<ul id="relatedlinks" class="selfclear">
+  <li class="first">
+    <a href="../genindex.html" title="General Index"
+       accesskey="I">index</a></li>
+  <li>
+    <a href="osm.html" title="Using GeoGit with OpenStreetMap data"
+       accesskey="N">next</a>|</li>
+  <li>
+    <a href="networking.html" title="GeoGit Networking"
+       accesskey="P">previous</a>|</li>
+</ul>
+        
+  <div class="section" id="web-api-documentation">
+<h1>Web-Api Documentation<a class="headerlink" href="#web-api-documentation" title="Permalink to this headline">¶</a></h1>
+<p>This will walk you through GeoGit&#8217;s web-api and all of its currently supported functionality. This doc also assumes that you already know what any given command does, this is strictly how to use these commands. First I will explain an easy way to get the web-api up and running.</p>
+<p>If you don&#8217;t already have the GeoGit source from GitHub and a GeoGit repository set up do that first. Next, to get the web-api up and running after you have built the latest GeoGit go into the web/app folder in the GeoGit source and run this command:
+<tt class="docutils literal"><span class="pre">mvn</span> <span class="pre">exec:java</span> <span class="pre">-Dexec.mainClass=org.geogit.web.Main</span> <span class="pre">-Dexec.args=/Path/To/Repo</span></tt>. This will set up a jetty server with your repository and give you access to the web-api. Now you just need to open up a web browser and go to localhost:8182/log to make sure it comes up. After you have gotten it up and running now you can test any of the commands listed here.</p>
+<p>All web-api commands have transaction support, which means you can run the web-api commands beginTransaction to start a transaction and then use the id that is returned to do other commands on that transaction instead of the actual repository. After you are done with everything on the transaction you just have call endTransaction through the web-api and pass it the transaction id. Some commands require a transaction to preserve the stability of the repository, those that require it will have <tt class="docutils literal"><span class="pre">(-T)</span></tt> next to the name of the command in this doc. To pass the transaction id you just need to use the transactionId option and set it equal to the id that beginTransaction returns. Some commands also have other options that required for that command to work they will be italicized in this doc. Any options that have notes associated with them have and asterisk next to them.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">All web-api command response are formatted for xml by default, however you can get a JSON response by adding this option to the url <tt class="docutils literal"><span class="pre">output_format=JSON</span></tt>.</p>
+</div>
+<div class="section" id="porcelain-commands-supported">
+<h2>Porcelain Commands Supported<a class="headerlink" href="#porcelain-commands-supported" title="Permalink to this headline">¶</a></h2>
+<ul>
+<li><p class="first">Add (-T)</p>
+<blockquote>
+<div><dl class="docutils">
+<dt>Currently Supported Options:</dt>
+<dd><ol class="first last loweralpha">
+<li><dl class="first docutils">
+<dt><em>path</em> - the path to the feature you want to add</dt>
+<dd><p class="first">Type: String</p>
+<p class="last">Default: null</p>
+</dd>
+</dl>
+</li>
+</ol>
+</dd>
+</dl>
+</div></blockquote>
+</li>
+</ul>
+<blockquote>
+<div><div class="highlight-python"><pre>Example: localhost:8182/add?path=tree/fid&amp;transactionId=id</pre>
+</div>
+</div></blockquote>
+<ul>
+<li><p class="first">Branch</p>
+<blockquote>
+<div><dl class="docutils">
+<dt>Currently Supported Options:</dt>
+<dd><ol class="first last loweralpha">
+<li><dl class="first docutils">
+<dt><em>list</em> - true to list any branches</dt>
+<dd><p class="first">Type: Boolean</p>
+<p class="last">Default: false</p>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt>remotes - true to list remote branches</dt>
+<dd><p class="first">Type: Boolean</p>
+<p class="last">Default: false</p>
+</dd>
+</dl>
+</li>
+</ol>
+</dd>
+</dl>
+</div></blockquote>
+</li>
+</ul>
+<blockquote>
+<div><div class="highlight-python"><pre>Example: localhost:8182/branch?list=true&amp;remote=true</pre>
+</div>
+</div></blockquote>
+<ul>
+<li><p class="first">Checkout (-T)</p>
+<blockquote>
+<div><dl class="docutils">
+<dt>Currently Supported Options:</dt>
+<dd><ol class="first last loweralpha">
+<li><dl class="first docutils">
+<dt><em>branch*</em> - the name of the branch to checkout</dt>
+<dd><p class="first">Type: String</p>
+<p class="last">Default: null</p>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt><em>ours*</em> - true to use our version of the feature specified</dt>
+<dd><p class="first">Type: Boolean</p>
+<p class="last">Default: false</p>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt><em>theirs*</em> - true to use their version of the feature specified</dt>
+<dd><p class="first">Type: Boolean</p>
+<p class="last">Default: false</p>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt><em>path*</em> - the path to the feature that will be updated</dt>
+<dd><p class="first">Type: String</p>
+<p class="last">Default: null</p>
+</dd>
+</dl>
+</li>
+</ol>
+</dd>
+</dl>
+</div></blockquote>
+</li>
+</ul>
+<blockquote>
+<div><div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">You must specify either branch OR path not both. If path is specified then you MUST specify either ours or theirs.</p>
+</div>
+<div class="highlight-python"><pre>Examples: localhost:8182/checkout?branch=master&amp;transactionId=id
+          localhost:8182/checkout?path=tree/fid&amp;ours=true&amp;transactionId=id</pre>
+</div>
+</div></blockquote>
+<ul>
+<li><p class="first">Commit (-T)</p>
+<blockquote>
+<div><dl class="docutils">
+<dt>Currently Supported Options:</dt>
+<dd><ol class="first last loweralpha">
+<li><dl class="first docutils">
+<dt>message - the message for this commit</dt>
+<dd><p class="first">Type: String</p>
+<p class="last">Default: null</p>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt>all - true to commit everything in the working tree</dt>
+<dd><p class="first">Type: Boolean</p>
+<p class="last">Default: false</p>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt>authorName - the author of the commit</dt>
+<dd><p class="first">Type: String</p>
+<p class="last">Default: null</p>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt>authorEmail - the email of the the author of the commit</dt>
+<dd><p class="first">Type: String</p>
+<p class="last">Default: null</p>
+</dd>
+</dl>
+</li>
+</ol>
+</dd>
+</dl>
+</div></blockquote>
+</li>
+</ul>
+<blockquote>
+<div><div class="highlight-python"><pre>Example: localhost:8182/commit?authorName=John&amp;authorEmail=john@example.com&amp;message=something&amp;all=true&amp;transactionId=id</pre>
+</div>
+</div></blockquote>
+<ul>
+<li><p class="first">Diff</p>
+<blockquote>
+<div><dl class="docutils">
+<dt>Currently Supported Options:</dt>
+<dd><ol class="first last loweralpha">
+<li><dl class="first docutils">
+<dt><em>oldRefSpec</em> - the old ref spec to diff against</dt>
+<dd><p class="first">Type: String</p>
+<p class="last">Default: null</p>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt>newRefSpec - the new ref spec to diff against</dt>
+<dd><p class="first">Type: String</p>
+<p class="last">Default: null</p>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt>pathFilter - a path to filter by</dt>
+<dd><p class="first">Type: String</p>
+<p class="last">Default: null</p>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt>showGeometryChanges - true to show geometry changes</dt>
+<dd><p class="first">Type: Boolean</p>
+<p class="last">Default: false</p>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt>page - the page number to build the response</dt>
+<dd><p class="first">Type: Integer</p>
+<p class="last">Default: 0</p>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt>show - the number of elements to display in the response per page</dt>
+<dd><p class="first">Type: Integer</p>
+<p class="last">Default: 30</p>
+</dd>
+</dl>
+</li>
+</ol>
+</dd>
+</dl>
+</div></blockquote>
+</li>
+</ul>
+<blockquote>
+<div><div class="highlight-python"><pre>Example: localhost:8182/diff?oldRefSpec=commitId1&amp;newRefSpec=commitId2&amp;showGeometryChanges=true&amp;show=100</pre>
+</div>
+</div></blockquote>
+<ul>
+<li><p class="first">Fetch</p>
+<blockquote>
+<div><dl class="docutils">
+<dt>Currently Supported Options:</dt>
+<dd><ol class="first last loweralpha">
+<li><dl class="first docutils">
+<dt>prune - true to prune remote tracking branches locally that no longer exist</dt>
+<dd><p class="first">Type: Boolean</p>
+<p class="last">Default: false</p>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt>all - true to fetch from all remotes</dt>
+<dd><p class="first">Type: Boolean</p>
+<p class="last">Default: false</p>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt><em>remote*</em> - the remote to fetch from</dt>
+<dd><p class="first">Type: String</p>
+<p class="last">Default: origin</p>
+</dd>
+</dl>
+</li>
+</ol>
+</dd>
+</dl>
+</div></blockquote>
+</li>
+</ul>
+<blockquote>
+<div><div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">If remote is not specified it will try to fetch from a remote named origin.</p>
+</div>
+<div class="highlight-python"><pre>Example: localhost:8182/fetch?prune=true&amp;remote=origin</pre>
+</div>
+</div></blockquote>
+<ul>
+<li><p class="first">Log</p>
+<blockquote>
+<div><dl class="docutils">
+<dt>Currently Supported Options:</dt>
+<dd><ol class="first last loweralpha">
+<li><dl class="first docutils">
+<dt>limit - the number of commits to print</dt>
+<dd><p class="first">Type: Integer</p>
+<p class="last">Default: null</p>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt>offset - the offset to start listing at</dt>
+<dd><p class="first">Type: Integer</p>
+<p class="last">Default: null</p>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt>path - a list of paths to filter commits by</dt>
+<dd><p class="first">Type: List&lt;String&gt;</p>
+<p class="last">Default: Empty List</p>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt>since - the start place to list commits</dt>
+<dd><p class="first">Type: String</p>
+<p class="last">Default: null</p>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt>until - the end place to list commits</dt>
+<dd><p class="first">Type: String</p>
+<p class="last">Default: null</p>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt>page - the page number to build the response</dt>
+<dd><p class="first">Type: Integer</p>
+<p class="last">Default: 0</p>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt>show - the number of elements to display in the response per page</dt>
+<dd><p class="first">Type: Integer</p>
+<p class="last">Default: 30</p>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt>firstParentOnly - true to only show the first parent of a commit</dt>
+<dd><p class="first">Type: Boolean</p>
+<p class="last">Default: false</p>
+</dd>
+</dl>
+</li>
+</ol>
+</dd>
+</dl>
+</div></blockquote>
+</li>
+</ul>
+<blockquote>
+<div><div class="highlight-python"><pre>Example: localhost:8182/log?path=treeName&amp;firstParentOnly=true</pre>
+</div>
+</div></blockquote>
+<ul>
+<li><p class="first">Merge (-T)</p>
+<blockquote>
+<div><dl class="docutils">
+<dt>Currently Supported Options:</dt>
+<dd><ol class="first last loweralpha">
+<li><dl class="first docutils">
+<dt>noCommit - true to merge without creating a commit afterwards</dt>
+<dd><p class="first">Type: Boolean</p>
+<p class="last">Default: false</p>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt><em>commit*</em> - the commit to merge into the currently checked out ref</dt>
+<dd><p class="first">Type: String</p>
+<p class="last">Default: null</p>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt>authorName - the author of the merge commit</dt>
+<dd><p class="first">Type: String</p>
+<p class="last">Default: null</p>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt>authorEmail - the email of the author of the merge commit</dt>
+<dd><p class="first">Type: String</p>
+<p class="last">Default: null</p>
+</dd>
+</dl>
+</li>
+</ol>
+</dd>
+</dl>
+</div></blockquote>
+</li>
+</ul>
+<blockquote>
+<div><div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">You can also pass a ref name for the commit option, instead of a commit hash.</p>
+</div>
+<div class="highlight-python"><pre>Example: localhost:8182/merge?commit=branch1&amp;noCommit=true&amp;transactionId=id</pre>
+</div>
+</div></blockquote>
+<ul>
+<li><p class="first">Pull</p>
+<blockquote>
+<div><dl class="docutils">
+<dt>Currently Supported Options:</dt>
+<dd><ol class="first last loweralpha">
+<li><dl class="first docutils">
+<dt><em>remoteName*</em> - the name of the remote to pull from</dt>
+<dd><p class="first">Type: String</p>
+<p class="last">Default: origin</p>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt>all - true to fetch all</dt>
+<dd><p class="first">Type: Boolean</p>
+<p class="last">Default: false</p>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt><em>ref*</em> - the ref to pull</dt>
+<dd><p class="first">Type: String</p>
+<p class="last">Default: Currently Checked Out Branch</p>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt>authorName - the author of the merge commit</dt>
+<dd><p class="first">Type: String</p>
+<p class="last">Default: null</p>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt>authorEmail - the email of the author of the merge commit</dt>
+<dd><p class="first">Type: String</p>
+<p class="last">Default: null</p>
+</dd>
+</dl>
+</li>
+</ol>
+</dd>
+</dl>
+</div></blockquote>
+</li>
+</ul>
+<blockquote>
+<div><div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">If you don&#8217;t specify the remoteName it will try to pull from a remote named   origin. Also, if ref is not specified it will try to pull the currently checked out branch. The ref option should be in this format remoteref:localref, with the localref portion being optional. If you should opt out of specifying the localref it will just use the same name as the remoteref.</p>
+</div>
+<div class="highlight-python"><pre>Example: localhost:8182/pull?remoteName=origin&amp;all=true&amp;ref=master:master</pre>
+</div>
+</div></blockquote>
+<ul>
+<li><p class="first">Push</p>
+<blockquote>
+<div><dl class="docutils">
+<dt>Currently Supported Options:</dt>
+<dd><ol class="first last loweralpha">
+<li><dl class="first docutils">
+<dt>all - true to push all refs</dt>
+<dd><p class="first">Type: Boolean</p>
+<p class="last">Default: false</p>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt><em>ref*</em> - the ref to push</dt>
+<dd><p class="first">Type: String</p>
+<p class="last">Default: Currently Checked Out Branch</p>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt><em>remoteName*</em> - the name of the remote to push to</dt>
+<dd><p class="first">Type: String</p>
+<p class="last">Default: origin</p>
+</dd>
+</dl>
+</li>
+</ol>
+</dd>
+</dl>
+</div></blockquote>
+</li>
+</ul>
+<blockquote>
+<div><div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">If you don&#8217;t specify the remoteName it will try to push to a remote named origin. Also, if ref is not specified it will try to push the currently checked out branch. The ref option should be in this format localref:remoteref, with the remoteref portion being optional. If you should opt out of specifying the remoteref it will just use the same name as the localref.</p>
+</div>
+<div class="highlight-python"><pre>Example: localhost:8182/push?ref=master:master&amp;remoteName=origin</pre>
+</div>
+</div></blockquote>
+<ul>
+<li><p class="first">Remote</p>
+<blockquote>
+<div><dl class="docutils">
+<dt>Currently Supported Options:</dt>
+<dd><ol class="first last loweralpha">
+<li><dl class="first docutils">
+<dt><em>list*</em> - true to list the names of your remotes</dt>
+<dd><p class="first">Type: Boolean</p>
+<p class="last">Default: false</p>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt>remove - true to remove the given remote</dt>
+<dd><p class="first">Type: Boolean</p>
+<p class="last">Default: false</p>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt><em>remoteName*</em> - the name of the remote to add or remove</dt>
+<dd><p class="first">Type: String</p>
+<p class="last">Default: null</p>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt>remoteURL - the URL to the repo to make a remote</dt>
+<dd><p class="first">Type: String</p>
+<p class="last">Default: null</p>
+</dd>
+</dl>
+</li>
+</ol>
+</dd>
+</dl>
+</div></blockquote>
+</li>
+</ul>
+<blockquote>
+<div><div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">You must specify either list OR remoteName for the command to work. If remoteName is specified but remove is false then remoteURL is required as well.</p>
+</div>
+<div class="highlight-python"><pre>Examples: localhost:8182/remote?list=true
+          localhost:8182/remote?remove=true&amp;remoteName=origin
+          localhost:8182/remote?remoteName=origin&amp;remoteURL=urlToRepo.com</pre>
+</div>
+</div></blockquote>
+<ul>
+<li><p class="first">Remove (-T)</p>
+<blockquote>
+<div><dl class="docutils">
+<dt>Currently Supported Options:</dt>
+<dd><ol class="first last loweralpha">
+<li><dl class="first docutils">
+<dt><em>path</em> - the path to the feature to be removed</dt>
+<dd><p class="first">Type: String</p>
+<p class="last">Default: null</p>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt>recursive - true to remove a tree and all features under it</dt>
+<dd><p class="first">Type: Boolean</p>
+<p class="last">Default: false</p>
+</dd>
+</dl>
+</li>
+</ol>
+</dd>
+</dl>
+</div></blockquote>
+</li>
+</ul>
+<blockquote>
+<div><div class="highlight-python"><pre>Examples: localhost:8182/remove?path=treeName/fid&amp;transactionId=id
+          localhost:8182/remove?path=treeName&amp;recursive=true&amp;transactionId=id</pre>
+</div>
+</div></blockquote>
+<ul>
+<li><p class="first">Status</p>
+<blockquote>
+<div><dl class="docutils">
+<dt>Currently Supported Options:</dt>
+<dd><ol class="first last loweralpha">
+<li><dl class="first docutils">
+<dt>limit - the number of staged and unstaged changes to make</dt>
+<dd><p class="first">Type: Integer</p>
+<p class="last">Default: 50</p>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt>offset - the offset to start listing staged and unstaged changes</dt>
+<dd><p class="first">Type: Integer</p>
+<p class="last">Default: 0</p>
+</dd>
+</dl>
+</li>
+</ol>
+</dd>
+</dl>
+</div></blockquote>
+</li>
+</ul>
+<blockquote>
+<div><div class="highlight-python"><pre>Example: localhost:8182/status?limit=100</pre>
+</div>
+</div></blockquote>
+<ul>
+<li><p class="first">Tag</p>
+<blockquote>
+<div><dl class="docutils">
+<dt>Currently Supported Options:</dt>
+<dd><ol class="first last loweralpha">
+<li><dl class="first docutils">
+<dt><em>list</em> - true to list the names of your tags</dt>
+<dd><p class="first">Type: Boolean</p>
+<p class="last">Default: false</p>
+</dd>
+</dl>
+</li>
+</ol>
+</dd>
+</dl>
+</div></blockquote>
+</li>
+</ul>
+<blockquote>
+<div><div class="highlight-python"><pre>Example: localhost:8182/tag?list=true</pre>
+</div>
+</div></blockquote>
+<ul>
+<li><p class="first">Version</p>
+<blockquote>
+<div><dl class="docutils">
+<dt>Currently Supported Options:</dt>
+<dd><p class="first last">none</p>
+</dd>
+</dl>
+</div></blockquote>
+</li>
+</ul>
+<blockquote>
+<div><div class="highlight-python"><pre>Example: localhost:8182/version</pre>
+</div>
+</div></blockquote>
+</div>
+<div class="section" id="plumbing-commands-supported">
+<h2>Plumbing Commands Supported<a class="headerlink" href="#plumbing-commands-supported" title="Permalink to this headline">¶</a></h2>
+<ul>
+<li><p class="first">BeginTransaction</p>
+<blockquote>
+<div><dl class="docutils">
+<dt>Currently Supported Options:</dt>
+<dd><p class="first last">none</p>
+</dd>
+</dl>
+</div></blockquote>
+</li>
+</ul>
+<blockquote>
+<div><div class="highlight-python"><pre>Example: localhost:8182/beginTransaction</pre>
+</div>
+</div></blockquote>
+<ul>
+<li><p class="first">EndTransaction (-T)</p>
+<blockquote>
+<div><dl class="docutils">
+<dt>Currently Supported Options:</dt>
+<dd><ol class="first last loweralpha">
+<li><dl class="first docutils">
+<dt>cancel - true to abort all changes made in this transaction</dt>
+<dd><p class="first">Type: Boolean</p>
+<p class="last">Default: false</p>
+</dd>
+</dl>
+</li>
+</ol>
+</dd>
+</dl>
+</div></blockquote>
+</li>
+</ul>
+<blockquote>
+<div><div class="highlight-python"><pre>Example: localhost:8182/endTransaction?cancel=true&amp;transactionId=id</pre>
+</div>
+</div></blockquote>
+<ul>
+<li><p class="first">FeatureDiff</p>
+<blockquote>
+<div><dl class="docutils">
+<dt>Currently Supported Options:</dt>
+<dd><ol class="first last loweralpha">
+<li><dl class="first docutils">
+<dt><em>path</em> - the path to feature</dt>
+<dd><p class="first">Type: String</p>
+<p class="last">Default: null</p>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt><em>newCommitId*</em> - the id of the newer commit</dt>
+<dd><p class="first">Type: String</p>
+<p class="last">Default: ObjectId.NULL</p>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt><em>oldCommitId*</em> - the id of the older commit</dt>
+<dd><p class="first">Type: String</p>
+<p class="last">Default: ObjectId.NULL</p>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt>all - true to show all attributes not just changed ones</dt>
+<dd><p class="first">Type: Boolean</p>
+<p class="last">Default: false</p>
+</dd>
+</dl>
+</li>
+</ol>
+</dd>
+</dl>
+</div></blockquote>
+</li>
+</ul>
+<blockquote>
+<div><div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">If no newCommitId is specified then it will use the commit that HEAD is pointing to. If no oldCommitId is specified then it will assume you want the diff to include the initial commit.</p>
+</div>
+<div class="highlight-python"><pre>Example: localhost:8182/featurediff?path=treeName/fid&amp;newCommitId=commitId1&amp;oldCommitId=commitId2</pre>
+</div>
+</div></blockquote>
+<ul>
+<li><p class="first">LsTree</p>
+<blockquote>
+<div><dl class="docutils">
+<dt>Currently Supported Options:</dt>
+<dd><ol class="first last loweralpha">
+<li><dl class="first docutils">
+<dt>showTree - true to display trees in the response</dt>
+<dd><p class="first">Type: Boolean</p>
+<p class="last">Default: false</p>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt>onlyTree - true to display only trees in the response</dt>
+<dd><p class="first">Type: Boolean</p>
+<p class="last">Default: false</p>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt>recursive - true to recurse through the trees</dt>
+<dd><p class="first">Type: Boolean</p>
+<p class="last">Default: false</p>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt>verbose - true to print out the type, metadataId and Id of the object</dt>
+<dd><p class="first">Type: Boolean</p>
+<p class="last">Default: false</p>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt><em>path*</em> - reference to start at</dt>
+<dd><p class="first">Type: String</p>
+<p class="last">Default: null</p>
+</dd>
+</dl>
+</li>
+</ol>
+</dd>
+</dl>
+</div></blockquote>
+</li>
+</ul>
+<blockquote>
+<div><div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">If path is not specified it will use the WORK_HEAD.</p>
+</div>
+<div class="highlight-python"><pre>Example: localhost:8182/ls-tree?showTree=true&amp;recursive=true&amp;verbose=true</pre>
+</div>
+</div></blockquote>
+<ul>
+<li><p class="first">RefParse</p>
+<blockquote>
+<div><dl class="docutils">
+<dt>Currently Supported Options:</dt>
+<dd><ol class="first last loweralpha">
+<li><dl class="first docutils">
+<dt><em>name</em> - the name of the ref to parse</dt>
+<dd><p class="first">Type: String</p>
+<p class="last">Default: null</p>
+</dd>
+</dl>
+</li>
+</ol>
+</dd>
+</dl>
+</div></blockquote>
+</li>
+</ul>
+<blockquote>
+<div><div class="highlight-python"><pre>Example: localhost:8182/refparse?name=master</pre>
+</div>
+</div></blockquote>
+<ul>
+<li><p class="first">UpdateRef</p>
+<blockquote>
+<div><dl class="docutils">
+<dt>Currently Supported Options:</dt>
+<dd><ol class="first last loweralpha">
+<li><dl class="first docutils">
+<dt><em>name</em> - the name of the ref to update</dt>
+<dd><p class="first">Type: String</p>
+<p class="last">Default: null</p>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt><em>delete*</em> - true to delete this ref</dt>
+<dd><p class="first">Type: Boolean</p>
+<p class="last">Default: false</p>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt><em>newValue*</em> - the new value to change the ref to</dt>
+<dd><p class="first">Type: String</p>
+<p class="last">Default: ObjectId.NULL</p>
+</dd>
+</dl>
+</li>
+</ol>
+</dd>
+</dl>
+</div></blockquote>
+</li>
+</ul>
+<blockquote>
+<div><div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">You must specify either delete OR newValue for the command to work.</p>
+</div>
+<div class="highlight-python"><pre>Example: localhost:8182/updateref?name=master&amp;newValue=branch1</pre>
+</div>
+</div></blockquote>
+</div>
+<div class="section" id="web-api-specific">
+<h2>Web-Api Specific<a class="headerlink" href="#web-api-specific" title="Permalink to this headline">¶</a></h2>
+<p>There is currently only one web-api specific function at this time and it is to traverse the entire commit graph. It starts at the specified commitId and works its way down the graph to either the initial commit or the specified depth. Since it traverses the actual commit graph, unlike log, it will display multiple parents and will list every single commit that runs down each parents history.</p>
+<ul>
+<li><p class="first">GetCommitGraph</p>
+<blockquote>
+<div><dl class="docutils">
+<dt>Currently Supported Options:</dt>
+<dd><ol class="first last loweralpha">
+<li><dl class="first docutils">
+<dt>depth - the depth to search to</dt>
+<dd><p class="first">Type: Integer</p>
+<p class="last">Default: 0</p>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt><em>commitId</em> - the id of the commit to start at</dt>
+<dd><p class="first">Type: String</p>
+<p class="last">Default: ObjectId.NULL</p>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt>page - the page number to build the response</dt>
+<dd><p class="first">Type: Integer</p>
+<p class="last">Default: 0</p>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt>show - the number of elements to list per page</dt>
+<dd><p class="first">Type: Integer</p>
+<p class="last">Default: 30</p>
+</dd>
+</dl>
+</li>
+</ol>
+</dd>
+</dl>
+</div></blockquote>
+</li>
+</ul>
+<blockquote>
+<div><div class="highlight-python"><pre>Example: localhost:8182/getCommitGraph?show=100</pre>
+</div>
+</div></blockquote>
+</div>
+</div>
+<div class="section" id="issues">
+<h1>Issues<a class="headerlink" href="#issues" title="Permalink to this headline">¶</a></h1>
+<p>The main concern with the web-api currently is that it doesn&#8217;t have any kind of authentication on it, which means that anyone with the url can potentially destroy your repo or steal you data with commands like updateref and pull.</p>
+<p>There is also a lot of room for improvement and optimization. There are also several commands that still need to be exposed through the web-api.</p>
+</div>
+
+
+      <div class="selfclear pagination-nav">
+          <div class="leftwise"><strong>Previous</strong>: <a href="networking.html" title="previous chapter">GeoGit Networking</a></div>
+          <div class="rightwise"><strong>Next</strong>: <a href="osm.html" title="next chapter">Using GeoGit with OpenStreetMap data</a></div>
+      </div>
+      </div><!-- /#content> -->
+  <div id="sidebar" class="contrast col-md-4">
+
+    <div>
+         <form id="quick-search" action="search.html" method="get" style="width: 100%;">
+          <fieldset>
+            <input type="hidden" name="check_keywords" value="yes" />
+            <input type="hidden" name="area" value="default" />
+            <input id="quick-search-query" type="text" name="q" accessKey="q" name="searchQuery.queryString" size="25" value="Search Documentation&hellip;" size="20" tabindex="3" onblur="if(this.value=='') this.value='Search Documentation&hellip;';" onfocus="if(this.value=='Search Documentation&hellip;') this.value='';" />
+          </fieldset>
+        </form>
+
+
+        <div class="btn-group-vertical" id="docs_toc"> 
+          <button type="button" class="btn btn-default"><a href="/docs/">User Manual</a></button>
+          <button type="button" class="btn btn-default"><a href="/technical/">Technical Manual</a></button>
+          <button type="button" class="btn btn-default"><a href="/manpages/">Man Pages</a></button>
+      </div>
+      <h3 class="pngfix">Table Of Contents</h3>
+        <ul>
+<li><a class="reference internal" href="#">Web-Api Documentation</a><ul>
+<li><a class="reference internal" href="#porcelain-commands-supported">Porcelain Commands Supported</a></li>
+<li><a class="reference internal" href="#plumbing-commands-supported">Plumbing Commands Supported</a></li>
+<li><a class="reference internal" href="#web-api-specific">Web-Api Specific</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#issues">Issues</a></li>
+</ul>
+
+        <div class="section-footer"></div>
+      </div>
+        <div class="section">
+          <h3>Continue Reading</h3>
+          <ul>
+            <li>Previous: <a href="networking.html" title="previous chapter">GeoGit Networking</a></li>
+            <li>Next: <a href="osm.html" title="next chapter">Using GeoGit with OpenStreetMap data</a></li>
+          </ul>
+        </div>
+        <div class="section">
+        <h3>This Page</h3>
+        <ul class="this-page-menu">
+          <li><a href="../_sources/interaction/web-api.txt">Show Source</a></li>
+        </ul>
+        </div>
+
+  </div><!-- /#sidebar -->
+  </div><!-- /.wrap> -->
+</div></div>
+</div><!-- /#main -->
+    <footer>
+      <div class="container">
+        <div class="row">
+          <div class=""><p class="repo-owner"><a href="https://github.com/boundlessgeo/GeoGit">GeoGit</a> is maintained by <a href="https://github.com/boundlessgeo"><img src="../_static/Boundless_Logo.png" alt="Boundless"></a></p></div>
+        </div>
+      </div>
+    </footer>
+
+  </body>
+</html>
