@@ -2165,8 +2165,8 @@ input[type="button"].btn-block {
 }
 @font-face {
   font-family: 'Glyphicons Halflings';
-  src: url('/fonts/glyphicons-halflings-regular.eot');
-  src: url('/fonts/glyphicons-halflings-regular.eot?#iefix') format('embedded-opentype'), url('/fonts/glyphicons-halflings-regular.woff') format('woff'), url('../fonts/glyphicons-halflings-regular.ttf') format('truetype'), url('../fonts/glyphicons-halflings-regular.svg#glyphicons-halflingsregular') format('svg');
+  src: url('../fonts/glyphicons-halflings-regular.eot');
+  src: url('../fonts/glyphicons-halflings-regular.eot?#iefix') format('embedded-opentype'), url('../fonts/glyphicons-halflings-regular.woff') format('woff'), url('../fonts/glyphicons-halflings-regular.ttf') format('truetype'), url('../fonts/glyphicons-halflings-regular.svg#glyphicons-halflingsregular') format('svg');
 }
 .glyphicon {
   position: relative;
@@ -6019,7 +6019,8 @@ h5 {
 .navbar {
   margin-bottom: 0px;
 }
-.navbar h1 {
+.navbar a > h1 {
+  color: #7eb5d3;
   text-shadow: 2px 2px 0px #333;
 }
 .navbar-brand {
@@ -6027,9 +6028,6 @@ h5 {
   padding-left: 125px;
   margin-top: 5px;
   margin-bottom: 5px;
-}
-.navbar-brand:hover {
-  background: url(../_static/logo_hover.png) no-repeat 10% 100%;
 }
 @media only screen and (-webkit-min-device-pixel-ratio: 2) {
   .navbar-brand {
