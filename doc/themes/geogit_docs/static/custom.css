@@ -2165,8 +2165,8 @@ input[type="button"].btn-block {
 }
 @font-face {
   font-family: 'Glyphicons Halflings';
-  src: url('../fonts/glyphicons-halflings-regular.eot');
-  src: url('../fonts/glyphicons-halflings-regular.eot?#iefix') format('embedded-opentype'), url('../fonts/glyphicons-halflings-regular.woff') format('woff'), url('../fonts/glyphicons-halflings-regular.ttf') format('truetype'), url('../fonts/glyphicons-halflings-regular.svg#glyphicons-halflingsregular') format('svg');
+  src: url('/fonts/glyphicons-halflings-regular.eot');
+  src: url('/fonts/glyphicons-halflings-regular.eot?#iefix') format('embedded-opentype'), url('/fonts/glyphicons-halflings-regular.woff') format('woff'), url('../fonts/glyphicons-halflings-regular.ttf') format('truetype'), url('../fonts/glyphicons-halflings-regular.svg#glyphicons-halflingsregular') format('svg');
 }
 .glyphicon {
   position: relative;
@@ -5944,22 +5944,22 @@ td.visible-print {
 }
 @font-face {
   font-family: "Cantarell";
-  src: url("../fonts/cantarell-regular.eot");
-  src: url("../fonts/cantarell-regular.eot?#iefix") format("embedded-opentype"), url("../fonts/cantarell-regular.woff") format("woff"), url("../fonts/cantarell-regular.ttf") format("truetype"), url("../fonts/cantarell-regular.svg#Cantarell") format("svg");
+  src: url("/fonts/cantarell-regular.eot");
+  src: url("/fonts/cantarell-regular.eot?#iefix") format("embedded-opentype"), url("/fonts/cantarell-regular.woff") format("woff"), url("/fonts/cantarell-regular.ttf") format("truetype"), url("/fonts/cantarell-regular.svg#Cantarell") format("svg");
   font-weight: normal;
   font-style: normal;
 }
 @font-face {
   font-family: "Proxima Nova";
-  src: url("../fonts/proximanova-light.eot");
-  src: url("../fonts/proximanova-light.eot?#iefix") format("embedded-opentype"), url("../fonts/proximanova-light.woff") format("woff"), url("../fonts/proximanova-light.ttf") format("truetype"), url("../fonts/proximanova-light.svg#Proxima Nova") format("svg");
+  src: url("/fonts/proximanova-light.eot");
+  src: url("/fonts/proximanova-light.eot?#iefix") format("embedded-opentype"), url("/fonts/proximanova-light.woff") format("woff"), url("/fonts/proximanova-light.ttf") format("truetype"), url("/fonts/proximanova-light.svg#Proxima Nova") format("svg");
   font-weight: 300;
   font-style: normal;
 }
 @font-face {
   font-family: "Proxima Nova";
-  src: url("../fonts/proximanova-semibold.eot");
-  src: url("../fonts/proximanova-semibold.eot?#iefix") format("embedded-opentype"), url("../fonts/proximanova-semibold.woff") format("woff"), url("../fonts/proximanova-semibold.ttf") format("truetype"), url("../fonts/proximanova-semibold.svg#Proxima Nova") format("svg");
+  src: url("/fonts/proximanova-semibold.eot");
+  src: url("/fonts/proximanova-semibold.eot?#iefix") format("embedded-opentype"), url("/fonts/proximanova-semibold.woff") format("woff"), url("/fonts/proximanova-semibold.ttf") format("truetype"), url("/fonts/proximanova-semibold.svg#Proxima Nova") format("svg");
   font-weight: bold;
   font-style: normal;
 }

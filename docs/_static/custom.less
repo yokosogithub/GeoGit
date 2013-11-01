@@ -19,9 +19,9 @@
   }
 }
 
-.font-face("Cantarell", "../fonts/cantarell-regular", normal);
-.font-face("Proxima Nova", "../fonts/proximanova-light", 300);
-.font-face("Proxima Nova", "../fonts/proximanova-semibold", bold);
+.font-face("Cantarell", "/fonts/cantarell-regular", normal);
+.font-face("Proxima Nova", "/fonts/proximanova-light", 300);
+.font-face("Proxima Nova", "/fonts/proximanova-semibold", bold);
 
 body {
 	font-family: 'Cantarell', sans-serif;
@@ -83,8 +83,7 @@ h1, h2, h3, h4, h5 {
 .navbar {
 	margin-bottom: 0px;
 
-	a > h1 {
-		color: @ltblue;
+	h1 {
 		text-shadow:  2px 2px 0px #333;
 	}
 
@@ -95,6 +94,10 @@ h1, h2, h3, h4, h5 {
 	padding-left: 125px;
 	margin-top: 5px;
 	margin-bottom: 5px;
+
+	&:hover {
+		background: url(../_static/logo_hover.png) no-repeat 10% 100%;
+	}
 
 	@media only screen and (-webkit-min-device-pixel-ratio: 2) {
     	background: url(../_static/logo@2x.png) no-repeat 10% 100%;
