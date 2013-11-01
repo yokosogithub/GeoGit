@@ -7,7 +7,6 @@ Welcome to the GeoGit User Manual
    :maxdepth: 2
 
    start/index
-   repository/index
+   repo/index
    data/index
    interaction/index
-   exercise
