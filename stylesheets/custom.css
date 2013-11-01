@@ -5944,22 +5944,22 @@ td.visible-print {
 }
 @font-face {
   font-family: "Cantarell";
-  src: url("../fonts/cantarell-regular.eot");
-  src: url("../fonts/cantarell-regular.eot?#iefix") format("embedded-opentype"), url("../fonts/cantarell-regular.woff") format("woff"), url("../fonts/cantarell-regular.ttf") format("truetype"), url("../fonts/cantarell-regular.svg#Cantarell") format("svg");
+  src: url("/fonts/cantarell-regular.eot");
+  src: url("/fonts/cantarell-regular.eot?#iefix") format("embedded-opentype"), url("/fonts/cantarell-regular.woff") format("woff"), url("/fonts/cantarell-regular.ttf") format("truetype"), url("/fonts/cantarell-regular.svg#Cantarell") format("svg");
   font-weight: normal;
   font-style: normal;
 }
 @font-face {
   font-family: "Proxima Nova";
-  src: url("../fonts/proximanova-light.eot");
-  src: url("../fonts/proximanova-light.eot?#iefix") format("embedded-opentype"), url("../fonts/proximanova-light.woff") format("woff"), url("../fonts/proximanova-light.ttf") format("truetype"), url("../fonts/proximanova-light.svg#Proxima Nova") format("svg");
+  src: url("/fonts/proximanova-light.eot");
+  src: url("/fonts/proximanova-light.eot?#iefix") format("embedded-opentype"), url("/fonts/proximanova-light.woff") format("woff"), url("/fonts/proximanova-light.ttf") format("truetype"), url("/fonts/proximanova-light.svg#Proxima Nova") format("svg");
   font-weight: 300;
   font-style: normal;
 }
 @font-face {
   font-family: "Proxima Nova";
-  src: url("../fonts/proximanova-semibold.eot");
-  src: url("../fonts/proximanova-semibold.eot?#iefix") format("embedded-opentype"), url("../fonts/proximanova-semibold.woff") format("woff"), url("../fonts/proximanova-semibold.ttf") format("truetype"), url("../fonts/proximanova-semibold.svg#Proxima Nova") format("svg");
+  src: url("/fonts/proximanova-semibold.eot");
+  src: url("/fonts/proximanova-semibold.eot?#iefix") format("embedded-opentype"), url("/fonts/proximanova-semibold.woff") format("woff"), url("/fonts/proximanova-semibold.ttf") format("truetype"), url("/fonts/proximanova-semibold.svg#Proxima Nova") format("svg");
   font-weight: bold;
   font-style: normal;
 }
@@ -5968,13 +5968,6 @@ body {
   font-weight: 500;
   font-size: 2em;
   background: url(../images/ticks.png) repeat;
-}
-@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
-  body {
-    /* Retina-specific stuff here */
-  
-    background: url(../images/ticks_@2x.png) repeat;
-  }
 }
 a {
   color: #7eb5d3;
@@ -6022,14 +6015,6 @@ h5 {
 }
 .navbar-brand:hover {
   background: url(../images/logo_hover.png) no-repeat 10% 100%;
-}
-@media only screen and (-webkit-min-device-pixel-ratio: 2) {
-  .navbar-brand {
-    background: url(../images/logo@2x.png) no-repeat 10% 100%;
-  }
-  .navbar-brand:hover {
-    background: url(../images/logo_hover@2x.png) no-repeat 10% 100%;
-  }
 }
 #blacktop {
   position: fixed;
@@ -6134,14 +6119,6 @@ h5 {
   background-color: #7eb5d3;
   color: white;
 }
-@media only screen and (-webkit-min-device-pixel-ratio: 2) {
-  #main .download {
-    background: url(../images/zipfile@2x.png) no-repeat 10%;
-  }
-  #main .download:hover {
-    background: url(../images/zip_hover@2x.png) no-repeat 10%;
-  }
-}
 #main .pagelink {
   display: block;
   color: #ccc;
@@ -6156,37 +6133,14 @@ h5 {
   text-decoration: none;
   color: #7eb5d3;
 }
-@media only screen and (-webkit-min-device-pixel-ratio: 2) {
-  #main .pagelink {
-    background: url(../images/arrow@2x.png) no-repeat;
-  }
-  #main .pagelink:hover {
-    background: url(../images/arrow@2x.png) no-repeat;
-  }
-}
 #main .link-docs {
   background: url(../images/docs.png) no-repeat;
-}
-@media only screen and (-webkit-min-device-pixel-ratio: 2) {
-  #main .link-docs {
-    background: url(../images/docs@2x.png) no-repeat;
-  }
 }
 #main .link-participate {
   background: url(../images/participate.png) no-repeat;
 }
-@media only screen and (-webkit-min-device-pixel-ratio: 2) {
-  #main .link-participate {
-    background: url(../images/participate@2x.png) no-repeat;
-  }
-}
 #main .link-install {
   background: url(../images/install.png) no-repeat;
-}
-@media only screen and (-webkit-min-device-pixel-ratio: 2) {
-  #main .link-install {
-    background: url(../images/install@2x.png) no-repeat;
-  }
 }
 #main .page-link {
   text-decoration: none;
@@ -6301,11 +6255,6 @@ h5 {
   height: 1174px;
   width: 537px;
   background: url(../images/git_tree.png) no-repeat;
-}
-@media only screen and (-webkit-min-device-pixel-ratio: 2) {
-  #tree_img {
-    background: url(../images/git_tree@2x.png) no-repeat;
-  }
 }
 footer {
   background-color: #191818;

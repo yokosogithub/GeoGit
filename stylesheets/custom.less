@@ -19,21 +19,15 @@
   }
 }
 
-.font-face("Cantarell", "../fonts/cantarell-regular", normal);
-.font-face("Proxima Nova", "../fonts/proximanova-light", 300);
-.font-face("Proxima Nova", "../fonts/proximanova-semibold", bold);
+.font-face("Cantarell", "/fonts/cantarell-regular", normal);
+.font-face("Proxima Nova", "/fonts/proximanova-light", 300);
+.font-face("Proxima Nova", "/fonts/proximanova-semibold", bold);
 
 body {
 	font-family: 'Cantarell', sans-serif;
 	font-weight: 500;
 	font-size: 2em;
     background: url(../images/ticks.png) repeat;
-
-    @media (-webkit-min-device-pixel-ratio: 2), 
-	(min-resolution: 192dpi) { 
-	    /* Retina-specific stuff here */
-	    background: url(../images/ticks_@2x.png) repeat;
-	}
 }
 
 a {
@@ -88,13 +82,6 @@ h1, h2, h3, h4, h5 {
 		background: url(../images/logo_hover.png) no-repeat 10% 100%;
 	}
 
-	@media only screen and (-webkit-min-device-pixel-ratio: 2) {
-    	background: url(../images/logo@2x.png) no-repeat 10% 100%;
-
-    	&:hover {
-    		background: url(../images/logo_hover@2x.png) no-repeat 10% 100%;
-    	}
-	}
 }
 
 #blacktop {
@@ -207,13 +194,6 @@ h1, h2, h3, h4, h5 {
 			color: white;
 		}
 
-		@media only screen and (-webkit-min-device-pixel-ratio: 2) {
-			background: url(../images/zipfile@2x.png) no-repeat 10%;
-
-			&:hover {
-				background: url(../images/zip_hover@2x.png) no-repeat 10%;
-			}
-		}
 	}
 
 	.pagelink {
@@ -230,35 +210,19 @@ h1, h2, h3, h4, h5 {
 			color: @ltblue;
 		}
 		
-		@media only screen and (-webkit-min-device-pixel-ratio: 2) {
-			background: url(../images/arrow@2x.png) no-repeat;
-
-			&:hover {
-				background: url(../images/arrow@2x.png) no-repeat;
-			}
-		}
 
 	}
 	.link-docs {
 		background: url(../images/docs.png) no-repeat;
 
-		@media only screen and (-webkit-min-device-pixel-ratio: 2) {
-			background: url(../images/docs@2x.png) no-repeat;
-		}
 	}
 	.link-participate {
 		background: url(../images/participate.png) no-repeat;
 
-		@media only screen and (-webkit-min-device-pixel-ratio: 2) {
-			background: url(../images/participate@2x.png) no-repeat;
-		}
 	}
 	.link-install {
 		background: url(../images/install.png) no-repeat;
 
-		@media only screen and (-webkit-min-device-pixel-ratio: 2) {
-			background: url(../images/install@2x.png) no-repeat;
-		}
 	}
 
 	.page-link {
@@ -386,10 +350,6 @@ h1, h2, h3, h4, h5 {
 		height: 1174px;
 		width: 537px;
 		background: url(../images/git_tree.png) no-repeat;
-	
-		@media only screen and (-webkit-min-device-pixel-ratio: 2) {
-			background: url(../images/git_tree@2x.png) no-repeat;
-		}
 
 	}
 
