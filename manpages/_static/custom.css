@@ -5981,6 +5981,7 @@ p {
   line-height: 1.6em;
 }
 li {
+  list-style-type: none;
   padding-bottom: 0.3em;
 }
 a {
@@ -6018,7 +6019,8 @@ h5 {
 .navbar {
   margin-bottom: 0px;
 }
-.navbar h1 {
+.navbar a > h1 {
+  color: #7eb5d3;
   text-shadow: 2px 2px 0px #333;
 }
 .navbar-brand {
@@ -6026,9 +6028,6 @@ h5 {
   padding-left: 125px;
   margin-top: 5px;
   margin-bottom: 5px;
-}
-.navbar-brand:hover {
-  background: url(../_static/logo_hover.png) no-repeat 10% 100%;
 }
 @media only screen and (-webkit-min-device-pixel-ratio: 2) {
   .navbar-brand {
@@ -6270,6 +6269,13 @@ Sidebar
 #sidebar {
   float: right;
 }
+#sidebar li ul {
+  margin: .4em 0 0 1.5em;
+}
+#sidebar li > a.reference {
+  font-size: 0.8em;
+  padding-bottom: 0.05em;
+}
 #sidebar a {
   text-decoration: none;
   color: #28728d;
@@ -6303,6 +6309,31 @@ Sidebar
   #sidebar {
     display: none;
   }
+}
+#quick-search-query {
+  color: #999999;
+  font-size: 0.8em;
+  width: 100%;
+  border-radius: 3px;
+}
+#docs_toc {
+  margin-top: 20px;
+  margin-bottom: 20px;
+  width: 100%;
+}
+#docs_toc .btn-default {
+  color: #333333;
+  background-color: #cccccc;
+  border-color: #cccccc;
+}
+#docs_toc .btn-default:hover {
+  background-color: #7eb5d3;
+}
+#docs_toc .btn-default:hover a {
+  color: #000;
+}
+#docs_toc .btn-default:hover a:hover {
+  text-decoration: none;
 }
 .pagination-nav {
   width: 100%;
