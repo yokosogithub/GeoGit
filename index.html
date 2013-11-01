@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset='utf-8'>
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <link rel="icon" type="image/png" href="images/favicon.png" />
+    
+    <link rel="stylesheet" type="text/css" href="stylesheets/custom.css" media="screen" />
+
+    <!--[if lt IE 9]>
+    <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+
+    <title>GeoGit by Boundless</title>
+  </head>
+
+  <body>
+    <div id="blacktop"></div>
+    <header id="masthead">
+      <div class="navbar">
+        <div class="container">
+          <div class="navbar-header">
+            <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+              <span class="icon-bar"></span>
+              <span class="icon-bar"></span>
+              <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="#"><h1>GeoGit</h1></a>
+          </div>
+          <div class="navbar-collapse collapse navbar-right">
+            <ul class="nav navbar-nav">
+              <li><a href="http://geogit.org/docs/quickstart.html">Quick Start</a></li>
+              <li><a href="http://geogit.org/docs/index.html">Documentation</a></li>
+              <li><a href="https://github.com/boundlessgeo/GeoGit">On Github</a></li>
+            </ul>
+          </div><!--/.navbar-collapse -->
+        </div>
+      </div>
+    </header>
+
+    <section class="subheading hidden-xs">
+      <div class="container">
+        <div class="row">
+          <div class="col-md-8">
+            <p class="byline">A Tool for Geospatial Data Management</p>
+          </div>
+        </div>
+      </div>
+    </section>
+    
+    <section id="main">
+      <div class="container">
+        <div class="row">
+          <div class="col-md-7">
+              <p class="first">GeoGit is an open source tool that draws inspiration from <a href="http://git-scm.com/">Git</a>, but adapts its core concepts to handle distributed versioning of geospatial data.</p>
+              <h1 class="light copy">Track GeoSpatial Data Edits</h1>
+              <p>Users are able to import raw geospatial data (currently from Shapefiles, PostGIS or SpatiaLite) in to a repository where every change to the data is tracked. These changes can be viewed in a history, reverted to older versions, branched in to sandboxed areas, merged back in, and pushed to remote repositories.</p>
+
+              <p>GeoGit is written in Java, and available under the <a href="https://github.com/boundlessgeo/GeoGit/blob/master/LICENSE.txt">BSD License</a>.</p>
+
+            </div>
+            <div class="col-md-offset-1 col-md-4">
+              <a href="http://sourceforge.net/projects/geogit/files/latest/download" class="btn download">DOWNLOAD <br/>0.5 Release .zip</a>
+              <ul class="list-unstyled">
+                <li><a href="#install" class="page-link"><div class="pagelink link-install"> Install</div></a></li>
+                <li><a href="#docs" class="page-link"><div class="pagelink link-docs"> Docs</div></a></li>
+                <li><a href="#participate" class="page-link"><div class="pagelink link-participate"> Participate</div></a></li>
+              </ul>
+              <p class="alpha">We are firmly in 'alpha' mode, working to release early and often, so please join us. Testing, documentation, ideas and patches are all greatly appreciated. Don&apos;t hesitate to <a href="https://groups.google.com/a/boundlessgeo.com/forum/#!forum/geogit" target="_blank">get in touch</a> with any issues, feedback or encouragement.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <a name="install"></a>
+      <section id="install" class="overlay">
+      <div class="container">
+        <div class="row">
+          <div class="col-md-7">
+
+              <h2>Install</h2>
+
+              <p>1. Download <a href="http://sourceforge.net/projects/geogit/files/latest/download">Version 0.5.0</a> from SourceForge. <br />(Or if you have homebrew, run <strong>'brew install geogit'</strong> and skip to 3.)</p> 
+
+              <p>2. Unzip the <em>geogit-cli-app-0.5.0.zip</em> to an applications directory, and then add the unzipped <code>geogit/bin/</code> folder to your <strong>PATH</strong>.</p>
+
+              <p>3. Import your spatial data to get started:
+
+                <p class="quickstart_title">QuickStart</p>
+                <div class="quickstart_shell">
+                  <p class="line">
+                    <span class="path">~$</span>
+                    <span class="command">geogit help</span>
+                  </p>
+                  <p class="line">
+                    <span class="output"> List geogit commands</span>
+                  </p>
+                  <p class="line">
+                    <span class="path">~/new-folder $</span>
+                    <span class="command">geogit init</span>
+                  </p>
+                  <p class="line">
+                    <span class="output"> Initialise a geogit repository in new-folder</span>
+                  </p>
+                  <p class="line">
+                    <span class="path">~/new-folder $</span>
+                    <span class="command">geogit shp import</span>
+                    <span class="input">your_shapefile</span>
+                  </p>
+                  <p class="line">
+                    <span class="output"> Import a .shp file (or try OSM, SpatialLite or PostGIS)</span>
+                  </p>
+                  <p class="line">
+                    <span class="path">~/new-folder $</span>
+                    <span class="command">geogit ls</span>
+                  </p>
+                  <p class="line">
+                    <span class="output"> What's in your geogit repository</span>
+                  </p>
+                  <p class="line">
+                    <span class="path">~/new-folder $</span>
+                    <span class="command">geogit status</span>
+                  </p>
+                  <p class="line">
+                    <span class="output"> What you can commit to a snapshot</span>
+                  </p>
+                </div>
+
+              <p>See more GeoGit instructions in our <a href="http://geogit.org/docs/quickstart.html">QuickStart Guide</a>.</p> </p>
+
+              <p>4. Additional 
+              information on how GeoGit works is available at the full <a href="http://geogit.org/docs/index.html">User Manual</a>.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <a name="docs"></a>
+      <section id="docs">
+      <div class="container">
+        <div class="row">
+          <div class="col-md-7">
+
+              <h2>Docs</h2>
+
+              <p>GeoGit's <a href="http://geogit.org/docs/index.html">User Manual</a> is available for <a href="http://sourceforge.net/projects/geogit/files/geogit-0.5.0/geogit-user-mannual-0.5.0.zip/download">download</a> and <a href="http://geogit.org/docs/index.html">online</a>. The <a href='http://geogit.org/technical/'>Technical Manual</a> and the <a href='http://geogit.org/manpages/'>man pages</a> are also published online.</p>
+
+              <p>For background reading see these papers on the spatial distributed versioning <a href="http://boundlessgeo.com/whitepaper/new-approach-working-geospatial-data-part-1/">Concept</a>, <a href="http://boundlessgeo.com/whitepaper/distributed-versioning-geospatial-data-part-2/">Implementation</a> and <a href='http://boundlessgeo.com/whitepaper/distributed-versioning-geospatial-data-part-3/'>Potential Development</a>.</p>
+          </div>
+          <div class="col-md-5">
+            <a href="images/geogit_workflow.png" target="_blank"><img class="workflow_diagram" src="images/geogit_workflow.png" alt="geogit workflow overview" /></a>
+          </div>
+        </div>
+      </section>
+
+      <a name="participate"></a>
+      <section id="participate">
+      <div class="container">
+        <div class="row">
+          <div class="col-md-7">
+
+              <h2>Participate</h2>
+
+              <p>The project is hosted on github: <a href="https://github.com/boundlessgeo/GeoGit">https://github.com/boundlessgeo/GeoGit</a></p>
+              <p>Discussion takes place on our <a href="https://groups.google.com/a/opengeo.org/group/geogit/">GeoGit Google Group</a>. 
+              Please join and introduce yourself, we'd love to help, and to figure out ways for you to get involved.</p>
+
+              <p>Participation is encouraged using the github <em>fork</em> and <em>pull request</em> workflow:</p>
+
+              <ul>
+              <li>Include test case demonstrating functionality</li>
+              <li>Contributions are expected to pass all tests and not break the build</li>
+              <li>Include proper license headers on your contributed files</li>
+              </ul><p>Issues to help out on are at our <a href="https://github.com/boundlessgeo/GeoGit/issues">issue tracker</a>.</p>
+
+              <p>For those who can't code help on documentation is always appreciated, all docs can be found at 
+              <a href="https://github.com/boundlessgeo/GeoGit/tree/master/doc/">https://github.com/boundlessgeo/GeoGit/tree/master/doc/</a> and contributed to by editing in ReStructuredText and using standard GitHub workflows.</p>
+
+              <p>Our build is <a href="http://ares.boundlessgeo.com/jenkins/view/geogit/">actively monitored using Hudson</a>.</p>
+
+          </div>
+          <div class="col-md-5 hidden-sm hidden-xs">
+            <div id="tree_img"></div>
+          </div>
+ 
+        </div>
+      </div>
+    </section>
+
+    <footer>
+      <div class="container">
+        <div class="row">
+          <div class=""><p class="repo-owner"><a href="https://github.com/boundlessgeo/GeoGit">GeoGit</a> is maintained by <a href="https://github.com/boundlessgeo"><img src="images/Boundless_Logo.png" alt="Boundless"></a></p></div>
+        </div>
+      </div>
+    </footer>
+
+
+     <!-- Bootstrap core JavaScript -->
+    <script src="javascripts/jquery.js"></script>
+    <script src="javascripts/bootstrap.js"></script>
+  </body>
+</html>
+

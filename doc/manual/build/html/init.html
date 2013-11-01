@@ -1,0 +1,119 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en-US" xml:lang="en-US">
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  
+  <title>Creating a GeoGit repository &mdash; GeoGit documentation 0.5-SNAPSHOT documentation</title>
+  <link rel="stylesheet" href="_static/blueprint/screen.css" type="text/css" media="screen, projection" />
+  <link rel="stylesheet" href="_static/blueprint/print.css" type="text/css" media="print" /> 
+  <!--[if IE]>
+  <link rel="stylesheet" href="_static/blueprint/ie.css" type="text/css" media="screen, projection" />
+  <![endif]-->
+  <link rel="stylesheet" href="_static/default.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+  <script type="text/javascript">
+    var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '#',
+        VERSION:     '0.5-SNAPSHOT',
+        COLLAPSE_MODINDEX: false,
+        FILE_SUFFIX: '.html'
+    };
+  </script>
+  <script type="text/javascript" src="_static/jquery.js"></script>
+  <script type="text/javascript" src="_static/doctools.js"></script>
+  <script type="text/javascript" src="_static/searchtools.js"></script>
+  <script type="text/javascript" src="searchindex.js"></script>
+      <link rel="top" title="GeoGit documentation 0.5-SNAPSHOT documentation" href="index.html" />
+      <link rel="next" title="Configuring a GeoGit repository" href="config.html" />
+      <link rel="prev" title="Installation" href="installing.html" />
+</head>
+<body class="init">
+  <div id="header" class="selfclear">
+    <div class="wrap selfclear">
+      <div id="logo"><a href="index.html">GeoGit documentation 0.5-SNAPSHOT documentation</a></div>
+      <ul id="top-nav">
+        <li class="first"><a href="https://github.com/opengeo/GeoGit/blob/master/README.rst">About</a></li>
+        <li><a href="http://sourceforge.net/projects/geogit">Download</a></li>
+        <li><a href="/docs/">Users Manual</a></li>
+        <li><a href="/technical/">Technical Manual</a></li>
+        <li><a href="/manpages/">Man Pages</a></li>
+      </ul>
+        <form id="quick-search" action="search.html" method="get">
+          <fieldset>
+            <input type="hidden" name="check_keywords" value="yes" />
+            <input type="hidden" name="area" value="default" />
+            <input id="quick-search-query" type="text" name="q" accessKey="q" name="searchQuery.queryString" size="25" value="Search Documentation&hellip;" size="20" tabindex="3" onblur="if(this.value=='') this.value='Search Documentation&hellip;';" onfocus="if(this.value=='Search Documentation&hellip;') this.value='';" />
+            <input id="quick-search-submit" type="image" value="Search" src="_static/chrome/search_icon_green.png" />
+          </fieldset>
+        </form>
+    </div><!-- /.wrap -->
+  </div><!-- /#header -->
+  <div id="main">
+    <div class="wrap selfclear">
+      <div id="content">
+<ul id="breadcrumbs">
+  
+  <li><a href="index.html">GeoGit documentation 0.5-SNAPSHOT documentation</a> &raquo;</li>
+  <li>Creating a GeoGit repository</li>
+</ul>
+<ul id="relatedlinks" class="selfclear">
+  <li class="first">
+    <a href="genindex.html" title="General Index"
+       accesskey="I">index</a></li>
+  <li>
+    <a href="config.html" title="Configuring a GeoGit repository"
+       accesskey="N">next</a>|</li>
+  <li>
+    <a href="installing.html" title="Installation"
+       accesskey="P">previous</a>|</li>
+</ul>
+        
+  <div class="section" id="creating-a-geogit-repository">
+<span id="init"></span><h1>Creating a GeoGit repository<a class="headerlink" href="#creating-a-geogit-repository" title="Permalink to this headline">¶</a></h1>
+<p>The first thing to do to start working with GeoGit is to create a GeoGit repository. A repository keeps your data and all the different versions of it, so you can go back to a given version at any time, and evolve the current data, creating new versions.</p>
+<p>GeoGit is a command-line application, and it is run from the console typing commands in the form of <tt class="docutils literal"><span class="pre">geogit</span> <span class="pre">&lt;command_to_execute&gt;</span> <span class="pre">&lt;options&gt;</span></tt>. To create a new repository, the <tt class="docutils literal"><span class="pre">init</span></tt> command is used.</p>
+<div class="highlight-python"><pre>$ geogit init</pre>
+</div>
+<p>This creates a new folder in the current folder, named <tt class="docutils literal"><span class="pre">.geogit</span></tt>. That folder will contain all your data, both the current version and the history of old versions that were created. Other than that folder, GeoGit will put nothing else under the folder from which you called the <tt class="docutils literal"><span class="pre">init</span></tt> command. You can put whatever you want on that folder, whether spatial or non-spatial data files, since GeoGit will ignore them.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">In Geogit, the working tree is not the folder where the <tt class="docutils literal"><span class="pre">.geogit</span></tt> subfolder is located. The working tree itself is also located within the <tt class="docutils literal"><span class="pre">geogit</span></tt> folder.</p>
+</div>
+<p>All GeoGit commands have to be run from within a valid Geogit repository. The only exception to this rule is the <tt class="docutils literal"><span class="pre">init</span></tt> command we have just used. From now own, you should move to the repository folder whenever you want to run a GeoGit operation and apply it to it. In case you have several repositories in your computer, each of them in its corresponding repository, the operations you execute will affect just the repository you are currently in, from where the commands are invoked.</p>
+<p>The GeoGit repository that we have just created is empty, that meaning that it contains no spatial data at all. Even if the folder where the repository has been created previously contained some files, those are not part of the repository itself, and they are ignored as well.</p>
+<p>To start adding data to our repository, we need to import data into its working tree. But first, let&#8217;s learn how to configure some important information about our repository.</p>
+</div>
+
+
+      <div class="selfclear pagination-nav">
+          <div class="leftwise"><strong>Previous</strong>: <a href="installing.html" title="previous chapter">Installation</a></div>
+          <div class="rightwise"><strong>Next</strong>: <a href="config.html" title="next chapter">Configuring a GeoGit repository</a></div>
+      </div>
+      </div><!-- /#content> -->
+  <div id="sidebar" class="contrast">
+        <div class="section">
+          <h3>Continue Reading</h3>
+          <ul>
+            <li>Previous: <a href="installing.html" title="previous chapter">Installation</a></li>
+            <li>Next: <a href="config.html" title="next chapter">Configuring a GeoGit repository</a></li>
+          </ul>
+        </div>
+        <div class="section">
+        <h3>This Page</h3>
+        <ul class="this-page-menu">
+          <li><a href="_sources/init.txt">Show Source</a></li>
+        </ul>
+        </div>
+  </div><!-- /#sidebar -->
+  </div><!-- /.wrap> -->
+</div><!-- /#main -->
+<div id="footer">
+  <div class="wrap">
+    &copy; Copyright 2013, OpenGeo.
+    Created using <a href="http://sphinx.pocoo.org/">Sphinx</a>.
+  </div><!-- /.wrap> -->
+</div><!-- /#footer -->
+  </body>
+</html>

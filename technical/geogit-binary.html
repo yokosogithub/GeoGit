@@ -1,0 +1,194 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en-US" xml:lang="en-US">
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  
+  <title>Binary encoding of GeoGit objects &mdash; GeoGit Technical Manual 0.5-SNAPSHOT documentation</title>
+  <link rel="stylesheet" href="_static/blueprint/screen.css" type="text/css" media="screen, projection" />
+  <link rel="stylesheet" href="_static/blueprint/print.css" type="text/css" media="print" /> 
+  <!--[if IE]>
+  <link rel="stylesheet" href="_static/blueprint/ie.css" type="text/css" media="screen, projection" />
+  <![endif]-->
+  <link rel="stylesheet" href="_static/default.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+  <script type="text/javascript">
+    var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '#',
+        VERSION:     '0.5-SNAPSHOT',
+        COLLAPSE_MODINDEX: false,
+        FILE_SUFFIX: '.html'
+    };
+  </script>
+  <script type="text/javascript" src="_static/jquery.js"></script>
+  <script type="text/javascript" src="_static/doctools.js"></script>
+  <script type="text/javascript" src="_static/searchtools.js"></script>
+  <script type="text/javascript" src="searchindex.js"></script>
+      <link rel="top" title="GeoGit Technical Manual 0.5-SNAPSHOT documentation" href="index.html" />
+      <link rel="next" title="GeoGit Network Synchronization" href="geogit-network-sync.html" />
+      <link rel="prev" title="GeoGit Technical Manual" href="index.html" />
+</head>
+<body class="geogit-binary">
+  <div id="header" class="selfclear">
+    <div class="wrap selfclear">
+      <div id="logo"><a href="index.html">GeoGit Technical Manual 0.5-SNAPSHOT documentation</a></div>
+      <ul id="top-nav">
+        <li class="first"><a href="https://github.com/opengeo/GeoGit/blob/master/README.rst">About</a></li>
+        <li><a href="http://sourceforge.net/projects/geogit">Download</a></li>
+        <li><a href="/docs/">Users Manual</a></li>
+        <li><a href="/technical/">Technical Manual</a></li>
+        <li><a href="/manpages/">Man Pages</a></li>
+      </ul>
+        <form id="quick-search" action="search.html" method="get">
+          <fieldset>
+            <input type="hidden" name="check_keywords" value="yes" />
+            <input type="hidden" name="area" value="default" />
+            <input id="quick-search-query" type="text" name="q" accessKey="q" name="searchQuery.queryString" size="25" value="Search Documentation&hellip;" size="20" tabindex="3" onblur="if(this.value=='') this.value='Search Documentation&hellip;';" onfocus="if(this.value=='Search Documentation&hellip;') this.value='';" />
+            <input id="quick-search-submit" type="image" value="Search" src="_static/chrome/search_icon_green.png" />
+          </fieldset>
+        </form>
+    </div><!-- /.wrap -->
+  </div><!-- /#header -->
+  <div id="main">
+    <div class="wrap selfclear">
+      <div id="content">
+<ul id="breadcrumbs">
+  
+  <li><a href="index.html">GeoGit Technical Manual 0.5-SNAPSHOT documentation</a> &raquo;</li>
+  <li>Binary encoding of GeoGit objects</li>
+</ul>
+<ul id="relatedlinks" class="selfclear">
+  <li class="first">
+    <a href="genindex.html" title="General Index"
+       accesskey="I">index</a></li>
+  <li>
+    <a href="geogit-network-sync.html" title="GeoGit Network Synchronization"
+       accesskey="N">next</a>|</li>
+  <li>
+    <a href="index.html" title="GeoGit Technical Manual"
+       accesskey="P">previous</a>|</li>
+</ul>
+        
+  <div class="section" id="binary-encoding-of-geogit-objects">
+<h1>Binary encoding of GeoGit objects<a class="headerlink" href="#binary-encoding-of-geogit-objects" title="Permalink to this headline">¶</a></h1>
+<p>This is the format used for internal storage in the GeoGit object store.</p>
+<div class="section" id="conventions">
+<h2>Conventions<a class="headerlink" href="#conventions" title="Permalink to this headline">¶</a></h2>
+<p>Formats are specified using a modified Backus-Naur notation.
+Definitions generally take the form:</p>
+<div class="highlight-python"><pre>&lt;structure&gt; := part1 part2 part3</pre>
+</div>
+<p>Indicating that the structure has three parts.
+The parts can be:</p>
+<ul>
+<li><p class="first">Another structure, referenced by name.</p>
+</li>
+<li><p class="first">One of these specially defined structures
+.. code-block:</p>
+<div class="highlight-python"><pre>NUL       := 0x00 (ASCII NUL character)
+SP        := 0x20 (ASCII space character)
+BR        := 0x0a (ASCII newline character)
+&lt;rev&gt;     := &lt;byte&gt;* (exactly 20 bytes)
+&lt;utf8&gt;    := &lt;int16&gt; &lt;byte&gt;* (two-byte count followed by the number of
+                              bytes indicated by the count. these should
+                              then be decoded as modified UTF-8, as seen
+                              in the readUTF and writeUTF methods in the
+                              java.io.DataInputStream and
+                              java.io.DataOutputStream classes in the Java
+                              Standard Library.)
+&lt;byte&gt;    := (8 bit byte)
+&lt;int16&gt;   := (16 bit signed integer, "short" in Java)
+&lt;int32&gt;   := (32 bit signed integer, "int" in Java)
+&lt;int64&gt;   := (64 bit signed integer, "long" in Java)
+&lt;float32&gt; := (32 bit IEEE floating point value, "float" in Java)
+&lt;float64&gt; := (64 bit IEEE floating point value, "double" in Java)</pre>
+</div>
+</li>
+<li><p class="first">A literal byte sequence.  These are generally used as markers and are represented as text in double quotes (<cite>&#8220;</cite>).
+These markers will always be constrained to printable ASCII characters and should be encoded as ASCII, one byte per character.</p>
+</li>
+<li><p class="first">A literal byte, specified as a hexidecimal string (for example, 0xFF).</p>
+</li>
+<li><p class="first">any of the above suffixed by a modifier:</p>
+<ul class="simple">
+<li>An asterisk (<cite>*</cite>) to indicate 0 or more repetitions</li>
+<li>A number in brackets (<cite>[]</cite>) to indicate a specific number of repetitions.</li>
+</ul>
+</li>
+<li><p class="first">Comments sometimes appear to clarify the intent of certain structures.
+These will be enclosed in parentheses (<cite>()</cite>).</p>
+</li>
+</ul>
+</div>
+<div class="section" id="commit">
+<h2>Commit<a class="headerlink" href="#commit" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="tree">
+<h2>Tree<a class="headerlink" href="#tree" title="Permalink to this headline">¶</a></h2>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p>In representing trees we split the count of tree contents into three fields:
+features, trees, and buckets. Because of the way GeoGit builds trees,
+buckets must be zero when either of the other two fields is nonzero.</p>
+<p class="last">We should probably document how exactly GeoGit builds trees :)</p>
+</div>
+</div>
+<div class="section" id="feature">
+<h2>Feature<a class="headerlink" href="#feature" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="featuretype">
+<h2>FeatureType<a class="headerlink" href="#featuretype" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="tag">
+<h2>Tag<a class="headerlink" href="#tag" title="Permalink to this headline">¶</a></h2>
+</div>
+</div>
+
+
+      <div class="selfclear pagination-nav">
+          <div class="leftwise"><strong>Previous</strong>: <a href="index.html" title="previous chapter">GeoGit Technical Manual</a></div>
+          <div class="rightwise"><strong>Next</strong>: <a href="geogit-network-sync.html" title="next chapter">GeoGit Network Synchronization</a></div>
+      </div>
+      </div><!-- /#content> -->
+  <div id="sidebar" class="contrast">
+      <div id="toc" class="section">
+        <h3 class="pngfix">Table Of Contents</h3>
+        <ul>
+<li><a class="reference internal" href="#">Binary encoding of GeoGit objects</a><ul>
+<li><a class="reference internal" href="#conventions">Conventions</a></li>
+<li><a class="reference internal" href="#commit">Commit</a></li>
+<li><a class="reference internal" href="#tree">Tree</a></li>
+<li><a class="reference internal" href="#feature">Feature</a></li>
+<li><a class="reference internal" href="#featuretype">FeatureType</a></li>
+<li><a class="reference internal" href="#tag">Tag</a></li>
+</ul>
+</li>
+</ul>
+
+        <div class="section-footer"></div>
+      </div>
+        <div class="section">
+          <h3>Continue Reading</h3>
+          <ul>
+            <li>Previous: <a href="index.html" title="previous chapter">GeoGit Technical Manual</a></li>
+            <li>Next: <a href="geogit-network-sync.html" title="next chapter">GeoGit Network Synchronization</a></li>
+          </ul>
+        </div>
+        <div class="section">
+        <h3>This Page</h3>
+        <ul class="this-page-menu">
+          <li><a href="_sources/geogit-binary.txt">Show Source</a></li>
+        </ul>
+        </div>
+  </div><!-- /#sidebar -->
+  </div><!-- /.wrap> -->
+</div><!-- /#main -->
+<div id="footer">
+  <div class="wrap">
+    &copy; Copyright 2013, OpenGeo.
+    Created using <a href="http://sphinx.pocoo.org/">Sphinx</a>.
+  </div><!-- /.wrap> -->
+</div><!-- /#footer -->
+  </body>
+</html>

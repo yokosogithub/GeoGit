@@ -1,0 +1,150 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en-US" xml:lang="en-US">
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  
+  <title>Installation &mdash; GeoGit documentation 0.5-SNAPSHOT documentation</title>
+  <link rel="stylesheet" href="_static/blueprint/screen.css" type="text/css" media="screen, projection" />
+  <link rel="stylesheet" href="_static/blueprint/print.css" type="text/css" media="print" /> 
+  <!--[if IE]>
+  <link rel="stylesheet" href="_static/blueprint/ie.css" type="text/css" media="screen, projection" />
+  <![endif]-->
+  <link rel="stylesheet" href="_static/default.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+  <script type="text/javascript">
+    var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '#',
+        VERSION:     '0.5-SNAPSHOT',
+        COLLAPSE_MODINDEX: false,
+        FILE_SUFFIX: '.html'
+    };
+  </script>
+  <script type="text/javascript" src="_static/jquery.js"></script>
+  <script type="text/javascript" src="_static/doctools.js"></script>
+  <script type="text/javascript" src="_static/searchtools.js"></script>
+  <script type="text/javascript" src="searchindex.js"></script>
+      <link rel="top" title="GeoGit documentation 0.5-SNAPSHOT documentation" href="index.html" />
+      <link rel="next" title="Creating a GeoGit repository" href="init.html" />
+      <link rel="prev" title="GeoGit Quickstart" href="quickstart.html" />
+</head>
+<body class="installing">
+  <div id="header" class="selfclear">
+    <div class="wrap selfclear">
+      <div id="logo"><a href="index.html">GeoGit documentation 0.5-SNAPSHOT documentation</a></div>
+      <ul id="top-nav">
+        <li class="first"><a href="https://github.com/opengeo/GeoGit/blob/master/README.rst">About</a></li>
+        <li><a href="http://sourceforge.net/projects/geogit">Download</a></li>
+        <li><a href="/docs/">Users Manual</a></li>
+        <li><a href="/technical/">Technical Manual</a></li>
+        <li><a href="/manpages/">Man Pages</a></li>
+      </ul>
+        <form id="quick-search" action="search.html" method="get">
+          <fieldset>
+            <input type="hidden" name="check_keywords" value="yes" />
+            <input type="hidden" name="area" value="default" />
+            <input id="quick-search-query" type="text" name="q" accessKey="q" name="searchQuery.queryString" size="25" value="Search Documentation&hellip;" size="20" tabindex="3" onblur="if(this.value=='') this.value='Search Documentation&hellip;';" onfocus="if(this.value=='Search Documentation&hellip;') this.value='';" />
+            <input id="quick-search-submit" type="image" value="Search" src="_static/chrome/search_icon_green.png" />
+          </fieldset>
+        </form>
+    </div><!-- /.wrap -->
+  </div><!-- /#header -->
+  <div id="main">
+    <div class="wrap selfclear">
+      <div id="content">
+<ul id="breadcrumbs">
+  
+  <li><a href="index.html">GeoGit documentation 0.5-SNAPSHOT documentation</a> &raquo;</li>
+  <li>Installation</li>
+</ul>
+<ul id="relatedlinks" class="selfclear">
+  <li class="first">
+    <a href="genindex.html" title="General Index"
+       accesskey="I">index</a></li>
+  <li>
+    <a href="init.html" title="Creating a GeoGit repository"
+       accesskey="N">next</a>|</li>
+  <li>
+    <a href="quickstart.html" title="GeoGit Quickstart"
+       accesskey="P">previous</a>|</li>
+</ul>
+        
+  <div class="section" id="installation">
+<span id="installing"></span><h1>Installation<a class="headerlink" href="#installation" title="Permalink to this headline">¶</a></h1>
+<p>GeoGit has to be installed in your system before you can start using it for versioning your spatial data. This sectin describes the steps needed to install GeoGit.</p>
+<p>No packaged versions are currently available for GeoGit, and it has to be build from sources. To build GeoGit and have an executable binary that you can run, follow these steps.</p>
+<ul class="simple">
+<li>Clone the GeoGit source code repository. To do so, create a new folder where you want the GeoGit source code to be kept, open a console and move to that folder. Now type the following in a console.</li>
+</ul>
+<div class="highlight-python"><pre>$git clone http://github.com/opengeo/GeoGit.git</pre>
+</div>
+<ul>
+<li><p class="first">Install the software needed to build GeoGit (you can skip one or both of the steps below in case you have Java and/or Maven already installed in your system)</p>
+<blockquote>
+<div><ul class="simple">
+<li>Install the Java JDK from <a class="reference external" href="http://www.oracle.com/technetwork/java/javase/downloads/jdk7-downloads-1880260.html">this website</a>.</li>
+<li>Install Maven following the instructions in <a class="reference external" href="http://maven.apache.org/download.cgi">this website</a>.</li>
+</ul>
+</div></blockquote>
+</li>
+<li><p class="first">Move to the <tt class="docutils literal"><span class="pre">src/parent</span></tt> folder under the folder where you have cloned the GeoGit source code, and type the following.</p>
+</li>
+</ul>
+<div class="highlight-python"><pre>$mvn clean install</pre>
+</div>
+<ul class="simple">
+<li>GeoGit should now be built, and scripts ready to be run should be available in the <cite>src/cli-app/target/geogit/bin</cite> folder. Add that folders to your PATH environment variable, so your system can find it and you can call GeoGit from the console.</li>
+</ul>
+<p>-To test that GeoGit is ready to be used, open a console and type <tt class="docutils literal"><span class="pre">geogit</span> <span class="pre">help</span></tt>. You should see a list of available commands like the one shown below.</p>
+<div class="highlight-python"><pre>usage: geogit &lt;command&gt; [&lt;args&gt;]
+
+The most commonly used geogit commands are:
+--help          Print this help message, or provide a command name to get help for
+add             Add features to the staging area
+apply           Apply a patch to the current working tree
+branch          List, create, or delete branches
+cat             Provide content of an element in the repository
+checkout        Checkout a branch or paths to the working tree
+cherry-pick     Apply the changes introduced by existing commits
+clean           Deletes untracked features from working tree
+clone           Clone a repository into a new directory
+commit          Record staged changes to the repository
+config          Get and set repository or global options
+conflicts       Shows existing conflicts
+diff            Show changes between commits, commit and working tree, etc
+[...]</pre>
+</div>
+</div>
+
+
+      <div class="selfclear pagination-nav">
+          <div class="leftwise"><strong>Previous</strong>: <a href="quickstart.html" title="previous chapter">GeoGit Quickstart</a></div>
+          <div class="rightwise"><strong>Next</strong>: <a href="init.html" title="next chapter">Creating a GeoGit repository</a></div>
+      </div>
+      </div><!-- /#content> -->
+  <div id="sidebar" class="contrast">
+        <div class="section">
+          <h3>Continue Reading</h3>
+          <ul>
+            <li>Previous: <a href="quickstart.html" title="previous chapter">GeoGit Quickstart</a></li>
+            <li>Next: <a href="init.html" title="next chapter">Creating a GeoGit repository</a></li>
+          </ul>
+        </div>
+        <div class="section">
+        <h3>This Page</h3>
+        <ul class="this-page-menu">
+          <li><a href="_sources/installing.txt">Show Source</a></li>
+        </ul>
+        </div>
+  </div><!-- /#sidebar -->
+  </div><!-- /.wrap> -->
+</div><!-- /#main -->
+<div id="footer">
+  <div class="wrap">
+    &copy; Copyright 2013, OpenGeo.
+    Created using <a href="http://sphinx.pocoo.org/">Sphinx</a>.
+  </div><!-- /.wrap> -->
+</div><!-- /#footer -->
+  </body>
+</html>

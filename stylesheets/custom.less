@@ -1,0 +1,402 @@
+@black: #191818;
+@ltblue: #7EB5D3;
+@mdblue: #28728D;
+@whitegray: #fafafa;
+@ltgray: #a5a5a5;
+
+@import url('bootstrap/bootstrap.less');
+
+.font-face (@family, @file-base, @weight: normal, @style: normal) {
+  @font-face {
+    font-family: @family;
+    src: url("@{file-base}.eot");
+    src: url("@{file-base}.eot?#iefix") format("embedded-opentype"),
+         url("@{file-base}.woff") format("woff"),
+         url("@{file-base}.ttf") format("truetype"),
+         url("@{file-base}.svg#@{family}") format("svg");
+    font-weight: @weight;
+    font-style: @style;
+  }
+}
+
+.font-face("Cantarell", "../fonts/cantarell-regular", normal);
+.font-face("Proxima Nova", "../fonts/proximanova-light", 300);
+.font-face("Proxima Nova", "../fonts/proximanova-semibold", bold);
+
+body {
+	font-family: 'Cantarell', sans-serif;
+	font-weight: 500;
+	font-size: 2em;
+    background: url(../images/ticks.png) repeat;
+
+    @media (-webkit-min-device-pixel-ratio: 2), 
+	(min-resolution: 192dpi) { 
+	    /* Retina-specific stuff here */
+	    background: url(../images/ticks_@2x.png) repeat;
+	}
+}
+
+a {
+	color: @ltblue;
+
+	&:hover {
+		color: @mdblue;
+	}
+}
+
+header {
+	background: @black;
+
+	.navbar .nav > li > a {	
+		font-size: .8em;
+		color: @ltblue;
+		text-shadow: none;
+		text-decoration: none;
+		box-shadow: none;
+		padding: 5px 15px;
+		line-height: normal;
+		text-transform: uppercase;
+	
+		&:hover, &:focus {
+			color: white;
+			background-color: @ltblue;
+		}
+	}
+}
+
+h1, h2, h3, h4, h5 {
+	font-family: 'Proxima Nova', Helvetica, Arial, sans-serif;
+	font-weight: bold;
+}
+
+.navbar {
+	margin-bottom: 0px;
+
+	h1 {
+		text-shadow:  2px 2px 0px #333;
+	}
+
+}
+
+.navbar-brand {
+	background: url(../images/logo.png) no-repeat 10% 100%;
+	padding-left: 125px;
+	margin-top: 5px;
+	margin-bottom: 5px;
+
+	&:hover {
+		background: url(../images/logo_hover.png) no-repeat 10% 100%;
+	}
+
+	@media only screen and (-webkit-min-device-pixel-ratio: 2) {
+    	background: url(../images/logo@2x.png) no-repeat 10% 100%;
+
+    	&:hover {
+    		background: url(../images/logo_hover@2x.png) no-repeat 10% 100%;
+    	}
+	}
+}
+
+#blacktop {
+	position: fixed;
+	width: 100%;
+	border-top: @black 45px solid;
+	z-index: 1;
+
+	@media (max-width: 767px) {
+		display: none;
+	}
+}
+
+.navbar-collapse {
+	position: fixed;
+	right: 5%;
+	background-color: @black;
+	z-index: 2;
+	padding-top: 5px;
+
+	.navbar-nav > li > a {
+		-webkit-border-radius: 4px;
+		-moz-border-radius: 4px;
+		border-radius: 4px;
+	}
+
+	@media (max-width: 767px) {
+		position: relative;
+		.navbar-nav > li > a {
+			padding: 20px 20px 20px 60px !important;
+		}
+	}
+}
+
+.navbar-toggle .icon-bar {
+	background-color: @ltblue;
+}
+
+.subheading {
+	background-color: @black;
+	
+	margin-top: -35px;
+
+	.byline {
+		font-family: 'Proxima Nova', Helvetica, Arial, sans-serif;
+		font-weight: 300;
+		font-size: .8em;
+		color: #777;
+		text-transform: uppercase;
+		padding: 10px 10px 10px 87px;
+		margin: 0 10px 10px 25px;
+		float: left;
+
+		@media (max-width: 480px) {
+			font-size: .7em;
+			text-transform: none;
+		}
+	}
+}
+
+#main, #install, #docs, #participate {
+	p {
+		margin-bottom: 40px;
+		line-height: 1.8em;
+	}
+}
+
+#main {
+	padding-top: 50px;
+	padding-bottom: 20px;
+	background: #272727 url(../images/roadmap.png) no-repeat;
+	color: #ddd;
+
+	.first {
+		font-size: 1.3em;
+		padding-bottom: 10px;
+	}
+
+	.light {
+		font-weight: 300;
+	}
+
+	.copy {
+		font-size: 1.6em;
+		padding-top: 30px;
+		padding-bottom: 10px;
+		line-height: 1.2em;
+		text-transform: uppercase;
+	}
+
+	.download {
+		background: url(../images/zipfile.png) no-repeat 10%;
+		border: @ltblue 4px solid;
+		width: 250px;
+		padding: 15px 10px 15px 80px;
+		margin: 10px 10px 40px 30px;
+		font-size: .75em;
+		-webkit-border-radius: 5px;
+		-moz-border-radius: 5px;
+		border-radius: 5px;
+		text-align: left;
+
+		@media (max-width: 480px) {
+			margin-left: 48px;
+		}
+
+		&:hover {
+			background: url(../images/zip_hover.png) no-repeat 10%;
+			background-color: @ltblue;
+			color: white;
+		}
+
+		@media only screen and (-webkit-min-device-pixel-ratio: 2) {
+			background: url(../images/zipfile@2x.png) no-repeat 10%;
+
+			&:hover {
+				background: url(../images/zip_hover@2x.png) no-repeat 10%;
+			}
+		}
+	}
+
+	.pagelink {
+		display: block;
+		color: #ccc;
+		height: 34px;
+		width: 150px;
+		margin: 20px;
+		text-align: left;
+		padding-left: 40px;
+		&:hover{
+			background: url(../images/arrow_hover.png) no-repeat;
+			text-decoration: none;
+			color: @ltblue;
+		}
+		
+		@media only screen and (-webkit-min-device-pixel-ratio: 2) {
+			background: url(../images/arrow@2x.png) no-repeat;
+
+			&:hover {
+				background: url(../images/arrow@2x.png) no-repeat;
+			}
+		}
+
+	}
+	.link-docs {
+		background: url(../images/docs.png) no-repeat;
+
+		@media only screen and (-webkit-min-device-pixel-ratio: 2) {
+			background: url(../images/docs@2x.png) no-repeat;
+		}
+	}
+	.link-participate {
+		background: url(../images/participate.png) no-repeat;
+
+		@media only screen and (-webkit-min-device-pixel-ratio: 2) {
+			background: url(../images/participate@2x.png) no-repeat;
+		}
+	}
+	.link-install {
+		background: url(../images/install.png) no-repeat;
+
+		@media only screen and (-webkit-min-device-pixel-ratio: 2) {
+			background: url(../images/install@2x.png) no-repeat;
+		}
+	}
+
+	.page-link {
+		text-decoration: none;
+	}
+
+	.alpha {
+		text-align: left;
+		font-size: .8em;
+		padding-left: 25px;
+		padding-top: 40px;
+	}
+}
+
+#install, #docs, #participate {
+	padding-top: 60px;
+	padding-bottom: 60px;
+
+	h2 {
+		padding-bottom: 20px;
+		font-size: 2.5em;
+	}
+}
+
+#install {
+	a {
+		color: @mdblue;
+	}
+
+	.quickstart_title {
+		display: block;
+		text-align: center;
+		margin: 0 20px;
+		padding: 5px 0;
+		border-radius: 5px 5px 0 0;
+		box-shadow: 0 3px 10px rgba(0,0,0,.5);
+		font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+		font-size: 16px;
+		font-weight: normal;
+		color: #444;
+		text-shadow: 0 1px 0 rgba(255,255,255,.5);
+		background: #f7f7f7;
+		background: url(data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiA/Pgo8c3ZnIHhtbG5zPSJod…IgaGVpZ2h0PSIxIiBmaWxsPSJ1cmwoI2dyYWQtdWNnZy1nZW5lcmF0ZWQpIiAvPgo8L3N2Zz4=);
+		background: -moz-linear-gradient(top, #f7f7f7 0%, #cfcfcf 7%, #aaaaaa 100%);
+		background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,#f7f7f7), color-stop(7%,#cfcfcf), color-stop(100%,#aaaaaa));
+		background: -webkit-linear-gradient(top, #f7f7f7 0%,#cfcfcf 7%,#aaaaaa 100%);
+		background: -o-linear-gradient(top, #f7f7f7 0%,#cfcfcf 7%,#aaaaaa 100%);
+		background: -ms-linear-gradient(top, #f7f7f7 0%,#cfcfcf 7%,#aaaaaa 100%);
+		background: linear-gradient(top, #f7f7f7 0%,#cfcfcf 7%,#aaaaaa 100%);
+		filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#f7f7f7', endColorstr='#aaaaaa',GradientType=0 );
+		border-bottom: 1px solid #111;
+	}
+
+	.quickstart_shell {
+		padding: 20px;
+		text-shadow: none;
+		margin: 0 20px 30px;
+		background: #3d3d3d;
+		border-radius: 0 0 5px 5px;
+		box-shadow: 0 5px 30px rgba(0,0,0,.4);
+		line-height: 1.5em;
+	}
+
+	.line {
+		display: block;
+		margin-bottom: 0;
+	}
+
+	.path {
+		color: #87ceeb;
+	}
+	.input {
+		color: #cd5c5c;
+		padding-left: 5px;
+	}
+	.command {
+		color: #f0e68c;
+	}
+	.output {
+		color: #888;
+	}
+}
+
+#docs {
+	background-color: @ltblue;
+	a {
+		color: #000;
+	}
+
+	.workflow_diagram {
+		height: 500px;
+		width: 428px;
+		float: right;
+
+		@media (max-width: @screen-md) {
+			margin: 20px auto;
+			float: none;
+			text-align: center;
+		}
+	}
+}
+
+.overlay {
+	background: url(../images/gis.png) no-repeat bottom right;
+}
+
+#participate {
+	background-color: #ccc;
+	padding-top: 0px;
+	padding-bottom: 0px;
+	a {
+		color: @mdblue;
+	}
+	h2 {
+		padding-top: 60px;
+	}
+
+	p {
+		margin-top: 30px;
+		margin-bottom: 30px;
+	}
+}
+
+#tree_img {
+		height: 1174px;
+		width: 537px;
+		background: url(../images/git_tree.png) no-repeat;
+	
+		@media only screen and (-webkit-min-device-pixel-ratio: 2) {
+			background: url(../images/git_tree@2x.png) no-repeat;
+		}
+
+	}
+
+footer {
+	background-color: @black;
+	color: @ltgray;
+	height: 100px;
+	text-align: center;
+	padding-top: 40px;
+}
