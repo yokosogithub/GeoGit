@@ -1,0 +1,136 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en-US" xml:lang="en-US">
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  
+  <title>Creating branches &mdash; GeoGit documentation 0.5-SNAPSHOT documentation</title>
+  <link rel="stylesheet" href="_static/blueprint/screen.css" type="text/css" media="screen, projection" />
+  <link rel="stylesheet" href="_static/blueprint/print.css" type="text/css" media="print" /> 
+  <!--[if IE]>
+  <link rel="stylesheet" href="_static/blueprint/ie.css" type="text/css" media="screen, projection" />
+  <![endif]-->
+  <link rel="stylesheet" href="_static/default.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+  <script type="text/javascript">
+    var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '#',
+        VERSION:     '0.5-SNAPSHOT',
+        COLLAPSE_MODINDEX: false,
+        FILE_SUFFIX: '.html'
+    };
+  </script>
+  <script type="text/javascript" src="_static/jquery.js"></script>
+  <script type="text/javascript" src="_static/doctools.js"></script>
+  <script type="text/javascript" src="_static/searchtools.js"></script>
+  <script type="text/javascript" src="searchindex.js"></script>
+      <link rel="top" title="GeoGit documentation 0.5-SNAPSHOT documentation" href="index.html" />
+      <link rel="next" title="Checking out a previous version" href="checkout.html" />
+      <link rel="prev" title="Showing differences" href="diffs.html" />
+</head>
+<body class="branches">
+  <div id="header" class="selfclear">
+    <div class="wrap selfclear">
+      <div id="logo"><a href="index.html">GeoGit documentation 0.5-SNAPSHOT documentation</a></div>
+      <ul id="top-nav">
+        <li class="first"><a href="https://github.com/opengeo/GeoGit/blob/master/README.rst">About</a></li>
+        <li><a href="http://sourceforge.net/projects/geogit">Download</a></li>
+        <li><a href="/docs/">Users Manual</a></li>
+        <li><a href="/technical/">Technical Manual</a></li>
+        <li><a href="/manpages/">Man Pages</a></li>
+      </ul>
+        <form id="quick-search" action="search.html" method="get">
+          <fieldset>
+            <input type="hidden" name="check_keywords" value="yes" />
+            <input type="hidden" name="area" value="default" />
+            <input id="quick-search-query" type="text" name="q" accessKey="q" name="searchQuery.queryString" size="25" value="Search Documentation&hellip;" size="20" tabindex="3" onblur="if(this.value=='') this.value='Search Documentation&hellip;';" onfocus="if(this.value=='Search Documentation&hellip;') this.value='';" />
+            <input id="quick-search-submit" type="image" value="Search" src="_static/chrome/search_icon_green.png" />
+          </fieldset>
+        </form>
+    </div><!-- /.wrap -->
+  </div><!-- /#header -->
+  <div id="main">
+    <div class="wrap selfclear">
+      <div id="content">
+<ul id="breadcrumbs">
+  
+  <li><a href="index.html">GeoGit documentation 0.5-SNAPSHOT documentation</a> &raquo;</li>
+  <li>Creating branches</li>
+</ul>
+<ul id="relatedlinks" class="selfclear">
+  <li class="first">
+    <a href="genindex.html" title="General Index"
+       accesskey="I">index</a></li>
+  <li>
+    <a href="checkout.html" title="Checking out a previous version"
+       accesskey="N">next</a>|</li>
+  <li>
+    <a href="diffs.html" title="Showing differences"
+       accesskey="P">previous</a>|</li>
+</ul>
+        
+  <div class="section" id="creating-branches">
+<span id="id1"></span><h1>Creating branches<a class="headerlink" href="#creating-branches" title="Permalink to this headline">¶</a></h1>
+<p>Up to this point, we have worked in a linear fashion, adding new commits one after another. In some circumstances, it might be interesting to have several histories in our repository, creating a tree-like structure. GeoGit allows that, by creating so-called branches.</p>
+<p>The following figure shows a branch-based workflow.</p>
+<div class="figure">
+<img alt="_images/branched.png" src="_images/branched.png" />
+</div>
+<p>The linear workflow we have been describing was just a sucession of commits, each one with a single parent and child, like the one shown next.</p>
+<div class="figure">
+<img alt="_images/linear.png" src="_images/linear.png" />
+</div>
+<p>Branches are useful if you want to work on your data and version your changes, but you do not want to mix your new work with the rest of the data until a certain point, usually when it reaches a given completion state. For instance, imagine that you have a rather large dataset and you want to edit it by adding new attributes to its features. That might take some time of work, and if you keep using a linear model, during that time the updated features will coexist with the original unedited ones, which might cause problems for users of the repository. You can do all your work and not commit anything until you have finished, but that is less convenient, since you cannot publish your data and keep versions of it as you work. Instead, creating a branch gives you a new context where you can work, not interfering with the main branch. Once you have finished your work and it is ready to replace the old feature from where you started your work, you can pass your changes to the main branch, as we will see in an upcoming section.</p>
+<p>Each branch has a name that is given to it when it is created. The &#8220;central&#8221; branch that is created when you initialize the repository, in which we have been working until now, it is called <tt class="docutils literal"><span class="pre">master</span></tt>.</p>
+<p>To create a new branch named <tt class="docutils literal"><span class="pre">edits</span></tt> use the following command:</p>
+<div class="highlight-python"><pre>$ geogit branch mybranch
+Created branch refs/heads/edits</pre>
+</div>
+<p>This creates a new branch, but does not put you into it. To change to that branch you have to perform a <em>checkout</em>. You can do it using the <tt class="docutils literal"><span class="pre">checkout</span></tt> command followed by the name of the branch, or by adding the <tt class="docutils literal"><span class="pre">-c</span></tt> option when creating the branch.</p>
+<p>Let&#8217;s move to our <tt class="docutils literal"><span class="pre">edits</span></tt> branch</p>
+<div class="highlight-python"><pre>$ geogit checkout edits</pre>
+</div>
+<p>When you checkout a branch, GeoGit puts the data from the tip of that branch (its latest commit) in you working tree. For this reason, your working tree has to be clean, with no unstaged changes, before doing a checkout.</p>
+<p>When a branch is created, a reference is created as well with the name of the branch. That reference will always point to the latest commit made on that branch. When you checkout a branch, GeoGit changes the <tt class="docutils literal"><span class="pre">HEAD</span></tt> to point at the reference denoting the branch you have checked out. Until now, <tt class="docutils literal"><span class="pre">HEAD</span></tt> was linked to the <tt class="docutils literal"><span class="pre">master</span></tt> branch and its corresponding reference, but when you checkout a branch, <tt class="docutils literal"><span class="pre">HEAD</span></tt> changes automatically.</p>
+<p>You can start working and creating new commits, and they will be added on top of the current branch, instead of on top of <tt class="docutils literal"><span class="pre">master</span></tt>, as shown in the next figure:</p>
+<p>..figure:: work_on_branch.png</p>
+<p>You can go back to the <tt class="docutils literal"><span class="pre">master</span></tt> branch, just by checking it out. If you have done no work on <tt class="docutils literal"><span class="pre">master</span></tt> (by moving to it and making commits) since then, that will take you to the state that it had when you created the <tt class="docutils literal"><span class="pre">edits</span></tt> branch, and the working tree content will correspond to it. That is, your work on the <tt class="docutils literal"><span class="pre">edits</span></tt> branch is completely independent of the current contents of <tt class="docutils literal"><span class="pre">master</span></tt>.</p>
+<p>You can consider that having branches is somehow like having several repositories in which you work in a linear fashion, but since everything is kept in the same repository, you can easily move between them.</p>
+<p>The name of the branch is a valid reference just like the ones you already know (<tt class="docutils literal"><span class="pre">WORK_HEAD,</span> <span class="pre">STAGE_HEAD</span></tt>, etc.). For this reason, you can use it to reference an object under that branch. For instance, to show a description of a feature named <tt class="docutils literal"><span class="pre">1</span></tt> in a tree called <tt class="docutils literal"><span class="pre">parks</span></tt>, in its version in the <tt class="docutils literal"><span class="pre">edits</span></tt> branch, you can use the following command:</p>
+<div class="highlight-python"><pre>$ geogit show edits:parks/1</pre>
+</div>
+<p>As we mentioned, the first part of the reference (the part before the colon), has to eventually resolve to a tree. The <tt class="docutils literal"><span class="pre">edits</span></tt> reference points to a commit (the latest one on that branch), and a commit points to a tree as we already know, which makes <tt class="docutils literal"><span class="pre">edits</span></tt> a valid string to use for creating a full reference.</p>
+</div>
+
+
+      <div class="selfclear pagination-nav">
+          <div class="leftwise"><strong>Previous</strong>: <a href="diffs.html" title="previous chapter">Showing differences</a></div>
+          <div class="rightwise"><strong>Next</strong>: <a href="checkout.html" title="next chapter">Checking out a previous version</a></div>
+      </div>
+      </div><!-- /#content> -->
+  <div id="sidebar" class="contrast">
+        <div class="section">
+          <h3>Continue Reading</h3>
+          <ul>
+            <li>Previous: <a href="diffs.html" title="previous chapter">Showing differences</a></li>
+            <li>Next: <a href="checkout.html" title="next chapter">Checking out a previous version</a></li>
+          </ul>
+        </div>
+        <div class="section">
+        <h3>This Page</h3>
+        <ul class="this-page-menu">
+          <li><a href="_sources/branches.txt">Show Source</a></li>
+        </ul>
+        </div>
+  </div><!-- /#sidebar -->
+  </div><!-- /.wrap> -->
+</div><!-- /#main -->
+<div id="footer">
+  <div class="wrap">
+    &copy; Copyright 2013, OpenGeo.
+    Created using <a href="http://sphinx.pocoo.org/">Sphinx</a>.
+  </div><!-- /.wrap> -->
+</div><!-- /#footer -->
+  </body>
+</html>
