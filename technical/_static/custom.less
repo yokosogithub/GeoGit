@@ -42,6 +42,7 @@ p {
 }
 
 li {
+	list-style-type: none;
 	padding-bottom: 0.3em;
 }
 
@@ -82,7 +83,8 @@ h1, h2, h3, h4, h5 {
 .navbar {
 	margin-bottom: 0px;
 
-	h1 {
+	a > h1 {
+		color: @ltblue;
 		text-shadow:  2px 2px 0px #333;
 	}
 
@@ -93,10 +95,6 @@ h1, h2, h3, h4, h5 {
 	padding-left: 125px;
 	margin-top: 5px;
 	margin-bottom: 5px;
-
-	&:hover {
-		background: url(../_static/logo_hover.png) no-repeat 10% 100%;
-	}
 
 	@media only screen and (-webkit-min-device-pixel-ratio: 2) {
     	background: url(../_static/logo@2x.png) no-repeat 10% 100%;
@@ -349,6 +347,7 @@ li.toctree-l3 {
 	}
 }
 
+
 #geogit-user-manual  {
 	margin-left: 1.5em;
 	margin-bottom: 2em;
@@ -360,6 +359,16 @@ Sidebar
 #sidebar {
 
 	float: right;
+
+	li ul {
+		margin: .4em 0 0 1.5em;
+	}
+
+	li > a.reference{ 
+		font-size: 0.8em;
+		padding-bottom: 0.05em;
+
+	}
 
 	a {
 		text-decoration: none;
@@ -399,6 +408,34 @@ Sidebar
 		display: none;
 	}
 }
+
+#quick-search-query {
+	color: #999999; 
+	font-size: 0.8em; 
+	width:100%;
+	border-radius: 3px;
+}
+
+#docs_toc {
+	margin-top: 20px;
+	margin-bottom: 20px;
+	width: 100%;
+
+	.btn-default {
+		color: #333333;
+		background-color: #cccccc;
+		border-color: #cccccc;
+
+		&:hover {
+			background-color: @ltblue;
+			a { color: #000; }
+			a:hover {
+				text-decoration: none;
+			}
+		}
+	}
+}
+
 
 .selfclear {
 	//clear: both;

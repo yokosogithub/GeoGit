@@ -112,9 +112,24 @@
 
 
       </div><!-- /#content> -->
-  <div id="sidebar" class="contrast">
-      <div id="toc" class="section">
-        <h3 class="pngfix">Table Of Contents</h3>
+  <div id="sidebar" class="contrast col-md-4">
+
+    <div>
+         <form id="quick-search" action="search.html" method="get" style="width: 100%;">
+          <fieldset>
+            <input type="hidden" name="check_keywords" value="yes" />
+            <input type="hidden" name="area" value="default" />
+            <input id="quick-search-query" type="text" name="q" accessKey="q" name="searchQuery.queryString" size="25" value="Search Documentation&hellip;" size="20" tabindex="3" onblur="if(this.value=='') this.value='Search Documentation&hellip;';" onfocus="if(this.value=='Search Documentation&hellip;') this.value='';" />
+          </fieldset>
+        </form>
+
+
+        <div class="btn-group-vertical" id="docs_toc"> 
+          <button type="button" class="btn btn-default"><a href="/docs/">User Manual</a></button>
+          <button type="button" class="btn btn-default"><a href="/technical/">Technical Manual</a></button>
+          <button type="button" class="btn btn-default"><a href="/manpages/">Man Pages</a></button>
+      </div>
+      <h3 class="pngfix">Table Of Contents</h3>
         <ul>
 <li><a class="reference internal" href="#">geogit-push documentation</a><ul>
 <li><a class="reference internal" href="#synopsis">SYNOPSIS</a></li>
@@ -134,6 +149,7 @@
           <li><a href="_sources/push.txt">Show Source</a></li>
         </ul>
         </div>
+
   </div><!-- /#sidebar -->
   </div><!-- /.wrap> -->
 </div></div>
