@@ -30,7 +30,7 @@
 
 {%- macro sidebar() %}
   {%- if builder != 'htmlhelp' %}
-  <div id="sidebar"{%- if pagename not in ['index', 'search'] %} class="contrast col-md-4"{%- endif %}>
+  <div id="sidebar"{%- if pagename not in ['index', 'search'] %} class="contrast col-md-4"{%- else %} class="col-md-4"{%- endif %}>
 
     <div>
          <form id="quick-search" action="search.html" method="get" style="width: 100%;">
@@ -191,7 +191,7 @@
           </div>
           <div class="navbar-collapse collapse navbar-right">
             <ul class="nav navbar-nav">
-              <li><a href="http://geogit.org/docs/quickstart.html">Quick Start</a></li>
+              <li><a href="http://geogit.org/docs/start/tutorial.html">Get Started</a></li>
               <li><a href="http://geogit.org/docs/index.html">Documentation</a></li>
               <li><a href="https://github.com/boundlessgeo/GeoGit">On Github</a></li>
             </ul>
