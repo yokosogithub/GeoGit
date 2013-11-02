@@ -69,19 +69,35 @@ h1, h2, h3, h4, h5 {
 	h1 {
 		text-shadow:  2px 2px 0px #333;
 	}
+}
 
+// Sprites
+.logo, .logo:hover, .link-docs, .link-docs:hover, .link-participate, .link-participate:hover, .install_hover, .link-install , .link-install:hover, .zipfile, .zipfile:hover {
+	background: url(../images/sprites.png) no-repeat;
+	display: inline-block;
+}
+
+.logo{
+	background-position: 0 0;
+	width: 113px;
+	height: 101px;
 }
 
 .navbar-brand {
-	background: url(../images/logo.png) no-repeat 10% 100%;
-	padding-left: 125px;
-	margin-top: 5px;
-	margin-bottom: 5px;
-
-	&:hover {
-		background: url(../images/logo_hover.png) no-repeat 10% 100%;
+	padding: 5px 15px;
+	h1 { 
+	     line-height: 0;
+		 display: inline-block;
+		 vertical-align: top;
+		 padding-top: 30px;
 	}
-
+	&:hover {
+		.logo {
+			background-position: 0 -101px;
+			width: 113px;	
+			height: 101px;
+		}
+	}
 }
 
 #blacktop {
@@ -173,56 +189,113 @@ h1, h2, h3, h4, h5 {
 	}
 
 	.download {
-		background: url(../images/zipfile.png) no-repeat 10%;
+		
 		border: @ltblue 4px solid;
 		width: 250px;
-		padding: 15px 10px 15px 80px;
-		margin: 10px 10px 40px 30px;
+		padding: 5px 10px 5px 20px;
+		margin-bottom: 20px;
 		font-size: .75em;
 		-webkit-border-radius: 5px;
 		-moz-border-radius: 5px;
 		border-radius: 5px;
 		text-align: left;
+		vertical-align: top;
 
 		@media (max-width: 480px) {
 			margin-left: 48px;
 		}
 
 		&:hover {
-			background: url(../images/zip_hover.png) no-repeat 10%;
 			background-color: @ltblue;
 			color: white;
+
+			.zipfile {
+				background-position: -49px -203px;
+				width: 45px;
+				height: 60px;
+			}
+		}
+
+		.zipfile {
+			background-position: 0 -201px ;
+			width: 45px;
+			height: 60px;
+			&:hover {
+				background-position: -49px -203px;
+				width: 45px;
+				height: 60px;
+			}
+		}
+
+		.download-ziptxt {
+			display:inline-block;
+			vertical-align: top;
+			padding: 10px 0 0 10px;
 		}
 
 	}
 
-	.pagelink {
-		display: block;
+	.page-link {
+		display: inline-block;
 		color: #ccc;
-		height: 34px;
+		height: 35px;
 		width: 150px;
-		margin: 20px;
+		margin: 15px;
 		text-align: left;
-		padding-left: 40px;
+		vertical-align: top;
 		&:hover{
-			background: url(../images/arrow_hover.png) no-repeat;
 			text-decoration: none;
 			color: @ltblue;
+
+			.link-docs {
+				background-position: -150px -41px;
+				width: 34px;
+				height: 34px;
+			}	
+			.link-participate {
+				background-position: -155px -9px;
+				width: 34px;
+				height: 34px;
+			}
+			.link-install {
+				background-position: -149px -78px;
+				width: 34px;
+				height: 34px;
+			}
 		}
-		
-
 	}
-	.link-docs {
-		background: url(../images/docs.png) no-repeat;
 
+	.link-docs {
+		background-position: -116px -42px;
+		width: 34px;
+		height: 34px;
+
+		&:hover{
+			background-position: -150px -41px;
+			width: 34px;
+			height: 34px;
+		}
 	}
 	.link-participate {
-		background: url(../images/participate.png) no-repeat;
-
+		background-position: -118px -7px;
+		width: 34px;
+		height: 34px;
+		&:hover{
+			background-position: -155px -9px;
+			width: 34px;
+			height: 34px;
+		}
 	}
 	.link-install {
-		background: url(../images/install.png) no-repeat;
+		background-position: -116px -78px;
+		width: 34px;
+		height: 34px;
 
+		&:hover{
+			background-position:  -149px -78px;
+			width: 34px;
+			height: 34px;
+		}
 	}
 
 	.page-link {
