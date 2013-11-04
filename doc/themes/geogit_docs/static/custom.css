@@ -2165,8 +2165,8 @@ input[type="button"].btn-block {
 }
 @font-face {
   font-family: 'Glyphicons Halflings';
-  src: url('/fonts/glyphicons-halflings-regular.eot');
-  src: url('/fonts/glyphicons-halflings-regular.eot?#iefix') format('embedded-opentype'), url('/fonts/glyphicons-halflings-regular.woff') format('woff'), url('../fonts/glyphicons-halflings-regular.ttf') format('truetype'), url('../fonts/glyphicons-halflings-regular.svg#glyphicons-halflingsregular') format('svg');
+  src: url('../fonts/glyphicons-halflings-regular.eot');
+  src: url('../fonts/glyphicons-halflings-regular.eot?#iefix') format('embedded-opentype'), url('../fonts/glyphicons-halflings-regular.woff') format('woff'), url('../fonts/glyphicons-halflings-regular.ttf') format('truetype'), url('../fonts/glyphicons-halflings-regular.svg#glyphicons-halflingsregular') format('svg');
 }
 .glyphicon {
   position: relative;
@@ -5969,13 +5969,6 @@ body {
   font-size: 18px;
   background: url(../_static/ticks.png) repeat;
 }
-@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
-  body {
-    /* Retina-specific stuff here */
-  
-    background: url(../_static/ticks_@2x.png) repeat;
-  }
-}
 p {
   font-size: 1em;
   line-height: 1.6em;
@@ -6021,6 +6014,7 @@ h5 {
 }
 .navbar h1 {
   text-shadow: 2px 2px 0px #333;
+  color: #7eb5d3;
 }
 .navbar-brand {
   background: url(../_static/logo.png) no-repeat 10% 100%;
@@ -6031,13 +6025,8 @@ h5 {
 .navbar-brand:hover {
   background: url(../_static/logo_hover.png) no-repeat 10% 100%;
 }
-@media only screen and (-webkit-min-device-pixel-ratio: 2) {
-  .navbar-brand {
-    background: url(../_static/logo@2x.png) no-repeat 10% 100%;
-  }
-  .navbar-brand:hover {
-    background: url(../_static/logo_hover@2x.png) no-repeat 10% 100%;
-  }
+.navbar-brand:hover h1 {
+  color: #28728d;
 }
 #blacktop {
   position: fixed;
@@ -6133,14 +6122,6 @@ h5 {
   background-color: #7eb5d3;
   color: white;
 }
-@media only screen and (-webkit-min-device-pixel-ratio: 2) {
-  #main .download {
-    background: url(../_static/zipfile@2x.png) no-repeat 10%;
-  }
-  #main .download:hover {
-    background: url(../_static/zip_hover@2x.png) no-repeat 10%;
-  }
-}
 #main .pagelink {
   display: block;
   color: #ccc;
@@ -6155,37 +6136,14 @@ h5 {
   text-decoration: none;
   color: #7eb5d3;
 }
-@media only screen and (-webkit-min-device-pixel-ratio: 2) {
-  #main .pagelink {
-    background: url(../_static/arrow@2x.png) no-repeat;
-  }
-  #main .pagelink:hover {
-    background: url(../_static/arrow@2x.png) no-repeat;
-  }
-}
 #main .link-docs {
   background: url(../_static/docs.png) no-repeat;
-}
-@media only screen and (-webkit-min-device-pixel-ratio: 2) {
-  #main .link-docs {
-    background: url(../_static/docs@2x.png) no-repeat;
-  }
 }
 #main .link-participate {
   background: url(../_static/participate.png) no-repeat;
 }
-@media only screen and (-webkit-min-device-pixel-ratio: 2) {
-  #main .link-participate {
-    background: url(../_static/participate@2x.png) no-repeat;
-  }
-}
 #main .link-install {
   background: url(../_static/install.png) no-repeat;
-}
-@media only screen and (-webkit-min-device-pixel-ratio: 2) {
-  #main .link-install {
-    background: url(../_static/install@2x.png) no-repeat;
-  }
 }
 #main .page-link {
   text-decoration: none;
@@ -6271,8 +6229,12 @@ Sidebar
 #sidebar {
   float: right;
 }
+#sidebar p {
+  font-size: 0.8em;
+  margin-top: 0.4em;
+}
 #sidebar li ul {
-  margin: .4em 0 0 1.5em;
+  margin: 0.4em 0 0 1.5em;
 }
 #sidebar li > a.reference {
   font-size: 0.8em;
@@ -6307,6 +6269,9 @@ Sidebar
 #sidebar .section li:before {
   content: "\00BB \0020";
 }
+#sidebar .continue_reading {
+  margin-bottom: 30px;
+}
 @media (max-width: 992px) {
   #sidebar {
     display: none;
@@ -6327,6 +6292,9 @@ Sidebar
   color: #333333;
   background-color: #cccccc;
   border-color: #cccccc;
+  text-transform: uppercase;
+  text-align: left;
+  padding-left: 3em;
 }
 #docs_toc .btn-default:hover {
   background-color: #7eb5d3;
@@ -6336,6 +6304,13 @@ Sidebar
 }
 #docs_toc .btn-default:hover a:hover {
   text-decoration: none;
+}
+.admonition .note {
+  border: 1px solid #ccc;
+  padding: 5px;
+}
+.admonition .note .admonition-title {
+  font-weight: bold;
 }
 .pagination-nav {
   width: 100%;

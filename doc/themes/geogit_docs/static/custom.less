@@ -29,11 +29,6 @@ body {
 	font-size: 18px;
     background: url(../_static/ticks.png) repeat;
 
-    @media (-webkit-min-device-pixel-ratio: 2), 
-	(min-resolution: 192dpi) { 
-	    /* Retina-specific stuff here */
-	    background: url(../_static/ticks_@2x.png) repeat;
-	}
 }
 
 p {
@@ -85,6 +80,7 @@ h1, h2, h3, h4, h5 {
 
 	h1 {
 		text-shadow:  2px 2px 0px #333;
+		color: @ltblue;
 	}
 
 }
@@ -97,14 +93,7 @@ h1, h2, h3, h4, h5 {
 
 	&:hover {
 		background: url(../_static/logo_hover.png) no-repeat 10% 100%;
-	}
-
-	@media only screen and (-webkit-min-device-pixel-ratio: 2) {
-    	background: url(../_static/logo@2x.png) no-repeat 10% 100%;
-
-    	&:hover {
-    		background: url(../_static/logo_hover@2x.png) no-repeat 10% 100%;
-    	}
+		h1 { color: @mdblue; }
 	}
 }
 
@@ -208,14 +197,6 @@ h1, h2, h3, h4, h5 {
 			background-color: @ltblue;
 			color: white;
 		}
-
-		@media only screen and (-webkit-min-device-pixel-ratio: 2) {
-			background: url(../_static/zipfile@2x.png) no-repeat 10%;
-
-			&:hover {
-				background: url(../_static/zip_hover@2x.png) no-repeat 10%;
-			}
-		}
 	}
 
 	.pagelink {
@@ -231,36 +212,18 @@ h1, h2, h3, h4, h5 {
 			text-decoration: none;
 			color: @ltblue;
 		}
-		
-		@media only screen and (-webkit-min-device-pixel-ratio: 2) {
-			background: url(../_static/arrow@2x.png) no-repeat;
-
-			&:hover {
-				background: url(../_static/arrow@2x.png) no-repeat;
-			}
-		}
 
 	}
 	.link-docs {
 		background: url(../_static/docs.png) no-repeat;
 
-		@media only screen and (-webkit-min-device-pixel-ratio: 2) {
-			background: url(../_static/docs@2x.png) no-repeat;
-		}
 	}
 	.link-participate {
 		background: url(../_static/participate.png) no-repeat;
-
-		@media only screen and (-webkit-min-device-pixel-ratio: 2) {
-			background: url(../_static/participate@2x.png) no-repeat;
-		}
 	}
 	.link-install {
 		background: url(../_static/install.png) no-repeat;
 
-		@media only screen and (-webkit-min-device-pixel-ratio: 2) {
-			background: url(../_static/install@2x.png) no-repeat;
-		}
 	}
 
 	.page-link {
@@ -363,8 +326,13 @@ Sidebar
 
 	float: right;
 
+	p {
+		font-size: 0.8em;
+		margin-top: 0.4em;
+	}
+
 	li ul {
-		margin: .4em 0 0 1.5em;
+		margin: 0.4em 0 0 1.5em;
 	}
 
 	li > a.reference{ 
@@ -407,6 +375,10 @@ Sidebar
 		}
 	}
 
+	.continue_reading {
+		margin-bottom: 30px;
+	}
+
 	@media (max-width: @screen-md) {
 		display: none;
 	}
@@ -428,6 +400,9 @@ Sidebar
 		color: #333333;
 		background-color: #cccccc;
 		border-color: #cccccc;
+		text-transform: uppercase;
+		text-align: left;
+		padding-left: 3em;
 
 		&:hover {
 			background-color: @ltblue;
@@ -442,6 +417,15 @@ Sidebar
 
 .selfclear {
 	//clear: both;
+}
+
+.admonition .note {
+	border: 1px solid #ccc;
+	padding: 5px;
+
+	.admonition-title {
+		font-weight: bold;
+	}
 }
 
 .pagination-nav {

@@ -30,7 +30,7 @@
 
 {%- macro sidebar() %}
   {%- if builder != 'htmlhelp' %}
-  <div id="sidebar"{%- if pagename not in ['index', 'search'] %} class="contrast col-md-4"{%- endif %}>
+  <div id="sidebar"{%- if pagename not in ['index', 'search'] %} class="contrast col-md-4" {%- else %} class="col-md-4" {%- endif %}>
 
     <div>
          <form id="quick-search" action="search.html" method="get" style="width: 100%;">
@@ -46,6 +46,7 @@
           <button type="button" class="btn btn-default"><a href="/docs/">User Manual</a></button>
           <button type="button" class="btn btn-default"><a href="/technical/">Technical Manual</a></button>
           <button type="button" class="btn btn-default"><a href="/manpages/">Man Pages</a></button>
+          <button type="button" class="btn btn-default"><a href="/workshop/">Workshop</a></button>
       </div>
 
     {%- if display_toc %}
@@ -58,7 +59,7 @@
     {%- endif %}
       {%- block sidebarrel %}
         {%- if (prev or next) %}
-        <div class="section">
+        <div class="section continue_reading">
           <h3>Continue Reading</h3>
           <ul>
           {%- if prev %}
@@ -83,6 +84,10 @@
           <li><a href="{{ pathto('_sources/' + sourcename, true)|e }}">Show Source</a></li>
         {%- endif %}
         </ul>
+        </div>
+        <div class="section">
+          <h3>License</h3>
+          <p>This project is licensed under the <a href="https://github.com/boundlessgeo/GeoGit/blob/master/LICENSE.txt">BSD New License</a>, except for the GeoServer plugin which is available under the <a href="http://geoserver.org/display/GEOS/License">GPL 2.0 License</a>.</p>
         </div>
       {%- endif %}
       {%- if customsidebar %}
@@ -137,7 +142,7 @@
   </script>
   <script type="text/javascript" src="{{ pathto('_static/jquery.js', 1) }}"></script>
   <script type="text/javascript" src="{{ pathto('_static/bootstrap.js', 1) }}" ></script>
-    <script type="text/javascript" src="{{ pathto('_static/underscore.js', 1) }}"></script>
+  <script type="text/javascript" src="{{ pathto('_static/underscore.js', 1) }}"></script>
   <script type="text/javascript" src="{{ pathto('_static/doctools.js', 1) }}"></script>
   <script type="text/javascript" src="{{ pathto('_static/searchtools.js', 1) }}"></script>
   <script type="text/javascript" src="{{ pathto('searchindex.js', 1) }}"></script>
