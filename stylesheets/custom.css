@@ -6297,11 +6297,11 @@ h5 {
   background-color: #7eb5d3;
 }
 #docs a {
-  color: #000;
+  color: #266d87;
 }
 #docs .workflow_diagram {
-  height: 500px;
-  width: 428px;
+  height: 408px;
+  width: 350px;
   float: right;
 }
 @media (max-width: 992px) {
