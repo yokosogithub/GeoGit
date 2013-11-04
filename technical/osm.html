@@ -105,8 +105,9 @@
 <p>When a new node is added (whether by the user, who created it in something like JOSM, or by an unmap operation), new entities get a negative ID, as it seems customary in OSM before commiting them. Once submitted, they get a valid ID, and when later updating, the Id&#8217;s will not match, so GeoGit will not replace them, leaving both versions.</p>
 <p>This is, in fact, not a problem now, since the update operation just deletes and updates everything (see (1)), but once we get a more efficient update strategy, this problem will surface.</p>
 </div>
+</div>
 <div class="section" id="osm-paths">
-<h3>4. OSM paths<a class="headerlink" href="#osm-paths" title="Permalink to this headline">¶</a></h3>
+<h2>OSM Paths<a class="headerlink" href="#osm-paths" title="Permalink to this headline">¶</a></h2>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
 <p class="last">This is just an idea, not implemented yet. Is it a good idea??</p>
@@ -114,7 +115,6 @@
 <p>The default paths for OSM data are <tt class="docutils literal"><span class="pre">way</span></tt> and <tt class="docutils literal"><span class="pre">node</span></tt>. they should contain just OSM data imported using the corresponding GeoGit commands. To use those paths for different data and avoid problem with OSM commands, the default paths can be changed using the <tt class="docutils literal"><span class="pre">config</span></tt> command. Default paths are kept in the <tt class="docutils literal"><span class="pre">osm.nodepath</span></tt> and <tt class="docutils literal"><span class="pre">osm.waypath</span></tt> config parameters, which can be configured as shown in the example below.</p>
 <div class="highlight-python"><pre>$ geogit config osm.nodepath osmnode
 $ geogit config osm.waypath osmway</pre>
-</div>
 </div>
 </div>
 </div>
@@ -149,9 +149,9 @@ $ geogit config osm.waypath osmway</pre>
 <li><a class="reference internal" href="#updating">1. Updating</a></li>
 <li><a class="reference internal" href="#unmapping-of-ways">2. Unmapping of ways</a></li>
 <li><a class="reference internal" href="#updating-new-entities">3. Updating new entities</a></li>
-<li><a class="reference internal" href="#osm-paths">4. OSM paths</a></li>
 </ul>
 </li>
+<li><a class="reference internal" href="#osm-paths">OSM Paths</a></li>
 </ul>
 </li>
 </ul>
