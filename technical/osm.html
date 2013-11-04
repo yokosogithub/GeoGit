@@ -4,7 +4,7 @@
 <head>
   <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
   
-  <title>IDEAS FOR FUTURE DEVELOPMENT. ISSUES &mdash; GeoGit Technical Manual 0.6-SNAPSHOT documentation</title>
+  <title>OSM &mdash; GeoGit 0.6 Technical Manual</title>
   <link rel="stylesheet" href="_static/screen.css" type="text/css" media="screen, projection" />
   <link rel="stylesheet" href="_static/print.css" type="text/css" media="print" /> 
   <!--[if IE]>
@@ -15,18 +15,20 @@
   <script type="text/javascript">
     var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    './',
-        VERSION:     '0.6-SNAPSHOT',
+        VERSION:     '0.6',
         COLLAPSE_MODINDEX: false,
         FILE_SUFFIX: '.html'
     };
   </script>
   <script type="text/javascript" src="_static/jquery.js"></script>
   <script type="text/javascript" src="_static/bootstrap.js" ></script>
-    <script type="text/javascript" src="_static/underscore.js"></script>
+  <script type="text/javascript" src="_static/underscore.js"></script>
   <script type="text/javascript" src="_static/doctools.js"></script>
   <script type="text/javascript" src="_static/searchtools.js"></script>
   <script type="text/javascript" src="searchindex.js"></script>
-      <link rel="top" title="GeoGit Technical Manual 0.6-SNAPSHOT documentation" href="index.html" />
+  <link rel="shortcut icon" href="_static/favicon.ico"/>
+      <link rel="top" title="GeoGit 0.6 Technical Manual" href="index.html" />
+      <link rel="prev" title="Sparse clone" href="sparse-clone.html" />
 </head>
 <body class="osm">
     <div id="blacktop"></div>
@@ -43,7 +45,7 @@
           </div>
           <div class="navbar-collapse collapse navbar-right">
             <ul class="nav navbar-nav">
-              <li><a href="http://geogit.org/docs/start/tutorial.html">Get Started</a></li>
+              <li><a href="http://geogit.org/docs/quickstart.html">Quick Start</a></li>
               <li><a href="http://geogit.org/docs/index.html">Documentation</a></li>
               <li><a href="https://github.com/boundlessgeo/GeoGit">On Github</a></li>
             </ul>
@@ -71,36 +73,43 @@
           <div class="col-md-8">
 <ul id="breadcrumbs">
   
-  <li><a href="index.html">GeoGit Technical Manual 0.6-SNAPSHOT documentation</a> &raquo;</li>
-  <li>IDEAS FOR FUTURE DEVELOPMENT. ISSUES</li>
+  <li><a href="index.html">GeoGit 0.6 Technical Manual</a> &raquo;</li>
+  <li>OSM</li>
 </ul>
 <ul id="relatedlinks" class="selfclear">
   <li class="first">
     <a href="genindex.html" title="General Index"
        accesskey="I">index</a></li>
+  <li>
+    <a href="sparse-clone.html" title="Sparse clone"
+       accesskey="P">previous</a>|</li>
 </ul>
         
-  <div class="section" id="ideas-for-future-development-issues">
-<h1>IDEAS FOR FUTURE DEVELOPMENT. ISSUES<a class="headerlink" href="#ideas-for-future-development-issues" title="Permalink to this headline">¶</a></h1>
+  <div class="section" id="osm">
+<h1>OSM<a class="headerlink" href="#osm" title="Permalink to this headline">¶</a></h1>
 <div class="section" id="problems-to-solve-things-to-consider-about-osm-commands-in-geogit">
-<h2>Problems to solve / Things to consider  about OSM commands in GeoGit<a class="headerlink" href="#problems-to-solve-things-to-consider-about-osm-commands-in-geogit" title="Permalink to this headline">¶</a></h2>
-<ol class="arabic simple">
-<li>Updating. The current update command just re-downloads with the last filter, but is not a smart download, and downloads everything. The overpass API allows to fetch only features newer than a given data, but that cannot be used if there are deletions, since it does not report deleted elements.</li>
-</ol>
+<h2>Problems to solve / Things to consider  about OSM commands in GeoGit:<a class="headerlink" href="#problems-to-solve-things-to-consider-about-osm-commands-in-geogit" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="updating">
+<h3>1. Updating<a class="headerlink" href="#updating" title="Permalink to this headline">¶</a></h3>
+<p>The current update command just re-downloads with the last filter, but is not a smart download, and downloads everything. The overpass API allows to fetch only features newer than a given data, but that cannot be used if there are deletions, since it does not report deleted elements.</p>
 <p>The OSM API allows to download history, including deletions, but does not support filters.</p>
 <p>Ideally, a mix of both functionalities would be needed for geogit to work optimally</p>
-<ol class="arabic simple" start="2">
-<li>Unmapping of ways. When a way is unmapped, its geometry is used to re-create the list of nodes. The best way would be to take the coords of the nodes and check if a node exist in each coordinate, and if so, take the node id, otherwise, add a new node. This is, however, not possible now, since it would not be efficient. GeoGit has no spatial indexing, and searching a feature by its coordinates is not an available operation.</li>
-</ol>
+</div>
+<div class="section" id="unmapping-of-ways">
+<h3>2. Unmapping of ways<a class="headerlink" href="#unmapping-of-ways" title="Permalink to this headline">¶</a></h3>
+<p>When a way is unmapped, its geometry is used to re-create the list of nodes. The best way would be to take the coords of the nodes and check if a node exist in each coordinate, and if so, take the node id, otherwise, add a new node. This is, however, not possible now, since it would not be efficient. GeoGit has no spatial indexing, and searching a feature by its coordinates is not an available operation.</p>
 <p>The current implementation just retrieves the nodes that belonged to the way in the last version, and check the current geometry against them. This is fine if all new nodes are actually new, but if the way uses a node that it did not use before but that exists already, that node will not be used (since there is no way of retrieving the id of the node in that coord), and a new one in that same position is added.</p>
-<p>3)Updating new entities. When a new node is added (whether by the user, who created it in something like JOSM, or by an unmap operation), new entities get a negative ID, as it seems customary in OSM before commiting them. Once submitted, they get a valid ID, and when later updating, the Id&#8217;s will not match, so GeoGit will not replace them, leaving both versions.</p>
+</div>
+<div class="section" id="updating-new-entities">
+<h3>3. Updating new entities<a class="headerlink" href="#updating-new-entities" title="Permalink to this headline">¶</a></h3>
+<p>When a new node is added (whether by the user, who created it in something like JOSM, or by an unmap operation), new entities get a negative ID, as it seems customary in OSM before commiting them. Once submitted, they get a valid ID, and when later updating, the Id&#8217;s will not match, so GeoGit will not replace them, leaving both versions.</p>
 <p>This is, in fact, not a problem now, since the update operation just deletes and updates everything (see (1)), but once we get a more efficient update strategy, this problem will surface.</p>
 </div>
 <div class="section" id="osm-paths">
-<h2>OSM paths<a class="headerlink" href="#osm-paths" title="Permalink to this headline">¶</a></h2>
+<h3>4. OSM paths<a class="headerlink" href="#osm-paths" title="Permalink to this headline">¶</a></h3>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
-<p class="last">[This is just an idea, not implemented yet. Is it a good idea??]</p>
+<p class="last">This is just an idea, not implemented yet. Is it a good idea??</p>
 </div>
 <p>The default paths for OSM data are <tt class="docutils literal"><span class="pre">way</span></tt> and <tt class="docutils literal"><span class="pre">node</span></tt>. they should contain just OSM data imported using the corresponding GeoGit commands. To use those paths for different data and avoid problem with OSM commands, the default paths can be changed using the <tt class="docutils literal"><span class="pre">config</span></tt> command. Default paths are kept in the <tt class="docutils literal"><span class="pre">osm.nodepath</span></tt> and <tt class="docutils literal"><span class="pre">osm.waypath</span></tt> config parameters, which can be configured as shown in the example below.</p>
 <div class="highlight-python"><pre>$ geogit config osm.nodepath osmnode
@@ -108,8 +117,12 @@ $ geogit config osm.waypath osmway</pre>
 </div>
 </div>
 </div>
+</div>
 
 
+      <div class="selfclear pagination-nav">
+          <div class="leftwise"><strong>Previous</strong>: <a href="sparse-clone.html" title="previous chapter">Sparse clone</a></div>
+      </div>
       </div><!-- /#content> -->
   <div id="sidebar" class="contrast col-md-4">
 
@@ -127,23 +140,39 @@ $ geogit config osm.waypath osmway</pre>
           <button type="button" class="btn btn-default"><a href="/docs/">User Manual</a></button>
           <button type="button" class="btn btn-default"><a href="/technical/">Technical Manual</a></button>
           <button type="button" class="btn btn-default"><a href="/manpages/">Man Pages</a></button>
+          <button type="button" class="btn btn-default"><a href="/workshop/">Workshop</a></button>
       </div>
       <h3 class="pngfix">Table Of Contents</h3>
         <ul>
-<li><a class="reference internal" href="#">IDEAS FOR FUTURE DEVELOPMENT. ISSUES</a><ul>
-<li><a class="reference internal" href="#problems-to-solve-things-to-consider-about-osm-commands-in-geogit">Problems to solve / Things to consider  about OSM commands in GeoGit</a></li>
-<li><a class="reference internal" href="#osm-paths">OSM paths</a></li>
+<li><a class="reference internal" href="#">OSM</a><ul>
+<li><a class="reference internal" href="#problems-to-solve-things-to-consider-about-osm-commands-in-geogit">Problems to solve / Things to consider  about OSM commands in GeoGit:</a><ul>
+<li><a class="reference internal" href="#updating">1. Updating</a></li>
+<li><a class="reference internal" href="#unmapping-of-ways">2. Unmapping of ways</a></li>
+<li><a class="reference internal" href="#updating-new-entities">3. Updating new entities</a></li>
+<li><a class="reference internal" href="#osm-paths">4. OSM paths</a></li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>
 
         <div class="section-footer"></div>
       </div>
+        <div class="section continue_reading">
+          <h3>Continue Reading</h3>
+          <ul>
+            <li>Previous: <a href="sparse-clone.html" title="previous chapter">Sparse clone</a></li>
+          </ul>
+        </div>
         <div class="section">
         <h3>This Page</h3>
         <ul class="this-page-menu">
           <li><a href="_sources/osm.txt">Show Source</a></li>
         </ul>
+        </div>
+        <div class="section">
+          <h3>License</h3>
+          <p>This project is licensed under the <a href="https://github.com/boundlessgeo/GeoGit/blob/master/LICENSE.txt">BSD New License</a>, except for the GeoServer plugin which is available under the <a href="http://geoserver.org/display/GEOS/License">GPL 2.0 License</a>.</p>
         </div>
 
   </div><!-- /#sidebar -->

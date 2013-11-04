@@ -4,7 +4,7 @@
 <head>
   <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
   
-  <title>Binary encoding of GeoGit objects &mdash; GeoGit Technical Manual 0.6-SNAPSHOT documentation</title>
+  <title>Binary encoding of GeoGit objects &mdash; GeoGit 0.6 Technical Manual</title>
   <link rel="stylesheet" href="_static/screen.css" type="text/css" media="screen, projection" />
   <link rel="stylesheet" href="_static/print.css" type="text/css" media="print" /> 
   <!--[if IE]>
@@ -15,18 +15,19 @@
   <script type="text/javascript">
     var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    './',
-        VERSION:     '0.6-SNAPSHOT',
+        VERSION:     '0.6',
         COLLAPSE_MODINDEX: false,
         FILE_SUFFIX: '.html'
     };
   </script>
   <script type="text/javascript" src="_static/jquery.js"></script>
   <script type="text/javascript" src="_static/bootstrap.js" ></script>
-    <script type="text/javascript" src="_static/underscore.js"></script>
+  <script type="text/javascript" src="_static/underscore.js"></script>
   <script type="text/javascript" src="_static/doctools.js"></script>
   <script type="text/javascript" src="_static/searchtools.js"></script>
   <script type="text/javascript" src="searchindex.js"></script>
-      <link rel="top" title="GeoGit Technical Manual 0.6-SNAPSHOT documentation" href="index.html" />
+  <link rel="shortcut icon" href="_static/favicon.ico"/>
+      <link rel="top" title="GeoGit 0.6 Technical Manual" href="index.html" />
       <link rel="next" title="GeoGit Network Synchronization" href="geogit-network-sync.html" />
       <link rel="prev" title="GeoGit Technical Manual" href="index.html" />
 </head>
@@ -45,7 +46,7 @@
           </div>
           <div class="navbar-collapse collapse navbar-right">
             <ul class="nav navbar-nav">
-              <li><a href="http://geogit.org/docs/start/tutorial.html">Get Started</a></li>
+              <li><a href="http://geogit.org/docs/quickstart.html">Quick Start</a></li>
               <li><a href="http://geogit.org/docs/index.html">Documentation</a></li>
               <li><a href="https://github.com/boundlessgeo/GeoGit">On Github</a></li>
             </ul>
@@ -73,7 +74,7 @@
           <div class="col-md-8">
 <ul id="breadcrumbs">
   
-  <li><a href="index.html">GeoGit Technical Manual 0.6-SNAPSHOT documentation</a> &raquo;</li>
+  <li><a href="index.html">GeoGit 0.6 Technical Manual</a> &raquo;</li>
   <li>Binary encoding of GeoGit objects</li>
 </ul>
 <ul id="relatedlinks" class="selfclear">
@@ -102,25 +103,26 @@ The parts can be:</p>
 <ul>
 <li><p class="first">Another structure, referenced by name.</p>
 </li>
-<li><p class="first">One of these specially defined structures
-.. code-block:</p>
-<div class="highlight-python"><pre>NUL       := 0x00 (ASCII NUL character)
+<li><p class="first">One of these specially defined structures</p>
+<div class="highlight-none"><div class="highlight"><pre>NUL       := 0x00 (ASCII NUL character)
 SP        := 0x20 (ASCII space character)
 BR        := 0x0a (ASCII newline character)
 &lt;rev&gt;     := &lt;byte&gt;* (exactly 20 bytes)
-&lt;utf8&gt;    := &lt;int16&gt; &lt;byte&gt;* (two-byte count followed by the number of
-                              bytes indicated by the count. these should
-                              then be decoded as modified UTF-8, as seen
-                              in the readUTF and writeUTF methods in the
+&lt;utf8&gt;    := &lt;int16&gt; &lt;byte&gt;* (two-byte count followed by the number
+                              of bytes indicated by the count.
+                              These should then be decoded as
+                              modified UTF-8, as seen in the
+                              readUTF and writeUTF methods in the
                               java.io.DataInputStream and
-                              java.io.DataOutputStream classes in the Java
-                              Standard Library.)
+                              java.io.DataOutputStream classes
+                              in the Java Standard Library.)
 &lt;byte&gt;    := (8 bit byte)
-&lt;int16&gt;   := (16 bit signed integer, "short" in Java)
-&lt;int32&gt;   := (32 bit signed integer, "int" in Java)
-&lt;int64&gt;   := (64 bit signed integer, "long" in Java)
-&lt;float32&gt; := (32 bit IEEE floating point value, "float" in Java)
-&lt;float64&gt; := (64 bit IEEE floating point value, "double" in Java)</pre>
+&lt;int16&gt;   := (16 bit signed integer, &quot;short&quot; in Java)
+&lt;int32&gt;   := (32 bit signed integer, &quot;int&quot; in Java)
+&lt;int64&gt;   := (64 bit signed integer, &quot;long&quot; in Java)
+&lt;float32&gt; := (32 bit IEEE floating point value, &quot;float&quot; in Java)
+&lt;float64&gt; := (64 bit IEEE floating point value, &quot;double&quot; in Java)
+</pre></div>
 </div>
 </li>
 <li><p class="first">A literal byte sequence.  These are generally used as markers and are represented as text in double quotes (<cite>&#8220;</cite>).
@@ -141,6 +143,20 @@ These will be enclosed in parentheses (<cite>()</cite>).</p>
 </div>
 <div class="section" id="commit">
 <h2>Commit<a class="headerlink" href="#commit" title="Permalink to this headline">¶</a></h2>
+<div class="highlight-none"><div class="highlight"><pre>commit := commitHeader treeRef parent* authorLine committerLine message
+commitHeader := &quot;commit&quot; NUL
+treeRef := 0x01 &lt;rev&gt;
+parent  := 0x02 &lt;rev&gt;
+authorLine := 0x03 person
+committerLine := 0x04 person
+person := name email timestamp tzOffset
+name := &lt;utf8&gt;
+email := &lt;utf8&gt;
+timestamp := &lt;int64&gt;
+tzOffset := &lt;int32&gt;
+message := &lt;utf8&gt;
+</pre></div>
+</div>
 </div>
 <div class="section" id="tree">
 <h2>Tree<a class="headerlink" href="#tree" title="Permalink to this headline">¶</a></h2>
@@ -151,15 +167,114 @@ features, trees, and buckets. Because of the way GeoGit builds trees,
 buckets must be zero when either of the other two fields is nonzero.</p>
 <p class="last">We should probably document how exactly GeoGit builds trees :)</p>
 </div>
+<div class="highlight-none"><div class="highlight"><pre>tree := treeHeader size treeCount features trees buckets
+size := &lt;int64&gt; (the total [recursive] count of features in this tree)
+treeCount := &lt;int32&gt; (in a bucket tree: the number of trees that are
+                      direct children of the bucket tree. In a node
+                      tree: 0)
+features := count node*
+trees := count node*
+buckets := count bucket*
+count := &lt;int32&gt;
+node := name objectId metadataId envelope nodeType
+name := &lt;utf8&gt;
+objectId := &lt;byte&gt;[20]
+metadataId := &lt;byte&gt;[20]
+envelope := &lt;float64&gt;[4] (minx, maxx, miny, maxy.  Note that this may be
+                         (0, -1, 0, -1) as is traditional for indicating
+                         NULL envelopes. Of course empty (zero-area)
+                         envelopes are valid as well.)
+nodeType := &lt;byte&gt; (0x01: Tree, 0x02: Feature)
+bucket := index objectId envelope
+index := &lt;int32&gt;
+</pre></div>
+</div>
 </div>
 <div class="section" id="feature">
 <h2>Feature<a class="headerlink" href="#feature" title="Permalink to this headline">¶</a></h2>
+<div class="highlight-none"><div class="highlight"><pre>feature := featureHeader count fields
+featureHeader := &quot;feature&quot; NUL
+count := &lt;int32&gt;
+fields := field*
+field = nullField |
+        booleanField | byteField | shortField | intField | longField | floatField | doubleField | stringField |
+        booleanArray | byteArray | shortArray | intArray | longArray | floatArray | doubleArray | stringArray |
+        geometryField | uuidField | bigIntField | bigDecimalField
+nullField               := 0x00
+booleanField            := 0x01 &lt;byte&gt;
+byteField               := 0x02 &lt;byte&gt;
+shortField              := 0x03 &lt;int16&gt;
+intField                := 0x04 &lt;int32&gt;
+longField               := 0x05 &lt;int64&gt;
+floatField              := 0x06 &lt;float32&gt;
+doubleField             := 0x07 &lt;float64&gt;
+stringField             := 0x08 &lt;utf8&gt;
+booleanArray            := 0x09 &lt;int32&gt; &lt;byte&gt;* (note that the int is the number of boolean values and booleans are packed to save space. so the number of bytes is actually the count of bits divided by 8)
+byteArray               := 0x0A &lt;int32&gt; &lt;byte&gt;*
+shortArray              := 0x0B &lt;int32&gt; &lt;int16&gt;*
+intArray                := 0x0C &lt;int32&gt; &lt;int32&gt;*
+longArray               := 0x0D &lt;int32&gt; &lt;int64&gt;*
+floatArray              := 0x0E &lt;int32&gt; &lt;float32&gt;*
+doubleArray             := 0x0F &lt;int32&gt; &lt;float64&gt;*
+stringArray             := 0x10 &lt;utf8&gt;
+pointField              := 0x11 &lt;int32&gt; &lt;byte&gt;* (bytes represent the geometry encoded as Well-Known Binary)
+lineStringField         := 0x12 &lt;int32&gt; &lt;byte&gt;* (same)
+polygonField            := 0x13 &lt;int32&gt; &lt;byte&gt;* (same)
+multiPointField         := 0x14 &lt;int32&gt; &lt;byte&gt;* (same)
+multiLineStringField    := 0x15 &lt;int32&gt; &lt;byte&gt;* (same)
+multiPolygonField       := 0x16 &lt;int32&gt; &lt;byte&gt;* (same)
+geometryCollectionField := 0x17 &lt;int32&gt; &lt;byte&gt;* (same)
+geometryField           := 0x18 &lt;int32&gt; &lt;byte&gt;* (same)
+uuidField               := 0x19 &lt;int64&gt; &lt;int64&gt;
+bigIntField             := 0x1A &lt;int32&gt; &lt;byte&gt;*
+bigDecimalField         := 0x1B &lt;int32&gt; &lt;int32&gt; &lt;byte&gt;* (scale, length of byte array, byte array)
+datetimeField           := 0x1C &lt;int64&gt; (milliseconds since unix epoch)
+dateField               := 0x1D &lt;int64&gt; (datetime with hours, minutes, seconds, milliseconds all set to 0)
+timeField               := 0x1E &lt;int64&gt; (datetime with years, months, days all set to zero (ie, a time on Jan 1 1970))
+timestampField          := 0x1F &lt;int64&gt; &lt;int32&gt; (datetime followed by a specifier of nanoseconds within the millisecond)
+</pre></div>
+</div>
 </div>
 <div class="section" id="featuretype">
 <h2>FeatureType<a class="headerlink" href="#featuretype" title="Permalink to this headline">¶</a></h2>
+<div class="highlight-none"><div class="highlight"><pre>featureType := featureTypeHeader name properties
+featureTypeHeader := &quot;featuretype&quot; NUL
+name := namespace localPart
+namespace := &lt;utf8&gt;
+localPart := &lt;utf8&gt;
+properties := &lt;int32&gt; property*
+property := name nillability minOccurs maxOccurs type
+nillability := &lt;byte&gt; (0: non-nillable, 1: nillable. other values unused.)
+minOccurs := &lt;int32&gt;
+maxOccurs := &lt;int32&gt;
+type := spatialType | aspatialType
+aspatialType := name typeTag (aspatial types are distinguished from
+                              spatial ones by the value of the type tag)
+typeTag := &lt;byte&gt; (as used in features)
+spatialType := name typeTag crsTextInterpretation crsText
+crsTextInterpretation := &lt;byte&gt; (0: crsText is WKT CRS definition,
+                                 1: crsText references a well-known CRS by
+                                 identifier. If it uses URI notation
+                                 (&quot;urn:...&quot;) then the axes should be
+                                 forced to X=Easting, Y=Northing order.)
+crsText := &lt;utf8&gt; (as determined by crsTextInterpretation)
+</pre></div>
+</div>
 </div>
 <div class="section" id="tag">
 <h2>Tag<a class="headerlink" href="#tag" title="Permalink to this headline">¶</a></h2>
+<div class="highlight-none"><div class="highlight"><pre>tag := tagHeader objectId tagName message tagger
+tagHeader := &quot;tag&quot; NUL
+objectId := &lt;byte&gt;[20]
+tagName := &lt;utf8&gt;
+message := &lt;utf8&gt;
+tagger := name email timestamp tzOffset
+name := &lt;utf8&gt;
+email := &lt;utf8&gt;
+timestamp := &lt;int64&gt;
+tzOffset := &lt;int32&gt;
+</pre></div>
+</div>
 </div>
 </div>
 
@@ -185,6 +300,7 @@ buckets must be zero when either of the other two fields is nonzero.</p>
           <button type="button" class="btn btn-default"><a href="/docs/">User Manual</a></button>
           <button type="button" class="btn btn-default"><a href="/technical/">Technical Manual</a></button>
           <button type="button" class="btn btn-default"><a href="/manpages/">Man Pages</a></button>
+          <button type="button" class="btn btn-default"><a href="/workshop/">Workshop</a></button>
       </div>
       <h3 class="pngfix">Table Of Contents</h3>
         <ul>
@@ -201,7 +317,7 @@ buckets must be zero when either of the other two fields is nonzero.</p>
 
         <div class="section-footer"></div>
       </div>
-        <div class="section">
+        <div class="section continue_reading">
           <h3>Continue Reading</h3>
           <ul>
             <li>Previous: <a href="index.html" title="previous chapter">GeoGit Technical Manual</a></li>
@@ -213,6 +329,10 @@ buckets must be zero when either of the other two fields is nonzero.</p>
         <ul class="this-page-menu">
           <li><a href="_sources/geogit-binary.txt">Show Source</a></li>
         </ul>
+        </div>
+        <div class="section">
+          <h3>License</h3>
+          <p>This project is licensed under the <a href="https://github.com/boundlessgeo/GeoGit/blob/master/LICENSE.txt">BSD New License</a>, except for the GeoServer plugin which is available under the <a href="http://geoserver.org/display/GEOS/License">GPL 2.0 License</a>.</p>
         </div>
 
   </div><!-- /#sidebar -->

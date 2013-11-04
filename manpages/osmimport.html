@@ -4,7 +4,7 @@
 <head>
   <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
   
-  <title>geogit-osm-import documentation &mdash; GeoGit 0.6 GeoGit man pages</title>
+  <title>geogit-osm-import documentation &mdash; GeoGit 0.6 Man Pages</title>
   <link rel="stylesheet" href="_static/screen.css" type="text/css" media="screen, projection" />
   <link rel="stylesheet" href="_static/print.css" type="text/css" media="print" /> 
   <!--[if IE]>
@@ -22,11 +22,11 @@
   </script>
   <script type="text/javascript" src="_static/jquery.js"></script>
   <script type="text/javascript" src="_static/bootstrap.js" ></script>
-    <script type="text/javascript" src="_static/underscore.js"></script>
+  <script type="text/javascript" src="_static/underscore.js"></script>
   <script type="text/javascript" src="_static/doctools.js"></script>
   <script type="text/javascript" src="_static/searchtools.js"></script>
   <script type="text/javascript" src="searchindex.js"></script>
-      <link rel="top" title="GeoGit 0.6 GeoGit man pages" href="index.html" />
+      <link rel="top" title="GeoGit 0.6 Man Pages" href="index.html" />
 </head>
 <body class="osmimport">
     <div id="blacktop"></div>
@@ -43,7 +43,7 @@
           </div>
           <div class="navbar-collapse collapse navbar-right">
             <ul class="nav navbar-nav">
-              <li><a href="http://geogit.org/docs/start/tutorial.html">Get Started</a></li>
+              <li><a href="http://geogit.org/docs/quickstart.html">Quick Start</a></li>
               <li><a href="http://geogit.org/docs/index.html">Documentation</a></li>
               <li><a href="https://github.com/boundlessgeo/GeoGit">On Github</a></li>
             </ul>
@@ -71,21 +71,24 @@
           <div class="col-md-8">
 <ul id="breadcrumbs">
   
-  <li><a href="index.html">GeoGit 0.6 GeoGit man pages</a> &raquo;</li>
+  <li><a href="index.html">GeoGit 0.6 Man Pages</a> &raquo;</li>
   <li>geogit-osm-import documentation</li>
 </ul>
 <ul id="relatedlinks" class="selfclear">
+  <li class="first">
+    <a href="genindex.html" title="General Index"
+       accesskey="I">index</a></li>
 </ul>
         
   <div class="section" id="geogit-osm-import-documentation">
-<span id="geogit-import"></span><h1>geogit-osm-import documentation<a class="headerlink" href="#geogit-osm-import-documentation" title="Permalink to this headline">¶</a></h1>
+<span id="geogit-osm-import"></span><h1>geogit-osm-import documentation<a class="headerlink" href="#geogit-osm-import-documentation" title="Permalink to this headline">¶</a></h1>
 <div class="section" id="synopsis">
 <h2>SYNOPSIS<a class="headerlink" href="#synopsis" title="Permalink to this headline">¶</a></h2>
 <p>geogit osm import &lt;filename&gt; [&#8211;add] &lt;repository&gt; [&lt;directory&gt;] [&#8211;filter &lt;file&gt;] [&#8211;depth &lt;depth&gt;]</p>
 </div>
 <div class="section" id="description">
 <h2>DESCRIPTION<a class="headerlink" href="#description" title="Permalink to this headline">¶</a></h2>
-<p>Imports OSM data from a file into the working tree of the repository. Optionally, a data mapping can be performed. See <em class="xref std std-ref">geogit-map</em> for more information about how to define a mapping.</p>
+<p>Imports OSM data from a file into the working tree of the repository. Optionally, a data mapping can be performed. See <a class="reference internal" href="osmmap.html#geogit-osm-map"><em>geogit-osm-map documentation</em></a> for more information about how to define a mapping.</p>
 <p>Data in the specified file is imported into GeoGit and put into two trees: <tt class="docutils literal"><span class="pre">way</span></tt> and <tt class="docutils literal"><span class="pre">node</span></tt>, with default feature types in both cases.</p>
 <p>if a mapping is used and the canonical representations are also added to the repository (that is, if the <tt class="docutils literal"><span class="pre">--no-raw</span></tt> switch is not used) the working tree and index have to be clean, and after the import and mapping, a commit will be made . The comit message is automatically generated. A custom commit message cna be defined using the  <tt class="docutils literal"><span class="pre">--message</span></tt> option.</p>
 </div>
@@ -114,9 +117,9 @@
 </div>
 <div class="section" id="see-also">
 <h2>SEE ALSO<a class="headerlink" href="#see-also" title="Permalink to this headline">¶</a></h2>
-<p><a class="reference internal" href="osmdownload.html#geogit-osm-download"><em>geogit-osm-download documentation</em></a>
-<a class="reference internal" href="osmmap.html#geogit-osm-map"><em>geogit-osm-map documentation</em></a>
-<em class="xref std std-ref">geogit-osm-unmap</em></p>
+<p><a class="reference internal" href="osmdownload.html#geogit-osm-download"><em>geogit-osm-download documentation</em></a></p>
+<p><a class="reference internal" href="osmmap.html#geogit-osm-map"><em>geogit-osm-map documentation</em></a></p>
+<p><a class="reference internal" href="osmunmap.html#geogit-osm-unmap"><em>geogit-osmunmap documentation</em></a></p>
 </div>
 <div class="section" id="bugs">
 <h2>BUGS<a class="headerlink" href="#bugs" title="Permalink to this headline">¶</a></h2>
@@ -142,6 +145,7 @@
           <button type="button" class="btn btn-default"><a href="/docs/">User Manual</a></button>
           <button type="button" class="btn btn-default"><a href="/technical/">Technical Manual</a></button>
           <button type="button" class="btn btn-default"><a href="/manpages/">Man Pages</a></button>
+          <button type="button" class="btn btn-default"><a href="/workshop/">Workshop</a></button>
       </div>
       <h3 class="pngfix">Table Of Contents</h3>
         <ul>
@@ -162,6 +166,10 @@
         <ul class="this-page-menu">
           <li><a href="_sources/osmimport.txt">Show Source</a></li>
         </ul>
+        </div>
+        <div class="section">
+          <h3>License</h3>
+          <p>This project is licensed under the <a href="https://github.com/boundlessgeo/GeoGit/blob/master/LICENSE.txt">BSD New License</a>, except for the GeoServer plugin which is available under the <a href="http://geoserver.org/display/GEOS/License">GPL 2.0 License</a>.</p>
         </div>
 
   </div><!-- /#sidebar -->

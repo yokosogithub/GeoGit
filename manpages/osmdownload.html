@@ -4,7 +4,7 @@
 <head>
   <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
   
-  <title>geogit-osm-download documentation &mdash; GeoGit 0.6 GeoGit man pages</title>
+  <title>geogit-osm-download documentation &mdash; GeoGit 0.6 Man Pages</title>
   <link rel="stylesheet" href="_static/screen.css" type="text/css" media="screen, projection" />
   <link rel="stylesheet" href="_static/print.css" type="text/css" media="print" /> 
   <!--[if IE]>
@@ -22,11 +22,11 @@
   </script>
   <script type="text/javascript" src="_static/jquery.js"></script>
   <script type="text/javascript" src="_static/bootstrap.js" ></script>
-    <script type="text/javascript" src="_static/underscore.js"></script>
+  <script type="text/javascript" src="_static/underscore.js"></script>
   <script type="text/javascript" src="_static/doctools.js"></script>
   <script type="text/javascript" src="_static/searchtools.js"></script>
   <script type="text/javascript" src="searchindex.js"></script>
-      <link rel="top" title="GeoGit 0.6 GeoGit man pages" href="index.html" />
+      <link rel="top" title="GeoGit 0.6 Man Pages" href="index.html" />
 </head>
 <body class="osmdownload">
     <div id="blacktop"></div>
@@ -43,7 +43,7 @@
           </div>
           <div class="navbar-collapse collapse navbar-right">
             <ul class="nav navbar-nav">
-              <li><a href="http://geogit.org/docs/start/tutorial.html">Get Started</a></li>
+              <li><a href="http://geogit.org/docs/quickstart.html">Quick Start</a></li>
               <li><a href="http://geogit.org/docs/index.html">Documentation</a></li>
               <li><a href="https://github.com/boundlessgeo/GeoGit">On Github</a></li>
             </ul>
@@ -71,10 +71,13 @@
           <div class="col-md-8">
 <ul id="breadcrumbs">
   
-  <li><a href="index.html">GeoGit 0.6 GeoGit man pages</a> &raquo;</li>
+  <li><a href="index.html">GeoGit 0.6 Man Pages</a> &raquo;</li>
   <li>geogit-osm-download documentation</li>
 </ul>
 <ul id="relatedlinks" class="selfclear">
+  <li class="first">
+    <a href="genindex.html" title="General Index"
+       accesskey="I">index</a></li>
 </ul>
         
   <div class="section" id="geogit-osm-download-documentation">
@@ -85,7 +88,7 @@
 </div>
 <div class="section" id="description">
 <h2>DESCRIPTION<a class="headerlink" href="#description" title="Permalink to this headline">¶</a></h2>
-<p>Downloads data from an OSM services supporting the OSM Overpass API. The data is filtered according to a filter that uses the syntax of the Overpass <a href="#id1"><span class="problematic" id="id2">`Query Language&lt;http://wiki.openstreetmap.org/wiki/Overpass_API/Language_Guide&gt;`_</span></a>. As an alternative, a simple bounding box filter can be used.</p>
+<p>Downloads data from an OSM services supporting the OSM Overpass API. The data is filtered according to a filter that uses the syntax of the <a class="reference external" href="http://wiki.openstreetmap.org/wiki/Overpass_API/Language_Guide">Overpass Query Language</a>. As an alternative, a simple bounding box filter can be used.</p>
 <p>The download operation needs a clean working tree and index. Once the data is downloaded and added to the repository, a new commit is made, which represents the state of the repository with the new downloaded OSM data.</p>
 <p>If a download operation has been performed before in the repository, the <tt class="docutils literal"><span class="pre">--update</span></tt> option can be used, which fetches new data from the OSM service using the same filter that was used in the last download and merges or rebases the current branch with it.</p>
 </div>
@@ -125,9 +128,9 @@
 </div>
 <div class="section" id="see-also">
 <h2>SEE ALSO<a class="headerlink" href="#see-also" title="Permalink to this headline">¶</a></h2>
-<p><a class="reference internal" href="rebase.html#geogit-rebase"><em>geogit-rebase documentation</em></a>
-<a class="reference internal" href="merge.html#geogit-merge"><em>geogit-merge documentation</em></a>
-<em class="xref std std-ref">geogit-map</em></p>
+<p><a class="reference internal" href="rebase.html#geogit-rebase"><em>geogit-rebase documentation</em></a></p>
+<p><a class="reference internal" href="merge.html#geogit-merge"><em>geogit-merge documentation</em></a></p>
+<p><a class="reference internal" href="osmmap.html#geogit-osm-map"><em>geogit-osm-map documentation</em></a></p>
 </div>
 <div class="section" id="bugs">
 <h2>BUGS<a class="headerlink" href="#bugs" title="Permalink to this headline">¶</a></h2>
@@ -153,6 +156,7 @@
           <button type="button" class="btn btn-default"><a href="/docs/">User Manual</a></button>
           <button type="button" class="btn btn-default"><a href="/technical/">Technical Manual</a></button>
           <button type="button" class="btn btn-default"><a href="/manpages/">Man Pages</a></button>
+          <button type="button" class="btn btn-default"><a href="/workshop/">Workshop</a></button>
       </div>
       <h3 class="pngfix">Table Of Contents</h3>
         <ul>
@@ -173,6 +177,10 @@
         <ul class="this-page-menu">
           <li><a href="_sources/osmdownload.txt">Show Source</a></li>
         </ul>
+        </div>
+        <div class="section">
+          <h3>License</h3>
+          <p>This project is licensed under the <a href="https://github.com/boundlessgeo/GeoGit/blob/master/LICENSE.txt">BSD New License</a>, except for the GeoServer plugin which is available under the <a href="http://geoserver.org/display/GEOS/License">GPL 2.0 License</a>.</p>
         </div>
 
   </div><!-- /#sidebar -->
