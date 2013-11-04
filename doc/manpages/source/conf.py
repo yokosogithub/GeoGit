@@ -79,7 +79,7 @@ extensions = ['sphinx.ext.todo']
 
 # Add any paths that contain custom themes here, relative to this directory.
 html_theme_path = ['../../themes/']
-html_theme = 'geogit'
+html_theme = 'geogit_docs'
 
 # The suffix of source filenames.
 source_suffix = '.rst'
