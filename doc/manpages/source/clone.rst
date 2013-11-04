@@ -2,7 +2,7 @@
 .. _geogit-clone:
 
 geogit-clone documentation
-#########################
+###########################
 
 
 
@@ -35,7 +35,9 @@ SEE ALSO
 ********
 
 :ref:`geogit-fetch`
+
 :ref:`geogit-pull`
+
 :ref:`geogit-push`
 
 BUGS

@@ -2,7 +2,7 @@
 .. _geogit-sl-list:
 
 geogit-sl-list documentation
-#########################
+#############################
 
 
 

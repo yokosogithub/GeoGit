@@ -2,7 +2,7 @@
 .. _geogit-sqlserver-export:
 
 geogit-sqlserver-export documentation
-###############################
+######################################
 
 
 

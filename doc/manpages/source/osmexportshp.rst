@@ -1,5 +1,5 @@
 
-.. _geogit-osmexportshp:
+.. _geogit-osm-export-shp:
 
 geogit-osm-export-shp documentation
 ####################################
@@ -26,8 +26,9 @@ OPTIONS
 SEE ALSO
 ********
 
-:ref:`geogit-osmexportpg`
-:ref:`geogit-osmexportsl`
+:ref:`geogit-osm-export-pg`
+
+:ref:`geogit-osm-export-sl`
 
 BUGS
 ****

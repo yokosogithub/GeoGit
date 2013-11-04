@@ -2,7 +2,7 @@
 .. _geogit-shp-import:
 
 geogit-shp-import documentation
-#########################
+################################
 
 
 

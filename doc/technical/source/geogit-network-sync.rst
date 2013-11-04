@@ -21,7 +21,7 @@ The first line should represent the HEAD symbolic ref.
 Example
 .......
 
-.. code-block::
+.. code-block:: none
 
     GET /geogit/repo/manifest
 
@@ -55,7 +55,7 @@ Example
 
 In the following example, the "want" list conveniently contains only a single commit - which happens to be a direct descendant of the one commit in the "have" list.
 
-.. code-block::
+.. code-block:: none
 
    POST /geogit/repo/exists
    {
@@ -101,7 +101,7 @@ While the server SHOULD optimize by avoiding sending objects that are reachable 
 Example
 .......
 
-.. code-block::
+.. code-block:: none
 
    POST /geogit/repo/objects
    { 

@@ -3,7 +3,7 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-GeoGit manual pages 
+GeoGit Manual Pages 
 ================================================
 
 Contents:
@@ -18,8 +18,8 @@ Contents:
     clean.rst
     clone.rst
     commit.rst
-    conf.py
     config.rst
+    diff.rst
     fetch.rst
     formatpatch.rst
     geogit.rst
@@ -28,6 +28,15 @@ Contents:
     log.rst
     ls.rst
     merge.rst
+    osmchangeset.rst
+    osmdownload.rst
+    osmexport.rst
+    osmexportpg.rst
+    osmexportshp.rst
+    osmexportsl.rst
+    osmimport.rst
+    osmmap.rst
+    osmunmap.rst
     pg.rst
     pgdescribe.rst
     pgexport.rst
@@ -52,5 +61,9 @@ Contents:
     slexport.rst
     slimport.rst
     sllist.rst
+    sqlserverdescribe.rst
+    sqlserverexport.rst
+    sqlserverimport.rst
+    sqlserverlist.rst
     status.rst
     tag.rst

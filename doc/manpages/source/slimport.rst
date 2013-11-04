@@ -2,7 +2,7 @@
 .. _geogit-sl-import:
 
 geogit-sl-import documentation
-#########################
+###############################
 
 
 

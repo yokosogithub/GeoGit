@@ -20,6 +20,7 @@ SEE ALSO
 ********
 
 :ref:`geogit-remote-add`
+
 :ref:`geogit-remote-list`
 
 BUGS

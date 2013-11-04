@@ -2,7 +2,7 @@
 .. _geogit-osm-createchangeset:
 
 geogit-osm-createchangeset documentation
-########################################
+#########################################
 
 
 
@@ -29,9 +29,11 @@ OPTIONS
 SEE ALSO
 ********
 
-:ref:`geogit-osmdownload`
-:ref:`geogit-map`
-:ref:`geogit-unmap`
+:ref:`geogit-osm-download`
+
+:ref:`geogit-osm-map`
+
+:ref:`geogit-osm-unmap`
 
 BUGS
 ****
