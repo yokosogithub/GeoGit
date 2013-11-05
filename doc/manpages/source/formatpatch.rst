@@ -33,6 +33,7 @@ SEE ALSO
 ********
 
 :ref:`geogit-apply`
+
 :ref:`geogit-diff`
 
 BUGS

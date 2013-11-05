@@ -2,7 +2,7 @@
 .. _geogit-commit:
 
 geogit-commit documentation
-#########################
+############################
 
 
 
@@ -34,6 +34,7 @@ SEE ALSO
 ********
 
 :ref:`geogit-add`
+
 :ref:`geogit-status`
 
 BUGS

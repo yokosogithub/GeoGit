@@ -14,7 +14,7 @@ geogit osm download <url> [--bbox <N S E W>] [--saveto <path>] [--message <messa
 DESCRIPTION
 ***********
 
-Downloads data from an OSM services supporting the OSM Overpass API. The data is filtered according to a filter that uses the syntax of the Overpass `Query Language<http://wiki.openstreetmap.org/wiki/Overpass_API/Language_Guide>`_. As an alternative, a simple bounding box filter can be used.
+Downloads data from an OSM services supporting the OSM Overpass API. The data is filtered according to a filter that uses the syntax of the `Overpass Query Language <http://wiki.openstreetmap.org/wiki/Overpass_API/Language_Guide>`_. As an alternative, a simple bounding box filter can be used.
 
 The download operation needs a clean working tree and index. Once the data is downloaded and added to the repository, a new commit is made, which represents the state of the repository with the new downloaded OSM data. 
 
@@ -41,8 +41,10 @@ SEE ALSO
 ********
 
 :ref:`geogit-rebase`
+
 :ref:`geogit-merge`
-:ref:`geogit-map`
+
+:ref:`geogit-osm-map`
 
 BUGS
 ****

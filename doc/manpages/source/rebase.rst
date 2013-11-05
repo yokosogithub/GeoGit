@@ -2,7 +2,7 @@
 .. _geogit-rebase:
 
 geogit-rebase documentation
-#########################
+############################
 
 
 

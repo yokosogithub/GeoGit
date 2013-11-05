@@ -29,6 +29,7 @@ SEE ALSO
 ********
 
 :ref:`geogit-add`
+
 :ref:`geogit-commit`
 
 BUGS

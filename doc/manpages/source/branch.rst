@@ -1,7 +1,7 @@
 .. _geogit-branch:
 
 geogit-branch documentation
-#########################
+############################
 
 
 

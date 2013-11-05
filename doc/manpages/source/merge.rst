@@ -35,7 +35,9 @@ SEE ALSO
 ********
 
 :ref:`geogit-log`
+
 :ref:`geogit-pull`
+
 :ref:`geogit-commit`
 
 BUGS

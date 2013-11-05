@@ -16,19 +16,21 @@ The parts can be:
 
 * Another structure, referenced by name.
 * One of these specially defined structures
-  .. code-block::
+
+  .. code-block:: none
 
     NUL       := 0x00 (ASCII NUL character)
     SP        := 0x20 (ASCII space character)
     BR        := 0x0a (ASCII newline character)
     <rev>     := <byte>* (exactly 20 bytes)
-    <utf8>    := <int16> <byte>* (two-byte count followed by the number of
-                                  bytes indicated by the count. these should
-                                  then be decoded as modified UTF-8, as seen
-                                  in the readUTF and writeUTF methods in the
-                                  java.io.DataInputStream and
-                                  java.io.DataOutputStream classes in the Java
-                                  Standard Library.)
+    <utf8>    := <int16> <byte>* (two-byte count followed by the number
+				  of bytes indicated by the count. 
+				  These should then be decoded as 
+				  modified UTF-8, as seen in the 
+				  readUTF and writeUTF methods in the
+    				  java.io.DataInputStream and
+    				  java.io.DataOutputStream classes 
+				  in the Java Standard Library.)
     <byte>    := (8 bit byte)
     <int16>   := (16 bit signed integer, "short" in Java)
     <int32>   := (32 bit signed integer, "int" in Java)
@@ -49,7 +51,7 @@ The parts can be:
 Commit
 ------
 
-.. code-block::
+.. code-block:: none
 
     commit := commitHeader treeRef parent* authorLine committerLine message
     commitHeader := "commit" NUL
@@ -74,12 +76,13 @@ Tree
 
     We should probably document how exactly GeoGit builds trees :)
 
-.. code-block:: 
+.. code-block:: none
 
     tree := treeHeader size treeCount features trees buckets
     size := <int64> (the total [recursive] count of features in this tree)
-    treeCount := <int32> (in a bucket tree: the number of trees that are direct
-                          children of the bucket tree. In a node tree: 0)
+    treeCount := <int32> (in a bucket tree: the number of trees that are
+			  direct children of the bucket tree. In a node 
+			  tree: 0)
     features := count node*
     trees := count node*
     buckets := count bucket*
@@ -88,10 +91,10 @@ Tree
     name := <utf8>
     objectId := <byte>[20]
     metadataId := <byte>[20]
-    envelope := <float64>[4] (minx, maxx, miny, maxy.  Note that this may be (0,
-                            -1, 0, -1) as is traditional for indicating NULL
-                            envelopes.  Of course empty (zero-area) envelopes
-                            are valid as well.)
+    envelope := <float64>[4] (minx, maxx, miny, maxy.  Note that this may be 
+			     (0, -1, 0, -1) as is traditional for indicating
+			     NULL envelopes. Of course empty (zero-area) 
+			     envelopes are valid as well.)
     nodeType := <byte> (0x01: Tree, 0x02: Feature)
     bucket := index objectId envelope
     index := <int32>
@@ -99,7 +102,7 @@ Tree
 Feature
 -------
 
-.. code-block:: 
+.. code-block:: none
 
     feature := featureHeader count fields
     featureHeader := "feature" NUL
@@ -145,7 +148,7 @@ Feature
 FeatureType
 -----------
 
-.. code-block::
+.. code-block:: none
     
     featureType := featureTypeHeader name properties
     featureTypeHeader := "featuretype" NUL
@@ -158,17 +161,21 @@ FeatureType
     minOccurs := <int32>
     maxOccurs := <int32>
     type := spatialType | aspatialType
-    aspatialType := name typeTag (aspatial types are distinguished from spatial ones by the value of the type tag)
+    aspatialType := name typeTag (aspatial types are distinguished from 
+				  spatial ones by the value of the type tag)
     typeTag := <byte> (as used in features)
     spatialType := name typeTag crsTextInterpretation crsText
     crsTextInterpretation := <byte> (0: crsText is WKT CRS definition,
-                                     1: crsText references a well-known CRS by identifier.  If it uses URI notation ("urn:...") then the axes should be forced to X=Easting, Y=Northing order.)
+                                     1: crsText references a well-known CRS by 
+				     identifier. If it uses URI notation 
+				     ("urn:...") then the axes should be 
+				     forced to X=Easting, Y=Northing order.)
     crsText := <utf8> (as determined by crsTextInterpretation)
 
 Tag
 ---
 
-.. code-block::
+.. code-block:: none
 
    tag := tagHeader objectId tagName message tagger
    tagHeader := "tag" NUL
