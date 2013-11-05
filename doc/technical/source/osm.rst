@@ -25,8 +25,8 @@ When a new node is added (whether by the user, who created it in something like 
 This is, in fact, not a problem now, since the update operation just deletes and updates everything (see (1)), but once we get a more efficient update strategy, this problem will surface.
 
 
-4. OSM paths
-~~~~~~~~~~~~~
+OSM Paths
+----------
 
 .. note:: 
 

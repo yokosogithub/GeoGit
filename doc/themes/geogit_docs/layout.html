@@ -30,7 +30,7 @@
 
 {%- macro sidebar() %}
   {%- if builder != 'htmlhelp' %}
-  <div id="sidebar"{%- if pagename not in ['index', 'search'] %} class="contrast col-md-4" {%- else %} class="col-md-4" {%- endif %}>
+  <div id="sidebar"{%- if pagename not in ['index', 'search'] %} class="sidebar-offcanvas contrast col-sm-4 sidebar-offcanvas" {%- else %} class="sidebar-offcanvas col-sm-4 sidebar-offcanvas" {%- endif %} id="sidebar" role="navigation">
 
     <div>
          <form id="quick-search" action="search.html" method="get" style="width: 100%;">
@@ -130,6 +130,7 @@
   {%- else %}
   <link rel="stylesheet" href="{{ pathto('_static/' + style, 1) }}" type="text/css" />
   <link rel="stylesheet" href="{{ pathto('_static/pygments.css', 1) }}" type="text/css" />
+  <link rel="stylesheet" href="{{ pathto('_static/offcanvas.css', 1) }}" type="text/css" />
   {%- endif %}
   {%- if builder != 'htmlhelp' %}
   <script type="text/javascript">
@@ -146,6 +147,23 @@
   <script type="text/javascript" src="{{ pathto('_static/doctools.js', 1) }}"></script>
   <script type="text/javascript" src="{{ pathto('_static/searchtools.js', 1) }}"></script>
   <script type="text/javascript" src="{{ pathto('searchindex.js', 1) }}"></script>
+  <script>
+      $(document).ready(function() {
+
+      $('[data-toggle=offcanvas]').click(function(e) {
+        e.stopPropagation();
+        $('.row-offcanvas').toggleClass('active');
+        $('.btn-back').toggleClass('active');
+        $('.btn-text').toggleClass('active');
+      });
+      $('.list-group-item').click(function(e) {
+        e.stopPropagation();
+        $('.row-offcanvas').toggleClass('active');
+        $('.btn-back').toggleClass('active');
+        $('.btn-text').toggleClass('active');
+      });
+    });
+  </script>
   {%- if use_opensearch %}
   <link rel="search" type="application/opensearchdescription+xml"
         title="Search within {{ docstitle }}"
@@ -196,7 +214,7 @@
           </div>
           <div class="navbar-collapse collapse navbar-right">
             <ul class="nav navbar-nav">
-              <li><a href="http://geogit.org/docs/quickstart.html">Quick Start</a></li>
+              <li><a href="http://geogit.org/#install">Get Started</a></li>
               <li><a href="http://geogit.org/docs/index.html">Documentation</a></li>
               <li><a href="https://github.com/boundlessgeo/GeoGit">On Github</a></li>
             </ul>
@@ -214,19 +232,31 @@
         </div>
       </div>
     </section>
-    
+    <a name="top"></a>
 
  <div id="main">
     <div class="wrap selfclear">
       <div id="content">
       <div class="container">
-        <div class="row">
+        <div class="row row-offcanvas row-offcanvas-right">
           <div class="col-md-8"> 
+            <div class="row pull-right">
+             <div class="visible-sm visible-xs" id="menu-btn">
+                <button class="btn btn-blue btn-sm"type="button" data-toggle="offcanvas">
+                  <span class="btn-text active">Docs Menu &nbsp; <i class="icon-arrow-right"></i></span>
+                  <span class="btn-back">< Back</span>
+                </button>
+              </div>
+            </div>
+
+
       {%- block breadcrumbbar %}{{ breadcrumbs() }}{% endblock %}
+
       {%- block rellinkbar %}{{ rellinkbar() }}{% endblock %}
       {%- block document %}
         {% block body %}{% endblock %}
       {%- endblock %}
+
       {%- if (prev or next) %}
       <div class="selfclear pagination-nav">
         {%- if prev %}
@@ -237,10 +267,13 @@
         {%- endif %}
       </div>
       {%- endif %}
+      <p class="centered-text"><a href="#top"><img src="{{ pathto('_static/arrow_up.png', 1) }}" alt="back to top"/></a></p>
       </div><!-- /#content> -->
 {%- block sidebar %}{{ sidebar() }}{% endblock %}
   </div><!-- /.wrap> -->
-</div></div>
+</div>
+</div>
+
 </div><!-- /#main -->
 
 {%- block footer %}
