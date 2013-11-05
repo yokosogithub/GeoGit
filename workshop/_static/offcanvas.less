@@ -1,7 +1,10 @@
 
 @ltblue: #7EB5D3;
 
-@media screen and (max-width: 991px) {
+@media screen and (max-width: 991px),
+screen and (min-device-width: 768px) and (max-device-width: 1024px) and (-webkit-min-device-pixel-ratio: 2),
+screen and (min-device-width: 320px) and (max-device-width: 568px) and (-webkit-min-device-pixel-ratio: 2)
+ {
   .row-offcanvas {
     position: relative;
     -webkit-transition: all 0.25s ease-out;
@@ -10,11 +13,11 @@
   }
   .row-offcanvas-right
   .sidebar-offcanvas {
-    right: -65%; 
+    right: -85%; 
   }
 
   .row-offcanvas-right.active {
-    right: 65%; 
+    right: 85%; 
   }
   .sidebar-offcanvas {
     position: fixed;
@@ -26,7 +29,11 @@
 #menu-btn {
   display: none;
 
-  @media screen and (max-width: 991px) { 
+  @media screen and (max-width: 991px),
+ only screen and (-webkit-min-device-pixel-ratio: 1.3),
+  only screen and (-o-min-device-pixel-ratio: 13/10),
+  only screen and (min-resolution: 120dpi)
+  { 
     display: block;
     position: absolute;
     right: 15px;
@@ -57,7 +64,11 @@
     }
   }
 
-  @media screen and (max-width: 991px) { 
+  @media screen and (max-width: 991px),
+  only screen and (-webkit-min-device-pixel-ratio: 1.3),
+  only screen and (-o-min-device-pixel-ratio: 13/10),
+  only screen and (min-resolution: 120dpi)
+  { 
     position: absolute;
     margin-left: 185%;
     top: 20px;
