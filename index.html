@@ -16,8 +16,14 @@
     <title>GeoGit by Boundless</title>
   </head>
 
-  <body>
-    <div id="blacktop"></div>
+  <body data-spy="scroll" data-target="#blacktop" data-offset="20">
+    <div id="blacktop" class="activated">
+      <ul class="nav">
+        <li><a href="#main"></a></li>
+        <li><a href="#blacktop"></a></li>
+      </ul>
+    </div>
+    <div id="top"></div>
     <header id="masthead">
       <div class="navbar">
         <div class="container">
@@ -78,7 +84,7 @@
       <section id="install" class="overlay">
       <div class="container">
         <div class="row">
-          <div class="col-md-7">
+          <div class="col-md-10">
 
               <h2>Quick Start</h2>
 
@@ -163,7 +169,7 @@
 
               <h2>Participate</h2>
 
-              <p>The project is hosted on github: <a href="https://github.com/boundlessgeo/GeoGit">https://github.com/boundlessgeo/GeoGit</a></p>
+              <p>The project is hosted on github: <a href="https://github.com/boundlessgeo/GeoGit">http://github.com/boundlessgeo/GeoGit</a></p>
               <p>Discussion takes place on our <a href="https://groups.google.com/a/opengeo.org/group/geogit/">GeoGit Google Group</a>. 
               Please join and introduce yourself, we'd love to help, and to figure out ways for you to get involved.</p>
 
@@ -173,13 +179,15 @@
               <li>Include test case demonstrating functionality</li>
               <li>Contributions are expected to pass all tests and not break the build</li>
               <li>Include proper license headers on your contributed files</li>
-              </ul><p>Issues to help out on are at our <a href="https://github.com/boundlessgeo/GeoGit/issues">issue tracker</a>.</p>
+              </ul><p>Issues to help out on are at our <a href="http://github.com/boundlessgeo/GeoGit/issues">issue tracker</a>.</p>
 
               <p>For those who can't code help on documentation is always appreciated, all docs can be found at 
-              <a href="https://github.com/boundlessgeo/GeoGit/tree/master/doc/">https://github.com/boundlessgeo/GeoGit/tree/master/doc/</a> and contributed to by editing in ReStructuredText and using standard GitHub workflows.</p>
+              <a href="http://github.com/boundlessgeo/GeoGit/tree/master/doc/">http://github.com/boundlessgeo/GeoGit/tree/master/doc/</a> and contributed to by editing in ReStructuredText and using standard GitHub workflows.</p>
 
               <p>Our build is <a href="http://ares.boundlessgeo.com/jenkins/view/geogit/">actively monitored using Hudson</a>.</p>
 
+
+              <p class="col-sm-offset-10 col-sm-1"><a href="#top"><img src="images/arrow_up.png" alt="back to top"/></a></p>
           </div>
           <div class="col-md-5 hidden-sm hidden-xs">
             <div id="tree_img"></div>
@@ -192,7 +200,7 @@
     <footer>
       <div class="container">
         <div class="row">
-          <div class=""><p class="repo-owner"><a href="https://github.com/boundlessgeo/GeoGit">GeoGit</a> is maintained by <a href="https://github.com/boundlessgeo"><img src="images/Boundless_Logo.png" alt="Boundless"></a></p></div>
+          <div class=""><p class="repo-owner"><a href="http://github.com/boundlessgeo/GeoGit">GeoGit</a> is maintained by <a href="https://github.com/boundlessgeo"><img src="images/Boundless_Logo.png" alt="Boundless"></a></p></div>
         </div>
       </div>
     </footer>
@@ -201,6 +209,12 @@
      <!-- Bootstrap core JavaScript -->
     <script src="javascripts/jquery.js"></script>
     <script src="javascripts/bootstrap.js"></script>
+    <script>
+      $('#blacktop').on('activate.bs.scrollspy', function () {
+        $('#blacktop').toggleClass("activated");
+      })
+
+    </script>
   </body>
 </html>
 

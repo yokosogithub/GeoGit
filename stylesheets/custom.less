@@ -28,7 +28,7 @@ body {
 	font-family: 'Cantarell', sans-serif;
 	font-weight: 500;
 	font-size: 2em;
-    background: url(../images/ticks.png) repeat;
+    background: #272727 url(../images/roadmap.png) no-repeat;
 }
 
 a {
@@ -40,7 +40,6 @@ a {
 }
 
 header {
-	background: @black;
 
 	.navbar .nav > li > a {	
 		font-size: .8em;
@@ -104,7 +103,6 @@ h1, h2, h3, h4, h5 {
 #blacktop {
 	position: fixed;
 	width: 100%;
-	border-top: @black 45px solid;
 	z-index: 1;
 
 	@media (max-width: 767px) {
@@ -112,10 +110,14 @@ h1, h2, h3, h4, h5 {
 	}
 }
 
+// black bar at top on scrollspy
+.activated  {
+	border-top: @black 45px solid;
+}
+
 .navbar-collapse {
 	position: fixed;
 	right: 5%;
-	background-color: @black;
 	z-index: 2;
 	padding-top: 5px;
 
@@ -127,6 +129,7 @@ h1, h2, h3, h4, h5 {
 
 	@media (max-width: 767px) {
 		position: relative;
+
 		.navbar-nav > li > a {
 			padding: 20px 20px 20px 60px !important;
 		}
@@ -137,9 +140,7 @@ h1, h2, h3, h4, h5 {
 	background-color: @ltblue;
 }
 
-.subheading {
-	background-color: @black;
-	
+.subheading {	
 	margin-top: -35px;
 
 	.byline {
@@ -167,9 +168,8 @@ h1, h2, h3, h4, h5 {
 }
 
 #main {
-	padding-top: 50px;
+	padding-top: 30px;
 	padding-bottom: 20px;
-	background: #272727 url(../images/roadmap.png) no-repeat;
 	color: #ddd;
 
 	.first {
@@ -322,6 +322,7 @@ h1, h2, h3, h4, h5 {
 }
 
 #install {
+	background: url(../images/ticks.png) repeat;
 	a {
 		color: @mdblue;
 	}
