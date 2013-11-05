@@ -141,29 +141,6 @@
         FILE_SUFFIX: '{{ file_suffix }}'
     };
   </script>
-  <script type="text/javascript" src="{{ pathto('_static/jquery.js', 1) }}"></script>
-  <script type="text/javascript" src="{{ pathto('_static/bootstrap.js', 1) }}" ></script>
-  <script type="text/javascript" src="{{ pathto('_static/underscore.js', 1) }}"></script>
-  <script type="text/javascript" src="{{ pathto('_static/doctools.js', 1) }}"></script>
-  <script type="text/javascript" src="{{ pathto('_static/searchtools.js', 1) }}"></script>
-  <script type="text/javascript" src="{{ pathto('searchindex.js', 1) }}"></script>
-  <script>
-      $(document).ready(function() {
-
-      $('[data-toggle=offcanvas]').click(function(e) {
-        e.stopPropagation();
-        $('.row-offcanvas').toggleClass('active');
-        $('.btn-back').toggleClass('active');
-        $('.btn-text').toggleClass('active');
-      });
-      $('.list-group-item').click(function(e) {
-        e.stopPropagation();
-        $('.row-offcanvas').toggleClass('active');
-        $('.btn-back').toggleClass('active');
-        $('.btn-text').toggleClass('active');
-      });
-    });
-  </script>
   {%- if use_opensearch %}
   <link rel="search" type="application/opensearchdescription+xml"
         title="Search within {{ docstitle }}"
@@ -286,6 +263,31 @@
     </footer>
 {%- endblock %}
 
+
+  <script type="text/javascript" src="{{ pathto('_static/jquery.js', 1) }}"></script>
+  <script type="text/javascript" src="{{ pathto('_static/jquery-migrate-min.js', 1) }}"></script>
+  <script type="text/javascript" src="{{ pathto('_static/bootstrap.js', 1) }}" ></script>
+  <script type="text/javascript" src="{{ pathto('_static/underscore.js', 1) }}"></script>
+  <script type="text/javascript" src="{{ pathto('_static/doctools.js', 1) }}"></script>
+  <script type="text/javascript" src="{{ pathto('_static/searchtools.js', 1) }}"></script>
+  <script type="text/javascript" src="{{ pathto('searchindex.js', 1) }}"></script>
+  <script>
+      $(document).ready(function() {
+
+      $('[data-toggle=offcanvas]').click(function(e) {
+        e.stopPropagation();
+        $('.row-offcanvas').toggleClass('active');
+        $('.btn-back').toggleClass('active');
+        $('.btn-text').toggleClass('active');
+      });
+      $('.list-group-item').click(function(e) {
+        e.stopPropagation();
+        $('.row-offcanvas').toggleClass('active');
+        $('.btn-back').toggleClass('active');
+        $('.btn-text').toggleClass('active');
+      });
+    });
+  </script>
   </body>
 </html>
 
