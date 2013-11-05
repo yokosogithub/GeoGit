@@ -1551,9 +1551,10 @@ public class diff_match_patch {
             // Perfect match at the perfect spot! (Includes case of null pattern)
             return loc;
         } else {
-            // Do a fuzzy compare.
-            return -1;
-            // return match_bitap(text, pattern, loc);
+            // try to find a match at a different position
+            // TODO: try to locate the closest match to the specified position, not just the first
+            // one
+            return text.indexOf(pattern);
         }
     }
 
