@@ -21,29 +21,6 @@
         FILE_SUFFIX: '.html'
     };
   </script>
-  <script type="text/javascript" src="../_static/jquery.js"></script>
-  <script type="text/javascript" src="../_static/bootstrap.js" ></script>
-  <script type="text/javascript" src="../_static/underscore.js"></script>
-  <script type="text/javascript" src="../_static/doctools.js"></script>
-  <script type="text/javascript" src="../_static/searchtools.js"></script>
-  <script type="text/javascript" src="../searchindex.js"></script>
-  <script>
-      $(document).ready(function() {
-
-      $('[data-toggle=offcanvas]').click(function(e) {
-        e.stopPropagation();
-        $('.row-offcanvas').toggleClass('active');
-        $('.btn-back').toggleClass('active');
-        $('.btn-text').toggleClass('active');
-      });
-      $('.list-group-item').click(function(e) {
-        e.stopPropagation();
-        $('.row-offcanvas').toggleClass('active');
-        $('.btn-back').toggleClass('active');
-        $('.btn-text').toggleClass('active');
-      });
-    });
-  </script>
       <link rel="top" title="GeoGit 0.6 User Manual" href="../index.html" />
       <link rel="up" title="Other ways to interact with GeoGit" href="index.html" />
       <link rel="prev" title="Web-Api Documentation" href="web-api.html" />
@@ -668,5 +645,30 @@ $ geogit config osm.waypath osmway</pre>
       </div>
     </footer>
 
+
+  <script type="text/javascript" src="../_static/jquery.js"></script>
+  <script type="text/javascript" src="../_static/jquery-migrate-min.js"></script>
+  <script type="text/javascript" src="../_static/bootstrap.js" ></script>
+  <script type="text/javascript" src="../_static/underscore.js"></script>
+  <script type="text/javascript" src="../_static/doctools.js"></script>
+  <script type="text/javascript" src="../_static/searchtools.js"></script>
+  <script type="text/javascript" src="../searchindex.js"></script>
+  <script>
+      $(document).ready(function() {
+
+      $('[data-toggle=offcanvas]').click(function(e) {
+        e.stopPropagation();
+        $('.row-offcanvas').toggleClass('active');
+        $('.btn-back').toggleClass('active');
+        $('.btn-text').toggleClass('active');
+      });
+      $('.list-group-item').click(function(e) {
+        e.stopPropagation();
+        $('.row-offcanvas').toggleClass('active');
+        $('.btn-back').toggleClass('active');
+        $('.btn-text').toggleClass('active');
+      });
+    });
+  </script>
   </body>
 </html>

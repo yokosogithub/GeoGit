@@ -21,29 +21,6 @@
         FILE_SUFFIX: '.html'
     };
   </script>
-  <script type="text/javascript" src="_static/jquery.js"></script>
-  <script type="text/javascript" src="_static/bootstrap.js" ></script>
-  <script type="text/javascript" src="_static/underscore.js"></script>
-  <script type="text/javascript" src="_static/doctools.js"></script>
-  <script type="text/javascript" src="_static/searchtools.js"></script>
-  <script type="text/javascript" src="searchindex.js"></script>
-  <script>
-      $(document).ready(function() {
-
-      $('[data-toggle=offcanvas]').click(function(e) {
-        e.stopPropagation();
-        $('.row-offcanvas').toggleClass('active');
-        $('.btn-back').toggleClass('active');
-        $('.btn-text').toggleClass('active');
-      });
-      $('.list-group-item').click(function(e) {
-        e.stopPropagation();
-        $('.row-offcanvas').toggleClass('active');
-        $('.btn-back').toggleClass('active');
-        $('.btn-text').toggleClass('active');
-      });
-    });
-  </script>
   <link rel="shortcut icon" href="_static/favicon.ico"/>
       <link rel="top" title="GeoGit 0.6 Technical Manual" href="index.html" />
       <link rel="next" title="Sparse clone" href="sparse-clone.html" />
@@ -264,5 +241,30 @@ Both actors have added a feature or feature type with the same name, but differe
       </div>
     </footer>
 
+
+  <script type="text/javascript" src="_static/jquery.js"></script>
+  <script type="text/javascript" src="_static/jquery-migrate-min.js"></script>
+  <script type="text/javascript" src="_static/bootstrap.js" ></script>
+  <script type="text/javascript" src="_static/underscore.js"></script>
+  <script type="text/javascript" src="_static/doctools.js"></script>
+  <script type="text/javascript" src="_static/searchtools.js"></script>
+  <script type="text/javascript" src="searchindex.js"></script>
+  <script>
+      $(document).ready(function() {
+
+      $('[data-toggle=offcanvas]').click(function(e) {
+        e.stopPropagation();
+        $('.row-offcanvas').toggleClass('active');
+        $('.btn-back').toggleClass('active');
+        $('.btn-text').toggleClass('active');
+      });
+      $('.list-group-item').click(function(e) {
+        e.stopPropagation();
+        $('.row-offcanvas').toggleClass('active');
+        $('.btn-back').toggleClass('active');
+        $('.btn-text').toggleClass('active');
+      });
+    });
+  </script>
   </body>
 </html>
