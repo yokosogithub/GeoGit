@@ -12,6 +12,7 @@
   <![endif]-->
   <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
   <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/offcanvas.css" type="text/css" />
   <script type="text/javascript">
     var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../',
@@ -26,6 +27,23 @@
   <script type="text/javascript" src="../_static/doctools.js"></script>
   <script type="text/javascript" src="../_static/searchtools.js"></script>
   <script type="text/javascript" src="../searchindex.js"></script>
+  <script>
+      $(document).ready(function() {
+
+      $('[data-toggle=offcanvas]').click(function(e) {
+        e.stopPropagation();
+        $('.row-offcanvas').toggleClass('active');
+        $('.btn-back').toggleClass('active');
+        $('.btn-text').toggleClass('active');
+      });
+      $('.list-group-item').click(function(e) {
+        e.stopPropagation();
+        $('.row-offcanvas').toggleClass('active');
+        $('.btn-back').toggleClass('active');
+        $('.btn-text').toggleClass('active');
+      });
+    });
+  </script>
       <link rel="top" title="GeoGit 0.6 User Manual" href="../index.html" />
       <link rel="up" title="Data and commits" href="index.html" />
       <link rel="next" title="Creating and applying patches" href="patches.html" />
@@ -64,14 +82,22 @@
         </div>
       </div>
     </section>
-    
+    <a name="top"></a>
 
  <div id="main">
     <div class="wrap selfclear">
       <div id="content">
       <div class="container">
-        <div class="row">
-          <div class="col-md-8">
+        <div class="row row-offcanvas row-offcanvas-right">
+          <div class="col-md-8"> 
+            <div class="row pull-right">
+             <div class="visible-sm visible-xs" id="menu-btn">
+                <button class="btn btn-blue btn-sm"type="button" data-toggle="offcanvas">
+                  <span class="btn-text active">Docs Menu &nbsp; <i class="icon-arrow-right"></i></span>
+                  <span class="btn-back">< Back</span>
+                </button>
+              </div>
+            </div>
 <ul id="breadcrumbs">
   
   <li><a href="../index.html">GeoGit 0.6 User Manual</a> &raquo;</li>
@@ -170,8 +196,9 @@
           <div class="leftwise"><strong>Previous</strong>: <a href="history.html" title="previous chapter">Exploring your history</a></div>
           <div class="rightwise"><strong>Next</strong>: <a href="patches.html" title="next chapter">Creating and applying patches</a></div>
       </div>
+      <p class="centered-text"><a href="#top"><img src="../_static/arrow_up.png" alt="back to top"/></a></p>
       </div><!-- /#content> -->
-  <div id="sidebar" class="contrast col-md-4">
+  <div id="sidebar" class="sidebar-offcanvas contrast col-sm-4 sidebar-offcanvas" id="sidebar" role="navigation">
 
     <div>
          <form id="quick-search" action="search.html" method="get" style="width: 100%;">
@@ -209,7 +236,9 @@
 
   </div><!-- /#sidebar -->
   </div><!-- /.wrap> -->
-</div></div>
+</div>
+</div>
+
 </div><!-- /#main -->
     <footer>
       <div class="container">
