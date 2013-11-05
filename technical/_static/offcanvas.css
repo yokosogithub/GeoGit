@@ -1,4 +1,4 @@
-@media screen and (max-width: 991px) {
+@media screen and (max-width: 991px), screen and (min-device-width: 768px) and (max-device-width: 1024px) and (-webkit-min-device-pixel-ratio: 2), screen and (min-device-width: 320px) and (max-device-width: 568px) and (-webkit-min-device-pixel-ratio: 2) {
   .row-offcanvas {
     position: relative;
     -webkit-transition: all 0.25s ease-out;
@@ -20,7 +20,7 @@
 #menu-btn {
   display: none;
 }
-@media screen and (max-width: 991px) {
+@media screen and (max-width: 991px), screen and (min-device-width: 768px) and (max-device-width: 1024px) and (-webkit-min-device-pixel-ratio: 2), screen and (min-device-width: 320px) and (max-device-width: 568px) and (-webkit-min-device-pixel-ratio: 2) {
   #menu-btn {
     display: block;
     position: absolute;
@@ -50,7 +50,7 @@
   margin-left: 20px;
   color: #666;
 }
-@media screen and (max-width: 991px) {
+@media screen and (max-width: 991px), screen and (min-device-width: 768px) and (max-device-width: 1024px) and (-webkit-min-device-pixel-ratio: 2), screen and (min-device-width: 320px) and (max-device-width: 568px) and (-webkit-min-device-pixel-ratio: 2) {
   #sidebar {
     position: absolute;
     margin-left: 185%;
