@@ -17,6 +17,7 @@ import org.geotools.feature.simple.SimpleFeatureTypeBuilder;
 import org.geotools.referencing.crs.DefaultGeographicCRS;
 import org.opengis.feature.Feature;
 import org.opengis.feature.GeometryAttribute;
+import org.opengis.feature.simple.SimpleFeature;
 import org.opengis.feature.simple.SimpleFeatureType;
 import org.opengis.feature.type.AttributeDescriptor;
 import org.openstreetmap.osmosis.core.domain.v0_6.Tag;
@@ -122,6 +123,21 @@ public class MappingRule {
 
     /**
      * Returns the feature resulting from transforming a given feature using this rule
+     * 
+     * @param feature
+     * @return
+     */
+    public Optional<Feature> apply(Feature feature) {
+        String tagsString = (String) ((SimpleFeature) feature).getAttribute("tags");
+        Collection<Tag> tags = OSMUtils.buildTagsCollectionFromString(tagsString);
+        return apply(feature, tags);
+    }
+
+    /**
+     * Returns the feature resulting from transforming a given feature using this rule. This method
+     * takes a colelction of tags, so there is no need to compute them from the 'tags' attribute.
+     * This is meant as a faster alternative to the apply(Feature) method, in case the mapping
+     * object calling this has already computed the tags, to avoid recomputing them
      * 
      * @param feature
      * @param tags
