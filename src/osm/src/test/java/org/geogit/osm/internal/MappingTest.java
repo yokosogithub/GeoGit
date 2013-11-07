@@ -29,11 +29,12 @@ public class MappingTest {
     public void TestDuplicatedFieldName() {
         Map<String, AttributeDefinition> fields = Maps.newHashMap();
         Map<String, List<String>> filters = Maps.newHashMap();
+        Map<String, List<String>> filtersExclude = Maps.newHashMap();
         fields.put("lit", new AttributeDefinition("name", FieldType.STRING));
         fields.put("geom", new AttributeDefinition("name", FieldType.POINT));
         filters.put("highway", new ArrayList<String>());
         try {
-            MappingRule mappingRule = new MappingRule("mapped", filters, fields);
+            MappingRule mappingRule = new MappingRule("mapped", filters, filtersExclude, fields);
             fail();
         } catch (Exception e) {
             assertTrue(e.getMessage().startsWith("Duplicated"));
@@ -45,10 +46,12 @@ public class MappingTest {
     public void TestJsonSerialization() {
         Map<String, AttributeDefinition> fields = Maps.newHashMap();
         Map<String, List<String>> filters = Maps.newHashMap();
+        Map<String, List<String>> exclude = Maps.newHashMap();
         filters.put("highway", Lists.newArrayList("bus_stop"));
+        exclude.put("public_transport", Lists.newArrayList("platform"));
         fields.put("geom", new AttributeDefinition("geom", FieldType.POINT));
         fields.put("name", new AttributeDefinition("name_alias", FieldType.STRING));
-        MappingRule mappingRule = new MappingRule("busstops", filters, fields);
+        MappingRule mappingRule = new MappingRule("busstops", filters, exclude, fields);
         List<MappingRule> mappingRules = Lists.newArrayList();
         mappingRules.add(mappingRule);
         Mapping mapping = new Mapping(mappingRules);

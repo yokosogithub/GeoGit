@@ -224,6 +224,9 @@ Mappings are defined in a mapping file, using JSON syntax, as in the following e
 	    "filter":{
 	      "oneway":["yes"]
 	    },
+	    "exclude":{
+	      "highway":["construction"]
+	    },
 	    "fields":{
 	      "highway":{"name":"highway", "type":"STRING"},
 	      "geom":{"name":"geom", "type":"LINESTRING"}
@@ -235,6 +238,7 @@ A mapping description is an array of mapping rules, each of them with the follow
  
 - ``name`` defines the name of the mapping, and is used as the name of the destination tree.
 - ``filter`` is a set of tags and values, which define the entities to use for the tree. All entities which have any of the specified values for any of the given tags will be used. And empty filter will cause all entities to be used.
+- ``exclude`` is a set of tags and values used to exclude certain elements. Those elements that contain any of the specified values for the specified tags, will not be mapped, even if they pass the filter set by the ``filter`` element. This field can be ignored and not added to the JSON definition, so no exclusion filter is added. Examples in this document do not use this field.
 - ``fields`` is a set of tags and destination column names and types.
 
 The following mapping will copy all ways to a feature type that only contains the geometry of the way:
