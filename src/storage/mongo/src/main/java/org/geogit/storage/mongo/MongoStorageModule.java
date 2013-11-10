@@ -18,5 +18,6 @@ public class MongoStorageModule extends AbstractModule {
         bind(ObjectDatabase.class).to(MongoObjectDatabase.class).in(Scopes.SINGLETON);
         bind(StagingDatabase.class).to(MongoStagingDatabase.class).in(Scopes.SINGLETON);
         bind(GraphDatabase.class).to(MongoGraphDatabase.class).in(Scopes.SINGLETON);
+        bind(MongoConnectionManager.class).in(Scopes.NO_SCOPE);
     }
 }
