@@ -12,6 +12,7 @@ import org.geogit.api.NodeRef;
 import org.geogit.api.RevFeature;
 import org.geogit.api.RevFeatureType;
 import org.geogit.api.plumbing.RevObjectParse;
+import org.geogit.api.plumbing.diff.GeometryAttributeDiff;
 import org.geotools.feature.simple.SimpleFeatureBuilder;
 import org.opengis.feature.Feature;
 import org.opengis.feature.simple.SimpleFeatureType;
@@ -22,6 +23,7 @@ import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
+import com.vividsolutions.jts.geom.Geometry;
 
 /**
  * This operation merges two features that have compatible changes, returning the result of this
@@ -101,18 +103,24 @@ public class MergeFeaturesOp extends AbstractGeoGitOp<Feature> {
         ImmutableList<Optional<Object>> valuesAncestor = ancestor.getValues();
         ImmutableList<PropertyDescriptor> descriptors = featureType.sortedDescriptors();
         for (int i = 0; i < descriptors.size(); i++) {
-            Name name = descriptors.get(i).getName();
+            PropertyDescriptor descriptor = descriptors.get(i);
+            boolean isGeom = Geometry.class.isAssignableFrom(descriptor.getType().getBinding());
+            Name name = descriptor.getName();
             Optional<Object> valueAncestor = valuesAncestor.get(i);
             Optional<Object> valueA = valuesA.get(i);
+            Optional<Object> valueB = valuesB.get(i);
             if (!valueA.equals(valueAncestor)) {
-                featureBuilder.set(name, valueA.orNull());
-            } else {
-                Optional<Object> valueB = valuesB.get(i);
-                if (!valueB.equals(valueAncestor)) {
-                    featureBuilder.set(name, valueB.orNull());
-                } else {
-                    featureBuilder.set(name, valueAncestor.orNull());
+                Optional<Object> merged = valueA;
+                if (isGeom && !valueB.equals(valueAncestor)) { // true merge is only done with
+                                                               // geometries
+                    GeometryAttributeDiff diffB = new GeometryAttributeDiff(
+                            Optional.fromNullable((Geometry) valueAncestor.orNull()),
+                            Optional.fromNullable((Geometry) valueB.orNull()));
+                    merged = (Optional<Object>) diffB.applyOn(valueA);
                 }
+                featureBuilder.set(name, merged.orNull());
+            } else {
+                featureBuilder.set(name, valueB.orNull());
             }
         }
         return featureBuilder.buildFeature(nodeRefA.name());

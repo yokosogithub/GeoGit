@@ -35,10 +35,12 @@ import org.geogit.api.porcelain.MergeOp;
 import org.geogit.api.porcelain.MergeOp.MergeReport;
 import org.geogit.api.porcelain.NothingToCommitException;
 import org.geogit.api.porcelain.PullOp;
+import org.geotools.data.DataUtilities;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.opengis.feature.Feature;
+import org.opengis.feature.simple.SimpleFeatureType;
 
 import com.google.common.base.Optional;
 import com.google.common.base.Strings;
@@ -917,6 +919,40 @@ public class MergeOpTest extends RepositoryTestCase {
             assertEquals(e.getMessage(), "Cannot run operation while merge conflicts exist.");
         }
 
+    }
+
+    @Test
+    public void testMergeWithPolygonAutoMerge() throws Exception {
+        String polyId = "polyId";
+        String polygonTypeSpec = "poly:Polygon:srid=4326";
+        SimpleFeatureType polygonType = DataUtilities.createType("http://geogit.polygon",
+                "polygons", polygonTypeSpec);
+        Feature polygonOriginal = feature(polygonType, polyId,
+                "POLYGON((0 0,1 0,2 0,3 0,4 0,5 0,5 1,4 1,3 1,2 1,1 1,1 0,0 0))");
+        insertAndAdd(polygonOriginal);
+        geogit.command(CommitOp.class).call();
+        geogit.command(BranchCreateOp.class).setName("TestBranch").call();
+        Feature polygonMaster = feature(polygonType, polyId,
+                "POLYGON((0 0,1 0,2 0.2,3 0.2,4 0,5 0,5 1,4 1,3 1,2 1,1 1,1 0,0 0))");
+        insertAndAdd(polygonMaster);
+        geogit.command(CommitOp.class).call();
+        geogit.command(CheckoutOp.class).setSource("TestBranch").call();
+        Feature polygonBranch = feature(polygonType, polyId,
+                "POLYGON((0 0,1 0,2 0,3 0,4 0,5 0,5 1,4 1,3 0.8,2 0.8,1 1,1 0,0 0))");
+        insertAndAdd(polygonBranch);
+        geogit.command(CommitOp.class).call();
+
+        geogit.command(CheckoutOp.class).setSource("master").call();
+        Ref branch = geogit.command(RefParse.class).setName("TestBranch").call().get();
+        geogit.command(MergeOp.class).addCommit(Suppliers.ofInstance(branch.getObjectId())).call();
+
+        Optional<RevFeature> feature = repo.command(RevObjectParse.class)
+                .setRefSpec("WORK_HEAD:polygons/polyId").call(RevFeature.class);
+        assertTrue(feature.isPresent());
+        RevFeature merged = feature.get();
+        Feature expected = feature(polygonType, polyId,
+                "POLYGON((0 0,1 0,2 0.2,3 0.2,4 0,5 0,5 1,4 1,3 0.8,2 0.8,1 1,1 0,0 0))");
+        assertEquals(expected.getProperty("poly").getValue(), merged.getValues().get(0).get());
     }
 
     @Test
