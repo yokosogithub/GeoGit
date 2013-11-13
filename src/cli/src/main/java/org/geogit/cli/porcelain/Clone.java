@@ -111,7 +111,13 @@ public class Clone extends AbstractCommand implements CLICommand {
                 }
 
             } else {
-                repoDir = currDir;
+                String[] repoSplit = repoURL.split(System.getProperty("file.separator"));
+                repoDir = new File(currDir, repoSplit[repoSplit.length - 1]).getCanonicalFile();
+
+                if (!repoDir.exists() && !repoDir.mkdirs()) {
+                  throw new CommandFailedException("Can't create directory "
+                      + repoDir.getAbsolutePath());
+                }
             }
         }
 
