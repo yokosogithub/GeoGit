@@ -90,8 +90,9 @@
     <nd ref="269237865"/>
     <nd ref="345117527"/>
     <tag k="highway" v="residential"/>
-    <tag k="lit" v="yes"/>
+    <tag k="lit" v="no"/>
     <tag k="name" v="Gielgenstraße"/>
+    <tag k="oneway" v="yes"/>
   </way>
   <way id="51502277" version="2" timestamp="2011-10-16T07:42:20Z" changeset="9569574" uid="55687" user="dschuwa">
     <nd ref="345117527"/>

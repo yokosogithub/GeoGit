@@ -78,7 +78,8 @@ public class OSMImportOpTest extends RepositoryTestCase {
         mappings.put("oneway", Lists.newArrayList("yes"));
         fields.put("geom", new AttributeDefinition("geom", FieldType.LINESTRING));
         fields.put("lit", new AttributeDefinition("lit", FieldType.STRING));
-        MappingRule mappingRule = new MappingRule("onewaystreets", mappings, fields);
+        Map<String, List<String>> filterExclude = Maps.newHashMap();
+        MappingRule mappingRule = new MappingRule("onewaystreets", mappings, filterExclude, fields);
         List<MappingRule> mappingRules = Lists.newArrayList();
         mappingRules.add(mappingRule);
         Mapping mapping = new Mapping(mappingRules);
@@ -125,7 +126,8 @@ public class OSMImportOpTest extends RepositoryTestCase {
         mappings.put("oneway", Lists.newArrayList("yes"));
         fields.put("geom", new AttributeDefinition("geom", FieldType.LINESTRING));
         fields.put("lit", new AttributeDefinition("lit", FieldType.STRING));
-        MappingRule mappingRule = new MappingRule("onewaystreets", mappings, fields);
+        Map<String, List<String>> filterExclude = Maps.newHashMap();
+        MappingRule mappingRule = new MappingRule("onewaystreets", mappings, filterExclude, fields);
         List<MappingRule> mappingRules = Lists.newArrayList();
         mappingRules.add(mappingRule);
         Mapping mapping = new Mapping(mappingRules);
@@ -139,7 +141,7 @@ public class OSMImportOpTest extends RepositoryTestCase {
         assertEquals(0, unstaged);
         unstaged = geogit.getRepository().getWorkingTree().countUnstaged("onewaystreets")
                 .getCount();
-        assertEquals(1, unstaged);
+        assertEquals(2, unstaged);
         Optional<Node> feature = geogit.getRepository().getWorkingTree()
                 .findUnstaged("onewaystreets/31045880");
         assertTrue(feature.isPresent());
