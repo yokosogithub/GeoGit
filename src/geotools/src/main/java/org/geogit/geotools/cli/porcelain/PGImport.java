@@ -66,7 +66,6 @@ public class PGImport extends AbstractPGCommand implements CLICommand {
     protected void runInternal(GeogitCLI cli) throws IOException {
 
         DataStore dataStore = getDataStore();
-
         try {
             cli.getConsole().println("Importing from database " + commonArgs.database);
 

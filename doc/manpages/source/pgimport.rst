@@ -8,7 +8,7 @@ geogit-pg-import documentation
 
 SYNOPSIS
 ********
-geogit pg import [options] [--all|-t <table>]
+geogit pg import [connection_options] [--all|-t <table>]  [--path <path>] [--add] [--alter]
 
 
 DESCRIPTION
@@ -19,21 +19,31 @@ This command imports one or more tables from a PostGIS database into the GeoGit 
 OPTIONS
 *******    
 
--t, --table     The table to import.
+--path <path>					The path to import to. Only allowed when importing a single table. If not specified, it uses the table name
 
---all           Import all tables.
+--fid-attrib <attrib_name>		Uses the specified attribute as the feature id of each feature to import. If not used, a nummber indicating the position in the shapefile is used
 
---host          Machine name or IP address to connect to. Default: localhost
+--add							Adds the imported feature to the corresponding tree without removing previous features in case the tree already exists
 
---port          Port number to connect to.  Default: 5432
+--alter							Same as the ``--add`` switch, but if the feature type of the imported features is different to that of the destination tree, the default feature type is changed and all previous features are modified to use that feature type
 
---schema        The database schema to access.  Default: public
+-t, --table     				The table to import.
+				
+--all           				Import all tables.
+				
+--host          				Machine name or IP address to connect to. Default: localhost
+				
+--port          				Port number to connect to.  Default: 5432
+				
+--schema        				The database schema to access.  Default: public
+				
+--database      				The databse to connect to.  Default: database
+				
+--user          				User name.  Default: postgres
+				
+--password      				Password.  Default: <no password>
 
---database      The databse to connect to.  Default: database
 
---user          User name.  Default: postgres
-
---password      Password.  Default: <no password>
 
 SEE ALSO
 ********

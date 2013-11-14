@@ -25,9 +25,11 @@ import org.geotools.data.simple.SimpleFeatureIterator;
 import org.geotools.data.simple.SimpleFeatureSource;
 import org.geotools.feature.DecoratingFeature;
 import org.geotools.feature.NameImpl;
+import org.geotools.feature.simple.SimpleFeatureTypeBuilder;
 import org.geotools.filter.identity.FeatureIdImpl;
 import org.opengis.feature.Feature;
 import org.opengis.feature.simple.SimpleFeature;
+import org.opengis.feature.simple.SimpleFeatureType;
 import org.opengis.feature.type.Name;
 import org.opengis.feature.type.PropertyDescriptor;
 import org.opengis.filter.identity.FeatureId;
@@ -57,6 +59,11 @@ public class ImportOp extends AbstractGeoGitOp<RevTree> {
      * The path to import the data into
      */
     private String destPath;
+
+    /**
+     * The name of the attribute to use for defining feature id's
+     */
+    private String fidAttribute;
 
     private DataStore dataStore;
 
@@ -161,16 +168,24 @@ public class ImportOp extends AbstractGeoGitOp<RevTree> {
                 throw new GeoToolsOpException(StatusCode.UNABLE_TO_GET_FEATURES);
             }
 
-            final RevFeatureType featureType = RevFeatureType.build(featureSource.getSchema());
+            SimpleFeatureType featureType = featureSource.getSchema();
+            RevFeatureType revFeatureType = RevFeatureType.build(featureSource.getSchema());
 
             String path;
             if (destPath == null || destPath.isEmpty()) {
-                path = featureType.getName().getLocalPart();
+                path = revFeatureType.getName().getLocalPart();
             } else {
                 path = destPath;
-            }
 
+            }
             NodeRef.checkValidPath(path);
+
+            SimpleFeatureTypeBuilder builder = new SimpleFeatureTypeBuilder();
+            builder.setAttributes(featureType.getAttributeDescriptors());
+            builder.setName(new NameImpl(revFeatureType.getName().getNamespaceURI(), path));
+            builder.setCRS(featureType.getCoordinateReferenceSystem());
+            featureType = builder.buildFeatureType();
+            revFeatureType = RevFeatureType.build(featureType);
 
             ProgressListener taskProgress = subProgress(100.f / (all ? typeNames.size() : 1f));
 
@@ -194,8 +209,9 @@ public class ImportOp extends AbstractGeoGitOp<RevTree> {
                     return featureIterator.next();
                 }
             };
-            final String fidPrefix = featureType.getName().getLocalPart() + ".";
-            iterator = Iterators.transform(iterator, new FidReplacer(fidPrefix));
+            final String fidPrefix = revFeatureType.getName().getLocalPart() + ".";
+            iterator = Iterators.transform(iterator, new FidAndFtReplacer(fidAttribute, fidPrefix,
+                    featureType));
 
             Integer collectionSize = features.size();
             if (!alter) {
@@ -205,7 +221,7 @@ public class ImportOp extends AbstractGeoGitOp<RevTree> {
                     } else {
                         // No features
                         if (overwrite) {
-                            getWorkTree().createTypeTree(path, featureType.type());
+                            getWorkTree().createTypeTree(path, featureType);
                         }
                     }
                 } catch (Exception e) {
@@ -215,11 +231,12 @@ public class ImportOp extends AbstractGeoGitOp<RevTree> {
                 }
             } else {
                 // first we modify the feature type and the existing features, if needed
-                this.getWorkTree().updateTypeTree(path, featureType.type());
+                this.getWorkTree().updateTypeTree(path, featureType);
 
                 Iterator<NodeRef> oldFeatures = command(LsTreeOp.class).setReference(refspec)
                         .setStrategy(Strategy.FEATURES_ONLY).call();
-                Iterator<Feature> transformedIterator = transformIterator(oldFeatures, featureType);
+                Iterator<Feature> transformedIterator = transformIterator(oldFeatures,
+                        revFeatureType);
                 try {
                     Integer size = features.size();
                     getWorkTree().insert(path, transformedIterator, taskProgress, null, size);
@@ -326,6 +343,15 @@ public class ImportOp extends AbstractGeoGitOp<RevTree> {
     }
 
     /**
+     * 
+     * @param the attribute to use to create the feature id, if the default.
+     */
+    public ImportOp setFidAttribute(String attribute) {
+        this.fidAttribute = attribute;
+        return this;
+    }
+
+    /**
      * @param force if true, it will change the default feature type of the tree we are importing
      *        into and change all features under that tree to have that same feature type
      * @return {@code this}
@@ -356,32 +382,72 @@ public class ImportOp extends AbstractGeoGitOp<RevTree> {
     }
 
     /**
-     * Replaces the default geotools fid by removing the specified fidPrefix prefix from it.
+     * Replaces the default geotools fid with the string representation of the value of an
+     * attribute.
+     * 
+     * If the specified attribute is null, does not exist or the value is null, an fid is created by
+     * taking the default fid and removing the specified fidPrefix prefix from it.
+     * 
+     * It also replaces the feature type. This is used to avoid identical feature types (in terms of
+     * attributes) coming from different data sources (such as to shapefiles with different names)
+     * being considered different for having a different name. It is used in this importer class to
+     * decorate the name of the feature type when importing into a given tree, using the name of the
+     * tree.
+     * 
+     * The passed feature type should have the same attribute descriptions as the one to replace,
+     * but no checking is performed to ensure that
      * 
      */
-    private static final class FidReplacer implements Function<Feature, Feature> {
+    private static final class FidAndFtReplacer implements Function<Feature, Feature> {
+
+        private String attributeName;
 
         private String fidPrefix;
 
-        public FidReplacer(String fidPrefix) {
+        private SimpleFeatureType featureType;
+
+        public FidAndFtReplacer(final String attributeName, String fidPrefix,
+                SimpleFeatureType featureType) {
+            this.attributeName = attributeName;
             this.fidPrefix = fidPrefix;
+            this.featureType = featureType;
         }
 
         @Override
         public Feature apply(final Feature input) {
-            String fid = ((SimpleFeature) input).getID().substring(fidPrefix.length());
-            return new FidOverrideFeature((SimpleFeature) input, fid);
+            if (attributeName == null) {
+                String fid = ((SimpleFeature) input).getID().substring(fidPrefix.length());
+                return new FidAndFtOverrideFeature((SimpleFeature) input, fid, featureType);
+            } else {
+                Object value = ((SimpleFeature) input).getAttribute(attributeName);
+                if (value == null) {
+                    String fid = ((SimpleFeature) input).getID().substring(fidPrefix.length());
+                    return new FidAndFtOverrideFeature((SimpleFeature) input, fid, featureType);
+                } else {
+                    return new FidAndFtOverrideFeature((SimpleFeature) input, value.toString(),
+                            featureType);
+                }
+            }
         }
 
     }
 
-    private static final class FidOverrideFeature extends DecoratingFeature {
+    private static final class FidAndFtOverrideFeature extends DecoratingFeature {
 
         private String fid;
 
-        public FidOverrideFeature(SimpleFeature delegate, String fid) {
+        private SimpleFeatureType featureType;
+
+        public FidAndFtOverrideFeature(SimpleFeature delegate, String fid,
+                SimpleFeatureType featureType) {
             super(delegate);
             this.fid = fid;
+            this.featureType = featureType;
+        }
+
+        @Override
+        public SimpleFeatureType getType() {
+            return featureType;
         }
 
         @Override
