@@ -87,6 +87,18 @@ public class Clone extends AbstractCommand implements CLICommand {
         File repoDir;
         {
             File currDir = cli.getPlatform().pwd();
+
+            // Construct a non-relative repository URL
+            URI repoURI = URI.create(repoURL);
+            String protocol = repoURI.getScheme();
+            if (protocol == null || protocol.equals("file")) {
+                File repo = new File(repoURL);
+                if (!repo.isAbsolute()) {
+                    repo = new File(currDir, repoURL).getCanonicalFile();
+                }
+                repoURL = repo.toURI().getPath();
+            }
+
             if (args != null && args.size() == 2) {
                 String target = args.get(1);
                 File f = new File(target);
@@ -98,20 +110,22 @@ public class Clone extends AbstractCommand implements CLICommand {
                     throw new CommandFailedException("Can't create directory "
                             + repoDir.getAbsolutePath());
                 }
+            } else {
+                String[] sp;
 
-                // Construct a non-relative repository URL
-                URI repoURI = URI.create(repoURL);
-                String protocol = repoURI.getScheme();
                 if (protocol == null || protocol.equals("file")) {
-                    File repo = new File(repoURL);
-                    if (!repo.isAbsolute()) {
-                        repo = new File(currDir, repoURL).getCanonicalFile();
-                    }
-                    repoURL = repo.toURI().getPath();
+                    sp = repoURL.split(System.getProperty("file.separator"));
+                } else {
+                    // HTTP
+                    sp = repoURL.split("/");
                 }
 
-            } else {
-                repoDir = currDir;
+                repoDir = new File(currDir, sp[sp.length - 1]).getCanonicalFile();
+
+                if (!repoDir.exists() && !repoDir.mkdirs()) {
+                  throw new CommandFailedException("Can't create directory "
+                      + repoDir.getAbsolutePath());
+                }
             }
         }
 
