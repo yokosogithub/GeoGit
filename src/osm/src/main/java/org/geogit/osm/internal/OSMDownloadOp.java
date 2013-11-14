@@ -158,7 +158,9 @@ public class OSMDownloadOp extends AbstractGeoGitOp<Optional<OSMDownloadReport>>
                     + " --keep-files options and verify the intermediate file.");
 
         } catch (RuntimeException e) {
-            throw new IllegalStateException("Error importing OSM data: " + e.getMessage(), e);
+            throw new IllegalStateException(
+                    "Failed to fetch data from overpass server. (Did you try to use a standard OSM server instead?) "
+                            + e.getMessage(), e);
         }
 
     }
