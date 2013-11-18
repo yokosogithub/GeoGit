@@ -224,6 +224,9 @@ Mappings are defined in a mapping file, using JSON syntax, as in the following e
 	    "filter":{
 	      "oneway":["yes"]
 	    },
+	    "exclude":{
+	      "highway":["construction"]
+	    },
 	    "fields":{
 	      "highway":{"name":"highway", "type":"STRING"},
 	      "geom":{"name":"geom", "type":"LINESTRING"}
@@ -235,6 +238,7 @@ A mapping description is an array of mapping rules, each of them with the follow
  
 - ``name`` defines the name of the mapping, and is used as the name of the destination tree.
 - ``filter`` is a set of tags and values, which define the entities to use for the tree. All entities which have any of the specified values for any of the given tags will be used. And empty filter will cause all entities to be used.
+- ``exclude`` is a set of tags and values used to exclude certain elements. Those elements that contain any of the specified values for the specified tags, will not be mapped, even if they pass the filter set by the ``filter`` element. This field can be ignored and not added to the JSON definition, so no exclusion filter is added. Examples in this document do not use this field.
 - ``fields`` is a set of tags and destination column names and types.
 
 The following mapping will copy all ways to a feature type that only contains the geometry of the way:
@@ -361,10 +365,12 @@ Below you can see some examples:
 
 	$ geogit osm export-shp ./myexportfile.shp --mapping ./mymappingfile.json
 
+	$ geogit osm export-pg --port 54321 --database geogit --mapping ./mymappingfile.json --user geogit --password geogit
 
-The mapping file should contain a single rule. If the mapping contains more than one mapping rule, only the first one will be used. 
 
-In the case of a shapefile, the destination file has to be entered. In the case of a database export, the name of the mapping is used as the name of the table to create. In both cases, the ``--overwrite`` switch has to be used if the destination file/table already exists.
+When exporting to a shapefile, the mapping file should contain a single rule. If the mapping contains more than one mapping rule, only the first one will be used. 
+
+In the case of a shapefile, the destination file has to be entered. In the case of a database export, the name of the each rule is used as the name of the corresponding table to create. In both cases, the ``--overwrite`` switch has to be used if the destination file/table already exists.
 
 Since features in a shapefiles must have a geometry, the mapping used when exporting to a shapefile must contain one, and only one, field of type ``POLYGON, LINESTRING`` or ``POINT``. In the case of exporting to a database, the rule can contain no geometry attribute at all. 
 

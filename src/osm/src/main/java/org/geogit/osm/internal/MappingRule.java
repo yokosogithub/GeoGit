@@ -17,6 +17,7 @@ import org.geotools.feature.simple.SimpleFeatureTypeBuilder;
 import org.geotools.referencing.crs.DefaultGeographicCRS;
 import org.opengis.feature.Feature;
 import org.opengis.feature.GeometryAttribute;
+import org.opengis.feature.simple.SimpleFeature;
 import org.opengis.feature.simple.SimpleFeatureType;
 import org.opengis.feature.type.AttributeDescriptor;
 import org.openstreetmap.osmosis.core.domain.v0_6.Tag;
@@ -53,6 +54,14 @@ public class MappingRule {
     private Map<String, List<String>> filter;
 
     /**
+     * A map of key, list_of_values_to_exclude, to be used to filter features. If a feature has any
+     * of the keys in this map with any of the values in the list, it will not be transformed by
+     * this rule, even if it meets the conditions set by the 'filter' object
+     */
+    @Expose
+    private Map<String, List<String>> exclude;
+
+    /**
      * The fields to use for the custom feature type of the transformed feature
      */
     @Expose
@@ -67,12 +76,13 @@ public class MappingRule {
     private static GeometryFactory gf = new GeometryFactory();
 
     public MappingRule(String name, Map<String, List<String>> filter,
-            Map<String, AttributeDefinition> fields) {
+            Map<String, List<String>> filterExclude, Map<String, AttributeDefinition> fields) {
         Preconditions.checkNotNull(name);
         Preconditions.checkNotNull(filter);
         Preconditions.checkNotNull(fields);
         this.name = name;
         this.filter = filter;
+        this.exclude = filterExclude;
         this.fields = fields;
         ArrayList<String> names = Lists.newArrayList();
         for (AttributeDefinition ad : fields.values()) {
@@ -122,6 +132,21 @@ public class MappingRule {
 
     /**
      * Returns the feature resulting from transforming a given feature using this rule
+     * 
+     * @param feature
+     * @return
+     */
+    public Optional<Feature> apply(Feature feature) {
+        String tagsString = (String) ((SimpleFeature) feature).getAttribute("tags");
+        Collection<Tag> tags = OSMUtils.buildTagsCollectionFromString(tagsString);
+        return apply(feature, tags);
+    }
+
+    /**
+     * Returns the feature resulting from transforming a given feature using this rule. This method
+     * takes a colelction of tags, so there is no need to compute them from the 'tags' attribute.
+     * This is meant as a faster alternative to the apply(Feature) method, in case the mapping
+     * object calling this has already computed the tags, to avoid recomputing them
      * 
      * @param feature
      * @param tags
@@ -183,7 +208,7 @@ public class MappingRule {
     }
 
     public boolean canBeApplied(Feature feature, Collection<Tag> tags) {
-        return hasRequiredTags(feature, tags) && hasCompatibleGeometryType(feature);
+        return hasCorrectTags(feature, tags) && hasCompatibleGeometryType(feature);
     }
 
     private boolean hasCompatibleGeometryType(Feature feature) {
@@ -197,22 +222,26 @@ public class MappingRule {
         }
     }
 
-    private boolean hasRequiredTags(Feature feature, Collection<Tag> tags) {
-        if (filter.isEmpty()) {
+    private boolean hasCorrectTags(Feature feature, Collection<Tag> tags) {
+        if (filter.isEmpty() && (exclude == null || exclude.isEmpty())) {
             return true;
         }
+        boolean ret = false;
         for (Tag tag : tags) {
+            if (exclude != null && exclude.keySet().contains(tag.getKey())) {
+                List<String> values = exclude.get(tag.getKey());
+                if (values.isEmpty() || values.contains(tag.getValue())) {
+                    return false;
+                }
+            }
             if (filter.keySet().contains(tag.getKey())) {
                 List<String> values = filter.get(tag.getKey());
-                if (values.isEmpty()) {
-                    return true;
-                }
-                if (values.contains(tag.getValue())) {
-                    return true;
+                if (values.isEmpty() || values.contains(tag.getValue())) {
+                    ret = true;
                 }
             }
         }
-        return false;
+        return ret;
     }
 
     public String getName() {
@@ -263,7 +292,8 @@ public class MappingRule {
     public boolean equals(Object o) {
         if (o instanceof MappingRule) {
             MappingRule m = (MappingRule) o;
-            return name.equals(m.name) && m.fields.equals(fields) && m.filter.equals(filter);
+            return name.equals(m.name) && m.fields.equals(fields) && m.filter.equals(filter)
+                    && m.exclude.equals(exclude);
         } else {
             return false;
         }

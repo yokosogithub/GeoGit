@@ -85,6 +85,10 @@ public class OSMMapTest extends Assert {
         assertEquals(wkt, values.get(2).get().toString());
         assertEquals("345117525;345117526;1300224327;345117527", values.get(3).get());
         assertEquals("yes", values.get(1).get());
+        // check that a feature was correctly ignored
+        revFeature = cli.getGeogit().command(RevObjectParse.class)
+                .setRefSpec("HEAD:onewaystreets/31347480").call(RevFeature.class);
+        assertFalse(revFeature.isPresent());
     }
 
     @Test

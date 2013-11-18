@@ -67,7 +67,8 @@ public class OSMMapOpTest extends RepositoryTestCase {
         mappings.put("oneway", Lists.newArrayList("yes"));
         fields.put("geom", new AttributeDefinition("geom", FieldType.LINESTRING));
         fields.put("lit", new AttributeDefinition("lit", FieldType.STRING));
-        MappingRule mappingRule = new MappingRule("onewaystreets", mappings, fields);
+        Map<String, List<String>> filterExclude = Maps.newHashMap();
+        MappingRule mappingRule = new MappingRule("onewaystreets", mappings, filterExclude, fields);
         List<MappingRule> mappingRules = Lists.newArrayList();
         mappingRules.add(mappingRule);
         Mapping mapping = new Mapping(mappingRules);
@@ -110,7 +111,8 @@ public class OSMMapOpTest extends RepositoryTestCase {
         mappings.put("highway", Lists.newArrayList("bus_stop"));
         fields.put("geom", new AttributeDefinition("geom", FieldType.POINT));
         fields.put("name", new AttributeDefinition("name", FieldType.STRING));
-        MappingRule mappingRule = new MappingRule("busstops", mappings, fields);
+        Map<String, List<String>> filterExclude = Maps.newHashMap();
+        MappingRule mappingRule = new MappingRule("busstops", mappings, filterExclude, fields);
         List<MappingRule> mappingRules = Lists.newArrayList();
         mappingRules.add(mappingRule);
         Mapping mapping = new Mapping(mappingRules);
@@ -139,6 +141,51 @@ public class OSMMapOpTest extends RepositoryTestCase {
     }
 
     @Test
+    public void testMappingWithExclusion() throws Exception {
+        // import and check that we have nodes
+        String filename = OSMImportOp.class.getResource("nodes.xml").getFile();
+        File file = new File(filename);
+        geogit.command(OSMImportOp.class).setDataSource(file.getAbsolutePath()).call();
+        WorkingTree workTree = geogit.getRepository().getWorkingTree();
+        long unstaged = workTree.countUnstaged("node").getCount();
+        assertTrue(unstaged > 0);
+        geogit.command(AddOp.class).call();
+        geogit.command(CommitOp.class).setMessage("msg").call();
+        // Define mapping
+        Map<String, AttributeDefinition> fields = Maps.newHashMap();
+        Map<String, List<String>> filter = Maps.newHashMap();
+        Map<String, List<String>> filterExclude = Maps.newHashMap();
+        filter.put("highway", Lists.newArrayList("bus_stop"));
+        filterExclude.put("public_transport", Lists.newArrayList("stop_position"));
+        fields.put("geom", new AttributeDefinition("geom", FieldType.POINT));
+        fields.put("name", new AttributeDefinition("name", FieldType.STRING));
+        fields.put("name", new AttributeDefinition("name", FieldType.STRING));
+        MappingRule mappingRule = new MappingRule("busstops", filter, filterExclude, fields);
+        List<MappingRule> mappingRules = Lists.newArrayList();
+        mappingRules.add(mappingRule);
+        Mapping mapping = new Mapping(mappingRules);
+        geogit.command(OSMMapOp.class).setMapping(mapping).call();
+
+        // Check that mapping was correctly performed
+        Optional<RevFeature> revFeature = geogit.command(RevObjectParse.class)
+                .setRefSpec("HEAD:busstops/507464799").call(RevFeature.class);
+        assertTrue(revFeature.isPresent());
+        Optional<RevFeatureType> featureType = geogit.command(ResolveFeatureType.class)
+                .setRefSpec("HEAD:busstops/507464799").call();
+        assertTrue(featureType.isPresent());
+        ImmutableList<Optional<Object>> values = revFeature.get().getValues();
+        assertEquals(3, values.size());
+        String wkt = "POINT (7.1959361 50.739397)";
+        assertEquals(wkt, values.get(2).get().toString());
+        assertEquals(507464799l, values.get(0).get());
+
+        // Check that the excluded feature is missing
+        revFeature = geogit.command(RevObjectParse.class).setRefSpec("HEAD:busstops/507464865")
+                .call(RevFeature.class);
+        assertFalse(revFeature.isPresent());
+    }
+
+    @Test
     public void testMappingNodesWithAlias() throws Exception {
         // import and check that we have nodes
         String filename = OSMImportOp.class.getResource("nodes.xml").getFile();
@@ -156,7 +203,8 @@ public class OSMMapOpTest extends RepositoryTestCase {
         mappings.put("highway", Lists.newArrayList("bus_stop"));
         fields.put("geom", new AttributeDefinition("the_geometry", FieldType.POINT));
         fields.put("name", new AttributeDefinition("the_name", FieldType.STRING));
-        MappingRule mappingRule = new MappingRule("busstops", mappings, fields);
+        Map<String, List<String>> filterExclude = Maps.newHashMap();
+        MappingRule mappingRule = new MappingRule("busstops", mappings, filterExclude, fields);
         List<MappingRule> mappingRules = Lists.newArrayList();
         mappingRules.add(mappingRule);
         Mapping mapping = new Mapping(mappingRules);
@@ -196,7 +244,8 @@ public class OSMMapOpTest extends RepositoryTestCase {
         Map<String, List<String>> filters = Maps.newHashMap();
         filters.put("oneway", Lists.newArrayList("yes"));
         fields.put("lit", new AttributeDefinition("lit", FieldType.STRING));
-        MappingRule mappingRule = new MappingRule("onewaystreets", filters, fields);
+        Map<String, List<String>> filterExclude = Maps.newHashMap();
+        MappingRule mappingRule = new MappingRule("onewaystreets", filters, filterExclude, fields);
         List<MappingRule> mappingRules = Lists.newArrayList();
         mappingRules.add(mappingRule);
         Mapping mapping = new Mapping(mappingRules);
@@ -227,7 +276,8 @@ public class OSMMapOpTest extends RepositoryTestCase {
         Map<String, List<String>> filters = Maps.newHashMap();
         fields.put("lit", new AttributeDefinition("lit", FieldType.STRING));
         fields.put("geom", new AttributeDefinition("geom", FieldType.LINESTRING));
-        MappingRule mappingRule = new MappingRule("allways", filters, fields);
+        Map<String, List<String>> filterExclude = Maps.newHashMap();
+        MappingRule mappingRule = new MappingRule("allways", filters, filterExclude, fields);
         List<MappingRule> mappingRules = Lists.newArrayList();
         mappingRules.add(mappingRule);
         Mapping mapping = new Mapping(mappingRules);
@@ -258,7 +308,8 @@ public class OSMMapOpTest extends RepositoryTestCase {
         fields.put("lit", new AttributeDefinition("lit", FieldType.STRING));
         fields.put("geom", new AttributeDefinition("geom", FieldType.POINT));
         filters.put("highway", new ArrayList<String>());
-        MappingRule mappingRule = new MappingRule("mapped", filters, fields);
+        Map<String, List<String>> filterExclude = Maps.newHashMap();
+        MappingRule mappingRule = new MappingRule("mapped", filters, filterExclude, fields);
         List<MappingRule> mappingRules = Lists.newArrayList();
         mappingRules.add(mappingRule);
         Mapping mapping = new Mapping(mappingRules);
