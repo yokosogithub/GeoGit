@@ -246,6 +246,9 @@ out meta;</pre>
     <span class="s">&quot;filter&quot;</span><span class="p">:{</span>
       <span class="s">&quot;oneway&quot;</span><span class="p">:[</span><span class="s">&quot;yes&quot;</span><span class="p">]</span>
     <span class="p">},</span>
+    <span class="s">&quot;exclude&quot;</span><span class="p">:{</span>
+      <span class="s">&quot;highway&quot;</span><span class="p">:[</span><span class="s">&quot;construction&quot;</span><span class="p">]</span>
+    <span class="p">},</span>
     <span class="s">&quot;fields&quot;</span><span class="p">:{</span>
       <span class="s">&quot;highway&quot;</span><span class="p">:{</span><span class="s">&quot;name&quot;</span><span class="p">:</span><span class="s">&quot;highway&quot;</span><span class="p">,</span> <span class="s">&quot;type&quot;</span><span class="p">:</span><span class="s">&quot;STRING&quot;</span><span class="p">},</span>
       <span class="s">&quot;geom&quot;</span><span class="p">:{</span><span class="s">&quot;name&quot;</span><span class="p">:</span><span class="s">&quot;geom&quot;</span><span class="p">,</span> <span class="s">&quot;type&quot;</span><span class="p">:</span><span class="s">&quot;LINESTRING&quot;</span><span class="p">}</span>
@@ -258,6 +261,7 @@ out meta;</pre>
 <ul class="simple">
 <li><tt class="docutils literal"><span class="pre">name</span></tt> defines the name of the mapping, and is used as the name of the destination tree.</li>
 <li><tt class="docutils literal"><span class="pre">filter</span></tt> is a set of tags and values, which define the entities to use for the tree. All entities which have any of the specified values for any of the given tags will be used. And empty filter will cause all entities to be used.</li>
+<li><tt class="docutils literal"><span class="pre">exclude</span></tt> is a set of tags and values used to exclude certain elements. Those elements that contain any of the specified values for the specified tags, will not be mapped, even if they pass the filter set by the <tt class="docutils literal"><span class="pre">filter</span></tt> element. This field can be ignored and not added to the JSON definition, so no exclusion filter is added. Examples in this document do not use this field.</li>
 <li><tt class="docutils literal"><span class="pre">fields</span></tt> is a set of tags and destination column names and types.</li>
 </ul>
 <p>The following mapping will copy all ways to a feature type that only contains the geometry of the way:</p>
@@ -355,10 +359,12 @@ out meta;</pre>
 </div>
 <p>These commands all have a syntax similar to the equivalent export commands such as <tt class="docutils literal"><span class="pre">shp</span> <span class="pre">export</span></tt> or <tt class="docutils literal"><span class="pre">pg</span> <span class="pre">export</span></tt>, but without the <tt class="docutils literal"><span class="pre">--alter</span></tt>, <tt class="docutils literal"><span class="pre">--defaulttype</span></tt> and <tt class="docutils literal"><span class="pre">--featuretype</span></tt> options. Instead, the <tt class="docutils literal"><span class="pre">--mapping</span></tt> option must be used to specify the file that contains the mapping to use. Also, a path cannot be specified, since the operation will always take the OSM data from the default <em>raw</em> locations at the <tt class="docutils literal"><span class="pre">way</span></tt> and <tt class="docutils literal"><span class="pre">node</span></tt> trees.</p>
 <p>Below you can see some examples:</p>
-<div class="highlight-python"><pre>$ geogit osm export-shp ./myexportfile.shp --mapping ./mymappingfile.json</pre>
+<div class="highlight-python"><pre>$ geogit osm export-shp ./myexportfile.shp --mapping ./mymappingfile.json
+
+$ geogit osm export-pg --port 54321 --database geogit --mapping ./mymappingfile.json --user geogit --password geogit</pre>
 </div>
-<p>The mapping file should contain a single rule. If the mapping contains more than one mapping rule, only the first one will be used.</p>
-<p>In the case of a shapefile, the destination file has to be entered. In the case of a database export, the name of the mapping is used as the name of the table to create. In both cases, the <tt class="docutils literal"><span class="pre">--overwrite</span></tt> switch has to be used if the destination file/table already exists.</p>
+<p>When exporting to a shapefile, the mapping file should contain a single rule. If the mapping contains more than one mapping rule, only the first one will be used.</p>
+<p>In the case of a shapefile, the destination file has to be entered. In the case of a database export, the name of the each rule is used as the name of the corresponding table to create. In both cases, the <tt class="docutils literal"><span class="pre">--overwrite</span></tt> switch has to be used if the destination file/table already exists.</p>
 <p>Since features in a shapefiles must have a geometry, the mapping used when exporting to a shapefile must contain one, and only one, field of type <tt class="docutils literal"><span class="pre">POLYGON,</span> <span class="pre">LINESTRING</span></tt> or <tt class="docutils literal"><span class="pre">POINT</span></tt>. In the case of exporting to a database, the rule can contain no geometry attribute at all.</p>
 <p>In all cases, exporting is done from the working tree.</p>
 <div class="admonition note">
@@ -669,6 +675,16 @@ $ geogit config osm.waypath osmway</pre>
         $('.btn-text').toggleClass('active');
       });
     });
+  </script>
+  <script type="text/javascript">
+      var _gaq = _gaq || [];
+      _gaq.push(['_setAccount', 'UA-3879903-19']);
+      _gaq.push(['_trackPageview']);
+      (function() {
+        var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+        ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+        var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+      })();
   </script>
   </body>
 </html>

@@ -87,7 +87,7 @@
 <span id="geogit-pg-import"></span><h1>geogit-pg-import documentation<a class="headerlink" href="#geogit-pg-import-documentation" title="Permalink to this headline">¶</a></h1>
 <div class="section" id="synopsis">
 <h2>SYNOPSIS<a class="headerlink" href="#synopsis" title="Permalink to this headline">¶</a></h2>
-<p>geogit pg import [options] [&#8211;all|-t &lt;table&gt;]</p>
+<p>geogit pg import [connection_options] [&#8211;all|-t &lt;table&gt;]  [&#8211;path &lt;path&gt;] [&#8211;add] [&#8211;alter]</p>
 </div>
 <div class="section" id="description">
 <h2>DESCRIPTION<a class="headerlink" href="#description" title="Permalink to this headline">¶</a></h2>
@@ -99,6 +99,19 @@
 <col class="option" />
 <col class="description" />
 <tbody valign="top">
+<tr><td class="option-group">
+<kbd><span class="option">--path <var>&lt;path&gt;</var></span></kbd></td>
+<td>The path to import to. Only allowed when importing a single table. If not specified, it uses the table name</td></tr>
+<tr><td class="option-group" colspan="2">
+<kbd><span class="option">--fid-attrib <var>&lt;attrib_name&gt;</var></span></kbd></td>
+</tr>
+<tr><td>&nbsp;</td><td>Uses the specified attribute as the feature id of each feature to import. If not used, a nummber indicating the position in the shapefile is used</td></tr>
+<tr><td class="option-group">
+<kbd><span class="option">--add</span></kbd></td>
+<td>Adds the imported feature to the corresponding tree without removing previous features in case the tree already exists</td></tr>
+<tr><td class="option-group">
+<kbd><span class="option">--alter</span></kbd></td>
+<td>Same as the <tt class="docutils literal"><span class="pre">--add</span></tt> switch, but if the feature type of the imported features is different to that of the destination tree, the default feature type is changed and all previous features are modified to use that feature type</td></tr>
 <tr><td class="option-group">
 <kbd><span class="option">-t</span>, <span class="option">--table</span></kbd></td>
 <td>The table to import.</td></tr>
@@ -220,6 +233,16 @@
         $('.btn-text').toggleClass('active');
       });
     });
+  </script>
+  <script type="text/javascript">
+      var _gaq = _gaq || [];
+      _gaq.push(['_setAccount', 'UA-3879903-19']);
+      _gaq.push(['_trackPageview']);
+      (function() {
+        var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+        ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+        var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+      })();
   </script>
   </body>
 </html>
