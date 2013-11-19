@@ -114,8 +114,8 @@ public class MongoObjectDatabase implements ObjectDatabase {
     @Override
     public void configure() throws RepositoryConnectionException {
         RepositoryConnectionException.StorageType.OBJECT.configure(config, "mongodb", "0.1");
-        config.put("mongodb.host", "localhost");
-        config.put("mongodb.port", 27017);
+        config.put("mongodb.host", config.get("mongodb.host").or(config.getGlobal("mongodb.host")).or("localhost"));
+        config.put("mongodb.port", config.get("mongodb.port").or(config.getGlobal("mongodb.port")).or("27017"));
     }
 
     @Override
