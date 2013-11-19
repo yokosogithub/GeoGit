@@ -75,7 +75,7 @@ public class GeogitCLI {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(GeogitCLI.class);
 
-    private boolean loggingConfigured;
+    private File geogitDirLoggingConfiguration;
 
     private Injector commandsInjector;
 
@@ -260,33 +260,32 @@ public class GeogitCLI {
     }
 
     void tryConfigureLogging() {
-        if (loggingConfigured) {
-            return;
-        }
-        loggingConfigured = true;
-
         // instantiate and call ResolveGeogitDir directly to avoid calling getGeogit() and hence get
         // some logging events before having configured logging
         final URL geogitDirUrl = new ResolveGeogitDir(getPlatform()).call();
-        if (geogitDirUrl == null) {
+        if (geogitDirUrl == null || !"file".equalsIgnoreCase(geogitDirUrl.getProtocol())) {
             // redirect java.util.logging to SLF4J anyways
             SLF4JBridgeHandler.removeHandlersForRootLogger();
             SLF4JBridgeHandler.install();
             return;
         }
-        if (!"file".equalsIgnoreCase(geogitDirUrl.getProtocol())) {
-            return;
-        }
-        File geogitdir;
+
+        final File geogitDir;
         try {
-            geogitdir = new File(geogitDirUrl.toURI());
+            geogitDir = new File(geogitDirUrl.toURI());
         } catch (URISyntaxException e) {
             throw Throwables.propagate(e);
         }
-        if (!geogitdir.exists() || !geogitdir.isDirectory()) {
+
+        if (geogitDir.equals(geogitDirLoggingConfiguration)) {
             return;
         }
-        final URL loggingFile = getOrCreateLoggingConfigFile(geogitdir);
+
+        if (!geogitDir.exists() || !geogitDir.isDirectory()) {
+            return;
+        }
+        final URL loggingFile = getOrCreateLoggingConfigFile(geogitDir);
+
         if (loggingFile == null) {
             return;
         }
@@ -298,7 +297,7 @@ public class GeogitCLI {
              * Set the geogitdir variable for the config file can resolve the default location
              * ${geogitdir}/log/geogit.log
              */
-            loggerContext.putProperty("geogitdir", geogitdir.getAbsolutePath());
+            loggerContext.putProperty("geogitdir", geogitDir.getAbsolutePath());
             JoranConfigurator configurator = new JoranConfigurator();
             configurator.setContext(loggerContext);
             configurator.doConfigure(loggingFile);
@@ -306,6 +305,7 @@ public class GeogitCLI {
             // redirect java.util.logging to SLF4J
             SLF4JBridgeHandler.removeHandlersForRootLogger();
             SLF4JBridgeHandler.install();
+            geogitDirLoggingConfiguration = geogitDir;
         } catch (JoranException e) {
             LOGGER.error("Error configuring logging from file {}. '{}'", loggingFile,
                     e.getMessage(), e);

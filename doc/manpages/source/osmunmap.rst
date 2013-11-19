@@ -1,5 +1,5 @@
 
-.. _geogit-unmap:
+.. _geogit-osm-unmap:
 
 geogit-osmunmap documentation
 ##############################
@@ -34,7 +34,9 @@ SEE ALSO
 ********
 
 :ref:`geogit-osm-download`
+
 :ref:`geogit-osm-map`
+
 :ref:`geogit-osm-import`
 
 BUGS

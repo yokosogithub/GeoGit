@@ -3,7 +3,7 @@
  * application directory.
  */
 
-package org.geogit.storage;
+package org.geogit.di;
 
 import java.util.Iterator;
 import java.util.List;
@@ -13,6 +13,8 @@ import org.aopalliance.intercept.MethodInvocation;
 import org.geogit.api.ObjectId;
 import org.geogit.api.RevCommit;
 import org.geogit.api.RevObject;
+import org.geogit.storage.GraphDatabase;
+import org.geogit.storage.ObjectDatabase;
 
 import com.google.common.base.Function;
 import com.google.common.collect.ImmutableList;
@@ -24,7 +26,7 @@ import com.google.inject.Provider;
  * Method interceptor for {@link ObjectDatabase#put(RevObject)} that adds new commits to the graph
  * database.
  */
-public class ObjectDatabasePutInterceptor implements MethodInterceptor {
+class ObjectDatabasePutInterceptor implements MethodInterceptor {
 
     private Provider<GraphDatabase> graphDb;
 

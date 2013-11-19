@@ -36,7 +36,9 @@ SEE ALSO
 ********
 
 :ref:`geogit-fetch`
+
 :ref:`geogit-clone`
+
 :ref:`geogit-rebase`
 
 BUGS

@@ -40,7 +40,7 @@
         <artifactId>appassembler-maven-plugin</artifactId>
         <configuration>
           <!-- Extra JVM arguments that will be included in the bin scripts -->
-          <extraJvmArguments>-Xmx2G -XX:MaxPermSize=128m -Dorg.geotools.referencing.forceXY=true -XX:-HeapDumpOnOutOfMemoryError</extraJvmArguments>
+          <extraJvmArguments>-Xmx2G -XX:MaxPermSize=128m -Dorg.geotools.referencing.forceXY=true -XX:-HeapDumpOnOutOfMemoryError -XX:+UseCompressedOops</extraJvmArguments>
           <!-- set alternative assemble directory -->
           <assembleDirectory>${project.build.directory}/geogit-build</assembleDirectory>
           <repositoryLayout>flat</repositoryLayout>
@@ -130,9 +130,19 @@
     </plugins>
   </build>
 
-  <profiles>
+ <profiles>
     <profile>
-      <id>sqlServerDriver</id>
+      <id>oracle</id>
+      <dependencies>
+        <dependency>
+          <groupId>com.oracle</groupId>
+          <artifactId>ojdbc14</artifactId> 
+          <version>10.2.0.3.0</version>
+        </dependency>
+      </dependencies>
+    </profile>
+    <profile>
+      <id>sqlServer</id>
       <dependencies>
         <dependency>
           <groupId>com.microsoft</groupId>

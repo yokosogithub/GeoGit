@@ -25,7 +25,7 @@ import com.google.inject.Inject;
  * Rebuilds the {@link GraphDatabase} and returns a list of {@link ObjectId}s that were found to be
  * missing or incomplete.
  */
-public final class RebuildGraphOp extends AbstractGeoGitOp<ImmutableList<ObjectId>> {
+public class RebuildGraphOp extends AbstractGeoGitOp<ImmutableList<ObjectId>> {
 
     private Repository repository;
 

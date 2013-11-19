@@ -1,8 +1,8 @@
 
-.. _geogit-import:
+.. _geogit-osm-import:
 
 geogit-osm-import documentation
-##############################
+################################
 
 
 
@@ -14,7 +14,7 @@ geogit osm import <filename> [--add] <repository> [<directory>] [--filter <file>
 DESCRIPTION
 ***********
 
-Imports OSM data from a file into the working tree of the repository. Optionally, a data mapping can be performed. See :ref:`geogit-map` for more information about how to define a mapping.
+Imports OSM data from a file into the working tree of the repository. Optionally, a data mapping can be performed. See :ref:`geogit-osm-map` for more information about how to define a mapping.
 
 Data in the specified file is imported into GeoGit and put into two trees: ``way`` and ``node``, with default feature types in both cases.
 
@@ -38,7 +38,9 @@ SEE ALSO
 ********
 
 :ref:`geogit-osm-download`
+
 :ref:`geogit-osm-map`
+
 :ref:`geogit-osm-unmap`
 
 BUGS

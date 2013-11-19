@@ -12,19 +12,16 @@ import java.util.Iterator;
 import org.geogit.api.AbstractGeoGitOp;
 import org.geogit.api.CommandLocator;
 import org.geogit.api.DefaultPlatform;
-import org.geogit.api.ObjectId;
 import org.geogit.api.Platform;
 import org.geogit.api.RevObject;
 import org.geogit.repository.Index;
 import org.geogit.repository.Repository;
 import org.geogit.repository.StagingArea;
 import org.geogit.repository.WorkingTree;
-import org.geogit.storage.CachingObjectDatabaseGetInterceptor;
 import org.geogit.storage.ConfigDatabase;
 import org.geogit.storage.DeduplicationService;
 import org.geogit.storage.GraphDatabase;
 import org.geogit.storage.ObjectDatabase;
-import org.geogit.storage.ObjectDatabasePutInterceptor;
 import org.geogit.storage.ObjectSerializingFactory;
 import org.geogit.storage.RefDatabase;
 import org.geogit.storage.StagingDatabase;
@@ -87,28 +84,9 @@ public class GeogitModule extends AbstractModule {
 
         bind(DeduplicationService.class).to(HeapDeduplicationService.class).in(Scopes.SINGLETON);
 
-        bindRevObjectCachingDatabaseInterceptor();
-
         bindCommitGraphInterceptor();
 
         bindConflictCheckingInterceptor();
-    }
-
-    private void bindRevObjectCachingDatabaseInterceptor() {
-        final Method getObjectId;
-        final Method getObjectIdClass;
-        try {
-            getObjectId = ObjectDatabase.class.getMethod("get", ObjectId.class);
-            getObjectIdClass = ObjectDatabase.class.getMethod("get", ObjectId.class, Class.class);
-        } catch (Exception e) {
-            throw Throwables.propagate(e);
-        }
-        Matcher<Method> methodMatcher = new MethodMatcher(getObjectId).or(new MethodMatcher(
-                getObjectIdClass));
-
-        bindInterceptor(subclassesOf(ObjectDatabase.class), methodMatcher,
-                new CachingObjectDatabaseGetInterceptor());
-
     }
 
     private void bindConflictCheckingInterceptor() {

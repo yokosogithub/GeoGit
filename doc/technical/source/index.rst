@@ -16,3 +16,4 @@ Contents:
     developers.rst
     geogit-merge-conflicts.rst
     sparse-clone.rst
+    osm.rst

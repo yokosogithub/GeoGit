@@ -6,8 +6,8 @@ package org.geogit.cli;
 
 import org.geogit.api.InjectorBuilder;
 import org.geogit.di.GeogitModule;
+import org.geogit.di.caching.CachingModule;
 import org.geogit.metrics.MetricsModule;
-import org.geogit.storage.bdbje.JEStorageModule;
 import org.geogit.storage.mongo.MongoStorageModule;
 
 import com.google.inject.Guice;
@@ -18,9 +18,8 @@ public class CLIInjectorBuilder extends InjectorBuilder {
 
     @Override
     public Injector build() {
-        return Guice.createInjector(Modules.override(new GeogitModule()).with(
-                new MongoStorageModule(),
-                new MetricsModule()));
+        return Guice.createInjector(Modules.override(new GeogitModule(), new CachingModule()).with(
+                new MongoStorageModule(), new MetricsModule()));
     }
 
 }

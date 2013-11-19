@@ -173,9 +173,10 @@ public class OSMDownloadOpTest extends RepositoryTestCase {
         try {
             OSMDownloadOp download = geogit.command(OSMDownloadOp.class);
             download.setBbox(Arrays.asList("50.79", "7.19", "50.8", "7.20"))
-                    .setOsmAPIUrl("wrongurl").call();
+                    .setOsmAPIUrl("http://wrongurl.com").call();
             fail();
         } catch (IllegalStateException e) {
+            assertTrue(e.getMessage().contains("Did you try to use a standard OSM server instead?"));
         }
     }
 

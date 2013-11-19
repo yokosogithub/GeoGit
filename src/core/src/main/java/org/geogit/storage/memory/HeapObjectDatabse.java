@@ -7,6 +7,7 @@ package org.geogit.storage.memory;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.io.ByteArrayInputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.util.Collections;
 import java.util.Iterator;
@@ -14,14 +15,19 @@ import java.util.List;
 import java.util.Map;
 
 import org.geogit.api.ObjectId;
+import org.geogit.api.RevObject;
 import org.geogit.storage.AbstractObjectDatabase;
+import org.geogit.storage.BulkOpListener;
 import org.geogit.storage.ObjectDatabase;
 import org.geogit.storage.ObjectSerializingFactory;
 
 import com.google.common.base.Preconditions;
+import com.google.common.base.Throwables;
+import com.google.common.collect.AbstractIterator;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.inject.Inject;
+import com.ning.compress.lzf.LZFInputStream;
 
 /**
  * Provides an implementation of a GeoGit object database that utilizes the heap for the storage of
@@ -141,24 +147,59 @@ public class HeapObjectDatabse extends AbstractObjectDatabase implements ObjectD
     }
 
     @Override
-    public long deleteAll(Iterator<ObjectId> ids) {
+    public long deleteAll(Iterator<ObjectId> ids, final BulkOpListener listener) {
         long count = 0;
         while (ids.hasNext()) {
-            byte[] removed = this.objects.remove(ids.next());
+            ObjectId id = ids.next();
+            byte[] removed = this.objects.remove(id);
             if (removed != null) {
                 count++;
+                listener.deleted(id);
+            } else {
+                listener.notFound(id);
             }
         }
         return count;
     }
 
     @Override
+    public Iterator<RevObject> getAll(final Iterable<ObjectId> ids, final BulkOpListener listener) {
+
+        return new AbstractIterator<RevObject>() {
+            final Iterator<ObjectId> iterator = ids.iterator();
+
+            @Override
+            protected RevObject computeNext() {
+                RevObject found = null;
+                ObjectId id;
+                byte[] raw;
+                while (iterator.hasNext() && found == null) {
+                    id = iterator.next();
+                    raw = objects.get(id);
+                    if (raw != null) {
+                        try {
+                            found = serializationFactory.createObjectReader().read(id,
+                                    new LZFInputStream(new ByteArrayInputStream(raw)));
+                        } catch (IOException e) {
+                            throw Throwables.propagate(e);
+                        }
+                        listener.found(found, raw.length);
+                    } else {
+                        listener.notFound(id);
+                    }
+                }
+                return found == null ? endOfData() : found;
+            }
+        };
+    }
+
+    @Override
     public void configure() {
         // No-op
     }
-    
+
     @Override
-	public void checkConfig() {
-		// No-op
-	}
+    public void checkConfig() {
+        // No-op
+    }
 }

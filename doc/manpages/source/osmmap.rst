@@ -46,6 +46,7 @@ SEE ALSO
 ********
 
 :ref:`geogit-osm-import`
+
 :ref:`geogit-osm-unmap`
 
 BUGS

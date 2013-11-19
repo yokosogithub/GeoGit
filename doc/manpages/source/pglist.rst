@@ -2,7 +2,7 @@
 .. _geogit-pg-list:
 
 geogit-pg-list documentation
-#########################
+#############################
 
 
 

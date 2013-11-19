@@ -27,6 +27,7 @@ SEE ALSO
 ********
 
 :ref:`geogit-remote-list`
+
 :ref:`geogit-remote-remove`
 
 BUGS

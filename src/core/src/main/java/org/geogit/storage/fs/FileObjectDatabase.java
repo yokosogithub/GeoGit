@@ -20,9 +20,11 @@ import java.util.List;
 
 import org.geogit.api.ObjectId;
 import org.geogit.api.Platform;
+import org.geogit.api.RevObject;
 import org.geogit.api.plumbing.ResolveGeogitDir;
 import org.geogit.repository.RepositoryConnectionException;
 import org.geogit.storage.AbstractObjectDatabase;
+import org.geogit.storage.BulkOpListener;
 import org.geogit.storage.ConfigDatabase;
 import org.geogit.storage.ObjectDatabase;
 import org.geogit.storage.ObjectSerializingFactory;
@@ -252,7 +254,12 @@ public class FileObjectDatabase extends AbstractObjectDatabase implements Object
     }
 
     @Override
-    public long deleteAll(Iterator<ObjectId> ids) {
+    public Iterator<RevObject> getAll(Iterable<ObjectId> ids, BulkOpListener listener) {
+        throw new UnsupportedOperationException("This method is not yet implemented");
+    }
+
+    @Override
+    public long deleteAll(Iterator<ObjectId> ids, final BulkOpListener listener) {
         throw new UnsupportedOperationException("This method is not yet implemented");
     }
 
@@ -265,4 +272,5 @@ public class FileObjectDatabase extends AbstractObjectDatabase implements Object
     public void checkConfig() throws RepositoryConnectionException {
         RepositoryConnectionException.StorageType.OBJECT.verify(configDB, "file", "1.0");
     }
+
 }

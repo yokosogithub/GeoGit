@@ -17,7 +17,6 @@ import org.geogit.cli.GeogitCLI;
 import org.geogit.geotools.cli.porcelain.AbstractPGCommand;
 import org.geogit.geotools.plumbing.ExportOp;
 import org.geogit.geotools.plumbing.GeoToolsOpException;
-import org.geogit.osm.internal.MappedFeature;
 import org.geogit.osm.internal.Mapping;
 import org.geogit.osm.internal.MappingRule;
 import org.geotools.data.DataStore;
@@ -33,7 +32,7 @@ import com.beust.jcommander.Parameters;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
-import com.vividsolutions.jts.awt.PointShapeFactory.Point;
+import com.vividsolutions.jts.geom.Point;
 
 /**
  * Exports OSM into a PostGIS database, using a data mapping
@@ -58,64 +57,69 @@ public class OSMExportPG extends AbstractPGCommand implements CLICommand {
 
         final Mapping mapping = Mapping.fromFile(mappingFile);
         List<MappingRule> rules = mapping.getRules();
-        checkParameter(!rules.isEmpty(),
-                "No rules are defined in the specified mapping");
-        Function<Feature, Optional<Feature>> function = new Function<Feature, Optional<Feature>>() {
+        checkParameter(!rules.isEmpty(), "No rules are defined in the specified mapping");
 
-            @Override
-            @Nullable
-            public Optional<Feature> apply(@Nullable Feature feature) {
-                Optional<MappedFeature> mapped = mapping.map(feature);
-                if (mapped.isPresent()) {
-                    return Optional.of(mapped.get().getFeature());
+        for (final MappingRule rule : mapping.getRules()) {
+            Function<Feature, Optional<Feature>> function = new Function<Feature, Optional<Feature>>() {
+
+                @Override
+                @Nullable
+                public Optional<Feature> apply(@Nullable Feature feature) {
+                    Optional<Feature> mapped = rule.apply(feature);
+                    if (mapped.isPresent()) {
+                        return Optional.of(mapped.get());
+                    }
+                    return Optional.absent();
                 }
-                return Optional.absent();
-            }
 
-        };
-
-        SimpleFeatureType outputFeatureType = mapping.getRules().get(0).getFeatureType();
-        String path = getOriginTreesFromOutputFeatureType(outputFeatureType);
-        DataStore dataStore;
-        try {
-            dataStore = getDataStore();
-
-            String tableName = outputFeatureType.getName().getLocalPart();
-            if (Arrays.asList(dataStore.getTypeNames()).contains(tableName)) {
-                if (!overwrite) {
-                    throw new CommandFailedException(
-                            "The selected table already exists. Use -o to overwrite");
-                }
-            } else {
-                try {
-                    dataStore.createSchema(outputFeatureType);
-                } catch (IOException e) {
-                    throw new CommandFailedException("Cannot create new table in database", e);
-                }
-            }
-
-            final SimpleFeatureSource featureSource = dataStore.getFeatureSource(tableName);
-            if (!(featureSource instanceof SimpleFeatureStore)) {
-                throw new CommandFailedException(
-                        "Could not create feature store. Data source is read only.");
-            }
-            final SimpleFeatureStore featureStore = (SimpleFeatureStore) featureSource;
-            if (overwrite) {
-                featureStore.removeFeatures(Filter.INCLUDE);
-            }
-            ExportOp op = cli.getGeogit().command(ExportOp.class).setFeatureStore(featureStore)
-                    .setPath(path).setFeatureTypeConversionFunction(function);
+            };
+            SimpleFeatureType outputFeatureType = rule.getFeatureType();
+            String path = getOriginTreesFromOutputFeatureType(outputFeatureType);
+            DataStore dataStore = null;
             try {
-                op.setProgressListener(cli.getProgressListener()).call();
-                cli.getConsole().println("OSM data exported successfully to " + tableName);
-            } catch (IllegalArgumentException iae) {
-                throw new org.geogit.cli.InvalidParameterException(iae.getMessage(), iae);
-            } catch (GeoToolsOpException e) {
-                throw new CommandFailedException("Could not export. Error:" + e.statusCode.name(),
-                        e);
+                dataStore = getDataStore();
+
+                String tableName = outputFeatureType.getName().getLocalPart();
+                if (Arrays.asList(dataStore.getTypeNames()).contains(tableName)) {
+                    if (!overwrite) {
+                        throw new CommandFailedException("A table named '" + tableName
+                                + "'already exists. Use -o to overwrite");
+                    }
+                } else {
+                    try {
+                        dataStore.createSchema(outputFeatureType);
+                    } catch (IOException e) {
+                        throw new CommandFailedException("Cannot create new table in database", e);
+                    }
+                }
+
+                final SimpleFeatureSource featureSource = dataStore.getFeatureSource(tableName);
+                if (!(featureSource instanceof SimpleFeatureStore)) {
+                    throw new CommandFailedException(
+                            "Could not create feature store. Data source is read only.");
+                }
+                final SimpleFeatureStore featureStore = (SimpleFeatureStore) featureSource;
+                if (overwrite) {
+                    featureStore.removeFeatures(Filter.INCLUDE);
+                }
+                ExportOp op = cli.getGeogit().command(ExportOp.class).setFeatureStore(featureStore)
+                        .setPath(path).setFeatureTypeConversionFunction(function);
+                try {
+                    op.setProgressListener(cli.getProgressListener()).call();
+                    cli.getConsole().println("OSM data exported successfully to " + tableName);
+                } catch (IllegalArgumentException iae) {
+                    throw new org.geogit.cli.InvalidParameterException(iae.getMessage(), iae);
+                } catch (GeoToolsOpException e) {
+                    throw new CommandFailedException("Could not export. Error:"
+                            + e.statusCode.name(), e);
+                }
+            } catch (IOException e) {
+                throw new IllegalStateException("Cannot connect to database: " + e.getMessage(), e);
+            } finally {
+                if (dataStore != null) {
+                    dataStore.dispose();
+                }
             }
-        } catch (IOException e) {
-            throw new IllegalStateException("Cannot connect to database: " + e.getMessage(), e);
         }
     }
 

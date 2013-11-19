@@ -224,6 +224,9 @@ Mappings are defined in a mapping file, using JSON syntax, as in the following e
 	    "filter":{
 	      "oneway":["yes"]
 	    },
+	    "exclude":{
+	      "highway":["construction"]
+	    },
 	    "fields":{
 	      "highway":{"name":"highway", "type":"STRING"},
 	      "geom":{"name":"geom", "type":"LINESTRING"}
@@ -235,6 +238,7 @@ A mapping description is an array of mapping rules, each of them with the follow
  
 - ``name`` defines the name of the mapping, and is used as the name of the destination tree.
 - ``filter`` is a set of tags and values, which define the entities to use for the tree. All entities which have any of the specified values for any of the given tags will be used. And empty filter will cause all entities to be used.
+- ``exclude`` is a set of tags and values used to exclude certain elements. Those elements that contain any of the specified values for the specified tags, will not be mapped, even if they pass the filter set by the ``filter`` element. This field can be ignored and not added to the JSON definition, so no exclusion filter is added. Examples in this document do not use this field.
 - ``fields`` is a set of tags and destination column names and types.
 
 The following mapping will copy all ways to a feature type that only contains the geometry of the way:
@@ -361,10 +365,12 @@ Below you can see some examples:
 
 	$ geogit osm export-shp ./myexportfile.shp --mapping ./mymappingfile.json
 
+	$ geogit osm export-pg --port 54321 --database geogit --mapping ./mymappingfile.json --user geogit --password geogit
 
-The mapping file should contain a single rule. If the mapping contains more than one mapping rule, only the first one will be used. 
 
-In the case of a shapefile, the destination file has to be entered. In the case of a database export, the name of the mapping is used as the name of the table to create. In both cases, the ``--overwrite`` switch has to be used if the destination file/table already exists.
+When exporting to a shapefile, the mapping file should contain a single rule. If the mapping contains more than one mapping rule, only the first one will be used. 
+
+In the case of a shapefile, the destination file has to be entered. In the case of a database export, the name of the each rule is used as the name of the corresponding table to create. In both cases, the ``--overwrite`` switch has to be used if the destination file/table already exists.
 
 Since features in a shapefiles must have a geometry, the mapping used when exporting to a shapefile must contain one, and only one, field of type ``POLYGON, LINESTRING`` or ``POINT``. In the case of exporting to a database, the rule can contain no geometry attribute at all. 
 
@@ -628,19 +634,25 @@ IDEAS & ISSUES FOR FUTURE DEVELOPMENT
 Problems to solve / Things to consider  about OSM commands in GeoGit
 ---------------------------------------------------------------------
 
-# Updating. The current update command just re-downloads with the last filter, but is not a smart download, and downloads everything. The overpass API allows to fetch only features newer than a given data, but that cannot be used if there are deletions, since it does not report deleted elements.
+1. Updating 
+~~~~~~~~~~~~
+The current update command just re-downloads with the last filter, but is not a smart download, and downloads everything. The `Overpass API <http://wiki.openstreetmap.org/wiki/Overpass_API>`_ allows to fetch only features newer than a given data, but that cannot be used if there are deletions, since it does not report deleted elements.
 
-  The OSM API allows to download history, including deletions, but does not support filters.
+The OSM API allows to download history, including deletions, but does not support filters.
 
-  Ideally, a mix of both functionalities would be needed for geogit to work optimally
+Ideally, a mix of both functionalities would be needed for geogit to work optimally
 
-# Unmapping of ways. When a way is unmapped, its geometry is used to re-create the list of nodes. The best way would be to take the coords of the nodes and check if a node exist in each coordinate, and if so, take the node id, otherwise, add a new node. This is, however, not possible now, since it would not be efficient. GeoGit has no spatial indexing, and searching a feature by its coordinates is not an available operation.
+2. Unmapping of ways 
+~~~~~~~~~~~~~~~~~~~~~
+When a way is unmapped, its geometry is used to re-create the list of nodes. The best way would be to take the coords of the nodes and check if a node exist in each coordinate, and if so, take the node id, otherwise, add a new node. This is, however, not possible now, since it would not be efficient. GeoGit has no spatial indexing, and searching a feature by its coordinates is not an available operation.
 
-  The current implementation just retrieves the nodes that belonged to the way in the last version, and check the current geometry against them. This is fine if all new nodes are actually new, but if the way uses a node that it did not use before but that exists already, that node will not be used (since there is no way of retrieving the id of the node in that coord), and a new one in that same position is added.
+The current implementation just retrieves the nodes that belonged to the way in the last version, and check the current geometry against them. This is fine if all new nodes are actually new, but if the way uses a node that it did not use before but that exists already, that node will not be used (since there is no way of retrieving the id of the node in that coord), and a new one in that same position is added.
 
-# Updating new entities. When a new node is added (whether by the user, who created it in something like JOSM, or by an unmap operation), new entities get a negative ID, as it seems customary in OSM before commiting them. Once submitted, they get a valid ID, and when later updating, the Id's will not match, so GeoGit will not replace them, leaving both versions.
+3. Updating new entities 
+~~~~~~~~~~~~~~~~~~~~~~~~~
+When a new node is added (whether by the user, who created it in something like JOSM, or by an unmap operation), new entities get a negative ID, as it seems customary in OSM before commiting them. Once submitted, they get a valid ID, and when later updating, the Id's will not match, so GeoGit will not replace them, leaving both versions.
 
-  This is, in fact, not a problem now, since the update operation just deletes and updates everything (see (1)), but once we get a more efficient update strategy, this problem will surface.
+This is, in fact, not a problem now, since the update operation just deletes and updates everything (see (1)), but once we get a more efficient update strategy, this problem will surface.
 
 
 OSM paths

@@ -33,6 +33,7 @@ SEE ALSO
 ********
 
 :ref:`geogit-status`
+
 :ref:`geogit-commit`
 
 BUGS

@@ -24,12 +24,9 @@ import jline.console.completer.StringsCompleter;
 import org.geogit.api.Ref;
 import org.geogit.api.SymRef;
 import org.geogit.api.plumbing.RefParse;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.ParameterDescription;
-import com.beust.jcommander.ParameterException;
 import com.google.common.base.Charsets;
 import com.google.common.base.Optional;
 import com.google.common.base.Throwables;
@@ -40,15 +37,6 @@ import com.google.common.io.Files;
  * the command line interface.
  */
 public class GeogitConsole {
-
-    private static final Logger LOGGER = LoggerFactory.getLogger(GeogitConsole.class);
-
-    /**
-     * Constructs the GeogitConsole
-     */
-    public GeogitConsole() {
-    }
-
     /**
      * Entry point for the Geogit console.
      * 
@@ -71,7 +59,7 @@ public class GeogitConsole {
     }
 
     private void runFile(String filename) throws IOException {
-        File file = new File(filename);
+        final File file = new File(filename);
         if (!file.exists()) {
             System.out.println("The specified batch file does not exist");
             return;
@@ -87,20 +75,15 @@ public class GeogitConsole {
         consoleReader.getTerminal().setEchoEnabled(true);
 
         final GeogitCLI cli = new GeogitCLI(consoleReader);
+        cli.tryConfigureLogging();
+
         try {
             for (String line : lines) {
-                try {
-                    if (line.trim().length() == 0) {
-                        continue;
-                    }
-                    String[] args = line.split(" ");
-                    cli.execute(args);
-                } catch (ParameterException pe) {
-                    consoleReader.print("Error: " + pe.getMessage());
-                    consoleReader.println();
-                } catch (Exception e) {
-                    throw Throwables.propagate(e);
+                if (line.trim().length() == 0) {
+                    continue;
                 }
+                String[] args = line.split(" ");
+                cli.processCommand(args);
             }
 
         } finally {
@@ -215,49 +198,27 @@ public class GeogitConsole {
 
         final ConsoleReader consoleReader = cli.getConsole();
         while (true) {
-            try {
-                String line = consoleReader.readLine();
-                if (line == null) {
-                    return;
-                }
-                if (line.trim().length() == 0) {
-                    continue;
-                }
-
-                String[] args = line.split(" ");
-
-                if (args != null && args.length == 1 && "exit".equals(args[0])) {
-                    return;
-                }
-                if (args != null && args.length == 1 && "clear".equals(args[0])) {
-                    consoleReader.clearScreen();
-                    consoleReader.redrawLine();
-                    continue;
-                }
-
-                cli.execute(args);
-                setPrompt(cli);// in case HEAD has changed
-            } catch (ParameterException pe) {
-                consoleReader.println(Optional.fromNullable(pe.getMessage()).or(
-                        "Unknown parameter error."));
-                LOGGER.info("Parameter exception", pe);
-            } catch (InvalidParameterException ipe) {
-                consoleReader.println(Optional.fromNullable(ipe.getMessage()).or(
-                        "Unknown parameter error."));
-                LOGGER.info("Parameter exception", ipe);
-            } catch (CommandFailedException ce) {
-                String msg = "Command failed. "
-                        + Optional.fromNullable(ce.getMessage()).or(
-                                "Unknown reason. Check logs for detail.");
-                consoleReader.println(msg);
-                LOGGER.error(msg, ce);
-            } catch (Exception e) {
-                String msg = String.format(
-                        "An unhandled error occurred: %s. See the log for more details.",
-                        e.getMessage());
-                LOGGER.error(msg, e);
-                consoleReader.println(msg);
+            String line = consoleReader.readLine();
+            if (line == null) {
+                return;
             }
+            if (line.trim().length() == 0) {
+                continue;
+            }
+
+            String[] args = line.split(" ");
+
+            if (args != null && args.length == 1 && "exit".equals(args[0])) {
+                return;
+            }
+            if (args != null && args.length == 1 && "clear".equals(args[0])) {
+                consoleReader.clearScreen();
+                consoleReader.redrawLine();
+                continue;
+            }
+
+            cli.processCommand(args);
+            setPrompt(cli);// in case HEAD has changed
         }
     }
 }

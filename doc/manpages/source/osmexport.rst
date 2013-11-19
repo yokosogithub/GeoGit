@@ -14,7 +14,7 @@ geogit osm export <file> [commitish] [--bbox] [--overwrite]
 DESCRIPTION
 ***********
 
-Exports a given commit to a file using an OSM export format. Only features in the canonical OSM trees (``way`` and ``node) are exported.
+Exports a given commit to a file using an OSM export format. Only features in the canonical OSM trees (``way`` and ``node``) are exported.
 
 If the output filename has the ``pbf`` extension, the pbf format will be used. Otherwise, the OSM XML format will be 
 
@@ -30,9 +30,11 @@ OPTIONS
 SEE ALSO
 ********
 
-:ref:`geogit-osmexportpg`
-:ref:`geogit-osmexportshp`
-:ref:`geogit-osmexportsl`
+:ref:`geogit-osm-export-pg`
+
+:ref:`geogit-osm-export-shp`
+
+:ref:`geogit-osm-export-sl`
 
 
 BUGS

@@ -42,9 +42,11 @@ OPTIONS
 SEE ALSO
 ********
 
-:ref:`geogit-osmexportpg`
-:ref:`geogit-osmexportshp`
-:ref:`geogit-osmexportsl`
+:ref:`geogit-osm-export-pg`
+
+:ref:`geogit-osm-export-shp`
+
+:ref:`geogit-osm-export-sl`
 
 
 BUGS

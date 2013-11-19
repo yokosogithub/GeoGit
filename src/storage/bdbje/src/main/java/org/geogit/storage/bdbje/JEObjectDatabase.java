@@ -4,17 +4,20 @@
  */
 package org.geogit.storage.bdbje;
 
+import static com.google.common.collect.Iterators.concat;
+import static com.google.common.collect.Iterators.partition;
+import static com.google.common.collect.Iterators.transform;
 import static com.sleepycat.je.OperationStatus.NOTFOUND;
 import static com.sleepycat.je.OperationStatus.SUCCESS;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.Closeable;
 import java.io.File;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
@@ -30,19 +33,23 @@ import org.geogit.api.ObjectId;
 import org.geogit.api.RevObject;
 import org.geogit.repository.RepositoryConnectionException;
 import org.geogit.storage.AbstractObjectDatabase;
+import org.geogit.storage.BulkOpListener;
 import org.geogit.storage.ConfigDatabase;
 import org.geogit.storage.ObjectDatabase;
+import org.geogit.storage.ObjectReader;
 import org.geogit.storage.ObjectSerializingFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
-import com.google.common.collect.Iterators;
+import com.google.common.collect.AbstractIterator;
 import com.google.common.collect.Lists;
 import com.google.common.collect.UnmodifiableIterator;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.inject.Inject;
+import com.ning.compress.lzf.LZFInputStream;
 import com.sleepycat.collections.CurrentTransaction;
 import com.sleepycat.je.Cursor;
 import com.sleepycat.je.CursorConfig;
@@ -260,15 +267,8 @@ public class JEObjectDatabase extends AbstractObjectDatabase implements ObjectDa
         return new ByteArrayInputStream(cData);
     }
 
-    private static final Comparator<RevObject> OBJECTID_COMPARATOR = new Comparator<RevObject>() {
-        @Override
-        public int compare(RevObject o1, RevObject o2) {
-            return o1.getId().compareTo(o2.getId());
-        }
-    };
-
     @Override
-    public void putAll(final Iterator<? extends RevObject> objects) {
+    public void putAll(final Iterator<? extends RevObject> objects, final BulkOpListener listener) {
         if (!objects.hasNext()) {
             return;
         }
@@ -280,15 +280,13 @@ public class JEObjectDatabase extends AbstractObjectDatabase implements ObjectDa
         // contention on the db.
         final int partitionSize = 500;
 
-        UnmodifiableIterator<?> partitions = Iterators.partition(objects, partitionSize);
+        UnmodifiableIterator<?> partitions = partition(objects, partitionSize);
         while (partitions.hasNext()) {
             @SuppressWarnings("unchecked")
             List<RevObject> partition = (List<RevObject>) partitions.next();
-            partition = Lists.newArrayList(partition);
+            partition = RevObject.NATURAL_ORDER.sortedCopy(partition);
 
-            Collections.sort(partition, OBJECTID_COMPARATOR);
-
-            Future<?> future = putAll(partition);
+            Future<?> future = putAll(partition, listener);
             futures.add(future);
         }
         for (Future<?> future : futures) {
@@ -300,8 +298,8 @@ public class JEObjectDatabase extends AbstractObjectDatabase implements ObjectDa
         }
     }
 
-    private Future<?> putAll(List<RevObject> partition) {
-        BulkInsert bulkInsert = new BulkInsert(partition);
+    private Future<?> putAll(List<RevObject> partition, final BulkOpListener listener) {
+        BulkInsert bulkInsert = new BulkInsert(partition, listener);
         Future<?> future = service.submit(bulkInsert);
         return future;
     }
@@ -310,8 +308,11 @@ public class JEObjectDatabase extends AbstractObjectDatabase implements ObjectDa
 
         private List<RevObject> partition;
 
-        public BulkInsert(List<RevObject> partition) {
+        private BulkOpListener listener;
+
+        public BulkInsert(final List<RevObject> partition, final BulkOpListener listener) {
             this.partition = partition;
+            this.listener = listener;
         }
 
         @Override
@@ -349,7 +350,10 @@ public class JEObjectDatabase extends AbstractObjectDatabase implements ObjectDa
                     id.getRawValue(key.getData());
                     DatabaseEntry data = new DatabaseEntry(rawData);
 
-                    cursor.putNoOverwrite(key, data);
+                    OperationStatus status = cursor.putNoOverwrite(key, data);
+                    if (OperationStatus.SUCCESS.equals(status)) {
+                        listener.inserted(object, data.getSize());
+                    }
                 }
                 cursor.close();
                 if (transactional) {
@@ -377,7 +381,6 @@ public class JEObjectDatabase extends AbstractObjectDatabase implements ObjectDa
                 partition = null;
             }
         }
-
     }
 
     @Override
@@ -413,11 +416,11 @@ public class JEObjectDatabase extends AbstractObjectDatabase implements ObjectDa
     }
 
     @Override
-    public long deleteAll(Iterator<ObjectId> ids) {
+    public long deleteAll(Iterator<ObjectId> ids, final BulkOpListener listener) {
         long count = 0;
 
         CursorConfig cconfig = new CursorConfig();
-        UnmodifiableIterator<List<ObjectId>> partition = Iterators.partition(ids, 10 * 1000);
+        UnmodifiableIterator<List<ObjectId>> partition = partition(ids, 10 * 1000);
 
         final DatabaseEntry data = new DatabaseEntry();
         data.setPartial(0, 0, true);// do not retrieve data
@@ -439,8 +442,13 @@ public class JEObjectDatabase extends AbstractObjectDatabase implements ObjectDa
                     if (OperationStatus.SUCCESS.equals(status)) {
                         OperationStatus delete = cursor.delete();
                         if (OperationStatus.SUCCESS.equals(delete)) {
+                            listener.deleted(id);
                             count++;
+                        } else {
+                            listener.notFound(id);
                         }
+                    } else {
+                        listener.notFound(id);
                     }
                 }
                 cursor.close();
@@ -467,4 +475,105 @@ public class JEObjectDatabase extends AbstractObjectDatabase implements ObjectDa
     public void checkConfig() throws RepositoryConnectionException {
         RepositoryConnectionException.StorageType.OBJECT.verify(configDB, "bdbje", "0.1");
     }
+
+    @Override
+    public Iterator<RevObject> getAll(final Iterable<ObjectId> ids, final BulkOpListener listener) {
+        Preconditions.checkNotNull(ids, "ids");
+
+        final int partitionSize = 1000 * 10;
+        final Iterator<List<ObjectId>> partitions = partition(ids.iterator(), partitionSize);
+
+        Function<List<ObjectId>, Iterator<RevObject>> idsToObjectsCursor = new Function<List<ObjectId>, Iterator<RevObject>>() {
+            @Override
+            public Iterator<RevObject> apply(List<ObjectId> ids) {
+
+                CursorConfig cursorConfig = new CursorConfig();
+                cursorConfig.setReadUncommitted(true);
+
+                Transaction transaction = txn == null ? null : txn.getTransaction();
+                Cursor cursor = objectDb.openCursor(transaction, cursorConfig);
+
+                return new CursorRevObjectIterator(cursor, ids, listener);
+            }
+        };
+
+        Iterator<RevObject> allObjectsFound;
+        allObjectsFound = concat(transform(partitions, idsToObjectsCursor));
+
+        return allObjectsFound;
+    }
+
+    private class CursorRevObjectIterator extends AbstractIterator<RevObject> implements Closeable {
+
+        private final ObjectReader<RevObject> reader = serializationFactory.createObjectReader();
+
+        private Cursor cursor;
+
+        private Iterator<ObjectId> sortedIds;
+
+        private BulkOpListener listener;
+
+        /**
+         * @param cursor
+         * @param listener
+         * @param unmodifiableIterator
+         */
+        public CursorRevObjectIterator(Cursor cursor, Iterable<ObjectId> unsortedIds,
+                BulkOpListener listener) {
+            this.sortedIds = ObjectId.NATURAL_ORDER.sortedCopy(unsortedIds).iterator();
+            this.cursor = cursor;
+            this.listener = listener;
+        }
+
+        @Override
+        protected RevObject computeNext() {
+            try {
+
+                byte[] keyBuff = new byte[ObjectId.NUM_BYTES];
+                DatabaseEntry key = new DatabaseEntry(keyBuff);
+
+                RevObject found = null;
+                while (sortedIds.hasNext() && found == null) {
+                    ObjectId id = sortedIds.next();
+                    id.getRawValue(keyBuff);
+                    key.setData(keyBuff);
+
+                    DatabaseEntry data = new DatabaseEntry();
+                    // lookup data for the next key
+                    OperationStatus status;
+                    status = cursor.getSearchKey(key, data, LockMode.READ_UNCOMMITTED);
+                    if (SUCCESS.equals(status)) {
+                        InputStream rawData;
+                        rawData = new LZFInputStream(new ByteArrayInputStream(data.getData()));
+                        found = reader.read(id, rawData);
+                        listener.found(found, data.getSize());
+                    } else {
+                        listener.notFound(id);
+                    }
+                }
+                if (found == null) {
+                    close();
+                    return endOfData();
+                }
+                return found;
+            } catch (Exception e) {
+                try {
+                    throw Throwables.propagate(e);
+                } finally {
+                    close();
+                }
+            }
+        }
+
+        @Override
+        public void close() {
+            sortedIds = null;
+            Cursor cursor = this.cursor;
+            this.cursor = null;
+            if (cursor != null) {
+                cursor.close();
+            }
+        }
+    }
+
 }

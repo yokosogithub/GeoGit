@@ -33,6 +33,7 @@ SEE ALSO
 ********
 
 :ref:`geogit-clone`
+
 :ref:`geogit-pull`
 
 BUGS

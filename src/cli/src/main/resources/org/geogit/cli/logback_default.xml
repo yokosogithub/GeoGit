@@ -36,7 +36,7 @@
     <file>${geogitdir}/log/metrics.csv</file>
 
     <rollingPolicy class="ch.qos.logback.core.rolling.FixedWindowRollingPolicy">
-      <fileNamePattern>metrics.csv.%i</fileNamePattern>
+      <fileNamePattern>${geogitdir}/log/metrics.csv.%i</fileNamePattern>
       <minIndex>1</minIndex>
       <maxIndex>9</maxIndex>
     </rollingPolicy>
@@ -54,7 +54,25 @@
     <file>${geogitdir}/log/command_trace.txt</file>
 
     <rollingPolicy class="ch.qos.logback.core.rolling.FixedWindowRollingPolicy">
-      <fileNamePattern>command_trace.txt.%i</fileNamePattern>
+      <fileNamePattern>${geogitdir}/log/command_trace.txt.%i</fileNamePattern>
+      <minIndex>1</minIndex>
+      <maxIndex>9</maxIndex>
+    </rollingPolicy>
+
+    <triggeringPolicy class="ch.qos.logback.core.rolling.SizeBasedTriggeringPolicy">
+      <maxFileSize>10MB</maxFileSize>
+    </triggeringPolicy>
+
+    <encoder>
+      <pattern>%m%n</pattern>
+    </encoder>
+  </appender>
+  <appender name="MEMORY" class="ch.qos.logback.core.rolling.RollingFileAppender">
+
+    <file>${geogitdir}/log/memory.csv</file>
+
+    <rollingPolicy class="ch.qos.logback.core.rolling.FixedWindowRollingPolicy">
+      <fileNamePattern>${geogitdir}/log/memory.csv.%i</fileNamePattern>
       <minIndex>1</minIndex>
       <maxIndex>9</maxIndex>
     </rollingPolicy>
@@ -88,5 +106,9 @@
   <logger name="org.geogit.metrics.stack" additivity="false">
     <level value="INFO" />
     <appender-ref ref="METRICS_STACK" />
+  </logger>
+  <logger name="org.geogit.metrics.memory" additivity="false">
+    <level value="INFO" />
+    <appender-ref ref="MEMORY" />
   </logger>
 </configuration>
