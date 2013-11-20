@@ -6131,7 +6131,7 @@ h5 {
 }
 @media (max-width: 480px) {
   #main .download {
-    margin-left: 48px;
+    margin-left: 10%;
   }
 }
 #main .download:hover {
@@ -6311,6 +6311,12 @@ h5 {
     margin: 20px auto;
     float: none;
     text-align: center;
+  }
+}
+@media (max-width: 768px) {
+  #docs .workflow_diagram {
+    width: 90%;
+    height: 90%;
   }
 }
 .overlay {

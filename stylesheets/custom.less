@@ -203,7 +203,7 @@ h1, h2, h3, h4, h5 {
 		vertical-align: top;
 
 		@media (max-width: 480px) {
-			margin-left: 48px;
+			margin-left: 10%;
 		}
 
 		&:hover {
@@ -400,6 +400,11 @@ h1, h2, h3, h4, h5 {
 			margin: 20px auto;
 			float: none;
 			text-align: center;
+		}
+
+		@media (max-width: @screen-sm) {
+			width: 90%;
+			height: 90%;
 		}
 	}
 }

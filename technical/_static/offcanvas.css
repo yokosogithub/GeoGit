@@ -25,6 +25,7 @@
     display: block;
     position: absolute;
     right: 15px;
+    padding-bottom: 3px;
   }
 }
 #menu-btn .btn-back {
@@ -32,6 +33,7 @@
 }
 #menu-btn .btn-text {
   display: none;
+  font-size: 1.2em;
 }
 #menu-btn .active {
   display: inline !important;
