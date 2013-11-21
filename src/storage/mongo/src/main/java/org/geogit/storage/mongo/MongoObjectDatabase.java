@@ -98,10 +98,10 @@ public class MongoObjectDatabase implements ObjectDatabase {
         if (client != null) {
             return;
         }
-        String hostname = config.get("mongodb.host").get();
-        int port = config.get("mongodb.port", Integer.class).get();
-        client = manager.acquire(new MongoAddress(hostname, port));
-        db = client.getDB("geogit");
+        String uri = config.get("mongodb.uri").get();
+        String database = config.get("mongodb.database").get();
+        client = manager.acquire(new MongoAddress(uri));
+        db = client.getDB(database);
         collection = db.getCollection(getCollectionName());
         collection.ensureIndex("oid");
     }
