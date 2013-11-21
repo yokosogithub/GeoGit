@@ -17,7 +17,9 @@ import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedMap;
+import com.google.common.collect.Iterables;
 import com.google.common.collect.Iterators;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 
 /**
@@ -138,6 +140,8 @@ public abstract class RevTreeImpl extends AbstractRevObject implements RevTree {
         return new LeafTree(id, size, f, t);
     }
 
+    private static final NodeStorageOrder ordering = new NodeStorageOrder();
+
     public static RevTreeImpl createLeafTree(ObjectId id, long size, Collection<Node> features,
             Collection<Node> trees) {
         Preconditions.checkNotNull(id);
@@ -147,14 +151,10 @@ public abstract class RevTreeImpl extends AbstractRevObject implements RevTree {
         ImmutableList<Node> treesList = ImmutableList.of();
 
         if (!features.isEmpty()) {
-            TreeSet<Node> featureSet = Sets.newTreeSet(new NodeStorageOrder());
-            featureSet.addAll(features);
-            featuresList = ImmutableList.copyOf(featureSet);
+            featuresList = ordering.immutableSortedCopy(features);
         }
         if (!trees.isEmpty()) {
-            TreeSet<Node> treeSet = Sets.newTreeSet(new NodeStorageOrder());
-            treeSet.addAll(trees);
-            treesList = ImmutableList.copyOf(treeSet);
+            treesList = ordering.immutableSortedCopy(trees);
         }
         return createLeafTree(id, size, featuresList, treesList);
     }
@@ -231,6 +231,8 @@ public abstract class RevTreeImpl extends AbstractRevObject implements RevTree {
         StringBuilder builder = new StringBuilder();
         builder.append("Tree[");
         builder.append(getId().toString());
+        builder.append("; size=");
+        builder.append(size);
         builder.append("; subtrees=");
         builder.append(nSubtrees);
         builder.append(", buckets=");
