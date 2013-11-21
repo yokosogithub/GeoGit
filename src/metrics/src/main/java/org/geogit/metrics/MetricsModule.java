@@ -82,17 +82,25 @@ public class MetricsModule extends AbstractModule {
         bindInterceptor(subclassesOf(AbstractGeoGitOp.class), new MethodMatcher(
                 AbstractGeoGitOp.class, "call"), new GeogitOpMeteredInterceptor(platform, configDb));
 
-        Matcher<Class> objectDatabase = subclassesOf(ObjectDatabase.class);
-        Matcher<Class> stagingDatabase = subclassesOf(StagingDatabase.class);
+        final Matcher<Class> stagingDatabase = subclassesOf(StagingDatabase.class);
+        final Matcher<Class> objectDatabase = subclassesOf(ObjectDatabase.class).and(
+                Matchers.not(stagingDatabase));
 
-        bindInterceptor(objectDatabase.and(Matchers.not(stagingDatabase)), new MethodMatcher(
-                ObjectDatabase.class, "putAll", Iterator.class), new NamedMeteredInterceptor(
-                platform, configDb, "ObjectDatabase.putAll"));
+        bindInterceptor(objectDatabase, new MethodMatcher(ObjectDatabase.class, "putAll",
+                Iterator.class), new NamedMeteredInterceptor(platform, configDb,
+                "ObjectDatabase.putAll"));
 
         bindInterceptor(stagingDatabase, new MethodMatcher(StagingDatabase.class, "putAll",
                 Iterator.class), new NamedMeteredInterceptor(platform, configDb,
                 "StagingDatabase.putAll"));
 
+        bindInterceptor(objectDatabase, new MethodMatcher(ObjectDatabase.class, "close"),
+                new NamedMeteredInterceptor(platform, configDb, "ObjectDatabase.close"));
+
+        bindInterceptor(stagingDatabase, new MethodMatcher(StagingDatabase.class, "close"),
+                new NamedMeteredInterceptor(platform, configDb, "StagingDatabase.close"));
+
+        // bind JVM metrics to the repository life cycle
         final HeapMemoryMetricsService jvmMetricsService = new HeapMemoryMetricsService(
                 getProvider(Platform.class), getProvider(ConfigDatabase.class));
 
