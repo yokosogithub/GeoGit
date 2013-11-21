@@ -682,7 +682,7 @@ public class GeogitCLI {
                 }
 
                 @Override
-                public void complete() {
+                public synchronized void complete() {
                     // avoid double logging if caller missbehaves
                     if (super.isCompleted()) {
                         return;
@@ -699,7 +699,7 @@ public class GeogitCLI {
                 }
 
                 @Override
-                public void progress(float percent) {
+                public synchronized void progress(float percent) {
                     super.progress(percent);
                     long currentTimeMillis = platform.currentTimeMillis();
                     if (percent > 99f || (currentTimeMillis - lastRun) > delayMillis) {
