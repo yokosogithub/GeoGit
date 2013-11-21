@@ -34,14 +34,14 @@ Unzip the geogit-cli-app-0.5.0.zip to an applications directory, and then add th
 Running
 =======
 
-See the `QuickStart <http://geogit.org/docs/quickstart.html>`_ guide for an introduction to GeoGit. Additional information available at the full `Manual <http://geogit.org/docs/index.html>`_.
+See the `QuickStart <http://geogit.org/#install>`_ guide for an introduction to GeoGit. Additional information available at the full `Manual <http://geogit.org/docs/index.html>`_.
 
 Developing
 ===========
 
-If you want to get involved in the development of GeoGit, build GeoGit yourself or know more about the technical details behind GeoGit, check the `developers section <https://github.com/opengeo/GeoGit/blob/master/doc/technical/source/developers.rst>`_.
+If you want to get involved in the development of GeoGit, build GeoGit yourself or know more about the technical details behind GeoGit, check the `developers section <https://github.com/boundlessgeo/GeoGit/blob/master/doc/technical/source/developers.rst>`_.
 
 Participation
 =============
 
-Everyone is invited to participate in GeoGit and help in its development. Check the `How to help <https://github.com/opengeo/GeoGit/blob/master/helping.rst>`_ section to read about how you can help us improve GeoGit.
+Everyone is invited to participate in GeoGit and help in its development. Check the `How to help <https://github.com/boundlessgeo/GeoGit/blob/master/helping.rst>`_ section to read about how you can help us improve GeoGit.
