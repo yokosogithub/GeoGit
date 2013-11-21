@@ -6227,13 +6227,15 @@ h5 {
 }
 #install,
 #docs,
-#participate {
+#participate,
+#contributors {
   padding-top: 60px;
   padding-bottom: 60px;
 }
 #install h2,
 #docs h2,
-#participate h2 {
+#participate h2,
+#contributors h2 {
   padding-bottom: 20px;
   font-size: 2.5em;
 }
@@ -6341,6 +6343,29 @@ h5 {
   height: 1174px;
   width: 537px;
   background: url(../images/git_tree.png) no-repeat;
+}
+#contributors {
+  color: #ccc;
+}
+#contributors h2 {
+  padding-top: 0px;
+  font-weight: normal;
+}
+#contributors .devlist li {
+  display: inline-block;
+  margin-right: 5%;
+}
+#contributors .devlist li img {
+  width: 70px;
+  height: 70px;
+}
+#contributors .devlist li a p {
+  padding-top: 10px;
+  font-size: 0.8em;
+  text-align: center;
+}
+#contributors p.devmore {
+  margin-top: 60px;
 }
 footer {
   background-color: #191818;
