@@ -82,6 +82,9 @@ public class GeogitConsole {
                 if (line.trim().length() == 0) {
                     continue;
                 }
+                if (line.trim().startsWith("#")) {// comment
+                    continue;
+                }
                 String[] args = line.split(" ");
                 cli.processCommand(args);
             }
