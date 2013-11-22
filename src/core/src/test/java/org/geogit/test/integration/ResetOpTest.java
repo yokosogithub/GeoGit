@@ -351,4 +351,68 @@ public class ResetOpTest extends RepositoryTestCase {
         assertFalse(ref.isPresent());
     }
 
+    @Test
+    public void testResetPathFixesConflict() throws Exception {
+        Feature points1Modified = feature(pointsType, idP1, "StringProp1_2", new Integer(1000),
+                "POINT(1 1)");
+        Feature points1ModifiedB = feature(pointsType, idP1, "StringProp1_3", new Integer(2000),
+                "POINT(1 1)");
+        insertAndAdd(points1);
+        RevCommit resetCommit = geogit.command(CommitOp.class).call();
+        geogit.command(BranchCreateOp.class).setName("TestBranch").call();
+        insertAndAdd(points1Modified);
+        geogit.command(CommitOp.class).call();
+        geogit.command(CheckoutOp.class).setSource("TestBranch").call();
+        insertAndAdd(points1ModifiedB);
+        insertAndAdd(points2);
+        geogit.command(CommitOp.class).call();
+
+        geogit.command(CheckoutOp.class).setSource("master").call();
+        Ref branch = geogit.command(RefParse.class).setName("TestBranch").call().get();
+        try {
+            geogit.command(MergeOp.class).addCommit(Suppliers.ofInstance(branch.getObjectId()))
+                    .call();
+            fail();
+        } catch (IllegalStateException e) {
+            assertTrue(e.getMessage().contains("conflict"));
+        }
+
+        geogit.command(ResetOp.class).addPattern(pointsName + "/" + idP1)
+                .setCommit(Suppliers.ofInstance(resetCommit.getId())).call();
+        List<Conflict> conflicts = geogit.getRepository().getIndex().getDatabase()
+                .getConflicts(null, null);
+        assertTrue(conflicts.isEmpty());
+    }
+
+    @Test
+    public void testResetPathToHeadVersionFixesConflict() throws Exception {
+        Feature points1Modified = feature(pointsType, idP1, "StringProp1_2", new Integer(1000),
+                "POINT(1 1)");
+        Feature points1ModifiedB = feature(pointsType, idP1, "StringProp1_3", new Integer(2000),
+                "POINT(1 1)");
+        insertAndAdd(points1);
+        geogit.command(CommitOp.class).call();
+        geogit.command(BranchCreateOp.class).setName("TestBranch").call();
+        insertAndAdd(points1Modified);
+        geogit.command(CommitOp.class).call();
+        geogit.command(CheckoutOp.class).setSource("TestBranch").call();
+        insertAndAdd(points1ModifiedB);
+        insertAndAdd(points2);
+        geogit.command(CommitOp.class).call();
+
+        geogit.command(CheckoutOp.class).setSource("master").call();
+        Ref branch = geogit.command(RefParse.class).setName("TestBranch").call().get();
+        try {
+            geogit.command(MergeOp.class).addCommit(Suppliers.ofInstance(branch.getObjectId()))
+                    .call();
+            fail();
+        } catch (IllegalStateException e) {
+            assertTrue(e.getMessage().contains("conflict"));
+        }
+
+        geogit.command(ResetOp.class).addPattern(pointsName + "/" + idP1).call();
+        List<Conflict> conflicts = geogit.getRepository().getIndex().getDatabase()
+                .getConflicts(null, null);
+        assertTrue(conflicts.isEmpty());
+    }
 }
