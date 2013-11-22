@@ -7,8 +7,8 @@ GeoGit - Geospatial Distributed Version Control System
 
 Welcome to the GeoGit project, exploring the use of distributed management of spatial data. GeoGit draws inspiration from `Git <http://git-scm.com/>`_, but adapts its core concepts to handle versioning of geospatial data. Users are able to import raw geospatial data (currently from Shapefiles, PostGIS or SpatiaLite) in to a repository where every change to the data is tracked. These changes can be viewed in a history, reverted to older versions, branched in to sandboxed areas, merged back in, and pushed to remote repositories. GeoGit is written in Java, available under the BSD License.
 
-For background reading see these two papers on the spatial distributed versioning `Concept <http://opengeo.org/publications/distributedversioning/>`_ and 
-`Implementation <http://opengeo.org/publications/distributedversioningimplement/>`_..
+For background reading see these two papers on the spatial distributed versioning `Concept <http://boundlessgeo.com/whitepaper/new-approach-working-geospatial-data-part-1/>`_, 
+`Implementation <http://boundlessgeo.com/whitepaper/distributed-versioning-geospatial-data-part-2//>`_, and `Potential Development <http://boundlessgeo.com/whitepaper/distributed-versioning-geospatial-data-part-3/>`_.
 
 Details
 =======
