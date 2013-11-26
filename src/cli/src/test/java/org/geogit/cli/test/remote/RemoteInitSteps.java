@@ -263,6 +263,7 @@ public class RemoteInitSteps extends AbstractGeogitFunctionalTest {
         runCommand(("commit -m Commit4").split(" "));
         insertAndAdd(lines2);
         runCommand(("commit -m Commit5").split(" "));
+        geogit.close();
         geogit = oldGeogit;
         geogitCLI.setGeogit(oldGeogit);
         geogitCLI.setGeogitInjector(oldInjector);
