@@ -11,6 +11,7 @@ import static org.geogit.api.RevTree.NORMALIZED_SIZE_LIMIT;
 
 import java.util.Collection;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
@@ -23,17 +24,23 @@ import org.geogit.repository.DepthSearch;
 import org.geogit.repository.SpatialOps;
 import org.geogit.storage.NodePathStorageOrder;
 import org.geogit.storage.ObjectDatabase;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Stopwatch;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
 import com.vividsolutions.jts.geom.Envelope;
 
 public class RevTreeBuilder {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(RevTreeBuilder.class);
 
     /**
      * How many children nodes to hold before forcing normalization of the internal data structures
@@ -201,9 +208,11 @@ public class RevTreeBuilder {
      * only entries or subtrees
      */
     private RevTree normalize() {
+        Stopwatch sw = new Stopwatch().start();
         RevTree unnamedTree;
 
-        if (bucketTreesByBucket.isEmpty() && numPendingChanges() <= NORMALIZED_SIZE_LIMIT) {
+        final int numPendingChanges = numPendingChanges();
+        if (bucketTreesByBucket.isEmpty() && numPendingChanges <= NORMALIZED_SIZE_LIMIT) {
             unnamedTree = normalizeToChildren();
         } else {
             unnamedTree = normalizeToBuckets();
@@ -221,22 +230,24 @@ public class RevTreeBuilder {
             }
         }
 
-        final int pendingWritesThreshold = 1000 * 1000;
-        final boolean actualTree = this.depth == 0;// am I an actual (addressable) tree or bucket
-                                                   // tree of a higher level one?
-        final boolean forceWrite = pendingWritesCache.size() > pendingWritesThreshold;
-        if (!pendingWritesCache.isEmpty() && (actualTree || forceWrite)) {
-            // System.err.printf("calling db.putAll for %d buckets because %s...",
-            // pendingWritesCache
-            // .size(), (actualTree ? "writing top level tree" : "there are "
-            // + pendingWritesCache.size() + " pending bucket writes"));
-            // Stopwatch sw = new Stopwatch().start();
+        final int pendingWritesThreshold = 10 * 1000;
+        final boolean topLevelTree = this.depth == 0;// am I an actual (addressable) tree or bucket
+                                                     // tree of a higher level one?
+        final boolean forceWrite = pendingWritesCache.size() >= pendingWritesThreshold;
+        if (!pendingWritesCache.isEmpty() && (topLevelTree || forceWrite)) {
+            LOGGER.debug("calling db.putAll for {} buckets because {}...", pendingWritesCache
+                    .size(), (topLevelTree ? "writing top level tree" : "there are "
+                    + pendingWritesCache.size() + " pending bucket writes"));
+            Stopwatch sw2 = new Stopwatch().start();
             db.putAll(pendingWritesCache.values().iterator());
             pendingWritesCache.clear();
-            // System.err.printf("done in %s.\n", sw);
+            LOGGER.debug("done in {}", sw2.stop());
         }
         this.initialSize = unnamedTree.size();
         this.initialNumTrees = unnamedTree.numTrees();
+        if (this.depth == 0) {
+            LOGGER.debug("Normalization took {}. Changes: {}", sw.stop(), numPendingChanges);
+        }
         return unnamedTree;
     }
 
@@ -310,6 +321,8 @@ public class RevTreeBuilder {
 
             changedBucketIndexes = ImmutableSet.copyOf(changesByBucket.keySet());
 
+            List<RevTree> newLeafTreesToSave = Lists.newArrayList();
+
             for (Integer bucketIndex : changedBucketIndexes) {
                 final RevTree currentBucketTree = getBucketTree(bucketIndex);
                 final int bucketDepth = this.depth + 1;
@@ -336,23 +349,31 @@ public class RevTreeBuilder {
                 } else {
                     final Bucket currBucket = this.bucketTreesByBucket.get(bucketIndex);
                     if (currBucket == null || !currBucket.id().equals(modifiedBucketTree.getId())) {
+                        // if (currBucket != null) {
+                        // db.delete(currBucket.id());
+                        // }
                         // have it on the pending writes set only if its not a leaf tree. Non bucket
                         // trees may be too large and cause OOM
                         if (null != pendingWritesCache.remove(currentBucketTree.getId())) {
-                            System.err.printf(" ---> removed bucket %s from list\n",
-                                    currentBucketTree.getId());
+                            // System.err.printf(" ---> removed bucket %s from list\n",
+                            // currentBucketTree.getId());
                         }
                         if (modifiedBucketTree.buckets().isPresent()) {
                             pendingWritesCache.put(modifiedBucketTree.getId(), modifiedBucketTree);
                         } else {
-                            // System.err.println("saving " + modifiedBucketTree);
-                            boolean isNew = db.put(modifiedBucketTree);
+                            // db.put(modifiedBucketTree);
+                            newLeafTreesToSave.add(modifiedBucketTree);
                         }
                         Envelope bucketBounds = SpatialOps.boundsOf(modifiedBucketTree);
                         Bucket bucket = Bucket.create(modifiedBucketTree.getId(), bucketBounds);
                         bucketTreesByBucket.put(bucketIndex, bucket);
                     }
                 }
+            }
+            if (!newLeafTreesToSave.isEmpty()) {
+                db.putAll(newLeafTreesToSave.iterator());
+                newLeafTreesToSave.clear();
+                newLeafTreesToSave = null;
             }
         } catch (RuntimeException e) {
             throw e;
@@ -490,5 +511,4 @@ public class RevTreeBuilder {
         this.treeChanges.clear();
         return this;
     }
-
 }
