@@ -267,7 +267,7 @@ public class MongoObjectDatabase implements ObjectDatabase {
             RevObject object = objects.next();
             boolean put = put(object);
             if (put) {
-                listener.inserted(object, null);
+                listener.inserted(object.getId(), null);
             }
         }
     }
@@ -300,7 +300,7 @@ public class MongoObjectDatabase implements ObjectDatabase {
                     if (obj == null) {
                         listener.notFound(id);
                     } else {
-                        listener.found(obj, null);
+                        listener.found(obj.getId(), null);
                     }
                 }
                 return obj == null ? endOfData() : obj;

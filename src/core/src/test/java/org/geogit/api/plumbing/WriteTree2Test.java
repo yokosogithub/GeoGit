@@ -6,7 +6,6 @@ package org.geogit.api.plumbing;
 
 import java.util.Arrays;
 import java.util.Iterator;
-import java.util.Map;
 import java.util.Set;
 
 import javax.annotation.Nullable;
@@ -685,10 +684,14 @@ public class WriteTree2Test extends RepositoryTestCase {
             }
         }
         RevTree fakenId = forceTreeId(b, treeId);
-        db.put(fakenId);
+        if (!db.exists(fakenId.getId())) {
+            db.put(fakenId);
+        }
         if (!metadataId.isNull()) {
             RevFeatureType fakeType = new RevFeatureType(metadataId, pointsType);
-            db.put(fakeType);
+            if (!db.exists(fakeType.getId())) {
+                db.put(fakeType);
+            }
         }
 
         String name = NodeRef.nodeFromPath(path);

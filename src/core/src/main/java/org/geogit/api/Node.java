@@ -214,7 +214,7 @@ public abstract class Node implements Bounded, Comparable<Node> {
 
     private static final class BoundedFeatureNode extends FeatureNode {
 
-        // dim0(0),dim0(1),dim1(0),dim1(1)
+        // dim0(0),dim1(0),dim0(1),dim1(1)
         private float[] bounds;
 
         public BoundedFeatureNode(String name, ObjectId oid, ObjectId mdid, Envelope env) {
