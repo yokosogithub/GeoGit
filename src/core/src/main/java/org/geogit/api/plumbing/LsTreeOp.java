@@ -20,6 +20,7 @@ import org.geogit.api.RevObject.TYPE;
 import org.geogit.api.RevTree;
 import org.geogit.api.plumbing.diff.DepthTreeIterator;
 import org.geogit.di.CanRunDuringConflict;
+import org.geogit.storage.ObjectDatabase;
 
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
@@ -115,12 +116,32 @@ public class LsTreeOp extends AbstractGeoGitOp<Iterator<NodeRef>> implements
      * @see java.util.concurrent.Callable#call()
      */
     public Iterator<NodeRef> call() {
+        String ref = this.ref;
 
         if (ref == null) {
             ref = Ref.WORK_HEAD;
         }
 
-        ObjectId parentObjectId = ObjectId.NULL;
+        ObjectId metadataId = ObjectId.NULL;
+        final String path = ref.lastIndexOf(':') != -1 ? ref.substring(ref.lastIndexOf(':') + 1)
+                : "";
+        if (!path.isEmpty()) {
+            final String providedRefName = ref.lastIndexOf(':') != -1 ? ref.substring(0,
+                    ref.lastIndexOf(':')) : null;
+            if (providedRefName != null) {
+                Optional<ObjectId> rootTreeId = command(ResolveTreeish.class).setTreeish(
+                        providedRefName).call();
+                if (rootTreeId.isPresent()) {
+                    RevTree rootTree = command(RevObjectParse.class).setObjectId(rootTreeId.get())
+                            .call(RevTree.class).get();
+
+                    Optional<NodeRef> treeRef = command(FindTreeChild.class).setChildPath(path)
+                            .setIndex(true).setParent(rootTree).call();
+                    metadataId = treeRef.isPresent() ? treeRef.get().getMetadataId()
+                            : ObjectId.NULL;
+                }
+            }
+        }
 
         // is it just a ref name?
         Optional<Ref> reference = command(RefParse.class).setName(ref).call();
@@ -147,7 +168,7 @@ public class LsTreeOp extends AbstractGeoGitOp<Iterator<NodeRef>> implements
 
             Preconditions.checkArgument(treeRef.isPresent(), "Invalid reference: %s", ref);
             ObjectId treeId = treeRef.get().objectId();
-            parentObjectId = treeRef.get().getMetadataId();
+            metadataId = treeRef.get().getMetadataId();
             revObject = command(RevObjectParse.class).setObjectId(treeId).call(RevObject.class);
         }
 
@@ -202,11 +223,10 @@ public class LsTreeOp extends AbstractGeoGitOp<Iterator<NodeRef>> implements
                 throw new IllegalStateException("Unknown strategy: " + this.strategy);
             }
 
-            final String path = ref.lastIndexOf(':') != -1 ? ref
-                    .substring(ref.lastIndexOf(':') + 1) : "";
-
-            DepthTreeIterator iter = new DepthTreeIterator(path, parentObjectId,
-                    (RevTree) revObject.get(), getIndex().getDatabase(), iterStrategy);
+            RevTree tree = (RevTree) revObject.get();
+            ObjectDatabase database = getIndex().getDatabase();
+            DepthTreeIterator iter = new DepthTreeIterator(path, metadataId, tree, database,
+                    iterStrategy);
             iter.setBoundsFilter(refBoundsFilter);
             return iter;
         default:

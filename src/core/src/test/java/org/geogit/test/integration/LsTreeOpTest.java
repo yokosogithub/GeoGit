@@ -5,14 +5,17 @@
 package org.geogit.test.integration;
 
 import java.util.Iterator;
+import java.util.List;
 
 import org.geogit.api.NodeRef;
+import org.geogit.api.ObjectId;
 import org.geogit.api.plumbing.LsTreeOp;
 import org.geogit.api.plumbing.LsTreeOp.Strategy;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterators;
 
 public class LsTreeOpTest extends RepositoryTestCase {
@@ -50,8 +53,24 @@ public class LsTreeOpTest extends RepositoryTestCase {
     @Test
     public void testPathListing() {
         Iterator<NodeRef> iter = geogit.command(LsTreeOp.class).setReference("Points").call();
+        List<NodeRef> nodes = ImmutableList.copyOf(iter);
 
-        assertEquals(3, Iterators.size(iter));
+        assertEquals(3, nodes.size());
+        for (NodeRef ref : nodes) {
+            ObjectId metadataId = ref.getMetadataId();
+            assertFalse(metadataId.isNull());
+        }
+    }
+
+    @Test
+    public void testRefAndPathListing() {
+        Iterator<NodeRef> iter = geogit.command(LsTreeOp.class).setReference("HEAD:Points").call();
+        List<NodeRef> nodes = ImmutableList.copyOf(iter);
+        assertEquals(3, nodes.size());
+        for (NodeRef ref : nodes) {
+            ObjectId metadataId = ref.getMetadataId();
+            assertFalse(metadataId.isNull());
+        }
     }
 
     @Test
