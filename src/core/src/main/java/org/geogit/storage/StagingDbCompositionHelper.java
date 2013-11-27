@@ -50,6 +50,11 @@ public class StagingDbCompositionHelper {
                     return foundInStaging.next();
                 } else if (forwardedToObjectDb.hasNext()) {
                     return forwardedToObjectDb.next();
+                } else if (!missingInStaging.isEmpty()) {
+                    List<ObjectId> missing = new ArrayList<ObjectId>(missingInStaging);
+                    missingInStaging.clear();
+                    forwardedToObjectDb = objectDb.getAll(missing, listener);
+                    return computeNext();
                 }
                 return endOfData();
             }
