@@ -22,6 +22,7 @@ import org.geogit.api.plumbing.LsTreeOp;
 import org.geogit.api.plumbing.ResolveGeogitDir;
 import org.geogit.api.porcelain.CommitOp;
 import org.geogit.di.GeogitModule;
+import org.geogit.di.caching.CachingModule;
 import org.geogit.geotools.data.GeoGitDataStore;
 import org.geogit.geotools.data.GeoGitDataStoreFactory;
 import org.geogit.storage.bdbje.JEStorageModule;
@@ -70,8 +71,8 @@ public class WFSIntegrationTest extends WFSTestSupport {
     @AfterClass
     public static void oneTimeTearDown() throws Exception {
         if (helper != null) {
-            helper.repositoryTempFolder.delete();
             helper.tearDown();
+            helper.repositoryTempFolder.delete();
         }
     }
 
@@ -94,8 +95,8 @@ public class WFSIntegrationTest extends WFSTestSupport {
 
             @Override
             protected Injector createInjector() {
-                return Guice.createInjector(Modules.override(new GeogitModule()).with(
-                        new JEStorageModule()));
+                return Guice.createInjector(Modules.override(new GeogitModule(),
+                        new CachingModule()).with(new JEStorageModule()));
             }
 
             @Override

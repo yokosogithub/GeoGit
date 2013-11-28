@@ -27,6 +27,7 @@ import org.geogit.api.plumbing.ResolveTreeish;
 import org.geogit.api.plumbing.RevObjectParse;
 import org.geogit.api.porcelain.CommitOp;
 import org.geogit.di.GeogitModule;
+import org.geogit.di.caching.CachingModule;
 import org.geogit.geotools.data.GeoGitDataStore;
 import org.geogit.geotools.data.GeoGitDataStoreFactory;
 import org.geogit.storage.ObjectSerializingFactory;
@@ -78,8 +79,8 @@ public class GeoServerRESTIntegrationTest extends GeoServerSystemTestSupport {
 
             @Override
             protected Injector createInjector() {
-                return Guice.createInjector(Modules.override(new GeogitModule()).with(
-                        new JEStorageModule()));
+                return Guice.createInjector(Modules.override(new GeogitModule(),
+                        new CachingModule()).with(new JEStorageModule()));
             }
 
             @Override
@@ -94,8 +95,8 @@ public class GeoServerRESTIntegrationTest extends GeoServerSystemTestSupport {
     @AfterClass
     public static void oneTimeTearDown() throws Exception {
         if (helper != null) {
-            helper.repositoryTempFolder.delete();
             helper.tearDown();
+            helper.repositoryTempFolder.delete();
         }
     }
 
