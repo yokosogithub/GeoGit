@@ -7,9 +7,14 @@ package org.geogit.repository;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
+import java.io.IOException;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
 import javax.annotation.Nullable;
 
@@ -39,7 +44,15 @@ import org.geogit.api.plumbing.UpdateRef;
 import org.geogit.api.plumbing.WriteBack;
 import org.geogit.api.plumbing.diff.DiffEntry;
 import org.geogit.api.plumbing.diff.DiffObjectCount;
+import org.geogit.storage.BulkOpListener;
+import org.geogit.storage.BulkOpListener.CountingListener;
 import org.geogit.storage.StagingDatabase;
+import org.geotools.data.FeatureSource;
+import org.geotools.data.Query;
+import org.geotools.data.store.FeatureIteratorIterator;
+import org.geotools.factory.Hints;
+import org.geotools.feature.FeatureCollection;
+import org.geotools.feature.FeatureIterator;
 import org.geotools.geometry.jts.ReferencedEnvelope;
 import org.opengis.feature.Feature;
 import org.opengis.feature.type.FeatureType;
@@ -47,17 +60,24 @@ import org.opengis.feature.type.Name;
 import org.opengis.filter.Filter;
 import org.opengis.geometry.BoundingBox;
 import org.opengis.util.ProgressListener;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Stopwatch;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
+import com.google.common.base.Throwables;
 import com.google.common.collect.Iterators;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.PeekingIterator;
 import com.google.inject.Inject;
+import com.vividsolutions.jts.geom.CoordinateSequenceFactory;
 import com.vividsolutions.jts.geom.Envelope;
+import com.vividsolutions.jts.geom.impl.PackedCoordinateSequenceFactory;
 
 /**
  * A working tree is the collection of Features for a single FeatureType in GeoServer that has a
@@ -83,6 +103,8 @@ import com.vividsolutions.jts.geom.Envelope;
  */
 public class WorkingTree {
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(WorkingTree.class);
+
     private StagingDatabase indexDatabase;
 
     private CommandLocator commandLocator;
@@ -100,7 +122,7 @@ public class WorkingTree {
      * 
      * @param newTree the tree to be set as the new WORK_HEAD
      */
-    public void updateWorkHead(ObjectId newTree) {
+    public synchronized void updateWorkHead(ObjectId newTree) {
 
         commandLocator.command(UpdateRef.class).setName(Ref.WORK_HEAD).setNewValue(newTree).call();
     }
@@ -109,7 +131,7 @@ public class WorkingTree {
      * @return the tree represented by WORK_HEAD. If there is no tree set at WORK_HEAD, it will
      *         return the HEAD tree (no unstaged changes).
      */
-    public RevTree getTree() {
+    public synchronized RevTree getTree() {
         Optional<ObjectId> workTreeId = commandLocator.command(ResolveTreeish.class)
                 .setTreeish(Ref.WORK_HEAD).call();
         final RevTree workTree;
@@ -339,15 +361,16 @@ public class WorkingTree {
         }
     }
 
-    public NodeRef createTypeTree(final String treePath, final FeatureType featureType) {
+    public synchronized NodeRef createTypeTree(final String treePath, final FeatureType featureType) {
 
         final RevTree workHead = getTree();
         Optional<NodeRef> typeTreeRef = commandLocator.command(FindTreeChild.class).setIndex(true)
                 .setParent(workHead).setChildPath(treePath).call();
-        Preconditions
-                .checkArgument(!typeTreeRef.isPresent(), "Tree already exists at %s", treePath);
 
         final RevFeatureType revType = RevFeatureType.build(featureType);
+        if (typeTreeRef.isPresent()) {
+            throw new IllegalArgumentException("Tree already exists at " + treePath);
+        }
         indexDatabase.put(revType);
 
         final ObjectId metadataId = revType.getId();
@@ -413,6 +436,194 @@ public class WorkingTree {
         return featureRef.get().getNode();
     }
 
+    @SuppressWarnings({ "rawtypes", "deprecation" })
+    public void insert(final String treePath, final FeatureSource source, final Query query,
+            ProgressListener listener) {
+
+        final NodeRef treeRef = findOrCreateTypeTree(treePath, source);
+
+        Long collectionSize = null;
+        try {
+            // try for a fast count
+            int count = source.getCount(Query.ALL);
+            if (count > -1) {
+                collectionSize = Long.valueOf(count);
+            }
+        } catch (IOException e) {
+            throw Throwables.propagate(e);
+        }
+
+        final int nFetchThreads;
+        {
+            // maxFeatures is assumed to be supported by all data sources, so supportsPaging depends
+            // only on offset being supported
+            boolean supportsPaging = source.getQueryCapabilities().isOffsetSupported();
+            if (supportsPaging) {
+                nFetchThreads = Math.max(2, Runtime.getRuntime().availableProcessors() / 2);
+            } else {
+                nFetchThreads = 1;
+            }
+        }
+
+        final ExecutorService executorService = Executors.newFixedThreadPool(2 + nFetchThreads);
+
+        listener.started();
+
+        Stopwatch sw = new Stopwatch().start();
+
+        final RevTree origTree = treeRef.objectId().isNull() ? RevTree.EMPTY : indexDatabase
+                .getTree(treeRef.objectId());
+        RevTreeBuilder2 builder = new RevTreeBuilder2(indexDatabase, origTree,
+                treeRef.getMetadataId(), executorService);
+
+        List<Future<Integer>> insertBlobsFuture = insertBlobs(source, query, executorService,
+                listener, collectionSize, nFetchThreads, builder);
+
+        RevTree newFeatureTree;
+        try {
+            long insertedCount = 0;
+            for (Future<Integer> f : insertBlobsFuture) {
+                insertedCount += f.get().longValue();
+            }
+            sw.stop();
+            listener.setDescription(insertedCount + " distinct features inserted in " + sw);
+
+            listener.setDescription("Building final tree...");
+
+            sw.reset().start();
+            newFeatureTree = builder.build();
+
+            listener.setDescription(String.format("%d features tree built in %s",
+                    newFeatureTree.size(), sw.stop()));
+            listener.complete();
+
+        } catch (Exception e) {
+            throw Throwables.propagate(Throwables.getRootCause(e));
+        } finally {
+            executorService.shutdown();
+        }
+        ObjectId newTree = commandLocator.command(WriteBack.class).setAncestor(getTreeSupplier())
+                .setChildPath(treePath).setMetadataId(treeRef.getMetadataId()).setToIndex(true)
+                .setTree(newFeatureTree).call();
+
+        updateWorkHead(newTree);
+
+    }
+
+    private NodeRef findOrCreateTypeTree(final String treePath,
+            @SuppressWarnings("rawtypes") final FeatureSource source) {
+
+        final NodeRef treeRef;
+        {
+            Optional<NodeRef> typeTreeRef = commandLocator.command(FindTreeChild.class)
+                    .setIndex(true).setParent(getTree()).setChildPath(treePath).call();
+
+            if (typeTreeRef.isPresent()) {
+                treeRef = typeTreeRef.get();
+            } else {
+                FeatureType featureType = source.getSchema();
+                treeRef = createTypeTree(treePath, featureType);
+            }
+        }
+        return treeRef;
+    }
+
+    @SuppressWarnings("rawtypes")
+    private List<Future<Integer>> insertBlobs(final FeatureSource source, final Query baseQuery,
+            final ExecutorService executorService, final ProgressListener listener,
+            final @Nullable Long collectionSize, int nTasks, RevTreeBuilder2 builder) {
+
+        int partitionSize = 0;
+        BulkOpListener bulkOpListener;
+        if (collectionSize == null) {
+            nTasks = 1;
+            partitionSize = Integer.MAX_VALUE;
+            bulkOpListener = BulkOpListener.NOOP_LISTENER;
+        } else {
+            final int total = collectionSize.intValue();
+            partitionSize = total / nTasks;
+            bulkOpListener = new BulkOpListener() {
+                int inserted = 0;
+
+                @Override
+                public synchronized void inserted(ObjectId object,
+                        @Nullable Integer storageSizeBytes) {
+                    listener.progress((float) (++inserted * 100) / total);
+                }
+            };
+        }
+
+        List<Future<Integer>> results = Lists.newArrayList();
+        for (int i = 0; i < nTasks; i++) {
+            int offset = i * partitionSize;
+            int limit = partitionSize;
+
+            results.add(executorService.submit(new BlobInsertTask(source, offset, limit,
+                    bulkOpListener, builder)));
+        }
+        return results;
+    }
+
+    private final class BlobInsertTask implements Callable<Integer> {
+
+        private final BulkOpListener listener;
+
+        @SuppressWarnings("rawtypes")
+        private FeatureSource source;
+
+        private int offset;
+
+        private int limit;
+
+        private RevTreeBuilder2 builder;
+
+        private BlobInsertTask(@SuppressWarnings("rawtypes") FeatureSource source, int offset,
+                int limit, BulkOpListener listener, RevTreeBuilder2 builder) {
+
+            this.source = source;
+            this.offset = offset;
+            this.limit = limit;
+            this.listener = listener;
+            this.builder = builder;
+        }
+
+        @SuppressWarnings({ "rawtypes", "unchecked" })
+        @Override
+        public Integer call() throws Exception {
+
+            final Query query = new Query();
+            CoordinateSequenceFactory coordSeq = new PackedCoordinateSequenceFactory();
+            query.getHints().add(new Hints(Hints.JTS_COORDINATE_SEQUENCE_FACTORY, coordSeq));
+            query.setStartIndex(offset);
+            if (limit > 0) {
+                query.setMaxFeatures(limit);
+            }
+            FeatureCollection collection = source.getFeatures(query);
+            FeatureIterator features = collection.features();
+            Iterator<Feature> fiterator = new FeatureIteratorIterator<Feature>(features);
+
+            Iterator<RevObject> objects = Iterators.transform(fiterator,
+                    new Function<Feature, RevObject>() {
+                        @Override
+                        public RevFeature apply(final Feature feature) {
+                            final RevFeature revFeature = RevFeatureBuilder.build(feature);
+                            builder.putFeature(revFeature.getId(), feature.getIdentifier().getID(),
+                                    feature.getBounds(), feature.getType());
+                            return revFeature;
+                        }
+
+                    });
+
+            CountingListener countingListener = BulkOpListener.newCountingListener();
+            try {
+                indexDatabase.putAll(objects, BulkOpListener.composite(listener, countingListener));
+            } finally {
+                features.close();
+            }
+            return countingListener.inserted();
+        }
+    }
+
     /**
      * Inserts a collection of features into the working tree and updates the WORK_HEAD ref.
      * 
@@ -458,13 +669,11 @@ public class WorkingTree {
         Iterator<RevObject> objects = Iterators.transform(features,
                 new Function<Feature, RevObject>() {
 
-                    private RevFeatureBuilder builder = new RevFeatureBuilder();
-
                     private int count;
 
                     @Override
                     public RevFeature apply(Feature feature) {
-                        final RevFeature revFeature = builder.build(feature);
+                        final RevFeature revFeature = RevFeatureBuilder.build(feature);
                         FeatureType featureType = feature.getType();
                         ObjectId revFeatureTypeId = revFeatureTypes.get(featureType.getName());
 
@@ -483,7 +692,6 @@ public class WorkingTree {
                             insertedTarget.add(node);
                         }
                         typeTreeBuilder.put(node);
-
                         count++;
                         if (collectionSize != null) {
                             listener.progress((float) (count * 100) / collectionSize.intValue());
@@ -491,47 +699,39 @@ public class WorkingTree {
                         return revFeature;
                     }
 
-                });
+                    private Node createNode(final ObjectId metadataId, Feature feature,
+                            final RevFeature revFeature) {
+                        final String name;
+                        final ObjectId oid;
+                        final Envelope env;
+                        name = feature.getIdentifier().getID();
+                        BoundingBox bounds = feature.getBounds();
+                        if (bounds instanceof ReferencedEnvelope) {
+                            env = (Envelope) bounds;
+                        } else if (bounds != null) {
+                            env = new Envelope(bounds.getMinX(), bounds.getMaxX(),
+                                    bounds.getMinY(), bounds.getMaxY());
+                        } else {
+                            env = null;
+                        }
+                        oid = revFeature.getId();
+                        Node node = Node.create(name, oid, metadataId, TYPE.FEATURE, env);
+                        return node;
+                    }
 
-        // System.err.println("\n inserting rev features...");
-        // Stopwatch sw = new Stopwatch().start();
+                });
         listener.started();
         indexDatabase.putAll(objects);
         listener.complete();
-        // sw.stop();
-        // System.err.printf("\n%d features inserted in %s", collectionSize, sw);
 
-        // System.err.println("\nBuilding final tree...");
-        // sw.reset().start();
         RevTree newFeatureTree = typeTreeBuilder.build();
         indexDatabase.put(newFeatureTree);
-        // sw.stop();
-        // System.err.println("\nfinal tree built in " + sw);
 
         ObjectId newTree = commandLocator.command(WriteBack.class).setAncestor(getTreeSupplier())
                 .setChildPath(treePath).setMetadataId(treeRef.getMetadataId()).setToIndex(true)
                 .setTree(newFeatureTree).call();
 
         updateWorkHead(newTree);
-    }
-
-    private Node createNode(final ObjectId metadataId, Feature feature, final RevFeature revFeature) {
-        final String name;
-        final ObjectId oid;
-        final Envelope env;
-        name = feature.getIdentifier().getID();
-        BoundingBox bounds = feature.getBounds();
-        if (bounds instanceof ReferencedEnvelope) {
-            env = (Envelope) bounds;
-        } else if (bounds != null) {
-            env = new Envelope(bounds.getMinX(), bounds.getMaxX(), bounds.getMinY(),
-                    bounds.getMaxY());
-        } else {
-            env = null;
-        }
-        oid = revFeature.getId();
-        Node node = Node.create(name, oid, metadataId, TYPE.FEATURE, env);
-        return node;
     }
 
     /**
@@ -628,7 +828,7 @@ public class WorkingTree {
         checkNotNull(feature);
         checkNotNull(metadataId);
 
-        final RevFeature newFeature = new RevFeatureBuilder().build(feature);
+        final RevFeature newFeature = RevFeatureBuilder.build(feature);
         final ObjectId objectId = newFeature.getId();
         final Envelope bounds = (ReferencedEnvelope) feature.getBounds();
         final String nodeName = feature.getIdentifier().getID();
@@ -637,66 +837,6 @@ public class WorkingTree {
 
         Node newObject = Node.create(nodeName, objectId, metadataId, TYPE.FEATURE, bounds);
         return newObject;
-    }
-
-    /**
-     * Adds a collection of features to the staging database.
-     * 
-     * @param parentTreepath path of features
-     * @param objects the features to insert
-     * @param progress the {@link ProgressListener} for this process
-     * @param size number of features to add
-     * @param target if specified, created {@link Node}s will be added to the list
-     * @param defaultMetadataId
-     */
-    private void putInDatabase(final String parentTreePath,
-            final Iterator<? extends Feature> objects, final ProgressListener progress,
-            final @Nullable Integer size, @Nullable final List<Node> target,
-            final RevTreeBuilder parentTree, ObjectId defaultMetadataId) {
-
-        checkNotNull(objects);
-        checkNotNull(progress);
-        checkNotNull(parentTree);
-
-        Feature feature;
-        int count = 0;
-
-        progress.started();
-
-        Map<Name, ObjectId> revFeatureTypes = Maps.newHashMap();
-
-        while (objects.hasNext()) {
-            count++;
-            if (progress.isCanceled()) {
-                return;
-            }
-            if (size != null) {
-                progress.progress((float) (count * 100) / size.intValue());
-            }
-
-            feature = objects.next();
-
-            final FeatureType featureType = feature.getType();
-            ObjectId revFeatureTypeId = revFeatureTypes.get(featureType.getName());
-
-            if (null == revFeatureTypeId) {
-                RevFeatureType newFeatureType = RevFeatureType.build(featureType);
-
-                revFeatureTypeId = newFeatureType.getId();
-
-                indexDatabase.put(newFeatureType);
-                revFeatureTypes.put(featureType.getName(), revFeatureTypeId);
-            }
-
-            final Node objectRef = putInDatabase(feature,
-                    defaultMetadataId.equals(revFeatureTypeId) ? ObjectId.NULL : revFeatureTypeId);
-            parentTree.put(objectRef);
-            if (target != null) {
-                target.add(objectRef);
-            }
-        }
-
-        progress.complete();
     }
 
     /**

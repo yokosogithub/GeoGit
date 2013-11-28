@@ -50,6 +50,8 @@ public abstract class AbstractShpCommand extends AbstractCommand implements CLIC
             params.put(ShapefileDataStoreFactory.URLP.key, new File(shapefile).toURI().toURL());
             params.put(ShapefileDataStoreFactory.NAMESPACEP.key, "http://www.opengis.net/gml");
             params.put(ShapefileDataStoreFactory.CREATE_SPATIAL_INDEX.key, Boolean.FALSE);
+            params.put(ShapefileDataStoreFactory.ENABLE_SPATIAL_INDEX.key, Boolean.FALSE);
+            params.put(ShapefileDataStoreFactory.MEMORY_MAPPED.key, Boolean.FALSE);
 
             DataStore dataStore = dataStoreFactory.createDataStore(params);
             checkParameter(dataStore != null, "Unable to open '%s' as a shapefile", shapefile);

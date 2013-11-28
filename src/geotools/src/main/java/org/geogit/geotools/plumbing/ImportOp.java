@@ -5,6 +5,7 @@
 
 package org.geogit.geotools.plumbing;
 
+import java.io.IOException;
 import java.util.Iterator;
 import java.util.List;
 
@@ -18,18 +19,25 @@ import org.geogit.api.RevTree;
 import org.geogit.api.plumbing.LsTreeOp;
 import org.geogit.api.plumbing.LsTreeOp.Strategy;
 import org.geogit.api.plumbing.RevObjectParse;
+import org.geogit.geotools.data.ForwardingFeatureCollection;
+import org.geogit.geotools.data.ForwardingFeatureIterator;
+import org.geogit.geotools.data.ForwardingFeatureSource;
 import org.geogit.geotools.plumbing.GeoToolsOpException.StatusCode;
+import org.geogit.repository.WorkingTree;
 import org.geotools.data.DataStore;
-import org.geotools.data.simple.SimpleFeatureCollection;
-import org.geotools.data.simple.SimpleFeatureIterator;
-import org.geotools.data.simple.SimpleFeatureSource;
+import org.geotools.data.FeatureSource;
+import org.geotools.data.Query;
+import org.geotools.factory.Hints;
 import org.geotools.feature.DecoratingFeature;
+import org.geotools.feature.FeatureCollection;
+import org.geotools.feature.FeatureIterator;
 import org.geotools.feature.NameImpl;
 import org.geotools.feature.simple.SimpleFeatureTypeBuilder;
 import org.geotools.filter.identity.FeatureIdImpl;
 import org.opengis.feature.Feature;
 import org.opengis.feature.simple.SimpleFeature;
 import org.opengis.feature.simple.SimpleFeatureType;
+import org.opengis.feature.type.FeatureType;
 import org.opengis.feature.type.Name;
 import org.opengis.feature.type.PropertyDescriptor;
 import org.opengis.filter.identity.FeatureId;
@@ -42,6 +50,8 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterators;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
+import com.vividsolutions.jts.geom.CoordinateSequenceFactory;
+import com.vividsolutions.jts.geom.impl.PackedCoordinateSequenceFactory;
 
 /**
  * Internal operation for importing tables from a GeoTools {@link DataStore}.
@@ -144,6 +154,7 @@ public class ImportOp extends AbstractGeoGitOp<RevTree> {
             }
         }
 
+        final WorkingTree workTree = getWorkTree();
         for (Name typeName : typeNames) {
             tableCount++;
             if (!all && !table.equals(typeName.toString()))
@@ -159,16 +170,19 @@ public class ImportOp extends AbstractGeoGitOp<RevTree> {
                     "Importing " + tableName + " (" + (all ? tableCount : 1) + "/"
                             + (all ? typeNames.size() : 1) + ")... ");
 
-            SimpleFeatureSource featureSource;
-            SimpleFeatureCollection features;
+            FeatureSource featureSource;
+            FeatureCollection features;
+            Query query = new Query();
             try {
-                featureSource = dataStore.getFeatureSource(typeName);
-                features = featureSource.getFeatures();
+                featureSource = getFeatureSource(typeName);
+                CoordinateSequenceFactory coordSeq = new PackedCoordinateSequenceFactory();
+                query.getHints().add(new Hints(Hints.JTS_COORDINATE_SEQUENCE_FACTORY, coordSeq));
+                features = featureSource.getFeatures(query);
             } catch (Exception e) {
                 throw new GeoToolsOpException(StatusCode.UNABLE_TO_GET_FEATURES);
             }
 
-            SimpleFeatureType featureType = featureSource.getSchema();
+            SimpleFeatureType featureType = (SimpleFeatureType) featureSource.getSchema();
             RevFeatureType revFeatureType = RevFeatureType.build(featureSource.getSchema());
 
             String path;
@@ -176,8 +190,8 @@ public class ImportOp extends AbstractGeoGitOp<RevTree> {
                 path = revFeatureType.getName().getLocalPart();
             } else {
                 path = destPath;
-
             }
+
             NodeRef.checkValidPath(path);
 
             SimpleFeatureTypeBuilder builder = new SimpleFeatureTypeBuilder();
@@ -193,13 +207,13 @@ public class ImportOp extends AbstractGeoGitOp<RevTree> {
 
             if (overwrite) {
                 try {
-                    this.getWorkTree().delete(new NameImpl(path));
+                    workTree.delete(new NameImpl(path));
                 } catch (Exception e) {
                     throw new GeoToolsOpException(e, StatusCode.UNABLE_TO_INSERT);
                 }
             }
 
-            final SimpleFeatureIterator featureIterator = features.features();
+            final FeatureIterator featureIterator = features.features();
             Iterator<Feature> iterator = new AbstractIterator<Feature>() {
                 @Override
                 protected Feature computeNext() {
@@ -213,11 +227,22 @@ public class ImportOp extends AbstractGeoGitOp<RevTree> {
             iterator = Iterators.transform(iterator, new FidAndFtReplacer(fidAttribute, fidPrefix,
                     featureType));
 
-            Integer collectionSize = features.size();
+            final Integer collectionSize = features.size();
             if (!alter) {
                 try {
                     if (iterator.hasNext()) {
-                        getWorkTree().insert(path, iterator, taskProgress, null, collectionSize);
+                        /*
+                         * REVISIT: only using the improved import if no destPath was specified
+                         * because the merge of commit 07fff6f made it so that also feature types
+                         * are replaced
+                         */
+                        if (null == destPath) {
+                            featureIterator.close();
+                            insert(workTree, path, featureSource, typeName, taskProgress,
+                                    collectionSize);
+                        } else {
+                            workTree.insert(path, iterator, taskProgress, null, collectionSize);
+                        }
                     } else {
                         // No features
                         if (overwrite) {
@@ -239,12 +264,12 @@ public class ImportOp extends AbstractGeoGitOp<RevTree> {
                         revFeatureType);
                 try {
                     Integer size = features.size();
-                    getWorkTree().insert(path, transformedIterator, taskProgress, null, size);
+                    workTree.insert(path, transformedIterator, taskProgress, null, size);
                 } catch (Exception e) {
                     throw new GeoToolsOpException(StatusCode.UNABLE_TO_INSERT);
                 }
                 // then we add the new ones
-                getWorkTree().insert(path, iterator, taskProgress, null, collectionSize);
+                workTree.insert(path, iterator, taskProgress, null, collectionSize);
             }
 
         }
@@ -257,7 +282,68 @@ public class ImportOp extends AbstractGeoGitOp<RevTree> {
         }
         getProgressListener().progress(100.f);
         getProgressListener().complete();
-        return getWorkTree().getTree();
+        return workTree.getTree();
+    }
+
+    @SuppressWarnings({ "rawtypes", "unchecked" })
+    private FeatureSource getFeatureSource(Name typeName) throws IOException {
+        FeatureSource featureSource = dataStore.getFeatureSource(typeName);
+        return new ForwardingFeatureSource(featureSource) {
+
+            @Override
+            public FeatureCollection getFeatures(Query query) throws IOException {
+
+                final FeatureCollection features = super.getFeatures(query);
+                return new ForwardingFeatureCollection(features) {
+
+                    @Override
+                    public FeatureIterator features() {
+
+                        final FeatureType featureType = getSchema();
+                        final String fidPrefix = featureType.getName().getLocalPart() + ".";
+
+                        FeatureIterator iterator = delegate.features();
+                        return new FidPrefixRemovingIterator(iterator, fidPrefix);
+                    }
+                };
+            }
+        };
+    }
+
+    private static class FidPrefixRemovingIterator extends ForwardingFeatureIterator<SimpleFeature> {
+
+        private final String fidPrefix;
+
+        public FidPrefixRemovingIterator(FeatureIterator iterator, String fidPrefix) {
+            super(iterator);
+            this.fidPrefix = fidPrefix;
+        }
+
+        @Override
+        public SimpleFeature next() {
+            SimpleFeature next = super.next();
+            String fid = ((SimpleFeature) next).getID();
+            if (fid.startsWith(fidPrefix)) {
+                fid = fid.substring(fidPrefix.length());
+            }
+            return new FidAndFtOverrideFeature(next, fid, next.getFeatureType());
+        }
+
+    }
+
+    private void insert(final WorkingTree workTree, final String path,
+            final FeatureSource featureSource, final Name typeName,
+            final ProgressListener taskProgress, final Integer collectionSize) {
+
+        if (collectionSize == null || collectionSize.intValue() <= 0) {
+            return;
+        }
+
+        final Query query = new Query();
+        CoordinateSequenceFactory coordSeq = new PackedCoordinateSequenceFactory();
+        query.getHints().add(new Hints(Hints.JTS_COORDINATE_SEQUENCE_FACTORY, coordSeq));
+        workTree.insert(path, featureSource, query, taskProgress);
+
     }
 
     private Iterator<Feature> transformIterator(Iterator<NodeRef> nodeIterator,
@@ -416,7 +502,10 @@ public class ImportOp extends AbstractGeoGitOp<RevTree> {
         @Override
         public Feature apply(final Feature input) {
             if (attributeName == null) {
-                String fid = ((SimpleFeature) input).getID().substring(fidPrefix.length());
+                String fid = ((SimpleFeature) input).getID();
+                if (fid.startsWith(fidPrefix)) {
+                    fid = fid.substring(fidPrefix.length());
+                }
                 return new FidAndFtOverrideFeature((SimpleFeature) input, fid, featureType);
             } else {
                 Object value = ((SimpleFeature) input).getAttribute(attributeName);
