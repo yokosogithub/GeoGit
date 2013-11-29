@@ -4,21 +4,22 @@
  */
 package org.geogit.osm.internal;
 
+import org.geotools.feature.DecoratingFeature;
 import org.opengis.feature.Feature;
+import org.opengis.feature.simple.SimpleFeature;
 
-public class MappedFeature {
-
-    private Feature feature;
+public class MappedFeature extends DecoratingFeature {
 
     private String path;
 
     public MappedFeature(String path, Feature feature) {
+        super((SimpleFeature) feature);
         this.path = path;
-        this.feature = feature;
     }
 
+    @Deprecated
     public Feature getFeature() {
-        return feature;
+        return this;
     }
 
     public String getPath() {
