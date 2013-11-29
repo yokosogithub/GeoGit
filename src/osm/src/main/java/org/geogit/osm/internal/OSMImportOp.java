@@ -13,11 +13,12 @@ import java.io.IOException;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.ThreadFactory;
+
+import javax.annotation.Nullable;
 
 import org.geogit.api.AbstractGeoGitOp;
 import org.geogit.api.NodeRef;
@@ -177,38 +178,11 @@ public class OSMImportOp extends AbstractGeoGitOp<Optional<OSMDownloadReport>> {
 
         checkNotNull(urlOrFilepath);
 
-        final ThreadFactory threadFactory = new ThreadFactoryBuilder().setDaemon(true)
-                .setNameFormat("osm-data-download-thread-%d").build();
-        final ExecutorService executor = Executors.newFixedThreadPool(3, threadFactory);
-
         ObjectId oldTreeId = getWorkTree().getTree().getId();
 
         File file;
         if (urlOrFilepath.startsWith("http")) {
-            getProgressListener().setDescription("Downloading data...");
-            checkNotNull(filter);
-            OSMDownloader downloader = new OSMDownloader(urlOrFilepath, executor,
-                    getProgressListener());
-
-            if (downloadFile == null) {
-                try {
-                    downloadFile = File.createTempFile("osm-geogit", ".xml");
-                } catch (IOException e) {
-                    Throwables.propagate(e);
-                }
-            } else {
-                downloadFile = downloadFile.getAbsoluteFile();
-            }
-
-            Future<File> data = downloader.download(filter, downloadFile);
-
-            try {
-                file = data.get();
-            } catch (InterruptedException e) {
-                throw Throwables.propagate(e);
-            } catch (ExecutionException e) {
-                throw Throwables.propagate(e);
-            }
+            file = downloadFile(this.downloadFile);
         } else {
             file = new File(urlOrFilepath);
             Preconditions.checkArgument(file.exists(), "File does not exist: " + urlOrFilepath);
@@ -221,7 +195,7 @@ public class OSMImportOp extends AbstractGeoGitOp<Optional<OSMDownloadReport>> {
         OSMDownloadReport report = parseDataFileAndInsert(file, converter);
 
         if (urlOrFilepath.startsWith("http") && !keepFile) {
-            downloadFile.delete();
+            file.delete();
         }
 
         if (report != null) {
@@ -251,6 +225,40 @@ public class OSMImportOp extends AbstractGeoGitOp<Optional<OSMDownloadReport>> {
 
         return Optional.fromNullable(report);
 
+    }
+
+    private File downloadFile(@Nullable File destination) {
+        File file;
+        final ThreadFactory threadFactory = new ThreadFactoryBuilder().setDaemon(true)
+                .setNameFormat("osm-data-download-thread-%d").build();
+        final ExecutorService executor = Executors.newFixedThreadPool(3, threadFactory);
+        try {
+            getProgressListener().setDescription("Downloading data...");
+            checkNotNull(filter);
+            OSMDownloader downloader = new OSMDownloader(urlOrFilepath, executor,
+                    getProgressListener());
+
+            if (destination == null) {
+                try {
+                    destination = File.createTempFile("osm-geogit", ".xml");
+                } catch (IOException e) {
+                    Throwables.propagate(e);
+                }
+            } else {
+                destination = destination.getAbsoluteFile();
+            }
+
+            Future<File> data = downloader.download(filter, destination);
+
+            try {
+                file = data.get();
+                return file;
+            } catch (Exception e) {
+                throw Throwables.propagate(Throwables.getRootCause(e));
+            }
+        } finally {
+            executor.shutdownNow();
+        }
     }
 
     private OSMDownloadReport parseDataFileAndInsert(File file, final EntityConverter converter) {
