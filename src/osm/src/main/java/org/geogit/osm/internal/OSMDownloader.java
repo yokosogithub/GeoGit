@@ -17,9 +17,6 @@ import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLEncoder;
-import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Future;
 
 import org.opengis.util.ProgressListener;
 
@@ -29,24 +26,20 @@ public class OSMDownloader {
 
     private final String osmAPIUrl;
 
-    private final ExecutorService executor;
-
     private ProgressListener progress;
 
     /**
      * @param osmAPIUrl api url, e.g. {@code http://api.openstreetmap.org/api/0.6},
      * @param downloadFolder where to download the data xml contents to
      */
-    public OSMDownloader(String osmAPIUrl, ExecutorService executor, ProgressListener progress) {
+    public OSMDownloader(String osmAPIUrl, ProgressListener progress) {
         checkNotNull(osmAPIUrl);
-        checkNotNull(executor);
         checkNotNull(progress);
         this.osmAPIUrl = osmAPIUrl;
-        this.executor = executor;
         this.progress = progress;
     }
 
-    private class DownloadOSMData implements Callable<File> {
+    private class DownloadOSMData {
 
         private String filter;
 
@@ -60,35 +53,30 @@ public class OSMDownloader {
             this.downloadFile = downloadFile;
         }
 
-        @Override
         public File call() throws Exception {
-            synchronized (downloadFile.getAbsolutePath().intern()) {
-                URL url = new URL(osmAPIUrl);
-                HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-                conn.setConnectTimeout(10000);
-                conn.setReadTimeout(180000);
-                conn.setDoInput(true);
-                conn.setDoOutput(true);
-                conn.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
+            URL url = new URL(osmAPIUrl);
+            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+            conn.setConnectTimeout(10000);
+            conn.setReadTimeout(180000);
+            conn.setDoInput(true);
+            conn.setDoOutput(true);
+            conn.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
 
-                DataOutputStream printout = new DataOutputStream(conn.getOutputStream());
-                printout.writeBytes("data=" + URLEncoder.encode(filter, "utf-8"));
-                printout.flush();
-                printout.close();
+            DataOutputStream printout = new DataOutputStream(conn.getOutputStream());
+            printout.writeBytes("data=" + URLEncoder.encode(filter, "utf-8"));
+            printout.flush();
+            printout.close();
 
-                ProgressInputStream stream = new ProgressInputStream(conn.getInputStream(),
-                        progress);
-                copy(stream, downloadFile);
+            ProgressInputStream stream = new ProgressInputStream(conn.getInputStream(), progress);
+            copy(stream, downloadFile);
 
-            }
             return downloadFile;
         }
-
     }
 
-    public Future<File> download(String filter, File file) {
-        Future<File> future = executor.submit(new DownloadOSMData(osmAPIUrl, filter, file));
-        return future;
+    public File download(String filter, File destination) throws Exception {
+        File downloadedFile = new DownloadOSMData(osmAPIUrl, filter, destination).call();
+        return downloadedFile;
     }
 
     private static class ProgressInputStream extends FilterInputStream {

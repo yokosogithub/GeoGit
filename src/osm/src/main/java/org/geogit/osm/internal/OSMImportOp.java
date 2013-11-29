@@ -14,10 +14,6 @@ import java.io.InputStream;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
-import java.util.concurrent.ThreadFactory;
 
 import javax.annotation.Nullable;
 
@@ -52,7 +48,6 @@ import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.io.Closeables;
-import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.geom.GeometryFactory;
@@ -231,36 +226,26 @@ public class OSMImportOp extends AbstractGeoGitOp<Optional<OSMDownloadReport>> {
     }
 
     private File downloadFile(@Nullable File destination) {
-        File file;
-        final ThreadFactory threadFactory = new ThreadFactoryBuilder().setDaemon(true)
-                .setNameFormat("osm-data-download-thread-%d").build();
-        final ExecutorService executor = Executors.newFixedThreadPool(3, threadFactory);
-        try {
-            getProgressListener().setDescription("Downloading data...");
-            checkNotNull(filter);
-            OSMDownloader downloader = new OSMDownloader(urlOrFilepath, executor,
-                    getProgressListener());
 
-            if (destination == null) {
-                try {
-                    destination = File.createTempFile("osm-geogit", ".xml");
-                } catch (IOException e) {
-                    Throwables.propagate(e);
-                }
-            } else {
-                destination = destination.getAbsoluteFile();
-            }
+        getProgressListener().setDescription("Downloading data...");
+        checkNotNull(filter);
+        OSMDownloader downloader = new OSMDownloader(urlOrFilepath, getProgressListener());
 
-            Future<File> data = downloader.download(filter, destination);
-
+        if (destination == null) {
             try {
-                file = data.get();
-                return file;
-            } catch (Exception e) {
-                throw Throwables.propagate(Throwables.getRootCause(e));
+                destination = File.createTempFile("osm-geogit", ".xml");
+            } catch (IOException e) {
+                Throwables.propagate(e);
             }
-        } finally {
-            executor.shutdownNow();
+        } else {
+            destination = destination.getAbsoluteFile();
+        }
+
+        try {
+            File file = downloader.download(filter, destination);
+            return file;
+        } catch (Exception e) {
+            throw Throwables.propagate(Throwables.getRootCause(e));
         }
     }
 
