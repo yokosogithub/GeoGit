@@ -6,10 +6,11 @@ package org.geogit.osm.internal;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
+import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -50,6 +51,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
+import com.google.common.io.Closeables;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.geom.Geometry;
@@ -180,22 +182,23 @@ public class OSMImportOp extends AbstractGeoGitOp<Optional<OSMDownloadReport>> {
 
         ObjectId oldTreeId = getWorkTree().getTree().getId();
 
-        File file;
+        final File osmDataFile;
         if (urlOrFilepath.startsWith("http")) {
-            file = downloadFile(this.downloadFile);
+            osmDataFile = downloadFile(this.downloadFile);
         } else {
-            file = new File(urlOrFilepath);
-            Preconditions.checkArgument(file.exists(), "File does not exist: " + urlOrFilepath);
+            osmDataFile = new File(urlOrFilepath);
+            Preconditions.checkArgument(osmDataFile.exists(), "File does not exist: "
+                    + urlOrFilepath);
         }
 
         getProgressListener().setDescription("Importing into GeoGit repo...");
 
         EntityConverter converter = new EntityConverter();
 
-        OSMDownloadReport report = parseDataFileAndInsert(file, converter);
+        OSMDownloadReport report = parseDataFileAndInsert(osmDataFile, converter);
 
         if (urlOrFilepath.startsWith("http") && !keepFile) {
-            file.delete();
+            osmDataFile.delete();
         }
 
         if (report != null) {
@@ -275,40 +278,44 @@ public class OSMImportOp extends AbstractGeoGitOp<Optional<OSMDownloadReport>> {
         }
 
         RunnableSource reader;
-
+        InputStream dataIn = null;
         if (pbf) {
             try {
-                reader = new OsmosisReader(new FileInputStream(file));
-            } catch (FileNotFoundException e) {
-                // should not reach this, because we have already checked existence
-                throw new IllegalArgumentException("File does not exist: " + urlOrFilepath);
+                dataIn = new BufferedInputStream(new FileInputStream(file), 1024 * 1024);
+                reader = new OsmosisReader(dataIn);
+            } catch (Exception e) {
+                Closeables.closeQuietly(dataIn);
+                throw Throwables.propagate(e);
             }
         } else {
             reader = new XmlReader(file, true, compression);
         }
+        try {
+            ConvertAndImportSink sink = new ConvertAndImportSink(converter);
+            reader.setSink(sink);
 
-        ConvertAndImportSink sink = new ConvertAndImportSink(converter);
-        reader.setSink(sink);
+            Thread readerThread = new Thread(reader);
+            readerThread.start();
 
-        Thread readerThread = new Thread(reader);
-        readerThread.start();
-
-        while (readerThread.isAlive()) {
-            try {
-                readerThread.join();
-            } catch (InterruptedException e) {
-                return null;
+            while (readerThread.isAlive()) {
+                try {
+                    readerThread.join();
+                } catch (InterruptedException e) {
+                    return null;
+                }
             }
+
+            if (sink.getCount() == 0) {
+                throw new EmptyOSMDownloadException();
+            }
+
+            OSMDownloadReport report = new OSMDownloadReport(sink.getCount(),
+                    sink.getUnprocessedCount(), sink.getLatestChangeset(),
+                    sink.getLatestTimestamp());
+            return report;
+        } finally {
+            Closeables.closeQuietly(dataIn);
         }
-
-        if (sink.getCount() == 0) {
-            throw new EmptyOSMDownloadException();
-        }
-
-        OSMDownloadReport report = new OSMDownloadReport(sink.getCount(),
-                sink.getUnprocessedCount(), sink.getLatestChangeset(), sink.getLatestTimestamp());
-        return report;
-
     }
 
     /**
