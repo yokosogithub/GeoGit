@@ -20,6 +20,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.ServiceLoader;
 import java.util.TreeSet;
+import java.util.concurrent.TimeUnit;
 
 import javax.annotation.Nullable;
 
@@ -660,15 +661,16 @@ public class GeogitCLI {
 
                 private final NumberFormat fmt = NumberFormat.getPercentInstance();
 
-                private final long delayMillis = 300;
+                private final long delayNanos = TimeUnit.NANOSECONDS.convert(300,
+                        TimeUnit.MILLISECONDS);
 
                 // Don't skip the first update
-                private volatile long lastRun = -(delayMillis + 1);
+                private volatile long lastRun = -(delayNanos + 1);
 
                 @Override
                 public void started() {
                     super.started();
-                    lastRun = -(delayMillis + 1);
+                    lastRun = -(delayNanos + 1);
                 }
 
                 public void setDescription(String s) {
@@ -701,9 +703,9 @@ public class GeogitCLI {
                 @Override
                 public synchronized void progress(float percent) {
                     super.progress(percent);
-                    long currentTimeMillis = platform.currentTimeMillis();
-                    if (percent > 99f || (currentTimeMillis - lastRun) > delayMillis) {
-                        lastRun = currentTimeMillis;
+                    long nanoTime = platform.nanoTime();
+                    if (percent > 99f || (nanoTime - lastRun) > delayNanos) {
+                        lastRun = nanoTime;
                         log(percent);
                     }
                 }
