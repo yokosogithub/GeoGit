@@ -8,10 +8,12 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 
 import javax.annotation.Nullable;
 
 import org.geogit.api.AbstractGeoGitOp;
+import org.geogit.api.FeatureBuilder;
 import org.geogit.api.NodeRef;
 import org.geogit.api.ObjectId;
 import org.geogit.api.RevFeature;
@@ -35,6 +37,7 @@ import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterators;
 
 /**
@@ -142,33 +145,30 @@ public class OSMMapOp extends AbstractGeoGitOp<RevTree> {
 
         Iterator<NodeRef> iterator = op.call();
 
-        Function<NodeRef, Feature> function = new Function<NodeRef, Feature>() {
+        Function<NodeRef, Feature> nodeRefToFeature = new Function<NodeRef, Feature>() {
+
+            private final Map<String, FeatureBuilder> builders = //
+            ImmutableMap.<String, FeatureBuilder> of(//
+                    OSMUtils.NODE_TYPE_NAME, //
+                    new FeatureBuilder(RevFeatureType.build(OSMUtils.nodeType())), //
+                    OSMUtils.WAY_TYPE_NAME,//
+                    new FeatureBuilder(RevFeatureType.build(OSMUtils.wayType())));
+
+            private final RevObjectParse parseCommand = command(RevObjectParse.class);
 
             @Override
             @Nullable
             public Feature apply(@Nullable NodeRef ref) {
-                RevFeature revFeature = command(RevObjectParse.class).setObjectId(ref.objectId())
+                RevFeature revFeature = parseCommand.setObjectId(ref.objectId())
                         .call(RevFeature.class).get();
-                SimpleFeatureType featureType;
-                if (ref.path().startsWith(OSMUtils.NODE_TYPE_NAME)) {
-                    featureType = OSMUtils.nodeType();
-                } else {
-                    featureType = OSMUtils.wayType();
-                }
-                SimpleFeatureBuilder featureBuilder = new SimpleFeatureBuilder(featureType);
-                RevFeatureType revFeatureType = RevFeatureType.build(featureType);
-                List<PropertyDescriptor> descriptors = revFeatureType.sortedDescriptors();
-                ImmutableList<Optional<Object>> values = revFeature.getValues();
-                for (int i = 0; i < descriptors.size(); i++) {
-                    PropertyDescriptor descriptor = descriptors.get(i);
-                    Optional<Object> value = values.get(i);
-                    featureBuilder.set(descriptor.getName(), value.orNull());
-                }
-                SimpleFeature feature = featureBuilder.buildFeature(ref.name());
+                final String parentPath = ref.getParentPath();
+                FeatureBuilder featureBuilder = builders.get(parentPath);
+                String fid = ref.name();
+                Feature feature = featureBuilder.build(fid, revFeature);
                 return feature;
             }
 
         };
-        return Iterators.transform(iterator, function);
+        return Iterators.transform(iterator, nodeRefToFeature);
     }
 }
