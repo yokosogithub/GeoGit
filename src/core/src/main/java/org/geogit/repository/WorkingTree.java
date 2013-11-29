@@ -695,7 +695,6 @@ public class WorkingTree {
         try {
             listener.started();
             indexDatabase.putAll(objects);
-            listener.complete();
 
             listener.setDescription("Building trees for "
                     + new TreeSet<String>(insertHelper.getTreeNames()));
@@ -717,6 +716,7 @@ public class WorkingTree {
                         .setTree(newFeatureTree).call();
                 updateWorkHead(newRootTree);
             }
+            listener.complete();
         } finally {
             treeBuildingService.shutdownNow();
         }

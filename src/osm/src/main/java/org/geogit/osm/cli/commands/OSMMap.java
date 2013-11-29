@@ -5,10 +5,10 @@
 
 package org.geogit.osm.cli.commands;
 
-import java.io.IOException;
 import static com.google.common.base.Preconditions.checkState;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.List;
 
 import jline.console.ConsoleReader;

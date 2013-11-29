@@ -27,7 +27,6 @@ import com.sleepycat.je.EnvironmentConfig;
 
 public class EnvironmentBuilder implements Provider<Environment> {
 
-    @Inject
     private Platform platform;
 
     private String[] path;
@@ -35,6 +34,11 @@ public class EnvironmentBuilder implements Provider<Environment> {
     private File absolutePath;
 
     private boolean stagingDatabase;
+
+    @Inject
+    public EnvironmentBuilder(Platform platform) {
+        this.platform = platform;
+    }
 
     public EnvironmentBuilder setRelativePath(String... path) {
         this.path = path;
@@ -104,28 +108,28 @@ public class EnvironmentBuilder implements Provider<Environment> {
         envCfg.setLockTimeout(5, TimeUnit.SECONDS);
         envCfg.setDurability(Durability.COMMIT_NO_SYNC);
 
-//        // envCfg.setSharedCache(true);
-//        //
-//         final boolean transactional = false;
-//         envCfg.setTransactional(transactional);
-//         envCfg.setCachePercent(75);// Use up to 50% of the heap size for the shared db cache
-//         envCfg.setConfigParam(EnvironmentConfig.LOG_FILE_MAX, String.valueOf(256 * 1024 * 1024));
-//         // check <http://www.oracle.com/technetwork/database/berkeleydb/je-faq-096044.html#35>
-//         envCfg.setConfigParam("je.evictor.lruOnly", "false");
-//         envCfg.setConfigParam("je.evictor.nodesPerScan", "100");
-//        
-//         envCfg.setConfigParam(EnvironmentConfig.CLEANER_MIN_UTILIZATION, "25");
-//         envCfg.setConfigParam(EnvironmentConfig.CHECKPOINTER_HIGH_PRIORITY, "true");
-//        
-//         envCfg.setConfigParam(EnvironmentConfig.CLEANER_THREADS, "4");
-//         // TODO: check whether we can set is locking to false
-//         envCfg.setConfigParam(EnvironmentConfig.ENV_IS_LOCKING, String.valueOf(transactional));
-//        
-//         envCfg.setConfigParam(EnvironmentConfig.ENV_RUN_CHECKPOINTER,
-//         String.valueOf(!transactional));
-//         envCfg.setConfigParam(EnvironmentConfig.ENV_RUN_CLEANER, String.valueOf(!transactional));
-//        
-//         // envCfg.setConfigParam(EnvironmentConfig.ENV_RUN_EVICTOR, "false");
+        // // envCfg.setSharedCache(true);
+        // //
+        // final boolean transactional = false;
+        // envCfg.setTransactional(transactional);
+        // envCfg.setCachePercent(75);// Use up to 50% of the heap size for the shared db cache
+        // envCfg.setConfigParam(EnvironmentConfig.LOG_FILE_MAX, String.valueOf(256 * 1024 * 1024));
+        // // check <http://www.oracle.com/technetwork/database/berkeleydb/je-faq-096044.html#35>
+        // envCfg.setConfigParam("je.evictor.lruOnly", "false");
+        // envCfg.setConfigParam("je.evictor.nodesPerScan", "100");
+        //
+        // envCfg.setConfigParam(EnvironmentConfig.CLEANER_MIN_UTILIZATION, "25");
+        // envCfg.setConfigParam(EnvironmentConfig.CHECKPOINTER_HIGH_PRIORITY, "true");
+        //
+        // envCfg.setConfigParam(EnvironmentConfig.CLEANER_THREADS, "4");
+        // // TODO: check whether we can set is locking to false
+        // envCfg.setConfigParam(EnvironmentConfig.ENV_IS_LOCKING, String.valueOf(transactional));
+        //
+        // envCfg.setConfigParam(EnvironmentConfig.ENV_RUN_CHECKPOINTER,
+        // String.valueOf(!transactional));
+        // envCfg.setConfigParam(EnvironmentConfig.ENV_RUN_CLEANER, String.valueOf(!transactional));
+        //
+        // // envCfg.setConfigParam(EnvironmentConfig.ENV_RUN_EVICTOR, "false");
 
         Environment env = new Environment(storeDirectory, envCfg);
         return env;

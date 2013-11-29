@@ -661,11 +661,11 @@ public class GeogitCLI {
 
                 private final NumberFormat fmt = NumberFormat.getPercentInstance();
 
-                private final long delayNanos = TimeUnit.NANOSECONDS.convert(300,
+                private final long delayNanos = TimeUnit.NANOSECONDS.convert(200,
                         TimeUnit.MILLISECONDS);
 
                 // Don't skip the first update
-                private volatile long lastRun = -(delayNanos + 1);
+                private volatile long lastRun = 0;
 
                 @Override
                 public void started() {
@@ -692,7 +692,7 @@ public class GeogitCLI {
                     super.complete();
                     super.dispose();
                     try {
-                        log(100f);
+                        log(getProgress());
                         console.println();
                         console.flush();
                     } catch (IOException e) {
@@ -704,7 +704,7 @@ public class GeogitCLI {
                 public synchronized void progress(float percent) {
                     super.progress(percent);
                     long nanoTime = platform.nanoTime();
-                    if (percent > 99f || (nanoTime - lastRun) > delayNanos) {
+                    if ((nanoTime - lastRun) > delayNanos) {
                         lastRun = nanoTime;
                         log(percent);
                     }
