@@ -34,6 +34,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
 import com.google.common.collect.AbstractIterator;
 import com.google.common.collect.Iterators;
+import com.google.common.collect.Lists;
 import com.google.common.collect.PeekingIterator;
 import com.google.common.io.Closeables;
 
@@ -43,14 +44,19 @@ class NodeIndex implements Closeable {
 
     private static final class IndexPartition {
 
-        private List<Node> cache = new ArrayList<Node>(PARTITION_SIZE);
+        List<Node> cache = new ArrayList<Node>(PARTITION_SIZE);
 
         public void add(Node node) {
             cache.add(node);
         }
 
-        public File flush() {
+        public List<Node> getSortedNodes() {
             Collections.sort(cache, new NodeStorageOrder());
+            return cache;
+        }
+
+        public File flush() {
+            List<Node> cache = getSortedNodes();
             final File file;
             try {
                 file = File.createTempFile("geogitNodes", ".idx");
@@ -133,9 +139,6 @@ class NodeIndex implements Closeable {
     }
 
     public Iterator<Node> nodes() {
-        if (!currPartition.cache.isEmpty()) {
-            flush(currPartition);
-        }
         List<File> files = new ArrayList<File>(indexFiles.size());
         try {
             for (Future<File> ff : indexFiles) {
@@ -145,7 +148,10 @@ class NodeIndex implements Closeable {
             e.printStackTrace();
             throw Throwables.propagate(Throwables.getRootCause(e));
         }
-        return new CompositeNodeIterator(files);
+
+        List<Node> unflushed = Lists.newArrayList(currPartition.getSortedNodes());
+        currPartition.cache.clear();
+        return new CompositeNodeIterator(files, unflushed);
     }
 
     private static class CompositeNodeIterator extends AbstractIterator<Node> {
@@ -156,13 +162,17 @@ class NodeIndex implements Closeable {
 
         private List<IndexIterator> openIterators;
 
-        public CompositeNodeIterator(List<File> files) {
+        public CompositeNodeIterator(List<File> files, List<Node> unflushedAndSorted) {
+
             openIterators = new ArrayList<IndexIterator>();
             iterators = new ArrayList<PeekingIterator<Node>>();
             for (File f : files) {
                 IndexIterator iterator = new IndexIterator(f);
                 openIterators.add(iterator);
                 iterators.add(Iterators.peekingIterator(iterator));
+            }
+            if (!unflushedAndSorted.isEmpty()) {
+                iterators.add(Iterators.peekingIterator(unflushedAndSorted.iterator()));
             }
         }
 

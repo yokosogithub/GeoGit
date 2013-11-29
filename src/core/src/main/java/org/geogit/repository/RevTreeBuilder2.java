@@ -39,13 +39,13 @@ class RevTreeBuilder2 {
 
     private final ObjectDatabase db;
 
-    private RevTree original;
+    private final RevTree original;
 
-    private ExecutorService executorService;
+    private final ExecutorService executorService;
 
     private final Map<Name, RevFeatureType> revFeatureTypes = Maps.newConcurrentMap();
 
-    private ObjectId defaultMetadataId;
+    private final ObjectId defaultMetadataId;
 
     /**
      * Copy constructor
@@ -57,6 +57,10 @@ class RevTreeBuilder2 {
         this.original = origTree;
         this.executorService = executorService;
         this.defaultMetadataId = defaultMetadataId;
+    }
+
+    public ObjectId getDefaultMetadataId() {
+        return defaultMetadataId;
     }
 
     /**
@@ -123,7 +127,7 @@ class RevTreeBuilder2 {
         }
     }
 
-    public void putFeature(final ObjectId id, final String name, final BoundingBox bounds,
+    public Node putFeature(final ObjectId id, final String name, final BoundingBox bounds,
             final FeatureType type) {
         Envelope bbox;
         if (bounds == null) {
@@ -143,5 +147,6 @@ class RevTreeBuilder2 {
                 : revFeatureType.getId();
         Node node = Node.create(name, id, metadataId, TYPE.FEATURE, bbox);
         put(node);
+        return node;
     }
 }

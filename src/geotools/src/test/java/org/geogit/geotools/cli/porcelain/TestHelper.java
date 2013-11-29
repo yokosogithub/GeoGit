@@ -4,7 +4,8 @@
  */
 package org.geogit.geotools.cli.porcelain;
 
-import static org.mockito.Matchers.anyMapOf;
+
+import static org.mockito.Matchers.*;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
@@ -113,6 +114,8 @@ public class TestHelper {
 
         MemoryDataStore testDataStore = mock(MemoryDataStore.class);
         when(testDataStore.getNames()).thenThrow(new IOException());
+        when(testDataStore.getTypeNames()).thenThrow(new RuntimeException());
+        when(testDataStore.getSchema(anyString())).thenThrow(new IOException());
 
         final AbstractDataStoreFactory factory = mock(AbstractDataStoreFactory.class);
         when(factory.createDataStore(anyMapOf(String.class, Serializable.class))).thenReturn(

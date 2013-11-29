@@ -9,6 +9,8 @@ import java.io.IOException;
 import java.util.Iterator;
 import java.util.List;
 
+import javax.annotation.Nullable;
+
 import org.geogit.api.AbstractGeoGitOp;
 import org.geogit.api.FeatureBuilder;
 import org.geogit.api.NodeRef;
@@ -38,14 +40,13 @@ import org.opengis.feature.Feature;
 import org.opengis.feature.simple.SimpleFeature;
 import org.opengis.feature.simple.SimpleFeatureType;
 import org.opengis.feature.type.FeatureType;
-import org.opengis.feature.type.Name;
 import org.opengis.feature.type.PropertyDescriptor;
 import org.opengis.filter.identity.FeatureId;
 import org.opengis.util.ProgressListener;
 
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
-import com.google.common.collect.AbstractIterator;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterators;
 import com.google.common.collect.Lists;
@@ -106,6 +107,131 @@ public class ImportOp extends AbstractGeoGitOp<RevTree> {
     @SuppressWarnings("deprecation")
     @Override
     public RevTree call() {
+
+        // check preconditions and get the actual list of type names to import
+        final String[] typeNames = checkPreconditions();
+
+        ProgressListener progressListener = getProgressListener();
+        progressListener.started();
+
+        // use a local variable not to alter the command's state
+        boolean overwrite = this.overwrite;
+        if (alter) {
+            overwrite = false;
+        }
+
+        final WorkingTree workTree = getWorkTree();
+
+        final boolean destPathProvided = destPath != null;
+        if (destPathProvided && overwrite) {
+            // we delete the previous tree to honor the overwrite setting, but then turn it
+            // to false. Otherwise, each table imported will overwrite the previous ones and
+            // only the last one will be imported.
+            try {
+                workTree.delete(destPath);
+            } catch (Exception e) {
+                throw new GeoToolsOpException(e, StatusCode.UNABLE_TO_INSERT);
+            }
+            overwrite = false;
+        }
+
+        int tableCount = 0;
+
+        for (String typeName : typeNames) {
+            {
+                tableCount++;
+                String tableName = String.format("%-16s", typeName);
+                if (typeName.length() > 16) {
+                    tableName = tableName.substring(0, 13) + "...";
+                }
+                progressListener.setDescription("Importing " + tableName + " (" + tableCount + "/"
+                        + typeNames.length + ")... ");
+            }
+
+            FeatureSource featureSource = getFeatureSource(typeName);
+            SimpleFeatureType featureType = (SimpleFeatureType) featureSource.getSchema();
+
+            final String fidPrefix = featureType.getTypeName() + ".";
+
+            String path;
+            if (destPath == null) {
+                path = featureType.getTypeName();
+            } else {
+                NodeRef.checkValidPath(destPath);
+                path = destPath;
+                featureType = createForceFeatureType(featureType, path);
+            }
+            featureSource = new ForceTypeAndFidFeatureSource<FeatureType, Feature>(featureSource,
+                    featureType, fidPrefix);
+
+            ProgressListener taskProgress = subProgress(100.f / typeNames.length);
+            if (overwrite) {
+                try {
+                    workTree.delete(path);
+                    workTree.createTypeTree(path, featureType);
+                } catch (Exception e) {
+                    throw new GeoToolsOpException(e, StatusCode.UNABLE_TO_INSERT);
+                }
+            }
+
+            if (alter) {
+                // first we modify the feature type and the existing features, if needed
+                workTree.updateTypeTree(path, featureType);
+                Iterator<Feature> transformedIterator = transformFeatures(featureType, path);
+                try {
+                    final Integer collectionSize = collectionSize(featureSource);
+                    workTree.insert(path, transformedIterator, taskProgress, null, collectionSize);
+                } catch (Exception e) {
+                    throw new GeoToolsOpException(StatusCode.UNABLE_TO_INSERT);
+                }
+            }
+            try {
+                insert(workTree, path, featureSource, taskProgress);
+            } catch (Exception e) {
+                throw new GeoToolsOpException(e, StatusCode.UNABLE_TO_INSERT);
+            }
+        }
+
+        progressListener.progress(100.f);
+        progressListener.complete();
+        return workTree.getTree();
+    }
+
+    private SimpleFeatureType createForceFeatureType(SimpleFeatureType featureType, String path) {
+        SimpleFeatureTypeBuilder builder = new SimpleFeatureTypeBuilder();
+        builder.setAttributes(featureType.getAttributeDescriptors());
+        builder.setName(new NameImpl(featureType.getName().getNamespaceURI(), path));
+        builder.setCRS(featureType.getCoordinateReferenceSystem());
+
+        featureType = builder.buildFeatureType();
+        return featureType;
+    }
+
+    private Iterator<Feature> transformFeatures(SimpleFeatureType featureType, String path) {
+        String refspec = Ref.WORK_HEAD + ":" + path;
+        Iterator<NodeRef> oldFeatures = command(LsTreeOp.class).setReference(refspec)
+                .setStrategy(Strategy.FEATURES_ONLY).call();
+
+        RevFeatureType revFeatureType = RevFeatureType.build(featureType);
+        Iterator<Feature> transformedIterator = transformIterator(oldFeatures, revFeatureType);
+        return transformedIterator;
+    }
+
+    private Integer collectionSize(FeatureSource featureSource) {
+        final Integer collectionSize;
+        {
+            int fastCount;
+            try {
+                fastCount = featureSource.getCount(Query.ALL);
+            } catch (IOException e) {
+                throw new GeoToolsOpException(e, StatusCode.UNABLE_TO_GET_FEATURES);
+            }
+            collectionSize = -1 == fastCount ? null : Integer.valueOf(fastCount);
+        }
+        return collectionSize;
+    }
+
+    private String[] checkPreconditions() {
         if (dataStore == null) {
             throw new GeoToolsOpException(StatusCode.DATASTORE_NOT_DEFINED);
         }
@@ -117,177 +243,43 @@ public class ImportOp extends AbstractGeoGitOp<RevTree> {
         if (table != null && !table.isEmpty() && all) {
             throw new GeoToolsOpException(StatusCode.ALL_AND_TABLE_DEFINED);
         }
-
-        boolean foundTable = false;
-
-        List<Name> typeNames;
-        try {
-            typeNames = dataStore.getNames();
-        } catch (Exception e) {
-            throw new GeoToolsOpException(StatusCode.UNABLE_TO_GET_NAMES);
-        }
-
-        if (typeNames.size() > 1 && alter && all) {
-            throw new GeoToolsOpException(StatusCode.ALTER_AND_ALL_DEFINED);
-        }
-
-        if (alter) {
-            overwrite = false;
-        }
-
-        getProgressListener().started();
-        int tableCount = 0;
-        if (destPath != null && !destPath.isEmpty()) {
-            if (typeNames.size() > 1 && all) {
-                if (overwrite) {
-                    // we delete the previous tree to honor the overwrite setting, but then turn it
-                    // to false. Otherwise, each table imported will overwrite the previous ones and
-                    // only the last one will be imported.
-                    try {
-                        this.getWorkTree().delete(new NameImpl(destPath));
-                    } catch (Exception e) {
-                        throw new GeoToolsOpException(e, StatusCode.UNABLE_TO_INSERT);
-                    }
-                    overwrite = false;
-                }
-
-            }
-        }
-
-        final WorkingTree workTree = getWorkTree();
-        for (Name typeName : typeNames) {
-            tableCount++;
-            if (!all && !table.equals(typeName.toString()))
-                continue;
-
-            foundTable = true;
-
-            String tableName = String.format("%-16s", typeName.getLocalPart());
-            if (typeName.getLocalPart().length() > 16) {
-                tableName = tableName.substring(0, 13) + "...";
-            }
-            getProgressListener().setDescription(
-                    "Importing " + tableName + " (" + (all ? tableCount : 1) + "/"
-                            + (all ? typeNames.size() : 1) + ")... ");
-
-            FeatureSource featureSource;
-            FeatureCollection features;
-            Query query = new Query();
+        String[] typeNames;
+        if (all) {
             try {
-                featureSource = getFeatureSource(typeName);
-                CoordinateSequenceFactory coordSeq = new PackedCoordinateSequenceFactory();
-                query.getHints().add(new Hints(Hints.JTS_COORDINATE_SEQUENCE_FACTORY, coordSeq));
-                features = featureSource.getFeatures(query);
+                typeNames = dataStore.getTypeNames();
             } catch (Exception e) {
-                throw new GeoToolsOpException(StatusCode.UNABLE_TO_GET_FEATURES);
+                throw new GeoToolsOpException(StatusCode.UNABLE_TO_GET_NAMES);
             }
-
-            SimpleFeatureType featureType = (SimpleFeatureType) featureSource.getSchema();
-            RevFeatureType revFeatureType = RevFeatureType.build(featureSource.getSchema());
-
-            String path;
-            if (destPath == null || destPath.isEmpty()) {
-                path = revFeatureType.getName().getLocalPart();
-            } else {
-                path = destPath;
-            }
-
-            NodeRef.checkValidPath(path);
-
-            SimpleFeatureTypeBuilder builder = new SimpleFeatureTypeBuilder();
-            builder.setAttributes(featureType.getAttributeDescriptors());
-            builder.setName(new NameImpl(revFeatureType.getName().getNamespaceURI(), path));
-            builder.setCRS(featureType.getCoordinateReferenceSystem());
-            featureType = builder.buildFeatureType();
-            revFeatureType = RevFeatureType.build(featureType);
-
-            ProgressListener taskProgress = subProgress(100.f / (all ? typeNames.size() : 1f));
-
-            String refspec = Ref.WORK_HEAD + ":" + path;
-
-            if (overwrite) {
-                try {
-                    workTree.delete(new NameImpl(path));
-                } catch (Exception e) {
-                    throw new GeoToolsOpException(e, StatusCode.UNABLE_TO_INSERT);
-                }
-            }
-
-            final FeatureIterator featureIterator = features.features();
-            Iterator<Feature> iterator = new AbstractIterator<Feature>() {
-                @Override
-                protected Feature computeNext() {
-                    if (!featureIterator.hasNext()) {
-                        return super.endOfData();
-                    }
-                    return featureIterator.next();
-                }
-            };
-            final String fidPrefix = revFeatureType.getName().getLocalPart() + ".";
-            iterator = Iterators.transform(iterator, new FidAndFtReplacer(fidAttribute, fidPrefix,
-                    featureType));
-
-            final Integer collectionSize = features.size();
-            if (!alter) {
-                try {
-                    if (iterator.hasNext()) {
-                        /*
-                         * REVISIT: only using the improved import if no destPath was specified
-                         * because the merge of commit 07fff6f made it so that also feature types
-                         * are replaced
-                         */
-                        if (null == destPath) {
-                            featureIterator.close();
-                            insert(workTree, path, featureSource, typeName, taskProgress,
-                                    collectionSize);
-                        } else {
-                            workTree.insert(path, iterator, taskProgress, null, collectionSize);
-                        }
-                    } else {
-                        // No features
-                        if (overwrite) {
-                            getWorkTree().createTypeTree(path, featureType);
-                        }
-                    }
-                } catch (Exception e) {
-                    throw new GeoToolsOpException(e, StatusCode.UNABLE_TO_INSERT);
-                } finally {
-                    featureIterator.close();
-                }
-            } else {
-                // first we modify the feature type and the existing features, if needed
-                this.getWorkTree().updateTypeTree(path, featureType);
-
-                Iterator<NodeRef> oldFeatures = command(LsTreeOp.class).setReference(refspec)
-                        .setStrategy(Strategy.FEATURES_ONLY).call();
-                Iterator<Feature> transformedIterator = transformIterator(oldFeatures,
-                        revFeatureType);
-                try {
-                    Integer size = features.size();
-                    workTree.insert(path, transformedIterator, taskProgress, null, size);
-                } catch (Exception e) {
-                    throw new GeoToolsOpException(StatusCode.UNABLE_TO_INSERT);
-                }
-                // then we add the new ones
-                workTree.insert(path, iterator, taskProgress, null, collectionSize);
-            }
-
-        }
-        if (!foundTable) {
-            if (all) {
+            if (typeNames.length == 0) {
                 throw new GeoToolsOpException(StatusCode.NO_FEATURES_FOUND);
-            } else {
+            }
+        } else {
+            SimpleFeatureType schema;
+            try {
+                schema = dataStore.getSchema(table);
+            } catch (IOException e) {
                 throw new GeoToolsOpException(StatusCode.TABLE_NOT_FOUND);
             }
+            Preconditions.checkNotNull(schema);
+            typeNames = new String[] { table };
         }
-        getProgressListener().progress(100.f);
-        getProgressListener().complete();
-        return workTree.getTree();
+
+        if (typeNames.length > 1 && alter && all) {
+            throw new GeoToolsOpException(StatusCode.ALTER_AND_ALL_DEFINED);
+        }
+        return typeNames;
     }
 
     @SuppressWarnings({ "rawtypes", "unchecked" })
-    private FeatureSource getFeatureSource(Name typeName) throws IOException {
-        FeatureSource featureSource = dataStore.getFeatureSource(typeName);
+    private FeatureSource getFeatureSource(String typeName) {
+
+        FeatureSource featureSource;
+        try {
+            featureSource = dataStore.getFeatureSource(typeName);
+        } catch (Exception e) {
+            throw new GeoToolsOpException(StatusCode.UNABLE_TO_GET_FEATURES);
+        }
+
         return new ForwardingFeatureSource(featureSource) {
 
             @Override
@@ -332,12 +324,7 @@ public class ImportOp extends AbstractGeoGitOp<RevTree> {
     }
 
     private void insert(final WorkingTree workTree, final String path,
-            final FeatureSource featureSource, final Name typeName,
-            final ProgressListener taskProgress, final Integer collectionSize) {
-
-        if (collectionSize == null || collectionSize.intValue() <= 0) {
-            return;
-        }
+            final FeatureSource featureSource, final ProgressListener taskProgress) {
 
         final Query query = new Query();
         CoordinateSequenceFactory coordSeq = new PackedCoordinateSequenceFactory();
@@ -453,7 +440,8 @@ public class ImportOp extends AbstractGeoGitOp<RevTree> {
      *        type of the table to import.
      * @return {@code this}
      */
-    public ImportOp setDestinationPath(String destPath) {
+    public ImportOp setDestinationPath(@Nullable String destPath) {
+        Preconditions.checkArgument(destPath == null || !destPath.isEmpty());
         this.destPath = destPath;
         return this;
     }
