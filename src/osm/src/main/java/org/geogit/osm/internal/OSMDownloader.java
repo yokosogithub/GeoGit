@@ -7,6 +7,8 @@ package org.geogit.osm.internal;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
+import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
 import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
@@ -18,9 +20,12 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLEncoder;
 
+import javax.annotation.Nullable;
+
 import org.opengis.util.ProgressListener;
 
 import com.google.common.io.ByteStreams;
+import com.google.common.io.Closeables;
 
 public class OSMDownloader {
 
@@ -47,13 +52,13 @@ public class OSMDownloader {
 
         private File downloadFile;
 
-        public DownloadOSMData(String osmAPIUrl, String filter, File downloadFile) {
+        public DownloadOSMData(String osmAPIUrl, String filter, @Nullable File downloadFile) {
             this.filter = filter;
             this.osmAPIUrl = osmAPIUrl;
             this.downloadFile = downloadFile;
         }
 
-        public File call() throws Exception {
+        public InputStream call() throws Exception {
             URL url = new URL(osmAPIUrl);
             HttpURLConnection conn = (HttpURLConnection) url.openConnection();
             conn.setConnectTimeout(10000);
@@ -67,16 +72,69 @@ public class OSMDownloader {
             printout.flush();
             printout.close();
 
-            ProgressInputStream stream = new ProgressInputStream(conn.getInputStream(), progress);
-            copy(stream, downloadFile);
-
-            return downloadFile;
+            InputStream inputStream;
+            if (downloadFile != null) {
+                OutputStream out = new BufferedOutputStream(new FileOutputStream(downloadFile),
+                        16 * 1024);
+                inputStream = new TeeInputStream(new BufferedInputStream(conn.getInputStream(),
+                        16 * 1024), out);
+            } else {
+                inputStream = new BufferedInputStream(conn.getInputStream(), 16 * 1024);
+            }
+            return inputStream;
         }
     }
 
-    public File download(String filter, File destination) throws Exception {
-        File downloadedFile = new DownloadOSMData(osmAPIUrl, filter, destination).call();
+    public InputStream download(String filter, @Nullable File destination) throws Exception {
+        InputStream downloadedFile = new DownloadOSMData(osmAPIUrl, filter, destination).call();
         return downloadedFile;
+    }
+
+    private static class TeeInputStream extends FilterInputStream {
+
+        private OutputStream out;
+
+        protected TeeInputStream(InputStream in, OutputStream out) {
+            super(in);
+            this.out = out;
+        }
+
+        @Override
+        public void close() throws IOException {
+            try {
+                super.close();
+            } finally {
+                Closeables.closeQuietly(out);
+            }
+        }
+
+        @Override
+        public int read() throws IOException {
+            int b = super.read();
+            if (b > -1) {
+                out.write(b);
+            }
+            return b;
+        }
+
+        @Override
+        public int read(byte b[]) throws IOException {
+            int c = super.read(b);
+            if (c > -1) {
+                out.write(b, 0, c);
+            }
+            return c;
+        }
+
+        @Override
+        public int read(byte b[], int off, int len) throws IOException {
+            int c = super.read(b, off, len);
+            if (c > -1) {
+                out.write(b, off, c);
+            }
+            return c;
+        }
+
     }
 
     private static class ProgressInputStream extends FilterInputStream {

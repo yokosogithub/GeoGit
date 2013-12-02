@@ -9,6 +9,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
@@ -39,7 +40,6 @@ import org.openstreetmap.osmosis.core.domain.v0_6.WayNode;
 import org.openstreetmap.osmosis.core.task.v0_6.RunnableSource;
 import org.openstreetmap.osmosis.core.task.v0_6.Sink;
 import org.openstreetmap.osmosis.xml.common.CompressionMethod;
-import org.openstreetmap.osmosis.xml.v0_6.XmlReader;
 
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
@@ -186,13 +186,20 @@ public class OSMImportOp extends AbstractGeoGitOp<Optional<OSMDownloadReport>> {
 
         ObjectId oldTreeId = getWorkTree().getTree().getId();
 
-        final File osmDataFile;
+        File osmDataFile = null;
+        final InputStream osmDataStream;
         if (urlOrFilepath.startsWith("http")) {
-            osmDataFile = downloadFile(this.downloadFile);
+            osmDataStream = downloadFile();
         } else {
             osmDataFile = new File(urlOrFilepath);
             Preconditions.checkArgument(osmDataFile.exists(), "File does not exist: "
                     + urlOrFilepath);
+            try {
+                osmDataStream = new BufferedInputStream(new FileInputStream(osmDataFile),
+                        1024 * 1024);
+            } catch (FileNotFoundException e) {
+                throw Throwables.propagate(e);
+            }
         }
 
         ProgressListener progressListener = getProgressListener();
@@ -200,10 +207,11 @@ public class OSMImportOp extends AbstractGeoGitOp<Optional<OSMDownloadReport>> {
 
         EntityConverter converter = new EntityConverter();
 
-        OSMDownloadReport report = parseDataFileAndInsert(osmDataFile, converter);
-
-        if (urlOrFilepath.startsWith("http") && !keepFile) {
-            osmDataFile.delete();
+        OSMDownloadReport report;
+        try {
+            report = parseDataFileAndInsert(osmDataFile, osmDataStream, converter);
+        } finally {
+            Closeables.closeQuietly(osmDataStream);
         }
 
         if (report != null) {
@@ -235,47 +243,55 @@ public class OSMImportOp extends AbstractGeoGitOp<Optional<OSMDownloadReport>> {
 
     }
 
-    private File downloadFile(@Nullable File destination) {
+    private InputStream downloadFile() {
 
-        getProgressListener().setDescription("Downloading data...");
+        ProgressListener listener = getProgressListener();
         checkNotNull(filter);
-        OSMDownloader downloader = new OSMDownloader(urlOrFilepath, getProgressListener());
-
-        if (destination == null) {
-            try {
-                destination = File.createTempFile("osm-geogit", ".xml");
-            } catch (IOException e) {
-                Throwables.propagate(e);
+        OSMDownloader downloader = new OSMDownloader(urlOrFilepath, listener);
+        listener.setDescription("Connecting to " + urlOrFilepath + "...");
+        File destination = null;
+        if (keepFile) {
+            destination = this.downloadFile;
+            if (destination == null) {
+                try {
+                    destination = File.createTempFile("osm-geogit", ".xml");
+                } catch (IOException e) {
+                    Throwables.propagate(e);
+                }
+            } else {
+                destination = destination.getAbsoluteFile();
             }
-        } else {
-            destination = destination.getAbsoluteFile();
         }
-
         try {
-            File file = downloader.download(filter, destination);
-            return file;
+            InputStream dataStream = downloader.download(filter, destination);
+            if (keepFile) {
+                listener.setDescription("Downloaded data will be kept in "
+                        + destination.getAbsolutePath());
+            }
+            return dataStream;
         } catch (Exception e) {
             throw Throwables.propagate(Throwables.getRootCause(e));
         }
     }
 
-    private OSMDownloadReport parseDataFileAndInsert(File file, final EntityConverter converter) {
+    private OSMDownloadReport parseDataFileAndInsert(@Nullable File file, final InputStream dataIn,
+            final EntityConverter converter) {
 
-        final boolean pbf = file.getName().endsWith(".pbf");
-        final CompressionMethod compression = resolveCompressionMethod(file);
+        final boolean pbf;
+        final CompressionMethod compression;
+        if (file == null) {
+            pbf = false;
+            compression = CompressionMethod.None;
+        } else {
+            pbf = file.getName().endsWith(".pbf");
+            compression = resolveCompressionMethod(file);
+        }
 
         RunnableSource reader;
-        InputStream dataIn = null;
         if (pbf) {
-            try {
-                dataIn = new BufferedInputStream(new FileInputStream(file), 1024 * 1024);
-                reader = new OsmosisReader(dataIn);
-            } catch (Exception e) {
-                Closeables.closeQuietly(dataIn);
-                throw Throwables.propagate(e);
-            }
+            reader = new OsmosisReader(dataIn);
         } else {
-            reader = new XmlReader(file, true, compression);
+            reader = new org.geogit.osm.internal.XmlReader(dataIn, true, compression);
         }
 
         final WorkingTree workTree = getWorkTree();
@@ -293,48 +309,43 @@ public class OSMImportOp extends AbstractGeoGitOp<Optional<OSMDownloadReport>> {
         QueueIterator<Feature> iterator = new QueueIterator<Feature>(queueCapacity, timeout,
                 timeoutUnit);
 
-        try {
-            ProgressListener progressListener = getProgressListener();
-            ConvertAndImportSink sink = new ConvertAndImportSink(converter, iterator, platform,
-                    mapping, noRaw, new SubProgressListener(progressListener, 100));
-            reader.setSink(sink);
+        ProgressListener progressListener = getProgressListener();
+        ConvertAndImportSink sink = new ConvertAndImportSink(converter, iterator, platform,
+                mapping, noRaw, new SubProgressListener(progressListener, 100));
+        reader.setSink(sink);
 
-            Thread readerThread = new Thread(reader, "osm-import-reader-thread");
-            readerThread.start();
+        Thread readerThread = new Thread(reader, "osm-import-reader-thread");
+        readerThread.start();
 
-            Function<Feature, String> parentTreePathResolver = new Function<Feature, String>() {
-                @Override
-                public String apply(Feature input) {
-                    if (input instanceof MappedFeature) {
-                        return ((MappedFeature) input).getPath();
-                    }
-                    return input.getType().getName().getLocalPart();
+        Function<Feature, String> parentTreePathResolver = new Function<Feature, String>() {
+            @Override
+            public String apply(Feature input) {
+                if (input instanceof MappedFeature) {
+                    return ((MappedFeature) input).getPath();
                 }
-            };
-
-            // used to set the task status name, but report no progress so it does not interfere
-            // with the progress reported by the reader thread
-            SubProgressListener noPorgressReportingListener = new SubProgressListener(
-                    progressListener, 0) {
-                @Override
-                public void progress(float progress) {
-                    // no-op
-                }
-            };
-            workTree.insert(parentTreePathResolver, iterator, noPorgressReportingListener, null,
-                    null);
-
-            if (sink.getCount() == 0) {
-                throw new EmptyOSMDownloadException();
+                return input.getType().getName().getLocalPart();
             }
+        };
 
-            OSMDownloadReport report = new OSMDownloadReport(sink.getCount(), sink.getNodeCount(),
-                    sink.getWayCount(), sink.getUnprocessedCount(), sink.getLatestChangeset(),
-                    sink.getLatestTimestamp());
-            return report;
-        } finally {
-            Closeables.closeQuietly(dataIn);
+        // used to set the task status name, but report no progress so it does not interfere
+        // with the progress reported by the reader thread
+        SubProgressListener noPorgressReportingListener = new SubProgressListener(progressListener,
+                0) {
+            @Override
+            public void progress(float progress) {
+                // no-op
+            }
+        };
+        workTree.insert(parentTreePathResolver, iterator, noPorgressReportingListener, null, null);
+
+        if (sink.getCount() == 0) {
+            throw new EmptyOSMDownloadException();
         }
+
+        OSMDownloadReport report = new OSMDownloadReport(sink.getCount(), sink.getNodeCount(),
+                sink.getWayCount(), sink.getUnprocessedCount(), sink.getLatestChangeset(),
+                sink.getLatestTimestamp());
+        return report;
     }
 
     private CompressionMethod resolveCompressionMethod(File file) {
