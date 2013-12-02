@@ -9,10 +9,9 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
+import java.util.concurrent.ConcurrentMap;
 
 import org.geogit.api.ObjectId;
 import org.geogit.api.RevObject;
@@ -37,7 +36,7 @@ import com.ning.compress.lzf.LZFInputStream;
  */
 public class HeapObjectDatabse extends AbstractObjectDatabase implements ObjectDatabase {
 
-    private Map<ObjectId, byte[]> objects;
+    private ConcurrentMap<ObjectId, byte[]> objects;
 
     @Inject
     public HeapObjectDatabse(final ObjectSerializingFactory sfac) {
@@ -73,8 +72,7 @@ public class HeapObjectDatabse extends AbstractObjectDatabase implements ObjectD
         if (isOpen()) {
             return;
         }
-        Map<ObjectId, byte[]> map = Maps.newConcurrentMap();
-        objects = Collections.synchronizedMap(map);
+        objects = Maps.newConcurrentMap();
     }
 
     /**
@@ -139,11 +137,8 @@ public class HeapObjectDatabse extends AbstractObjectDatabase implements ObjectD
 
     @Override
     protected boolean putInternal(ObjectId id, byte[] rawData) {
-        if (exists(id)) {
-            return false;
-        }
-        objects.put(id, rawData);
-        return true;
+        byte[] previousValue = objects.putIfAbsent(id, rawData);
+        return previousValue == null;
     }
 
     @Override
@@ -183,7 +178,7 @@ public class HeapObjectDatabse extends AbstractObjectDatabase implements ObjectD
                         } catch (IOException e) {
                             throw Throwables.propagate(e);
                         }
-                        listener.found(found, raw.length);
+                        listener.found(found.getId(), raw.length);
                     } else {
                         listener.notFound(id);
                     }

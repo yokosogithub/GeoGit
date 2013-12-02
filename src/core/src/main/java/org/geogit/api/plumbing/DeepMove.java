@@ -7,7 +7,13 @@ package org.geogit.api.plumbing;
 
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Set;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
+
+import javax.annotation.Nullable;
 
 import org.geogit.api.AbstractGeoGitOp;
 import org.geogit.api.Bucket;
@@ -19,15 +25,18 @@ import org.geogit.api.RevObject.TYPE;
 import org.geogit.api.RevTree;
 import org.geogit.api.plumbing.LsTreeOp.Strategy;
 import org.geogit.repository.StagingArea;
+import org.geogit.storage.BulkOpListener;
 import org.geogit.storage.ObjectDatabase;
 import org.geogit.storage.StagingDatabase;
 
 import com.google.common.base.Function;
+import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.AbstractIterator;
 import com.google.common.collect.Iterators;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 
@@ -140,6 +149,56 @@ public class DeepMove extends AbstractGeoGitOp<ObjectId> {
         return ret;
     }
 
+    private static class DeleteTask implements Runnable {
+        private List<ObjectId> ids;
+
+        private ObjectDatabase db;
+
+        public DeleteTask(List<ObjectId> ids, ObjectDatabase db) {
+            this.ids = ids;
+            this.db = db;
+        }
+
+        @Override
+        public void run() {
+            db.deleteAll(ids.iterator());
+            ids.clear();
+            ids = null;
+        }
+    }
+
+    private static class DeletingListener extends BulkOpListener {
+
+        private final int limit = 1000 * 10;
+
+        final List<ObjectId> removeIds = Lists.newArrayListWithCapacity(limit);
+
+        private ExecutorService deletingService;
+
+        private ObjectDatabase db;
+
+        public DeletingListener(ExecutorService deletingService, ObjectDatabase db) {
+            this.deletingService = deletingService;
+            this.db = db;
+        }
+
+        @Override
+        public synchronized void inserted(ObjectId object, @Nullable Integer storageSizeBytes) {
+            removeIds.add(object);
+            if (removeIds.size() == limit) {
+                deleteInserted();
+            }
+        }
+
+        public void deleteInserted() {
+            if (!removeIds.isEmpty()) {
+                DeleteTask deleteTask = new DeleteTask(Lists.newArrayList(removeIds), db);
+                deletingService.execute(deleteTask);
+                removeIds.clear();
+            }
+        }
+    }
+
     private void moveObjects(final ObjectDatabase from, final ObjectDatabase to,
             final Supplier<Iterator<Node>> nodesToMove, final Set<ObjectId> metadataIds) {
 
@@ -148,7 +207,12 @@ public class DeepMove extends AbstractGeoGitOp<ObjectId> {
             final Function<Node, ObjectId> asId = new Function<Node, ObjectId>() {
                 @Override
                 public ObjectId apply(Node input) {
-                    return input.getObjectId();
+                    Optional<ObjectId> metadataId = input.getMetadataId();
+                    if (metadataId.isPresent()) {
+                        metadataIds.add(input.getMetadataId().get());
+                    }
+                    ObjectId id = input.getObjectId();
+                    return id;
                 }
             };
 
@@ -161,8 +225,26 @@ public class DeepMove extends AbstractGeoGitOp<ObjectId> {
             }
         };
 
-        to.putAll(from.getAll(ids));
-        from.deleteAll(ids.iterator());
+        final ExecutorService deletingService = Executors.newSingleThreadExecutor();
+        try {
+            final DeletingListener deletingListener = new DeletingListener(deletingService, from);
+
+            // store objects into the target db and remove them from the origin db in one shot
+            to.putAll(from.getAll(ids), deletingListener);
+            // in case there are some deletes pending cause the iterator finished and the listener
+            // didn't fill its buffer
+            deletingListener.deleteInserted();
+
+        } finally {
+            deletingService.shutdown();
+            while (!deletingService.isTerminated()) {
+                try {
+                    deletingService.awaitTermination(100, TimeUnit.MILLISECONDS);
+                } catch (InterruptedException e) {
+                    // ok, still awaiting for delete tasks to finish
+                }
+            }
+        }
     }
 
     /**
@@ -283,8 +365,21 @@ public class DeepMove extends AbstractGeoGitOp<ObjectId> {
             final ObjectDatabase to) {
 
         RevObject object = from.get(objectId);
-        moveObject(object, from, to);
 
+        if (object instanceof RevTree) {
+            Set<ObjectId> metadataIds = new HashSet<ObjectId>();
+            moveTree(object.getId(), from, to, metadataIds);
+            for (ObjectId metadataId : metadataIds) {
+                moveObject(metadataId, from, to);
+            }
+        } else {
+            moveObject(object, from, to);
+        }
+    }
+
+    public DeepMove setFrom(ObjectDatabase odb) {
+        this.odb = odb;
+        return this;
     }
 
 }

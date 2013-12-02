@@ -27,7 +27,6 @@ import com.sleepycat.je.EnvironmentConfig;
 
 public class EnvironmentBuilder implements Provider<Environment> {
 
-    @Inject
     private Platform platform;
 
     private String[] path;
@@ -35,6 +34,13 @@ public class EnvironmentBuilder implements Provider<Environment> {
     private File absolutePath;
 
     private boolean stagingDatabase;
+
+    private EnvironmentConfig forceConfig;
+
+    @Inject
+    public EnvironmentBuilder(Platform platform) {
+        this.platform = platform;
+    }
 
     public EnvironmentBuilder setRelativePath(String... path) {
         this.path = path;
@@ -81,7 +87,8 @@ public class EnvironmentBuilder implements Provider<Environment> {
             throw new IllegalStateException("Unable to create Environment directory: '"
                     + storeDirectory.getAbsolutePath() + "'");
         }
-        {
+        EnvironmentConfig envCfg;
+        if (this.forceConfig == null) {
             File conf = new File(storeDirectory, "je.properties");
             if (!conf.exists()) {
                 String resource = stagingDatabase ? "je.properties.staging"
@@ -94,19 +101,20 @@ public class EnvironmentBuilder implements Provider<Environment> {
                     Throwables.propagate(e);
                 }
             }
+
+            // use the default settings
+            envCfg = new EnvironmentConfig();
+            envCfg.setAllowCreate(true);
+            envCfg.setCacheMode(CacheMode.MAKE_COLD);
+            envCfg.setLockTimeout(5, TimeUnit.SECONDS);
+            envCfg.setDurability(Durability.COMMIT_NO_SYNC);
+        } else {
+            envCfg = this.forceConfig;
         }
-        EnvironmentConfig envCfg;
 
-        // use the default settings
-        envCfg = new EnvironmentConfig();
-        envCfg.setAllowCreate(true);
-        envCfg.setCacheMode(CacheMode.MAKE_COLD);
-        envCfg.setLockTimeout(1000, TimeUnit.MILLISECONDS);
-        envCfg.setDurability(Durability.COMMIT_WRITE_NO_SYNC);
-
-        // envCfg.setSharedCache(true);
-        //
-        // final boolean transactional = true;
+        // // envCfg.setSharedCache(true);
+        // //
+        // final boolean transactional = false;
         // envCfg.setTransactional(transactional);
         // envCfg.setCachePercent(75);// Use up to 50% of the heap size for the shared db cache
         // envCfg.setConfigParam(EnvironmentConfig.LOG_FILE_MAX, String.valueOf(256 * 1024 * 1024));
@@ -133,6 +141,10 @@ public class EnvironmentBuilder implements Provider<Environment> {
 
     public void setIsStagingDatabase(boolean stagingDatabase) {
         this.stagingDatabase = stagingDatabase;
+    }
+
+    public void setConfig(EnvironmentConfig envCfg) {
+        this.forceConfig = envCfg;
     }
 
 }

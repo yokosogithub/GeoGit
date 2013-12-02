@@ -14,11 +14,15 @@ import org.geotools.referencing.CRS;
 import org.opengis.feature.simple.SimpleFeatureType;
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
 import org.openstreetmap.osmosis.core.domain.v0_6.Tag;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Throwables;
 import com.google.common.collect.Lists;
 
 public class OSMUtils {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(OSMUtils.class);
 
     public static final String OSM_FETCH_BRANCH = "OSM_FETCH";
 
@@ -107,7 +111,8 @@ public class OSMUtils {
                     Tag tag = new Tag(token.substring(0, idx), token.substring(idx + 1));
                     tags.add(tag);
                 } else {
-                    System.out.println(token);
+                    LOGGER.info("found tag token '{}' with no value in tagString '{}'", token,
+                            tagsString);
                 }
             }
         }

@@ -40,6 +40,12 @@
       <artifactId>jsr305</artifactId>
     </dependency>
     
+    <!-- used to implement a point cache as a temporary database -->
+    <dependency>
+      <groupId>com.sleepycat</groupId>
+      <artifactId>je</artifactId>
+    </dependency>
+    
     <dependency>
 		<groupId>org.openstreetmap.osmosis</groupId>
 		<artifactId>osmosis-core</artifactId>

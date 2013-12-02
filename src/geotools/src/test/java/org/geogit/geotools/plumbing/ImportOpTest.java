@@ -307,7 +307,7 @@ public class ImportOpTest extends RepositoryTestCase {
         WorkingTree workTree = mock(WorkingTree.class);
         CommandLocator cmdl = mock(CommandLocator.class);
         when(cmdl.getWorkingTree()).thenReturn(workTree);
-        doThrow(new Exception("Exception")).when(workTree).delete(any(Name.class));
+        doThrow(new RuntimeException("Exception")).when(workTree).delete(any(String.class));
         ImportOp importOp = new ImportOp();
         importOp.setCommandLocator(cmdl);
         importOp.setDataStore(TestHelper.createTestFactory().createDataStore(null));

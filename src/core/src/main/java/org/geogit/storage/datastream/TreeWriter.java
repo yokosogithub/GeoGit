@@ -21,6 +21,7 @@ import org.geogit.storage.ObjectWriter;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedMap;
+import com.vividsolutions.jts.geom.Envelope;
 
 public class TreeWriter implements ObjectWriter<RevTree> {
     @Override
@@ -29,11 +30,14 @@ public class TreeWriter implements ObjectWriter<RevTree> {
         writeHeader(data, "tree");
         data.writeLong(tree.size());
         data.writeInt(tree.numTrees());
+        
+        Envelope envBuff = new Envelope();
+        
         if (tree.features().isPresent()) {
             data.writeInt(tree.features().get().size());
             ImmutableList<Node> features = tree.features().get();
             for (Node feature : features) {
-                writeNode(feature, data);
+                writeNode(feature, data, envBuff);
             }
         } else {
             data.writeInt(0);
@@ -42,7 +46,7 @@ public class TreeWriter implements ObjectWriter<RevTree> {
             data.writeInt(tree.trees().get().size());
             ImmutableList<Node> subTrees = tree.trees().get();
             for (Node subTree : subTrees) {
-                writeNode(subTree, data);
+                writeNode(subTree, data, envBuff);
             }
         } else {
             data.writeInt(0);
@@ -51,7 +55,7 @@ public class TreeWriter implements ObjectWriter<RevTree> {
             data.writeInt(tree.buckets().get().size());
             ImmutableSortedMap<Integer, Bucket> buckets = tree.buckets().get();
             for (Map.Entry<Integer, Bucket> bucket : buckets.entrySet()) {
-                writeBucket(bucket.getKey(), bucket.getValue(), data);
+                writeBucket(bucket.getKey(), bucket.getValue(), data, envBuff);
             }
         } else {
             data.writeInt(0);

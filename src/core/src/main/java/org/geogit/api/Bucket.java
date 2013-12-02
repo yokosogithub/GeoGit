@@ -24,6 +24,13 @@ public abstract class Bucket implements Bounded {
         return bucketTree;
     }
 
+    @Override
+    public String toString() {
+        Envelope bounds = new Envelope();
+        expand(bounds);
+        return getClass().getSimpleName() + "[" + id() + "] " + bounds;
+    }
+
     /**
      * Equality check based purely on {@link #id() ObjectId}
      */

@@ -64,6 +64,8 @@ public class JEStagingDatabase extends ForwardingStagingDatabase {
 
     private ConfigDatabase configDB;
 
+    private Environment tempDatabasesEnvironment;
+
     /**
      * @param referenceDatabase the repository reference database, used to get the head re
      * @param repoDb
@@ -74,14 +76,15 @@ public class JEStagingDatabase extends ForwardingStagingDatabase {
             final ObjectDatabase repositoryDb, final EnvironmentBuilder envBuilder,
             final Platform platform, final ConfigDatabase configDB) {
 
-        super(Suppliers.ofInstance(repositoryDb), stagingDbSupplier(sfac, envBuilder));
+        super(Suppliers.ofInstance(repositoryDb), stagingDbSupplier(sfac, envBuilder, configDB));
 
         this.platform = platform;
         this.configDB = configDB;
     }
 
     private static Supplier<JEObjectDatabase> stagingDbSupplier(
-            final ObjectSerializingFactory sfac, final EnvironmentBuilder envProvider) {
+            final ObjectSerializingFactory sfac, final EnvironmentBuilder envProvider,
+            final ConfigDatabase configDb) {
 
         return Suppliers.memoize(new Supplier<JEObjectDatabase>() {
 
@@ -90,10 +93,21 @@ public class JEStagingDatabase extends ForwardingStagingDatabase {
                 envProvider.setRelativePath("index");
                 envProvider.setIsStagingDatabase(true);
                 Environment env = envProvider.get();
-                JEObjectDatabase db = new JEObjectDatabase(sfac, env);
+                JEObjectDatabase db = new JEObjectDatabase(sfac, env, configDb);
                 return db;
             }
         });
+    }
+
+    @Override
+    public void close() {
+        try {
+            if (tempDatabasesEnvironment != null) {
+                tempDatabasesEnvironment.close();
+            }
+        } finally {
+            super.close();
+        }
     }
 
     // TODO:
@@ -286,5 +300,4 @@ public class JEStagingDatabase extends ForwardingStagingDatabase {
     public void checkConfig() throws RepositoryConnectionException {
         RepositoryConnectionException.StorageType.STAGING.verify(configDB, "bdbje", "0.1");
     }
-
 }

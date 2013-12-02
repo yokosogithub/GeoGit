@@ -26,7 +26,7 @@ public final class RevFeatureBuilder {
      * @param feature the feature to build from
      * @return the newly constructed RevFeature
      */
-    public RevFeature build(Feature feature) {
+    public static RevFeature build(Feature feature) {
         if (feature == null) {
             throw new IllegalStateException("No feature set");
         }

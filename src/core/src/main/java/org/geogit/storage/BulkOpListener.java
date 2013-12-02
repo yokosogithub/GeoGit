@@ -4,10 +4,11 @@
  */
 package org.geogit.storage;
 
+import java.util.concurrent.atomic.AtomicInteger;
+
 import javax.annotation.Nullable;
 
 import org.geogit.api.ObjectId;
-import org.geogit.api.RevObject;
 
 public abstract class BulkOpListener {
 
@@ -16,12 +17,13 @@ public abstract class BulkOpListener {
 
     /**
      * Signals each object found at {@link ObjectDatabase#getAll(Iterable, BulkOpListener)} as the
-     * returned iterator is traversed
+     * returned iterator is traversed, or each object not inserted at
+     * {@link ObjectDatabase#putAll(java.util.Iterator, BulkOpListener)} because it already exists.
      * 
      * @param object the object found
      * @param storageSizeBytes <b>optional</b> the object storage size, if known.
      */
-    public void found(RevObject object, @Nullable Integer storageSizeBytes) {
+    public void found(ObjectId object, @Nullable Integer storageSizeBytes) {
         // no-op
     }
 
@@ -33,7 +35,7 @@ public abstract class BulkOpListener {
      * @param object the object inserted
      * @param storageSizeBytes <b>optional</b> the object storage size, if known.
      */
-    public void inserted(RevObject object, @Nullable Integer storageSizeBytes) {
+    public void inserted(ObjectId object, @Nullable Integer storageSizeBytes) {
         // no-op
     }
 
@@ -58,6 +60,10 @@ public abstract class BulkOpListener {
         // no-op
     }
 
+    public static CountingListener newCountingListener() {
+        return new CountingListener();
+    }
+
     /**
      * Returns a composite listener that dispatches each signal to both listeners
      */
@@ -70,13 +76,13 @@ public abstract class BulkOpListener {
         }
         return new BulkOpListener() {
             @Override
-            public void found(RevObject object, Integer storageSizeBytes) {
+            public void found(ObjectId object, Integer storageSizeBytes) {
                 b1.found(object, storageSizeBytes);
                 b2.found(object, storageSizeBytes);
             }
 
             @Override
-            public void inserted(RevObject object, Integer storageSizeBytes) {
+            public void inserted(ObjectId object, Integer storageSizeBytes) {
                 b1.inserted(object, storageSizeBytes);
                 b2.inserted(object, storageSizeBytes);
             }
@@ -104,11 +110,11 @@ public abstract class BulkOpListener {
         }
 
         @Override
-        public void found(RevObject object, @Nullable Integer storageSizeBytes) {
+        public void found(ObjectId object, @Nullable Integer storageSizeBytes) {
             target.found(object, storageSizeBytes);
         }
 
-        public void inserted(RevObject object, @Nullable Integer storageSizeBytes) {
+        public void inserted(ObjectId object, @Nullable Integer storageSizeBytes) {
             target.inserted(object, storageSizeBytes);
         }
 
@@ -121,6 +127,51 @@ public abstract class BulkOpListener {
         public void notFound(ObjectId id) {
             target.notFound(id);
         }
+    }
 
+    public static class CountingListener extends BulkOpListener {
+        private AtomicInteger found = new AtomicInteger();
+
+        private AtomicInteger inserted = new AtomicInteger();
+
+        private AtomicInteger deleted = new AtomicInteger();
+
+        private AtomicInteger notFound = new AtomicInteger();
+
+        @Override
+        public void found(ObjectId object, @Nullable Integer storageSizeBytes) {
+            found.incrementAndGet();
+        }
+
+        @Override
+        public void inserted(ObjectId object, @Nullable Integer storageSizeBytes) {
+            inserted.incrementAndGet();
+        }
+
+        @Override
+        public void deleted(ObjectId id) {
+            deleted.incrementAndGet();
+        }
+
+        @Override
+        public void notFound(ObjectId id) {
+            notFound.incrementAndGet();
+        }
+
+        public int found() {
+            return found.get();
+        }
+
+        public int deleted() {
+            return deleted.get();
+        }
+
+        public int inserted() {
+            return inserted.get();
+        }
+
+        public int notFound() {
+            return notFound.get();
+        }
     }
 }

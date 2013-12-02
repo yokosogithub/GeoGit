@@ -16,18 +16,14 @@ import org.geogit.api.Ref;
 import org.geogit.api.RevCommit;
 import org.geogit.api.SymRef;
 import org.geogit.api.plumbing.RefParse;
-import org.geogit.api.porcelain.AddOp;
 import org.geogit.api.porcelain.BranchCreateOp;
 import org.geogit.api.porcelain.CheckoutOp;
-import org.geogit.api.porcelain.CommitOp;
 import org.geogit.api.porcelain.LogOp;
 import org.geogit.api.porcelain.MergeOp;
 import org.geogit.api.porcelain.RebaseOp;
-import org.geogit.osm.internal.log.AddOSMLogEntry;
 import org.geogit.osm.internal.log.OSMLogEntry;
 import org.geogit.osm.internal.log.ReadOSMFilterFile;
 import org.geogit.osm.internal.log.ReadOSMLogEntries;
-import org.geogit.osm.internal.log.WriteOSMFilterFile;
 
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;

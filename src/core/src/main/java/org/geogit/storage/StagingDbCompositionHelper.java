@@ -19,7 +19,7 @@ public class StagingDbCompositionHelper {
 
         final List<ObjectId> missingInStaging = Lists.newLinkedList();
 
-        final int limit = 1000;
+        final int limit = 10000;
 
         final BulkOpListener stagingListener = new BulkOpListener.ForwardingListener(listener) {
             @Override

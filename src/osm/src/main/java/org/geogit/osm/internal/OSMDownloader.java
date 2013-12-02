@@ -7,6 +7,8 @@ package org.geogit.osm.internal;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
+import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
 import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
@@ -17,19 +19,17 @@ import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLEncoder;
-import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Future;
+
+import javax.annotation.Nullable;
 
 import org.opengis.util.ProgressListener;
 
 import com.google.common.io.ByteStreams;
+import com.google.common.io.Closeables;
 
 public class OSMDownloader {
 
     private final String osmAPIUrl;
-
-    private final ExecutorService executor;
 
     private ProgressListener progress;
 
@@ -37,16 +37,14 @@ public class OSMDownloader {
      * @param osmAPIUrl api url, e.g. {@code http://api.openstreetmap.org/api/0.6},
      * @param downloadFolder where to download the data xml contents to
      */
-    public OSMDownloader(String osmAPIUrl, ExecutorService executor, ProgressListener progress) {
+    public OSMDownloader(String osmAPIUrl, ProgressListener progress) {
         checkNotNull(osmAPIUrl);
-        checkNotNull(executor);
         checkNotNull(progress);
         this.osmAPIUrl = osmAPIUrl;
-        this.executor = executor;
         this.progress = progress;
     }
 
-    private class DownloadOSMData implements Callable<File> {
+    private class DownloadOSMData {
 
         private String filter;
 
@@ -54,41 +52,89 @@ public class OSMDownloader {
 
         private File downloadFile;
 
-        public DownloadOSMData(String osmAPIUrl, String filter, File downloadFile) {
+        public DownloadOSMData(String osmAPIUrl, String filter, @Nullable File downloadFile) {
             this.filter = filter;
             this.osmAPIUrl = osmAPIUrl;
             this.downloadFile = downloadFile;
         }
 
-        @Override
-        public File call() throws Exception {
-            synchronized (downloadFile.getAbsolutePath().intern()) {
-                URL url = new URL(osmAPIUrl);
-                HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-                conn.setConnectTimeout(10000);
-                conn.setReadTimeout(180000);
-                conn.setDoInput(true);
-                conn.setDoOutput(true);
-                conn.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
+        public InputStream call() throws Exception {
+            URL url = new URL(osmAPIUrl);
+            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+            conn.setConnectTimeout(10000);
+            conn.setReadTimeout(180000);
+            conn.setDoInput(true);
+            conn.setDoOutput(true);
+            conn.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
 
-                DataOutputStream printout = new DataOutputStream(conn.getOutputStream());
-                printout.writeBytes("data=" + URLEncoder.encode(filter, "utf-8"));
-                printout.flush();
-                printout.close();
+            DataOutputStream printout = new DataOutputStream(conn.getOutputStream());
+            printout.writeBytes("data=" + URLEncoder.encode(filter, "utf-8"));
+            printout.flush();
+            printout.close();
 
-                ProgressInputStream stream = new ProgressInputStream(conn.getInputStream(),
-                        progress);
-                copy(stream, downloadFile);
-
+            InputStream inputStream;
+            if (downloadFile != null) {
+                OutputStream out = new BufferedOutputStream(new FileOutputStream(downloadFile),
+                        16 * 1024);
+                inputStream = new TeeInputStream(new BufferedInputStream(conn.getInputStream(),
+                        16 * 1024), out);
+            } else {
+                inputStream = new BufferedInputStream(conn.getInputStream(), 16 * 1024);
             }
-            return downloadFile;
+            return inputStream;
         }
-
     }
 
-    public Future<File> download(String filter, File file) {
-        Future<File> future = executor.submit(new DownloadOSMData(osmAPIUrl, filter, file));
-        return future;
+    public InputStream download(String filter, @Nullable File destination) throws Exception {
+        InputStream downloadedFile = new DownloadOSMData(osmAPIUrl, filter, destination).call();
+        return downloadedFile;
+    }
+
+    private static class TeeInputStream extends FilterInputStream {
+
+        private OutputStream out;
+
+        protected TeeInputStream(InputStream in, OutputStream out) {
+            super(in);
+            this.out = out;
+        }
+
+        @Override
+        public void close() throws IOException {
+            try {
+                super.close();
+            } finally {
+                Closeables.closeQuietly(out);
+            }
+        }
+
+        @Override
+        public int read() throws IOException {
+            int b = super.read();
+            if (b > -1) {
+                out.write(b);
+            }
+            return b;
+        }
+
+        @Override
+        public int read(byte b[]) throws IOException {
+            int c = super.read(b);
+            if (c > -1) {
+                out.write(b, 0, c);
+            }
+            return c;
+        }
+
+        @Override
+        public int read(byte b[], int off, int len) throws IOException {
+            int c = super.read(b, off, len);
+            if (c > -1) {
+                out.write(b, off, c);
+            }
+            return c;
+        }
+
     }
 
     private static class ProgressInputStream extends FilterInputStream {

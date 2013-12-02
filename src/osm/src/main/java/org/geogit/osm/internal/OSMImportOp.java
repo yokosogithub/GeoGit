@@ -6,23 +6,21 @@ package org.geogit.osm.internal;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
+import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.util.LinkedHashMap;
+import java.io.InputStream;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
-import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.TimeUnit;
+
+import javax.annotation.Nullable;
 
 import org.geogit.api.AbstractGeoGitOp;
-import org.geogit.api.NodeRef;
 import org.geogit.api.ObjectId;
-import org.geogit.api.RevFeature;
+import org.geogit.api.Platform;
 import org.geogit.api.porcelain.AddOp;
 import org.geogit.api.porcelain.CommitOp;
 import org.geogit.osm.internal.log.AddOSMLogEntry;
@@ -30,30 +28,32 @@ import org.geogit.osm.internal.log.OSMLogEntry;
 import org.geogit.osm.internal.log.OSMMappingLogEntry;
 import org.geogit.osm.internal.log.WriteOSMFilterFile;
 import org.geogit.osm.internal.log.WriteOSMMappingEntries;
+import org.geogit.repository.WorkingTree;
+import org.geotools.util.SubProgressListener;
 import org.opengis.feature.Feature;
-import org.opengis.feature.simple.SimpleFeature;
+import org.opengis.util.ProgressListener;
 import org.openstreetmap.osmosis.core.container.v0_6.EntityContainer;
-import org.openstreetmap.osmosis.core.domain.v0_6.Bound;
 import org.openstreetmap.osmosis.core.domain.v0_6.Entity;
 import org.openstreetmap.osmosis.core.domain.v0_6.Node;
-import org.openstreetmap.osmosis.core.domain.v0_6.Relation;
 import org.openstreetmap.osmosis.core.domain.v0_6.Way;
 import org.openstreetmap.osmosis.core.domain.v0_6.WayNode;
 import org.openstreetmap.osmosis.core.task.v0_6.RunnableSource;
 import org.openstreetmap.osmosis.core.task.v0_6.Sink;
 import org.openstreetmap.osmosis.xml.common.CompressionMethod;
-import org.openstreetmap.osmosis.xml.v0_6.XmlReader;
 
+import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
-import com.google.common.util.concurrent.ThreadFactoryBuilder;
+import com.google.common.io.Closeables;
+import com.google.inject.Inject;
 import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.geom.GeometryFactory;
+import com.vividsolutions.jts.geom.LineString;
 import com.vividsolutions.jts.geom.Point;
+import com.vividsolutions.jts.geom.impl.PackedCoordinateSequenceFactory;
 
 import crosby.binary.osmosis.OsmosisReader;
 
@@ -86,6 +86,13 @@ public class OSMImportOp extends AbstractGeoGitOp<Optional<OSMDownloadReport>> {
     private boolean noRaw;
 
     private String message;
+
+    private Platform platform;
+
+    @Inject
+    public OSMImportOp(Platform platform) {
+        this.platform = platform;
+    }
 
     /**
      * Sets the filter to use. It uses the overpass Query Language
@@ -177,62 +184,45 @@ public class OSMImportOp extends AbstractGeoGitOp<Optional<OSMDownloadReport>> {
 
         checkNotNull(urlOrFilepath);
 
-        final ThreadFactory threadFactory = new ThreadFactoryBuilder().setDaemon(true)
-                .setNameFormat("osm-data-download-thread-%d").build();
-        final ExecutorService executor = Executors.newFixedThreadPool(3, threadFactory);
-
         ObjectId oldTreeId = getWorkTree().getTree().getId();
 
-        File file;
+        File osmDataFile = null;
+        final InputStream osmDataStream;
         if (urlOrFilepath.startsWith("http")) {
-            getProgressListener().setDescription("Downloading data...");
-            checkNotNull(filter);
-            OSMDownloader downloader = new OSMDownloader(urlOrFilepath, executor,
-                    getProgressListener());
-
-            if (downloadFile == null) {
-                try {
-                    downloadFile = File.createTempFile("osm-geogit", ".xml");
-                } catch (IOException e) {
-                    Throwables.propagate(e);
-                }
-            } else {
-                downloadFile = downloadFile.getAbsoluteFile();
-            }
-
-            Future<File> data = downloader.download(filter, downloadFile);
-
-            try {
-                file = data.get();
-            } catch (InterruptedException e) {
-                throw Throwables.propagate(e);
-            } catch (ExecutionException e) {
-                throw Throwables.propagate(e);
-            }
+            osmDataStream = downloadFile();
         } else {
-            file = new File(urlOrFilepath);
-            Preconditions.checkArgument(file.exists(), "File does not exist: " + urlOrFilepath);
+            osmDataFile = new File(urlOrFilepath);
+            Preconditions.checkArgument(osmDataFile.exists(), "File does not exist: "
+                    + urlOrFilepath);
+            try {
+                osmDataStream = new BufferedInputStream(new FileInputStream(osmDataFile),
+                        1024 * 1024);
+            } catch (FileNotFoundException e) {
+                throw Throwables.propagate(e);
+            }
         }
 
-        getProgressListener().setDescription("Importing into GeoGit repo...");
+        ProgressListener progressListener = getProgressListener();
+        progressListener.setDescription("Importing into GeoGit repo...");
 
         EntityConverter converter = new EntityConverter();
 
-        OSMDownloadReport report = parseDataFileAndInsert(file, converter);
-
-        if (urlOrFilepath.startsWith("http") && !keepFile) {
-            downloadFile.delete();
+        OSMDownloadReport report;
+        try {
+            report = parseDataFileAndInsert(osmDataFile, osmDataStream, converter);
+        } finally {
+            Closeables.closeQuietly(osmDataStream);
         }
 
         if (report != null) {
             ObjectId newTreeId = getWorkTree().getTree().getId();
             if (!noRaw) {
                 if (mapping != null || filter != null) {
-                    getProgressListener().setDescription("Staging features...");
-                    command(AddOp.class).setProgressListener(getProgressListener()).call();
-                    getProgressListener().setDescription("Committing features...");
+                    progressListener.setDescription("Staging features...");
+                    command(AddOp.class).setProgressListener(progressListener).call();
+                    progressListener.setDescription("Committing features...");
                     command(CommitOp.class).setMessage(message)
-                            .setProgressListener(getProgressListener()).call();
+                            .setProgressListener(progressListener).call();
                     OSMLogEntry entry = new OSMLogEntry(newTreeId, report.getLatestChangeset(),
                             report.getLatestTimestamp());
                     command(AddOSMLogEntry.class).setEntry(entry).call();
@@ -253,54 +243,119 @@ public class OSMImportOp extends AbstractGeoGitOp<Optional<OSMDownloadReport>> {
 
     }
 
-    private OSMDownloadReport parseDataFileAndInsert(File file, final EntityConverter converter) {
+    private InputStream downloadFile() {
 
-        boolean pbf = false;
-        CompressionMethod compression = CompressionMethod.None;
+        ProgressListener listener = getProgressListener();
+        checkNotNull(filter);
+        OSMDownloader downloader = new OSMDownloader(urlOrFilepath, listener);
+        listener.setDescription("Connecting to " + urlOrFilepath + "...");
+        File destination = null;
+        if (keepFile) {
+            destination = this.downloadFile;
+            if (destination == null) {
+                try {
+                    destination = File.createTempFile("osm-geogit", ".xml");
+                } catch (IOException e) {
+                    Throwables.propagate(e);
+                }
+            } else {
+                destination = destination.getAbsoluteFile();
+            }
+        }
+        try {
+            InputStream dataStream = downloader.download(filter, destination);
+            if (keepFile) {
+                listener.setDescription("Downloaded data will be kept in "
+                        + destination.getAbsolutePath());
+            }
+            return dataStream;
+        } catch (Exception e) {
+            throw Throwables.propagate(Throwables.getRootCause(e));
+        }
+    }
 
-        if (file.getName().endsWith(".pbf")) {
-            pbf = true;
-        } else if (file.getName().endsWith(".gz")) {
-            compression = CompressionMethod.GZip;
-        } else if (file.getName().endsWith(".bz2")) {
-            compression = CompressionMethod.BZip2;
+    private OSMDownloadReport parseDataFileAndInsert(@Nullable File file, final InputStream dataIn,
+            final EntityConverter converter) {
+
+        final boolean pbf;
+        final CompressionMethod compression;
+        if (file == null) {
+            pbf = false;
+            compression = CompressionMethod.None;
+        } else {
+            pbf = file.getName().endsWith(".pbf");
+            compression = resolveCompressionMethod(file);
         }
 
         RunnableSource reader;
-
         if (pbf) {
-            try {
-                reader = new OsmosisReader(new FileInputStream(file));
-            } catch (FileNotFoundException e) {
-                // should not reach this, because we have already checked existence
-                throw new IllegalArgumentException("File does not exist: " + urlOrFilepath);
-            }
+            reader = new OsmosisReader(dataIn);
         } else {
-            reader = new XmlReader(file, true, compression);
+            reader = new org.geogit.osm.internal.XmlReader(dataIn, true, compression);
         }
 
-        ConvertAndImportSink sink = new ConvertAndImportSink(converter);
+        final WorkingTree workTree = getWorkTree();
+        if (!add) {
+            workTree.delete(OSMUtils.NODE_TYPE_NAME);
+            workTree.delete(OSMUtils.WAY_TYPE_NAME);
+        }
+
+        final int queueCapacity = 100 * 1000;
+        final int timeout = 1;
+        final TimeUnit timeoutUnit = TimeUnit.SECONDS;
+        // With this iterator and the osm parsing happening on a separate thread, we follow a
+        // producer/consumer approach so that the osm parse thread produces featrures into the
+        // iterator's queue, and WorkingTree.insert consumes them on this thread
+        QueueIterator<Feature> iterator = new QueueIterator<Feature>(queueCapacity, timeout,
+                timeoutUnit);
+
+        ProgressListener progressListener = getProgressListener();
+        ConvertAndImportSink sink = new ConvertAndImportSink(converter, iterator, platform,
+                mapping, noRaw, new SubProgressListener(progressListener, 100));
         reader.setSink(sink);
 
-        Thread readerThread = new Thread(reader);
+        Thread readerThread = new Thread(reader, "osm-import-reader-thread");
         readerThread.start();
 
-        while (readerThread.isAlive()) {
-            try {
-                readerThread.join();
-            } catch (InterruptedException e) {
-                return null;
+        Function<Feature, String> parentTreePathResolver = new Function<Feature, String>() {
+            @Override
+            public String apply(Feature input) {
+                if (input instanceof MappedFeature) {
+                    return ((MappedFeature) input).getPath();
+                }
+                return input.getType().getName().getLocalPart();
             }
-        }
+        };
+
+        // used to set the task status name, but report no progress so it does not interfere
+        // with the progress reported by the reader thread
+        SubProgressListener noPorgressReportingListener = new SubProgressListener(progressListener,
+                0) {
+            @Override
+            public void progress(float progress) {
+                // no-op
+            }
+        };
+        workTree.insert(parentTreePathResolver, iterator, noPorgressReportingListener, null, null);
 
         if (sink.getCount() == 0) {
             throw new EmptyOSMDownloadException();
         }
 
-        OSMDownloadReport report = new OSMDownloadReport(sink.getCount(),
-                sink.getUnprocessedCount(), sink.getLatestChangeset(), sink.getLatestTimestamp());
+        OSMDownloadReport report = new OSMDownloadReport(sink.getCount(), sink.getNodeCount(),
+                sink.getWayCount(), sink.getUnprocessedCount(), sink.getLatestChangeset(),
+                sink.getLatestTimestamp());
         return report;
+    }
 
+    private CompressionMethod resolveCompressionMethod(File file) {
+        String fileName = file.getName();
+        if (fileName.endsWith(".gz")) {
+            return CompressionMethod.GZip;
+        } else if (fileName.endsWith(".bz2")) {
+            return CompressionMethod.BZip2;
+        }
+        return CompressionMethod.None;
     }
 
     /**
@@ -308,11 +363,22 @@ public class OSMImportOp extends AbstractGeoGitOp<Optional<OSMDownloadReport>> {
      * into the repository working tree
      * 
      */
-    class ConvertAndImportSink implements Sink {
+    static class ConvertAndImportSink implements Sink {
 
-        int count = 0;
+        private static final Function<WayNode, Long> NODELIST_TO_ID_LIST = new Function<WayNode, Long>() {
+            @Override
+            public Long apply(WayNode input) {
+                return Long.valueOf(input.getNodeId());
+            }
+        };
 
-        int unableToProcessCount = 0;
+        private int count = 0;
+
+        private int nodeCount;
+
+        private int wayCount;
+
+        private int unableToProcessCount = 0;
 
         private EntityConverter converter;
 
@@ -320,27 +386,27 @@ public class OSMImportOp extends AbstractGeoGitOp<Optional<OSMDownloadReport>> {
 
         private long latestTimestamp;
 
-        private FeatureMapFlusher insertsByParent;
+        private PointCache pointCache;
 
-        Map<Long, Coordinate> pointCache;
+        private QueueIterator<Feature> target;
 
-        private boolean firstFeature = true;
+        private ProgressListener progressListener;
 
-        public ConvertAndImportSink(EntityConverter converter) {
+        private Mapping mapping;
+
+        private boolean noRaw;
+
+        public ConvertAndImportSink(EntityConverter converter, QueueIterator<Feature> target,
+                Platform platform, Mapping mapping, boolean noRaw, ProgressListener progressListener) {
             super();
             this.converter = converter;
+            this.target = target;
+            this.mapping = mapping;
+            this.noRaw = noRaw;
+            this.progressListener = progressListener;
             this.latestChangeset = 0;
             this.latestTimestamp = 0;
-            this.insertsByParent = new FeatureMapFlusher(getWorkTree());
-            pointCache = new LinkedHashMap<Long, Coordinate>() {
-                /** serialVersionUID */
-                private static final long serialVersionUID = 1277795218777240552L;
-
-                @Override
-                protected boolean removeEldestEntry(Map.Entry<Long, Coordinate> eldest) {
-                    return size() == 100000;
-                }
-            };
+            this.pointCache = new BDBJEPointCache(platform);
         }
 
         public long getUnprocessedCount() {
@@ -351,49 +417,65 @@ public class OSMImportOp extends AbstractGeoGitOp<Optional<OSMDownloadReport>> {
             return count;
         }
 
+        public long getNodeCount() {
+            return nodeCount;
+        }
+
+        public long getWayCount() {
+            return wayCount;
+        }
+
+        @Override
+        public void complete() {
+            progressListener.progress(count);
+            progressListener.complete();
+            target.finish();
+            pointCache.dispose();
+        }
+
+        @Override
+        public void release() {
+            pointCache.dispose();
+        }
+
+        @Override
         public void process(EntityContainer entityContainer) {
             Entity entity = entityContainer.getEntity();
+            if (++count % 10 == 0) {
+                progressListener.progress(count);
+            }
             latestChangeset = Math.max(latestChangeset, entity.getChangesetId());
             latestTimestamp = Math.max(latestTimestamp, entity.getTimestamp().getTime());
-            if (entity instanceof Relation || entity instanceof Bound) {
-                getProgressListener().progress(count++);
+            Geometry geom = null;
+            switch (entity.getType()) {
+            case Node:
+                nodeCount++;
+                geom = parsePoint((Node) entity);
+                break;
+            case Way:
+                wayCount++;
+                geom = parseLine((Way) entity);
+                break;
+            default:
                 return;
             }
-            Geometry geom = parseGeometry(entity);
-            getProgressListener().progress(count++);
             if (geom != null) {
+
+                @Nullable
                 Feature feature = converter.toFeature(entity, geom);
-                if (mapping != null) {
+                if (mapping != null && feature != null) {
                     Optional<MappedFeature> mapped = mapping.map(feature);
                     if (mapped.isPresent()) {
-                        clean();
-                        insertsByParent.put(mapped.get().getPath(), (SimpleFeature) mapped.get()
-                                .getFeature());
+                        MappedFeature mappedFeature = mapped.get();
+                        target.put(mappedFeature);
                     }
-                    if (!noRaw) {
-                        String path = feature.getType().getName().getLocalPart();
-                        clean();
-                        insertsByParent.put(path, (SimpleFeature) feature);
-                    }
-                } else {
-                    String path = feature.getType().getName().getLocalPart();
-                    clean();
-                    insertsByParent.put(path, (SimpleFeature) feature);
                 }
+                if (feature == null || noRaw) {
+                    return;
+                }
+                target.put(feature);
+
             }
-        }
-
-        private void clean() {
-            if (!add && firstFeature) {
-                getWorkTree().delete(OSMUtils.NODE_TYPE_NAME);
-                getWorkTree().delete(OSMUtils.WAY_TYPE_NAME);
-                firstFeature = false;
-            }
-
-        }
-
-        public FeatureMapFlusher getFeaturesMap() {
-            return insertsByParent;
         }
 
         /**
@@ -418,80 +500,37 @@ public class OSMImportOp extends AbstractGeoGitOp<Optional<OSMDownloadReport>> {
             return latestChangeset != 0;
         }
 
-        public void release() {
-        }
-
-        public void complete() {
-            insertsByParent.flushAll();
-        }
-
+        @Override
         public void initialize(Map<String, Object> map) {
         }
 
-        private final GeometryFactory GEOMF = new GeometryFactory();
+        private final GeometryFactory GEOMF = new GeometryFactory(
+                new PackedCoordinateSequenceFactory());
+
+        protected Geometry parsePoint(Node node) {
+            Coordinate coord = new Coordinate(node.getLongitude(), node.getLatitude());
+            Point pt = GEOMF.createPoint(coord);
+            pointCache.put(Long.valueOf(node.getId()), coord);
+            return pt;
+        }
 
         /**
-         * Returns the geometry corresponding to an entity. A point in the case of a node, a
-         * lineString for a way. Returns null if it could not create the geometry.
-         * 
-         * This will be the case if the entity is a way but the corresponding nodes cannot be found,
-         * and also if the entity is of a type other than Node of Way
-         * 
-         * @param entity the entity to extract the geometry from
-         * @return
+         * @return {@code null} if the way nodes cannot be found, or its list of nodes is too short,
+         *         the parsed {@link LineString} otherwise
          */
-        protected Geometry parseGeometry(Entity entity) {
-
-            if (entity instanceof Node) {
-                Node node = ((Node) entity);
-                Coordinate coord = new Coordinate(node.getLongitude(), node.getLatitude());
-                Point pt = GEOMF.createPoint(coord);
-                pointCache.put(Long.valueOf(node.getId()), coord);
-                return pt;
-            }
-
-            final Way way = (Way) entity;
+        @Nullable
+        protected Geometry parseLine(Way way) {
             final List<WayNode> nodes = way.getWayNodes();
 
-            List<Coordinate> coordinates = Lists.newArrayList();
-            for (WayNode node : nodes) {
-                long nodeId = node.getNodeId();
-                Coordinate coord = pointCache.get(nodeId);
-                if (coord == null) {
-                    String fid = String.valueOf(nodeId);
-                    String path = NodeRef.appendChild(OSMUtils.NODE_TYPE_NAME, fid);
-                    Optional<org.geogit.api.Node> ref = getWorkTree().findUnstaged(path);
-                    if (ref.isPresent()) {
-                        org.geogit.api.Node nodeRef = ref.get();
-                        RevFeature revFeature = getIndex().getDatabase().getFeature(
-                                nodeRef.getObjectId());
-                        Point pt = null;
-                        ImmutableList<Optional<Object>> values = revFeature.getValues();
-                        for (Optional<Object> opt : values) {
-                            if (opt.isPresent()) {
-                                Object value = opt.get();
-                                if (value instanceof Point) {
-                                    pt = (Point) value;
-                                }
-                            }
-                        }
-
-                        if (pt != null) {
-                            coord = pt.getCoordinate();
-                            pointCache.put(Long.valueOf(nodeId), coord);
-                        }
-                    }
-                }
-                if (coord != null) {
-                    coordinates.add(coord);
-                }
-            }
-            if (coordinates.size() < 2) {
+            if (nodes.size() < 2) {
                 unableToProcessCount++;
                 return null;
             }
 
-            return GEOMF.createLineString(coordinates.toArray(new Coordinate[coordinates.size()]));
+            final List<Long> ids = Lists.transform(nodes, NODELIST_TO_ID_LIST);
+
+            Coordinate[] coordinates = pointCache.get(ids);
+            return GEOMF.createLineString(coordinates);
         }
     }
 

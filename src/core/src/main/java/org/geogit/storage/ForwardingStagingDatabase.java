@@ -102,9 +102,9 @@ public abstract class ForwardingStagingDatabase implements StagingDatabase {
 
     @Override
     public boolean put(RevObject object) {
-        if (repositoryDb.exists(object.getId())) {
-            return false;
-        }
+//        if (repositoryDb.exists(object.getId())) {
+//            return false;
+//        }
         return stagingDb.put(object);
     }
 
