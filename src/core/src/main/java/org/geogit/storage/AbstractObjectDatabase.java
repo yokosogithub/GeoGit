@@ -224,6 +224,8 @@ public abstract class AbstractObjectDatabase implements ObjectDatabase {
             final boolean added = putInternal(id, rawData);
             if (added) {
                 listener.inserted(object.getId(), rawData.length);
+            } else {
+                listener.found(object.getId(), null);
             }
         }
     }

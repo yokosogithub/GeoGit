@@ -268,6 +268,8 @@ public class MongoObjectDatabase implements ObjectDatabase {
             boolean put = put(object);
             if (put) {
                 listener.inserted(object.getId(), null);
+            }else{
+                listener.found(object.getId(), null);
             }
         }
     }
