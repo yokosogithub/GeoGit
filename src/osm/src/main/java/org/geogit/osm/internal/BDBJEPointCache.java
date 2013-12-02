@@ -18,10 +18,13 @@ import com.sleepycat.bind.tuple.LongBinding;
 import com.sleepycat.bind.tuple.TupleBinding;
 import com.sleepycat.bind.tuple.TupleInput;
 import com.sleepycat.bind.tuple.TupleOutput;
+import com.sleepycat.je.CacheMode;
 import com.sleepycat.je.Database;
 import com.sleepycat.je.DatabaseConfig;
 import com.sleepycat.je.DatabaseEntry;
+import com.sleepycat.je.Durability;
 import com.sleepycat.je.Environment;
+import com.sleepycat.je.EnvironmentConfig;
 import com.sleepycat.je.LockMode;
 import com.sleepycat.je.OperationStatus;
 import com.vividsolutions.jts.geom.Coordinate;
@@ -37,9 +40,25 @@ public class BDBJEPointCache implements PointCache {
     public BDBJEPointCache(Platform platform) {
         String envName = "tmpPointCache_" + Math.abs(random.nextInt());
 
+        EnvironmentConfig envCfg;
+        envCfg = new EnvironmentConfig();
+        envCfg.setAllowCreate(true);
+        envCfg.setTransactional(false);
+
+        envCfg.setSharedCache(true);
+        envCfg.setCacheMode(CacheMode.MAKE_COLD);
+
+        envCfg.setDurability(Durability.COMMIT_NO_SYNC);
+        envCfg.setConfigParam(EnvironmentConfig.LOG_FILE_MAX, String.valueOf(1024 * 1024 * 1024));
+        envCfg.setConfigParam(EnvironmentConfig.ENV_RUN_CLEANER, "false");
+        envCfg.setConfigParam(EnvironmentConfig.ENV_RUN_CHECKPOINTER, "false");
+        envCfg.setConfigParam("je.evictor.lruOnly", "false");
+        envCfg.setConfigParam("je.evictor.nodesPerScan", "1000");
+
         EnvironmentBuilder environmentBuilder = new EnvironmentBuilder(platform);
         environmentBuilder.setRelativePath("osm", envName);
         environmentBuilder.setIsStagingDatabase(true);
+        environmentBuilder.setConfig(envCfg);
 
         this.environment = environmentBuilder.get();
 

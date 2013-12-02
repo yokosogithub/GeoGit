@@ -35,6 +35,8 @@ public class EnvironmentBuilder implements Provider<Environment> {
 
     private boolean stagingDatabase;
 
+    private EnvironmentConfig forceConfig;
+
     @Inject
     public EnvironmentBuilder(Platform platform) {
         this.platform = platform;
@@ -85,7 +87,8 @@ public class EnvironmentBuilder implements Provider<Environment> {
             throw new IllegalStateException("Unable to create Environment directory: '"
                     + storeDirectory.getAbsolutePath() + "'");
         }
-        {
+        EnvironmentConfig envCfg;
+        if (this.forceConfig == null) {
             File conf = new File(storeDirectory, "je.properties");
             if (!conf.exists()) {
                 String resource = stagingDatabase ? "je.properties.staging"
@@ -98,15 +101,16 @@ public class EnvironmentBuilder implements Provider<Environment> {
                     Throwables.propagate(e);
                 }
             }
-        }
-        EnvironmentConfig envCfg;
 
-        // use the default settings
-        envCfg = new EnvironmentConfig();
-        envCfg.setAllowCreate(true);
-        envCfg.setCacheMode(CacheMode.MAKE_COLD);
-        envCfg.setLockTimeout(5, TimeUnit.SECONDS);
-        envCfg.setDurability(Durability.COMMIT_NO_SYNC);
+            // use the default settings
+            envCfg = new EnvironmentConfig();
+            envCfg.setAllowCreate(true);
+            envCfg.setCacheMode(CacheMode.MAKE_COLD);
+            envCfg.setLockTimeout(5, TimeUnit.SECONDS);
+            envCfg.setDurability(Durability.COMMIT_NO_SYNC);
+        } else {
+            envCfg = this.forceConfig;
+        }
 
         // // envCfg.setSharedCache(true);
         // //
@@ -137,6 +141,10 @@ public class EnvironmentBuilder implements Provider<Environment> {
 
     public void setIsStagingDatabase(boolean stagingDatabase) {
         this.stagingDatabase = stagingDatabase;
+    }
+
+    public void setConfig(EnvironmentConfig envCfg) {
+        this.forceConfig = envCfg;
     }
 
 }

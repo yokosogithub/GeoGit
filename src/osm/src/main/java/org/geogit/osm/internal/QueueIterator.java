@@ -57,7 +57,11 @@ class QueueIterator<T> extends AbstractIterator<T> {
                 LOGGER.debug("queue.poll timed out after {} {}. retrying...", timeout, timeoutUnit);
             }
             if (next == null) {
-                return endOfData();
+                if (finish && !queue.isEmpty()) {
+                    next = queue.take();
+                } else {
+                    return endOfData();
+                }
             }
             return next;
         } catch (InterruptedException e) {

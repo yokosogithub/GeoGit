@@ -64,13 +64,19 @@ public class OSMImport extends AbstractCommand implements CLICommand {
                     .setDataSource(importFile.getAbsolutePath()).setMapping(mapping)
                     .setMessage(message).setNoRaw(noRaw).setAdd(add)
                     .setProgressListener(cli.getProgressListener()).call();
-            if (report.isPresent() && report.get().getUnpprocessedCount() > 0) {
-
-                String msg = String.format(
-                        "Some elements in the by specified file could not be processed.\n"
-                                + "Processed entities: %,d\n"
-                                + "Wrong or uncomplete elements: %,d ", report.get().getCount(),
-                        +report.get().getUnpprocessedCount());
+            if (report.isPresent()) {
+                OSMDownloadReport rep = report.get();
+                String msg;
+                if (rep.getUnpprocessedCount() > 0) {
+                    msg = String
+                            .format("\nSome elements returned by the specified filter could not be processed.\n"
+                                    + "Processed entities: %,d.\nWrong or uncomplete elements: %,d.\nNodes: %,d.\nWays: %,d.\n",
+                                    rep.getCount(), rep.getUnpprocessedCount(), rep.getNodeCount(),
+                                    rep.getWayCount());
+                } else {
+                    msg = String.format("\nProcessed entities: %,d.\n Nodes: %,d.\n Ways: %,d\n",
+                            rep.getCount(), rep.getNodeCount(), rep.getWayCount());
+                }
                 cli.getConsole().println(msg);
             }
 

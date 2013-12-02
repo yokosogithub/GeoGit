@@ -19,9 +19,15 @@ public class OSMDownloadReport {
 
     private long latestTimestamp;
 
-    public OSMDownloadReport(long count, long unprocessedCount, long latestChangeset,
-            long latestTimestamp) {
+    private long nodeCount;
+
+    private long wayCount;
+
+    public OSMDownloadReport(long count, long nodeCount, long wayCount, long unprocessedCount,
+            long latestChangeset, long latestTimestamp) {
         this.count = count;
+        this.nodeCount = nodeCount;
+        this.wayCount = wayCount;
         this.unpprocessedCount = unprocessedCount;
         this.latestChangeset = latestChangeset;
         this.latestTimestamp = latestTimestamp;
@@ -43,6 +49,14 @@ public class OSMDownloadReport {
      */
     public long getCount() {
         return count;
+    }
+
+    public long getNodeCount() {
+        return nodeCount;
+    }
+
+    public long getWayCount() {
+        return wayCount;
     }
 
     /**

@@ -74,6 +74,7 @@ import com.google.common.base.Throwables;
 import com.google.common.collect.Iterators;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.inject.Inject;
 import com.vividsolutions.jts.geom.CoordinateSequenceFactory;
 import com.vividsolutions.jts.geom.Envelope;
@@ -465,7 +466,8 @@ public class WorkingTree {
             }
         }
 
-        final ExecutorService executorService = Executors.newFixedThreadPool(2 + nFetchThreads);
+        final ExecutorService executorService = Executors.newFixedThreadPool(2 + nFetchThreads,
+                new ThreadFactoryBuilder().setNameFormat("WorkingTree-tree-builder-%d").build());
 
         listener.started();
 
@@ -653,14 +655,29 @@ public class WorkingTree {
         insert(providedPath, features, listener, insertedTarget, collectionSize);
     }
 
-    public void insert(final Function<Feature, String> treePathResolver,
+    /**
+     * Inserts the given {@code features} into the working tree, using the {@code treePathResolver}
+     * function to determine to which tree each feature is added.
+     * 
+     * @param treePathResolver a function that determines the path of the tree where each feature
+     *        node is stored
+     * @param features the features to insert, possibly of different schema and targetted to
+     *        different tree paths
+     * @param listener a progress listener
+     * @param insertedTarget if provided, all nodes created will be added to this list. Beware of
+     *        possible memory implications when inserting a lot of features.
+     * @param collectionSize if given, used to determine progress and notify the {@code listener}
+     * @return the total number of inserted features
+     */
+    public long insert(final Function<Feature, String> treePathResolver,
             Iterator<? extends Feature> features, final ProgressListener listener,
             @Nullable final List<Node> insertedTarget, @Nullable final Integer collectionSize) {
 
         checkArgument(collectionSize == null || collectionSize.intValue() > -1);
 
         final int nTreeThreads = Math.max(2, Runtime.getRuntime().availableProcessors() / 2);
-        final ExecutorService treeBuildingService = Executors.newFixedThreadPool(nTreeThreads);
+        final ExecutorService treeBuildingService = Executors.newFixedThreadPool(nTreeThreads,
+                new ThreadFactoryBuilder().setNameFormat("WorkingTree-tree-builder-%d").build());
 
         final WorkingTreeInsertHelper insertHelper;
 
@@ -694,7 +711,8 @@ public class WorkingTree {
                 });
         try {
             listener.started();
-            indexDatabase.putAll(objects);
+            CountingListener countingListener = BulkOpListener.newCountingListener();
+            indexDatabase.putAll(objects, countingListener);
 
             listener.setDescription("Building trees for "
                     + new TreeSet<String>(insertHelper.getTreeNames()));
@@ -717,6 +735,9 @@ public class WorkingTree {
                 updateWorkHead(newRootTree);
             }
             listener.complete();
+            int inserted = countingListener.inserted();
+            int existing = countingListener.found();
+            return inserted + existing;
         } finally {
             treeBuildingService.shutdownNow();
         }

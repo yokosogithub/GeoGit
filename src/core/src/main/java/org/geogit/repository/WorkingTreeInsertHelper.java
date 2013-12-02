@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 
 import org.geogit.api.CommandLocator;
@@ -27,6 +28,8 @@ import org.opengis.geometry.BoundingBox;
 
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
+import com.google.common.base.Throwables;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.vividsolutions.jts.geom.Envelope;
 
@@ -116,12 +119,41 @@ class WorkingTreeInsertHelper {
 
     public Map<NodeRef, RevTree> buildTrees() {
 
-        Map<NodeRef, RevTree> result = Maps.newHashMap();
+        final Map<NodeRef, RevTree> result = Maps.newConcurrentMap();
+
+        List<AsyncBuildTree> tasks = Lists.newArrayList();
 
         for (Entry<String, RevTreeBuilder2> builderEntry : treeBuilders.entrySet()) {
             final String treePath = builderEntry.getKey();
             final RevTreeBuilder2 builder = builderEntry.getValue();
+            tasks.add(new AsyncBuildTree(treePath, builder, result));
+        }
+        try {
+            executorService.invokeAll(tasks);
+        } catch (InterruptedException e) {
+            throw Throwables.propagate(e);
+        }
+        return result;
+    }
 
+    private class AsyncBuildTree implements Callable<Void> {
+
+        private String treePath;
+
+        private RevTreeBuilder2 builder;
+
+        private Map<NodeRef, RevTree> target;
+
+        AsyncBuildTree(final String treePath, final RevTreeBuilder2 builder,
+                final Map<NodeRef, RevTree> target) {
+
+            this.treePath = treePath;
+            this.builder = builder;
+            this.target = target;
+        }
+
+        @Override
+        public Void call() {
             RevTree tree = builder.build();
 
             Node treeNode;
@@ -146,9 +178,10 @@ class WorkingTreeInsertHelper {
                         : ObjectId.NULL;
             }
             NodeRef newTreeRef = new NodeRef(treeNode, parentPath, parentMetadataId);
-            result.put(newTreeRef, tree);
+            target.put(newTreeRef, tree);
+            return null;
         }
-        return result;
+
     }
 
 }

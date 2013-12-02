@@ -661,7 +661,7 @@ public class GeogitCLI {
 
                 private final NumberFormat fmt = NumberFormat.getPercentInstance();
 
-                private final long delayNanos = TimeUnit.NANOSECONDS.convert(200,
+                private final long delayNanos = TimeUnit.NANOSECONDS.convert(100,
                         TimeUnit.MILLISECONDS);
 
                 // Don't skip the first update
