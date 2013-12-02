@@ -76,6 +76,9 @@ public class JEObjectDatabase extends AbstractObjectDatabase implements ObjectDa
 
     private static final int SYNC_BYTES_LIMIT = 512 * 1024 * 1024;
 
+    @Nullable
+    private ExecutorService dbSyncService;
+
     private ExecutorService writerService;
 
     /**
@@ -137,6 +140,9 @@ public class JEObjectDatabase extends AbstractObjectDatabase implements ObjectDa
         writerService.shutdownNow();
         objectDb.close();
         objectDb = null;
+        if (dbSyncService != null) {
+            dbSyncService.shutdownNow();
+        }
         LOGGER.trace("ObjectDatabase closed. Closing environment...");
 
         env.sync();
@@ -165,6 +171,10 @@ public class JEObjectDatabase extends AbstractObjectDatabase implements ObjectDa
         int nWriterThreads = 1;
         writerService = Executors.newFixedThreadPool(nWriterThreads, new ThreadFactoryBuilder()
                 .setNameFormat("BDBJE-" + env.getHome().getName() + "-WRITE-THREAD-%d").build());
+        if (!objectDb.getConfig().getTransactional()) {
+            dbSyncService = Executors.newFixedThreadPool(nWriterThreads, new ThreadFactoryBuilder()
+                    .setNameFormat("BDBJE-" + env.getHome().getName() + "-SYNC-THREAD-%d").build());
+        }
 
         LOGGER.debug("Object database opened at {}. Transactional: {}", environment.getHome(),
                 objectDb.getConfig().getTransactional());
@@ -427,6 +437,8 @@ public class JEObjectDatabase extends AbstractObjectDatabase implements ObjectDa
                     OperationStatus status = objectDb.putNoOverwrite(transaction, key, data);
                     if (OperationStatus.SUCCESS.equals(status)) {
                         listener.inserted(objectId, size);
+                    } else if (OperationStatus.KEYEXIST.equals(status)) {
+                        listener.found(objectId, null);
                     }
 
                 }
@@ -456,7 +468,7 @@ public class JEObjectDatabase extends AbstractObjectDatabase implements ObjectDa
 
     }
 
-    private static class FlushLogTask implements Runnable {
+    private class FlushLogTask implements Runnable {
 
         private Environment env;
 
@@ -482,7 +494,10 @@ public class JEObjectDatabase extends AbstractObjectDatabase implements ObjectDa
                 }
             }
             if (doSync) {
-                Thread syncThread = new Thread() {
+                Preconditions.checkState(dbSyncService != null,
+                        "DB Sync executor service is null, but the database is non transactional.");
+                dbSyncService.execute(new Runnable() {
+
                     @Override
                     public void run() {
                         Stopwatch sw = new Stopwatch().start();
@@ -496,9 +511,7 @@ public class JEObjectDatabase extends AbstractObjectDatabase implements ObjectDa
                         }
                         LOGGER.debug("flushed db log after {} bytes in {}", buffSize, sw.stop());
                     }
-                };
-                syncThread.setDaemon(true);
-                syncThread.start();
+                });
             }
 
         }
