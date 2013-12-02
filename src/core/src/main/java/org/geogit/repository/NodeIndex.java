@@ -60,6 +60,7 @@ class NodeIndex implements Closeable {
             final File file;
             try {
                 file = File.createTempFile("geogitNodes", ".idx");
+                file.deleteOnExit();
                 // System.err.println("Created index file " + file.getAbsolutePath());
                 FastByteArrayOutputStream buf = new FastByteArrayOutputStream();
                 OutputStream fileOut = new BufferedOutputStream(new FileOutputStream(file),
