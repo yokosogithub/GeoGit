@@ -17,7 +17,6 @@ import org.geotools.data.DataStore;
 import org.geotools.data.memory.MemoryDataStore;
 import org.geotools.feature.FeatureCollection;
 import org.geotools.geojson.feature.FeatureJSON;
-import org.opengis.feature.simple.SimpleFeatureType;
 
 public abstract class AbstractGeoJsonCommand extends AbstractCommand implements CLICommand {
 

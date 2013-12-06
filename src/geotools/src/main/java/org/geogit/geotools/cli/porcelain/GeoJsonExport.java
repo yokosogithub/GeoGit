@@ -6,7 +6,6 @@
 package org.geogit.geotools.cli.porcelain;
 
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.List;
@@ -18,8 +17,8 @@ import org.geogit.api.NodeRef;
 import org.geogit.api.ObjectId;
 import org.geogit.api.RevFeatureType;
 import org.geogit.api.RevObject;
-import org.geogit.api.RevTree;
 import org.geogit.api.RevObject.TYPE;
+import org.geogit.api.RevTree;
 import org.geogit.api.plumbing.FindTreeChild;
 import org.geogit.api.plumbing.ResolveObjectType;
 import org.geogit.api.plumbing.ResolveTreeish;
