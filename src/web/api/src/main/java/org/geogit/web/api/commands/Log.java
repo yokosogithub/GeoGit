@@ -13,6 +13,8 @@ import org.geogit.api.ObjectId;
 import org.geogit.api.RevCommit;
 import org.geogit.api.plumbing.ParseTimestamp;
 import org.geogit.api.plumbing.RevParse;
+import org.geogit.api.plumbing.diff.DiffEntry;
+import org.geogit.api.porcelain.DiffOp;
 import org.geogit.api.porcelain.LogOp;
 import org.geogit.web.api.AbstractWebAPICommand;
 import org.geogit.web.api.CommandContext;
@@ -20,8 +22,10 @@ import org.geogit.web.api.CommandResponse;
 import org.geogit.web.api.ResponseWriter;
 import org.geotools.util.Range;
 
+import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.Iterators;
 
 /**
  * Interface for the Log operation in GeoGit.
@@ -49,6 +53,10 @@ public class Log extends AbstractWebAPICommand {
     private int elementsPerPage;
 
     boolean firstParentOnly;
+
+    boolean summarize = false;
+
+    boolean returnRange = false;
 
     /**
      * Mutator for the limit variable
@@ -141,6 +149,26 @@ public class Log extends AbstractWebAPICommand {
     }
 
     /**
+     * Mutator for the summarize variable
+     * 
+     * @param summarize - if true, each commit will include a summary of changes from its first
+     *        parent
+     */
+    public void setSummarize(boolean summarize) {
+        this.summarize = summarize;
+    }
+
+    /**
+     * Mutator for the returnRange variable.
+     * 
+     * @param returnRange - true to only show the first and last commit of the log, as well as a
+     *        count of the commits in the range.
+     */
+    public void setReturnRange(boolean returnRange) {
+        this.returnRange = returnRange;
+    }
+
+    /**
      * Runs the command and builds the appropriate response
      * 
      * @param context - the context to use for this command
@@ -193,14 +221,100 @@ public class Log extends AbstractWebAPICommand {
         }
 
         final Iterator<RevCommit> log = op.call();
-        context.setResponseContent(new CommandResponse() {
-            @Override
-            public void write(ResponseWriter out) throws Exception {
-                out.start();
-                out.writeCommits(log, page, elementsPerPage);
-                out.finish();
-            }
-        });
 
+        Iterators.advance(log, page * elementsPerPage);
+
+        if (summarize) {
+            final String pathFilter;
+            if (paths != null && !paths.isEmpty()) {
+                pathFilter = paths.get(0);
+            } else {
+                pathFilter = null;
+            }
+            Function<RevCommit, CommitSummary> summaryFunctor = new Function<RevCommit, CommitSummary>() {
+
+                @Override
+                public CommitSummary apply(RevCommit input) {
+                    ObjectId parent = ObjectId.NULL;
+                    if (input.getParentIds().size() > 0) {
+                        parent = input.getParentIds().get(0);
+                    }
+                    final Iterator<DiffEntry> diff = geogit.command(DiffOp.class)
+                            .setOldVersion(parent).setNewVersion(input.getId())
+                            .setFilter(pathFilter).call();
+
+                    int added = 0;
+                    int modified = 0;
+                    int removed = 0;
+
+                    while (diff.hasNext()) {
+                        DiffEntry entry = diff.next();
+                        if (entry.changeType() == DiffEntry.ChangeType.ADDED) {
+                            added++;
+                        } else if (entry.changeType() == DiffEntry.ChangeType.MODIFIED) {
+                            modified++;
+                        } else {
+                            removed++;
+                        }
+                    }
+
+                    return new CommitSummary(input, added, modified, removed);
+                }
+            };
+
+            final Iterator<CommitSummary> summarizedLog = Iterators.transform(log, summaryFunctor);
+            context.setResponseContent(new CommandResponse() {
+                @Override
+                public void write(ResponseWriter out) throws Exception {
+                    out.start();
+                    out.writeSummarizedCommits(summarizedLog, elementsPerPage);
+                    out.finish();
+                }
+            });
+        } else {
+            final boolean rangeLog = returnRange;
+            context.setResponseContent(new CommandResponse() {
+                @Override
+                public void write(ResponseWriter out) throws Exception {
+                    out.start();
+                    out.writeCommits(log, elementsPerPage, rangeLog);
+                    out.finish();
+                }
+            });
+        }
+
+    }
+
+    public class CommitSummary {
+        private final RevCommit commit;
+
+        private final int adds;
+
+        private final int modifies;
+
+        private final int removes;
+
+        public CommitSummary(RevCommit commit, int adds, int modifies, int removes) {
+            this.commit = commit;
+            this.adds = adds;
+            this.modifies = modifies;
+            this.removes = removes;
+        }
+
+        public RevCommit getCommit() {
+            return commit;
+        }
+
+        public int getAdds() {
+            return adds;
+        }
+
+        public int getModifies() {
+            return modifies;
+        }
+
+        public int getRemoves() {
+            return removes;
+        }
     }
 }

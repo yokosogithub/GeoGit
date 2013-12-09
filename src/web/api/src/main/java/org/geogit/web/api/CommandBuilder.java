@@ -158,6 +158,8 @@ public class CommandBuilder {
         command.setElementsPerPage(parseInt(options, "show", 30));
         command.setFirstParentOnly(Boolean.valueOf(options
                 .getFirstValue("firstParentOnly", "false")));
+        command.setSummarize(Boolean.valueOf(options.getFirstValue("summarize", "false")));
+        command.setReturnRange(Boolean.valueOf(options.getFirstValue("returnRange", "false")));
         return command;
     }
 
