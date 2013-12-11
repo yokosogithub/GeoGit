@@ -52,7 +52,7 @@ public abstract class GraphDatabaseStressTest extends RepositoryTestCase {
         executor.shutdown();
         executor.awaitTermination(10, TimeUnit.SECONDS);
         assertEquals(errorLog.toString(), 0, errorLog.size());
-        assertEquals(1000, database.getDepth(ObjectId.forString("a_commit_10000")));
+        assertEquals(100, database.getDepth(ObjectId.forString("a_commit_100")));
     }
 
     private class InsertMany implements Runnable {
@@ -65,7 +65,7 @@ public abstract class GraphDatabaseStressTest extends RepositoryTestCase {
 
         public void run() {
             try {
-                for (int i = 0; i < 10000; i++) {
+                for (int i = 0; i < 100; i++) {
                     ObjectId root = ObjectId.forString(key + "_commit_" + i);
                     ObjectId commit = ObjectId.forString(key + "_commit_" + (i + 1));
                     database.put(commit, ImmutableList.of(root));
