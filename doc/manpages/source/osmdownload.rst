@@ -8,7 +8,7 @@ geogit-osm-download documentation
 
 SYNOPSIS
 ********
-geogit osm download <url> [--bbox <N S E W>] [--saveto <path>] [--message <message>] [--keep-files] [--update] [-mapping <mapping_file>] [--rebase]
+geogit osm download <url> [--bbox <S W N E>] [--saveto <path>] [--message <message>] [--keep-files] [--update] [-mapping <mapping_file>] [--rebase]
 
 
 DESCRIPTION
