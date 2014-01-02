@@ -23,7 +23,7 @@ If a download operation has been performed before in the repository, the ``--upd
 OPTIONS
 *******
 
--b, --bbox <N S E W>		The bounding box to use as filter, defined by its 4 boundary values.
+-b, --bbox <S W N E>		The bounding box to use as filter, defined by its 4 boundary values.
 
 --saveto <path>  			The path were downloaded data is to be stored before importing it into the repository. If not specified, a temporary location will be used.
 
