@@ -25,6 +25,7 @@ import org.geogit.repository.Repository;
 
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.Parameters;
+import com.google.common.collect.ImmutableList;
 
 /**
  * This command creates an empty geogit repository - basically a .geogit directory with
@@ -49,6 +50,16 @@ public class Init extends AbstractCommand implements CLICommand {
 
     @Parameter(names = "--config", description = "Initial configuration values for new repository", required = false, variableArity = true)
     private List<String> config;
+
+    private final static List<String> defaultConfiguration =
+        ImmutableList.of(
+                "storage.graph", "tinkergraph",
+                "tinkergraph.version", "0.1",
+                "storage.objects", "bdbje",
+                "storage.staging", "bdbje",
+                "bdbje.version", "0.1",
+                "storage.refs", "file",
+                "file.version", "1.0");
 
     /**
      * Executes the init command.
@@ -85,12 +96,12 @@ public class Init extends AbstractCommand implements CLICommand {
             geogit = cli.getGeogit();
         }
 
-        Repository repository;
-        try {
-            repository = geogit.command(InitOp.class).setConfig(config).call();
-        } catch (ConfigException e) {
-            throw new CommandFailedException("Couldn't apply provided configuration: " + e.statusCode);
-        }
+        ImmutableList.Builder<String> builder = ImmutableList.builder();
+        builder.addAll(defaultConfiguration);
+        if (config != null) builder.addAll(config);
+        List<String> effectiveConfiguration = builder.build();
+
+        Repository repository = geogit.command(InitOp.class).setConfig(effectiveConfiguration).call();
         final boolean repoExisted = repository == null;
         geogit.setRepository(repository);
         cli.setGeogit(geogit);

@@ -33,6 +33,7 @@ import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
 import com.google.common.collect.Iterables;
+import com.google.common.collect.ImmutableList;
 import com.google.common.io.Resources;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
@@ -53,6 +54,8 @@ import com.google.inject.Injector;
  */
 @CanRunDuringConflict
 public class InitOp extends AbstractGeoGitOp<Repository> {
+
+    private List<String> initialOptions;
 
     private Platform platform;
 
@@ -120,6 +123,18 @@ public class InitOp extends AbstractGeoGitOp<Repository> {
                     .equals(new ResolveGeogitDir(platform).call()));
         } catch (MalformedURLException e) {
             Throwables.propagate(e);
+        }
+
+        if (!repoExisted && initialOptions != null && initialOptions.size() > 1) {
+            // the size check wasn't strictly necessary but we can skip the
+            // early access to the config database entirely if there are no
+            // config options to set as a small optimization
+            ConfigDatabase configDB = injector.getInstance(ConfigDatabase.class);
+            for (int i = 0; i + 1 < initialOptions.size(); i += 2) {
+                String name = initialOptions.get(i);
+                String value = initialOptions.get(i + 1);
+                configDB.put(name, value);
+            }
         }
 
         Repository repository;
