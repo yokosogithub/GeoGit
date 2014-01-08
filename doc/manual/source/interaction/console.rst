@@ -1,7 +1,7 @@
 The GeoGit Console
 ====================
 
-GeoGit is a command-line application that is run callin commands in the form ``geogit <command> [options]``. Each time you call it with a sentence like that, GeoGit has to be initialized. If your session involves running several commands, a better option is to run the geogit console, which lets you run a set of commands, initializing GeoGit just once at the begining of the session.
+GeoGit is a command-line application that is run by calling commands in the form ``geogit <command> [options]``. Each time you call it with a sentence like that, GeoGit has to be initialized. If your session involves running several commands, a better option is to run the geogit console, which lets you run a set of commands, initializing GeoGit just once at the begining of the session.
 
 To start the GeoGit console, type ``geogit-console``
 
