@@ -505,7 +505,7 @@ public class CheckoutOpTest extends RepositoryTestCase {
             geogit.command(MergeOp.class).addCommit(Suppliers.ofInstance(branch.getObjectId()))
                     .call();
             fail();
-        } catch (MergeConflictsException e) {
+        } catch (IllegalStateException e) {
             assertTrue(e.getMessage().contains("conflict"));
         }
     }
@@ -536,7 +536,7 @@ public class CheckoutOpTest extends RepositoryTestCase {
             geogit.command(MergeOp.class).addCommit(Suppliers.ofInstance(branch.getObjectId()))
                     .call();
             fail();
-        } catch (MergeConflictsException e) {
+        } catch (IllegalStateException e) {
             assertTrue(e.getMessage().contains("conflict"));
         }
     }
