@@ -172,34 +172,35 @@ public class MergeFeatureResource extends Resource {
 
                 for (Entry<String, JsonElement> entry : merges.entrySet()) {
                     int descriptorIndex = getDescriptorIndex(entry.getKey(), descriptors);
-                    if (descriptorIndex != -1 && entry.getValue().isJsonPrimitive()) {
+                    if (descriptorIndex != -1 && entry.getValue().isJsonObject()) {
                         PropertyDescriptor descriptor = descriptors.get(descriptorIndex);
-                        JsonPrimitive primitive = entry.getValue().getAsJsonPrimitive();
-                        if (primitive.isString()) {
-                            String value = entry.getValue().getAsJsonPrimitive().getAsString();
-                            if (value.equals("__OURS__")) {
-                                featureBuilder.set(descriptor.getName(), ourFeature == null ? null
-                                        : ourFeature.getValues().get(descriptorIndex).orNull());
-                            } else if (value.equals("__THEIRS__")) {
-                                featureBuilder.set(
-                                        descriptor.getName(),
-                                        theirFeature == null ? null : theirFeature.getValues()
-                                                .get(descriptorIndex).orNull());
-                            } else {
-
+                        JsonObject attributeObject = entry.getValue().getAsJsonObject();
+                        if (attributeObject.has("ours")
+                                && attributeObject.get("ours").isJsonPrimitive()
+                                && attributeObject.get("ours").getAsBoolean()) {
+                            featureBuilder.set(descriptor.getName(), ourFeature == null ? null
+                                    : ourFeature.getValues().get(descriptorIndex).orNull());
+                        } else if (attributeObject.has("theirs")
+                                && attributeObject.get("theirs").isJsonPrimitive()
+                                && attributeObject.get("theirs").getAsBoolean()) {
+                            featureBuilder.set(descriptor.getName(), theirFeature == null ? null
+                                    : theirFeature.getValues().get(descriptorIndex).orNull());
+                        } else if (attributeObject.has("value")
+                                && attributeObject.get("value").isJsonPrimitive()) {
+                            JsonPrimitive primitive = attributeObject.get("value")
+                                    .getAsJsonPrimitive();
+                            if (primitive.isString()) {
                                 try {
                                     Object object = valueFromString(
                                             FieldType.forBinding(descriptor.getType().getBinding()),
-                                            value);
+                                            primitive.getAsString());
                                     featureBuilder.set(descriptor.getName(), object);
                                 } catch (Exception e) {
                                     throw new Exception("Unable to convert attribute ("
                                             + entry.getKey() + ") to required type: "
                                             + descriptor.getType().getBinding().toString());
                                 }
-                            }
-                        } else {
-                            if (primitive.isNumber()) {
+                            } else if (primitive.isNumber()) {
                                 try {
                                     Object value = valueFromNumber(
                                             FieldType.forBinding(descriptor.getType().getBinding()),
@@ -224,7 +225,7 @@ public class MergeFeatureResource extends Resource {
                             } else if (primitive.isJsonNull()) {
                                 featureBuilder.set(descriptor.getName(), null);
                             } else {
-                                throw new Exception("Unsupported JSON type for attribute ("
+                                throw new Exception("Unsupported JSON type for attribute value ("
                                         + entry.getKey() + ")");
                             }
                         }
