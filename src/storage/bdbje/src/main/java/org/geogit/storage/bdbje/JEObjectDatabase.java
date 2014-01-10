@@ -768,10 +768,19 @@ public class JEObjectDatabase extends AbstractObjectDatabase implements ObjectDa
         if (transactional) {
             TransactionConfig txConfig = new TransactionConfig();
             txConfig.setReadUncommitted(true);
-            txConfig.setDurability(Durability.COMMIT_NO_SYNC);
+            txConfig.setDurability(Durability.COMMIT_WRITE_NO_SYNC);
             Transaction transaction = env.beginTransaction(null, txConfig);
             return transaction;
         }
         return null;
+    }
+
+    @Override
+    protected void finalize() {
+        if (isOpen()) {
+            LOGGER.warn("JEObjectDatabase %s was not closed. Forcing close at finalize()",
+                    env.getHome());
+            close();
+        }
     }
 }
