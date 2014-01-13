@@ -2,7 +2,7 @@ package org.geogit.storage.mongo;
 
 import org.geogit.api.Platform;
 import org.geogit.repository.RepositoryConnectionException;
-import org.geogit.storage.BlueprintsGraphDatabase;
+import org.geogit.storage.blueprints.BlueprintsGraphDatabase;
 import org.geogit.storage.ConfigDatabase;
 
 import com.boundlessgeo.blongo.MongoGraph;
