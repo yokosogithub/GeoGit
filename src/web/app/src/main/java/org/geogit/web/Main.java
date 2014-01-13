@@ -19,6 +19,7 @@ import org.geogit.api.Platform;
 import org.geogit.api.plumbing.ResolveGeogitDir;
 import org.geogit.di.GeogitModule;
 import org.geogit.storage.bdbje.JEStorageModule;
+import org.geogit.storage.blueprints.BlueprintsGraphModule;
 import org.geogit.web.api.repo.AffectedFeaturesResource;
 import org.geogit.web.api.repo.ApplyChangesResource;
 import org.geogit.web.api.repo.BatchedObjectResource;
@@ -130,7 +131,7 @@ public class Main extends Application {
             @Override
             public Injector build() {
                 return Guice.createInjector(Modules.override(new GeogitModule()).with(
-                        new JEStorageModule()));
+                        new JEStorageModule(), new BlueprintsGraphModule()));
             }
         };
     }
