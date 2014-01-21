@@ -133,7 +133,6 @@ public final class NodePathStorageOrder extends Ordering<String> implements Seri
                 hash = update(hash, b1);
                 hash = update(hash, b2);
             }
-            hash = Math.abs(hash);
             return hash;
         }
 
