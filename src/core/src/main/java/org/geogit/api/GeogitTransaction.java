@@ -139,4 +139,9 @@ public class GeogitTransaction implements CommandLocator {
         locator.command(TransactionEnd.class).setTransaction(this).setCancel(true).call();
     }
 
+    @Override
+    public Platform getPlatform() {
+        return locator.getPlatform();
+    }
+
 }
