@@ -29,6 +29,7 @@ import org.geogit.storage.ObjectWriter;
 import org.geogit.storage.datastream.DataStreamSerializationFactory;
 
 import com.google.common.base.Functions;
+import com.google.common.base.Optional;
 import com.google.common.collect.AbstractIterator;
 import com.google.common.collect.Iterators;
 import com.google.common.collect.Lists;
@@ -114,8 +115,10 @@ public class MongoObjectDatabase implements ObjectDatabase {
     @Override
     public void configure() throws RepositoryConnectionException {
         RepositoryConnectionException.StorageType.OBJECT.configure(config, "mongodb", "0.1");
-        config.put("mongodb.uri", config.get("mongodb.uri").or(config.getGlobal("mongodb.uri")).or("mongodb://localhost:27017/"));
-        config.put("mongodb.database", config.get("mongodb.database").or(config.getGlobal("mongodb.database")).or("geogit"));
+        Optional<String> uri = config.get("mongodb.uri").or(config.getGlobal("mongodb.uri"));
+        Optional<String> database = config.get("mongodb.database").or(config.getGlobal("mongodb.database"));
+        if (uri.isPresent()) config.put("mongodb.uri", uri.get());
+        if (database.isPresent()) config.put("mongodb.database", database.get());
     }
 
     @Override
