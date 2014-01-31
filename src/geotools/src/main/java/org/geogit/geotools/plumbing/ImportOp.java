@@ -349,15 +349,10 @@ public class ImportOp extends AbstractGeoGitOp<RevTree> {
                 return new FidAndFtOverrideFeature(next, fid, featureType);
             } else {
                 Object value = next.getAttribute(attributeName);
-                if (value == null) {
-                    String fid = (next).getID().substring(fidPrefix.length());
-                    return new FidAndFtOverrideFeature(next, fid, featureType);
-                } else {
-                    return new FidAndFtOverrideFeature(next, value.toString(), featureType);
-                }
+                Preconditions.checkNotNull(value);
+                return new FidAndFtOverrideFeature(next, value.toString(), featureType);
             }
         }
-
     }
 
     private void insert(final WorkingTree workTree, final String path,
