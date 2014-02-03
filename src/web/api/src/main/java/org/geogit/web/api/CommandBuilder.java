@@ -260,7 +260,10 @@ public class CommandBuilder {
         command.setList(Boolean.valueOf(options.getFirstValue("list", "false")));
         command.setRemove(Boolean.valueOf(options.getFirstValue("remove", "false")));
         command.setPing(Boolean.valueOf(options.getFirstValue("ping", "false")));
+        command.setUpdate(Boolean.valueOf(options.getFirstValue("update", "false")));
+        command.setVerbose(Boolean.valueOf(options.getFirstValue("verbose", "false")));
         command.setRemoteName(options.getFirstValue("remoteName", null));
+        command.setNewName(options.getFirstValue("newName", null));
         command.setRemoteURL(options.getFirstValue("remoteURL", null));
         command.setUserName(options.getFirstValue("username", null));
         command.setPassword(options.getFirstValue("password", null));
