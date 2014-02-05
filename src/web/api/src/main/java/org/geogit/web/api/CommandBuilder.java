@@ -26,6 +26,7 @@ import org.geogit.web.api.commands.RefParseWeb;
 import org.geogit.web.api.commands.RemoteWebOp;
 import org.geogit.web.api.commands.RemoveWebOp;
 import org.geogit.web.api.commands.ResolveConflict;
+import org.geogit.web.api.commands.RevertFeatureWebOp;
 import org.geogit.web.api.commands.Status;
 import org.geogit.web.api.commands.TagWebOp;
 import org.geogit.web.api.commands.UpdateRefWeb;
@@ -92,6 +93,8 @@ public class CommandBuilder {
             command = buildRemove(options);
         } else if ("resolveconflict".equalsIgnoreCase(commandName)) {
             command = buildResolveConflict(options);
+        } else if ("revertfeature".equalsIgnoreCase(commandName)) {
+            command = buildRevertFeature(options);
         } else if ("version".equalsIgnoreCase(commandName)) {
             command = buildVersion(options);
         } else {
@@ -444,6 +447,18 @@ public class CommandBuilder {
         ResolveConflict command = new ResolveConflict();
         command.setPath(options.getFirstValue("path", null));
         command.setFeatureObjectId(options.getFirstValue("objectid", null));
+        return command;
+    }
+
+    static RevertFeatureWebOp buildRevertFeature(ParameterSet options) {
+        RevertFeatureWebOp command = new RevertFeatureWebOp();
+        command.setAuthorName(options.getFirstValue("authorName", null));
+        command.setAuthorEmail(options.getFirstValue("authorEmail", null));
+        command.setCommitMessage(options.getFirstValue("commitMessage", null));
+        command.setMergeMessage(options.getFirstValue("mergeMessage", null));
+        command.setNewCommitId(options.getFirstValue("newCommitId", null));
+        command.setOldCommitId(options.getFirstValue("oldCommitId", null));
+        command.setPath(options.getFirstValue("path", null));
         return command;
     }
 }

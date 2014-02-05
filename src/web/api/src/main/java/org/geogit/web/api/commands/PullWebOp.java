@@ -169,8 +169,9 @@ public class PullWebOp extends AbstractWebAPICommand {
                 @Override
                 public void write(ResponseWriter out) throws Exception {
                     out.start();
-                    out.writeMergeResponse(report, geogit, ours.getId(), theirs.getId(), ancestor
-                            .get().getId());
+                    Optional<RevCommit> mergeCommit = Optional.absent();
+                    out.writeMergeResponse(mergeCommit, report, geogit, ours.getId(),
+                            theirs.getId(), ancestor.get().getId());
                     out.finish();
                 }
             });
