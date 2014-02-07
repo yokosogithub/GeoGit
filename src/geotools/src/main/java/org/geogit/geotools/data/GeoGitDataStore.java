@@ -17,12 +17,14 @@ import org.geogit.api.CommandLocator;
 import org.geogit.api.GeoGIT;
 import org.geogit.api.GeogitTransaction;
 import org.geogit.api.NodeRef;
+import org.geogit.api.ObjectId;
 import org.geogit.api.Ref;
 import org.geogit.api.RevObject.TYPE;
 import org.geogit.api.SymRef;
 import org.geogit.api.data.FindFeatureTypeTrees;
 import org.geogit.api.plumbing.ForEachRef;
 import org.geogit.api.plumbing.RefParse;
+import org.geogit.api.plumbing.RevParse;
 import org.geogit.api.plumbing.TransactionBegin;
 import org.geogit.api.porcelain.AddOp;
 import org.geogit.api.porcelain.CheckoutOp;
@@ -79,6 +81,9 @@ public class GeoGitDataStore extends ContentDataStore implements DataStore {
     /** @see #setBranch(String) */
     private String branch;
 
+    /** When the configured head is not a branch, we disallow transactions */
+    private boolean allowTransactions = true;
+
     public GeoGitDataStore(GeoGIT geogit) {
         super();
         Preconditions.checkNotNull(geogit);
@@ -105,18 +110,22 @@ public class GeoGitDataStore extends ContentDataStore implements DataStore {
      * @throws IllegalArgumentException if {@code branchName} is not null and no such branch exists
      *         in the repository
      */
+    // note. temporarily this is a bit misnamed; branchName may be a tag or arbitrary commit id as well.
     public void setBranch(@Nullable final String branchName) throws IllegalArgumentException {
         if (branchName != null) {
+            Optional<ObjectId> rev = getCommandLocator(null).command(RevParse.class).setRefSpec(branchName).call();
+            if (!rev.isPresent()) {
+                throw new IllegalArgumentException("Bad ref spec: " + branchName);
+            }
             Optional<Ref> branchRef = getCommandLocator(null).command(RefParse.class)
                     .setName(branchName).call();
-            if (!branchRef.isPresent()) {
-                throw new IllegalArgumentException(String.format(
-                        "Branch %s does not exist, available branches: %s", branchName,
-                        getAvailableBranches()));
+            if (branchRef.isPresent() && branchRef.get().getName().startsWith(Ref.HEADS_PREFIX)) {
+                allowTransactions = true;
+            } else {
+                allowTransactions = false;
             }
-            String refName = branchRef.get().getName();
-            Preconditions.checkArgument(refName.startsWith(Ref.HEADS_PREFIX),
-                    "%s is not a local branch: %s", branchName, refName);
+        } else {
+            allowTransactions = true; // when no branch name is set we assume we should make transactions against the current HEAD
         }
         this.branch = branchName;
     }
@@ -141,6 +150,13 @@ public class GeoGitDataStore extends ContentDataStore implements DataStore {
     @Nullable
     public String getConfiguredBranch() {
         return this.branch;
+    }
+
+    /**
+     * @return whether or not we can support transactions against the configured head
+     */
+    public boolean isAllowTransactions() {
+        return this.allowTransactions;
     }
 
     /**
@@ -282,6 +298,9 @@ public class GeoGitDataStore extends ContentDataStore implements DataStore {
      */
     @Override
     public void createSchema(SimpleFeatureType featureType) throws IOException {
+        if (!allowTransactions) {
+            throw new IllegalStateException("Configured head " + branch + " is not a branch; transactions are not supported.");
+        }
         GeogitTransaction tx = getCommandLocator(null).command(TransactionBegin.class).call();
         boolean abort = false;
         try {
