@@ -55,8 +55,11 @@ import com.google.common.collect.Lists;
  * A GeoTools {@link DataStore} that serves and edits {@link SimpleFeature}s in a geogit repository.
  * <p>
  * Multiple instances of this kind of data store may be created against the same repository,
- * possibly working against different {@link #setBranch(String) branches}.
+ * possibly working against different {@link #setHead(String) heads}.
  * <p>
+ * A head is any commit in GeoGit.  If a head has a branch pointing at it then
+ * the store allows transactions, otherwise no data modifications may be made.
+ *
  * A branch in Geogit is a separate line of history that may or may not share a common ancestor with
  * another branch. In the later case the branch is called "orphan" and by convention the default
  * branch is called "master", which is created when the geogit repo is first initialized, but does
@@ -78,8 +81,8 @@ public class GeoGitDataStore extends ContentDataStore implements DataStore {
 
     private final GeoGIT geogit;
 
-    /** @see #setBranch(String) */
-    private String branch;
+    /** @see #setHead(String) */
+    private String refspec;
 
     /** When the configured head is not a branch, we disallow transactions */
     private boolean allowTransactions = true;
@@ -100,25 +103,34 @@ public class GeoGitDataStore extends ContentDataStore implements DataStore {
     }
 
     /**
-     * Instructs the datastore to operate against the specified branch, or against the checked out
+     * @deprecated Use {@link setHead(String)} instead
+     */
+    @Deprecated
+    public void setBranch(@Nullable final String branchName) throws IllegalArgumentException {
+        setHead(branchName);
+    }
+
+    /**
+     * Instructs the datastore to operate against the specified refspec, or against the checked out
      * branch, whatever it is, if the argument is {@code null}.
+     *
+     * Editing capabilities are disabled if the refspec is not a local branch.
      * 
-     * @param branch the name of the branch to work against, or {@code null} to default to the
+     * @param refspec the name of the branch to work against, or {@code null} to default to the
      *        currently checked out branch
      * @see #getConfiguredBranch()
      * @see #getOrFigureOutBranch()
-     * @throws IllegalArgumentException if {@code branchName} is not null and no such branch exists
+     * @throws IllegalArgumentException if {@code refspec} is not null and no such commit exists
      *         in the repository
      */
-    // note. temporarily this is a bit misnamed; branchName may be a tag or arbitrary commit id as well.
-    public void setBranch(@Nullable final String branchName) throws IllegalArgumentException {
-        if (branchName != null) {
-            Optional<ObjectId> rev = getCommandLocator(null).command(RevParse.class).setRefSpec(branchName).call();
+    public void setHead(@Nullable final String refspec) throws IllegalArgumentException {
+        if (refspec != null) {
+            Optional<ObjectId> rev = getCommandLocator(null).command(RevParse.class).setRefSpec(refspec).call();
             if (!rev.isPresent()) {
-                throw new IllegalArgumentException("Bad ref spec: " + branchName);
+                throw new IllegalArgumentException("Bad ref spec: " + refspec);
             }
             Optional<Ref> branchRef = getCommandLocator(null).command(RefParse.class)
-                    .setName(branchName).call();
+                    .setName(refspec).call();
             if (branchRef.isPresent() && branchRef.get().getName().startsWith(Ref.HEADS_PREFIX)) {
                 allowTransactions = true;
             } else {
@@ -127,11 +139,19 @@ public class GeoGitDataStore extends ContentDataStore implements DataStore {
         } else {
             allowTransactions = true; // when no branch name is set we assume we should make transactions against the current HEAD
         }
-        this.branch = branchName;
+        this.refspec = refspec;
     }
 
+    /**
+     * @deprecated Use getOrFigureOutHead instead.
+     */
+    @Deprecated
     public String getOrFigureOutBranch() {
-        String branch = getConfiguredBranch();
+        return getOrFigureOutHead();
+    }
+
+    public String getOrFigureOutHead() {
+        String branch = getConfiguredHead();
         if (branch != null) {
             return branch;
         }
@@ -143,13 +163,21 @@ public class GeoGitDataStore extends ContentDataStore implements DataStore {
     }
 
     /**
-     * @return the configured name of the branch this datastore works against, or {@code null} if no
-     *         branch in particular has been set, meaning the data store works against whatever the
+     * @deprecated Use getConfiguredHead instead.
+     */
+    @Deprecated
+    public String getConfiguredBranch() {
+        return getConfiguredHead();
+    }
+
+    /**
+     * @return the configured refspec of the commit this datastore works against, or {@code null} if no
+     *         head in particular has been set, meaning the data store works against whatever the
      *         currently checked out branch is.
      */
     @Nullable
-    public String getConfiguredBranch() {
-        return this.branch;
+    public String getConfiguredHead() {
+        return this.refspec;
     }
 
     /**
@@ -299,7 +327,7 @@ public class GeoGitDataStore extends ContentDataStore implements DataStore {
     @Override
     public void createSchema(SimpleFeatureType featureType) throws IOException {
         if (!allowTransactions) {
-            throw new IllegalStateException("Configured head " + branch + " is not a branch; transactions are not supported.");
+            throw new IllegalStateException("Configured head " + refspec + " is not a branch; transactions are not supported.");
         }
         GeogitTransaction tx = getCommandLocator(null).command(TransactionBegin.class).call();
         boolean abort = false;

@@ -113,7 +113,7 @@ public class GeoGitFeatureStoreTest extends RepositoryTestCase {
     public void testAddFeaturesOnASeparateBranch() throws Exception {
         final String branchName = "addtest";
         final Ref branchRef = geogit.command(BranchCreateOp.class).setName(branchName).call();
-        dataStore.setBranch(branchName);
+        dataStore.setHead(branchName);
 
         FeatureCollection<SimpleFeatureType, SimpleFeature> collection;
         collection = DataUtilities.collection(Arrays.asList((SimpleFeature) points1,
@@ -145,7 +145,7 @@ public class GeoGitFeatureStoreTest extends RepositoryTestCase {
     public void testAddFeaturesWhileNotOnABranch() throws Exception {
         boolean gotIllegalStateException = false;
         final ObjectId head = geogit.command(RevParse.class).setRefSpec("HEAD").call().get();
-        dataStore.setBranch(head.toString());
+        dataStore.setHead(head.toString());
 
         FeatureCollection<SimpleFeatureType, SimpleFeature> collection;
         collection = DataUtilities.collection(Arrays.asList((SimpleFeature) points1,
