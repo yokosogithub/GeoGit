@@ -20,7 +20,7 @@ This command creates an empty `geogit` repository - basically a ``.geogit`` dire
 OPTIONS
 *******
 
---config  <config_param> <config_value> 		Sets a configuration parameter used to init the repository. Configuration parameters mostly refer to the storage options for the differents elements of the repository. The following parameters are available:
+--config  <config_param>=<config_value>[,<config_param>=<config_value>...] 		Sets a configuration parameter used to init the repository. Configuration parameters mostly refer to the storage options for the differents elements of the repository. The following parameters are available:
 
 	- storage.graph : sets the storage to use for the graph database. Valid values are 'tinkergraph', 'mongodb' and 'neo4j'
 	- storage.objects : sets the storage to use for the objects database.  Valid values are 'bdbje' and 'mongodb'
@@ -34,6 +34,8 @@ When specifying a given storage for a parameter, a version must also be supplied
 	- mongodb.version 0.1
 	- neo4j.version 0.1
 	- file.version 1.0
+
+The mongodb storage backend accepts additional parameters "mongodb.uri" and "mongodb.database" to specify connection parameters for the MongoDB server.
 
 SEE ALSO
 ********

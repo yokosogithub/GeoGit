@@ -51,8 +51,8 @@ public class Init extends AbstractCommand implements CLICommand {
     @Parameter(description = "Repository location (directory).", required = false, arity = 1)
     private List<String> location;
 
-    @Parameter(names = "--config", description = "Initial configuration values for new repository", required = false, variableArity = true)
-    private List<String> config;
+    @Parameter(names = { "--config" }, description = "Extra configuration options to set while preparing repository. Separate names from values with an equals sign and delimit configuration options with a colon. Example: storage.objects=bdbje:bdbje.version=0.1")
+    private String config;
 
     private void addDefaults(PluginDefaults defaults, ImmutableList.Builder<String> builder) {
         Optional<VersionedFormat> refs = defaults.getRefs();
@@ -89,10 +89,6 @@ public class Init extends AbstractCommand implements CLICommand {
      */
     @Override
     public void runInternal(GeogitCLI cli) throws IOException {
-        if (config != null && config.size() % 2 != 0) {
-            throw new InvalidParameterException("Configuration options must all have names and values");
-        }
-
         final File repoDir;
         {
             File currDir = cli.getPlatform().pwd();
@@ -121,7 +117,7 @@ public class Init extends AbstractCommand implements CLICommand {
 
         ImmutableList.Builder<String> builder = ImmutableList.builder();
         addDefaults(cli.getGeogitInjector().getInstance(PluginDefaults.class), builder);
-        if (config != null) builder.addAll(config);
+        builder.addAll(splitConfig(config));
         List<String> effectiveConfiguration = builder.build();
 
         Repository repository = geogit.command(InitOp.class).setConfig(effectiveConfiguration).call();
@@ -145,5 +141,18 @@ public class Init extends AbstractCommand implements CLICommand {
             message = "Initialized empty Geogit repository in " + repoDirectory.getAbsolutePath();
         }
         cli.getConsole().println(message);
+    }
+
+    public static List<String> splitConfig(String config) {
+        ImmutableList.Builder<String> builder = ImmutableList.builder();
+        if (config != null) {
+            String[] options = config.split(",");
+            for (String option : options) {
+                String[] kv = option.split("=", 2);
+                if (kv.length < 2) continue;
+                builder.add(kv[0], kv[1]);
+            }
+        }
+        return builder.build();
     }
 }

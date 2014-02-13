@@ -30,6 +30,7 @@ import org.geogit.repository.Repository;
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.Parameters;
 import com.google.common.base.Throwables;
+import com.google.common.collect.ImmutableList;
 import com.google.common.io.Files;
 
 /**
@@ -67,8 +68,8 @@ public class Clone extends AbstractCommand implements CLICommand {
     @Parameter(names = { "--filter" }, description = "Ini filter file.  This will create a sparse clone.")
     private String filterFile;
 
-    @Parameter(names = { "--config" }, description = "Extra configuration options to set while preparing repository.")
-    private List<String> config;
+    @Parameter(names = { "--config" }, description = "Extra configuration options to set while preparing repository. Separate names from values with an equals sign and delimit configuration options with a colon. Example: storage.objects=bdbje:bdbje.version=0.1")
+    private String config;
 
     @Parameter(description = "<repository> [<directory>]")
     private List<String> args;
@@ -134,7 +135,7 @@ public class Clone extends AbstractCommand implements CLICommand {
 
         GeoGIT geogit = new GeoGIT(cli.getGeogitInjector(), repoDir);
 
-        Repository repository = geogit.command(InitOp.class).setConfig(config).setFilterFile(filterFile).call();
+        Repository repository = geogit.command(InitOp.class).setConfig(Init.splitConfig(config)).setFilterFile(filterFile).call();
         checkParameter(repository != null,
                 "Destination path already exists and is not an empty directory.");
         cli.setGeogit(geogit);
