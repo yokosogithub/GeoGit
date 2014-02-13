@@ -29,7 +29,7 @@ public class RepositoryConnectionException extends Exception {
                 throws RepositoryConnectionException {
             Optional<String> storageName = configDB.get("storage." + key);
             Optional<String> storageVersion = configDB.get(formatName + ".version");
-            if (storageName.isPresent()) {
+            if (storageName.isPresent() && !storageName.get().equals(formatName)) {
                 throw new RepositoryConnectionException("Initializing already "
                         + "initialized " + key + " database. Would set " +
                         formatName + ":" + version + " but found " +

@@ -89,7 +89,7 @@ public class Init extends AbstractCommand implements CLICommand {
      */
     @Override
     public void runInternal(GeogitCLI cli) throws IOException {
-        if (configuration != null && configuration.size() % 2 != 0) {
+        if (config != null && config.size() % 2 != 0) {
             throw new InvalidParameterException("Configuration options must all have names and values");
         }
 
