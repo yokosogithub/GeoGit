@@ -115,7 +115,7 @@ public class MongoObjectDatabase implements ObjectDatabase {
     @Override
     public void configure() throws RepositoryConnectionException {
         RepositoryConnectionException.StorageType.OBJECT.configure(config, "mongodb", "0.1");
-        String uri = config.get("mongodb.uri").or(config.getGlobal("mongodb.uri")).or("mongodb://localhost:27017/;
+        String uri = config.get("mongodb.uri").or(config.getGlobal("mongodb.uri")).or("mongodb://localhost:27017/");
         String database = config.get("mongodb.database").or(config.getGlobal("mongodb.database")).or("geogit");
         config.put("mongodb.uri", uri);
         config.put("mongodb.database", database);
