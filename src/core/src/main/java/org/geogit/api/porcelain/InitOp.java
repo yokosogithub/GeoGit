@@ -57,8 +57,6 @@ import com.google.inject.Injector;
 @CanRunDuringConflict
 public class InitOp extends AbstractGeoGitOp<Repository> {
 
-    private List<String> initialOptions;
-
     private Platform platform;
 
     private Injector injector;
