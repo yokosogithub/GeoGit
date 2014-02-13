@@ -67,6 +67,9 @@ public class Clone extends AbstractCommand implements CLICommand {
     @Parameter(names = { "--filter" }, description = "Ini filter file.  This will create a sparse clone.")
     private String filterFile;
 
+    @Parameter(names = { "--config" }, description = "Extra configuration options to set while preparing repository.")
+    private List<String> config;
+
     @Parameter(description = "<repository> [<directory>]")
     private List<String> args;
 
@@ -131,58 +134,13 @@ public class Clone extends AbstractCommand implements CLICommand {
 
         GeoGIT geogit = new GeoGIT(cli.getGeogitInjector(), repoDir);
 
-        Repository repository = geogit.getOrCreateRepository();
+        Repository repository = geogit.command(InitOp.class).setConfig(config).setFilterFile(filterFile).call();
         checkParameter(repository != null,
                 "Destination path already exists and is not an empty directory.");
         cli.setGeogit(geogit);
         cli.getPlatform().setWorkingDir(repoDir);
 
-        boolean sparse = false;
-
-        if (filterFile != null) {
-            try {
-                final String FILTER_FILE = "filter.ini";
-
-                File oldFilterFile = new File(filterFile);
-                if (!oldFilterFile.exists()) {
-                    throw new FileNotFoundException("No filter file found at " + filterFile + ".");
-                }
-
-                URL envHome = new ResolveGeogitDir(cli.getPlatform()).call();
-                if (envHome == null) {
-                    throw new CommandFailedException("Not inside a geogit directory");
-                }
-                if (!"file".equals(envHome.getProtocol())) {
-                    throw new UnsupportedOperationException(
-                            "Sparse clone works only against file system repositories. "
-                                    + "Repository location: " + envHome.toExternalForm());
-                }
-                try {
-                    repoDir = new File(envHome.toURI());
-                } catch (URISyntaxException e) {
-                    throw Throwables.propagate(e);
-                }
-                File newFilterFile = new File(repoDir, FILTER_FILE);
-
-                Files.copy(oldFilterFile, newFilterFile);
-                cli.getGeogit().command(ConfigOp.class).setAction(ConfigAction.CONFIG_SET)
-                        .setName("sparse.filter").setValue(FILTER_FILE).setScope(ConfigScope.LOCAL)
-                        .call();
-                sparse = true;
-            } catch (Exception e) {
-                throw new CommandFailedException("Unable to copy filter file at path " + filterFile
-                        + " to the new repository.", e);
-            }
-        }
-
-        if (sparse) {
-            cli.getConsole()
-                    .println(
-                            "Performing a sparse clone into '" + cli.getPlatform().pwd().getName()
-                                    + "'...");
-        } else {
-            cli.getConsole().println("Cloning into '" + cli.getPlatform().pwd().getName() + "'...");
-        }
+        cli.getConsole().println("Cloning into '" + cli.getPlatform().pwd().getName() + "'...");
 
         CloneOp clone = cli.getGeogit().command(CloneOp.class);
         clone.setProgressListener(cli.getProgressListener());
