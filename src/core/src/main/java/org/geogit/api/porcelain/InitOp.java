@@ -175,24 +175,26 @@ public class InitOp extends AbstractGeoGitOp<Repository> {
 
         Repository repository;
         try {
-            repository = injector.getInstance(Repository.class);
             if (!repoExisted) {
+                ConfigDatabase configDB = injector.getInstance(ConfigDatabase.class);
                 try {
                     ImmutableList<String> effectiveConfig = effectiveConfigBuilder.build();
                     if (!effectiveConfig.isEmpty()) {
-                        ConfigDatabase configDB = repository.getConfigDatabase();
                         for (List<String> pair : Iterables.partition(effectiveConfig, 2)) {
                             String key = pair.get(0);
                             String value = pair.get(1);
                             configDB.put(key, value);
                         }
                     }
+                    repository = injector.getInstance(Repository.class);
                     repository.configure();
                 } catch (RepositoryConnectionException e) {
                     throw new IllegalStateException(
                             "Unable to initialize repository for the first time: " + e.getMessage(),
                             e);
                 }
+            } else {
+                repository = injector.getInstance(Repository.class);
             }
             try {
                 repository.open();
