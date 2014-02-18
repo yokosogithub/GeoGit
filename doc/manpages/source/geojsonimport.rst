@@ -28,6 +28,9 @@ OPTIONS
 
 --alter                         Same as the ``--add`` switch, but if the feature type of the imported features is different to that of the destination tree, the default feature type is changed and all previous features are modified to use that feature type
 
+--geom-name	<name>				Instead of using the default name for the geometry field ('geometry'), it will use the passed name.
+
+--geom-name-auto				Uses the name of the geomettry attribute in the destination tree, if it already exist, to name the geometry field of the data being imported. If the destination tree does not exist, or if the data contained in the tree has no geometry, it uses the default name ('geometry'). It cannot be used with --geom-name
 
 BUGS
 ****

@@ -300,6 +300,39 @@ public class ImportOpTest extends RepositoryTestCase {
     }
 
     @Test
+    public void testImportWithDecoratedGeomName() throws Exception {
+        ImportOp importOp = geogit.command(ImportOp.class);
+        importOp.setDataStore(TestHelper.createTestFactory().createDataStore(null));
+        importOp.setTable("table1");
+        importOp.setGeomName("my_geom_name");
+        importOp.call();
+        Iterator<NodeRef> features = geogit.command(LsTreeOp.class)
+                .setStrategy(Strategy.DEPTHFIRST_ONLY_FEATURES).call();
+        ArrayList<NodeRef> list = Lists.newArrayList(features);
+        assertEquals(2, list.size());
+        Optional<RevFeatureType> featureType = geogit.command(RevObjectParse.class)
+                .setObjectId(list.get(0).getMetadataId()).call(RevFeatureType.class);
+        assertTrue(featureType.isPresent());
+        assertEquals("table1", featureType.get().getName().getLocalPart());
+        assertEquals("my_geom_name", featureType.get().sortedDescriptors().get(0).getName()
+                .getLocalPart());
+    }
+
+    @Test
+    public void testImportWithDecoratedGeomNameAlredyInUse() throws Exception {
+        ImportOp importOp = geogit.command(ImportOp.class);
+        importOp.setDataStore(TestHelper.createTestFactory().createDataStore(null));
+        importOp.setTable("table1");
+        importOp.setGeomName("label");
+        try {
+            importOp.call();
+            fail("Should throw exception complaining of parameter name already in use");
+        } catch (IllegalArgumentException e) {
+            assertTrue(e.getMessage().startsWith("The provided geom name is already in use"));
+        }
+    }
+
+    @Test
     public void testImportWithFid() throws Exception {
         ImportOp importOp = geogit.command(ImportOp.class);
         importOp.setDataStore(TestHelper.createTestFactory().createDataStore(null));
