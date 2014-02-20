@@ -85,6 +85,9 @@ class RevTreeBuilder2 {
     }
 
     /**
+     * Traverses the nodes in the {@link NodeIndex}, deletes the ones with {@link ObjectId#NULL
+     * NULL} ObjectIds, and adds the ones with non "NULL" ids.
+     * 
      * @return the new tree, not saved to the object database. Any bucket tree though is saved when
      *         this method returns.
      */
@@ -100,7 +103,11 @@ class RevTreeBuilder2 {
             Iterator<Node> nodes = nodeIndex.nodes();
             while (nodes.hasNext()) {
                 Node node = nodes.next();
-                builder.put(node);
+                if (node.getObjectId().isNull()) {
+                    builder.remove(node.getName());
+                } else {
+                    builder.put(node);
+                }
             }
         } finally {
             nodeIndex.close();
@@ -127,8 +134,8 @@ class RevTreeBuilder2 {
         }
     }
 
-    public Node putFeature(final ObjectId id, final String name, final BoundingBox bounds,
-            final FeatureType type) {
+    public Node putFeature(final ObjectId id, final String name,
+            @Nullable final BoundingBox bounds, final FeatureType type) {
         Envelope bbox;
         if (bounds == null) {
             bbox = null;
@@ -149,4 +156,14 @@ class RevTreeBuilder2 {
         put(node);
         return node;
     }
+
+    /**
+     * Marks the node named after {@code fid} to be deleted by adding a Node with
+     * {@link ObjectId#NULL NULL} ObjectId
+     */
+    public void removeFeature(String fid) {
+        Node node = Node.create(fid, ObjectId.NULL, ObjectId.NULL, TYPE.FEATURE);
+        put(node);
+    }
+
 }
