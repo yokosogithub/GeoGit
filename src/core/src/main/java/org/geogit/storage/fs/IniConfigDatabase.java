@@ -475,6 +475,5 @@ public class IniConfigDatabase implements ConfigDatabase {
             }
             return ini;
         }
-
     }
 }

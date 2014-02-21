@@ -28,7 +28,7 @@ import org.geogit.storage.StagingDatabase;
 import org.geogit.storage.datastream.DataStreamSerializationFactory;
 import org.geogit.storage.fs.FileObjectDatabase;
 import org.geogit.storage.fs.FileRefDatabase;
-import org.geogit.storage.fs.IniConfigDatabase;
+import org.geogit.storage.fs.IniFileConfigDatabase;
 import org.geogit.storage.memory.HeapDeduplicationService;
 import org.geogit.storage.memory.HeapGraphDatabase;
 import org.geogit.storage.memory.HeapStagingDatabase;
@@ -70,7 +70,7 @@ public class GeogitModule extends AbstractModule {
         bind(Platform.class).to(DefaultPlatform.class).asEagerSingleton();
 
         bind(Repository.class).in(Scopes.SINGLETON);
-        bind(ConfigDatabase.class).to(IniConfigDatabase.class).in(Scopes.SINGLETON);
+        bind(ConfigDatabase.class).to(IniFileConfigDatabase.class).in(Scopes.SINGLETON);
         bind(StagingArea.class).to(Index.class).in(Scopes.SINGLETON);
         bind(StagingDatabase.class).to(HeapStagingDatabase.class).in(Scopes.SINGLETON);
         bind(WorkingTree.class).in(Scopes.SINGLETON);
