@@ -46,11 +46,6 @@
     </dependency>
 
     <dependency>
-      <groupId>org.ini4j</groupId>
-      <artifactId>ini4j</artifactId>
-    </dependency>
-
-    <dependency>
       <!-- Google Common Libraries. Featuring com.google.collect collection classes -->
       <groupId>com.google.guava</groupId>
       <artifactId>guava</artifactId>

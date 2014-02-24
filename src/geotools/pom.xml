@@ -78,6 +78,7 @@
     <dependency>
       <groupId>org.ini4j</groupId>
       <artifactId>ini4j</artifactId>
+      <scope>test</scope>
     </dependency>
 
     <dependency>
