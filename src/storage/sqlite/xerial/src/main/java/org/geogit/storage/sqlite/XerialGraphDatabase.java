@@ -21,7 +21,6 @@ import org.geogit.api.Platform;
 import org.geogit.storage.ConfigDatabase;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.sqlite.SQLiteDataSource;
 
 import com.google.inject.Inject;
 
@@ -42,14 +41,9 @@ public class XerialGraphDatabase extends SQLiteGraphDatabase<DataSource> {
 
     static final String MAPPINGS = "mappings";
 
-    final SQLiteDataSource dataSource;
-
     @Inject
     public XerialGraphDatabase(ConfigDatabase configdb, Platform platform) {
         super(configdb, platform);
-
-        File db = new File(new File(platform.pwd(), ".geogit"), "graph.db");
-        dataSource = Xerial.newDataSource(db);
     }
 
     @Override
