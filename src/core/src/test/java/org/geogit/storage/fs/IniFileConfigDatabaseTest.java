@@ -25,7 +25,7 @@ import com.google.common.base.Optional;
 
 // TODO: Not sure if this belongs in porcelain or integration
 
-public class IniConfigDatabaseTest {
+public class IniFileConfigDatabaseTest {
     @Rule
     public ExpectedException exception = ExpectedException.none();
 
@@ -48,7 +48,7 @@ public class IniConfigDatabaseTest {
         final Platform platform = mock(Platform.class);
         when(platform.pwd()).thenReturn(workingDir);
 
-        final ConfigDatabase ini = new IniConfigDatabase(platform);
+        final ConfigDatabase ini = new IniFileConfigDatabase(platform);
 
         // Test integer and string
         ini.put("section.int", 1);
@@ -74,7 +74,7 @@ public class IniConfigDatabaseTest {
         final Platform platform = mock(Platform.class);
         when(platform.getUserHome()).thenReturn(userhome);
 
-        final ConfigDatabase ini = new IniConfigDatabase(platform);
+        final ConfigDatabase ini = new IniFileConfigDatabase(platform);
 
         // Test integer and string
         ini.putGlobal("section.int", 1);
@@ -101,7 +101,7 @@ public class IniConfigDatabaseTest {
         final Platform platform = mock(Platform.class);
         when(platform.pwd()).thenReturn(workingDir);
 
-        final ConfigDatabase ini = new IniConfigDatabase(platform);
+        final ConfigDatabase ini = new IniFileConfigDatabase(platform);
 
         exception.expect(ConfigException.class);
         ini.get("nodot");
@@ -115,7 +115,7 @@ public class IniConfigDatabaseTest {
         final Platform platform = mock(Platform.class);
         when(platform.pwd()).thenReturn(workingDir);
 
-        final ConfigDatabase ini = new IniConfigDatabase(platform);
+        final ConfigDatabase ini = new IniFileConfigDatabase(platform);
 
         exception.expect(ConfigException.class);
         ini.get(".int");
@@ -129,7 +129,7 @@ public class IniConfigDatabaseTest {
         final Platform platform = mock(Platform.class);
         when(platform.pwd()).thenReturn(workingDir);
 
-        final ConfigDatabase ini = new IniConfigDatabase(platform);
+        final ConfigDatabase ini = new IniFileConfigDatabase(platform);
 
         exception.expect(ConfigException.class);
         ini.get("section.");
@@ -141,7 +141,7 @@ public class IniConfigDatabaseTest {
         final Platform platform = mock(Platform.class);
         when(platform.pwd()).thenReturn(workingDir);
 
-        final ConfigDatabase ini = new IniConfigDatabase(platform);
+        final ConfigDatabase ini = new IniFileConfigDatabase(platform);
 
         exception.expect(ConfigException.class);
         ini.put("section.int", 1);
@@ -152,7 +152,7 @@ public class IniConfigDatabaseTest {
         final Platform platform = mock(Platform.class);
         when(platform.getUserHome()).thenReturn(null);
 
-        final ConfigDatabase ini = new IniConfigDatabase(platform);
+        final ConfigDatabase ini = new IniFileConfigDatabase(platform);
 
         exception.expect(ConfigException.class);
         ini.putGlobal("section.int", 1);
@@ -166,7 +166,7 @@ public class IniConfigDatabaseTest {
         final Platform platform = mock(Platform.class);
         when(platform.pwd()).thenReturn(workingDir);
 
-        final ConfigDatabase ini = new IniConfigDatabase(platform);
+        final ConfigDatabase ini = new IniFileConfigDatabase(platform);
 
         exception.expect(ConfigException.class);
         ini.get(null);
@@ -180,7 +180,7 @@ public class IniConfigDatabaseTest {
         final Platform platform = mock(Platform.class);
         when(platform.pwd()).thenReturn(workingDir);
 
-        final ConfigDatabase ini = new IniConfigDatabase(platform);
+        final ConfigDatabase ini = new IniFileConfigDatabase(platform);
 
         ini.put("section.null", null);
 
@@ -196,7 +196,7 @@ public class IniConfigDatabaseTest {
         final Platform platform = mock(Platform.class);
         when(platform.pwd()).thenReturn(workingDir);
 
-        final ConfigDatabase ini = new IniConfigDatabase(platform);
+        final ConfigDatabase ini = new IniFileConfigDatabase(platform);
 
         ini.put("section.string", "notanumber");
 
@@ -212,7 +212,7 @@ public class IniConfigDatabaseTest {
         final Platform platform = mock(Platform.class);
         when(platform.pwd()).thenReturn(workingDir);
 
-        final ConfigDatabase ini = new IniConfigDatabase(platform);
+        final ConfigDatabase ini = new IniFileConfigDatabase(platform);
 
         Optional<String> str = ini.get("doesnt.exist");
         assertFalse(str.isPresent());
