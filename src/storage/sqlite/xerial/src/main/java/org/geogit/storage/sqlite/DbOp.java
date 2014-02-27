@@ -4,6 +4,8 @@
  */
 package org.geogit.storage.sqlite;
 
+import static org.geogit.storage.sqlite.XerialSQLiteModule.LOG;
+
 import java.io.IOException;
 import java.sql.Connection;
 import java.sql.ResultSet;
@@ -16,13 +18,13 @@ import javax.sql.DataSource;
 
 import com.google.common.base.Throwables;
 
-import static org.geogit.storage.sqlite.XerialSQLiteModule.LOG;
-
 /**
  * Helper class for executing statements and queries against a JDBC connection.
  * <p>
  * Usage:
- * <pre><code>
+ * 
+ * <pre>
+ * <code>
  * Connection cx = ...;
  * Long count = new DbOp<Long>() {
  *   public Long run(Connection cx) {
@@ -32,10 +34,13 @@ import static org.geogit.storage.sqlite.XerialSQLiteModule.LOG;
  *   }
  * }.run(cx):
  * 
- * </code></pre>
+ * </code>
+ * </pre>
+ * 
  * </p>
+ * 
  * @author Justin Deoliveira, Boundless
- *
+ * 
  * @param <T> Operation return type.
  */
 public abstract class DbOp<T> {
@@ -47,6 +52,7 @@ public abstract class DbOp<T> {
      * <p>
      * The connection is closed after usage.
      * </p>
+     * 
      * @param ds The data source to obtain connection from.
      */
     public final T run(DataSource ds) {
@@ -73,8 +79,7 @@ public abstract class DbOp<T> {
                 }
                 try {
                     return doRun(cx);
-                }
-                finally {
+                } finally {
                     if (!auto) {
                         cx.setAutoCommit(true);
                     }
@@ -82,15 +87,14 @@ public abstract class DbOp<T> {
             } catch (Exception e) {
                 throw Throwables.propagate(e);
             }
-        }
-        finally {
+        } finally {
             close();
         }
     }
 
     /**
      * Tracks a resource to be closed in LIFO order.
-     *
+     * 
      * @param obj The object to be closed.
      * 
      * @return The original object.
@@ -101,7 +105,7 @@ public abstract class DbOp<T> {
     }
 
     void close() {
-        while(!open.isEmpty()) {
+        while (!open.isEmpty()) {
             Object obj = open.pop();
             try {
                 if (obj instanceof ResultSet) {
@@ -111,10 +115,9 @@ public abstract class DbOp<T> {
                     ((Statement) obj).close();
                 }
                 if (obj instanceof Connection) {
-                    ((Connection)obj).close();
+                    ((Connection) obj).close();
                 }
-            }
-            catch(Exception e) {
+            } catch (Exception e) {
                 LOG.debug("error closing object: " + obj, e);
             }
         }
@@ -126,15 +129,16 @@ public abstract class DbOp<T> {
      * When creating statements and result sets from the connection ensure that {@link #open} is
      * called in order to track the created object to be closed when the operation is complete.
      * </p>
+     * 
      * @param cx The connection to run the op against.
      * 
      * @return The op result, or <code>null</code> for opts that don't return a value.
-     *
+     * 
      */
     protected abstract T doRun(Connection cx) throws IOException, SQLException;
 
     /**
-     * Subclass hook to determine if the operation runs within a transaction. 
+     * Subclass hook to determine if the operation runs within a transaction.
      * <p>
      * It is the responsibility of the subclass to either commit or rollback the transaction.
      * </p>

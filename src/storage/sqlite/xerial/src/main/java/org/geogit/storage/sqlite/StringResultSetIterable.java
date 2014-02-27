@@ -14,11 +14,12 @@ import com.google.common.collect.AbstractIterator;
  * Wraps a ResultSet consisting of a single string column in an iterable.
  * 
  * @author Justin Deoliveira, Boundless
- *
+ * 
  */
 public class StringResultSetIterable implements Iterable<String> {
 
     ResultSet rs;
+
     Connection cx;
 
     StringResultSetIterable(ResultSet rs, Connection cx) {
@@ -39,8 +40,7 @@ public class StringResultSetIterable implements Iterable<String> {
                     }
 
                     return rs.getString(1);
-                }
-                catch(Exception e) {
+                } catch (Exception e) {
                     throw new RuntimeException(e);
                 }
             }

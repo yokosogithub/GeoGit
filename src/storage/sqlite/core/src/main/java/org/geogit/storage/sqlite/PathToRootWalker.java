@@ -17,18 +17,20 @@ import com.google.common.collect.Sets;
 
 /**
  * Walks a path from the specified node to a root, bifurcating along the way in cases where a node
- * has multiple parents. 
- *
+ * has multiple parents.
+ * 
  * @author Justin Deoliveira, Boundless
- *
+ * 
  * @param <C> Connection type.
  */
 public class PathToRootWalker<T> implements Iterator<List<ObjectId>> {
 
     SQLiteGraphDatabase<T> graph;
+
     T cx;
 
     Queue<ObjectId> q;
+
     Set<ObjectId> seen;
 
     public PathToRootWalker(ObjectId start, SQLiteGraphDatabase<T> graph, T cx) {
@@ -55,8 +57,8 @@ public class PathToRootWalker<T> implements Iterator<List<ObjectId>> {
             ObjectId node = q.poll();
             curr.add(node);
 
-            Iterables.addAll(next, 
-                Iterables.transform(graph.outgoing(node.toString(), cx), StringToObjectId.INSTANCE));
+            Iterables.addAll(next, Iterables.transform(graph.outgoing(node.toString(), cx),
+                    StringToObjectId.INSTANCE));
         }
 
         seen.addAll(curr);

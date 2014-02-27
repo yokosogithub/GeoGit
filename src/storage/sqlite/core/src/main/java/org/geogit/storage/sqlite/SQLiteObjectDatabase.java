@@ -42,12 +42,13 @@ import com.google.common.collect.Lists;
  * Base class for SQLite based object database.
  * 
  * @author Justin Deoliveira, Boundless
- *
+ * 
  * @param <C> Connection type.
  */
 public abstract class SQLiteObjectDatabase<C> implements ObjectDatabase {
 
     final Platform platform;
+
     final ConfigDatabase configdb;
 
     final ObjectSerializingFactory serializer = new DataStreamSerializationFactory();
@@ -112,8 +113,7 @@ public abstract class SQLiteObjectDatabase<C> implements ObjectDatabase {
     }
 
     @Override
-    public <T extends RevObject> T get(ObjectId id, Class<T> type)
-            throws IllegalArgumentException {
+    public <T extends RevObject> T get(ObjectId id, Class<T> type) throws IllegalArgumentException {
         T obj = getIfPresent(id, type);
         if (obj == null) {
             throw new NoSuchElementException("No object with ids: " + id);
@@ -167,14 +167,13 @@ public abstract class SQLiteObjectDatabase<C> implements ObjectDatabase {
 
     @Override
     public Iterator<RevObject> getAll(Iterable<ObjectId> ids, final BulkOpListener listener) {
-        return filter(transform(ids, new Function<ObjectId,RevObject>() {
+        return filter(transform(ids, new Function<ObjectId, RevObject>() {
             @Override
             public RevObject apply(ObjectId id) {
                 RevObject obj = getIfPresent(id);
                 if (obj == null) {
                     listener.notFound(id);
-                }
-                else {
+                } else {
                     listener.found(id, null);
                 }
                 return obj;
@@ -200,7 +199,7 @@ public abstract class SQLiteObjectDatabase<C> implements ObjectDatabase {
 
     @Override
     public void putAll(Iterator<? extends RevObject> objects, BulkOpListener listener) {
-        while(objects.hasNext()) {
+        while (objects.hasNext()) {
             RevObject obj = objects.next();
             if (put(obj)) {
                 listener.inserted(obj.getId(), null);
@@ -221,7 +220,7 @@ public abstract class SQLiteObjectDatabase<C> implements ObjectDatabase {
     @Override
     public long deleteAll(Iterator<ObjectId> ids, BulkOpListener listener) {
         long count = 0;
-        while(ids.hasNext()) {
+        while (ids.hasNext()) {
             ObjectId id = ids.next();
             if (delete(id)) {
                 count++;
@@ -271,18 +270,20 @@ public abstract class SQLiteObjectDatabase<C> implements ObjectDatabase {
 
     /**
      * Creates the object table with the following schema:
+     * 
      * <pre>
      * objects(id:varchar PRIMARY KEY, object:blob)
      * </pre>
+     * 
      * Implementations of this method should be prepared to be called multiple times, so must check
      * if the table already exists.
-     *  
+     * 
      * @param cx The connection object.
      */
     protected abstract void init(C cx);
 
     /**
-     * Determines if the object with the specified id exists. 
+     * Determines if the object with the specified id exists.
      */
     protected abstract boolean has(String id, C cx);
 
@@ -299,7 +300,7 @@ public abstract class SQLiteObjectDatabase<C> implements ObjectDatabase {
      * Retrieves the object with the specified id.
      * <p>
      * Must return <code>null</code> if no such object exists.
-     * </p> 
+     * </p>
      */
     protected abstract InputStream get(String id, C cx);
 

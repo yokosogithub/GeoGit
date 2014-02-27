@@ -17,17 +17,21 @@ import com.google.common.collect.Maps;
  * Walks a shortest path between two nodes applying Dijkstra's algorithm.
  * 
  * @author Justin Deoliveira, Boundless
- *
+ * 
  * @param <C> Connection type.
  */
 public class ShortestPathWalker<T> implements Iterator<ObjectId> {
 
     final ObjectId start;
+
     final ObjectId end;
+
     final SQLiteGraphDatabase<T> graph;
+
     final T cx;
 
-    final Map<String,Node> nodes;
+    final Map<String, Node> nodes;
+
     final PriorityQueue<Node> q;
 
     ShortestPathWalker(ObjectId start, ObjectId end, SQLiteGraphDatabase<T> graph, T cx) {
@@ -70,8 +74,7 @@ public class ShortestPathWalker<T> implements Iterator<ObjectId> {
             if (m == null) {
                 m = newNode(adj, cost);
                 q.offer(m);
-            }
-            else {
+            } else {
                 if (cost < m.cost) {
                     // update the node
                     m.cost = cost;
@@ -91,6 +94,7 @@ public class ShortestPathWalker<T> implements Iterator<ObjectId> {
 
     static class Node {
         String id;
+
         Double cost = Double.MAX_VALUE;
 
         Node(String id, Double cost) {

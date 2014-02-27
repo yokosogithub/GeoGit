@@ -4,6 +4,9 @@
  */
 package org.geogit.storage.sqlite;
 
+import static org.geogit.storage.sqlite.SQLiteStorage.FORMAT_NAME;
+import static org.geogit.storage.sqlite.SQLiteStorage.VERSION;
+
 import java.util.List;
 
 import org.geogit.api.Platform;
@@ -18,24 +21,23 @@ import com.google.common.base.Suppliers;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 
-import static org.geogit.storage.sqlite.SQLiteStorage.*;
-
 /**
  * Base class for SQLite based staging database.
  * 
  * @author Justin Deoliveira, Boundless
- *
+ * 
  * @param <T>
  */
 public abstract class SQLiteStagingDatabase<T> extends ForwardingStagingDatabase {
 
     final ConfigDatabase configdb;
+
     final Platform platform;
 
     private T cx;
 
-    public SQLiteStagingDatabase(ObjectDatabase repoDb, SQLiteObjectDatabase<T> stageDb, 
-        ConfigDatabase configdb, Platform platform) {
+    public SQLiteStagingDatabase(ObjectDatabase repoDb, SQLiteObjectDatabase<T> stageDb,
+            ConfigDatabase configdb, Platform platform) {
 
         super(Suppliers.ofInstance(repoDb), Suppliers.ofInstance(stageDb));
 
@@ -47,7 +49,7 @@ public abstract class SQLiteStagingDatabase<T> extends ForwardingStagingDatabase
     public void open() {
         super.open();
 
-        cx = ((SQLiteObjectDatabase<T>)stagingDb).cx;
+        cx = ((SQLiteObjectDatabase<T>) stagingDb).cx;
         init(cx);
     }
 
@@ -62,8 +64,8 @@ public abstract class SQLiteStagingDatabase<T> extends ForwardingStagingDatabase
 
     @Override
     public List<Conflict> getConflicts(String namespace, String pathFilter) {
-        return Lists.newArrayList(Iterables.transform(get(namespace, pathFilter, cx), 
-            StringToConflict.INSTANCE));
+        return Lists.newArrayList(Iterables.transform(get(namespace, pathFilter, cx),
+                StringToConflict.INSTANCE));
     }
 
     @Override
@@ -78,7 +80,7 @@ public abstract class SQLiteStagingDatabase<T> extends ForwardingStagingDatabase
 
     @Override
     public void removeConflicts(String namespace) {
-        for (Conflict c : Iterables.transform(get(namespace, null, cx),StringToConflict.INSTANCE)) {
+        for (Conflict c : Iterables.transform(get(namespace, null, cx), StringToConflict.INSTANCE)) {
             removeConflict(namespace, c.getPath());
         }
     }
@@ -95,12 +97,14 @@ public abstract class SQLiteStagingDatabase<T> extends ForwardingStagingDatabase
 
     /**
      * Creates the object table with the following schema:
+     * 
      * <pre>
      * conflicts(namespace:varchar, path:varchar, conflict:varchar)
      * </pre>
+     * 
      * Implementations of this method should be prepared to be called multiple times, so must check
      * if the table already exists.
-     *  
+     * 
      * @param cx The connection object.
      */
     protected abstract void init(T cx);
@@ -109,8 +113,8 @@ public abstract class SQLiteStagingDatabase<T> extends ForwardingStagingDatabase
      * Returns all conflicts matching the specified namespace and pathFilter.
      * 
      * @param namespace Namespace value, may be <code>null</code>.
-     * @param pathFilter Path filter, may be <code>null</code>. 
-     *
+     * @param pathFilter Path filter, may be <code>null</code>.
+     * 
      */
     protected abstract Iterable<String> get(String namespace, String pathFilter, T cx);
 

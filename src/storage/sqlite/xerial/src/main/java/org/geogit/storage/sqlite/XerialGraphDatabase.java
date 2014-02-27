@@ -5,6 +5,7 @@
 package org.geogit.storage.sqlite;
 
 import static java.lang.String.format;
+import static org.geogit.storage.sqlite.Xerial.log;
 
 import java.io.File;
 import java.io.IOException;
@@ -24,11 +25,9 @@ import org.sqlite.SQLiteDataSource;
 
 import com.google.inject.Inject;
 
-import static org.geogit.storage.sqlite.Xerial.log;
-
 /**
  * Graph database based on xerial SQLite jdbc driver.
- *
+ * 
  * @author Justin Deoliveira, Boundless
  */
 public class XerialGraphDatabase extends SQLiteGraphDatabase<DataSource> {
@@ -36,10 +35,13 @@ public class XerialGraphDatabase extends SQLiteGraphDatabase<DataSource> {
     static Logger LOG = LoggerFactory.getLogger(XerialGraphDatabase.class);
 
     static final String NODES = "nodes";
+
     static final String EDGES = "edges";
+
     static final String PROPS = "props";
+
     static final String MAPPINGS = "mappings";
-    
+
     final SQLiteDataSource dataSource;
 
     @Inject
@@ -66,36 +68,37 @@ public class XerialGraphDatabase extends SQLiteGraphDatabase<DataSource> {
             protected Void doRun(Connection cx) throws IOException, SQLException {
                 Statement st = open(cx.createStatement());
 
-                String sql = 
-                    format("CREATE TABLE IF NOT EXISTS %s (id VARCHAR PRIMARY KEY)", NODES);
-                st.execute(log(sql,LOG));
+                String sql = format("CREATE TABLE IF NOT EXISTS %s (id VARCHAR PRIMARY KEY)", NODES);
+                st.execute(log(sql, LOG));
 
                 sql = format("CREATE TABLE IF NOT EXISTS %s (src VARCHAR, dst VARCHAR, "
-                    + "PRIMARY KEY (src,dst))", EDGES);
-                st.execute(log(sql,LOG));
+                        + "PRIMARY KEY (src,dst))", EDGES);
+                st.execute(log(sql, LOG));
 
                 sql = format("CREATE INDEX IF NOT EXISTS %s_src_index ON %s(src)", EDGES, EDGES);
-                st.execute(log(sql,LOG));
+                st.execute(log(sql, LOG));
 
                 sql = format("CREATE INDEX IF NOT EXISTS %s_dst_index ON %s(dst)", EDGES, EDGES);
-                st.execute(log(sql,LOG));
+                st.execute(log(sql, LOG));
 
-                sql = format("CREATE TABLE IF NOT EXISTS %s (nid VARCHAR, key VARCHAR, val VARCHAR,"
-                        + " PRIMARY KEY(nid,key))", 
-                    PROPS);
-                st.execute(log(sql,LOG));
+                sql = format(
+                        "CREATE TABLE IF NOT EXISTS %s (nid VARCHAR, key VARCHAR, val VARCHAR,"
+                                + " PRIMARY KEY(nid,key))", PROPS);
+                st.execute(log(sql, LOG));
 
-                sql = format("CREATE TABLE IF NOT EXISTS %s (alias VARCHAR PRIMARY KEY, nid VARCHAR)", MAPPINGS);
-                st.execute(log(sql,LOG));
+                sql = format(
+                        "CREATE TABLE IF NOT EXISTS %s (alias VARCHAR PRIMARY KEY, nid VARCHAR)",
+                        MAPPINGS);
+                st.execute(log(sql, LOG));
 
-                sql = format("CREATE INDEX IF NOT EXISTS %s_nid_index ON %s(nid)", 
-                    MAPPINGS, MAPPINGS);
-                st.execute(log(sql,LOG));
+                sql = format("CREATE INDEX IF NOT EXISTS %s_nid_index ON %s(nid)", MAPPINGS,
+                        MAPPINGS);
+                st.execute(log(sql, LOG));
 
                 return null;
             }
         }.run(ds);
-        
+
     }
 
     @Override
@@ -109,7 +112,7 @@ public class XerialGraphDatabase extends SQLiteGraphDatabase<DataSource> {
             protected Boolean doRun(Connection cx) throws IOException, SQLException {
                 String sql = format("INSERT OR IGNORE INTO %s (id) VALUES (?)", NODES);
 
-                PreparedStatement ps = open(cx.prepareStatement(log(sql,LOG,node)));
+                PreparedStatement ps = open(cx.prepareStatement(log(sql, LOG, node)));
                 ps.setString(1, node);
 
                 ps.executeUpdate();
@@ -125,7 +128,7 @@ public class XerialGraphDatabase extends SQLiteGraphDatabase<DataSource> {
             protected Boolean doRun(Connection cx) throws IOException, SQLException {
                 String sql = format("SELECT count(*) FROM %s WHERE id = ?", NODES);
 
-                PreparedStatement ps = open(cx.prepareStatement(log(sql,LOG,node)));
+                PreparedStatement ps = open(cx.prepareStatement(log(sql, LOG, node)));
                 ps.setString(1, node);
 
                 ResultSet rs = open(ps.executeQuery());
@@ -143,7 +146,7 @@ public class XerialGraphDatabase extends SQLiteGraphDatabase<DataSource> {
             protected Void doRun(Connection cx) throws IOException, SQLException {
                 String sql = format("INSERT or IGNORE INTO %s (src, dst) VALUES (?, ?)", EDGES);
 
-                PreparedStatement ps = open(cx.prepareStatement(log(sql,LOG,src,dst)));
+                PreparedStatement ps = open(cx.prepareStatement(log(sql, LOG, src, dst)));
                 ps.setString(1, src);
                 ps.setString(2, dst);
 
@@ -160,7 +163,7 @@ public class XerialGraphDatabase extends SQLiteGraphDatabase<DataSource> {
             protected Void doRun(Connection cx) throws IOException, SQLException {
                 String sql = format("INSERT OR REPLACE INTO %s (alias, nid) VALUES (?,?)", MAPPINGS);
 
-                PreparedStatement ps = open(cx.prepareStatement(log(sql,LOG,from)));
+                PreparedStatement ps = open(cx.prepareStatement(log(sql, LOG, from)));
                 ps.setString(1, from);
                 ps.setString(2, to);
 
@@ -177,7 +180,7 @@ public class XerialGraphDatabase extends SQLiteGraphDatabase<DataSource> {
             protected String doRun(Connection cx) throws IOException, SQLException {
                 String sql = format("SELECT nid FROM %s WHERE alias = ?", MAPPINGS);
 
-                PreparedStatement ps = open(cx.prepareStatement(log(sql,LOG,node)));
+                PreparedStatement ps = open(cx.prepareStatement(log(sql, LOG, node)));
                 ps.setString(1, node);
 
                 ResultSet rs = open(ps.executeQuery());
@@ -193,7 +196,7 @@ public class XerialGraphDatabase extends SQLiteGraphDatabase<DataSource> {
             protected Void doRun(Connection cx) throws IOException, SQLException {
                 String sql = format("INSERT OR REPLACE INTO %s (nid,key,val) VALUES (?,?,?)", PROPS);
 
-                PreparedStatement ps = open(cx.prepareStatement(log(sql,LOG,node,key,val)));
+                PreparedStatement ps = open(cx.prepareStatement(log(sql, LOG, node, key, val)));
                 ps.setString(1, node);
                 ps.setString(2, key);
                 ps.setString(3, val);
@@ -211,15 +214,14 @@ public class XerialGraphDatabase extends SQLiteGraphDatabase<DataSource> {
             protected String doRun(Connection cx) throws IOException, SQLException {
                 String sql = format("SELECT val FROM %s WHERE nid = ? AND key = ?", PROPS);
 
-                PreparedStatement ps = open(cx.prepareStatement(log(sql,LOG,node,key)));
+                PreparedStatement ps = open(cx.prepareStatement(log(sql, LOG, node, key)));
                 ps.setString(1, node);
                 ps.setString(2, key);
 
                 ResultSet rs = open(ps.executeQuery());
                 if (rs.next()) {
                     return rs.getString(1);
-                }
-                else {
+                } else {
                     return null;
                 }
             }
@@ -234,7 +236,7 @@ public class XerialGraphDatabase extends SQLiteGraphDatabase<DataSource> {
             protected ResultSet doRun(Connection cx) throws IOException, SQLException {
                 String sql = format("SELECT dst FROM %s WHERE src = ?", EDGES);
 
-                PreparedStatement ps = cx.prepareStatement(log(sql,LOG,node));
+                PreparedStatement ps = cx.prepareStatement(log(sql, LOG, node));
                 ps.setString(1, node);
                 return ps.executeQuery();
             }
@@ -252,7 +254,7 @@ public class XerialGraphDatabase extends SQLiteGraphDatabase<DataSource> {
             protected ResultSet doRun(Connection cx) throws IOException, SQLException {
                 String sql = format("SELECT src FROM %s WHERE dst = ?", EDGES);
 
-                PreparedStatement ps = cx.prepareStatement(log(sql,LOG,node));
+                PreparedStatement ps = cx.prepareStatement(log(sql, LOG, node));
                 ps.setString(1, node);
                 return ps.executeQuery();
             }
@@ -269,16 +271,16 @@ public class XerialGraphDatabase extends SQLiteGraphDatabase<DataSource> {
                 Statement st = open(cx.createStatement());
 
                 String sql = format("DELETE FROM %s", PROPS);
-                st.execute(log(sql,LOG));
+                st.execute(log(sql, LOG));
 
                 sql = format("DELETE FROM %s", EDGES);
-                st.execute(log(sql,LOG));
+                st.execute(log(sql, LOG));
 
                 sql = format("DELETE FROM %s", NODES);
-                st.execute(log(sql,LOG));
+                st.execute(log(sql, LOG));
 
                 sql = format("DELETE FROM %s", MAPPINGS);
-                st.execute(log(sql,LOG));
+                st.execute(log(sql, LOG));
 
                 return null;
             }

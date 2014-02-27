@@ -20,18 +20,20 @@ import com.google.common.base.Optional;
 
 /**
  * Base class for SQLite based config database.
- *
+ * 
  * @author Justin Deoliveira, Boundless
- *
+ * 
  */
 public abstract class SQLiteConfigDatabase implements ConfigDatabase {
 
     final Platform platform;
 
     File lastWorkingDir;
+
     File lastUserDir;
 
     Config local;
+
     Config global;
 
     protected SQLiteConfigDatabase(Platform platform) {
@@ -92,7 +94,7 @@ public abstract class SQLiteConfigDatabase implements ConfigDatabase {
     public void put(String key, Object value) {
         put(new Entry(key), value, local());
     }
-    
+
     @Override
     public void putGlobal(String key, Object value) {
         put(new Entry(key), value, global());
@@ -102,7 +104,7 @@ public abstract class SQLiteConfigDatabase implements ConfigDatabase {
     public void remove(String key) {
         remove(new Entry(key), local());
     }
-    
+
     @Override
     public void removeGlobal(String key) {
         remove(new Entry(key), global());
@@ -127,7 +129,7 @@ public abstract class SQLiteConfigDatabase implements ConfigDatabase {
     }
 
     <T> T convert(String value, Class<T> clazz) {
-        //TODO: actually convert
+        // TODO: actually convert
         return clazz.cast(value);
     }
 
@@ -167,8 +169,8 @@ public abstract class SQLiteConfigDatabase implements ConfigDatabase {
 
             File globalDir = new File(home.getPath(), ".geogit");
             if (globalDir.exists() && !globalDir.isDirectory()) {
-                throw new IllegalStateException(
-                    globalDir.getAbsolutePath() + " exists but is not a directory");
+                throw new IllegalStateException(globalDir.getAbsolutePath()
+                        + " exists but is not a directory");
             }
 
             if (!globalDir.exists() && !globalDir.mkdir()) {
@@ -191,6 +193,7 @@ public abstract class SQLiteConfigDatabase implements ConfigDatabase {
 
     protected static class Entry {
         final String section;
+
         final String key;
 
         public Entry(String entry) {
@@ -202,9 +205,9 @@ public abstract class SQLiteConfigDatabase implements ConfigDatabase {
 
     protected abstract String get(Entry entry, Config config);
 
-    protected abstract Map<String,String> all(Config config);
+    protected abstract Map<String, String> all(Config config);
 
-    protected abstract Map<String,String> all(String section, Config config);
+    protected abstract Map<String, String> all(String section, Config config);
 
     protected abstract List<String> list(String section, Config config);
 

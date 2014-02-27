@@ -12,7 +12,7 @@ import com.google.common.base.Function;
  * Function to convert string to object id.
  * 
  * @author Justin Deoliveira, Boundless
- *
+ * 
  */
 public class StringToObjectId implements Function<String, ObjectId> {
 

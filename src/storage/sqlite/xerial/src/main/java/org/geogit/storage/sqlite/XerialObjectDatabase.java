@@ -5,13 +5,12 @@
 package org.geogit.storage.sqlite;
 
 import static java.lang.String.format;
+import static org.geogit.storage.sqlite.Xerial.log;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.URISyntaxException;
-import java.net.URL;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -24,7 +23,6 @@ import javax.sql.DataSource;
 import org.geogit.api.ObjectId;
 import org.geogit.api.Platform;
 import org.geogit.api.RevObject;
-import org.geogit.api.plumbing.ResolveGeogitDir;
 import org.geogit.storage.BulkOpListener;
 import org.geogit.storage.ConfigDatabase;
 import org.slf4j.Logger;
@@ -35,11 +33,9 @@ import com.google.common.collect.Iterators;
 import com.google.common.io.ByteStreams;
 import com.google.inject.Inject;
 
-import static org.geogit.storage.sqlite.Xerial.log;
-
 /**
  * Object database based on Xerial SQLite jdbc driver.
- *
+ * 
  * @author Justin Deoliveira, Boundless
  */
 public class XerialObjectDatabase extends SQLiteObjectDatabase<DataSource> {
@@ -60,8 +56,8 @@ public class XerialObjectDatabase extends SQLiteObjectDatabase<DataSource> {
     public XerialObjectDatabase(ConfigDatabase configdb, Platform platform, String dbName) {
         super(configdb, platform);
         this.dbName = dbName;
-//        File db = new File(new File(platform.pwd(), ".geogit"), name + ".db");
-//        dataSource = Xerial.newDataSource(db);
+        // File db = new File(new File(platform.pwd(), ".geogit"), name + ".db");
+        // dataSource = Xerial.newDataSource(db);
     }
 
     @Override
@@ -78,9 +74,10 @@ public class XerialObjectDatabase extends SQLiteObjectDatabase<DataSource> {
         new DbOp<Void>() {
             @Override
             protected Void doRun(Connection cx) throws SQLException {
-                String sql = 
-                    format("CREATE TABLE IF NOT EXISTS %s (id varchar PRIMARY KEY, object blob)", OBJECTS);
-                open(cx.createStatement()).execute(log(sql,LOG));
+                String sql = format(
+                        "CREATE TABLE IF NOT EXISTS %s (id varchar PRIMARY KEY, object blob)",
+                        OBJECTS);
+                open(cx.createStatement()).execute(log(sql, LOG));
                 return null;
             }
         }.run(ds);
@@ -93,7 +90,7 @@ public class XerialObjectDatabase extends SQLiteObjectDatabase<DataSource> {
             protected Boolean doRun(Connection cx) throws SQLException {
                 String sql = format("SELECT count(*) FROM %s WHERE id = ?", OBJECTS);
 
-                PreparedStatement ps = open(cx.prepareStatement(log(sql,LOG,id)));
+                PreparedStatement ps = open(cx.prepareStatement(log(sql, LOG, id)));
                 ps.setString(1, id);
 
                 ResultSet rs = open(ps.executeQuery());
@@ -110,9 +107,8 @@ public class XerialObjectDatabase extends SQLiteObjectDatabase<DataSource> {
         final ResultSet rs = new DbOp<ResultSet>() {
             @Override
             protected ResultSet doRun(Connection cx) throws SQLException {
-                String sql = 
-                    format("SELECT id FROM %s WHERE id LIKE '%%%s%%'", OBJECTS, partialId);
-                return cx.createStatement().executeQuery(log(sql,LOG));
+                String sql = format("SELECT id FROM %s WHERE id LIKE '%%%s%%'", OBJECTS, partialId);
+                return cx.createStatement().executeQuery(log(sql, LOG));
             }
         }.run(cx);
 
@@ -126,9 +122,9 @@ public class XerialObjectDatabase extends SQLiteObjectDatabase<DataSource> {
             protected InputStream doRun(Connection cx) throws SQLException {
                 String sql = format("SELECT object FROM %s WHERE id = ?", OBJECTS);
 
-                PreparedStatement ps = open(cx.prepareStatement(log(sql,LOG,id)));
+                PreparedStatement ps = open(cx.prepareStatement(log(sql, LOG, id)));
                 ps.setString(1, id);
-                
+
                 ResultSet rs = open(ps.executeQuery());
                 if (!rs.next()) {
                     return null;
@@ -147,7 +143,7 @@ public class XerialObjectDatabase extends SQLiteObjectDatabase<DataSource> {
             protected Void doRun(Connection cx) throws SQLException, IOException {
                 String sql = format("INSERT OR IGNORE INTO %s (id,object) VALUES (?,?)", OBJECTS);
 
-                PreparedStatement ps = open(cx.prepareStatement(log(sql,LOG, id, obj)));
+                PreparedStatement ps = open(cx.prepareStatement(log(sql, LOG, id, obj)));
                 ps.setString(1, id);
                 ps.setBytes(2, ByteStreams.toByteArray(obj));
                 ps.executeUpdate();
@@ -164,7 +160,7 @@ public class XerialObjectDatabase extends SQLiteObjectDatabase<DataSource> {
             protected Boolean doRun(Connection cx) throws SQLException {
                 String sql = format("DELETE FROM %s WHERE id = ?", OBJECTS);
 
-                PreparedStatement ps = open(cx.prepareStatement(log(sql,LOG,id)));
+                PreparedStatement ps = open(cx.prepareStatement(log(sql, LOG, id)));
                 ps.setString(1, id);
 
                 return ps.executeUpdate() > 0;
@@ -190,9 +186,9 @@ public class XerialObjectDatabase extends SQLiteObjectDatabase<DataSource> {
                 String sql = format("INSERT OR IGNORE INTO %s (object,id) VALUES (?,?)", OBJECTS);
                 PreparedStatement stmt = open(cx.prepareStatement(log(sql, LOG)));
 
-                // partition the objects into chunks for batch processing 
-                Iterator<List<? extends RevObject>> it =
-                    (Iterator) Iterators.partition(objects, partitionSize);
+                // partition the objects into chunks for batch processing
+                Iterator<List<? extends RevObject>> it = (Iterator) Iterators.partition(objects,
+                        partitionSize);
 
                 while (it.hasNext()) {
                     List<? extends RevObject> objs = it.next();
@@ -202,7 +198,7 @@ public class XerialObjectDatabase extends SQLiteObjectDatabase<DataSource> {
                         stmt.addBatch();
                     }
 
-                    notifyInserted(stmt.executeBatch(), objs, listener); 
+                    notifyInserted(stmt.executeBatch(), objs, listener);
                     stmt.clearParameters();
                 }
                 cx.commit();
@@ -239,7 +235,7 @@ public class XerialObjectDatabase extends SQLiteObjectDatabase<DataSource> {
 
                 long count = 0;
 
-                // partition the objects into chunks for batch processing 
+                // partition the objects into chunks for batch processing
                 Iterator<List<ObjectId>> it = Iterators.partition(ids, partitionSize);
 
                 while (it.hasNext()) {
@@ -249,7 +245,7 @@ public class XerialObjectDatabase extends SQLiteObjectDatabase<DataSource> {
                         stmt.addBatch();
                     }
 
-                    count += notifyDeleted(stmt.executeBatch(), l, listener); 
+                    count += notifyDeleted(stmt.executeBatch(), l, listener);
                     stmt.clearParameters();
                 }
                 cx.commit();
@@ -260,7 +256,7 @@ public class XerialObjectDatabase extends SQLiteObjectDatabase<DataSource> {
     }
 
     long notifyDeleted(int[] deleted, List<ObjectId> ids, BulkOpListener listener) {
-        long count = 0; 
+        long count = 0;
         for (int i = 0; i < deleted.length; i++) {
             if (deleted[i] > 0) {
                 count++;
@@ -270,4 +266,3 @@ public class XerialObjectDatabase extends SQLiteObjectDatabase<DataSource> {
         return count;
     }
 }
-

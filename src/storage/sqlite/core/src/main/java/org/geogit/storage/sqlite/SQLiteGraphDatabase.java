@@ -4,6 +4,9 @@
  */
 package org.geogit.storage.sqlite;
 
+import static org.geogit.storage.sqlite.SQLiteStorage.FORMAT_NAME;
+import static org.geogit.storage.sqlite.SQLiteStorage.VERSION;
+
 import java.io.File;
 import java.util.List;
 import java.util.Queue;
@@ -19,18 +22,17 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 
-import static org.geogit.storage.sqlite.SQLiteStorage.*;
-
 /**
  * Base class for SQLite based graph database.
- *
+ * 
  * @author Justin Deoliveira, Boundless
- *
+ * 
  * @param <C> Connection type.
  */
 public abstract class SQLiteGraphDatabase<T> implements GraphDatabase {
 
     final ConfigDatabase configdb;
+
     final Platform platform;
 
     private T cx;
@@ -78,22 +80,22 @@ public abstract class SQLiteGraphDatabase<T> implements GraphDatabase {
 
     @Override
     public ImmutableList<ObjectId> getParents(ObjectId commitId) throws IllegalArgumentException {
-        return ImmutableList.copyOf(
-            Iterables.transform(outgoing(commitId.toString(),cx), StringToObjectId.INSTANCE));
+        return ImmutableList.copyOf(Iterables.transform(outgoing(commitId.toString(), cx),
+                StringToObjectId.INSTANCE));
     }
 
     @Override
     public ImmutableList<ObjectId> getChildren(ObjectId commitId) throws IllegalArgumentException {
-        return ImmutableList.copyOf(
-            Iterables.transform(incoming(commitId.toString(),cx), StringToObjectId.INSTANCE));
+        return ImmutableList.copyOf(Iterables.transform(incoming(commitId.toString(), cx),
+                StringToObjectId.INSTANCE));
     }
 
     @Override
     public boolean put(ObjectId commitId, ImmutableList<ObjectId> parentIds) {
-        String node = commitId.toString(); 
-        boolean added = put(node,cx);
+        String node = commitId.toString();
+        boolean added = put(node, cx);
 
-        //TODO: if node was node added should we severe existing parent relationships?
+        // TODO: if node was node added should we severe existing parent relationships?
         for (ObjectId p : parentIds) {
             relate(node, p.toString(), cx);
         }
@@ -107,7 +109,7 @@ public abstract class SQLiteGraphDatabase<T> implements GraphDatabase {
 
     @Override
     public ObjectId getMapping(ObjectId commitId) {
-        String mapped = mapping(commitId.toString(),cx);
+        String mapped = mapping(commitId.toString(), cx);
         return mapped != null ? ObjectId.valueOf(mapped) : null;
     }
 
@@ -143,7 +145,7 @@ public abstract class SQLiteGraphDatabase<T> implements GraphDatabase {
         PathToRootWalker<T> left = new PathToRootWalker<T>(leftId, this, cx);
         PathToRootWalker<T> right = new PathToRootWalker<T>(rightId, this, cx);
 
-        while(left.hasNext() || right.hasNext()) {
+        while (left.hasNext() || right.hasNext()) {
             if (left.hasNext()) {
                 for (ObjectId node : left.next()) {
                     if (right.seen(node)) {
@@ -171,7 +173,7 @@ public abstract class SQLiteGraphDatabase<T> implements GraphDatabase {
     @Override
     public boolean isSparsePath(ObjectId start, ObjectId end) {
         ShortestPathWalker<T> p = new ShortestPathWalker<T>(start, end, this, cx);
-        while(p.hasNext()) {
+        while (p.hasNext()) {
             ObjectId node = p.next();
             if (Boolean.valueOf(property(node.toString(), GraphDatabase.SPARSE_FLAG, cx))) {
                 return true;
@@ -199,15 +201,17 @@ public abstract class SQLiteGraphDatabase<T> implements GraphDatabase {
 
     /**
      * Creates the graph tables with the following schema:
+     * 
      * <pre>
      * nodes(id:varchar PRIMARY KEY)
      * edges(src:varchar, dst:varchar, PRIMARY KEY(src,dst))
      * props(nid:varchar, key:varchar, val:varchar, PRIMARY KEY(nid,key))
      * mappings(alias:varchar, nid:varchar)
      * </pre>
+     * 
      * Implementations of this method should be prepared to be called multiple times, so must check
      * if the tables already exist.
-     *  
+     * 
      * @param cx The connection object.
      */
     protected abstract void init(T cx);
@@ -215,15 +219,15 @@ public abstract class SQLiteGraphDatabase<T> implements GraphDatabase {
     /**
      * Adds a new node to the graph.
      * <p>
-     * This method must determine if the node already exists in the graph. 
+     * This method must determine if the node already exists in the graph.
      * </p>
      * 
      * @return True if the node did not previously exist in the graph, false if otherwise.
      */
     protected abstract boolean put(String node, T cx);
-    
+
     /**
-     * Determines if a node exists in the graph. 
+     * Determines if a node exists in the graph.
      */
     protected abstract boolean has(String node, T cx);
 
@@ -271,14 +275,14 @@ public abstract class SQLiteGraphDatabase<T> implements GraphDatabase {
     protected abstract String property(String node, String key, T cx);
 
     /**
-     * Returns all nodes connected to the specified node through a relationship in which the 
-     * specified node is the "source" of the relationship. 
+     * Returns all nodes connected to the specified node through a relationship in which the
+     * specified node is the "source" of the relationship.
      */
     protected abstract Iterable<String> outgoing(String node, T cx);
 
     /**
-     * Returns all nodes connected to the specified node through a relationship in which the 
-     * specified node is the "destination" of the relationship. 
+     * Returns all nodes connected to the specified node through a relationship in which the
+     * specified node is the "destination" of the relationship.
      */
     protected abstract Iterable<String> incoming(String node, T cx);
 

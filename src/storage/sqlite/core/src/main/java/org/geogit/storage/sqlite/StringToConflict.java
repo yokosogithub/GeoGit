@@ -10,11 +10,11 @@ import com.google.common.base.Function;
 
 /**
  * Function to convert string to conflict.
- *  
+ * 
  * @author Justin Deoliveira, Boundless
- *
+ * 
  */
-public class StringToConflict implements Function<String,Conflict> {
+public class StringToConflict implements Function<String, Conflict> {
 
     public static final StringToConflict INSTANCE = new StringToConflict();
 

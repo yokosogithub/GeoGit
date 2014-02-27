@@ -18,7 +18,7 @@ import com.google.inject.util.Modules;
  * Test utility class.
  * 
  * @author Justin Deoliveira, Boundless
- *
+ * 
  */
 public class XerialTests {
 
@@ -26,13 +26,12 @@ public class XerialTests {
      * Creates the injector to enable xerial sqlite storage.
      */
     public static Injector injector(final TestPlatform platform) {
-        return Guice.createInjector(
-            Modules.override(new GeogitModule()).with(new XerialSQLiteModule(), 
-            new AbstractModule() {
-                @Override
-                protected void configure() {
-                    bind(Platform.class).toInstance(platform);
-                }
-            }));
+        return Guice.createInjector(Modules.override(new GeogitModule()).with(
+                new XerialSQLiteModule(), new AbstractModule() {
+                    @Override
+                    protected void configure() {
+                        bind(Platform.class).toInstance(platform);
+                    }
+                }));
     }
 }

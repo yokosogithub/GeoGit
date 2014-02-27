@@ -25,7 +25,7 @@ import com.google.inject.Inject;
 
 /**
  * Staging database based on Xerial SQLite jdbc driver.
- *
+ * 
  * @author Justin Deoliveira, Boundless
  */
 public class XerialStagingDatabase extends SQLiteStagingDatabase<DataSource> {
@@ -45,8 +45,8 @@ public class XerialStagingDatabase extends SQLiteStagingDatabase<DataSource> {
             @Override
             protected Void doRun(Connection cx) throws SQLException {
                 String sql = format("CREATE TABLE IF NOT EXISTS %s (namespace VARCHAR, "
-                    + "path VARCHAR, conflict VARCHAR, PRIMARY KEY(namespace,path))", CONFLICTS);
-                
+                        + "path VARCHAR, conflict VARCHAR, PRIMARY KEY(namespace,path))", CONFLICTS);
+
                 LOG.debug(sql);
                 open(cx.createStatement()).execute(sql);
 
@@ -62,10 +62,10 @@ public class XerialStagingDatabase extends SQLiteStagingDatabase<DataSource> {
             @Override
             protected ResultSet doRun(Connection cx) throws IOException, SQLException {
                 String sql = format(
-                    "SELECT conflict FROM %s WHERE namespace = ? AND path LIKE '%%%s%%'", 
-                    CONFLICTS, pathFilter);
+                        "SELECT conflict FROM %s WHERE namespace = ? AND path LIKE '%%%s%%'",
+                        CONFLICTS, pathFilter);
 
-                PreparedStatement ps = open(cx.prepareStatement(log(sql,LOG,namespace)));
+                PreparedStatement ps = open(cx.prepareStatement(log(sql, LOG, namespace)));
                 ps.setString(1, namespace);
 
                 return ps.executeQuery();
@@ -76,8 +76,8 @@ public class XerialStagingDatabase extends SQLiteStagingDatabase<DataSource> {
     }
 
     @Override
-    protected void put(final String namespace, final String path, final String conflict, 
-        DataSource ds) {
+    protected void put(final String namespace, final String path, final String conflict,
+            DataSource ds) {
         new DbOp<Void>() {
             @Override
             protected Void doRun(Connection cx) throws IOException, SQLException {

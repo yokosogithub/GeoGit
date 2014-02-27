@@ -22,7 +22,7 @@ import com.google.inject.util.Modules;
  * Utility class.
  * 
  * @author Justin Deoliveira, Boundless
- *
+ * 
  */
 public class Xerial {
 
@@ -43,7 +43,7 @@ public class Xerial {
                 for (int i = 0; i < args.length; i++) {
                     sb.append(i).append("=").append(args[i]).append(", ");
                 }
-                sb.setLength(sb.length()-2);
+                sb.setLength(sb.length() - 2);
             }
             log.debug(sb.toString());
         }
@@ -54,8 +54,8 @@ public class Xerial {
      * Creates the injector to enable xerial sqlite storage.
      */
     public static Injector injector() {
-        return Guice.createInjector(
-            Modules.override(new GeogitModule()).with(new XerialSQLiteModule()));
+        return Guice.createInjector(Modules.override(new GeogitModule()).with(
+                new XerialSQLiteModule()));
     }
 
     public static SQLiteDataSource newDataSource(File db) {
