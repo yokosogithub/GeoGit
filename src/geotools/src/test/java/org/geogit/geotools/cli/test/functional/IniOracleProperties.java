@@ -29,7 +29,7 @@ public class IniOracleProperties {
             }
         }
     }
-    
+
     private File config() {
         File f = new File(System.getProperty("user.home"), ".geogit-oracle-tests.properties");
         try {
@@ -90,5 +90,4 @@ public class IniOracleProperties {
         }
     }
 
-    
 }

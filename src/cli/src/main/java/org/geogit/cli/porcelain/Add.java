@@ -20,6 +20,7 @@ import org.geogit.cli.AbstractCommand;
 import org.geogit.cli.CLICommand;
 import org.geogit.cli.GeogitCLI;
 import org.geogit.cli.InvalidParameterException;
+import org.geogit.cli.annotation.ObjectDatabaseReadOnly;
 import org.geogit.repository.WorkingTree;
 
 import com.beust.jcommander.Parameter;
@@ -49,6 +50,7 @@ import com.beust.jcommander.Parameters;
  * 
  * @see AddOp
  */
+@ObjectDatabaseReadOnly
 @Parameters(commandNames = "add", commandDescription = "Add features to the staging area")
 public class Add extends AbstractCommand implements CLICommand {
 

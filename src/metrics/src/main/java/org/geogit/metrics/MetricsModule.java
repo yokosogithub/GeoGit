@@ -109,7 +109,7 @@ public class MetricsModule extends AbstractModule {
 
             @Override
             public Object invoke(MethodInvocation invocation) throws Throwable {
-                jvmMetricsService.start();
+                jvmMetricsService.startAndWait();
                 return invocation.proceed();
             }
         });

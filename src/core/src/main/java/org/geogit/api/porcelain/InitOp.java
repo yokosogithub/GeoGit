@@ -17,6 +17,8 @@ import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.List;
 
+import javax.annotation.Nullable;
+
 import org.geogit.api.AbstractGeoGitOp;
 import org.geogit.api.ObjectId;
 import org.geogit.api.Platform;
@@ -65,6 +67,9 @@ public class InitOp extends AbstractGeoGitOp<Repository> {
 
     private String filterFile;
 
+    @Nullable
+    private File targetDir;
+
     /**
      * Constructs a new {@code InitOp} with the specified parameters.
      * 
@@ -85,6 +90,11 @@ public class InitOp extends AbstractGeoGitOp<Repository> {
         return this;
     }
 
+    public InitOp setTarget(File targetRepoDirectory) {
+        this.targetDir = targetRepoDirectory;
+        return this;
+    }
+
     public InitOp setFilterFile(String filterFile) {
         this.filterFile = filterFile;
         return this;
@@ -93,9 +103,7 @@ public class InitOp extends AbstractGeoGitOp<Repository> {
     /**
      * Executes the Init operation.
      * 
-     * @return the repository _if_ it was newly created, {@code null} if an existing repository was
-     *         reinitialized (NOTE so far reinitialized is a loose term, we're not reinitializing
-     *         anything, like copying template config files to the repo directory or so)
+     * @return the initialized repository
      * @throws IllegalStateException if a repository cannot be created on the current directory or
      *         re-initialized in the current dir or one if its parents as determined by
      *         {@link ResolveGeogitDir}
@@ -104,30 +112,48 @@ public class InitOp extends AbstractGeoGitOp<Repository> {
     public Repository call() {
         final File workingDirectory = platform.pwd();
         checkState(workingDirectory != null, "working directory is null");
+
+        final File targetDir = this.targetDir == null ? workingDirectory : this.targetDir;
+        if (!targetDir.exists() && !targetDir.mkdirs()) {
+            throw new IllegalArgumentException("Can't create directory "
+                    + targetDir.getAbsolutePath());
+        }
+        Repository repository;
+        try {
+            platform.setWorkingDir(targetDir);
+            repository = callInternal();
+        } finally {
+            // restore current directory
+            platform.setWorkingDir(workingDirectory);
+        }
+        return repository;
+    }
+
+    private Repository callInternal() {
+        final File workingDirectory = platform.pwd();
         final Optional<URL> repoUrl = new ResolveGeogitDir(platform).call();
 
-        boolean repoExisted = false;
-        File envHome;
-        if (!repoUrl.isPresent()) {
-            envHome = new File(workingDirectory, ".geogit");
-            envHome.mkdirs();
-            if (!envHome.exists()) {
-                throw new RuntimeException("Unable to create geogit environment at '"
-                        + envHome.getAbsolutePath() + "'");
-            }
-        } else {
+        final boolean repoExisted = repoUrl.isPresent();
+        final File envHome;
+        if (repoExisted) {
             // we're at either the repo working dir or a subdirectory of it
             try {
                 envHome = new File(repoUrl.get().toURI());
             } catch (URISyntaxException e) {
                 throw Throwables.propagate(e);
             }
-            repoExisted = true;
+        } else {
+            envHome = new File(workingDirectory, ".geogit");
+            if (!envHome.mkdirs()) {
+                throw new RuntimeException("Unable to create geogit environment at '"
+                        + envHome.getAbsolutePath() + "'");
+            }
         }
 
         ImmutableList.Builder<String> effectiveConfigBuilder = ImmutableList.builder();
-        if (config != null)
+        if (config != null) {
             effectiveConfigBuilder.addAll(config);
+        }
 
         if (filterFile != null) {
             try {
@@ -151,7 +177,8 @@ public class InitOp extends AbstractGeoGitOp<Repository> {
                 try {
                     repoDir = new File(url.toURI());
                 } catch (URISyntaxException e) {
-                    throw Throwables.propagate(e);
+                    throw new IllegalStateException("Unable to access directory "
+                            + url.toExternalForm(), e);
                 }
 
                 File newFilterFile = new File(repoDir, FILTER_FILE);
@@ -216,8 +243,7 @@ public class InitOp extends AbstractGeoGitOp<Repository> {
                 Throwables.propagate(e);
             }
         }
-
-        return repoExisted ? null : repository;
+        return repository;
     }
 
     private void createSampleHooks(File envHome) {

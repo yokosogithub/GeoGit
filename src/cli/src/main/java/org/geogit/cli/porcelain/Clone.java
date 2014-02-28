@@ -11,14 +11,16 @@ import java.net.URI;
 import java.util.List;
 
 import org.geogit.api.GeoGIT;
+import org.geogit.api.plumbing.ResolveGeogitDir;
 import org.geogit.api.porcelain.CloneOp;
 import org.geogit.api.porcelain.InitOp;
 import org.geogit.cli.AbstractCommand;
 import org.geogit.cli.CLICommand;
 import org.geogit.cli.CommandFailedException;
 import org.geogit.cli.GeogitCLI;
-import org.geogit.cli.RequiresRepository;
-import org.geogit.repository.Repository;
+import org.geogit.cli.annotation.RemotesReadOnly;
+import org.geogit.cli.annotation.RequiresRepository;
+import org.geogit.cli.annotation.StagingDatabaseReadOnly;
 
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.Parameters;
@@ -45,6 +47,8 @@ import com.beust.jcommander.Parameters;
  * 
  * @see CloneOp
  */
+@StagingDatabaseReadOnly
+@RemotesReadOnly
 @RequiresRepository(false)
 @Parameters(commandNames = "clone", commandDescription = "Clone a repository into a new directory")
 public class Clone extends AbstractCommand implements CLICommand {
@@ -125,10 +129,12 @@ public class Clone extends AbstractCommand implements CLICommand {
 
         GeoGIT geogit = new GeoGIT(cli.getGeogitInjector(), repoDir);
 
-        Repository repository = geogit.command(InitOp.class).setConfig(Init.splitConfig(config))
-                .setFilterFile(filterFile).call();
-        checkParameter(repository != null,
+        checkParameter(!geogit.command(ResolveGeogitDir.class).call().isPresent(),
                 "Destination path already exists and is not an empty directory.");
+
+        geogit.command(InitOp.class).setConfig(Init.splitConfig(config)).setFilterFile(filterFile)
+                .call();
+
         cli.setGeogit(geogit);
         cli.getPlatform().setWorkingDir(repoDir);
 

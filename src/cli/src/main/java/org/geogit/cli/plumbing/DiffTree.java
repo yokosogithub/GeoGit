@@ -28,6 +28,7 @@ import org.geogit.cli.AbstractCommand;
 import org.geogit.cli.CLICommand;
 import org.geogit.cli.CommandFailedException;
 import org.geogit.cli.GeogitCLI;
+import org.geogit.cli.annotation.ReadOnly;
 import org.geogit.storage.text.TextValueSerializer;
 import org.opengis.feature.type.PropertyDescriptor;
 
@@ -46,6 +47,7 @@ import com.google.common.collect.Sets;
  * 
  * @see DiffTree
  */
+@ReadOnly
 @Parameters(commandNames = "diff-tree", commandDescription = "Show changes between trees")
 public class DiffTree extends AbstractCommand implements CLICommand {
 

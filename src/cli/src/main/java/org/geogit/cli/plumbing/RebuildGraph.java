@@ -14,6 +14,7 @@ import org.geogit.api.plumbing.RebuildGraphOp;
 import org.geogit.cli.AbstractCommand;
 import org.geogit.cli.CLICommand;
 import org.geogit.cli.GeogitCLI;
+import org.geogit.cli.annotation.ReadOnly;
 
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.Parameters;
@@ -24,6 +25,7 @@ import com.google.common.collect.ImmutableList;
  * 
  * @see RebuildGraphOp
  */
+@ReadOnly
 @Parameters(commandNames = "rebuild-graph", commandDescription = "Rebuilds the graph database.")
 public class RebuildGraph extends AbstractCommand implements CLICommand {
 

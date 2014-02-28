@@ -11,6 +11,7 @@ import org.geogit.di.PluginsModule;
 import org.geogit.di.VersionedFormat;
 import org.geogit.di.caching.CachingModule;
 import org.geogit.metrics.MetricsModule;
+import org.geogit.repository.Hints;
 import org.geogit.storage.GraphDatabase;
 import org.geogit.storage.ObjectDatabase;
 import org.geogit.storage.RefDatabase;
@@ -39,11 +40,10 @@ public class CLIInjectorBuilder extends InjectorBuilder {
             new VersionedFormat("tinkergraph", "0.1"));
 
     @Override
-    public Injector build() {
+    public Injector build(Hints hints) {
         return Guice.createInjector(Modules.override(new GeogitModule(), new CachingModule()).with(
-                new MetricsModule(),
-                // new JEStorageModule(), new BlueprintsGraphModule()));
-                new PluginsModule(), new DefaultPlugins()));
+                new MetricsModule(), new PluginsModule(), new DefaultPlugins(),
+                new HintsModule(hints)));
     }
 
     private class DefaultPlugins extends AbstractModule {

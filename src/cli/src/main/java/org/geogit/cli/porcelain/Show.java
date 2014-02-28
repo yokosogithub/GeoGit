@@ -28,6 +28,7 @@ import org.geogit.api.plumbing.RevObjectParse;
 import org.geogit.cli.AbstractCommand;
 import org.geogit.cli.CLICommand;
 import org.geogit.cli.GeogitCLI;
+import org.geogit.cli.annotation.ReadOnly;
 import org.geogit.storage.FieldType;
 import org.geogit.storage.text.CrsTextSerializer;
 import org.opengis.feature.type.GeometryType;
@@ -46,6 +47,7 @@ import com.google.common.collect.ImmutableList;
  * Shows formatted information about a commit, tree, feature or feature type
  * 
  */
+@ReadOnly
 @Parameters(commandNames = "show", commandDescription = "Displays information about a commit, feature or feature type")
 public class Show extends AbstractCommand implements CLICommand {
 

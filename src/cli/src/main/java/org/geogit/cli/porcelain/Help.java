@@ -9,7 +9,8 @@ import java.util.List;
 
 import org.geogit.cli.CLICommand;
 import org.geogit.cli.GeogitCLI;
-import org.geogit.cli.RequiresRepository;
+import org.geogit.cli.annotation.ReadOnly;
+import org.geogit.cli.annotation.RequiresRepository;
 
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
@@ -23,6 +24,7 @@ import com.beust.jcommander.Parameters;
  * <li> {@code geogit [--]help [<command>]}
  * </ul>
  */
+@ReadOnly
 @RequiresRepository(false)
 @Parameters(commandNames = { "--help", "help" }, commandDescription = "Print this help message, or provide a command name to get help for")
 public class Help implements CLICommand {

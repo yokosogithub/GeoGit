@@ -4,6 +4,7 @@
  */
 package org.geogit.repository;
 
+import java.net.URL;
 import java.util.Map;
 
 import org.geogit.api.AbstractGeoGitOp;
@@ -19,6 +20,7 @@ import org.geogit.api.RevObject;
 import org.geogit.api.RevTree;
 import org.geogit.api.plumbing.FindTreeChild;
 import org.geogit.api.plumbing.RefParse;
+import org.geogit.api.plumbing.ResolveGeogitDir;
 import org.geogit.api.plumbing.ResolveTreeish;
 import org.geogit.api.plumbing.RevObjectParse;
 import org.geogit.api.plumbing.RevParse;
@@ -31,6 +33,7 @@ import org.geogit.storage.ObjectInserter;
 import org.geogit.storage.RefDatabase;
 
 import com.google.common.base.Optional;
+import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 
@@ -68,6 +71,8 @@ public class Repository implements CommandLocator {
     @Inject
     private GraphDatabase graphDatabase;
 
+    private URL repositoryLocation;
+
     public static final String DEPTH_CONFIG_KEY = "core.depth";
 
     Repository() {
@@ -90,16 +95,28 @@ public class Repository implements CommandLocator {
         objectDatabase.open();
         graphDatabase.open();
         index.getDatabase().open();
+        Optional<URL> repoUrl = command(ResolveGeogitDir.class).call();
+        Preconditions.checkState(repoUrl.isPresent(), "Repository URL can't be located");
+        this.repositoryLocation = repoUrl.get();
     }
 
     /**
      * Closes the repository.
      */
     public synchronized void close() {
-        refDatabase.close();
-        objectDatabase.close();
-        graphDatabase.close();
-        index.getDatabase().close();
+        try {
+            refDatabase.close();
+            objectDatabase.close();
+            graphDatabase.close();
+            index.getDatabase().close();
+        } catch (RuntimeException e) {
+            e.printStackTrace();
+            throw e;
+        }
+    }
+
+    public URL getLocation() {
+        return repositoryLocation;
     }
 
     /**

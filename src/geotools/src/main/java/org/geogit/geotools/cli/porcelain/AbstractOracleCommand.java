@@ -6,22 +6,17 @@ package org.geogit.geotools.cli.porcelain;
 
 import java.io.IOException;
 import java.io.Serializable;
-import java.net.ConnectException;
 import java.sql.Connection;
 import java.util.Map;
 
 import org.geogit.cli.AbstractCommand;
 import org.geogit.cli.CLICommand;
 import org.geogit.cli.CommandFailedException;
-import org.geogit.cli.GeogitCLI;
 import org.geotools.data.AbstractDataStoreFactory;
 import org.geotools.data.DataStore;
 import org.geotools.data.oracle.OracleNGDataStoreFactory;
 import org.geotools.jdbc.JDBCDataStore;
 
-import com.beust.jcommander.JCommander;
-import com.beust.jcommander.Parameter;
-import com.beust.jcommander.Parameters;
 import com.beust.jcommander.ParametersDelegate;
 import com.google.common.collect.Maps;
 

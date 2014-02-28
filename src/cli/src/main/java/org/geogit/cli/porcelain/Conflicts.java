@@ -28,6 +28,7 @@ import org.geogit.api.porcelain.MergeOp;
 import org.geogit.cli.AbstractCommand;
 import org.geogit.cli.CLICommand;
 import org.geogit.cli.GeogitCLI;
+import org.geogit.cli.annotation.ObjectDatabaseReadOnly;
 
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.Parameters;
@@ -40,8 +41,8 @@ import com.google.common.collect.Lists;
  * 
  * @see MergeOp
  */
-
 // Currently it just print conflict descriptions, so they can be used by another tool instead.
+@ObjectDatabaseReadOnly
 @Parameters(commandNames = "conflicts", commandDescription = "Shows existing conflicts")
 public class Conflicts extends AbstractCommand implements CLICommand {
 

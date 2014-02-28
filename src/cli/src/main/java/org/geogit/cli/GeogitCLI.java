@@ -9,6 +9,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.lang.annotation.Annotation;
 import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.net.URL;
@@ -34,6 +35,12 @@ import org.geogit.api.Platform;
 import org.geogit.api.plumbing.ResolveGeogitDir;
 import org.geogit.api.porcelain.ConfigException;
 import org.geogit.api.porcelain.ConfigGet;
+import org.geogit.cli.annotation.ObjectDatabaseReadOnly;
+import org.geogit.cli.annotation.ReadOnly;
+import org.geogit.cli.annotation.RemotesReadOnly;
+import org.geogit.cli.annotation.RequiresRepository;
+import org.geogit.cli.annotation.StagingDatabaseReadOnly;
+import org.geogit.repository.Hints;
 import org.geotools.util.DefaultProgressListener;
 import org.opengis.util.ProgressListener;
 import org.slf4j.Logger;
@@ -46,6 +53,8 @@ import ch.qos.logback.core.joran.spi.JoranException;
 
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.ParameterException;
+import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Objects;
 import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
 import com.google.common.base.Splitter;
@@ -76,6 +85,10 @@ public class GeogitCLI {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(GeogitCLI.class);
 
+    static {
+        GlobalInjectorBuilder.builder = new CLIInjectorBuilder();
+    }
+
     private File geogitDirLoggingConfiguration;
 
     private Injector commandsInjector;
@@ -86,9 +99,13 @@ public class GeogitCLI {
 
     private GeoGIT geogit;
 
-    private ConsoleReader consoleReader;
+    private final ConsoleReader consoleReader;
 
     protected ProgressListener progressListener;
+
+    private static final Hints READ_WRITE = Hints.readWrite();
+
+    private Hints hints = READ_WRITE;
 
     /**
      * Construct a GeogitCLI with the given console reader.
@@ -98,7 +115,6 @@ public class GeogitCLI {
     public GeogitCLI(final ConsoleReader consoleReader) {
         this.consoleReader = consoleReader;
         this.platform = new DefaultPlatform();
-        GlobalInjectorBuilder.builder = new CLIInjectorBuilder();
 
         Iterable<CLIModule> plugins = ServiceLoader.load(CLIModule.class);
         commandsInjector = Guice.createInjector(plugins);
@@ -143,6 +159,14 @@ public class GeogitCLI {
         return geogit;
     }
 
+    @VisibleForTesting
+    public synchronized GeoGIT getGeogit(Hints hints) {
+        close();
+        GeoGIT geogit = loadRepository(hints);
+        setGeogit(geogit);
+        return geogit;
+    }
+
     /**
      * Gives the command line interface a GeoGIT facade to use.
      * 
@@ -161,24 +185,41 @@ public class GeogitCLI {
      */
     @Nullable
     private GeoGIT loadRepository() {
-        GeoGIT geogit = newGeoGIT();
+        return loadRepository(this.hints);
+    }
+
+    @Nullable
+    private GeoGIT loadRepository(Hints hints) {
+        GeoGIT geogit = newGeoGIT(hints);
 
         if (geogit.command(ResolveGeogitDir.class).call().isPresent()) {
             geogit.getRepository();
             return geogit;
         }
+        geogit.close();
 
         return null;
     }
 
     /**
-     * Constructs a new geogit facade.
+     * Constructs and returns a new read-write geogit facade, which will not be managed by this
+     * GeogitCLI instance, so the calling code is responsible for closing/disposing it after usage
      * 
      * @return the constructed GeoGIT.
      */
     public GeoGIT newGeoGIT() {
-        Injector inj = getGeogitInjector();
-        return new GeoGIT(inj, platform.pwd());
+        return newGeoGIT(Hints.readWrite());
+    }
+
+    public GeoGIT newGeoGIT(Hints hints) {
+        Injector inj = newGeogitInjector(hints);
+        GeoGIT geogit = new GeoGIT(inj, platform.pwd());
+        try {
+            geogit.getRepository();
+        } catch (Exception e) {
+            throw Throwables.propagate(e);
+        }
+        return geogit;
     }
 
     /**
@@ -186,19 +227,20 @@ public class GeogitCLI {
      *         it will be created.
      */
     public Injector getGeogitInjector() {
-        if (geogitInjector == null) {
-            geogitInjector = GlobalInjectorBuilder.builder.build();
+        return getGeogitInjector(this.hints);
+    }
+
+    private Injector getGeogitInjector(Hints hints) {
+        if (this.geogitInjector == null || !Objects.equal(this.hints, hints)) {
+            // System.err.println("Injector hints: " + hints);
+            geogitInjector = newGeogitInjector(hints);
         }
         return geogitInjector;
     }
 
-    /**
-     * Sets the Guice injector for the command line interface to use.
-     * 
-     * @param injector the Guice injector to use
-     */
-    public void setGeogitInjector(@Nullable Injector injector) {
-        geogitInjector = injector;
+    private Injector newGeogitInjector(Hints hints) {
+        Injector geogitInjector = GlobalInjectorBuilder.builder.build(hints);
+        return geogitInjector;
     }
 
     /**
@@ -216,6 +258,8 @@ public class GeogitCLI {
             geogit.close();
             geogit = null;
         }
+        this.hints = READ_WRITE;
+        this.geogitInjector = null;
     }
 
     /**
@@ -243,7 +287,7 @@ public class GeogitCLI {
         }
 
         GeogitCLI cli = new GeogitCLI(consoleReader);
-        int exitCode = cli.processCommand(args);
+        int exitCode = cli.execute(args);
 
         try {
             cli.close();
@@ -254,6 +298,7 @@ public class GeogitCLI {
                 LOGGER.error(e.getMessage(), e);
                 exitCode = -1;
             }
+            consoleReader.shutdown();
         }
 
         System.exit(exitCode);
@@ -367,27 +412,32 @@ public class GeogitCLI {
         return jc;
     }
 
+    @VisibleForTesting
+    public Exception exception;
+
     /**
      * Processes a command, catching any exceptions and printing their messages to the console.
      * 
      * @param args
      * @return 0 for normal exit, -1 if there was an exception.
      */
-    public int processCommand(String... args) {
+    public int execute(String... args) {
+        exception = null;
         String consoleMessage = null;
         boolean printError = true;
         try {
-            execute(args);
+            executeInternal(args);
             return 0;
         } catch (ParameterException paramParseException) {
-
+            exception = paramParseException;
             consoleMessage = paramParseException.getMessage() + ". See geogit --help";
 
         } catch (InvalidParameterException paramValidationError) {
-
+            exception = paramValidationError;
             consoleMessage = paramValidationError.getMessage();
 
         } catch (CommandFailedException cmdFailed) {
+            exception = cmdFailed;
             if (null == cmdFailed.getMessage()) {
                 // this is intentional, see the javadoc for CommandFailedException
                 printError = false;
@@ -396,15 +446,22 @@ public class GeogitCLI {
                 consoleMessage = cmdFailed.getMessage();
             }
         } catch (RuntimeException e) {
+            exception = e;
+            // e.printStackTrace();
             consoleMessage = String.format(
                     "An unhandled error occurred: %s. See the log for more details.",
                     e.getMessage());
             LOGGER.error(consoleMessage, e);
         } catch (IOException ioe) {
+            exception = ioe;
             // can't write to the console, see the javadocs for CLICommand.run().
             LOGGER.error(
                     "An IOException was caught, should only happen if an error occurred while writing to the console",
                     ioe);
+        } finally {
+            // close after executing a command for the next one to reopen with its own hints and not
+            // to keep the db's open for write meanwhile
+            close();
         }
         if (printError) {
             try {
@@ -423,7 +480,7 @@ public class GeogitCLI {
      * @param args
      * @throws exceptions thrown by the executed commands.
      */
-    public void execute(String... args) throws ParameterException, CommandFailedException,
+    private void executeInternal(String... args) throws ParameterException, CommandFailedException,
             IOException {
         tryConfigureLogging();
 
@@ -480,6 +537,14 @@ public class GeogitCLI {
             List<Object> objects = jCommander.getObjects();
             CLICommand cliCommand = (CLICommand) objects.get(0);
             Class<? extends CLICommand> cmdClass = cliCommand.getClass();
+            if (cliCommand instanceof AbstractCommand && ((AbstractCommand) cliCommand).help) {
+                ((AbstractCommand) cliCommand).printUsage();
+                getConsole().flush();
+                return;
+            }
+            Hints hints = gatherHints(cmdClass);
+            this.hints = hints;
+
             if (cmdClass.isAnnotationPresent(RequiresRepository.class)
                     && cmdClass.getAnnotation(RequiresRepository.class).value()) {
                 String workingDir;
@@ -499,6 +564,27 @@ public class GeogitCLI {
         }
     }
 
+    private Hints gatherHints(Class<? extends CLICommand> cmdClass) {
+        Hints hints = new Hints();
+
+        checkAnnotationHint(cmdClass, ReadOnly.class, Hints.OBJECTS_READ_ONLY, hints);
+        checkAnnotationHint(cmdClass, ReadOnly.class, Hints.STAGING_READ_ONLY, hints);
+
+        checkAnnotationHint(cmdClass, ObjectDatabaseReadOnly.class, Hints.OBJECTS_READ_ONLY, hints);
+        checkAnnotationHint(cmdClass, StagingDatabaseReadOnly.class, Hints.STAGING_READ_ONLY, hints);
+        checkAnnotationHint(cmdClass, RemotesReadOnly.class, Hints.REMOTES_READ_ONLY, hints);
+
+        return hints;
+    }
+
+    private void checkAnnotationHint(Class<? extends CLICommand> cmdClass,
+            Class<? extends Annotation> annotation, String key, Hints hints) {
+
+        if (cmdClass.isAnnotationPresent(annotation)) {
+            hints.set(key, Boolean.TRUE);
+        }
+    }
+
     /**
      * If the passed arguments contains an alias, it replaces it by the full command corresponding
      * to that alias and returns anew set of arguments
@@ -509,13 +595,19 @@ public class GeogitCLI {
      * @return
      */
     private String[] unalias(String[] args) {
-        String configParam = "alias." + args[0];
+        final String aliasedCommand = args[0];
+        String configParam = "alias." + aliasedCommand;
+        boolean closeGeogit = false;
+        GeoGIT geogit = this.geogit;
         if (geogit == null) { // in case the repo is not initialized yet
-            return args;
+            closeGeogit = true;
+            geogit = newGeoGIT(Hints.readOnly());
         }
         try {
-            Optional<String> unaliased = geogit.command(ConfigGet.class).setName(configParam)
-                    .call();
+            Optional<String> unaliased = Optional.absent();
+            if (geogit.command(ResolveGeogitDir.class).call().isPresent()) {
+                unaliased = geogit.command(ConfigGet.class).setName(configParam).call();
+            }
             if (!unaliased.isPresent()) {
                 unaliased = geogit.command(ConfigGet.class).setGlobal(true).setName(configParam)
                         .call();
@@ -529,6 +621,10 @@ public class GeogitCLI {
             return allArgs.toArray(new String[0]);
         } catch (ConfigException e) {
             return args;
+        } finally {
+            if (closeGeogit) {
+                geogit.close();
+            }
         }
     }
 

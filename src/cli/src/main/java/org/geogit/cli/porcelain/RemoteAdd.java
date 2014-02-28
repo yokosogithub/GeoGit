@@ -14,6 +14,7 @@ import org.geogit.cli.AbstractCommand;
 import org.geogit.cli.CLICommand;
 import org.geogit.cli.CommandFailedException;
 import org.geogit.cli.GeogitCLI;
+import org.geogit.cli.annotation.ReadOnly;
 
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.Parameters;
@@ -34,6 +35,7 @@ import com.beust.jcommander.Parameters;
  * 
  * @see RemoteAddOp
  */
+@ReadOnly
 @Parameters(commandNames = "remote add", commandDescription = "Add a remote for the repository")
 public class RemoteAdd extends AbstractCommand implements CLICommand {
 

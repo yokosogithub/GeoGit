@@ -22,6 +22,7 @@ import org.geogit.api.plumbing.diff.VerifyPatchOp;
 import org.geogit.api.plumbing.diff.VerifyPatchResults;
 import org.geogit.cli.AbstractCommand;
 import org.geogit.cli.GeogitCLI;
+import org.geogit.cli.annotation.ReadOnly;
 
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.Parameters;
@@ -31,6 +32,7 @@ import com.google.common.io.Closeables;
  * Verifies that a patch can be applied
  * 
  */
+@ReadOnly
 @Parameters(commandNames = "verify-patch", commandDescription = "Verifies that a patch can be applied")
 public class VerifyPatch extends AbstractCommand {
 

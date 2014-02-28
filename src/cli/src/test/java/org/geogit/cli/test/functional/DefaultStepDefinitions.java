@@ -2,29 +2,47 @@
  * This code is licensed under the BSD New License, available at the root
  * application directory.
  */
-package org.geogit.cli.test.remote;
+package org.geogit.cli.test.functional;
 
-import static org.geogit.cli.test.functional.GlobalState.currentDirectory;
-import static org.geogit.cli.test.functional.GlobalState.geogit;
+import static org.geogit.cli.test.functional.GlobalState.deleteAndReplaceFeatureType;
+import static org.geogit.cli.test.functional.GlobalState.exitCode;
 import static org.geogit.cli.test.functional.GlobalState.geogitCLI;
-import static org.geogit.cli.test.functional.GlobalState.homeDirectory;
+import static org.geogit.cli.test.functional.GlobalState.insert;
+import static org.geogit.cli.test.functional.GlobalState.insertAndAdd;
+import static org.geogit.cli.test.functional.GlobalState.insertAndAddFeatures;
+import static org.geogit.cli.test.functional.GlobalState.insertFeatures;
+import static org.geogit.cli.test.functional.GlobalState.platform;
+import static org.geogit.cli.test.functional.GlobalState.runAndParseCommand;
+import static org.geogit.cli.test.functional.GlobalState.runCommand;
+import static org.geogit.cli.test.functional.GlobalState.setUpDirectories;
+import static org.geogit.cli.test.functional.GlobalState.setupGeogit;
 import static org.geogit.cli.test.functional.GlobalState.stdOut;
+import static org.geogit.cli.test.functional.GlobalState.tempFolder;
+import static org.geogit.cli.test.functional.TestFeatures.feature;
+import static org.geogit.cli.test.functional.TestFeatures.idP1;
+import static org.geogit.cli.test.functional.TestFeatures.lines1;
+import static org.geogit.cli.test.functional.TestFeatures.lines2;
+import static org.geogit.cli.test.functional.TestFeatures.lines3;
+import static org.geogit.cli.test.functional.TestFeatures.points1;
+import static org.geogit.cli.test.functional.TestFeatures.points1_modified;
+import static org.geogit.cli.test.functional.TestFeatures.points2;
+import static org.geogit.cli.test.functional.TestFeatures.points3;
+import static org.geogit.cli.test.functional.TestFeatures.pointsName;
+import static org.geogit.cli.test.functional.TestFeatures.pointsType;
+import static org.geogit.cli.test.functional.TestFeatures.setupFeatures;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNotSame;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import java.io.BufferedWriter;
 import java.io.File;
-import java.io.IOException;
+import java.nio.charset.Charset;
 import java.util.List;
 import java.util.Map;
 
 import org.geogit.api.GeoGIT;
-import org.geogit.api.GlobalInjectorBuilder;
-import org.geogit.api.InjectorBuilder;
 import org.geogit.api.NodeRef;
 import org.geogit.api.ObjectId;
 import org.geogit.api.Ref;
@@ -36,13 +54,10 @@ import org.geogit.api.plumbing.diff.FeatureDiff;
 import org.geogit.api.plumbing.diff.GenericAttributeDiffImpl;
 import org.geogit.api.plumbing.diff.Patch;
 import org.geogit.api.plumbing.diff.PatchSerializer;
-import org.geogit.api.porcelain.BranchCreateOp;
-import org.geogit.api.porcelain.CheckoutOp;
-import org.geogit.api.porcelain.CommitOp;
+import org.geogit.api.porcelain.MergeConflictsException;
 import org.geogit.api.porcelain.MergeOp;
-import org.geogit.cli.test.functional.AbstractGeogitFunctionalTest;
-import org.geogit.cli.test.functional.GlobalState;
-import org.junit.Rule;
+import org.geogit.repository.Hints;
+import org.geogit.repository.WorkingTree;
 import org.junit.rules.TemporaryFolder;
 import org.opengis.feature.Feature;
 import org.opengis.feature.type.PropertyDescriptor;
@@ -52,82 +67,77 @@ import com.google.common.base.Optional;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.Maps;
 import com.google.common.io.Files;
-import com.google.inject.Injector;
 
 import cucumber.annotation.en.Given;
 import cucumber.annotation.en.Then;
 import cucumber.annotation.en.When;
+import cucumber.runtime.java.StepDefAnnotation;
 
 /**
- * TODO: Find a way to remove this class. It is identical to InitSteps.java except for the
- * InjectorBuilder that is provided. Cucumber does not allow you to inherit from a class with step
- * definitions, so it's not as easy as overriding a method in InitSteps.
+ *
  */
-public class RemoteInitSteps extends AbstractGeogitFunctionalTest {
+@StepDefAnnotation
+public class DefaultStepDefinitions {
 
     private static final String LINE_SEPARATOR = System.getProperty("line.separator");
 
-    @Rule
-    public TemporaryFolder tempFolder = new TemporaryFolder();
-
-    private int exitCode;
-
     @cucumber.annotation.Before
-    public void before() throws IOException {
+    public void before() throws Exception {
+        tempFolder = new TemporaryFolder();
         tempFolder.create();
+        setupFeatures();
     }
 
     @cucumber.annotation.After
     public void after() {
         if (GlobalState.geogitCLI != null) {
             GlobalState.geogitCLI.close();
+            GlobalState.geogitCLI = null;
         }
-        if (GlobalState.geogit != null) {
-            GlobalState.geogit.close();
+        if (GlobalState.consoleReader != null) {
+            GlobalState.consoleReader.shutdown();
+            GlobalState.consoleReader = null;
         }
+        System.gc();
+        System.runFinalization();
         tempFolder.delete();
-    }
-
-    @Override
-    protected InjectorBuilder getInjectorBuilder() {
-        return new CLIRemoteTestInjectorBuilder(currentDirectory, homeDirectory);
-    }
-
-    private void setUpDirectories() throws IOException {
-        GlobalState.homeDirectory = tempFolder.newFolder("fakeHomeDir").getCanonicalFile();
-        GlobalState.currentDirectory = tempFolder.newFolder("testrepo").getCanonicalFile();
+        // assertFalse(
+        // "this test is messing up with the config, make sure it uses CLITestInjectorBuilder",
+        // new File("/home/groldan/.geogitconfig").exists());
     }
 
     @Given("^I am in an empty directory$")
     public void I_am_in_an_empty_directory() throws Throwable {
         setUpDirectories();
-        assertEquals(0, currentDirectory.list().length);
+        assertEquals(0, platform.pwd().list().length);
         setupGeogit();
     }
 
     @When("^I run the command \"([^\"]*)\"$")
     public void I_run_the_command_X(String commandSpec) throws Throwable {
         String[] args = commandSpec.split(" ");
+        File pwd = platform.pwd();
         for (int i = 0; i < args.length; i++) {
-            args[i] = args[i].replace("${currentdir}", currentDirectory.getAbsolutePath());
+            args[i] = args[i].replace("${currentdir}", pwd.getAbsolutePath());
         }
-        this.exitCode = runCommand(args);
+        runCommand(args);
     }
 
     @Then("^it should exit with non-zero exit code$")
     public void it_should_exit_with_non_zero_exit_code() throws Throwable {
-        assertNotSame(exitCode, 0);
+        assertFalse("exited with exit code " + exitCode, exitCode == 0);
     }
 
     @Then("^it should exit with zero exit code$")
     public void it_should_exit_with_zero_exit_code() throws Throwable {
-        assertEquals(exitCode, 0);
+        assertEquals(0, exitCode);
     }
 
     @Then("^it should answer \"([^\"]*)\"$")
     public void it_should_answer_exactly(String expected) throws Throwable {
-        expected = expected.replace("${currentdir}", currentDirectory.getAbsolutePath())
-                .toLowerCase().replaceAll("\\\\", "/");
+        File pwd = platform.pwd();
+        expected = expected.replace("${currentdir}", pwd.getAbsolutePath()).toLowerCase()
+                .replaceAll("\\\\", "/");
         String actual = stdOut.toString().replaceAll(LINE_SEPARATOR, "").replaceAll("\\\\", "/")
                 .trim().toLowerCase();
         assertEquals(expected, actual);
@@ -136,7 +146,10 @@ public class RemoteInitSteps extends AbstractGeogitFunctionalTest {
     @Then("^the response should contain \"([^\"]*)\"$")
     public void the_response_should_contain(String expected) throws Throwable {
         String actual = stdOut.toString().replaceAll(LINE_SEPARATOR, "").replaceAll("\\\\", "/");
-        assertTrue(actual, actual.contains(expected));
+        if (!actual.contains(expected))
+            System.err.println(actual);
+        assertTrue("'" + actual + "' does not contain '" + expected + "'",
+                actual.contains(expected));
     }
 
     @Then("^the response should not contain \"([^\"]*)\"$")
@@ -147,8 +160,9 @@ public class RemoteInitSteps extends AbstractGeogitFunctionalTest {
 
     @Then("^the response should contain ([^\"]*) lines$")
     public void the_response_should_contain_x_lines(int lines) throws Throwable {
-        String[] lineStrings = stdOut.toString().split(LINE_SEPARATOR);
-        assertEquals(lines, lineStrings.length);
+        String output = stdOut.toString();
+        String[] lineStrings = output.split(LINE_SEPARATOR);
+        assertEquals(output, lines, lineStrings.length);
     }
 
     @Then("^the response should start with \"([^\"]*)\"$")
@@ -159,13 +173,10 @@ public class RemoteInitSteps extends AbstractGeogitFunctionalTest {
 
     @Then("^the repository directory shall exist$")
     public void the_repository_directory_shall_exist() throws Throwable {
-        List<String> output = runAndParseCommand("rev-parse", "--resolve-geogit-dir");
+        List<String> output = runAndParseCommand(true, "rev-parse", "--resolve-geogit-dir");
         assertEquals(output.toString(), 1, output.size());
         String location = output.get(0);
         assertNotNull(location);
-        if (location.startsWith("Error:")) {
-            fail(location);
-        }
         File repoDir = new File(location);
         assertTrue("Repository directory not found: " + repoDir.getAbsolutePath(), repoDir.exists());
     }
@@ -173,8 +184,10 @@ public class RemoteInitSteps extends AbstractGeogitFunctionalTest {
     @Given("^I have a remote ref called \"([^\"]*)\"$")
     public void i_have_a_remote_ref_called(String expected) throws Throwable {
         String ref = "refs/remotes/origin/" + expected;
-        geogit.command(UpdateRef.class).setName(ref).setNewValue(ObjectId.NULL).call();
-        Optional<Ref> refValue = geogit.command(RefParse.class).setName(ref).call();
+        geogitCLI.getGeogit(Hints.readWrite()).command(UpdateRef.class).setName(ref)
+                .setNewValue(ObjectId.NULL).call();
+        Optional<Ref> refValue = geogitCLI.getGeogit(Hints.readWrite()).command(RefParse.class)
+                .setName(ref).call();
         assertTrue(refValue.isPresent());
         assertEquals(refValue.get().getObjectId(), ObjectId.NULL);
     }
@@ -184,7 +197,7 @@ public class RemoteInitSteps extends AbstractGeogitFunctionalTest {
         setUpDirectories();
         setupGeogit();
 
-        List<String> output = runAndParseCommand("init");
+        List<String> output = runAndParseCommand(true, "init");
         assertEquals(output.toString(), 1, output.size());
         assertNotNull(output.get(0));
         assertTrue(output.get(0), output.get(0).startsWith("Initialized"));
@@ -193,12 +206,13 @@ public class RemoteInitSteps extends AbstractGeogitFunctionalTest {
     @Given("^I have a merge conflict state$")
     public void I_have_a_merge_conflict_state() throws Throwable {
         I_have_conflicting_branches();
-        Ref branch = geogit.command(RefParse.class).setName("branch1").call().get();
+        Ref branch = geogitCLI.getGeogit(Hints.readOnly()).command(RefParse.class)
+                .setName("branch1").call().get();
         try {
-            geogit.command(MergeOp.class).addCommit(Suppliers.ofInstance(branch.getObjectId()))
-                    .call();
+            geogitCLI.getGeogit(Hints.readWrite()).command(MergeOp.class)
+                    .addCommit(Suppliers.ofInstance(branch.getObjectId())).call();
             fail();
-        } catch (IllegalStateException e) {
+        } catch (MergeConflictsException e) {
         }
     }
 
@@ -220,60 +234,75 @@ public class RemoteInitSteps extends AbstractGeogitFunctionalTest {
         Feature points1Modified = feature(pointsType, idP1, "StringProp1_2", new Integer(1000),
                 "POINT(1 1)");
         insertAndAdd(points1);
-        geogit.command(CommitOp.class).setMessage("Commit1").call();
-        geogit.command(BranchCreateOp.class).setName("branch1").call();
-        geogit.command(BranchCreateOp.class).setName("branch2").call();
+        runCommand(true, "commit -m Commit1");
+        runCommand(true, "branch branch1");
+        runCommand(true, "branch branch2");
         insertAndAdd(points1Modified);
-        geogit.command(CommitOp.class).setMessage("Commit2").call();
+        runCommand(true, "commit -m Commit2");
         insertAndAdd(lines1);
-        geogit.command(CommitOp.class).setMessage("Commit3").call();
-        geogit.command(CheckoutOp.class).setSource("branch1").call();
+        runCommand(true, "commit -m Commit3");
+        runCommand(true, "checkout branch1");
         insertAndAdd(points1ModifiedB);
         insertAndAdd(points2);
-        geogit.command(CommitOp.class).setMessage("Commit4").call();
-        geogit.command(CheckoutOp.class).setSource("branch2").call();
+        runCommand(true, "commit -m Commit4");
+        runCommand(true, "checkout branch2");
         insertAndAdd(points3);
-        geogit.command(CommitOp.class).call();
+        runCommand(true, "commit -m Commit5");
+        runCommand(true, "checkout master");
+    }
 
-        geogit.command(CheckoutOp.class).setSource("master").call();
+    @Given("^I set up a hook$")
+    public void I_set_up_a_hook() throws Throwable {
+        File hooksDir = new File(platform.pwd(), ".geogit/hooks");
+        File hook = new File(hooksDir, "pre_commit.js");
+        String script = "exception = Packages.org.geogit.api.hooks.CannotRunGeogitOperationException;\n"
+                + "msg = params.get(\"message\");\n"
+                + "if (msg.length() < 5){\n"
+                + "\tthrow new exception(\"Commit messages must have at least 5 letters\");\n"
+                + "}\n" + "params.put(\"message\", msg.toLowerCase());";
+        Files.write(script, hook, Charset.forName("UTF-8"));
     }
 
     @Given("^there is a remote repository$")
     public void there_is_a_remote_repository() throws Throwable {
         I_am_in_an_empty_directory();
-        GeoGIT oldGeogit = geogit;
-        Injector oldInjector = geogitCLI.getGeogitInjector();
-        geogitCLI.setGeogitInjector(GlobalInjectorBuilder.builder.build());
-        List<String> output = runAndParseCommand("init", "remoterepo");
+
+        final File currDir = platform.pwd();
+
+        List<String> output = runAndParseCommand(true, "init", "remoterepo");
+
         assertEquals(output.toString(), 1, output.size());
         assertNotNull(output.get(0));
         assertTrue(output.get(0), output.get(0).startsWith("Initialized"));
-        geogit = geogitCLI.getGeogit();
-        runCommand("config", "--global", "user.name", "John Doe");
-        runCommand("config", "--global", "user.email", "JohnDoe@example.com");
+
+        final File remoteRepo = new File(currDir, "remoterepo");
+        GlobalState.remoteRepo = remoteRepo;
+        platform.setWorkingDir(remoteRepo);
+        setupGeogit();
+        runCommand(true, "config", "--global", "user.name", "John Doe");
+        runCommand(true, "config", "--global", "user.email", "JohnDoe@example.com");
         insertAndAdd(points1);
-        runCommand(("commit -m Commit1").split(" "));
-        runCommand(("branch -c branch1").split(" "));
+        runCommand(true, "commit -m Commit1");
+        runCommand(true, "branch -c branch1");
         insertAndAdd(points2);
-        runCommand(("commit -m Commit2").split(" "));
+        runCommand(true, "commit -m Commit2");
         insertAndAdd(points3);
-        runCommand(("commit -m Commit3").split(" "));
-        runCommand(("checkout master").split(" "));
+        runCommand(true, "commit -m Commit3");
+        runCommand(true, "checkout master");
         insertAndAdd(lines1);
-        runCommand(("commit -m Commit4").split(" "));
+        runCommand(true, "commit -m Commit4");
         insertAndAdd(lines2);
-        runCommand(("commit -m Commit5").split(" "));
-        geogit.close();
-        geogit = oldGeogit;
-        geogitCLI.setGeogit(oldGeogit);
-        geogitCLI.setGeogitInjector(oldInjector);
+        runCommand(true, "commit -m Commit5");
+
+        platform.setWorkingDir(currDir);
+        setupGeogit();
     }
 
     @Given("^I have a repository$")
     public void I_have_a_repository() throws Throwable {
         I_have_an_unconfigured_repository();
-        runCommand("config", "--global", "user.name", "John Doe");
-        runCommand("config", "--global", "user.email", "JohnDoe@example.com");
+        runCommand(true, "config", "--global", "user.name", "John Doe");
+        runCommand(true, "config", "--global", "user.email", "JohnDoe@example.com");
     }
 
     @Given("^I have a repository with a remote$")
@@ -285,10 +314,15 @@ public class RemoteInitSteps extends AbstractGeogitFunctionalTest {
         assertNotNull(output.get(0));
         assertTrue(output.get(0), output.get(0).startsWith("Initialized"));
 
-        runCommand("config", "--global", "user.name", "John Doe");
-        runCommand("config", "--global", "user.email", "JohnDoe@example.com");
+        platform.setWorkingDir(new File(platform.pwd(), "localrepo"));
+        setupGeogit();
 
-        runCommand("remote", "add", "origin", currentDirectory + "/remoterepo");
+        runCommand(true, "config", "--global", "user.name", "John Doe");
+        runCommand(true, "config", "--global", "user.email", "JohnDoe@example.com");
+
+        File remoteRepo = GlobalState.remoteRepo;
+        String remotePath = remoteRepo.getAbsolutePath();
+        runCommand(true, "remote", "add", "origin", remotePath);
     }
 
     @Given("^I have staged \"([^\"]*)\"$")
@@ -338,6 +372,15 @@ public class RemoteInitSteps extends AbstractGeogitFunctionalTest {
         }
     }
 
+    @Given("^I have unstaged an empty feature type$")
+    public void I_have_unstaged_an_empty_feature_type() throws Throwable {
+        insert(points1);
+        GeoGIT geogit = geogitCLI.newGeoGIT();
+        final WorkingTree workTree = geogit.getRepository().getWorkingTree();
+        workTree.delete(pointsName, idP1);
+        geogit.close();
+    }
+
     @Given("^I stage 6 features$")
     public void I_stage_6_features() throws Throwable {
         insertAndAddFeatures();
@@ -345,35 +388,31 @@ public class RemoteInitSteps extends AbstractGeogitFunctionalTest {
 
     @Given("^I have several commits$")
     public void I_have_several_commits() throws Throwable {
-        insertAndAdd(points1);
-        insertAndAdd(points2);
-        runCommand(("commit -m Commit1").split(" "));
-        insertAndAdd(points3);
-        insertAndAdd(lines1);
-        runCommand(("commit -m Commit2").split(" "));
-        insertAndAdd(lines2);
-        insertAndAdd(lines3);
-        runCommand(("commit -m Commit3").split(" "));
+        insertAndAdd(points1, points2);
+        runCommand(true, "commit -m Commit1");
+        insertAndAdd(points3, lines1);
+        runCommand(true, "commit -m Commit2");
+        insertAndAdd(lines2, lines3);
+        runCommand(true, "commit -m Commit3");
         insertAndAdd(points1_modified);
-        runCommand(("commit -m Commit4").split(" "));
-
+        runCommand(true, "commit -m Commit4");
     }
 
     @Given("^I have several branches")
     public void I_have_several_branches() throws Throwable {
         insertAndAdd(points1);
-        runCommand(("commit -m Commit1").split(" "));
-        runCommand(("branch -c branch1").split(" "));
+        runCommand(true, "commit -m Commit1");
+        runCommand(true, "branch -c branch1");
         insertAndAdd(points2);
-        runCommand(("commit -m Commit2").split(" "));
+        runCommand(true, "commit -m Commit2");
         insertAndAdd(points3);
-        runCommand(("commit -m Commit3").split(" "));
-        runCommand(("branch -c branch2").split(" "));
+        runCommand(true, "commit -m Commit3");
+        runCommand(true, "branch -c branch2");
         insertAndAdd(lines1);
-        runCommand(("commit -m Commit4").split(" "));
-        runCommand(("checkout master").split(" "));
+        runCommand(true, "commit -m Commit4");
+        runCommand(true, "checkout master");
         insertAndAdd(lines2);
-        runCommand(("commit -m Commit5").split(" "));
+        runCommand(true, "commit -m Commit5");
     }
 
     @Given("I modify and add a feature")
@@ -394,12 +433,13 @@ public class RemoteInitSteps extends AbstractGeogitFunctionalTest {
     @Then("^if I change to the respository subdirectory \"([^\"]*)\"$")
     public void if_I_change_to_the_respository_subdirectory(String subdirSpec) throws Throwable {
         String[] subdirs = subdirSpec.split("/");
-        File dir = currentDirectory;
+        File dir = platform.pwd();
         for (String subdir : subdirs) {
             dir = new File(dir, subdir);
         }
         assertTrue(dir.exists());
-        currentDirectory = dir;
+        platform.setWorkingDir(dir);
+        setupGeogit();
     }
 
     @Given("^I have a patch file$")
@@ -413,7 +453,7 @@ public class RemoteInitSteps extends AbstractGeogitFunctionalTest {
         FeatureDiff feaureDiff = new FeatureDiff(path, map, RevFeatureType.build(pointsType),
                 RevFeatureType.build(pointsType));
         patch.addModifiedFeature(feaureDiff);
-        File file = new File(currentDirectory, "test.patch");
+        File file = new File(platform.pwd(), "test.patch");
         BufferedWriter writer = Files.newWriter(file, Charsets.UTF_8);
         PatchSerializer.write(writer, patch);
         writer.flush();
@@ -423,11 +463,11 @@ public class RemoteInitSteps extends AbstractGeogitFunctionalTest {
     @Given("^I am inside a repository subdirectory \"([^\"]*)\"$")
     public void I_am_inside_a_repository_subdirectory(String subdirSpec) throws Throwable {
         String[] subdirs = subdirSpec.split("/");
-        File dir = currentDirectory;
+        File dir = platform.pwd();
         for (String subdir : subdirs) {
             dir = new File(dir, subdir);
         }
         assertTrue(dir.mkdirs());
-        currentDirectory = dir;
+        platform.setWorkingDir(dir);
     }
 }

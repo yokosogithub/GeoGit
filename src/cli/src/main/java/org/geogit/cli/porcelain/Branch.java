@@ -25,6 +25,8 @@ import org.geogit.api.porcelain.BranchRenameOp;
 import org.geogit.cli.AbstractCommand;
 import org.geogit.cli.CLICommand;
 import org.geogit.cli.GeogitCLI;
+import org.geogit.cli.annotation.ObjectDatabaseReadOnly;
+import org.geogit.cli.annotation.StagingDatabaseReadOnly;
 
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.Parameters;
@@ -75,6 +77,8 @@ import com.google.common.collect.Lists;
  * @see BranchDeleteOp
  * @see BranchRenameOp
  */
+@ObjectDatabaseReadOnly
+@StagingDatabaseReadOnly
 @Parameters(commandNames = "branch", commandDescription = "List, create, or delete branches")
 public class Branch extends AbstractCommand implements CLICommand {
 
