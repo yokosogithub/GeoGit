@@ -9,14 +9,21 @@ import java.util.Map;
 
 import org.geogit.api.NodeRef;
 import org.geogit.api.RevCommit;
+import org.geogit.api.porcelain.BlameException;
+import org.geogit.api.porcelain.BlameException.StatusCode;
 import org.geogit.api.porcelain.BlameOp;
 import org.geogit.api.porcelain.BlameReport;
 import org.geogit.api.porcelain.CommitOp;
 import org.geogit.api.porcelain.ValueAndCommit;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 import org.opengis.feature.Feature;
 
 public class BlameOpTest extends RepositoryTestCase {
+
+    @Rule
+    public ExpectedException exception = ExpectedException.none();
 
     @Override
     protected void setUpInternal() throws Exception {
@@ -71,6 +78,48 @@ public class BlameOpTest extends RepositoryTestCase {
         assertEquals(pointsModified.getProperty("sp").getValue(), changes.get("sp").value.get());
         assertEquals(points1.getProperty("ip").getValue(), changes.get("ip").value.get());
         assertEquals(points1.getProperty("pp").getValue(), changes.get("pp").value.get());
+
+        report = geogit.command(BlameOp.class).setPath(path).setCommit(firstCommit.getId()).call();
+        changes = report.getChanges();
+        assertEquals(3, changes.size());
+        Collection<ValueAndCommit> commits = changes.values();
+        for (ValueAndCommit valueAndCommit : commits) {
+            assertEquals(firstCommit, valueAndCommit.commit);
+        }
+    }
+
+    @Test
+    public void testBlameRemovedAndAdded() throws Exception {
+        insertAndAdd(points1);
+        RevCommit firstCommit = geogit.command(CommitOp.class).call();
+        deleteAndAdd(points1);
+        RevCommit secondCommit = geogit.command(CommitOp.class).call();
+        insertAndAdd(points1);
+        RevCommit thirdCommit = geogit.command(CommitOp.class).call();
+        String path = NodeRef.appendChild(pointsName, idP1);
+        BlameReport report = geogit.command(BlameOp.class).setPath(path).call();
+        Map<String, ValueAndCommit> changes = report.getChanges();
+        assertEquals(3, changes.size());
+        Collection<ValueAndCommit> commits = changes.values();
+        for (ValueAndCommit valueAndCommit : commits) {
+            assertEquals(thirdCommit, valueAndCommit.commit);
+        }
+
+        try {
+            report = geogit.command(BlameOp.class).setPath(path).setCommit(secondCommit.getId())
+                    .call();
+            fail();
+        } catch (BlameException e) {
+            assertTrue(e.statusCode == StatusCode.FEATURE_NOT_FOUND);
+        }
+
+        report = geogit.command(BlameOp.class).setPath(path).setCommit(firstCommit.getId()).call();
+        changes = report.getChanges();
+        assertEquals(3, changes.size());
+        commits = changes.values();
+        for (ValueAndCommit valueAndCommit : commits) {
+            assertEquals(firstCommit, valueAndCommit.commit);
+        }
     }
 
     @Test
@@ -80,8 +129,8 @@ public class BlameOpTest extends RepositoryTestCase {
         try {
             geogit.command(BlameOp.class).setPath("wrongpath").call();
             fail();
-        } catch (Exception e) {
-            assertTrue(e.getMessage().contains("The supplied path does not exist"));
+        } catch (BlameException e) {
+            assertTrue(e.statusCode == StatusCode.FEATURE_NOT_FOUND);
         }
 
     }
@@ -93,8 +142,8 @@ public class BlameOpTest extends RepositoryTestCase {
         try {
             geogit.command(BlameOp.class).setPath(pointsName).call();
             fail();
-        } catch (Exception e) {
-            assertTrue(e.getMessage().contains("The supplied path does not resolve to a feature"));
+        } catch (BlameException e) {
+            assertTrue(e.statusCode == StatusCode.PATH_NOT_FEATURE);
         }
 
     }

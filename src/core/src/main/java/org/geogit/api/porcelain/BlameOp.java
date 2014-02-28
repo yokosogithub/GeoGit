@@ -22,11 +22,11 @@ import org.geogit.api.plumbing.RevParse;
 import org.geogit.api.plumbing.diff.AttributeDiff;
 import org.geogit.api.plumbing.diff.DiffEntry;
 import org.geogit.api.plumbing.diff.FeatureDiff;
+import org.geogit.api.porcelain.BlameException.StatusCode;
 import org.geogit.di.CanRunDuringConflict;
 import org.opengis.feature.type.PropertyDescriptor;
 
 import com.google.common.base.Optional;
-import com.google.common.base.Preconditions;
 import com.google.common.base.Suppliers;
 
 /**
@@ -39,6 +39,8 @@ public class BlameOp extends AbstractGeoGitOp<BlameReport> {
 
     private String path;
 
+    private ObjectId commit;
+
     /**
      * Sets the path of the feature to use
      * 
@@ -50,19 +52,34 @@ public class BlameOp extends AbstractGeoGitOp<BlameReport> {
         return this;
     }
 
+    /**
+     * Sets the commit to blame from
+     * 
+     * @param ObjectId commit
+     * @return
+     */
+    public BlameOp setCommit(ObjectId commit) {
+        this.commit = commit;
+        return this;
+    }
+
     @Override
     public BlameReport call() {
-        Optional<ObjectId> id = command(RevParse.class).setRefSpec(Ref.HEAD + ":" + path).call();
-        Preconditions.checkArgument(id.isPresent(), "The supplied path does not exist");
+        String fullPath = (commit != null ? commit.toString() : Ref.HEAD) + ":" + path;
+        Optional<ObjectId> id = command(RevParse.class).setRefSpec(fullPath).call();
+        if (!id.isPresent()) {
+            throw new BlameException(StatusCode.FEATURE_NOT_FOUND);
+        }
         TYPE type = command(ResolveObjectType.class).setObjectId(id.get()).call();
-        Preconditions.checkArgument(type.equals(TYPE.FEATURE),
-                "The supplied path does not resolve to a feature");
+        if (!type.equals(TYPE.FEATURE)) {
+            throw new BlameException(StatusCode.PATH_NOT_FEATURE);
+        }
         Optional<RevFeatureType> featureType = command(ResolveFeatureType.class).setRefSpec(path)
                 .call();
 
         BlameReport report = new BlameReport(featureType.get());
 
-        Iterator<RevCommit> log = command(LogOp.class).addPath(path).call();
+        Iterator<RevCommit> log = command(LogOp.class).addPath(path).setUntil(commit).call();
         RevCommit commit = log.next();
 
         while (!report.isComplete()) {
@@ -80,6 +97,13 @@ public class BlameOp extends AbstractGeoGitOp<BlameReport> {
             while (diffs.hasNext()) {
                 DiffEntry diff = diffs.next();
                 if (path.equals(diff.newPath())) {
+                    if (diff.isAdd()) {
+                        String refSpec = commit.getId().toString() + ":" + path;
+                        RevFeature feature = command(RevObjectParse.class).setRefSpec(refSpec)
+                                .call(RevFeature.class).get();
+                        report.setFirstVersion(feature, commit);
+                        break;
+                    }
                     FeatureDiff featureDiff = command(DiffFeature.class)
                             .setNewVersion(Suppliers.ofInstance(diff.getNewObject()))
                             .setOldVersion(Suppliers.ofInstance(diff.getOldObject())).call();
