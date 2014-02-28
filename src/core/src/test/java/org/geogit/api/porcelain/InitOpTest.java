@@ -154,7 +154,7 @@ public class InitOpTest {
         assertTrue(new File(workingDir, ".geogit").exists());
         assertTrue(new File(workingDir, ".geogit").isDirectory());
 
-        Ref master = new Ref(Ref.MASTER, ObjectId.forString("hash me"), TYPE.COMMIT);
+        Ref master = new Ref(Ref.MASTER, ObjectId.forString("hash me"));
 
         when(mockRefParse.call()).thenReturn(Optional.of(master));
 

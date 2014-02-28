@@ -307,7 +307,7 @@ public class FetchOp extends AbstractGeoGitOp<FetchResult> {
                 ObjectId mappedId = localRepository.getGraphDatabase().getMapping(
                         remoteRef.getObjectId());
                 command(UpdateRef.class).setName(refName).setNewValue(mappedId).call();
-                updatedRef = new Ref(remoteRef.getName(), mappedId, remoteRef.getType());
+                updatedRef = new Ref(remoteRef.getName(), mappedId);
             } else {
                 command(UpdateRef.class).setName(refName).setNewValue(remoteRef.getObjectId())
                         .call();

@@ -4,7 +4,7 @@
  */
 package org.geogit.api;
 
-import javax.annotation.Nullable;
+import org.geogit.api.RevObject.TYPE;
 
 import com.google.common.base.Preconditions;
 
@@ -82,8 +82,6 @@ public class Ref implements Comparable<Ref> {
 
     private String name;
 
-    private RevObject.TYPE type;
-
     private ObjectId objectId;
 
     /**
@@ -91,16 +89,24 @@ public class Ref implements Comparable<Ref> {
      * 
      * @param name name of this ref
      * @param oid object id for this ref
-     * @param type object type
-     * @see RevObject.TYPE
      */
-    public Ref(final String name, final ObjectId oid, @Nullable final RevObject.TYPE type) {
+    public Ref(final String name, final ObjectId oid) {
         Preconditions.checkNotNull(name);
         Preconditions.checkNotNull(oid);
-        Preconditions.checkArgument(oid.isNull() || type != null);
         this.name = name;
         this.objectId = oid;
-        this.type = type;
+    }
+
+    /**
+     * @return {@link TYPE#COMMIT}
+     * @deprecated this method is scheduled to be removed in 0.9.0 as its practically of no use and
+     *             forces ref-parse to unnecessarily call on resolve-object-type, which can be
+     *             called separately in case some client code needs to figure out what kind of
+     *             object a ref points to with the ref's object id as argument.
+     */
+    @Deprecated
+    public RevObject.TYPE getType() {
+        return RevObject.TYPE.COMMIT;
     }
 
     /**
@@ -170,14 +176,6 @@ public class Ref implements Comparable<Ref> {
     }
 
     /**
-     * @return the type of the object this ref refers to
-     * @see RevObject.TYPE
-     */
-    public RevObject.TYPE getType() {
-        return type;
-    }
-
-    /**
      * @param o object to compare against
      * @return whether or not this ref is equal to the target object
      */
@@ -187,9 +185,7 @@ public class Ref implements Comparable<Ref> {
             return false;
         }
         Ref r = (Ref) o;
-        return name.equals(r.getName())
-                && (type == null ? r.getType() == null : type.equals(r.getType()))
-                && objectId.equals(r.getObjectId());
+        return name.equals(r.getName()) && objectId.equals(r.getObjectId());
     }
 
     /**
