@@ -90,6 +90,8 @@ public class GeogitCLI {
 
     protected ProgressListener progressListener;
 
+    private boolean exitOnFinish = true;
+
     /**
      * Construct a GeogitCLI with the given console reader.
      * 
@@ -150,6 +152,29 @@ public class GeogitCLI {
      */
     public void setGeogit(@Nullable GeoGIT geogit) {
         this.geogit = geogit;
+    }
+
+    /**
+     * Sets flag controlling whether the cli will call {@link System#exit(int)} when done running
+     * the command.
+     * <p>
+     * Commands should call this method only in cases where the starts a server or creates 
+     * additional threads.
+     * </p>
+     *
+     * @param exit <tt>true</tt> will cause the cli to exit.
+     */
+    public void setExitOnFinish(boolean exit) {
+        this.exitOnFinish = exit;
+    }
+
+    /**
+     * Returns flag controlling whether cli will exit on completion.
+     * 
+     * @see {@link #setExitOnFinish(boolean)}
+     */
+    public boolean isExitOnFinish() {
+        return exitOnFinish;
     }
 
     /**
@@ -256,7 +281,9 @@ public class GeogitCLI {
             }
         }
 
-        System.exit(exitCode);
+        if (exitCode != 0 || cli.isExitOnFinish()) {
+            System.exit(exitCode);
+        }
     }
 
     void tryConfigureLogging() {
