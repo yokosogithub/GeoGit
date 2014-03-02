@@ -479,6 +479,7 @@
           </excludes>
           <forkMode>pertest</forkMode>
           <argLine>-Xms256m -Xmx512m</argLine>
+          <testFailureIgnore>true</testFailureIgnore>
         </configuration>
       </plugin>
       <plugin>
@@ -609,6 +610,7 @@
             </excludes>
             <!-- includes> <include>**/*Test.class</include> </includes -->
           </instrumentation>
+          <testFailureIgnore>true</testFailureIgnore>
         </configuration>
       </plugin>
     </plugins>
