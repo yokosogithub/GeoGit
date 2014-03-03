@@ -18,7 +18,6 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Queue;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -94,31 +93,10 @@ public abstract class BlueprintsGraphDatabase<DB extends KeyIndexableGraph> impl
         }
     }
 
-    static {
-        // Registers a shutdown hook for the Neo4j instance so that it
-        // shuts down nicely when the VM exits (even if you "Ctrl-C" the
-        // running example before it's completed)
-        Runtime.getRuntime().addShutdownHook(new Thread() {
-            @Override
-            public void run() {
-                for (Entry<String, ServiceContainer<?>> entry : databaseServices.entrySet()) {
-                    File graphPath = new File(entry.getKey());
-                    if (graphPath.exists()) {
-                        entry.getValue().getService().shutdown();
-                    }
-                }
-                databaseServices.clear();
-            }
-        });
-    }
-
     public BlueprintsGraphDatabase(Platform platform) {
         this.platform = platform;
     }
 
-    /**
-     * Opens the Neo4J graph database.
-     */
     @Override
     public void open() {
         if (isOpen()) {
@@ -212,7 +190,7 @@ public abstract class BlueprintsGraphDatabase<DB extends KeyIndexableGraph> impl
      * Closes the database.
      */
     @Override
-    public void close() {
+    public synchronized void close() {
         if (isOpen()) {
             @SuppressWarnings("unchecked")
             ServiceContainer<DB> container = (ServiceContainer<DB>) databaseServices.get(dbPath);
@@ -727,5 +705,10 @@ public abstract class BlueprintsGraphDatabase<DB extends KeyIndexableGraph> impl
      */
     protected void rollback() {
         // Stub for transactional graphdb to use
+    }
+
+    @Override
+    public String toString() {
+        return String.format("%s[path: %s]", getClass().getSimpleName(), dbPath);
     }
 }

@@ -320,4 +320,10 @@ public class MongoObjectDatabase implements ObjectDatabase {
     public DBCollection getCollection(String name) {
         return db.getCollection(name);
     }
+
+    @Override
+    public String toString() {
+        return String.format("%s[db: %s, collection: %s]", getClass().getSimpleName(),
+                db == null ? "<unset>" : db, collectionName);
+    }
 }

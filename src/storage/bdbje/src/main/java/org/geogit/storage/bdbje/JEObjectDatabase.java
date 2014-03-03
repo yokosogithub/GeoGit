@@ -796,4 +796,10 @@ public class JEObjectDatabase extends AbstractObjectDatabase implements ObjectDa
             close();
         }
     }
+
+    @Override
+    public String toString() {
+        return String.format("%s[env=%s]", getClass().getSimpleName(), env == null ? "<unset>"
+                : env.getHome());
+    }
 }
