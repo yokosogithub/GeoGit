@@ -158,10 +158,10 @@ public class GeogitCLI {
      * Sets flag controlling whether the cli will call {@link System#exit(int)} when done running
      * the command.
      * <p>
-     * Commands should call this method only in cases where the starts a server or creates 
+     * Commands should call this method only in cases where the starts a server or creates
      * additional threads.
      * </p>
-     *
+     * 
      * @param exit <tt>true</tt> will cause the cli to exit.
      */
     public void setExitOnFinish(boolean exit) {
@@ -487,6 +487,10 @@ public class GeogitCLI {
                 args = Arrays.asList(args).subList(1, args.length)
                         .toArray(new String[args.length - 1]);
                 mainCommander = ((CLICommandExtension) object).getCommandParser();
+                if (Lists.newArrayList(args).contains("--help")) {
+                    mainCommander.usage();
+                    return;
+                }
             }
         }
 
