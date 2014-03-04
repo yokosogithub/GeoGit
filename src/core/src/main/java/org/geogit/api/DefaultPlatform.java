@@ -30,6 +30,7 @@ public class DefaultPlatform implements Platform {
 
     /**
      * @param workingDir the working directory to use
+     * @throws IllegalArgumentException if {@code workingDir} does not exist or is not a directory
      */
     @Override
     public void setWorkingDir(File workingDir) {

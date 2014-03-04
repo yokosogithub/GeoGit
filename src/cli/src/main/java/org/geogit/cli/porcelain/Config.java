@@ -22,7 +22,10 @@ import org.geogit.cli.CLICommand;
 import org.geogit.cli.CommandFailedException;
 import org.geogit.cli.GeogitCLI;
 import org.geogit.cli.InvalidParameterException;
-import org.geogit.cli.RequiresRepository;
+import org.geogit.cli.annotation.ObjectDatabaseReadOnly;
+import org.geogit.cli.annotation.RequiresRepository;
+import org.geogit.cli.annotation.StagingDatabaseReadOnly;
+import org.geogit.repository.Hints;
 
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.Parameters;
@@ -50,6 +53,8 @@ import com.google.common.base.Optional;
  * 
  * @see ConfigOp
  */
+@StagingDatabaseReadOnly
+@ObjectDatabaseReadOnly
 @RequiresRepository(false)
 @Parameters(commandNames = "config", commandDescription = "Get and set repository or global options")
 public class Config extends AbstractCommand implements CLICommand {
@@ -82,9 +87,10 @@ public class Config extends AbstractCommand implements CLICommand {
     public void runInternal(GeogitCLI cli) throws IOException {
 
         GeoGIT geogit = cli.getGeogit();
-        if (null == geogit) {
+        boolean closeIt = geogit == null;
+        if (closeIt) {
             // we're not in a repository, need a geogit anyways to run the global commands
-            geogit = cli.newGeoGIT();
+            geogit = cli.newGeoGIT(Hints.readOnly());
         }
 
         try {
@@ -167,6 +173,10 @@ public class Config extends AbstractCommand implements CLICommand {
                         "Could not find a section with the name provided", e);
             case TOO_MANY_ARGS:
                 throw new InvalidParameterException("Too many arguments provided.", e);
+            }
+        } finally {
+            if (closeIt) {
+                geogit.close();
             }
         }
     }

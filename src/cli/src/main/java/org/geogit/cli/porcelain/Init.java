@@ -18,7 +18,7 @@ import org.geogit.cli.AbstractCommand;
 import org.geogit.cli.CLICommand;
 import org.geogit.cli.CommandFailedException;
 import org.geogit.cli.GeogitCLI;
-import org.geogit.cli.RequiresRepository;
+import org.geogit.cli.annotation.RequiresRepository;
 import org.geogit.di.PluginDefaults;
 import org.geogit.di.VersionedFormat;
 import org.geogit.repository.Repository;
@@ -27,6 +27,7 @@ import com.beust.jcommander.Parameter;
 import com.beust.jcommander.Parameters;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
+import com.google.inject.Injector;
 
 /**
  * This command creates an empty geogit repository - basically a .geogit directory with
@@ -88,7 +89,8 @@ public class Init extends AbstractCommand implements CLICommand {
      */
     @Override
     public void runInternal(GeogitCLI cli) throws IOException {
-        final File repoDir;
+        // argument location if provided, or current directory otherwise
+        final File targetDirectory;
         {
             File currDir = cli.getPlatform().pwd();
             if (location != null && location.size() == 1) {
@@ -97,41 +99,37 @@ public class Init extends AbstractCommand implements CLICommand {
                 if (!f.isAbsolute()) {
                     f = new File(currDir, target).getCanonicalFile();
                 }
-                repoDir = f;
-                if (!repoDir.exists() && !repoDir.mkdirs()) {
-                    throw new CommandFailedException("Can't create directory "
-                            + repoDir.getAbsolutePath());
-                }
+                targetDirectory = f;
             } else {
-                repoDir = currDir;
+                targetDirectory = currDir;
+            }
+        }
+        final boolean repoExisted;
+        final Repository repository;
+        {
+            GeoGIT geogit = cli.getGeogit();
+            if (geogit == null) {
+                Injector geogitInjector = cli.getGeogitInjector();
+                geogit = new GeoGIT(geogitInjector);
+            }
+            repoExisted = determineIfRepoExists(targetDirectory, geogit);
+            final List<String> effectiveConfiguration = resolveConfigParameters(cli);
+
+            try {
+                repository = geogit.command(InitOp.class).setConfig(effectiveConfiguration)
+                        .setTarget(targetDirectory).call();
+            } catch (IllegalArgumentException e) {
+                throw new CommandFailedException(e.getMessage(), e);
+            } finally {
+                geogit.close();
             }
         }
 
-        GeoGIT geogit = null;
-        if (cli.getGeogit() == null) {
-            geogit = new GeoGIT(cli.getGeogitInjector(), repoDir);
-        } else {
-            geogit = cli.getGeogit();
-        }
-
-        ImmutableList.Builder<String> builder = ImmutableList.builder();
-        addDefaults(cli.getGeogitInjector().getInstance(PluginDefaults.class), builder);
-        builder.addAll(splitConfig(config));
-        List<String> effectiveConfiguration = builder.build();
-
-        Repository repository = geogit.command(InitOp.class).setConfig(effectiveConfiguration)
-                .call();
-        final boolean repoExisted = repository == null;
-        geogit.setRepository(repository);
-        cli.setGeogit(geogit);
-
-        final URL envHome = geogit.command(ResolveGeogitDir.class).call().get();
-
         File repoDirectory;
         try {
-            repoDirectory = new File(envHome.toURI());
+            repoDirectory = new File(repository.getLocation().toURI());
         } catch (URISyntaxException e) {
-            throw new IllegalStateException("Environment home can't be resolved to a directory", e);
+            throw new CommandFailedException("Environment home can't be resolved to a directory", e);
         }
         String message;
         if (repoExisted) {
@@ -141,6 +139,29 @@ public class Init extends AbstractCommand implements CLICommand {
             message = "Initialized empty Geogit repository in " + repoDirectory.getAbsolutePath();
         }
         cli.getConsole().println(message);
+    }
+
+    private boolean determineIfRepoExists(final File targetDirectory, GeoGIT geogit) {
+        final boolean repoExisted;
+
+        final File currentDirectory = geogit.getPlatform().pwd();
+        try {
+            geogit.getPlatform().setWorkingDir(targetDirectory);
+        } catch (IllegalArgumentException e) {
+            return false;
+        }
+        final Optional<URL> currentRepoUrl = geogit.command(ResolveGeogitDir.class).call();
+        repoExisted = currentRepoUrl.isPresent();
+        geogit.getPlatform().setWorkingDir(currentDirectory);
+        return repoExisted;
+    }
+
+    private List<String> resolveConfigParameters(GeogitCLI cli) {
+        ImmutableList.Builder<String> builder = ImmutableList.builder();
+        addDefaults(cli.getGeogitInjector().getInstance(PluginDefaults.class), builder);
+        builder.addAll(splitConfig(config));
+        List<String> effectiveConfiguration = builder.build();
+        return effectiveConfiguration;
     }
 
     public static List<String> splitConfig(String config) {

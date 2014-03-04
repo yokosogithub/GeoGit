@@ -18,6 +18,8 @@ import org.geogit.api.ObjectId;
 import org.geogit.api.plumbing.ResolveGeogitDir;
 import org.geogit.cli.AbstractCommand;
 import org.geogit.cli.GeogitCLI;
+import org.geogit.cli.annotation.ReadOnly;
+import org.geogit.repository.Hints;
 
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.Parameters;
@@ -36,6 +38,7 @@ import com.google.common.collect.Lists;
  * geogit repository and print out the repository location
  * </ul>
  */
+@ReadOnly
 @Parameters(commandNames = "rev-parse", commandDescription = "Resolve parameters according to the arguments")
 public class RevParse extends AbstractCommand {
 
@@ -70,15 +73,22 @@ public class RevParse extends AbstractCommand {
             return;
         }
 
+        boolean closeIt = false;
         if (null == geogit) {
-            geogit = cli.newGeoGIT();
+            geogit = cli.newGeoGIT(Hints.readOnly());
+            closeIt = true;
         }
-        if (resolve_geogit_dir) {
-            resolveGeogitDir(cli.getConsole(), geogit);
-        } else if (is_inside_work_tree) {
-            isInsideWorkTree(cli.getConsole(), geogit);
+        try {
+            if (resolve_geogit_dir) {
+                resolveGeogitDir(cli.getConsole(), geogit);
+            } else if (is_inside_work_tree) {
+                isInsideWorkTree(cli.getConsole(), geogit);
+            }
+        } finally {
+            if (closeIt) {
+                geogit.close();
+            }
         }
-
     }
 
     private void isInsideWorkTree(ConsoleReader console, GeoGIT geogit) throws IOException {

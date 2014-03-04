@@ -21,9 +21,11 @@ import jline.console.completer.ArgumentCompleter;
 import jline.console.completer.Completer;
 import jline.console.completer.StringsCompleter;
 
+import org.geogit.api.GeoGIT;
 import org.geogit.api.Ref;
 import org.geogit.api.SymRef;
 import org.geogit.api.plumbing.RefParse;
+import org.geogit.repository.Hints;
 
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.ParameterDescription;
@@ -87,7 +89,7 @@ public class GeogitConsole {
                     continue;
                 }
                 String[] args = ArgumentTokenizer.tokenize(line);
-                cli.processCommand(args);
+                cli.execute(args);
             }
 
         } finally {
@@ -97,6 +99,7 @@ public class GeogitConsole {
             } finally {
                 try {
                     terminal.restore();
+                    consoleReader.shutdown();
                 } catch (Exception e) {
                     throw Throwables.propagate(e);
                 }
@@ -154,6 +157,7 @@ public class GeogitConsole {
         GeogitCLI.addShutdownHook(cli);
 
         setPrompt(cli);
+        cli.close();
 
         try {
             runInternal(cli);
@@ -164,6 +168,7 @@ public class GeogitConsole {
             } finally {
                 try {
                     terminal.restore();
+                    consoleReader.shutdown();
                 } catch (Exception e) {
                     throw Throwables.propagate(e);
                 }
@@ -180,24 +185,33 @@ public class GeogitConsole {
 
         String currentDir = new File(".").getCanonicalPath();
         String currentHead = "";
-        if (cli.getGeogit() != null) {
-            Optional<Ref> ref = cli.getGeogit().command(RefParse.class).setName(Ref.HEAD).call();
-            if (ref.isPresent()) {
-                if (ref.get() instanceof SymRef) {
-                    currentHead = ((SymRef) ref.get()).getTarget();
-                    int idx = currentHead.lastIndexOf("/");
-                    if (idx != -1) {
-                        currentHead = currentHead.substring(idx + 1);
+        GeoGIT geogit;
+        try {
+            geogit = cli.newGeoGIT(Hints.readOnly());
+        } catch (Exception e) {
+            geogit = null;
+        }
+        if (geogit != null) {
+            try {
+                Optional<Ref> ref = geogit.command(RefParse.class).setName(Ref.HEAD).call();
+                if (ref.isPresent()) {
+                    if (ref.get() instanceof SymRef) {
+                        currentHead = ((SymRef) ref.get()).getTarget();
+                        int idx = currentHead.lastIndexOf("/");
+                        if (idx != -1) {
+                            currentHead = currentHead.substring(idx + 1);
+                        }
+                    } else {
+                        currentHead = ref.get().getObjectId().toString().substring(0, 7);
                     }
-                } else {
-                    currentHead = ref.get().getObjectId().toString().substring(0, 7);
+                    currentHead = " (" + currentHead + ")";
                 }
-                currentHead = " (" + currentHead + ")";
+            } finally {
+                geogit.close();
             }
         }
         String prompt = "(geogit):" + currentDir + currentHead + " $ ";
         cli.getConsole().setPrompt(prompt);
-
     }
 
     private void runInternal(final GeogitCLI cli) throws IOException {
@@ -223,8 +237,9 @@ public class GeogitConsole {
                 continue;
             }
 
-            cli.processCommand(args);
+            cli.execute(args);
             setPrompt(cli);// in case HEAD has changed
+            cli.close();
         }
     }
 

@@ -23,6 +23,7 @@ import org.geogit.api.porcelain.FetchResult.ChangedRef;
 import org.geogit.api.porcelain.FetchResult.ChangedRef.ChangeTypes;
 import org.geogit.remote.IRemoteRepo;
 import org.geogit.remote.RemoteUtils;
+import org.geogit.repository.Hints;
 import org.geogit.repository.Repository;
 import org.geogit.storage.DeduplicationService;
 import org.opengis.util.ProgressListener;
@@ -295,7 +296,7 @@ public class FetchOp extends AbstractGeoGitOp<FetchResult> {
      */
     public Optional<IRemoteRepo> getRemoteRepo(Remote remote,
             DeduplicationService deduplicationService) {
-        return RemoteUtils.newRemote(GlobalInjectorBuilder.builder.build(), remote,
+        return RemoteUtils.newRemote(GlobalInjectorBuilder.builder.build(Hints.readOnly()), remote,
                 localRepository, deduplicationService);
     }
 

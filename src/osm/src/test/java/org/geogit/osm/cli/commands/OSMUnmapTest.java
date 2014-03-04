@@ -5,17 +5,20 @@
 
 package org.geogit.osm.cli.commands;
 
+
 import java.io.File;
 
 import jline.UnsupportedTerminal;
 import jline.console.ConsoleReader;
 
-import org.geogit.api.Platform;
+import org.geogit.api.GeoGIT;
+import org.geogit.api.GlobalInjectorBuilder;
 import org.geogit.api.RevFeature;
 import org.geogit.api.RevTree;
 import org.geogit.api.TestPlatform;
 import org.geogit.api.plumbing.RevObjectParse;
 import org.geogit.cli.GeogitCLI;
+import org.geogit.cli.test.functional.CLITestInjectorBuilder;
 import org.geogit.osm.internal.OSMImportOp;
 import org.junit.Assert;
 import org.junit.Before;
@@ -39,7 +42,8 @@ public class OSMUnmapTest extends Assert {
                 new UnsupportedTerminal());
         cli = new GeogitCLI(consoleReader);
         File workingDirectory = tempFolder.getRoot();
-        Platform platform = new TestPlatform(workingDirectory);
+        TestPlatform platform = new TestPlatform(workingDirectory);
+        GlobalInjectorBuilder.builder = new CLITestInjectorBuilder(platform);
         cli.setPlatform(platform);
         cli.execute("init");
         cli.execute("config", "user.name", "Gabriel Roldan");
@@ -53,23 +57,26 @@ public class OSMUnmapTest extends Assert {
         File mappingFile = new File(mappingFilename);
         cli.execute("osm", "import", file.getAbsolutePath(), "--mapping",
                 mappingFile.getAbsolutePath());
-        Optional<RevFeature> revFeature = cli.getGeogit().command(RevObjectParse.class)
+        GeoGIT geogit = cli.newGeoGIT();
+        Optional<RevFeature> revFeature = geogit.command(RevObjectParse.class)
                 .setRefSpec("WORK_HEAD:busstops/507464799").call(RevFeature.class);
         assertTrue(revFeature.isPresent());
-        cli.getGeogit().getRepository().getWorkingTree().delete("node");
-        Optional<RevTree> tree = cli.getGeogit().command(RevObjectParse.class)
-                .setRefSpec("WORK_HEAD:node").call(RevTree.class);
+        geogit.getRepository().getWorkingTree().delete("node");
+        Optional<RevTree> tree = geogit.command(RevObjectParse.class).setRefSpec("WORK_HEAD:node")
+                .call(RevTree.class);
         assertFalse(tree.isPresent());
+        geogit.close();
     }
 
     @Test
     public void testUnMapping() throws Exception {
         cli.execute("osm", "unmap", "busstops");
-        Optional<RevTree> tree = cli.getGeogit().command(RevObjectParse.class)
-                .setRefSpec("HEAD:node").call(RevTree.class);
+        GeoGIT geogit = cli.newGeoGIT();
+        Optional<RevTree> tree = geogit.command(RevObjectParse.class).setRefSpec("HEAD:node")
+                .call(RevTree.class);
         assertTrue(tree.isPresent());
         assertTrue(tree.get().size() > 0);
-        Optional<RevFeature> unmapped = cli.getGeogit().command(RevObjectParse.class)
+        Optional<RevFeature> unmapped = geogit.command(RevObjectParse.class)
                 .setRefSpec("HEAD:node/507464799").call(RevFeature.class);
         assertTrue(unmapped.isPresent());
         ImmutableList<Optional<Object>> values = unmapped.get().getValues();
@@ -77,7 +84,7 @@ public class OSMUnmapTest extends Assert {
         assertEquals(
                 "VRS:gemeinde:BONN|VRS:ortsteil:Hoholz|VRS:ref:68566|bus:yes|highway:bus_stop|name:Gielgen|public_transport:platform",
                 values.get(3).get().toString());
-
+        geogit.close();
     }
 
 }

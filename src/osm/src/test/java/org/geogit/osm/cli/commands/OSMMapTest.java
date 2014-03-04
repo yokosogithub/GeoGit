@@ -12,8 +12,9 @@ import java.util.Iterator;
 import jline.UnsupportedTerminal;
 import jline.console.ConsoleReader;
 
+import org.geogit.api.GeoGIT;
+import org.geogit.api.GlobalInjectorBuilder;
 import org.geogit.api.NodeRef;
-import org.geogit.api.Platform;
 import org.geogit.api.RevFeature;
 import org.geogit.api.RevFeatureType;
 import org.geogit.api.RevTree;
@@ -22,6 +23,7 @@ import org.geogit.api.plumbing.LsTreeOp;
 import org.geogit.api.plumbing.ResolveFeatureType;
 import org.geogit.api.plumbing.RevObjectParse;
 import org.geogit.cli.GeogitCLI;
+import org.geogit.cli.test.functional.CLITestInjectorBuilder;
 import org.geogit.osm.internal.OSMImportOp;
 import org.junit.Assert;
 import org.junit.Before;
@@ -47,7 +49,9 @@ public class OSMMapTest extends Assert {
                 new UnsupportedTerminal());
         cli = new GeogitCLI(consoleReader);
         File workingDirectory = tempFolder.getRoot();
-        Platform platform = new TestPlatform(workingDirectory);
+        TestPlatform platform = new TestPlatform(workingDirectory);
+        GlobalInjectorBuilder.builder = new CLITestInjectorBuilder(platform);
+
         cli.setPlatform(platform);
         cli.execute("init");
         cli.execute("config", "user.name", "Gabriel Roldan");
@@ -64,12 +68,12 @@ public class OSMMapTest extends Assert {
         cli.execute("osm", "import", file.getAbsolutePath());
         cli.execute("add");
         cli.execute("commit", "-m", "message");
-        Optional<RevTree> tree = cli.getGeogit().command(RevObjectParse.class)
-                .setRefSpec("HEAD:node").call(RevTree.class);
+        GeoGIT geogit = cli.newGeoGIT();
+        Optional<RevTree> tree = geogit.command(RevObjectParse.class).setRefSpec("HEAD:node")
+                .call(RevTree.class);
         assertTrue(tree.isPresent());
         assertTrue(tree.get().size() > 0);
-        tree = cli.getGeogit().command(RevObjectParse.class).setRefSpec("HEAD:way")
-                .call(RevTree.class);
+        tree = geogit.command(RevObjectParse.class).setRefSpec("HEAD:way").call(RevTree.class);
         assertTrue(tree.isPresent());
         assertTrue(tree.get().size() > 0);
         // map
@@ -77,7 +81,7 @@ public class OSMMapTest extends Assert {
         File mappingFile = new File(mappingFilename);
         cli.execute("osm", "map", mappingFile.getAbsolutePath());
         // check that a feature was correctly mapped
-        Optional<RevFeature> revFeature = cli.getGeogit().command(RevObjectParse.class)
+        Optional<RevFeature> revFeature = geogit.command(RevObjectParse.class)
                 .setRefSpec("HEAD:onewaystreets/31045880").call(RevFeature.class);
         assertTrue(revFeature.isPresent());
         ImmutableList<Optional<Object>> values = revFeature.get().getValues();
@@ -86,9 +90,10 @@ public class OSMMapTest extends Assert {
         assertEquals("345117525;345117526;1300224327;345117527", values.get(3).get());
         assertEquals("yes", values.get(1).get());
         // check that a feature was correctly ignored
-        revFeature = cli.getGeogit().command(RevObjectParse.class)
-                .setRefSpec("HEAD:onewaystreets/31347480").call(RevFeature.class);
+        revFeature = geogit.command(RevObjectParse.class).setRefSpec("HEAD:onewaystreets/31347480")
+                .call(RevFeature.class);
         assertFalse(revFeature.isPresent());
+        geogit.close();
     }
 
     @Test
@@ -108,12 +113,11 @@ public class OSMMapTest extends Assert {
         assertTrue(tree.get().size() > 0);
         String mappingFilename = OSMMap.class.getResource("wrong_mapping.json").getFile();
         File mappingFile = new File(mappingFilename);
-        try {
-            cli.execute("osm", "map", mappingFile.getAbsolutePath());
-            fail();
-        } catch (IllegalArgumentException e) {
-            assertTrue(e.getMessage().startsWith("Error parsing mapping definition"));
-        }
+
+        int retcode = cli.execute("osm", "map", mappingFile.getAbsolutePath());
+        assertTrue(retcode != 0);
+        assertNotNull(cli.exception);
+        assertTrue(cli.exception.getMessage().startsWith("Error parsing mapping definition"));
     }
 
     @Test
@@ -131,12 +135,12 @@ public class OSMMapTest extends Assert {
                 .call(RevTree.class);
         assertTrue(tree.isPresent());
         assertTrue(tree.get().size() > 0);
-        try {
-            cli.execute("osm", "map", "awrongpath/awroongfile.json");
-            fail();
-        } catch (IllegalArgumentException e) {
-            assertTrue(e.getMessage().startsWith("The specified mapping file does not exist"));
-        }
+
+        cli.execute("osm", "map", "awrongpath/awroongfile.json");
+        assertNotNull(cli.exception);
+        assertTrue(cli.exception.getMessage().startsWith(
+                "The specified mapping file does not exist"));
+
     }
 
     @Test
@@ -147,21 +151,22 @@ public class OSMMapTest extends Assert {
         cli.execute("osm", "import", file.getAbsolutePath());
         cli.execute("add");
         cli.execute("commit", "-m", "message");
-        Optional<RevTree> tree = cli.getGeogit().command(RevObjectParse.class)
-                .setRefSpec("HEAD:node").call(RevTree.class);
+        GeoGIT geogit = cli.newGeoGIT();
+        Optional<RevTree> tree = geogit.command(RevObjectParse.class).setRefSpec("HEAD:node")
+                .call(RevTree.class);
         assertTrue(tree.isPresent());
         assertTrue(tree.get().size() > 0);
-        tree = cli.getGeogit().command(RevObjectParse.class).setRefSpec("HEAD:way")
-                .call(RevTree.class);
+        tree = geogit.command(RevObjectParse.class).setRefSpec("HEAD:way").call(RevTree.class);
         assertTrue(tree.isPresent());
         assertTrue(tree.get().size() > 0);
         String mappingFilename = OSMMap.class.getResource("no_filter_mapping.json").getFile();
         File mappingFile = new File(mappingFilename);
         cli.execute("osm", "map", mappingFile.getAbsolutePath());
-        Iterator<NodeRef> allways = cli.getGeogit().command(LsTreeOp.class)
-                .setReference("HEAD:all_ways").call();
+        Iterator<NodeRef> allways = geogit.command(LsTreeOp.class).setReference("HEAD:all_ways")
+                .call();
         ArrayList<NodeRef> listAllways = Lists.newArrayList(allways);
         assertEquals(4, listAllways.size());
+        geogit.close();
     }
 
     @Test
