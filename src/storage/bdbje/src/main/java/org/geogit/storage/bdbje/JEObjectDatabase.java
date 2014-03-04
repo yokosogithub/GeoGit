@@ -33,6 +33,7 @@ import javax.annotation.Nullable;
 
 import org.geogit.api.ObjectId;
 import org.geogit.api.RevObject;
+import org.geogit.repository.Hints;
 import org.geogit.repository.RepositoryConnectionException;
 import org.geogit.storage.AbstractObjectDatabase;
 import org.geogit.storage.BulkOpListener;
@@ -63,6 +64,7 @@ import com.sleepycat.je.DatabaseConfig;
 import com.sleepycat.je.DatabaseEntry;
 import com.sleepycat.je.Durability;
 import com.sleepycat.je.Environment;
+import com.sleepycat.je.EnvironmentLockedException;
 import com.sleepycat.je.LockMode;
 import com.sleepycat.je.OperationStatus;
 import com.sleepycat.je.Transaction;
@@ -96,7 +98,7 @@ public class JEObjectDatabase extends AbstractObjectDatabase implements ObjectDa
     private EnvironmentBuilder envProvider;
 
     /**
-     * Lazily loaded, do not access it directly but through {@link #getEnvironment()}
+     * Lazily loaded, do not access it directly but through {@link #createEnvironment()}
      */
     protected Environment env;
 
@@ -104,28 +106,36 @@ public class JEObjectDatabase extends AbstractObjectDatabase implements ObjectDa
 
     private ConfigDatabase configDB;
 
+    private final boolean readOnly;
+
+    private final String envName;
+
     @Inject
     public JEObjectDatabase(final ConfigDatabase configDB,
-            final ObjectSerializingFactory serialFactory, final EnvironmentBuilder envProvider) {
+            final ObjectSerializingFactory serialFactory, final EnvironmentBuilder envProvider,
+            final Hints hints) {
+        this(configDB, serialFactory, envProvider, hints.getBoolean(Hints.OBJECTS_READ_ONLY),
+                "objects");
+    }
+
+    public JEObjectDatabase(final ConfigDatabase configDB,
+            final ObjectSerializingFactory serialFactory, final EnvironmentBuilder envProvider,
+            final boolean readOnly, final String envName) {
         super(serialFactory);
         this.configDB = configDB;
         this.envProvider = envProvider;
-    }
-
-    public JEObjectDatabase(final ObjectSerializingFactory serialFactory, final Environment env,
-            final ConfigDatabase configDb) {
-        super(serialFactory);
-        this.env = env;
-        this.configDB = configDb;
+        this.readOnly = readOnly;
+        this.envName = envName;
     }
 
     /**
-     * @return the env
+     * @return creates and returns the environment
      */
-    private synchronized Environment getEnvironment() {
-        if (env == null) {
-            env = envProvider.setRelativePath("objects").get();
-        }
+    private synchronized Environment createEnvironment(boolean readOnly)
+            throws com.sleepycat.je.EnvironmentLockedException {
+
+        Environment env = envProvider.setRelativePath(this.envName).setReadOnly(readOnly).get();
+
         return env;
     }
 
@@ -135,23 +145,30 @@ public class JEObjectDatabase extends AbstractObjectDatabase implements ObjectDa
             LOGGER.trace("Database already closed.");
             return;
         }
-
         final File envHome = env.getHome();
-        LOGGER.debug("Closing object database at {}", envHome);
-        writerService.shutdown();
-        waitForServiceShutDown(writerService);
-        objectDb.close();
-        objectDb = null;
-        if (dbSyncService != null) {
-            dbSyncService.shutdown();
-            waitForServiceShutDown(dbSyncService);
+        try {
+            LOGGER.debug("Closing object database at {}", envHome);
+            if (writerService != null) {
+                writerService.shutdown();
+                waitForServiceShutDown(writerService);
+            }
+            if (objectDb != null) {
+                objectDb.close();
+                objectDb = null;
+            }
+            if (dbSyncService != null) {
+                dbSyncService.shutdown();
+                waitForServiceShutDown(dbSyncService);
+            }
+            LOGGER.trace("ObjectDatabase closed. Closing environment...");
+            if (!readOnly) {
+                env.sync();
+                env.cleanLog();
+            }
+        } finally {
+            env.close();
+            env = null;
         }
-        LOGGER.trace("ObjectDatabase closed. Closing environment...");
-
-        env.sync();
-        env.cleanLog();
-        env.close();
-        env = null;
         LOGGER.debug("Database {} closed.", envHome);
     }
 
@@ -176,10 +193,7 @@ public class JEObjectDatabase extends AbstractObjectDatabase implements ObjectDa
             LOGGER.trace("Environment {} already open", env.getHome());
             return;
         }
-        Environment environment = getEnvironment();
-        LOGGER.debug("Opening ObjectDatabase at {}", env.getHome());
-
-        this.objectDb = createDatabase(environment);
+        this.objectDb = createDatabase();
 
         int nWriterThreads = 1;
         writerService = Executors.newFixedThreadPool(nWriterThreads, new ThreadFactoryBuilder()
@@ -189,22 +203,67 @@ public class JEObjectDatabase extends AbstractObjectDatabase implements ObjectDa
                     .setNameFormat("BDBJE-" + env.getHome().getName() + "-SYNC-THREAD-%d").build());
         }
 
-        LOGGER.debug("Object database opened at {}. Transactional: {}", environment.getHome(),
-                objectDb.getConfig().getTransactional());
+        LOGGER.debug("Object database opened at {}. Transactional: {}", env.getHome(), objectDb
+                .getConfig().getTransactional());
     }
 
-    protected Database createDatabase(Environment environment) {
-        DatabaseConfig dbConfig = new DatabaseConfig();
-        dbConfig.setAllowCreate(true);
-        boolean transactional = getEnvironment().getConfig().getTransactional();
+    protected Database createDatabase() {
 
-        dbConfig.setTransactional(transactional);
-        dbConfig.setDeferredWrite(!transactional);
-        dbConfig.setCacheMode(CacheMode.MAKE_COLD);
-        dbConfig.setKeyPrefixing(false);// can result in a slightly smaller db size
+        final String databaseName = "ObjectDatabase";
+        Environment environment;
+        try {
+            environment = createEnvironment(readOnly);
+        } catch (EnvironmentLockedException e) {
+            throw new IllegalStateException(
+                    "The repository is already open by another process for writing", e);
+        }
 
-        Database database = environment.openDatabase(null, "ObjectDatabase", dbConfig);
+        if (!environment.getDatabaseNames().contains(databaseName)) {
+            if (readOnly) {
+                environment.close();
+                try {
+                    environment = createEnvironment(false);
+                } catch (EnvironmentLockedException e) {
+                    throw new IllegalStateException(String.format(
+                            "Environment open readonly but databse %s does not exist.",
+                            databaseName));
+                }
+            }
+            DatabaseConfig dbConfig = new DatabaseConfig();
+            dbConfig.setAllowCreate(true);
+            Database openDatabase = environment.openDatabase(null, databaseName, dbConfig);
+            openDatabase.close();
+            environment.flushLog(true);
+            environment.close();
+            environment = createEnvironment(readOnly);
+        }
+
+        // System.err.println("Opened ObjectDatabase at " + env.getHome()
+        // + ". Environment read-only: " + environment.getConfig().getReadOnly()
+        // + " database read only: " + this.readOnly);
+        Database database;
+        try {
+            LOGGER.debug("Opening ObjectDatabase at {}", environment.getHome());
+
+            DatabaseConfig dbConfig = new DatabaseConfig();
+            dbConfig.setCacheMode(CacheMode.MAKE_COLD);
+            dbConfig.setKeyPrefixing(false);// can result in a slightly smaller db size
+
+            dbConfig.setReadOnly(readOnly);
+            boolean transactional = environment.getConfig().getTransactional();
+            dbConfig.setTransactional(transactional);
+            dbConfig.setDeferredWrite(!transactional);
+
+            database = environment.openDatabase(null, databaseName, dbConfig);
+        } catch (RuntimeException e) {
+            if (environment != null) {
+                environment.close();
+            }
+            throw e;
+        }
+        this.env = environment;
         return database;
+
     }
 
     @Override
@@ -280,7 +339,8 @@ public class JEObjectDatabase extends AbstractObjectDatabase implements ObjectDa
         OperationStatus operationStatus = objectDb.get(transaction, key, data, lockMode);
         if (NOTFOUND.equals(operationStatus)) {
             if (failIfNotFound) {
-                throw new IllegalArgumentException("Object does not exist: " + id.toString());
+                throw new IllegalArgumentException("Object does not exist: " + id.toString()
+                        + " at " + env.getHome().getAbsolutePath());
             }
             return null;
         }
@@ -293,12 +353,13 @@ public class JEObjectDatabase extends AbstractObjectDatabase implements ObjectDa
     public void putAll(final Iterator<? extends RevObject> objects, final BulkOpListener listener) {
         checkNotNull(objects);
         checkNotNull(listener);
+        checkWritable();
 
         if (!objects.hasNext()) {
             return;
         }
 
-        final int buffSize = 8 * 1024;
+        final int buffSize = 256 * 1024;
         BulkInsert task = new BulkInsert(objects, listener, buffSize);
 
         try {
@@ -532,6 +593,8 @@ public class JEObjectDatabase extends AbstractObjectDatabase implements ObjectDa
 
     @Override
     protected boolean putInternal(final ObjectId id, final byte[] rawData) {
+        checkWritable();
+
         final Transaction transaction = newTransaction();
 
         final OperationStatus status;
@@ -560,6 +623,7 @@ public class JEObjectDatabase extends AbstractObjectDatabase implements ObjectDa
 
     @Override
     public boolean delete(final ObjectId id) {
+        checkWritable();
         final byte[] rawKey = id.getRawValue();
         final DatabaseEntry key = new DatabaseEntry(rawKey);
 
@@ -598,6 +662,7 @@ public class JEObjectDatabase extends AbstractObjectDatabase implements ObjectDa
 
     @Override
     public long deleteAll(Iterator<ObjectId> ids, final BulkOpListener listener) {
+        checkWritable();
 
         long count = 0;
 
@@ -794,6 +859,12 @@ public class JEObjectDatabase extends AbstractObjectDatabase implements ObjectDa
             LOGGER.warn("JEObjectDatabase %s was not closed. Forcing close at finalize()",
                     env.getHome());
             close();
+        }
+    }
+
+    public void checkWritable() {
+        if (readOnly) {
+            throw new UnsupportedOperationException(envName + " is read only.");
         }
     }
 }

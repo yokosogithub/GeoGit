@@ -18,6 +18,7 @@ import org.geogit.api.InjectorBuilder;
 import org.geogit.api.Platform;
 import org.geogit.api.plumbing.ResolveGeogitDir;
 import org.geogit.di.GeogitModule;
+import org.geogit.repository.Hints;
 import org.geogit.storage.bdbje.JEStorageModule;
 import org.geogit.storage.blueprints.BlueprintsGraphModule;
 import org.geogit.web.api.repo.AffectedFeaturesResource;
@@ -129,9 +130,11 @@ public class Main extends Application {
     static void setup() {
         GlobalInjectorBuilder.builder = new InjectorBuilder() {
             @Override
-            public Injector build() {
-                return Guice.createInjector(Modules.override(new GeogitModule()).with(
-                        new JEStorageModule(), new BlueprintsGraphModule()));
+            public Injector build(Hints hints) {
+                return Guice
+                        .createInjector(Modules.override(new GeogitModule()).with(
+                                new JEStorageModule(), new BlueprintsGraphModule(),
+                                new HintsModule(hints)));
             }
         };
     }

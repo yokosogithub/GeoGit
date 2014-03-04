@@ -10,6 +10,7 @@ import java.io.IOException;
 import org.geogit.cli.CLICommand;
 import org.geogit.cli.CommandFailedException;
 import org.geogit.cli.GeogitCLI;
+import org.geogit.cli.annotation.ObjectDatabaseReadOnly;
 import org.geogit.geotools.plumbing.GeoToolsOpException;
 import org.geogit.geotools.plumbing.ImportOp;
 import org.geotools.data.DataStore;
@@ -25,6 +26,7 @@ import com.beust.jcommander.Parameters;
  * 
  * @see ImportOp
  */
+@ObjectDatabaseReadOnly
 @Parameters(commandNames = "import", commandDescription = "Import SpatiaLite database")
 public class SLImport extends AbstractSLCommand implements CLICommand {
 

@@ -20,6 +20,7 @@ import org.geogit.api.porcelain.ConfigOp.ConfigAction;
 import org.geogit.api.porcelain.ConfigOp.ConfigScope;
 import org.geogit.remote.IRemoteRepo;
 import org.geogit.remote.RemoteUtils;
+import org.geogit.repository.Hints;
 import org.geogit.repository.Repository;
 import org.geogit.storage.DeduplicationService;
 
@@ -109,21 +110,25 @@ public class CloneOp extends AbstractGeoGitOp<Void> {
 
         if (!depth.isPresent()) {
             // See if we are cloning a shallow clone. If so, a depth must be specified.
-            Optional<IRemoteRepo> remoteRepo = RemoteUtils
-                    .newRemote(GlobalInjectorBuilder.builder.build(), remote, repository,
-                            deduplicationService);
+            Optional<IRemoteRepo> remoteRepo = RemoteUtils.newRemote(
+                    GlobalInjectorBuilder.builder.build(Hints.readOnly()), remote, repository,
+                    deduplicationService);
 
             Preconditions.checkState(remoteRepo.isPresent(), "Failed to connect to the remote.");
+            IRemoteRepo remoteRepoInstance = remoteRepo.get();
             try {
-                remoteRepo.get().open();
+                remoteRepoInstance.open();
             } catch (IOException e) {
                 Throwables.propagate(e);
             }
-            depth = remoteRepo.get().getDepth();
             try {
-                remoteRepo.get().close();
-            } catch (IOException e) {
-                Throwables.propagate(e);
+                depth = remoteRepoInstance.getDepth();
+            } finally {
+                try {
+                    remoteRepoInstance.close();
+                } catch (IOException e) {
+                    Throwables.propagate(e);
+                }
             }
         }
 

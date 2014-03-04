@@ -16,6 +16,7 @@ import org.geogit.api.Platform;
 import org.geogit.api.RevTree;
 import org.geogit.api.plumbing.ResolveGeogitDir;
 import org.geogit.api.plumbing.merge.Conflict;
+import org.geogit.repository.Hints;
 import org.geogit.repository.RepositoryConnectionException;
 import org.geogit.storage.ConfigDatabase;
 import org.geogit.storage.ForwardingStagingDatabase;
@@ -74,9 +75,10 @@ public class JEStagingDatabase extends ForwardingStagingDatabase {
     @Inject
     public JEStagingDatabase(final ObjectSerializingFactory sfac,
             final ObjectDatabase repositoryDb, final EnvironmentBuilder envBuilder,
-            final Platform platform, final ConfigDatabase configDB) {
+            final Platform platform, final ConfigDatabase configDB, final Hints hints) {
 
-        super(Suppliers.ofInstance(repositoryDb), stagingDbSupplier(sfac, envBuilder, configDB));
+        super(Suppliers.ofInstance(repositoryDb), stagingDbSupplier(sfac, envBuilder, configDB,
+                hints));
 
         this.platform = platform;
         this.configDB = configDB;
@@ -84,16 +86,15 @@ public class JEStagingDatabase extends ForwardingStagingDatabase {
 
     private static Supplier<JEObjectDatabase> stagingDbSupplier(
             final ObjectSerializingFactory sfac, final EnvironmentBuilder envProvider,
-            final ConfigDatabase configDb) {
+            final ConfigDatabase configDb, final Hints hints) {
 
         return Suppliers.memoize(new Supplier<JEObjectDatabase>() {
 
             @Override
             public JEObjectDatabase get() {
-                envProvider.setRelativePath("index");
-                envProvider.setIsStagingDatabase(true);
-                Environment env = envProvider.get();
-                JEObjectDatabase db = new JEObjectDatabase(sfac, env, configDb);
+                boolean readOnly = hints.getBoolean(Hints.STAGING_READ_ONLY);
+                JEObjectDatabase db = new JEObjectDatabase(configDb, sfac, envProvider, readOnly,
+                        "index");
                 return db;
             }
         });

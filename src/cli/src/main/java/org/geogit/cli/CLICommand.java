@@ -5,6 +5,7 @@
 
 package org.geogit.cli;
 
+import org.geogit.cli.annotation.RequiresRepository;
 import org.geogit.cli.porcelain.Config;
 import org.geogit.cli.porcelain.Help;
 import org.geogit.cli.porcelain.Init;

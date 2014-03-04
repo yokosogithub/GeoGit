@@ -8,6 +8,7 @@ import org.geogit.api.InjectorBuilder;
 import org.geogit.api.MemoryModule;
 import org.geogit.api.Platform;
 import org.geogit.di.GeogitModule;
+import org.geogit.repository.Hints;
 
 import com.google.inject.Guice;
 import com.google.inject.Injector;
@@ -22,9 +23,9 @@ public class TestInjectorBuilder extends InjectorBuilder {
     }
 
     @Override
-    public Injector build() {
+    public Injector build(Hints hints) {
         return Guice.createInjector(Modules.override(new GeogitModule()).with(
-                new MemoryModule(platform)));
+                new MemoryModule(platform), new HintsModule(hints)));
     }
 
 }

@@ -14,6 +14,7 @@ Feature: "push" command
      When I run the command "clone remoterepo localrepo"
      Then the response should contain "Cloning into 'localrepo'..."
       And the response should contain "Done."
+      And if I change to the respository subdirectory "localrepo"
      When I modify and add a feature
       And I run the command "commit -m Commit6"
       And I run the command "push"

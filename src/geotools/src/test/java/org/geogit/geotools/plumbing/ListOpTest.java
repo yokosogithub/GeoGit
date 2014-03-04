@@ -10,8 +10,6 @@ import static org.junit.Assert.assertTrue;
 import java.util.List;
 
 import org.geogit.geotools.cli.porcelain.TestHelper;
-import org.geogit.geotools.plumbing.GeoToolsOpException;
-import org.geogit.geotools.plumbing.ListOp;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;

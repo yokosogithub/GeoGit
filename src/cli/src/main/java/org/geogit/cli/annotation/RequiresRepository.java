@@ -2,13 +2,16 @@
  * This code is licensed under the BSD New License, available at the root
  * application directory.
  */
-package org.geogit.cli;
+package org.geogit.cli.annotation;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Inherited;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
+
+import org.geogit.cli.CLICommand;
+import org.geogit.cli.GeogitCLI;
 
 /**
  * Annotation indicating that a given {@link CLICommand} can only be run if a proper geogit
@@ -19,6 +22,6 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 @Inherited
 public @interface RequiresRepository {
-    
+
     public boolean value();
 }

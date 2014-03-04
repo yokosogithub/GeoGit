@@ -14,6 +14,7 @@ import javax.annotation.Nullable;
 import jline.Terminal;
 
 import org.fusesource.jansi.Ansi;
+import org.geogit.cli.annotation.RequiresRepository;
 import org.geogit.cli.porcelain.ColorArg;
 
 import com.beust.jcommander.JCommander;

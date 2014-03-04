@@ -14,6 +14,8 @@ import cucumber.junit.Cucumber;
  * 
  */
 @RunWith(Cucumber.class)
-@Cucumber.Options(format = { "pretty", "html:target/cucumber-report" }, strict = true)
+@Cucumber.Options(monochrome = true, format = { "pretty", "html:target/cucumber-report" }, strict = true, //
+// the glue option tells cucumber where to look for step definitions
+glue = { "org.geogit.cli.test.functional", "org.geogit.geotools.cli.test.functional" })
 public class RunGeoToolsFunctionalOnlineTest {
 }

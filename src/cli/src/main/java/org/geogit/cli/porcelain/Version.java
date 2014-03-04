@@ -15,7 +15,8 @@ import org.geogit.api.porcelain.VersionInfo;
 import org.geogit.api.porcelain.VersionOp;
 import org.geogit.cli.CLICommand;
 import org.geogit.cli.GeogitCLI;
-import org.geogit.cli.RequiresRepository;
+import org.geogit.cli.annotation.ReadOnly;
+import org.geogit.cli.annotation.RequiresRepository;
 
 import com.beust.jcommander.Parameters;
 import com.google.common.base.Throwables;
@@ -28,6 +29,7 @@ import com.google.common.base.Throwables;
  * <li> {@code geogit [--]version}
  * </ul>
  */
+@ReadOnly
 @RequiresRepository(false)
 @Parameters(commandNames = { "--version", "version" }, commandDescription = "Display GeoGit version information")
 public class Version implements CLICommand {

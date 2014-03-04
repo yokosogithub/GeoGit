@@ -36,12 +36,22 @@ public class TinkerGraphDatabase extends SynchronizedGraphDatabase {
 
         @Override
         protected TinkerGraph getGraphDatabase() {
-            return new TinkerGraph(dbPath, TinkerGraph.FileType.GML);
+            TinkerGraph tinkerGraph = new TinkerGraph(dbPath, TinkerGraph.FileType.GML);
+
+            // HACK: force the gml file to be created. If it didn't exist, the constructor created
+            // the directory but not the file, and subsequent attempts to open the graph (from
+            // another process) results in a FileNotFountException
+            //if (tinkerGraph.getEdges().iterator().hasNext()) {
+                tinkerGraph.shutdown();
+                tinkerGraph = new TinkerGraph(dbPath, TinkerGraph.FileType.GML);
+            //}
+            return tinkerGraph;
         }
 
         @Override
         public void configure() throws RepositoryConnectionException {
-            RepositoryConnectionException.StorageType.GRAPH.configure(configDB, "tinkergraph", "0.1");
+            RepositoryConnectionException.StorageType.GRAPH.configure(configDB, "tinkergraph",
+                    "0.1");
         }
 
         @Override

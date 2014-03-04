@@ -6,14 +6,19 @@ package org.geogit.api;
 
 import java.io.File;
 
-public class TestPlatform extends DefaultPlatform implements Platform {
+public class TestPlatform extends DefaultPlatform implements Platform, Cloneable {
 
     private File userHomeDirectory;
 
     public TestPlatform(final File workingDirectory) {
-        super.workingDir= workingDirectory;
+        super.workingDir = workingDirectory;
         this.userHomeDirectory = new File(workingDirectory, "userhome");
         this.userHomeDirectory.mkdir();
+    }
+
+    public TestPlatform(final File workingDirectory, final File userHomeDirectory) {
+        super.workingDir = workingDirectory;
+        this.userHomeDirectory = userHomeDirectory;
     }
 
     @Override
@@ -28,5 +33,10 @@ public class TestPlatform extends DefaultPlatform implements Platform {
 
     public void setUserHome(File userHomeDirectory) {
         this.userHomeDirectory = userHomeDirectory;
+    }
+
+    @Override
+    public TestPlatform clone() {
+        return new TestPlatform(pwd(), getUserHome());
     }
 }

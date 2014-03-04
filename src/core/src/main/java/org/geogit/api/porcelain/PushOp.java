@@ -17,6 +17,7 @@ import org.geogit.api.plumbing.ForEachRef;
 import org.geogit.api.plumbing.RefParse;
 import org.geogit.remote.IRemoteRepo;
 import org.geogit.remote.RemoteUtils;
+import org.geogit.repository.Hints;
 import org.geogit.repository.Repository;
 import org.geogit.storage.DeduplicationService;
 
@@ -217,7 +218,9 @@ public class PushOp extends AbstractGeoGitOp<Void> {
      * @return an interface for the remote repository
      */
     public Optional<IRemoteRepo> getRemoteRepo(Remote remote) {
-        return RemoteUtils.newRemote(GlobalInjectorBuilder.builder.build(), remote,
+        Hints remoteHints = new Hints();
+        remoteHints.set(Hints.REMOTES_READ_ONLY, Boolean.FALSE);
+        return RemoteUtils.newRemote(GlobalInjectorBuilder.builder.build(remoteHints), remote,
                 localRepository, deduplicationService);
     }
 }

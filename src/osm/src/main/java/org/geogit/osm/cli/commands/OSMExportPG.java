@@ -14,6 +14,7 @@ import javax.annotation.Nullable;
 import org.geogit.cli.CLICommand;
 import org.geogit.cli.CommandFailedException;
 import org.geogit.cli.GeogitCLI;
+import org.geogit.cli.annotation.ReadOnly;
 import org.geogit.geotools.cli.porcelain.AbstractPGCommand;
 import org.geogit.geotools.plumbing.ExportOp;
 import org.geogit.geotools.plumbing.GeoToolsOpException;
@@ -39,6 +40,7 @@ import com.vividsolutions.jts.geom.Point;
  * 
  * @see ExportOp
  */
+@ReadOnly
 @Parameters(commandNames = "export-pg", commandDescription = "Export OSM data to a PostGIS database, using a data mapping")
 public class OSMExportPG extends AbstractPGCommand implements CLICommand {
 
