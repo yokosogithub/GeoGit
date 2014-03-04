@@ -13,7 +13,11 @@ import cucumber.junit.Cucumber;
  * definitions and hooks are defined in their own classes so they can be reused across features.
  * 
  */
+// use features=... to specify one or more specific features to execute
+// @Cucumber.Options(features = { "src/test/resources/org/geogit/cli/test/functional/Branch.feature"
+// }, monochrome = true, format = {
+// "pretty", "html:target/cucumber-report" }, strict = true)
+@Cucumber.Options(monochrome = true, format = { "pretty", "html:target/cucumber-report" }, strict = true)
 @RunWith(Cucumber.class)
-@Cucumber.Options(format = { "pretty", "html:target/cucumber-report" }, strict = true)
 public class RunFunctionalTest {
 }

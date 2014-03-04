@@ -161,8 +161,7 @@ public class RefParse extends AbstractGeoGitOp<Optional<Ref>> {
             return Optional.of(resolved);
         }
         ObjectId objectId = ObjectId.valueOf(storedValue);
-        TYPE type = objectId.isNull() ? null : command(ResolveObjectType.class).setObjectId(
-                objectId).call();
+        TYPE type = TYPE.COMMIT; //objectId.isNull() ? null : command(ResolveObjectType.class).setObjectId(objectId).call();
         return Optional.of(new Ref(name, objectId, type));
     }
 

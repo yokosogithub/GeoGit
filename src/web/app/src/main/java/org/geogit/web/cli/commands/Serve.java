@@ -17,7 +17,7 @@ import org.geogit.cli.AbstractCommand;
 import org.geogit.cli.CommandFailedException;
 import org.geogit.cli.GeogitCLI;
 import org.geogit.cli.InvalidParameterException;
-import org.geogit.cli.RequiresRepository;
+import org.geogit.cli.annotation.RequiresRepository;
 import org.geogit.web.Main;
 import org.restlet.Application;
 import org.restlet.Component;

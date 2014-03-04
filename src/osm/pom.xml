@@ -76,6 +76,20 @@
       <classifier>tests</classifier>
     </dependency>
     <dependency>
+      <groupId>org.geogit</groupId>
+      <artifactId>geogit-cli</artifactId>
+      <version>${project.version}</version>
+      <scope>test</scope>
+      <classifier>tests</classifier>
+    </dependency>
+    <dependency>
+      <groupId>org.geogit</groupId>
+      <artifactId>geogit-bdbje</artifactId>
+      <version>${project.version}</version>
+      <classifier>tests</classifier>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>
       <scope>test</scope>

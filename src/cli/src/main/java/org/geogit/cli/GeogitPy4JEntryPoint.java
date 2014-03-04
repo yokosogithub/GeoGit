@@ -107,7 +107,7 @@ public class GeogitPy4JEntryPoint {
         String command = Joiner.on(" ").join(args);
         os.clear();
         System.out.print("Running command: " + command);
-        int ret = cli.processCommand(args);
+        int ret = cli.execute(args);
         cli.close();
         if (ret == 0) {
             System.out.println(" [OK]");

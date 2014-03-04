@@ -18,6 +18,7 @@ import org.geogit.cli.AbstractCommand;
 import org.geogit.cli.CLICommand;
 import org.geogit.cli.CommandFailedException;
 import org.geogit.cli.GeogitCLI;
+import org.geogit.cli.annotation.ObjectDatabaseReadOnly;
 
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.Parameters;
@@ -42,6 +43,7 @@ import com.google.common.collect.Lists;
  * 
  * @see CheckoutOp
  */
+@ObjectDatabaseReadOnly
 @Parameters(commandNames = "checkout", commandDescription = "Checkout a branch or paths to the working tree")
 public class Checkout extends AbstractCommand implements CLICommand {
 

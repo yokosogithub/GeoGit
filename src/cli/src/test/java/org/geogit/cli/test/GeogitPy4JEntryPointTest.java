@@ -1,47 +1,50 @@
 package org.geogit.cli.test;
 
-import static org.geogit.cli.test.functional.GlobalState.currentDirectory;
-import static org.geogit.cli.test.functional.GlobalState.geogit;
-import static org.geogit.cli.test.functional.GlobalState.homeDirectory;
+import static org.geogit.cli.test.functional.GlobalState.geogitCLI;
+import static org.geogit.cli.test.functional.GlobalState.insert;
+import static org.geogit.cli.test.functional.GlobalState.platform;
+import static org.geogit.cli.test.functional.GlobalState.setupGeogit;
+import static org.geogit.cli.test.functional.GlobalState.tempFolder;
+import static org.geogit.cli.test.functional.TestFeatures.points1;
+import static org.geogit.cli.test.functional.TestFeatures.points1_modified;
+import static org.geogit.cli.test.functional.TestFeatures.points2;
+import static org.geogit.cli.test.functional.TestFeatures.points3;
+import static org.geogit.cli.test.functional.TestFeatures.setupFeatures;
 import static org.junit.Assert.assertTrue;
 
+import java.io.File;
 import java.io.IOException;
 
-import org.geogit.api.InjectorBuilder;
+import org.geogit.api.GlobalInjectorBuilder;
+import org.geogit.api.TestPlatform;
 import org.geogit.api.porcelain.AddOp;
 import org.geogit.api.porcelain.CommitOp;
 import org.geogit.cli.GeogitPy4JEntryPoint;
-import org.geogit.cli.test.functional.AbstractGeogitFunctionalTest;
 import org.geogit.cli.test.functional.CLITestInjectorBuilder;
+import org.geogit.cli.test.functional.GlobalState;
 import org.junit.Before;
-import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
 import py4j.GatewayServer;
 
-public class GeogitPy4JEntryPointTest extends AbstractGeogitFunctionalTest {
-
-    @Rule
-    public TemporaryFolder tempFolder = new TemporaryFolder();
+public class GeogitPy4JEntryPointTest {
 
     @Before
     public void setUpDirectories() throws IOException {
+        tempFolder = new TemporaryFolder();
         tempFolder.create();
-        homeDirectory = tempFolder.newFolder("fakeHomeDir").getCanonicalFile();
-        currentDirectory = tempFolder.newFolder("testrepo").getCanonicalFile();
-    }
-
-    @Override
-    protected InjectorBuilder getInjectorBuilder() {
-        return new CLITestInjectorBuilder(currentDirectory, homeDirectory);
+        File homeDirectory = tempFolder.newFolder("fakeHomeDir").getCanonicalFile();
+        File currentDirectory = tempFolder.newFolder("testrepo").getCanonicalFile();
+        GlobalState.platform = new TestPlatform(currentDirectory, homeDirectory);
+        GlobalInjectorBuilder.builder = new CLITestInjectorBuilder(platform);
     }
 
     @Test
     public void testPy4JentryPoint() throws Exception {
         setupGeogit();
         setupFeatures();
-        String repoFolder = currentDirectory.getAbsolutePath();
+        String repoFolder = platform.pwd().getAbsolutePath();
         GeogitPy4JEntryPoint py4j = new GeogitPy4JEntryPoint();
         GatewayServer gatewayServer = new GatewayServer(py4j);
         gatewayServer.start();
@@ -51,8 +54,8 @@ public class GeogitPy4JEntryPointTest extends AbstractGeogitFunctionalTest {
         insert(points1);
         insert(points2);
         insert(points3);
-        geogit.command(AddOp.class).call();
-        geogit.command(CommitOp.class).setMessage("message").call();
+        geogitCLI.getGeogit().command(AddOp.class).call();
+        geogitCLI.getGeogit().command(CommitOp.class).setMessage("message").call();
         py4j.runCommand(repoFolder, new String[] { "log" });
         String output = py4j.lastOutput();
         assertTrue(output.contains("message"));
