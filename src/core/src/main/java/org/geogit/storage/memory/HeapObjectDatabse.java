@@ -197,4 +197,9 @@ public class HeapObjectDatabse extends AbstractObjectDatabase implements ObjectD
     public void checkConfig() {
         // No-op
     }
+
+    @Override
+    public String toString() {
+        return getClass().getSimpleName();
+    }
 }

@@ -278,7 +278,7 @@ public class GeogitCLI {
     /**
      * Closes the GeoGIT facade if it exists.
      */
-    public void close() {
+    public synchronized void close() {
         if (geogit != null) {
             geogit.close();
             geogit = null;
@@ -288,20 +288,18 @@ public class GeogitCLI {
     }
 
     /**
+     * @return true if a command is being ran
+     */
+    public synchronized boolean isRunning() {
+        return geogit != null;
+    }
+
+    /**
      * Entry point for the command line interface.
      * 
      * @param args
      */
     public static void main(String[] args) {
-        // TODO: revisit in case we need to grafefully shutdown upon CTRL+C
-        // Runtime.getRuntime().addShutdownHook(new Thread() {
-        // @Override
-        // public void run() {
-        // System.err.println("Shutting down...");
-        // System.err.flush();
-        // }
-        // });
-
         ConsoleReader consoleReader;
         try {
             consoleReader = new ConsoleReader(System.in, System.out);
@@ -311,7 +309,8 @@ public class GeogitCLI {
             throw Throwables.propagate(e);
         }
 
-        GeogitCLI cli = new GeogitCLI(consoleReader);
+        final GeogitCLI cli = new GeogitCLI(consoleReader);
+        addShutdownHook(cli);
         int exitCode = cli.execute(args);
 
         try {
@@ -863,4 +862,19 @@ public class GeogitCLI {
         return this.progressListener;
     }
 
+    static void addShutdownHook(final GeogitCLI cli) {
+        // try to grafefully shutdown upon CTRL+C
+        Runtime.getRuntime().addShutdownHook(new Thread() {
+            @Override
+            public void run() {
+                if (cli.isRunning()) {
+                    System.err.println("Forced shut down, wait for geogit to be closed...");
+                    System.err.flush();
+                    cli.close();
+                    System.err.println("geogit closed.");
+                    System.err.flush();
+                }
+            }
+        });
+    }
 }

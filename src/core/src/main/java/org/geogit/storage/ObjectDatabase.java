@@ -4,6 +4,7 @@
  */
 package org.geogit.storage;
 
+import java.io.Closeable;
 import java.util.Iterator;
 import java.util.List;
 
@@ -21,7 +22,7 @@ import org.geogit.repository.RepositoryConnectionException;
 /**
  * Provides an interface for implementations of GeoGit object databases.
  */
-public interface ObjectDatabase {
+public interface ObjectDatabase extends Closeable {
 
     /**
      * Opens the database. It's safe to call this method multiple times, and only the first call

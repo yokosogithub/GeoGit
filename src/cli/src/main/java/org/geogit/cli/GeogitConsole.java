@@ -78,6 +78,7 @@ public class GeogitConsole {
 
         final GeogitCLI cli = new GeogitCLI(consoleReader);
         cli.tryConfigureLogging();
+        GeogitCLI.addShutdownHook(cli);
 
         try {
             for (String line : lines) {
@@ -152,6 +153,8 @@ public class GeogitConsole {
 
         Completer completer = new AggregateCompleter(completers);
         consoleReader.addCompleter(completer);
+
+        GeogitCLI.addShutdownHook(cli);
 
         setPrompt(cli);
         cli.close();

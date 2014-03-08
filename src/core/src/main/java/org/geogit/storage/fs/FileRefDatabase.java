@@ -331,4 +331,10 @@ public class FileRefDatabase extends AbstractRefDatabase {
     public void checkConfig() throws RepositoryConnectionException {
         RepositoryConnectionException.StorageType.REF.verify(configDB, "file", "1.0");
     }
+
+    @Override
+    public String toString() {
+        Optional<URL> envHome = new ResolveGeogitDir(platform).call();
+        return String.format("%s[geogit dir: %s]", getClass().getSimpleName(), envHome.orNull());
+    }
 }

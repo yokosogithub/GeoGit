@@ -47,4 +47,9 @@ public class MongoGraphDatabase extends BlueprintsGraphDatabase<MongoGraph> {
         return new MongoGraph(collection);
     }
 
+    @Override
+    public String toString() {
+        return String.format("%s[uri: %s]", getClass().getSimpleName(),
+                config == null ? "<unknown>" : config.get("mongodb.uri").or("<unset>"));
+    }
 }

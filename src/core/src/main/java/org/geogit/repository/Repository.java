@@ -4,6 +4,7 @@
  */
 package org.geogit.repository;
 
+import java.io.Closeable;
 import java.net.URL;
 import java.util.Map;
 
@@ -31,6 +32,8 @@ import org.geogit.storage.GraphDatabase;
 import org.geogit.storage.ObjectDatabase;
 import org.geogit.storage.ObjectInserter;
 import org.geogit.storage.RefDatabase;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
@@ -49,6 +52,8 @@ import com.google.inject.Injector;
  * @see WorkingTree
  */
 public class Repository implements CommandLocator {
+
+    private static Logger LOGGER = LoggerFactory.getLogger(Repository.class);
 
     @Inject
     private StagingArea index;
@@ -104,14 +109,17 @@ public class Repository implements CommandLocator {
      * Closes the repository.
      */
     public synchronized void close() {
+        close(refDatabase);
+        close(objectDatabase);
+        close(graphDatabase);
+        close(index.getDatabase());
+    }
+
+    private void close(Closeable db) {
         try {
-            refDatabase.close();
-            objectDatabase.close();
-            graphDatabase.close();
-            index.getDatabase().close();
-        } catch (RuntimeException e) {
-            e.printStackTrace();
-            throw e;
+            db.close();
+        } catch (Exception e) {
+            LOGGER.error("Error closing database " + db, e);
         }
     }
 

@@ -4,6 +4,7 @@
  */
 package org.geogit.storage;
 
+import java.io.Closeable;
 import java.util.Map;
 import java.util.concurrent.TimeoutException;
 
@@ -13,7 +14,7 @@ import org.geogit.repository.RepositoryConnectionException;
  * Provides an interface for GeoGit reference databases.
  * 
  */
-public interface RefDatabase {
+public interface RefDatabase extends Closeable{
 
     /**
      * Locks access to the main repository refs.
