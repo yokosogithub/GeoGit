@@ -101,7 +101,6 @@ public class RefParseTest {
         Optional<Ref> ref = command.setName(refName).call();
         assertTrue(ref.isPresent());
         assertEquals(refName, ref.get().getName());
-        assertEquals(TYPE.COMMIT, ref.get().getType());
         assertEquals(forString(refName), ref.get().getObjectId());
 
         refName = "refs/remotes/juan/v1.1";
@@ -126,7 +125,6 @@ public class RefParseTest {
         ref = command.setName(refSpec).call();
         assertTrue(ref.isPresent());
         assertEquals(refName, ref.get().getName());
-        assertEquals(TYPE.COMMIT, ref.get().getType());
         assertEquals(forString(refName), ref.get().getObjectId());
     }
 

@@ -141,7 +141,7 @@ public class LocalMappedRemoteRepo extends AbstractMappedRemoteRepo {
                 ObjectId mappedCommit = localRepository.getGraphDatabase().getMapping(
                         remoteRef.getObjectId());
                 if (mappedCommit != null) {
-                    newRef = new Ref(remoteRef.getName(), mappedCommit, remoteRef.getType());
+                    newRef = new Ref(remoteRef.getName(), mappedCommit);
                 }
             }
             builder.add(newRef);

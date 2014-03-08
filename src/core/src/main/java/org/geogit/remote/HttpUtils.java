@@ -55,14 +55,14 @@ class HttpUtils {
             // NAME HASH
             String name = tokens[0];
             ObjectId objectId = ObjectId.valueOf(tokens[1]);
-            ref = new Ref(name, objectId, RevObject.TYPE.COMMIT);
+            ref = new Ref(name, objectId);
         } else {
             // symbolic ref
             // NAME TARGET HASH
             String name = tokens[0];
             String targetRef = tokens[1];
             ObjectId targetObjectId = ObjectId.valueOf(tokens[2]);
-            Ref target = new Ref(targetRef, targetObjectId, RevObject.TYPE.COMMIT);
+            Ref target = new Ref(targetRef, targetObjectId);
             ref = new SymRef(name, target);
 
         }
@@ -261,10 +261,9 @@ class HttpUtils {
                 reader.close();
 
                 if (target != null) {
-                    updatedRef = new SymRef(refName, new Ref(target, ObjectId.valueOf(objectId),
-                            RevObject.TYPE.COMMIT));
+                    updatedRef = new SymRef(refName, new Ref(target, ObjectId.valueOf(objectId)));
                 } else {
-                    updatedRef = new Ref(refName, ObjectId.valueOf(objectId), RevObject.TYPE.COMMIT);
+                    updatedRef = new Ref(refName, ObjectId.valueOf(objectId));
                 }
 
             } finally {
@@ -409,10 +408,9 @@ class HttpUtils {
 
                     if (target != null) {
                         remoteRef = Optional.of((Ref) new SymRef(refName, new Ref(target, ObjectId
-                                .valueOf(objectId), RevObject.TYPE.COMMIT)));
+                                .valueOf(objectId))));
                     } else {
-                        remoteRef = Optional.of(new Ref(refName, ObjectId.valueOf(objectId),
-                                RevObject.TYPE.COMMIT));
+                        remoteRef = Optional.of(new Ref(refName, ObjectId.valueOf(objectId)));
                     }
                 }
 

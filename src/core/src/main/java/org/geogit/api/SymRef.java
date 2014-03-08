@@ -18,7 +18,7 @@ public class SymRef extends Ref {
      * @param target the reference that this symbolic ref points to
      */
     public SymRef(String name, Ref target) {
-        super(name, target.getObjectId(), target.getType());
+        super(name, target.getObjectId());
         this.target = target;
     }
 
