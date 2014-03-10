@@ -225,7 +225,7 @@ public class JEObjectDatabase extends AbstractObjectDatabase implements ObjectDa
                     environment = createEnvironment(false);
                 } catch (EnvironmentLockedException e) {
                     throw new IllegalStateException(String.format(
-                            "Environment open readonly but databse %s does not exist.",
+                            "Environment open readonly but database %s does not exist.",
                             databaseName));
                 }
             }

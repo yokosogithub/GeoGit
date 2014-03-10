@@ -13,9 +13,9 @@ import com.beust.jcommander.Parameter;
 public class SLCommonArgs {
 
     /**
-     * The databse to connect to. Default: database
+     * The database to connect to. Default: database
      */
-    @Parameter(names = "--database", description = "The databse to connect to.  Default: database.sqlite")
+    @Parameter(names = "--database", description = "The database to connect to.  Default: database.sqlite")
     public String database = "database.sqlite";
 
     /**

@@ -19,7 +19,7 @@ public interface GraphDatabase extends Closeable {
     public static final String SPARSE_FLAG = "sparse";
 
     /**
-     * Initializes/opens the databse. It's safe to call this method multiple times, and only the
+     * Initializes/opens the database. It's safe to call this method multiple times, and only the
      * first call shall take effect.
      */
     public void open();
