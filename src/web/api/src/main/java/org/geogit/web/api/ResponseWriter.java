@@ -46,6 +46,7 @@ import org.geogit.api.plumbing.merge.Conflict;
 import org.geogit.api.plumbing.merge.MergeScenarioReport;
 import org.geogit.api.porcelain.FetchResult;
 import org.geogit.api.porcelain.FetchResult.ChangedRef;
+import org.geogit.api.porcelain.MergeOp.MergeReport;
 import org.geogit.api.porcelain.PullResult;
 import org.geogit.web.api.commands.BranchWebOp;
 import org.geogit.web.api.commands.Commit;
@@ -546,10 +547,10 @@ public class ResponseWriter {
         }
         if (result.getMergeReport().isPresent()
                 && result.getMergeReport().get().getReport().isPresent()) {
-            writeMergeResponse(result.getMergeReport().get().getReport().get(), geogit, result
-                    .getMergeReport().get().getOurs(), result.getMergeReport().get().getPairs()
-                    .get(0).getTheirs(), result.getMergeReport().get().getPairs().get(0)
-                    .getAncestor());
+            MergeReport report = result.getMergeReport().get();
+            writeMergeResponse(Optional.fromNullable(report.getMergeCommit()), report.getReport()
+                    .get(), geogit, report.getOurs(), report.getPairs().get(0).getTheirs(), report
+                    .getPairs().get(0).getAncestor());
         }
         out.writeEndElement();
     }
@@ -872,12 +873,16 @@ public class ResponseWriter {
      * @param transaction - a CommandLocator to call commands from
      * @throws XMLStreamException
      */
-    public void writeMergeResponse(MergeScenarioReport report, CommandLocator transaction,
-            ObjectId ours, ObjectId theirs, ObjectId ancestor) throws XMLStreamException {
+    public void writeMergeResponse(Optional<RevCommit> mergeCommit, MergeScenarioReport report,
+            CommandLocator transaction, ObjectId ours, ObjectId theirs, ObjectId ancestor)
+            throws XMLStreamException {
         out.writeStartElement("Merge");
         writeElement("ours", ours.toString());
         writeElement("theirs", theirs.toString());
         writeElement("ancestor", ancestor.toString());
+        if (mergeCommit.isPresent()) {
+            writeElement("mergedCommit", mergeCommit.get().getId().toString());
+        }
         if (report.getConflicts().size() > 0) {
             writeElement("conflicts", Integer.toString(report.getConflicts().size()));
         }
