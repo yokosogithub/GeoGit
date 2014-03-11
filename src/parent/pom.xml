@@ -332,18 +332,11 @@
         <artifactId>blueprints-neo4j-graph</artifactId>
         <version>${blueprints.version}</version>
       </dependency>
-      <!--
       <dependency>
-        <groupId>org.restlet.jse</groupId>
-        <artifactId>org.restlet.ext.jetty</artifactId>
+        <groupId>org.restlet</groupId>
+        <artifactId>org.restlet</artifactId>
         <version>${restlet.version}</version>
       </dependency>
-      <dependency>
-        <groupId>org.restlet.jee</groupId>
-        <artifactId>org.restlet.ext.servlet</artifactId>
-        <version>${restlet.version}</version>
-      </dependency>
-      -->
       <dependency>
         <groupId>com.noelios.restlet</groupId>
         <artifactId>com.noelios.restlet.ext.jetty</artifactId>

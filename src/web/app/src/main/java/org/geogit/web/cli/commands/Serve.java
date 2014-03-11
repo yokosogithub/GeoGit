@@ -21,20 +21,20 @@ import org.geogit.cli.annotation.RequiresRepository;
 import org.geogit.web.Main;
 import org.restlet.Application;
 import org.restlet.Component;
-import org.restlet.Context;
 import org.restlet.data.Protocol;
 
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.Parameters;
 
 /**
- * This command starts an embedded server to serve up a repository. 
+ * This command starts an embedded server to serve up a repository.
  * <p>
  * Usage:
  * <ul>
  * <li> {@code geogit serve [-p <port>] [<directory>]}
  * </ul>
  * </p>
+ * 
  * @see Main
  */
 @RequiresRepository(false)
@@ -53,11 +53,9 @@ public class Serve extends AbstractCommand {
 
         String loc = repo != null && repo.size() > 0 ? repo.get(0) : ".";
 
-        Context context = new Context();
-        context.getAttributes().put("geogit", loadGeoGIT(loc, cli));
+        GeoGIT geogit = loadGeoGIT(loc, cli);
+        Application application = new Main(geogit);
 
-        Application application = new Main();
-        application.setContext(context);
         Component comp = new Component();
 
         comp.getDefaultHost().attach(application);
@@ -69,7 +67,7 @@ public class Serve extends AbstractCommand {
         try {
             comp.start();
             cli.setExitOnFinish(false);
-        } catch(BindException e) {
+        } catch (BindException e) {
             String msg = String.format(
                     "Port %d already in use, use the --port parameter to specify a different port",
                     port);

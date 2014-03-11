@@ -2,9 +2,14 @@
  * This code is licensed under the BSD New License, available at the root
  * application directory.
  */
-package org.geogit.web.api.repo;
+
+package org.geogit.rest.repository;
+
+import static org.geogit.rest.repository.RESTUtils.getGeogit;
 
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.Reader;
 import java.util.ArrayList;
@@ -16,23 +21,55 @@ import org.geogit.api.plumbing.CreateDeduplicator;
 import org.geogit.remote.BinaryPackedObjects;
 import org.geogit.repository.Repository;
 import org.geogit.storage.Deduplicator;
-import org.geogit.storage.memory.HeapDeduplicator;
+import org.restlet.Context;
+import org.restlet.Finder;
 import org.restlet.data.MediaType;
-import org.restlet.representation.OutputRepresentation;
-import org.restlet.representation.Representation;
-import org.restlet.resource.ResourceException;
-import org.restlet.resource.ServerResource;
+import org.restlet.data.Request;
+import org.restlet.data.Response;
+import org.restlet.resource.OutputRepresentation;
+import org.restlet.resource.Representation;
+import org.restlet.resource.Resource;
 
+import com.google.common.base.Throwables;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
-public class BatchedObjectResource extends ServerResource {
+/**
+ * Takes a set of commit Ids and packs up their contents into a binary stream to send to the client.
+ */
+public class BatchedObjectResource extends Finder {
+
     @Override
-    protected Representation post(Representation entity) throws ResourceException {
-        try {
-            final Reader body = entity.getReader();
+    public Resource findTarget(Request request, Response response) {
+        return new ObjectResource(getContext(), request, response);
+    }
+
+    private static class ObjectResource extends Resource {
+        public ObjectResource(//
+                Context context, //
+                Request request, //
+                Response response) //
+        {
+            super(context, request, response);
+        }
+
+        @Override
+        public boolean allowPost() {
+            return true;
+        }
+
+        @Override
+        public void post(Representation entity) {
+            final InputStream inStream;
+            try {
+                inStream = entity.getStream();
+            } catch (IOException e) {
+                throw Throwables.propagate(e);
+            }
+
+            final Reader body = new InputStreamReader(inStream);
             final JsonParser parser = new JsonParser();
             final JsonElement messageJson = parser.parse(body);
 
@@ -65,21 +102,17 @@ public class BatchedObjectResource extends ServerResource {
                 }
             }
 
-            final GeoGIT ggit = (GeoGIT) getApplication().getContext().getAttributes()
-                    .get("geogit");
+            final GeoGIT ggit = getGeogit(getRequest()).get();
             final Repository repository = ggit.getRepository();
             final Deduplicator deduplicator = ggit.command(CreateDeduplicator.class).call();
 
-            return new BinaryPackedObjectsRepresentation(new BinaryPackedObjects(
-                    repository.getObjectDatabase()), want, have, deduplicator);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
+            BinaryPackedObjects packer = new BinaryPackedObjects(repository.getIndex()
+                    .getDatabase());
+            getResponse().setEntity(new RevObjectBinaryRepresentation(packer, want, have, deduplicator));
         }
     }
 
-    private static final MediaType PACKED_OBJECTS = new MediaType("application/x-geogit-packed");
-
-    private class BinaryPackedObjectsRepresentation extends OutputRepresentation {
+    private static class RevObjectBinaryRepresentation extends OutputRepresentation {
         private final BinaryPackedObjects packer;
 
         private final List<ObjectId> want;
@@ -88,12 +121,16 @@ public class BatchedObjectResource extends ServerResource {
 
 		private Deduplicator deduplicator;
 
-        public BinaryPackedObjectsRepresentation(BinaryPackedObjects packer, List<ObjectId> want,
-                List<ObjectId> have, Deduplicator deduplicator) {
-            super(PACKED_OBJECTS);
+        public RevObjectBinaryRepresentation( //
+                BinaryPackedObjects packer, //
+                List<ObjectId> want, //
+                List<ObjectId> have, //
+                Deduplicator deduplicator) //
+        {
+            super(MediaType.APPLICATION_OCTET_STREAM);
+            this.packer = packer;
             this.want = want;
             this.have = have;
-            this.packer = packer;
             this.deduplicator = deduplicator;
         }
 
@@ -106,4 +143,5 @@ public class BatchedObjectResource extends ServerResource {
         	}
         }
     }
+
 }

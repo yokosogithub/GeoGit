@@ -5,7 +5,7 @@
 
 package org.geogit.rest.repository;
 
-import static org.geogit.rest.repository.GeogitResourceUtils.getGeogit;
+import static org.geogit.rest.repository.RESTUtils.getGeogit;
 
 import java.io.IOException;
 import java.io.OutputStream;
