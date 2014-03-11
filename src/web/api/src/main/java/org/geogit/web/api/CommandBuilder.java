@@ -23,6 +23,7 @@ import org.geogit.web.api.commands.LsTree;
 import org.geogit.web.api.commands.MergeWebOp;
 import org.geogit.web.api.commands.PullWebOp;
 import org.geogit.web.api.commands.PushWebOp;
+import org.geogit.web.api.commands.RebuildGraphWebOp;
 import org.geogit.web.api.commands.RefParseWeb;
 import org.geogit.web.api.commands.RemoteWebOp;
 import org.geogit.web.api.commands.RemoveWebOp;
@@ -96,6 +97,8 @@ public class CommandBuilder {
             command = buildResolveConflict(options);
         } else if ("revertfeature".equalsIgnoreCase(commandName)) {
             command = buildRevertFeature(options);
+        } else if ("rebuildgraph".equalsIgnoreCase(commandName)) {
+            command = buildRebuildGraph(options);
         } else if ("blame".equalsIgnoreCase(commandName)) {
             command = buildBlame(options);
         } else if ("version".equalsIgnoreCase(commandName)) {
@@ -452,6 +455,12 @@ public class CommandBuilder {
         ResolveConflict command = new ResolveConflict();
         command.setPath(options.getFirstValue("path", null));
         command.setFeatureObjectId(options.getFirstValue("objectid", null));
+        return command;
+    }
+
+    static RebuildGraphWebOp buildRebuildGraph(ParameterSet options) {
+        RebuildGraphWebOp command = new RebuildGraphWebOp();
+        command.setQuiet(Boolean.valueOf(options.getFirstValue("quiet", "false")));
         return command;
     }
 
