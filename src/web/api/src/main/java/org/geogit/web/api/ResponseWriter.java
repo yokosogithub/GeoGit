@@ -512,10 +512,17 @@ public class ResponseWriter {
      * @param remotes the list of the {@link Remote}s of this repository
      * @throws XMLStreamException
      */
-    public void writeRemoteListResponse(List<Remote> remotes) throws XMLStreamException {
+    public void writeRemoteListResponse(List<Remote> remotes, boolean verbose)
+            throws XMLStreamException {
         for (Remote remote : remotes) {
             out.writeStartElement("Remote");
             writeElement("name", remote.getName());
+            if (verbose) {
+                writeElement("url", remote.getFetchURL());
+                if (remote.getUserName() != null) {
+                    writeElement("username", remote.getUserName());
+                }
+            }
             out.writeEndElement();
         }
     }
