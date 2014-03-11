@@ -56,10 +56,12 @@ import org.geogit.web.api.commands.RefParseWeb;
 import org.geogit.web.api.commands.RemoteWebOp;
 import org.geogit.web.api.commands.TagWebOp;
 import org.geogit.web.api.commands.UpdateRefWeb;
+import org.geotools.metadata.iso.citation.Citations;
 import org.geotools.referencing.CRS;
 import org.opengis.feature.type.GeometryType;
 import org.opengis.feature.type.PropertyDescriptor;
 import org.opengis.feature.type.PropertyType;
+import org.opengis.referencing.FactoryException;
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
 
 import com.google.common.base.Function;
@@ -376,10 +378,12 @@ public class ResponseWriter {
     /**
      * Writes the response for the {@link Commit} command to the stream.
      * 
+     * @param commit the commit
      * @param diff the changes returned from the command
      * @throws XMLStreamException
      */
-    public void writeCommitResponse(Iterator<DiffEntry> diff) throws XMLStreamException {
+    public void writeCommitResponse(RevCommit commit, Iterator<DiffEntry> diff)
+            throws XMLStreamException {
         int adds = 0, deletes = 0, changes = 0;
         DiffEntry diffEntry;
         while (diff.hasNext()) {
@@ -396,6 +400,7 @@ public class ResponseWriter {
                 break;
             }
         }
+        writeElement("commitId", commit.getId().toString());
         writeElement("added", Integer.toString(adds));
         writeElement("changed", Integer.toString(changes));
         writeElement("deleted", Integer.toString(deletes));
@@ -620,7 +625,15 @@ public class ResponseWriter {
                 GeometryType gt = (GeometryType) attrType;
                 CoordinateReferenceSystem crs = gt.getCoordinateReferenceSystem();
                 if (crs != null) {
-                    writeElement("crs", CRS.toSRS(crs));
+                    String crsCode = null;
+                    try {
+                        crsCode = CRS.lookupIdentifier(Citations.EPSG, crs, false);
+                    } catch (FactoryException e) {
+                        crsCode = null;
+                    }
+                    if (crsCode != null) {
+                        writeElement("crs", "EPSG:" + crsCode);
+                    }
                 }
             }
             writeElement("attributename", entry.getKey().getName().toString());
@@ -688,7 +701,15 @@ public class ResponseWriter {
                                     CoordinateReferenceSystem crs = gt
                                             .getCoordinateReferenceSystem();
                                     if (crs != null) {
-                                        crsCode = CRS.toSRS(crs);
+                                        try {
+                                            crsCode = CRS.lookupIdentifier(Citations.EPSG, crs,
+                                                    false);
+                                        } catch (FactoryException e) {
+                                            crsCode = null;
+                                        }
+                                        if (crsCode != null) {
+                                            crsCode = "EPSG:" + crsCode;
+                                        }
                                     }
                                     break;
                                 }
@@ -806,7 +827,15 @@ public class ResponseWriter {
                                             .getCoordinateReferenceSystem();
 
                                     if (crs != null) {
-                                        crsCode = CRS.toSRS(crs);
+                                        try {
+                                            crsCode = CRS.lookupIdentifier(Citations.EPSG, crs,
+                                                    false);
+                                        } catch (FactoryException e) {
+                                            crsCode = null;
+                                        }
+                                        if (crsCode != null) {
+                                            crsCode = "EPSG:" + crsCode;
+                                        }
                                     }
                                     break;
                                 }
@@ -873,7 +902,14 @@ public class ResponseWriter {
                                 GeometryType gt = (GeometryType) attrType;
                                 CoordinateReferenceSystem crs = gt.getCoordinateReferenceSystem();
                                 if (crs != null) {
-                                    crsCode = CRS.toSRS(crs);
+                                    try {
+                                        crsCode = CRS.lookupIdentifier(Citations.EPSG, crs, false);
+                                    } catch (FactoryException e) {
+                                        crsCode = null;
+                                    }
+                                    if (crsCode != null) {
+                                        crsCode = "EPSG:" + crsCode;
+                                    }
                                 }
                                 break;
                             }
