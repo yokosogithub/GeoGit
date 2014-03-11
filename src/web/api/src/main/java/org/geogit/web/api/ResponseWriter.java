@@ -50,6 +50,7 @@ import org.geogit.api.porcelain.MergeOp.MergeReport;
 import org.geogit.api.porcelain.PullResult;
 import org.geogit.web.api.commands.BranchWebOp;
 import org.geogit.web.api.commands.Commit;
+import org.geogit.web.api.commands.Log.CommitSummary;
 import org.geogit.web.api.commands.LsTree;
 import org.geogit.web.api.commands.RefParseWeb;
 import org.geogit.web.api.commands.RemoteWebOp;
@@ -201,7 +202,7 @@ public class ResponseWriter {
             throws XMLStreamException {
         Iterator<Conflict> entries = conflicts.iterator();
 
-        advance(entries, start);
+        Iterators.advance(entries, start);
         if (length < 0) {
             length = Integer.MAX_VALUE;
         }
@@ -217,13 +218,6 @@ public class ResponseWriter {
         }
     }
 
-    @SuppressWarnings("rawtypes")
-    private void advance(Iterator it, int cnt) {
-        for (int i = 0; i < cnt && it.hasNext(); i++) {
-            it.next();
-        }
-    }
-
     /**
      * Writes a set of {@link DiffEntry}s to the stream.
      * 
@@ -235,7 +229,7 @@ public class ResponseWriter {
      */
     public void writeDiffEntries(String name, int start, int length, Iterator<DiffEntry> entries)
             throws XMLStreamException {
-        advance(entries, start);
+        Iterators.advance(entries, start);
         if (length < 0) {
             length = Integer.MAX_VALUE;
         }
@@ -270,46 +264,97 @@ public class ResponseWriter {
         }
     }
 
+    private void writeCommit(RevCommit commit, String tag, @Nullable Integer adds,
+            @Nullable Integer modifies, @Nullable Integer removes) throws XMLStreamException {
+        out.writeStartElement(tag);
+        writeElement("id", commit.getId().toString());
+        writeElement("tree", commit.getTreeId().toString());
+
+        ImmutableList<ObjectId> parentIds = commit.getParentIds();
+        out.writeStartElement("parents");
+        for (ObjectId parentId : parentIds) {
+            writeElement("id", parentId.toString());
+        }
+        out.writeEndElement();
+
+        writePerson("author", commit.getAuthor());
+        writePerson("committer", commit.getCommitter());
+
+        if (adds != null) {
+            writeElement("adds", adds.toString());
+        }
+        if (modifies != null) {
+            writeElement("modifies", modifies.toString());
+        }
+        if (removes != null) {
+            writeElement("removes", removes.toString());
+        }
+
+        out.writeStartElement("message");
+        if (commit.getMessage() != null) {
+            out.writeCData(commit.getMessage());
+        }
+        out.writeEndElement();
+
+        out.writeEndElement();
+    }
+
     /**
      * Writes a set of {@link RevCommit}s to the stream.
      * 
      * @param entries an iterator for the RevCommits to write
-     * @param page the page number to write
      * @param elementsPerPage the number of commits per page
+     * @param returnRange only return the range if true
      * @throws XMLStreamException
      */
-    public void writeCommits(Iterator<RevCommit> entries, int page, int elementsPerPage)
+    public void writeCommits(Iterator<RevCommit> entries, int elementsPerPage, boolean returnRange)
             throws XMLStreamException {
-        advance(entries, page * elementsPerPage);
         int counter = 0;
-        while (entries.hasNext() && counter < elementsPerPage) {
-            RevCommit entry = entries.next();
-            out.writeStartElement("commit");
-            writeElement("id", entry.getId().toString());
-            writeElement("tree", entry.getTreeId().toString());
-
-            ImmutableList<ObjectId> parentIds = entry.getParentIds();
-            out.writeStartElement("parents");
-            for (ObjectId parentId : parentIds) {
-                writeElement("id", parentId.toString());
+        RevCommit lastCommit = null;
+        if (returnRange) {
+            if (entries.hasNext()) {
+                lastCommit = entries.next();
+                writeCommit(lastCommit, "untilCommit", null, null, null);
+                counter++;
             }
-            out.writeEndElement();
+        }
+        while (entries.hasNext() && (returnRange || counter < elementsPerPage)) {
+            lastCommit = entries.next();
 
-            writePerson("author", entry.getAuthor());
-            writePerson("committer", entry.getCommitter());
-
-            out.writeStartElement("message");
-            if (entry.getMessage() != null) {
-                out.writeCData(entry.getMessage());
+            if (!returnRange) {
+                writeCommit(lastCommit, "commit", null, null, null);
             }
-            out.writeEndElement();
 
-            out.writeEndElement();
             counter++;
+        }
+        if (returnRange) {
+            if (lastCommit != null) {
+                writeCommit(lastCommit, "sinceCommit", null, null, null);
+            }
+            writeElement("numCommits", Integer.toString(counter));
         }
         if (entries.hasNext()) {
             writeElement("nextPage", "true");
         }
+    }
+
+    public void writeSummarizedCommits(Iterator<CommitSummary> entries, int elementsPerPage)
+            throws XMLStreamException {
+        int counter = 0;
+
+        while (entries.hasNext() && counter < elementsPerPage) {
+            CommitSummary entry = entries.next();
+
+            writeCommit(entry.getCommit(), "commit", entry.getAdds(), entry.getModifies(),
+                    entry.getRemoves());
+
+            counter++;
+        }
+
+        if (entries.hasNext()) {
+            writeElement("nextPage", "true");
+        }
+
     }
 
     /**
@@ -603,7 +648,7 @@ public class ResponseWriter {
     public void writeGeometryChanges(final CommandLocator geogit, Iterator<DiffEntry> diff,
             int page, int elementsPerPage) throws XMLStreamException {
 
-        advance(diff, page * elementsPerPage);
+        Iterators.advance(diff, page * elementsPerPage);
         int counter = 0;
 
         Iterator<GeometryChange> changeIterator = Iterators.transform(diff,

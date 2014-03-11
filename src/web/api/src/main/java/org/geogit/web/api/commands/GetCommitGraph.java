@@ -4,6 +4,7 @@
  */
 package org.geogit.web.api.commands;
 
+import java.util.Iterator;
 import java.util.List;
 
 import org.geogit.api.GeoGIT;
@@ -15,6 +16,7 @@ import org.geogit.web.api.CommandResponse;
 import org.geogit.web.api.CommandSpecException;
 import org.geogit.web.api.ResponseWriter;
 
+import com.google.common.collect.Iterators;
 import com.google.common.collect.Lists;
 
 /**
@@ -100,12 +102,15 @@ public class GetCommitGraph extends AbstractWebAPICommand {
             }
         }
 
+        final Iterator<RevCommit> historyIterator = history.iterator();
+        Iterators.advance(historyIterator, page * elementsPerPage);
+
         context.setResponseContent(new CommandResponse() {
 
             @Override
             public void write(ResponseWriter out) throws Exception {
                 out.start();
-                out.writeCommits(history.iterator(), page, elementsPerPage);
+                out.writeCommits(history.iterator(), elementsPerPage, false);
                 out.finish();
             }
         });
