@@ -20,12 +20,14 @@ import jline.console.ConsoleReader;
 import org.fusesource.jansi.Ansi;
 import org.geogit.api.GeoGIT;
 import org.geogit.api.RevCommit;
+import org.geogit.api.porcelain.BlameException;
 import org.geogit.api.porcelain.BlameOp;
 import org.geogit.api.porcelain.BlameReport;
 import org.geogit.api.porcelain.ValueAndCommit;
 import org.geogit.cli.AbstractCommand;
 import org.geogit.cli.GeogitCLI;
 import org.geogit.cli.annotation.ReadOnly;
+import org.geogit.cli.InvalidParameterException;
 import org.geogit.storage.text.TextValueSerializer;
 
 import com.beust.jcommander.Parameter;
@@ -63,43 +65,54 @@ public class Blame extends AbstractCommand {
 
         String path = paths.get(0);
 
-        BlameReport report = geogit.command(BlameOp.class).setPath(path).call();
+        try {
+            BlameReport report = geogit.command(BlameOp.class).setPath(path).call();
 
-        Map<String, ValueAndCommit> changes = report.getChanges();
-        Iterator<String> iter = changes.keySet().iterator();
-        while (iter.hasNext()) {
-            String attrib = iter.next();
-            ValueAndCommit valueAndCommit = changes.get(attrib);
-            RevCommit commit = valueAndCommit.commit;
-            Optional<?> value = valueAndCommit.value;
-            if (porcelain) {
-                StringBuilder sb = new StringBuilder();
-                sb.append(attrib).append(' ');
-                sb.append(commit.getId().toString()).append(' ');
-                sb.append(commit.getAuthor().getName().or("")).append(' ');
-                sb.append(commit.getAuthor().getEmail().or("")).append(' ');
-                sb.append(Long.toString(commit.getAuthor().getTimestamp())).append(' ');
-                sb.append(Integer.toString(commit.getAuthor().getTimeZoneOffset()));
-                if (!noValues) {
-                    sb.append(" ").append(
-                            TextValueSerializer.asString(Optional.of((Object) value.orNull())));
+            Map<String, ValueAndCommit> changes = report.getChanges();
+            Iterator<String> iter = changes.keySet().iterator();
+            while (iter.hasNext()) {
+                String attrib = iter.next();
+                ValueAndCommit valueAndCommit = changes.get(attrib);
+                RevCommit commit = valueAndCommit.commit;
+                Optional<?> value = valueAndCommit.value;
+                if (porcelain) {
+                    StringBuilder sb = new StringBuilder();
+                    sb.append(attrib).append(' ');
+                    sb.append(commit.getId().toString()).append(' ');
+                    sb.append(commit.getAuthor().getName().or("")).append(' ');
+                    sb.append(commit.getAuthor().getEmail().or("")).append(' ');
+                    sb.append(Long.toString(commit.getAuthor().getTimestamp())).append(' ');
+                    sb.append(Integer.toString(commit.getAuthor().getTimeZoneOffset()));
+                    if (!noValues) {
+                        sb.append(" ").append(
+                                TextValueSerializer.asString(Optional.of((Object) value.orNull())));
+                    }
+                    console.println(sb.toString());
+                } else {
+                    Ansi ansi = newAnsi(console.getTerminal());
+                    ansi.fg(GREEN).a(attrib + ": ").reset();
+                    if (!noValues) {
+                        String s = value.isPresent() ? value.get().toString() : "NULL";
+                        ansi.fg(YELLOW).a(s).a(" ").reset();
+                    }
+                    ansi.a(commit.getId().toString().substring(0, 7)).a(" ");
+                    ansi.a(commit.getAuthor().getName().or("")).a(" ");
+                    ansi.a(commit.getAuthor().getEmail().or("")).a(" ");
+                    SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss");
+                    String date = formatter.format(new Date(commit.getAuthor().getTimestamp()
+                            + commit.getAuthor().getTimeZoneOffset()));
+                    ansi.a(date);
+                    console.println(ansi.toString());
                 }
-                console.println(sb.toString());
-            } else {
-                Ansi ansi = newAnsi(console.getTerminal());
-                ansi.fg(GREEN).a(attrib + ": ").reset();
-                if (!noValues) {
-                    String s = value.isPresent() ? value.get().toString() : "NULL";
-                    ansi.fg(YELLOW).a(s).a(" ").reset();
-                }
-                ansi.a(commit.getId().toString().substring(0, 7)).a(" ");
-                ansi.a(commit.getAuthor().getName().or("")).a(" ");
-                ansi.a(commit.getAuthor().getEmail().or("")).a(" ");
-                SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss");
-                String date = formatter.format(new Date(commit.getAuthor().getTimestamp()
-                        + commit.getAuthor().getTimeZoneOffset()));
-                ansi.a(date);
-                console.println(ansi.toString());
+            }
+        } catch (BlameException e) {
+            switch (e.statusCode) {
+            case FEATURE_NOT_FOUND:
+                throw new InvalidParameterException("The supplied path does not exist", e);
+            case PATH_NOT_FEATURE:
+                throw new InvalidParameterException(
+                        "The supplied path does not resolve to a feature", e);
+
             }
         }
     }

@@ -44,10 +44,13 @@ import org.geogit.api.plumbing.diff.DiffEntry;
 import org.geogit.api.plumbing.diff.DiffEntry.ChangeType;
 import org.geogit.api.plumbing.merge.Conflict;
 import org.geogit.api.plumbing.merge.MergeScenarioReport;
+import org.geogit.api.porcelain.BlameReport;
 import org.geogit.api.porcelain.FetchResult;
 import org.geogit.api.porcelain.FetchResult.ChangedRef;
 import org.geogit.api.porcelain.MergeOp.MergeReport;
 import org.geogit.api.porcelain.PullResult;
+import org.geogit.api.porcelain.ValueAndCommit;
+import org.geogit.storage.text.TextValueSerializer;
 import org.geogit.web.api.commands.BranchWebOp;
 import org.geogit.web.api.commands.Commit;
 import org.geogit.web.api.commands.Log.CommitSummary;
@@ -984,6 +987,31 @@ public class ResponseWriter {
         out.writeStartElement("Transaction");
         if (transactionId != null) {
             writeElement("ID", transactionId.toString());
+        }
+        out.writeEndElement();
+    }
+
+    /**
+     * Writes the response for the blame operation.
+     * 
+     * @param report - the result of the blame operation
+     * @throws XMLStreamException
+     */
+    public void writeBlameReport(BlameReport report) throws XMLStreamException {
+        out.writeStartElement("Blame");
+        Map<String, ValueAndCommit> changes = report.getChanges();
+        Iterator<String> iter = changes.keySet().iterator();
+        while (iter.hasNext()) {
+            String attrib = iter.next();
+            ValueAndCommit valueAndCommit = changes.get(attrib);
+            RevCommit commit = valueAndCommit.commit;
+            Optional<?> value = valueAndCommit.value;
+            out.writeStartElement("Attribute");
+            writeElement("name", attrib);
+            writeElement("value",
+                    TextValueSerializer.asString(Optional.fromNullable((Object) value.orNull())));
+            writeCommit(commit, "commit", null, null, null);
+            out.writeEndElement();
         }
         out.writeEndElement();
     }

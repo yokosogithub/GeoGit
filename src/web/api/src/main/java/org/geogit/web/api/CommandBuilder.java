@@ -9,6 +9,7 @@ import java.util.Arrays;
 import org.geogit.api.ObjectId;
 import org.geogit.web.api.commands.AddWebOp;
 import org.geogit.web.api.commands.BeginTransaction;
+import org.geogit.web.api.commands.BlameWebOp;
 import org.geogit.web.api.commands.BranchWebOp;
 import org.geogit.web.api.commands.CheckoutWebOp;
 import org.geogit.web.api.commands.Commit;
@@ -95,6 +96,8 @@ public class CommandBuilder {
             command = buildResolveConflict(options);
         } else if ("revertfeature".equalsIgnoreCase(commandName)) {
             command = buildRevertFeature(options);
+        } else if ("blame".equalsIgnoreCase(commandName)) {
+            command = buildBlame(options);
         } else if ("version".equalsIgnoreCase(commandName)) {
             command = buildVersion(options);
         } else {
@@ -463,4 +466,12 @@ public class CommandBuilder {
         command.setPath(options.getFirstValue("path", null));
         return command;
     }
+    
+     static BlameWebOp buildBlame(ParameterSet options) {
+        BlameWebOp command = new BlameWebOp();
+        command.setCommit(options.getFirstValue("commit", null));
+        command.setPath(options.getFirstValue("path", null));
+        return command;
+    }
+
 }
