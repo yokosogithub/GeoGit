@@ -30,5 +30,5 @@ Feature: "sl import" command
      
   Scenario: Try to import with table and -all
     Given I have a repository
-     When I run the command "sl import --table Regions --all" on the PostGIS database
+     When I run the command "sl import --table Regions --all" on the SpatiaLite database
      Then the response should contain "Specify --all or --table <table>, both cannot be set."  
