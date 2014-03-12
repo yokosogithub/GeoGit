@@ -8,11 +8,11 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
+import org.geogit.api.DefaultProgressListener;
+import org.geogit.api.ProgressListener;
 import org.geogit.repository.WorkingTree;
-import org.geotools.util.NullProgressListener;
 import org.opengis.feature.Feature;
 import org.opengis.feature.simple.SimpleFeature;
-import org.opengis.util.ProgressListener;
 
 import com.google.common.collect.HashMultimap;
 
@@ -53,7 +53,7 @@ public class FeatureMapFlusher {
         Set<SimpleFeature> features = map.get(path);
         if (!features.isEmpty()) {
             Iterator<? extends Feature> iterator = features.iterator();
-            ProgressListener listener = new NullProgressListener();
+            ProgressListener listener = new DefaultProgressListener();
             List<org.geogit.api.Node> insertedTarget = null;
             Integer collectionSize = Integer.valueOf(features.size());
             workTree.insert(path, iterator, listener, insertedTarget, collectionSize);

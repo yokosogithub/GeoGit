@@ -22,7 +22,7 @@ import org.geogit.api.plumbing.merge.Conflict;
 import org.geogit.di.CanRunDuringConflict;
 import org.geogit.repository.StagingArea;
 import org.geogit.repository.WorkingTree;
-import org.opengis.util.ProgressListener;
+import org.geogit.api.ProgressListener;
 
 import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
@@ -92,7 +92,7 @@ public class AddOp extends AbstractGeoGitOp<WorkingTree> {
             if (workHead.isPresent()) {
                 command(UpdateRef.class).setName(Ref.STAGE_HEAD).setNewValue(workHead.get()).call();
             }
-            progress.progress(100f);
+            progress.setProgress(100f);
             progress.complete();
             return;
         }

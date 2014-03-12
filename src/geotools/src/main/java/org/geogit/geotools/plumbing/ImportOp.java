@@ -45,7 +45,7 @@ import org.opengis.feature.type.AttributeDescriptor;
 import org.opengis.feature.type.FeatureType;
 import org.opengis.feature.type.PropertyDescriptor;
 import org.opengis.filter.identity.FeatureId;
-import org.opengis.util.ProgressListener;
+import org.geogit.api.ProgressListener;
 
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
@@ -204,7 +204,7 @@ public class ImportOp extends AbstractGeoGitOp<RevTree> {
             }
         }
 
-        progressListener.progress(100.f);
+        progressListener.setProgress(100.f);
         progressListener.complete();
         return workTree.getTree();
     }

@@ -26,7 +26,7 @@ import org.geogit.remote.RemoteUtils;
 import org.geogit.repository.Hints;
 import org.geogit.repository.Repository;
 import org.geogit.storage.DeduplicationService;
-import org.opengis.util.ProgressListener;
+import org.geogit.api.ProgressListener;
 
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
@@ -226,7 +226,7 @@ public class FetchOp extends AbstractGeoGitOp<FetchResult> {
                 for (ChangedRef ref : needUpdate) {
                     if (ref.getType() != ChangeTypes.REMOVED_REF) {
                         refCount++;
-                        subProgress.progress((refCount * 100.f) / needUpdate.size());
+                        subProgress.setProgress((refCount * 100.f) / needUpdate.size());
 
                         Optional<Integer> newFetchLimit = depth;
                         // If we haven't specified a depth, but this is a shallow repository, set

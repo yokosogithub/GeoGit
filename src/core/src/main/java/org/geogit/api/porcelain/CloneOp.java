@@ -123,7 +123,7 @@ public class CloneOp extends AbstractGeoGitOp<Void> {
         }
 
         getProgressListener().started();
-        getProgressListener().progress(0.f);
+        getProgressListener().setProgress(0.f);
 
         // Set up origin
         Remote remote = command(RemoteAddOp.class).setName("origin").setURL(repositoryURL)
@@ -194,7 +194,7 @@ public class CloneOp extends AbstractGeoGitOp<Void> {
                     .setName("branches." + branchName + ".merge")
                     .setValue(Ref.HEADS_PREFIX + remoteRef.localName()).call();
         }
-        getProgressListener().progress(95.f);
+        getProgressListener().setProgress(95.f);
 
         if (!emptyRepo) {
             // checkout branch

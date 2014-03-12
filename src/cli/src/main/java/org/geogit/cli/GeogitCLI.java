@@ -29,9 +29,11 @@ import jline.console.ConsoleReader;
 import jline.console.CursorBuffer;
 
 import org.geogit.api.DefaultPlatform;
+import org.geogit.api.DefaultProgressListener;
 import org.geogit.api.GeoGIT;
 import org.geogit.api.GlobalInjectorBuilder;
 import org.geogit.api.Platform;
+import org.geogit.api.ProgressListener;
 import org.geogit.api.plumbing.ResolveGeogitDir;
 import org.geogit.api.porcelain.ConfigException;
 import org.geogit.api.porcelain.ConfigGet;
@@ -41,8 +43,6 @@ import org.geogit.cli.annotation.RemotesReadOnly;
 import org.geogit.cli.annotation.RequiresRepository;
 import org.geogit.cli.annotation.StagingDatabaseReadOnly;
 import org.geogit.repository.Hints;
-import org.geotools.util.DefaultProgressListener;
-import org.opengis.util.ProgressListener;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.bridge.SLF4JBridgeHandler;
@@ -828,8 +828,8 @@ public class GeogitCLI {
                 }
 
                 @Override
-                public synchronized void progress(float percent) {
-                    super.progress(percent);
+                public synchronized void setProgress(float percent) {
+                    super.setProgress(percent);
                     long nanoTime = platform.nanoTime();
                     if ((nanoTime - lastRun) > delayNanos) {
                         lastRun = nanoTime;
