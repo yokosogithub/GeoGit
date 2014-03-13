@@ -6,6 +6,7 @@ package org.geogit.api.plumbing.diff;
 
 import static com.google.common.base.Preconditions.checkState;
 
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
@@ -24,6 +25,7 @@ import com.google.common.base.Objects;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterators;
 import com.google.common.collect.Lists;
 
@@ -92,9 +94,9 @@ public class DiffTreeWalk {
         RevTree oldTree = this.fromRootTree;
         RevTree newTree = this.toRootTree;
 
-        Optional<NodeRef> oldObjectRef = getFilteredObjectRef(fromRootTree);
-        Optional<NodeRef> newObjectRef = getFilteredObjectRef(toRootTree);
-        boolean pathFiltering = !pathFilter.isEmpty();
+        final Optional<NodeRef> oldObjectRef = getFilteredObjectRef(fromRootTree);
+        final Optional<NodeRef> newObjectRef = getFilteredObjectRef(toRootTree);
+        final boolean pathFiltering = !pathFilter.isEmpty();
         if (pathFiltering && pathFilter.size() == 1) {
             if (Objects.equal(oldObjectRef, newObjectRef)) {
                 // filter didn't match anything
@@ -109,9 +111,25 @@ public class DiffTreeWalk {
 
             final TYPE type = oldObjectType == null ? newObjectType : oldObjectType;
             switch (type) {
-            case FEATURE:
-                return Iterators.singletonIterator(new DiffEntry(oldObjectRef.orNull(),
-                        newObjectRef.orNull()));
+            case FEATURE: {
+                DiffEntry featureDiff = new DiffEntry(oldObjectRef.orNull(), newObjectRef.orNull());
+                Iterator<DiffEntry> filteredIterator = Iterators.singletonIterator(featureDiff);
+                if (reportTrees) {
+                    // must report parent trees
+                    final String parentPath = oldObjectRef.isPresent() ? oldObjectRef.get()
+                            .getParentPath() : newObjectRef.get().getParentPath();
+                    List</* nullable */NodeRef> oldParents = findSubtreesOf(oldTree, parentPath);
+                    List</* nullable */NodeRef> newParents = findSubtreesOf(newTree, parentPath);
+                    Preconditions.checkState(oldParents.size() == newParents.size());
+                    List<DiffEntry> parentDiffs = Lists.newArrayListWithCapacity(oldParents.size());
+                    for (int i = 0; i < oldParents.size(); i++) {
+                        DiffEntry diffEntry = new DiffEntry(oldParents.get(i), newParents.get(i));
+                        parentDiffs.add(diffEntry);
+                    }
+                    filteredIterator = Iterators.concat(parentDiffs.iterator(), filteredIterator);
+                }
+                return filteredIterator;
+            }
             case TREE:
                 if (oldObjectRef.isPresent()) {
                     oldTree = objectDb.getTree(oldObjectRef.get().objectId());
@@ -165,6 +183,36 @@ public class DiffTreeWalk {
             });
         }
         return iterator;
+    }
+
+    /**
+     * @return a list of parent nodes, where list items can be {@code null} in case they're not
+     *         found,but the returned list is guaranteed to be of size equal to the number of path
+     *         steps in {@code childPath}
+     */
+    private List<NodeRef> findSubtreesOf(final RevTree root, final String childPath) {
+        ImmutableList<String> steps = NodeRef.split(childPath);
+        List<NodeRef> stepRefs = new ArrayList<NodeRef>(steps.size());
+        RevTree parent = root;
+        String parentPath = NodeRef.ROOT;
+        for (String childName : steps) {
+            if (parent == null) {
+                stepRefs.add(null);
+                continue;
+            }
+            DepthSearch depthSearch = new DepthSearch(objectDb);
+            Optional<NodeRef> childRef = depthSearch.find(parent, parentPath, childName);
+            if (childRef.isPresent()) {
+                NodeRef child = childRef.get();
+                stepRefs.add(child);
+                parentPath = childRef.get().getParentPath();
+                parent = objectDb.getTree(child.objectId());
+            } else {
+                stepRefs.add(null);
+                parent = null;
+            }
+        }
+        return stepRefs;
     }
 
     private Optional<NodeRef> getFilteredObjectRef(RevTree tree) {
