@@ -9,6 +9,8 @@ import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.PrintStream;
+import java.util.Iterator;
+import java.util.NoSuchElementException;
 
 import jline.console.ConsoleReader;
 
@@ -19,6 +21,7 @@ import org.opengis.util.ProgressListener;
 import py4j.GatewayServer;
 
 import com.google.common.base.Joiner;
+import com.google.common.base.Splitter;
 import com.google.common.base.Throwables;
 
 /**
@@ -33,6 +36,8 @@ public class GeogitPy4JEntryPoint {
      * A class to parse and store console output of GeoGit commands
      */
     public class ToStringOutputStream extends OutputStream {
+
+        private static final int PAGE_SIZE = 1000;
 
         StringBuffer sb = new StringBuffer();
 
@@ -50,11 +55,19 @@ public class GeogitPy4JEntryPoint {
         public String asString() {
             return sb.toString();
         }
+
+        public Iterator<String> getIterator() {
+            Splitter page = Splitter.fixedLength(PAGE_SIZE);
+            return page.split(sb.toString()).iterator();
+        }
+
     }
 
     private PrintStream stream;
 
     private ToStringOutputStream os;
+
+    private Iterator<String> pages = null;
 
     private GeoGitPy4JProgressListener listener;
 
@@ -76,8 +89,9 @@ public class GeogitPy4JEntryPoint {
      * @param folder the repository folder
      * @param args the args to run, including the command itself and additional parameters
      * @return
+     * @throws IOException
      */
-    public int runCommand(String folder, String[] args) {
+    public int runCommand(String folder, String[] args) throws IOException {
         System.gc();
         GeogitCLI cli = new GeogitCLI(consoleReader) {
             @Override
@@ -106,6 +120,7 @@ public class GeogitPy4JEntryPoint {
         cli.setPlatform(platform);
         String command = Joiner.on(" ").join(args);
         os.clear();
+        pages = null;
         System.out.print("Running command: " + command);
         int ret = cli.execute(args);
         cli.close();
@@ -114,20 +129,22 @@ public class GeogitPy4JEntryPoint {
         } else {
             System.out.println(" [Error]");
         }
-
+        stream.flush();
+        os.flush();
         return ret;
     }
 
-    /**
-     * Returns the output of the last command
-     * 
-     * @return the output of the last commmand
-     * @throws IOException
-     */
-    public String lastOutput() throws IOException {
-        stream.flush();
-        os.flush();
-        return os.asString();
+    public String nextOutputPage() throws IOException {
+        if (pages == null) {
+            pages = os.getIterator();
+        }
+        String next;
+        try {
+            next = pages.next();
+        } catch (NoSuchElementException e) {
+            next = null;
+        }
+        return next;
     }
 
     public boolean isGeoGitServer() {
