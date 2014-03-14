@@ -17,6 +17,7 @@ import org.geogit.api.porcelain.InitOp;
 import org.geogit.repository.Repository;
 
 import com.google.common.base.Optional;
+import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
 import com.google.inject.Injector;
 
@@ -30,7 +31,7 @@ import com.google.inject.Injector;
  */
 public class GeoGIT {
 
-    private final Injector injector;
+    private Injector injector;
 
     private Repository repository;
 
@@ -71,9 +72,11 @@ public class GeoGIT {
      * @see Injector
      */
     public GeoGIT(final Injector injector, @Nullable final File workingDir) {
+        Preconditions.checkNotNull(injector, "injector");
         this.injector = injector;
         if (workingDir != null) {
-            injector.getInstance(Platform.class).setWorkingDir(workingDir);
+            Platform instance = injector.getInstance(Platform.class);
+            instance.setWorkingDir(workingDir);
         }
     }
 
@@ -85,6 +88,7 @@ public class GeoGIT {
             repository.close();
             repository = null;
         }
+        injector = null;
     }
 
     /**

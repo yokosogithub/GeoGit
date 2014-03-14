@@ -5,6 +5,8 @@
 
 package org.geogit.api.porcelain;
 
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
@@ -28,6 +30,7 @@ import org.geogit.api.Platform;
 import org.geogit.api.Ref;
 import org.geogit.api.RevObject.TYPE;
 import org.geogit.api.plumbing.RefParse;
+import org.geogit.api.plumbing.ResolveGeogitDir;
 import org.geogit.api.plumbing.UpdateRef;
 import org.geogit.api.plumbing.UpdateSymRef;
 import org.geogit.repository.Repository;
@@ -154,7 +157,7 @@ public class InitOpTest {
         assertTrue(new File(workingDir, ".geogit").exists());
         assertTrue(new File(workingDir, ".geogit").isDirectory());
 
-        Ref master = new Ref(Ref.MASTER, ObjectId.forString("hash me"), TYPE.COMMIT);
+        Ref master = new Ref(Ref.MASTER, ObjectId.forString("hash me"));
 
         when(mockRefParse.call()).thenReturn(Optional.of(master));
 
@@ -162,8 +165,10 @@ public class InitOpTest {
         when(mockCommands.command(eq(RefParse.class))).thenReturn(mockRefParse);
         init.setCommandLocator(mockCommands);
 
-        assertNull(init.call());// repo existed, returns null
+        assertTrue(ResolveGeogitDir.lookup(platform.pwd()).isPresent());
+        assertNotNull(init.call());
         verify(platform, atLeastOnce()).pwd();
+        assertTrue(ResolveGeogitDir.lookup(platform.pwd()).isPresent());
 
         verify(mockCommands, never()).command(eq(UpdateRef.class));
         verify(mockCommands, never()).command(eq(UpdateSymRef.class));
@@ -178,7 +183,8 @@ public class InitOpTest {
 
         when(platform.pwd()).thenReturn(subDir);
 
-        assertNull(init.call());// repo existed, returns null
+        assertTrue(ResolveGeogitDir.lookup(platform.pwd()).isPresent());
+        assertNotNull(init.call());
         verify(platform, atLeastOnce()).pwd();
     }
 }

@@ -10,7 +10,7 @@ import java.util.Map;
 
 import org.geogit.api.Platform;
 import org.geogit.storage.ConfigDatabase;
-import org.geogit.storage.fs.IniConfigDatabase;
+import org.geogit.storage.fs.IniFileConfigDatabase;
 
 import com.google.inject.Inject;
 import com.google.common.base.Optional;
@@ -30,7 +30,7 @@ public class TestConfigDatabase implements ConfigDatabase {
 
     @Inject
     public TestConfigDatabase(Platform platform) {
-        this.delegate = new IniConfigDatabase(platform);
+        this.delegate = new IniFileConfigDatabase(platform);
     }
 
     public Optional<String> get(String key) {

@@ -14,6 +14,7 @@ import org.geogit.cli.AbstractCommand;
 import org.geogit.cli.CLICommand;
 import org.geogit.cli.CommandFailedException;
 import org.geogit.cli.GeogitCLI;
+import org.geogit.cli.annotation.ReadOnly;
 
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.Parameters;
@@ -34,11 +35,18 @@ import com.beust.jcommander.Parameters;
  * 
  * @see RemoteAddOp
  */
+@ReadOnly
 @Parameters(commandNames = "remote add", commandDescription = "Add a remote for the repository")
 public class RemoteAdd extends AbstractCommand implements CLICommand {
 
     @Parameter(names = { "-t", "--track" }, description = "branch to track")
     private String branch = "*";
+
+    @Parameter(names = { "-u", "--username" }, description = "user name")
+    private String username = null;
+
+    @Parameter(names = { "-p", "--password" }, description = "password")
+    private String password = null;
 
     @Parameter(description = "<name> <url>")
     private List<String> params = new ArrayList<String>();
@@ -55,7 +63,7 @@ public class RemoteAdd extends AbstractCommand implements CLICommand {
 
         try {
             cli.getGeogit().command(RemoteAddOp.class).setName(params.get(0)).setURL(params.get(1))
-                    .setBranch(branch).call();
+                    .setBranch(branch).setUserName(username).setPassword(password).call();
         } catch (RemoteException e) {
             switch (e.statusCode) {
             case REMOTE_ALREADY_EXISTS:

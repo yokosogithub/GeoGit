@@ -8,6 +8,7 @@ package org.geogit.geotools.cli.porcelain;
 import java.io.File;
 import java.io.IOException;
 import java.io.Serializable;
+import java.net.URL;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -30,6 +31,7 @@ import org.geogit.cli.CLICommand;
 import org.geogit.cli.CommandFailedException;
 import org.geogit.cli.GeogitCLI;
 import org.geogit.cli.InvalidParameterException;
+import org.geogit.cli.annotation.ReadOnly;
 import org.geogit.geotools.plumbing.ExportOp;
 import org.geogit.geotools.plumbing.GeoToolsOpException;
 import org.geotools.data.shapefile.ShapefileDataStore;
@@ -47,6 +49,7 @@ import com.google.common.base.Optional;
  * 
  * @see ExportOp
  */
+@ReadOnly
 @Parameters(commandNames = "export", commandDescription = "Export to Shapefile")
 public class ShpExport extends AbstractShpCommand implements CLICommand {
 
@@ -81,14 +84,20 @@ public class ShpExport extends AbstractShpCommand implements CLICommand {
 
         ShapefileDataStoreFactory dataStoreFactory = new ShapefileDataStoreFactory();
 
-        File file = new File(shapefile);
-        if (file.exists() && !overwrite) {
+        File targetShapefile = new File(shapefile);
+        if (!targetShapefile.isAbsolute()) {
+            File pwd = cli.getGeogit().getPlatform().pwd();
+            String relativePath = targetShapefile.getPath();
+            targetShapefile = new File(pwd, relativePath);
+        }
+        if (targetShapefile.exists() && !overwrite) {
             throw new CommandFailedException(
                     "The selected shapefile already exists. Use -o to overwrite");
         }
 
         Map<String, Serializable> params = new HashMap<String, Serializable>();
-        params.put(ShapefileDataStoreFactory.URLP.key, new File(shapefile).toURI().toURL());
+        URL targetShapefileAsUrl = targetShapefile.toURI().toURL();
+        params.put(ShapefileDataStoreFactory.URLP.key, targetShapefileAsUrl);
         params.put(ShapefileDataStoreFactory.CREATE_SPATIAL_INDEX.key, Boolean.FALSE);
         params.put(ShapefileDataStoreFactory.ENABLE_SPATIAL_INDEX.key, Boolean.FALSE);
 
@@ -138,7 +147,7 @@ public class ShpExport extends AbstractShpCommand implements CLICommand {
         } catch (IllegalArgumentException iae) {
             throw new org.geogit.cli.InvalidParameterException(iae.getMessage(), iae);
         } catch (GeoToolsOpException e) {
-            file.delete();
+            targetShapefile.delete();
             switch (e.statusCode) {
             case MIXED_FEATURE_TYPES:
                 throw new CommandFailedException(

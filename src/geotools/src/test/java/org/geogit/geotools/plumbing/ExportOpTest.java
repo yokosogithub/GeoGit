@@ -12,8 +12,6 @@ import org.geogit.api.ObjectId;
 import org.geogit.api.RevFeatureType;
 import org.geogit.api.porcelain.AddOp;
 import org.geogit.api.porcelain.CommitOp;
-import org.geogit.geotools.plumbing.ExportOp;
-import org.geogit.geotools.plumbing.GeoToolsOpException;
 import org.geogit.geotools.plumbing.GeoToolsOpException.StatusCode;
 import org.geogit.test.integration.RepositoryTestCase;
 import org.geotools.data.DataUtilities;

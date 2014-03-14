@@ -9,6 +9,7 @@ import java.util.Arrays;
 import org.geogit.api.ObjectId;
 import org.geogit.web.api.commands.AddWebOp;
 import org.geogit.web.api.commands.BeginTransaction;
+import org.geogit.web.api.commands.BlameWebOp;
 import org.geogit.web.api.commands.BranchWebOp;
 import org.geogit.web.api.commands.CheckoutWebOp;
 import org.geogit.web.api.commands.Commit;
@@ -22,10 +23,12 @@ import org.geogit.web.api.commands.LsTree;
 import org.geogit.web.api.commands.MergeWebOp;
 import org.geogit.web.api.commands.PullWebOp;
 import org.geogit.web.api.commands.PushWebOp;
+import org.geogit.web.api.commands.RebuildGraphWebOp;
 import org.geogit.web.api.commands.RefParseWeb;
 import org.geogit.web.api.commands.RemoteWebOp;
 import org.geogit.web.api.commands.RemoveWebOp;
 import org.geogit.web.api.commands.ResolveConflict;
+import org.geogit.web.api.commands.RevertFeatureWebOp;
 import org.geogit.web.api.commands.Status;
 import org.geogit.web.api.commands.TagWebOp;
 import org.geogit.web.api.commands.UpdateRefWeb;
@@ -92,6 +95,12 @@ public class CommandBuilder {
             command = buildRemove(options);
         } else if ("resolveconflict".equalsIgnoreCase(commandName)) {
             command = buildResolveConflict(options);
+        } else if ("revertfeature".equalsIgnoreCase(commandName)) {
+            command = buildRevertFeature(options);
+        } else if ("rebuildgraph".equalsIgnoreCase(commandName)) {
+            command = buildRebuildGraph(options);
+        } else if ("blame".equalsIgnoreCase(commandName)) {
+            command = buildBlame(options);
         } else if ("version".equalsIgnoreCase(commandName)) {
             command = buildVersion(options);
         } else {
@@ -158,6 +167,8 @@ public class CommandBuilder {
         command.setElementsPerPage(parseInt(options, "show", 30));
         command.setFirstParentOnly(Boolean.valueOf(options
                 .getFirstValue("firstParentOnly", "false")));
+        command.setSummarize(Boolean.valueOf(options.getFirstValue("summarize", "false")));
+        command.setReturnRange(Boolean.valueOf(options.getFirstValue("returnRange", "false")));
         return command;
     }
 
@@ -260,8 +271,13 @@ public class CommandBuilder {
         command.setList(Boolean.valueOf(options.getFirstValue("list", "false")));
         command.setRemove(Boolean.valueOf(options.getFirstValue("remove", "false")));
         command.setPing(Boolean.valueOf(options.getFirstValue("ping", "false")));
+        command.setUpdate(Boolean.valueOf(options.getFirstValue("update", "false")));
+        command.setVerbose(Boolean.valueOf(options.getFirstValue("verbose", "false")));
         command.setRemoteName(options.getFirstValue("remoteName", null));
+        command.setNewName(options.getFirstValue("newName", null));
         command.setRemoteURL(options.getFirstValue("remoteURL", null));
+        command.setUserName(options.getFirstValue("username", null));
+        command.setPassword(options.getFirstValue("password", null));
         return command;
     }
 
@@ -330,8 +346,8 @@ public class CommandBuilder {
     static FeatureDiffWeb buildFeatureDiff(ParameterSet options) {
         FeatureDiffWeb command = new FeatureDiffWeb();
         command.setPath(options.getFirstValue("path", null));
-        command.setOldCommitId(options.getFirstValue("oldCommitId", ObjectId.NULL.toString()));
-        command.setNewCommitId(options.getFirstValue("newCommitId", ObjectId.NULL.toString()));
+        command.setOldTreeish(options.getFirstValue("oldTreeish", ObjectId.NULL.toString()));
+        command.setNewTreeish(options.getFirstValue("newTreeish", ObjectId.NULL.toString()));
         command.setAll(Boolean.valueOf(options.getFirstValue("all", "false")));
         return command;
     }
@@ -446,4 +462,30 @@ public class CommandBuilder {
         command.setFeatureObjectId(options.getFirstValue("objectid", null));
         return command;
     }
+
+    static RebuildGraphWebOp buildRebuildGraph(ParameterSet options) {
+        RebuildGraphWebOp command = new RebuildGraphWebOp();
+        command.setQuiet(Boolean.valueOf(options.getFirstValue("quiet", "false")));
+        return command;
+    }
+
+    static RevertFeatureWebOp buildRevertFeature(ParameterSet options) {
+        RevertFeatureWebOp command = new RevertFeatureWebOp();
+        command.setAuthorName(options.getFirstValue("authorName", null));
+        command.setAuthorEmail(options.getFirstValue("authorEmail", null));
+        command.setCommitMessage(options.getFirstValue("commitMessage", null));
+        command.setMergeMessage(options.getFirstValue("mergeMessage", null));
+        command.setNewCommitId(options.getFirstValue("newCommitId", null));
+        command.setOldCommitId(options.getFirstValue("oldCommitId", null));
+        command.setPath(options.getFirstValue("path", null));
+        return command;
+    }
+    
+     static BlameWebOp buildBlame(ParameterSet options) {
+        BlameWebOp command = new BlameWebOp();
+        command.setCommit(options.getFirstValue("commit", null));
+        command.setPath(options.getFirstValue("path", null));
+        return command;
+    }
+
 }

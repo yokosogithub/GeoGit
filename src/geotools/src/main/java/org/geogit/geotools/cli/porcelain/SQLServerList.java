@@ -11,6 +11,7 @@ import java.util.List;
 import org.geogit.cli.CLICommand;
 import org.geogit.cli.CommandFailedException;
 import org.geogit.cli.GeogitCLI;
+import org.geogit.cli.annotation.ReadOnly;
 import org.geogit.geotools.plumbing.GeoToolsOpException;
 import org.geogit.geotools.plumbing.ListOp;
 import org.geotools.data.DataStore;
@@ -25,6 +26,7 @@ import com.google.common.base.Optional;
  * 
  * @see ListOp
  */
+@ReadOnly
 @Parameters(commandNames = "list", commandDescription = "List available feature types in a database")
 public class SQLServerList extends AbstractSQLServerCommand implements CLICommand {
 

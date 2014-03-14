@@ -40,9 +40,19 @@ public class RemoteWebOp extends AbstractWebAPICommand {
 
     private boolean ping;
 
+    private boolean update;
+
+    private boolean verbose;
+
     private String remoteName;
 
+    private String newName;
+
     private String remoteURL;
+
+    private String username = null;
+
+    private String password = null;
 
     /**
      * Mutator for the list variable
@@ -72,6 +82,24 @@ public class RemoteWebOp extends AbstractWebAPICommand {
     }
 
     /**
+     * Mutator for the update variable
+     * 
+     * @param update - true to update the given remote
+     */
+    public void setUpdate(boolean update) {
+        this.update = update;
+    }
+
+    /**
+     * Mutator for the verbose variable
+     * 
+     * @param update - true to show more info for each repo
+     */
+    public void setVerbose(boolean verbose) {
+        this.verbose = verbose;
+    }
+
+    /**
      * Mutator for the remoteName variable
      * 
      * @param remoteName - the name of the remote to add or remove
@@ -81,12 +109,39 @@ public class RemoteWebOp extends AbstractWebAPICommand {
     }
 
     /**
+     * Mutator for the newName variable
+     * 
+     * @param newName - the new name of the remote to update
+     */
+    public void setNewName(String newName) {
+        this.newName = newName;
+    }
+
+    /**
      * Mutator for the remoteURL variable
      * 
      * @param remoteURL - the URL to the repo to make a remote
      */
     public void setRemoteURL(String remoteURL) {
         this.remoteURL = remoteURL;
+    }
+
+    /**
+     * Mutator for the username variable
+     * 
+     * @param username - the username to access the remote
+     */
+    public void setUserName(String username) {
+        this.username = username;
+    }
+
+    /**
+     * Mutator for the password variable
+     * 
+     * @param password - the password to access the remote
+     */
+    public void setPassword(String password) {
+        this.password = password;
     }
 
     /**
@@ -104,7 +159,7 @@ public class RemoteWebOp extends AbstractWebAPICommand {
                 @Override
                 public void write(ResponseWriter out) throws Exception {
                     out.start();
-                    out.writeRemoteListResponse(remotes);
+                    out.writeRemoteListResponse(remotes, verbose);
                     out.finish();
                 }
             });
@@ -167,6 +222,38 @@ public class RemoteWebOp extends AbstractWebAPICommand {
                     out.finish();
                 }
             });
+        } else if (update) {
+            if (remoteName == null || remoteName.trim().isEmpty()) {
+                throw new CommandSpecException("No remote was specified.");
+            } else if (remoteURL == null || remoteURL.trim().isEmpty()) {
+                throw new CommandSpecException("No URL was specified.");
+            }
+            final Remote newRemote;
+            try {
+                if (newName != null && !newName.trim().isEmpty() && !newName.equals(remoteName)) {
+                    newRemote = geogit.command(RemoteAddOp.class).setName(newName)
+                            .setURL(remoteURL).setUserName(username).setPassword(password).call();
+                    geogit.command(RemoteRemoveOp.class).setName(remoteName).call();
+                } else {
+                    geogit.command(RemoteRemoveOp.class).setName(remoteName).call();
+                    newRemote = geogit.command(RemoteAddOp.class).setName(remoteName)
+                            .setURL(remoteURL).setUserName(username).setPassword(password).call();
+                }
+            } catch (RemoteException e) {
+                context.setResponseContent(CommandResponse.error(e.statusCode.toString()));
+                return;
+            } catch (Exception e) {
+                context.setResponseContent(CommandResponse.error("Aborting Remote Update"));
+                return;
+            }
+            context.setResponseContent(new CommandResponse() {
+                @Override
+                public void write(ResponseWriter out) throws Exception {
+                    out.start();
+                    out.writeElement("name", newRemote.getName());
+                    out.finish();
+                }
+            });
         } else {
             if (remoteName == null || remoteName.trim().isEmpty()) {
                 throw new CommandSpecException("No remote was specified.");
@@ -176,7 +263,7 @@ public class RemoteWebOp extends AbstractWebAPICommand {
             final Remote remote;
             try {
                 remote = geogit.command(RemoteAddOp.class).setName(remoteName).setURL(remoteURL)
-                        .call();
+                        .setUserName(username).setPassword(password).call();
             } catch (RemoteException e) {
                 context.setResponseContent(CommandResponse.error(e.statusCode.toString()));
                 return;

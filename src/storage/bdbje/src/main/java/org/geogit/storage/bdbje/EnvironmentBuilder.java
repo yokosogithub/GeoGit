@@ -38,6 +38,8 @@ public class EnvironmentBuilder implements Provider<Environment> {
 
     private EnvironmentConfig forceConfig;
 
+    private boolean readOnly;
+
     @Inject
     public EnvironmentBuilder(Platform platform) {
         this.platform = platform;
@@ -108,7 +110,8 @@ public class EnvironmentBuilder implements Provider<Environment> {
             envCfg.setAllowCreate(true);
             envCfg.setCacheMode(CacheMode.MAKE_COLD);
             envCfg.setLockTimeout(5, TimeUnit.SECONDS);
-            envCfg.setDurability(Durability.COMMIT_NO_SYNC);
+            envCfg.setDurability(Durability.COMMIT_SYNC);
+            //envCfg.setReadOnly(readOnly);
         } else {
             envCfg = this.forceConfig;
         }
@@ -136,7 +139,21 @@ public class EnvironmentBuilder implements Provider<Environment> {
         //
         // // envCfg.setConfigParam(EnvironmentConfig.ENV_RUN_EVICTOR, "false");
 
-        Environment env = new Environment(storeDirectory, envCfg);
+        Environment env;
+        try {
+            env = new Environment(storeDirectory, envCfg);
+        } catch (RuntimeException lockedEx) {
+            // lockedEx.printStackTrace();
+            if (readOnly) {
+                // this happens when trying to open the env in read only mode when its already open
+                // in read/write mode inside the same process. So we re-open it read-write but the
+                // database itself will be open read-only by JEObjectDatabase.
+                envCfg.setReadOnly(true);
+                env = new Environment(storeDirectory, envCfg);
+            } else {
+                throw lockedEx;
+            }
+        }
         return env;
     }
 
@@ -146,6 +163,11 @@ public class EnvironmentBuilder implements Provider<Environment> {
 
     public void setConfig(EnvironmentConfig envCfg) {
         this.forceConfig = envCfg;
+    }
+
+    public EnvironmentBuilder setReadOnly(boolean readOnly) {
+        this.readOnly = readOnly;
+        return this;
     }
 
 }

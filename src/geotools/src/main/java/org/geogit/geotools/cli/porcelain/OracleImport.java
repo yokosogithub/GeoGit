@@ -4,14 +4,12 @@
  */
 package org.geogit.geotools.cli.porcelain;
 
-import static com.google.common.base.Preconditions.checkState;
-
 import java.io.IOException;
-import java.net.ConnectException;
 
 import org.geogit.cli.CLICommand;
 import org.geogit.cli.CommandFailedException;
 import org.geogit.cli.GeogitCLI;
+import org.geogit.cli.annotation.ObjectDatabaseReadOnly;
 import org.geogit.geotools.plumbing.GeoToolsOpException;
 import org.geogit.geotools.plumbing.ImportOp;
 import org.geotools.data.DataStore;
@@ -27,7 +25,7 @@ import com.beust.jcommander.Parameters;
  * 
  * @see ImportOp
  */
-
+@ObjectDatabaseReadOnly
 @Parameters(commandNames = "import", commandDescription = "Import Oracle database")
 public class OracleImport extends AbstractOracleCommand implements CLICommand {
 

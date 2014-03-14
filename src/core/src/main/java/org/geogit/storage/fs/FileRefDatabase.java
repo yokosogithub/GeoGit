@@ -97,7 +97,7 @@ public class FileRefDatabase extends AbstractRefDatabase {
     public String getRef(String name) {
         checkNotNull(name);
         File refFile = toFile(name);
-        if (!refFile.exists()) {
+        if (!refFile.exists() || refFile.isDirectory()) {
             return null;
         }
         String value = readRef(refFile);
@@ -120,7 +120,7 @@ public class FileRefDatabase extends AbstractRefDatabase {
     public String getSymRef(String name) {
         checkNotNull(name);
         File refFile = toFile(name);
-        if (!refFile.exists()) {
+        if (!refFile.exists() || refFile.isDirectory()) {
             return null;
         }
         String value = readRef(refFile);
@@ -206,7 +206,7 @@ public class FileRefDatabase extends AbstractRefDatabase {
         }
     }
 
-    private String readRef(File refFile) {
+    private String readRef(final File refFile) {
         try {
             synchronized (refFile.getCanonicalPath().intern()) {
                 return Files.readFirstLine(refFile, CHARSET);
@@ -330,5 +330,11 @@ public class FileRefDatabase extends AbstractRefDatabase {
     @Override
     public void checkConfig() throws RepositoryConnectionException {
         RepositoryConnectionException.StorageType.REF.verify(configDB, "file", "1.0");
+    }
+
+    @Override
+    public String toString() {
+        Optional<URL> envHome = new ResolveGeogitDir(platform).call();
+        return String.format("%s[geogit dir: %s]", getClass().getSimpleName(), envHome.orNull());
     }
 }

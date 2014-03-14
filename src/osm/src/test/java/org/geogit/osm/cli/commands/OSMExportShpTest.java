@@ -10,11 +10,12 @@ import java.io.File;
 import jline.UnsupportedTerminal;
 import jline.console.ConsoleReader;
 
-import org.geogit.api.Platform;
+import org.geogit.api.GlobalInjectorBuilder;
 import org.geogit.api.RevTree;
 import org.geogit.api.TestPlatform;
 import org.geogit.api.plumbing.RevObjectParse;
 import org.geogit.cli.GeogitCLI;
+import org.geogit.cli.test.functional.CLITestInjectorBuilder;
 import org.geogit.osm.internal.OSMImportOp;
 import org.junit.Assert;
 import org.junit.Before;
@@ -37,7 +38,8 @@ public class OSMExportShpTest extends Assert {
                 new UnsupportedTerminal());
         cli = new GeogitCLI(consoleReader);
         File workingDirectory = tempFolder.getRoot();
-        Platform platform = new TestPlatform(workingDirectory);
+        TestPlatform platform = new TestPlatform(workingDirectory);
+        GlobalInjectorBuilder.builder = new CLITestInjectorBuilder(platform);
         cli.setPlatform(platform);
         cli.execute("init");
         cli.execute("config", "user.name", "Gabriel Roldan");
@@ -68,7 +70,8 @@ public class OSMExportShpTest extends Assert {
                 mappingFile.getAbsolutePath());
         assertTrue(exportFile.exists());
         cli.execute("shp", "import", "-d", "mapped", exportFile.getAbsolutePath());
-        long unstaged = cli.getGeogit().getRepository().getWorkingTree().countUnstaged("mapped").getCount();
+        long unstaged = cli.getGeogit().getRepository().getWorkingTree().countUnstaged("mapped")
+                .getCount();
         assertTrue(unstaged > 0);
     }
 
@@ -90,14 +93,12 @@ public class OSMExportShpTest extends Assert {
         String mappingFilename = OSMMap.class.getResource("no_geometry_mapping.json").getFile();
         File mappingFile = new File(mappingFilename);
         File exportFile = new File(tempFolder.getRoot(), "export.shp");
-        try {
-            cli.execute("osm", "export-shp", exportFile.getAbsolutePath(), "--mapping",
-                    mappingFile.getAbsolutePath());
-            fail();
-        } catch (NullPointerException e) {
-            assertTrue(e.getMessage().startsWith(
-                    "The mapping rule does not define a geometry field"));
-        }
+
+        cli.execute("osm", "export-shp", exportFile.getAbsolutePath(), "--mapping",
+                mappingFile.getAbsolutePath());
+        assertNotNull(cli.exception);
+        assertTrue(cli.exception.getMessage().startsWith(
+                "The mapping rule does not define a geometry field"));
     }
 
 }

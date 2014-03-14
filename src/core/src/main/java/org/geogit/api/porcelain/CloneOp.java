@@ -20,6 +20,7 @@ import org.geogit.api.porcelain.ConfigOp.ConfigAction;
 import org.geogit.api.porcelain.ConfigOp.ConfigScope;
 import org.geogit.remote.IRemoteRepo;
 import org.geogit.remote.RemoteUtils;
+import org.geogit.repository.Hints;
 import org.geogit.repository.Repository;
 import org.geogit.storage.DeduplicationService;
 
@@ -39,6 +40,10 @@ public class CloneOp extends AbstractGeoGitOp<Void> {
     private Optional<String> branch = Optional.absent();
 
     private String repositoryURL;
+
+    private String username = null;
+
+    private String password = null;
 
     private Optional<Integer> depth = Optional.absent();
 
@@ -61,6 +66,24 @@ public class CloneOp extends AbstractGeoGitOp<Void> {
      */
     public CloneOp setRepositoryURL(final String repositoryURL) {
         this.repositoryURL = repositoryURL;
+        return this;
+    }
+
+    /**
+     * @param username user name for the repository
+     * @return {@code this}
+     */
+    public CloneOp setUserName(String username) {
+        this.username = username;
+        return this;
+    }
+
+    /**
+     * @param password password for the repository
+     * @return {@code this}
+     */
+    public CloneOp setPassword(String password) {
+        this.password = password;
         return this;
     }
 
@@ -104,26 +127,30 @@ public class CloneOp extends AbstractGeoGitOp<Void> {
 
         // Set up origin
         Remote remote = command(RemoteAddOp.class).setName("origin").setURL(repositoryURL)
-                .setMapped(repository.isSparse())
+                .setMapped(repository.isSparse()).setUserName(username).setPassword(password)
                 .setBranch(repository.isSparse() ? branch.get() : null).call();
 
         if (!depth.isPresent()) {
             // See if we are cloning a shallow clone. If so, a depth must be specified.
-            Optional<IRemoteRepo> remoteRepo = RemoteUtils
-                    .newRemote(GlobalInjectorBuilder.builder.build(), remote, repository,
-                            deduplicationService);
+            Optional<IRemoteRepo> remoteRepo = RemoteUtils.newRemote(
+                    GlobalInjectorBuilder.builder.build(Hints.readOnly()), remote, repository,
+                    deduplicationService);
 
             Preconditions.checkState(remoteRepo.isPresent(), "Failed to connect to the remote.");
+            IRemoteRepo remoteRepoInstance = remoteRepo.get();
             try {
-                remoteRepo.get().open();
+                remoteRepoInstance.open();
             } catch (IOException e) {
                 Throwables.propagate(e);
             }
-            depth = remoteRepo.get().getDepth();
             try {
-                remoteRepo.get().close();
-            } catch (IOException e) {
-                Throwables.propagate(e);
+                depth = remoteRepoInstance.getDepth();
+            } finally {
+                try {
+                    remoteRepoInstance.close();
+                } catch (IOException e) {
+                    Throwables.propagate(e);
+                }
             }
         }
 

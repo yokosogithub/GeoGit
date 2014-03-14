@@ -11,11 +11,12 @@ import jline.UnsupportedTerminal;
 import jline.console.ConsoleReader;
 
 import org.geogit.api.GeoGIT;
-import org.geogit.api.Platform;
+import org.geogit.api.GlobalInjectorBuilder;
 import org.geogit.api.RevFeature;
 import org.geogit.api.TestPlatform;
 import org.geogit.api.plumbing.RevObjectParse;
 import org.geogit.cli.GeogitCLI;
+import org.geogit.cli.test.functional.CLITestInjectorBuilder;
 import org.geogit.osm.internal.OSMImportOp;
 import org.junit.Assert;
 import org.junit.Before;
@@ -37,8 +38,10 @@ public class OSMApplyDiffTest extends Assert {
         ConsoleReader consoleReader = new ConsoleReader(System.in, System.out,
                 new UnsupportedTerminal());
         cli = new GeogitCLI(consoleReader);
+
         File workingDirectory = tempFolder.getRoot();
-        Platform platform = new TestPlatform(workingDirectory);
+        TestPlatform platform = new TestPlatform(workingDirectory);
+        GlobalInjectorBuilder.builder = new CLITestInjectorBuilder(platform);
         cli.setPlatform(platform);
         cli.execute("init");
         cli.execute("config", "user.name", "Gabriel Roldan");
@@ -50,7 +53,7 @@ public class OSMApplyDiffTest extends Assert {
     @Test
     public void testApplyDiff() throws Exception {
         // import and check
-        GeoGIT geogit = cli.getGeogit();
+        GeoGIT geogit = cli.newGeoGIT();
         String filename = OSMImportOp.class.getResource("nodes_for_changeset2.xml").getFile();
         File file = new File(filename);
         cli.execute("osm", "import", file.getAbsolutePath());
@@ -74,7 +77,7 @@ public class OSMApplyDiffTest extends Assert {
         revFeature = geogit.command(RevObjectParse.class).setRefSpec("WORK_HEAD:node/507464865")
                 .call(RevFeature.class);
         assertTrue(revFeature.isPresent());
-
+        geogit.close();
     }
 
 }

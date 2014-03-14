@@ -34,7 +34,7 @@ public class OracleCommonArgs {
     /**
      * The database to connect to. Default: database
      */
-    @Parameter(names = "--database", description = "The databse to connect to. Default: database")
+    @Parameter(names = "--database", description = "The database to connect to. Default: database")
     public String database = "database";
 
     /**

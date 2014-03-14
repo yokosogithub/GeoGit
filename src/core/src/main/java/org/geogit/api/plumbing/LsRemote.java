@@ -13,6 +13,7 @@ import org.geogit.api.Ref;
 import org.geogit.api.Remote;
 import org.geogit.remote.IRemoteRepo;
 import org.geogit.remote.RemoteUtils;
+import org.geogit.repository.Hints;
 import org.geogit.repository.Repository;
 import org.geogit.storage.DeduplicationService;
 
@@ -40,6 +41,7 @@ public class LsRemote extends AbstractGeoGitOp<ImmutableSet<Ref>> {
     private boolean local;
 
     private final Repository localRepository;
+
     private final DeduplicationService deduplicationService;
 
     /**
@@ -136,8 +138,8 @@ public class LsRemote extends AbstractGeoGitOp<ImmutableSet<Ref>> {
      * @return an interface for the remote repository
      */
     public Optional<IRemoteRepo> getRemoteRepo(Remote remote) {
-        return RemoteUtils
-                .newRemote(GlobalInjectorBuilder.builder.build(), remote, localRepository, deduplicationService);
+        return RemoteUtils.newRemote(GlobalInjectorBuilder.builder.build(Hints.readOnly()), remote,
+                localRepository, deduplicationService);
     }
 
     /**

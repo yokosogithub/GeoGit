@@ -8,7 +8,10 @@ import java.util.Iterator;
 import java.util.List;
 
 import org.geogit.api.NodeRef;
+import org.geogit.api.ObjectId;
 import org.geogit.api.Ref;
+import org.geogit.api.RevFeatureType;
+import org.geogit.api.RevObject;
 import org.geogit.api.RevObject.TYPE;
 import org.geogit.api.plumbing.FindTreeChild;
 import org.geogit.api.plumbing.RefParse;
@@ -69,6 +72,28 @@ public class AddOpTest extends RepositoryTestCase {
         geogit.command(AddOp.class).call();
         iterator = repo.getWorkingTree().getUnstaged(null);
         assertFalse(iterator.hasNext());
+    }
+
+    @Test
+    public void testAddNewPathUsingPathFilter() throws Exception {
+        insert(points1);
+        insert(points2);
+        geogit.command(AddOp.class).addPattern("Points/Points.1").call();
+        List<DiffEntry> unstaged = toList(repo.getIndex().getStaged(null));
+        assertEquals(unstaged.toString(), 2, unstaged.size());
+
+        assertEquals(ChangeType.ADDED, unstaged.get(0).changeType());
+        assertEquals(RevObject.TYPE.TREE, unstaged.get(0).getNewObject().getType());
+        assertEquals("Points", unstaged.get(0).newName());
+        RevFeatureType ft = RevFeatureType.build(pointsType);
+        ObjectId expectedTreeMdId = ft.getId();
+        assertEquals(expectedTreeMdId, unstaged.get(0).getNewObject().getMetadataId());
+
+        assertEquals(ChangeType.ADDED, unstaged.get(1).changeType());
+        assertEquals(RevObject.TYPE.FEATURE, unstaged.get(1).getNewObject().getType());
+        assertEquals("Points.1", unstaged.get(1).newName());
+        assertFalse("feature node's metadata id should not be set, as it uses the parent tree one",
+                unstaged.get(1).getNewObject().getNode().getMetadataId().isPresent());
     }
 
     @Test

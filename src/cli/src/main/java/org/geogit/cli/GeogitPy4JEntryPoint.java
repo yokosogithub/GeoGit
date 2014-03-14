@@ -107,7 +107,7 @@ public class GeogitPy4JEntryPoint {
         String command = Joiner.on(" ").join(args);
         os.clear();
         System.out.print("Running command: " + command);
-        int ret = cli.processCommand(args);
+        int ret = cli.execute(args);
         cli.close();
         if (ret == 0) {
             System.out.println(" [OK]");
@@ -159,10 +159,23 @@ public class GeogitPy4JEntryPoint {
     }
 
     public static void main(String[] args) {
-        GatewayServer gatewayServer = new GatewayServer(new GeogitPy4JEntryPoint());
+        int port = GatewayServer.DEFAULT_PORT;
+        if (args.length != 0) {
+            if (args.length > 1) {
+                System.out.println("Too many arguments.\n Usage: geogit-gateway [port]");
+                return;
+            }
+            try {
+                port = Integer.parseInt(args[0]);
+            } catch (NumberFormatException e) {
+                System.out.println("Wrong argument: " + args[0] + "\nUsage: geogit-gateway [port]");
+                return;
+            }
+        }
+        GatewayServer gatewayServer = new GatewayServer(new GeogitPy4JEntryPoint(), port);
         gatewayServer.start();
         System.out.println("GeoGit server correctly started and waiting for conections at port "
-                + Integer.toString(gatewayServer.getListeningPort()));
+                + Integer.toString(port));
     }
 }
 

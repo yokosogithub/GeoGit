@@ -11,8 +11,6 @@ import static org.junit.Assert.assertTrue;
 import java.util.Map;
 
 import org.geogit.geotools.cli.porcelain.TestHelper;
-import org.geogit.geotools.plumbing.DescribeOp;
-import org.geogit.geotools.plumbing.GeoToolsOpException;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;

@@ -44,20 +44,27 @@ import org.geogit.api.plumbing.diff.DiffEntry;
 import org.geogit.api.plumbing.diff.DiffEntry.ChangeType;
 import org.geogit.api.plumbing.merge.Conflict;
 import org.geogit.api.plumbing.merge.MergeScenarioReport;
+import org.geogit.api.porcelain.BlameReport;
 import org.geogit.api.porcelain.FetchResult;
 import org.geogit.api.porcelain.FetchResult.ChangedRef;
+import org.geogit.api.porcelain.MergeOp.MergeReport;
 import org.geogit.api.porcelain.PullResult;
+import org.geogit.api.porcelain.ValueAndCommit;
+import org.geogit.storage.text.TextValueSerializer;
 import org.geogit.web.api.commands.BranchWebOp;
 import org.geogit.web.api.commands.Commit;
+import org.geogit.web.api.commands.Log.CommitSummary;
 import org.geogit.web.api.commands.LsTree;
 import org.geogit.web.api.commands.RefParseWeb;
 import org.geogit.web.api.commands.RemoteWebOp;
 import org.geogit.web.api.commands.TagWebOp;
 import org.geogit.web.api.commands.UpdateRefWeb;
+import org.geotools.metadata.iso.citation.Citations;
 import org.geotools.referencing.CRS;
 import org.opengis.feature.type.GeometryType;
 import org.opengis.feature.type.PropertyDescriptor;
 import org.opengis.feature.type.PropertyType;
+import org.opengis.referencing.FactoryException;
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
 
 import com.google.common.base.Function;
@@ -200,7 +207,7 @@ public class ResponseWriter {
             throws XMLStreamException {
         Iterator<Conflict> entries = conflicts.iterator();
 
-        advance(entries, start);
+        Iterators.advance(entries, start);
         if (length < 0) {
             length = Integer.MAX_VALUE;
         }
@@ -216,13 +223,6 @@ public class ResponseWriter {
         }
     }
 
-    @SuppressWarnings("rawtypes")
-    private void advance(Iterator it, int cnt) {
-        for (int i = 0; i < cnt && it.hasNext(); i++) {
-            it.next();
-        }
-    }
-
     /**
      * Writes a set of {@link DiffEntry}s to the stream.
      * 
@@ -234,7 +234,7 @@ public class ResponseWriter {
      */
     public void writeDiffEntries(String name, int start, int length, Iterator<DiffEntry> entries)
             throws XMLStreamException {
-        advance(entries, start);
+        Iterators.advance(entries, start);
         if (length < 0) {
             length = Integer.MAX_VALUE;
         }
@@ -269,46 +269,97 @@ public class ResponseWriter {
         }
     }
 
+    private void writeCommit(RevCommit commit, String tag, @Nullable Integer adds,
+            @Nullable Integer modifies, @Nullable Integer removes) throws XMLStreamException {
+        out.writeStartElement(tag);
+        writeElement("id", commit.getId().toString());
+        writeElement("tree", commit.getTreeId().toString());
+
+        ImmutableList<ObjectId> parentIds = commit.getParentIds();
+        out.writeStartElement("parents");
+        for (ObjectId parentId : parentIds) {
+            writeElement("id", parentId.toString());
+        }
+        out.writeEndElement();
+
+        writePerson("author", commit.getAuthor());
+        writePerson("committer", commit.getCommitter());
+
+        if (adds != null) {
+            writeElement("adds", adds.toString());
+        }
+        if (modifies != null) {
+            writeElement("modifies", modifies.toString());
+        }
+        if (removes != null) {
+            writeElement("removes", removes.toString());
+        }
+
+        out.writeStartElement("message");
+        if (commit.getMessage() != null) {
+            out.writeCData(commit.getMessage());
+        }
+        out.writeEndElement();
+
+        out.writeEndElement();
+    }
+
     /**
      * Writes a set of {@link RevCommit}s to the stream.
      * 
      * @param entries an iterator for the RevCommits to write
-     * @param page the page number to write
      * @param elementsPerPage the number of commits per page
+     * @param returnRange only return the range if true
      * @throws XMLStreamException
      */
-    public void writeCommits(Iterator<RevCommit> entries, int page, int elementsPerPage)
+    public void writeCommits(Iterator<RevCommit> entries, int elementsPerPage, boolean returnRange)
             throws XMLStreamException {
-        advance(entries, page * elementsPerPage);
         int counter = 0;
-        while (entries.hasNext() && counter < elementsPerPage) {
-            RevCommit entry = entries.next();
-            out.writeStartElement("commit");
-            writeElement("id", entry.getId().toString());
-            writeElement("tree", entry.getTreeId().toString());
-
-            ImmutableList<ObjectId> parentIds = entry.getParentIds();
-            out.writeStartElement("parents");
-            for (ObjectId parentId : parentIds) {
-                writeElement("id", parentId.toString());
+        RevCommit lastCommit = null;
+        if (returnRange) {
+            if (entries.hasNext()) {
+                lastCommit = entries.next();
+                writeCommit(lastCommit, "untilCommit", null, null, null);
+                counter++;
             }
-            out.writeEndElement();
+        }
+        while (entries.hasNext() && (returnRange || counter < elementsPerPage)) {
+            lastCommit = entries.next();
 
-            writePerson("author", entry.getAuthor());
-            writePerson("committer", entry.getCommitter());
-
-            out.writeStartElement("message");
-            if (entry.getMessage() != null) {
-                out.writeCData(entry.getMessage());
+            if (!returnRange) {
+                writeCommit(lastCommit, "commit", null, null, null);
             }
-            out.writeEndElement();
 
-            out.writeEndElement();
             counter++;
+        }
+        if (returnRange) {
+            if (lastCommit != null) {
+                writeCommit(lastCommit, "sinceCommit", null, null, null);
+            }
+            writeElement("numCommits", Integer.toString(counter));
         }
         if (entries.hasNext()) {
             writeElement("nextPage", "true");
         }
+    }
+
+    public void writeSummarizedCommits(Iterator<CommitSummary> entries, int elementsPerPage)
+            throws XMLStreamException {
+        int counter = 0;
+
+        while (entries.hasNext() && counter < elementsPerPage) {
+            CommitSummary entry = entries.next();
+
+            writeCommit(entry.getCommit(), "commit", entry.getAdds(), entry.getModifies(),
+                    entry.getRemoves());
+
+            counter++;
+        }
+
+        if (entries.hasNext()) {
+            writeElement("nextPage", "true");
+        }
+
     }
 
     /**
@@ -330,10 +381,12 @@ public class ResponseWriter {
     /**
      * Writes the response for the {@link Commit} command to the stream.
      * 
+     * @param commit the commit
      * @param diff the changes returned from the command
      * @throws XMLStreamException
      */
-    public void writeCommitResponse(Iterator<DiffEntry> diff) throws XMLStreamException {
+    public void writeCommitResponse(RevCommit commit, Iterator<DiffEntry> diff)
+            throws XMLStreamException {
         int adds = 0, deletes = 0, changes = 0;
         DiffEntry diffEntry;
         while (diff.hasNext()) {
@@ -350,6 +403,7 @@ public class ResponseWriter {
                 break;
             }
         }
+        writeElement("commitId", commit.getId().toString());
         writeElement("added", Integer.toString(adds));
         writeElement("changed", Integer.toString(changes));
         writeElement("deleted", Integer.toString(deletes));
@@ -458,10 +512,17 @@ public class ResponseWriter {
      * @param remotes the list of the {@link Remote}s of this repository
      * @throws XMLStreamException
      */
-    public void writeRemoteListResponse(List<Remote> remotes) throws XMLStreamException {
+    public void writeRemoteListResponse(List<Remote> remotes, boolean verbose)
+            throws XMLStreamException {
         for (Remote remote : remotes) {
             out.writeStartElement("Remote");
             writeElement("name", remote.getName());
+            if (verbose) {
+                writeElement("url", remote.getFetchURL());
+                if (remote.getUserName() != null) {
+                    writeElement("username", remote.getUserName());
+                }
+            }
             out.writeEndElement();
         }
     }
@@ -490,6 +551,25 @@ public class ResponseWriter {
             writeElement("name", tag.getName());
             out.writeEndElement();
         }
+    }
+
+    public void writeRebuildGraphResponse(ImmutableList<ObjectId> updatedObjects, boolean quiet)
+            throws XMLStreamException {
+        out.writeStartElement("RebuildGraph");
+        if (updatedObjects.size() > 0) {
+            writeElement("updatedGraphElements", Integer.toString(updatedObjects.size()));
+            if (!quiet) {
+                for (ObjectId object : updatedObjects) {
+                    out.writeStartElement("UpdatedObject");
+                    writeElement("ref", object.toString());
+                    out.writeEndElement();
+                }
+            }
+        } else {
+            writeElement("response",
+                    "No missing or incomplete graph elements (commits) were found.");
+        }
+        out.writeEndElement();
     }
 
     public void writeFetchResponse(FetchResult result) throws XMLStreamException {
@@ -546,10 +626,10 @@ public class ResponseWriter {
         }
         if (result.getMergeReport().isPresent()
                 && result.getMergeReport().get().getReport().isPresent()) {
-            writeMergeResponse(result.getMergeReport().get().getReport().get(), geogit, result
-                    .getMergeReport().get().getOurs(), result.getMergeReport().get().getPairs()
-                    .get(0).getTheirs(), result.getMergeReport().get().getPairs().get(0)
-                    .getAncestor());
+            MergeReport report = result.getMergeReport().get();
+            writeMergeResponse(Optional.fromNullable(report.getMergeCommit()), report.getReport()
+                    .get(), geogit, report.getOurs(), report.getPairs().get(0).getTheirs(), report
+                    .getPairs().get(0).getAncestor());
         }
         out.writeEndElement();
     }
@@ -574,7 +654,15 @@ public class ResponseWriter {
                 GeometryType gt = (GeometryType) attrType;
                 CoordinateReferenceSystem crs = gt.getCoordinateReferenceSystem();
                 if (crs != null) {
-                    writeElement("crs", CRS.toSRS(crs));
+                    String crsCode = null;
+                    try {
+                        crsCode = CRS.lookupIdentifier(Citations.EPSG, crs, false);
+                    } catch (FactoryException e) {
+                        crsCode = null;
+                    }
+                    if (crsCode != null) {
+                        writeElement("crs", "EPSG:" + crsCode);
+                    }
                 }
             }
             writeElement("attributename", entry.getKey().getName().toString());
@@ -602,7 +690,7 @@ public class ResponseWriter {
     public void writeGeometryChanges(final CommandLocator geogit, Iterator<DiffEntry> diff,
             int page, int elementsPerPage) throws XMLStreamException {
 
-        advance(diff, page * elementsPerPage);
+        Iterators.advance(diff, page * elementsPerPage);
         int counter = 0;
 
         Iterator<GeometryChange> changeIterator = Iterators.transform(diff,
@@ -642,7 +730,15 @@ public class ResponseWriter {
                                     CoordinateReferenceSystem crs = gt
                                             .getCoordinateReferenceSystem();
                                     if (crs != null) {
-                                        crsCode = CRS.toSRS(crs);
+                                        try {
+                                            crsCode = CRS.lookupIdentifier(Citations.EPSG, crs,
+                                                    false);
+                                        } catch (FactoryException e) {
+                                            crsCode = null;
+                                        }
+                                        if (crsCode != null) {
+                                            crsCode = "EPSG:" + crsCode;
+                                        }
                                     }
                                     break;
                                 }
@@ -760,7 +856,15 @@ public class ResponseWriter {
                                             .getCoordinateReferenceSystem();
 
                                     if (crs != null) {
-                                        crsCode = CRS.toSRS(crs);
+                                        try {
+                                            crsCode = CRS.lookupIdentifier(Citations.EPSG, crs,
+                                                    false);
+                                        } catch (FactoryException e) {
+                                            crsCode = null;
+                                        }
+                                        if (crsCode != null) {
+                                            crsCode = "EPSG:" + crsCode;
+                                        }
                                     }
                                     break;
                                 }
@@ -814,8 +918,7 @@ public class ResponseWriter {
                     @Override
                     public GeometryChange apply(FeatureInfo input) {
                         GeometryChange change = null;
-                        RevFeatureBuilder revBuilder = new RevFeatureBuilder();
-                        RevFeature revFeature = revBuilder.build(input.getFeature());
+                        RevFeature revFeature = RevFeatureBuilder.build(input.getFeature());
                         RevFeatureType featureType = input.getFeatureType();
                         Collection<PropertyDescriptor> attribs = featureType.type()
                                 .getDescriptors();
@@ -827,7 +930,14 @@ public class ResponseWriter {
                                 GeometryType gt = (GeometryType) attrType;
                                 CoordinateReferenceSystem crs = gt.getCoordinateReferenceSystem();
                                 if (crs != null) {
-                                    crsCode = CRS.toSRS(crs);
+                                    try {
+                                        crsCode = CRS.lookupIdentifier(Citations.EPSG, crs, false);
+                                    } catch (FactoryException e) {
+                                        crsCode = null;
+                                    }
+                                    if (crsCode != null) {
+                                        crsCode = "EPSG:" + crsCode;
+                                    }
                                 }
                                 break;
                             }
@@ -872,12 +982,16 @@ public class ResponseWriter {
      * @param transaction - a CommandLocator to call commands from
      * @throws XMLStreamException
      */
-    public void writeMergeResponse(MergeScenarioReport report, CommandLocator transaction,
-            ObjectId ours, ObjectId theirs, ObjectId ancestor) throws XMLStreamException {
+    public void writeMergeResponse(Optional<RevCommit> mergeCommit, MergeScenarioReport report,
+            CommandLocator transaction, ObjectId ours, ObjectId theirs, ObjectId ancestor)
+            throws XMLStreamException {
         out.writeStartElement("Merge");
         writeElement("ours", ours.toString());
         writeElement("theirs", theirs.toString());
         writeElement("ancestor", ancestor.toString());
+        if (mergeCommit.isPresent()) {
+            writeElement("mergedCommit", mergeCommit.get().getId().toString());
+        }
         if (report.getConflicts().size() > 0) {
             writeElement("conflicts", Integer.toString(report.getConflicts().size()));
         }
@@ -898,6 +1012,31 @@ public class ResponseWriter {
         out.writeStartElement("Transaction");
         if (transactionId != null) {
             writeElement("ID", transactionId.toString());
+        }
+        out.writeEndElement();
+    }
+
+    /**
+     * Writes the response for the blame operation.
+     * 
+     * @param report - the result of the blame operation
+     * @throws XMLStreamException
+     */
+    public void writeBlameReport(BlameReport report) throws XMLStreamException {
+        out.writeStartElement("Blame");
+        Map<String, ValueAndCommit> changes = report.getChanges();
+        Iterator<String> iter = changes.keySet().iterator();
+        while (iter.hasNext()) {
+            String attrib = iter.next();
+            ValueAndCommit valueAndCommit = changes.get(attrib);
+            RevCommit commit = valueAndCommit.commit;
+            Optional<?> value = valueAndCommit.value;
+            out.writeStartElement("Attribute");
+            writeElement("name", attrib);
+            writeElement("value",
+                    TextValueSerializer.asString(Optional.fromNullable((Object) value.orNull())));
+            writeCommit(commit, "commit", null, null, null);
+            out.writeEndElement();
         }
         out.writeEndElement();
     }

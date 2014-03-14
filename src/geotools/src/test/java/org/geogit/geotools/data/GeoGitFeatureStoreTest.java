@@ -175,7 +175,8 @@ public class GeoGitFeatureStoreTest extends RepositoryTestCase {
             tx.close();
         }
 
-        assertTrue("Should throw IllegalStateException when trying to modify data in geogit datastore when it is not configured with a branch.",
+        assertTrue(
+                "Should throw IllegalStateException when trying to modify data in geogit datastore when it is not configured with a branch.",
                 gotIllegalStateException);
     }
 

@@ -84,8 +84,9 @@ public class EndTransaction extends AbstractWebAPICommand {
                 @Override
                 public void write(ResponseWriter out) throws Exception {
                     out.start();
-                    out.writeMergeResponse(report, transaction, ours.getId(), theirs.getId(),
-                            ancestor.get().getId());
+                    Optional<RevCommit> mergeCommit = Optional.absent();
+                    out.writeMergeResponse(mergeCommit, report, transaction, ours.getId(),
+                            theirs.getId(), ancestor.get().getId());
                     out.finish();
                 }
             });

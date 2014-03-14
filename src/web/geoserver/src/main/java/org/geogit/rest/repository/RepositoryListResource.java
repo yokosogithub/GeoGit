@@ -14,6 +14,7 @@ import org.geoserver.catalog.DataStoreInfo;
 import org.geoserver.rest.MapResource;
 import org.geoserver.rest.format.DataFormat;
 import org.geoserver.rest.format.FreemarkerFormat;
+import org.geoserver.rest.format.MapJSONFormat;
 import org.restlet.data.MediaType;
 import org.restlet.data.Request;
 import org.restlet.data.Response;
@@ -33,6 +34,8 @@ public class RepositoryListResource extends MapResource {
 
         formats.add(new FreemarkerFormat(RepositoryListResource.class.getSimpleName() + ".ftl",
                 getClass(), MediaType.TEXT_HTML));
+
+        formats.add(new MapJSONFormat());
 
         return formats;
     }

@@ -20,6 +20,7 @@ import org.geogit.api.porcelain.DiffOp;
 import org.geogit.cli.AbstractCommand;
 import org.geogit.cli.CLICommand;
 import org.geogit.cli.GeogitCLI;
+import org.geogit.cli.annotation.ReadOnly;
 
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.Parameters;
@@ -34,6 +35,7 @@ import com.google.common.collect.Lists;
  * 
  * @see Diff
  */
+@ReadOnly
 @Parameters(commandNames = "format-patch", commandDescription = "Creates a patch with a set of changes")
 public class FormatPatch extends AbstractCommand implements CLICommand {
 

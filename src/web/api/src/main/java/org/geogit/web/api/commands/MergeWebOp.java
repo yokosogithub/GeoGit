@@ -115,9 +115,9 @@ public class MergeWebOp extends AbstractWebAPICommand {
                 @Override
                 public void write(ResponseWriter out) throws Exception {
                     out.start();
-                    out.writeMergeResponse(report.getReport().get(), transaction, report.getOurs(),
-                            report.getPairs().get(0).getTheirs(), report.getPairs().get(0)
-                                    .getAncestor());
+                    out.writeMergeResponse(Optional.fromNullable(report.getMergeCommit()), report
+                            .getReport().get(), transaction, report.getOurs(), report.getPairs()
+                            .get(0).getTheirs(), report.getPairs().get(0).getAncestor());
                     out.finish();
                 }
             });
@@ -134,8 +134,9 @@ public class MergeWebOp extends AbstractWebAPICommand {
                 @Override
                 public void write(ResponseWriter out) throws Exception {
                     out.start();
-                    out.writeMergeResponse(report, transaction, ours.getId(), theirs.getId(),
-                            ancestor.get().getId());
+                    Optional<RevCommit> mergeCommit = Optional.absent();
+                    out.writeMergeResponse(mergeCommit, report, transaction, ours.getId(),
+                            theirs.getId(), ancestor.get().getId());
                     out.finish();
                 }
             });

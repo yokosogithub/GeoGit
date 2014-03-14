@@ -102,9 +102,9 @@ public abstract class ForwardingStagingDatabase implements StagingDatabase {
 
     @Override
     public boolean put(RevObject object) {
-//        if (repositoryDb.exists(object.getId())) {
-//            return false;
-//        }
+        // if (repositoryDb.exists(object.getId())) {
+        // return false;
+        // }
         return stagingDb.put(object);
     }
 
@@ -198,5 +198,10 @@ public abstract class ForwardingStagingDatabase implements StagingDatabase {
     @Override
     public boolean delete(ObjectId objectId) {
         return stagingDb.delete(objectId);
+    }
+
+    @Override
+    public String toString() {
+        return String.format("%s[%s]", getClass().getSimpleName(), stagingDb.toString());
     }
 }

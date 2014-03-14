@@ -26,13 +26,12 @@ public class RefTest extends RepositoryTestCase {
         insertAndAdd(points1);
         RevCommit oid = geogit.command(CommitOp.class).call();
 
-        Ref testRef = new Ref(Ref.REFS_PREFIX + "commit1", oid.getId(), RevObject.TYPE.COMMIT);
+        Ref testRef = new Ref(Ref.REFS_PREFIX + "commit1", oid.getId());
 
         assertEquals(Ref.REFS_PREFIX + "commit1", testRef.getName());
         assertEquals(Ref.REFS_PREFIX, testRef.namespace());
         assertEquals("commit1", testRef.localName());
         assertEquals(oid.getId(), testRef.getObjectId());
-        assertEquals(RevObject.TYPE.COMMIT, testRef.getType());
     }
 
     @Test
@@ -40,7 +39,7 @@ public class RefTest extends RepositoryTestCase {
         insertAndAdd(points1);
         RevCommit oid = geogit.command(CommitOp.class).call();
 
-        Ref testRef = new Ref(Ref.REFS_PREFIX + "commit1", oid.getId(), RevObject.TYPE.COMMIT);
+        Ref testRef = new Ref(Ref.REFS_PREFIX + "commit1", oid.getId());
 
         assertEquals("Ref[" + testRef.getName() + " -> " + testRef.getObjectId().toString() + "]",
                 testRef.toString());
@@ -51,20 +50,16 @@ public class RefTest extends RepositoryTestCase {
         insertAndAdd(points1);
         RevCommit oid = geogit.command(CommitOp.class).call();
 
-        Ref testRef = new Ref(Ref.REFS_PREFIX + "commit1", oid.getId(), RevObject.TYPE.COMMIT);
+        Ref testRef = new Ref(Ref.REFS_PREFIX + "commit1", oid.getId());
 
         insertAndAdd(lines1);
         RevCommit oid2 = geogit.command(CommitOp.class).call();
 
-        Ref testRef2 = new Ref(Ref.REFS_PREFIX + "commit2", oid2.getId(), RevObject.TYPE.COMMIT);
+        Ref testRef2 = new Ref(Ref.REFS_PREFIX + "commit2", oid2.getId());
 
         assertFalse(testRef.equals(testRef2));
 
-        testRef2 = new Ref(Ref.REFS_PREFIX + "commit1", oid.getId(), RevObject.TYPE.TREE);
-
-        assertFalse(testRef.equals(testRef2));
-
-        testRef2 = new Ref(Ref.REFS_PREFIX + "commit1", oid.getTreeId(), RevObject.TYPE.COMMIT);
+        testRef2 = new Ref(Ref.REFS_PREFIX + "commit1", oid.getTreeId());
 
         assertFalse(testRef.equals(testRef2));
 
@@ -78,12 +73,12 @@ public class RefTest extends RepositoryTestCase {
         insertAndAdd(points1);
         RevCommit oid = geogit.command(CommitOp.class).call();
 
-        Ref testRef = new Ref(Ref.REFS_PREFIX + "commit1", oid.getId(), RevObject.TYPE.COMMIT);
+        Ref testRef = new Ref(Ref.REFS_PREFIX + "commit1", oid.getId());
 
         insertAndAdd(lines1);
         RevCommit oid2 = geogit.command(CommitOp.class).call();
 
-        Ref testRef2 = new Ref(Ref.REFS_PREFIX + "commit2", oid2.getId(), RevObject.TYPE.COMMIT);
+        Ref testRef2 = new Ref(Ref.REFS_PREFIX + "commit2", oid2.getId());
 
         assertTrue(testRef.compareTo(testRef2) < 0);
         assertTrue(testRef2.compareTo(testRef) > 0);

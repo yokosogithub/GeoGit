@@ -16,6 +16,7 @@ import org.geogit.api.plumbing.CatObject;
 import org.geogit.api.plumbing.RevObjectParse;
 import org.geogit.cli.AbstractCommand;
 import org.geogit.cli.GeogitCLI;
+import org.geogit.cli.annotation.ReadOnly;
 import org.geogit.storage.ObjectSerializingFactory;
 import org.geogit.storage.ObjectWriter;
 import org.geogit.storage.datastream.DataStreamSerializationFactory;
@@ -30,6 +31,7 @@ import com.google.common.base.Suppliers;
  * display, see the {@link show} command.
  * 
  */
+@ReadOnly
 @Parameters(commandNames = "cat", commandDescription = "Describes a repository element")
 public class Cat extends AbstractCommand {
 

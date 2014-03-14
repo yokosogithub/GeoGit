@@ -12,15 +12,19 @@ import org.geogit.storage.ObjectDatabase;
 import org.geogit.storage.RefDatabase;
 import org.geogit.storage.StagingDatabase;
 
+import com.google.inject.AbstractModule;
 import com.google.inject.Inject;
 import com.google.inject.Provider;
+import com.google.inject.Scopes;
 
-public class PluginsModule extends GeogitModule {
+public class PluginsModule extends AbstractModule {
+    
+    @Override
     protected void configure() {
-        bind(ObjectDatabase.class).toProvider(PluginObjectDatabaseProvider.class);
-        bind(StagingDatabase.class).toProvider(PluginStagingDatabaseProvider.class);
-        bind(RefDatabase.class).toProvider(PluginRefDatabaseProvider.class);
-        bind(GraphDatabase.class).toProvider(PluginGraphDatabaseProvider.class);
+        bind(ObjectDatabase.class).toProvider(PluginObjectDatabaseProvider.class).in(Scopes.SINGLETON);
+        bind(StagingDatabase.class).toProvider(PluginStagingDatabaseProvider.class).in(Scopes.SINGLETON);
+        bind(RefDatabase.class).toProvider(PluginRefDatabaseProvider.class).in(Scopes.SINGLETON);
+        bind(GraphDatabase.class).toProvider(PluginGraphDatabaseProvider.class).in(Scopes.SINGLETON);
     }
 
     private static class PluginObjectDatabaseProvider extends FormatSelector<ObjectDatabase> {

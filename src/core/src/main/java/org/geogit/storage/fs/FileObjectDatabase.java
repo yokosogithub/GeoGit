@@ -101,7 +101,6 @@ public class FileObjectDatabase extends AbstractObjectDatabase implements Object
         }
         final Optional<URL> repoUrl = new ResolveGeogitDir(platform).call();
         checkState(repoUrl.isPresent(), "Can't find geogit repository home");
-        
 
         try {
             dataRoot = new File(new File(repoUrl.get().toURI()), databaseName);
@@ -274,4 +273,9 @@ public class FileObjectDatabase extends AbstractObjectDatabase implements Object
         RepositoryConnectionException.StorageType.OBJECT.verify(configDB, "file", "1.0");
     }
 
+    @Override
+    public String toString() {
+        return String.format("%s[dir: %s, name: %s]", getClass().getSimpleName(),
+                dataRoot == null ? "<unset>" : dataRoot.getAbsolutePath(), databaseName);
+    }
 }

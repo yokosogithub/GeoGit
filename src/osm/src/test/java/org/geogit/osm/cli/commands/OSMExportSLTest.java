@@ -14,11 +14,13 @@ import java.sql.Statement;
 import jline.UnsupportedTerminal;
 import jline.console.ConsoleReader;
 
+import org.geogit.api.GlobalInjectorBuilder;
 import org.geogit.api.Platform;
 import org.geogit.api.RevTree;
 import org.geogit.api.TestPlatform;
 import org.geogit.api.plumbing.RevObjectParse;
 import org.geogit.cli.GeogitCLI;
+import org.geogit.cli.test.functional.CLITestInjectorBuilder;
 import org.geogit.osm.internal.OSMImportOp;
 import org.junit.Assert;
 import org.junit.Assume;
@@ -26,7 +28,7 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
-import org.sqlite.SQLiteConfig;
+import org.spatialite.SQLiteConfig;
 
 import com.google.common.base.Optional;
 
@@ -43,7 +45,8 @@ public class OSMExportSLTest extends Assert {
                 new UnsupportedTerminal());
         cli = new GeogitCLI(consoleReader);
         File workingDirectory = tempFolder.getRoot();
-        Platform platform = new TestPlatform(workingDirectory);
+        TestPlatform platform = new TestPlatform(workingDirectory);
+        GlobalInjectorBuilder.builder = new CLITestInjectorBuilder(platform);
         cli.setPlatform(platform);
         cli.execute("init");
         cli.execute("config", "user.name", "Gabriel Roldan");
@@ -55,10 +58,10 @@ public class OSMExportSLTest extends Assert {
         Throwable thrown = null;
 
         try {
-            Class.forName("org.sqlite.JDBC");
+            Class.forName("org.spatialite.JDBC");
             SQLiteConfig config = new SQLiteConfig();
             config.enableSpatiaLite(true);
-            connection = DriverManager.getConnection("jdbc:sqlite::memory:", config.toProperties());
+            connection = DriverManager.getConnection("jdbc:spatialite::memory:", config.toProperties());
             Statement statement = connection.createStatement();
             statement.execute("SELECT InitSpatialMetaData();");
         } catch (SQLException e) {
