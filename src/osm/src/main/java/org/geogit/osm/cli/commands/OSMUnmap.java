@@ -42,7 +42,7 @@ public class OSMUnmap extends AbstractCommand implements CLICommand {
     protected void runInternal(GeogitCLI cli) throws IOException{
 
         if (args == null || args.isEmpty() || args.size() != 1) {
-            printUsage();
+            printUsage(cli);
             throw new CommandFailedException();
         }
 

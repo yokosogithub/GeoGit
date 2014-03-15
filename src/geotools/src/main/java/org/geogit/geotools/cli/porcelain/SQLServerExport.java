@@ -73,7 +73,7 @@ public class SQLServerExport extends AbstractSQLServerCommand implements CLIComm
     @Override
     protected void runInternal(GeogitCLI cli) throws IOException {
         if (args.isEmpty()) {
-            printUsage();
+            printUsage(cli);
             throw new CommandFailedException();
         }
 

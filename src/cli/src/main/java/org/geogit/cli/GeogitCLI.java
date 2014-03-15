@@ -544,7 +544,7 @@ public class GeogitCLI {
                         .toArray(new String[args.length - 1]);
                 mainCommander = ((CLICommandExtension) object).getCommandParser();
                 if (Lists.newArrayList(args).contains("--help")) {
-                    mainCommander.usage();
+                    printUsage(mainCommander);
                     return;
                 }
             }
@@ -554,13 +554,13 @@ public class GeogitCLI {
         final String parsedCommand = mainCommander.getParsedCommand();
         if (null == parsedCommand) {
             if (mainCommander.getObjects().size() == 0) {
-                mainCommander.usage();
+                printUsage(mainCommander);
             } else if (mainCommander.getObjects().get(0) instanceof CLICommandExtension) {
                 CLICommandExtension extension = (CLICommandExtension) mainCommander.getObjects()
                         .get(0);
-                extension.getCommandParser().usage();
+                printUsage(extension.getCommandParser());
             } else {
-                mainCommander.usage();
+                printUsage(mainCommander);
             }
         } else {
             JCommander jCommander = mainCommander.getCommands().get(parsedCommand);
@@ -568,7 +568,7 @@ public class GeogitCLI {
             CLICommand cliCommand = (CLICommand) objects.get(0);
             Class<? extends CLICommand> cmdClass = cliCommand.getClass();
             if (cliCommand instanceof AbstractCommand && ((AbstractCommand) cliCommand).help) {
-                ((AbstractCommand) cliCommand).printUsage();
+                ((AbstractCommand) cliCommand).printUsage(this);
                 getConsole().flush();
                 return;
             }
@@ -591,6 +591,23 @@ public class GeogitCLI {
 
             cliCommand.run(this);
             getConsole().flush();
+        }
+    }
+
+    /**
+     * This method should be used instead of {@link JCommander#usage()} so the help string is
+     * printed to the cli's {@link #getConsole() console} (and hence to wherever its output is sent)
+     * instead of directly to {@code System.out}
+     */
+    public void printUsage(JCommander mainCommander) {
+        StringBuilder out = new StringBuilder();
+        mainCommander.usage(out);
+        ConsoleReader console = getConsole();
+        try {
+            console.println(out.toString());
+            console.flush();
+        } catch (IOException e) {
+            throw Throwables.propagate(e);
         }
     }
 

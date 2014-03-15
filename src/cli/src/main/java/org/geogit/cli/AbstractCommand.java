@@ -52,7 +52,7 @@ public abstract class AbstractCommand implements CLICommand {
     public void run(GeogitCLI cli) throws InvalidParameterException, CommandFailedException {
         checkNotNull(cli, "No GeogitCLI provided");
         if (help) {
-            printUsage();
+            printUsage(cli);
             return;
         }
 
@@ -115,11 +115,11 @@ public abstract class AbstractCommand implements CLICommand {
     /**
      * Prints the JCommander usage for this command.
      */
-    public void printUsage() {
+    public void printUsage(GeogitCLI cli) {
         JCommander jc = new JCommander(this);
         String commandName = this.getClass().getAnnotation(Parameters.class).commandNames()[0];
         jc.setProgramName("geogit " + commandName);
-        jc.usage();
+        cli.printUsage(jc);
     }
 
     /**

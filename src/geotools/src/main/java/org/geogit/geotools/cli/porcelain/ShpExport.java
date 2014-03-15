@@ -75,7 +75,7 @@ public class ShpExport extends AbstractShpCommand implements CLICommand {
     @Override
     protected void runInternal(GeogitCLI cli) throws IOException {
         if (args.isEmpty()) {
-            printUsage();
+            printUsage(cli);
             throw new CommandFailedException();
         }
 

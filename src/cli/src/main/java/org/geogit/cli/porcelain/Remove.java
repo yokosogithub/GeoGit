@@ -51,7 +51,7 @@ public class Remove extends AbstractCommand implements CLICommand {
 
         // check that there is something to remove
         if (pathsToRemove.isEmpty()) {
-            printUsage();
+            printUsage(cli);
             throw new CommandFailedException();
         }
 
