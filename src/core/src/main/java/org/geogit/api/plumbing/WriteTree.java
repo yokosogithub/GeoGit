@@ -16,6 +16,7 @@ import org.geogit.api.AbstractGeoGitOp;
 import org.geogit.api.Node;
 import org.geogit.api.NodeRef;
 import org.geogit.api.ObjectId;
+import org.geogit.api.ProgressListener;
 import org.geogit.api.Ref;
 import org.geogit.api.RevObject.TYPE;
 import org.geogit.api.RevTree;
@@ -23,7 +24,6 @@ import org.geogit.api.RevTreeBuilder;
 import org.geogit.api.plumbing.diff.DiffEntry;
 import org.geogit.api.plumbing.diff.DiffEntry.ChangeType;
 import org.geogit.storage.ObjectDatabase;
-import org.opengis.util.ProgressListener;
 
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
@@ -145,7 +145,7 @@ public class WriteTree extends AbstractGeoGitOp<ObjectId> {
         int i = 0;
         while (diffs.hasNext()) {
             if (numChanges != 0) {
-                progress.progress((float) (++i * 100) / numChanges);
+                progress.setProgress((float) (++i * 100) / numChanges);
             }
             if (progress.isCanceled()) {
                 return null;

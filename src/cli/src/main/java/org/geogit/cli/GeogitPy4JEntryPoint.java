@@ -15,8 +15,8 @@ import java.util.NoSuchElementException;
 import jline.console.ConsoleReader;
 
 import org.geogit.api.DefaultPlatform;
-import org.geotools.util.DefaultProgressListener;
-import org.opengis.util.ProgressListener;
+import org.geogit.api.DefaultProgressListener;
+import org.geogit.api.ProgressListener;
 
 import py4j.GatewayServer;
 
@@ -105,7 +105,7 @@ public class GeogitPy4JEntryPoint {
                         }
 
                         @Override
-                        public synchronized void progress(float percent) {
+                        public synchronized void setProgress(float percent) {
                             GeogitPy4JEntryPoint.this.listener.setProgress(percent);
 
                         }

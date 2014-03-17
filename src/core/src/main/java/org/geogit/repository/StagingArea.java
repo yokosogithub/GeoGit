@@ -16,7 +16,7 @@ import org.geogit.api.plumbing.diff.DiffEntry;
 import org.geogit.api.plumbing.diff.DiffObjectCount;
 import org.geogit.api.plumbing.merge.Conflict;
 import org.geogit.storage.StagingDatabase;
-import org.opengis.util.ProgressListener;
+import org.geogit.api.ProgressListener;
 
 import com.google.common.base.Optional;
 

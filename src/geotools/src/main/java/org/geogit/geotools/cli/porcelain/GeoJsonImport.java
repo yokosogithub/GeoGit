@@ -18,7 +18,7 @@ import org.geogit.geotools.plumbing.ImportOp;
 import org.geotools.data.DataStore;
 import org.opengis.feature.type.AttributeDescriptor;
 import org.opengis.feature.type.GeometryDescriptor;
-import org.opengis.util.ProgressListener;
+import org.geogit.api.ProgressListener;
 
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.Parameters;
