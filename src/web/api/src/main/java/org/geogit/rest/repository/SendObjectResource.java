@@ -5,14 +5,13 @@
 
 package org.geogit.rest.repository;
 
-import static org.geogit.rest.repository.GeogitResourceUtils.getGeogit;
+import static org.geogit.rest.repository.RESTUtils.getGeogit;
 
 import java.io.IOException;
 import java.io.InputStream;
 
 import org.geogit.api.GeoGIT;
 import org.geogit.remote.BinaryPackedObjects;
-import org.geoserver.rest.RestletException;
 import org.restlet.data.Status;
 import org.restlet.resource.Representation;
 import org.restlet.resource.Resource;
@@ -29,6 +28,7 @@ public class SendObjectResource extends Resource {
         return true;
     }
 
+    @Override
     public void post(Representation entity) {
         InputStream input = null;
 

@@ -4,7 +4,7 @@
  */
 package org.geogit.rest.repository;
 
-import static org.geogit.rest.repository.GeogitResourceUtils.getGeogit;
+import static org.geogit.rest.repository.RESTUtils.getGeogit;
 
 import java.io.IOException;
 import java.io.Writer;
@@ -27,8 +27,6 @@ import org.geogit.web.api.CommandSpecException;
 import org.geogit.web.api.ParameterSet;
 import org.geogit.web.api.ResponseWriter;
 import org.geogit.web.api.WebAPICommand;
-import org.geoserver.rest.RestletException;
-import org.geoserver.rest.util.RESTUtils;
 import org.restlet.Context;
 import org.restlet.data.Form;
 import org.restlet.data.MediaType;
@@ -61,7 +59,7 @@ public class CommandResource extends Resource {
     @Override
     public Variant getPreferredVariant() {
         Request request = getRequest();
-        String extension = RESTUtils.getAttribute(request, "extension");
+        String extension = RESTUtils.getStringAttribute(request, "extension");
         if ("xml".equals(extension)) {
             return XML;
         }
