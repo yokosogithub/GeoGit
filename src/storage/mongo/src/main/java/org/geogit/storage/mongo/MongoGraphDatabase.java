@@ -5,7 +5,6 @@
 package org.geogit.storage.mongo;
 
 import org.geogit.api.Platform;
-import org.geogit.blongo.MongoGraph;
 import org.geogit.repository.RepositoryConnectionException;
 import org.geogit.storage.ConfigDatabase;
 import org.geogit.storage.blueprints.BlueprintsGraphDatabase;

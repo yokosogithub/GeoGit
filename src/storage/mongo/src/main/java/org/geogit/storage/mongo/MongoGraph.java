@@ -2,7 +2,7 @@
  * This code is licensed under the BSD New License, available at the root
  * application directory.
  */
-package org.geogit.blongo;
+package org.geogit.storage.mongo;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -53,7 +53,7 @@ import com.tinkerpop.blueprints.util.DefaultVertexQuery;
  *     properties according to the index type - the name just helps the system
  *     to know which one we expect.
  */
-public class MongoGraph implements Graph, KeyIndexableGraph {
+class MongoGraph implements Graph, KeyIndexableGraph {
     private final DBCollection collection;
 
     public MongoGraph(DBCollection collection) {
