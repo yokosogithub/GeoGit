@@ -14,6 +14,8 @@ import java.util.Set;
 
 import org.bson.types.ObjectId;
 
+import com.google.common.base.Function;
+import com.google.common.collect.Iterables;
 import com.mongodb.BasicDBObject;
 import com.mongodb.BasicDBObjectBuilder;
 import com.mongodb.DBCollection;
@@ -129,27 +131,30 @@ public class MongoGraph implements Graph, KeyIndexableGraph {
     }
 
     private Iterable<Edge> edges(Iterable<DBObject> objects) {
-        return new AdaptingIterable<DBObject, Edge>(objects) {
-            public Edge transform(DBObject record) {
+        return Iterables.transform(objects, new Function<DBObject, Edge>() {
+            @Override
+            public Edge apply(DBObject record) {
                 return new MEdge(record);
             }
-        };
+        });
     }
 
     private Iterable<Vertex> vertices(Iterable<DBObject> objects) {
-        return new AdaptingIterable<DBObject, Vertex>(objects) {
-            public Vertex transform(DBObject record) {
+        return Iterables.transform(objects, new Function<DBObject, Vertex>() {
+            @Override
+            public Vertex apply(DBObject record) {
                 return new MVertex(record);
             }
-        };
+        });
     }
 
     private Iterable<Vertex> edgeVertices(final Direction direction, Iterable<Edge> objects) {
-        return new AdaptingIterable<Edge, Vertex>(objects) {
-            Vertex transform(Edge edge) {
+        return Iterables.transform(objects, new Function<Edge, Vertex>() {
+            @Override
+            public Vertex apply(Edge edge) {
                 return edge.getVertex(direction);
             }
-        };
+        });
     }
 
     public Features getFeatures() {
@@ -426,7 +431,7 @@ public class MongoGraph implements Graph, KeyIndexableGraph {
             DBObject path, query;
             switch(direction) {
             case BOTH:
-                return new ConcatenatedIterable(
+                return Iterables.concat(
                            getEdges(Direction.OUT, labels),
                            getEdges(Direction.IN, labels));
             case IN:
@@ -463,7 +468,7 @@ public class MongoGraph implements Graph, KeyIndexableGraph {
             case IN:
                 return edgeVertices(Direction.OUT, getEdges(direction, labels));
             case BOTH:
-                return new ConcatenatedIterable(
+                return Iterables.concat(
                            getVertices(Direction.OUT, labels),
                            getVertices(Direction.IN, labels));
             default:
@@ -873,9 +878,9 @@ public class MongoGraph implements Graph, KeyIndexableGraph {
 
         @Override
         public Iterable<Vertex> vertices() {
-            return new AdaptingIterable<Edge, Vertex>(edges()) {
+            return Iterables.transform(edges(), new Function<Edge, Vertex>() {
                 @Override
-                public Vertex transform(Edge e) {
+                public Vertex apply(Edge e) {
                     Vertex v = e.getVertex(Direction.OUT);
                     if (!v.equals(vertex)) {
                         return v;
@@ -883,7 +888,7 @@ public class MongoGraph implements Graph, KeyIndexableGraph {
                         return e.getVertex(Direction.IN);
                     }
                 }
-            };
+            });
         }
     }
 
