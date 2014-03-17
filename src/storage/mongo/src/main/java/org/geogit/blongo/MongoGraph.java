@@ -5,20 +5,20 @@
 package org.geogit.blongo;
 
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.Collections;
+import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import com.mongodb.BasicDBObjectBuilder;
+import org.bson.types.ObjectId;
+
 import com.mongodb.BasicDBObject;
+import com.mongodb.BasicDBObjectBuilder;
 import com.mongodb.DBCollection;
 import com.mongodb.DBObject;
 import com.mongodb.WriteResult;
-import com.tinkerpop.blueprints.CloseableIterable;
-import com.tinkerpop.blueprints.Contains;
 import com.tinkerpop.blueprints.Contains;
 import com.tinkerpop.blueprints.Direction;
 import com.tinkerpop.blueprints.Edge;
@@ -31,10 +31,7 @@ import com.tinkerpop.blueprints.Parameter;
 import com.tinkerpop.blueprints.Vertex;
 import com.tinkerpop.blueprints.VertexQuery;
 import com.tinkerpop.blueprints.util.DefaultGraphQuery;
-import com.tinkerpop.blueprints.util.DefaultQuery;
 import com.tinkerpop.blueprints.util.DefaultVertexQuery;
-
-import org.bson.types.ObjectId;
 
 /**
  * MongoGraph encodes a general property graph into a MongoDB collection.
