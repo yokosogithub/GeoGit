@@ -2,20 +2,19 @@
  * This code is licensed under the BSD New License, available at the root
  * application directory.
  */
-package org.geogit.storage.neo4j;
+package org.geogit.storage.blueprints;
 
-import org.geogit.api.Platform;
+import org.geogit.api.TestPlatform;
 import org.geogit.storage.ConfigDatabase;
 import org.geogit.storage.GraphDatabase;
-import org.geogit.storage.GraphDatabaseTest;
+import org.geogit.storage.GraphDatabaseStressTest;
 import org.geogit.storage.fs.IniFileConfigDatabase;
 
-public class Neo4JGraphDatabaseTest extends GraphDatabaseTest {
+public class TinkerGraphDatabaseStressTest extends GraphDatabaseStressTest {
 
     @Override
-    protected GraphDatabase createDatabase(Platform platform) throws Exception {
+    protected GraphDatabase createDatabase(TestPlatform platform) {
         ConfigDatabase configDB = new IniFileConfigDatabase(platform);
-        TestNeo4JGraphDatabase graphDatabase = new TestNeo4JGraphDatabase(platform, configDB);
-        return graphDatabase;
+        return new TinkerGraphDatabase(platform, configDB);
     }
 }
