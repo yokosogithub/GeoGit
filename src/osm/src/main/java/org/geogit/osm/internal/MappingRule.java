@@ -285,10 +285,9 @@ public class MappingRule {
                 return null;
             }
             return gf.createPolygon(coords);
-        } else {
-            return geom;
         }
-
+        
+        return geom;
     }
 
     private Object getAttributeValue(String value, FieldType type) {
