@@ -236,8 +236,6 @@ public class OSMHistoryImport extends AbstractCommand implements CLICommand {
         command.setAuthorTimestamp(changeset.getClosed());
         command.setAuthorTimeZoneOffset(0);// osm timestamps are in GMT
         ProgressListener listener = cli.getProgressListener();
-        listener.dispose();
-        listener.cancel();
         listener.setProgress(0f);
         listener.started();
         command.setProgressListener(listener);
