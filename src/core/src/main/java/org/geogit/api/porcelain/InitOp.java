@@ -28,6 +28,8 @@ import org.geogit.api.plumbing.ResolveGeogitDir;
 import org.geogit.api.plumbing.UpdateRef;
 import org.geogit.api.plumbing.UpdateSymRef;
 import org.geogit.di.CanRunDuringConflict;
+import org.geogit.di.PluginDefaults;
+import org.geogit.di.VersionedFormat;
 import org.geogit.repository.Repository;
 import org.geogit.repository.RepositoryConnectionException;
 import org.geogit.storage.ConfigDatabase;
@@ -64,6 +66,8 @@ public class InitOp extends AbstractGeoGitOp<Repository> {
     private Injector injector;
 
     private List<String> config;
+    
+    private PluginDefaults defaults;
 
     private String filterFile;
 
@@ -78,11 +82,13 @@ public class InitOp extends AbstractGeoGitOp<Repository> {
      *        the {@code .geogit} repository directory is found or created.
      */
     @Inject
-    public InitOp(Platform platform, Injector injector) {
+    public InitOp(Platform platform, Injector injector, PluginDefaults defaults) {
         checkNotNull(platform);
         checkNotNull(injector);
+        checkNotNull(defaults);
         this.platform = platform;
         this.injector = injector;
+        this.defaults = defaults;
     }
 
     public InitOp setConfig(List<String> config) {
@@ -154,6 +160,7 @@ public class InitOp extends AbstractGeoGitOp<Repository> {
         if (config != null) {
             effectiveConfigBuilder.addAll(config);
         }
+        addDefaults(defaults, effectiveConfigBuilder);
 
         if (filterFile != null) {
             try {
@@ -265,6 +272,37 @@ public class InitOp extends AbstractGeoGitOp<Repository> {
         OutputStream os = new FileOutputStream(new File(folder, file).getAbsolutePath());
         Resources.copy(url, os);
         os.close();
+    }
+
+    private void addDefaults(PluginDefaults defaults, ImmutableList.Builder<String> builder) {
+        Optional<VersionedFormat> refs = defaults.getRefs();
+        Optional<VersionedFormat> objects = defaults.getObjects();
+        Optional<VersionedFormat> staging = defaults.getStaging();
+        Optional<VersionedFormat> graph = defaults.getGraph();
+        if (refs.isPresent()) {
+            builder.add("storage.refs");
+            builder.add(refs.get().getFormat());
+            builder.add(refs.get().getFormat() + ".version");
+            builder.add(refs.get().getVersion());
+        }
+        if (objects.isPresent()) {
+            builder.add("storage.objects");
+            builder.add(objects.get().getFormat());
+            builder.add(objects.get().getFormat() + ".version");
+            builder.add(objects.get().getVersion());
+        }
+        if (staging.isPresent()) {
+            builder.add("storage.staging");
+            builder.add(staging.get().getFormat());
+            builder.add(staging.get().getFormat() + ".version");
+            builder.add(staging.get().getVersion());
+        }
+        if (graph.isPresent()) {
+            builder.add("storage.graph");
+            builder.add(graph.get().getFormat());
+            builder.add(graph.get().getFormat() + ".version");
+            builder.add(graph.get().getVersion());
+        }
     }
 
     private void createDefaultRefs() {

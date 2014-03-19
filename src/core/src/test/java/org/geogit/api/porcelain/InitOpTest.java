@@ -33,6 +33,7 @@ import org.geogit.api.plumbing.RefParse;
 import org.geogit.api.plumbing.ResolveGeogitDir;
 import org.geogit.api.plumbing.UpdateRef;
 import org.geogit.api.plumbing.UpdateSymRef;
+import org.geogit.di.PluginDefaults;
 import org.geogit.repository.Repository;
 import org.junit.Before;
 import org.junit.Rule;
@@ -51,6 +52,8 @@ public class InitOpTest {
     private Platform platform;
 
     private Injector injector;
+
+    private PluginDefaults defaults;
 
     private InitOp init;
 
@@ -97,7 +100,8 @@ public class InitOpTest {
 
         platform = mock(Platform.class);
         injector = mock(Injector.class);
-        init = new InitOp(platform, injector);
+        defaults = PluginDefaults.NO_PLUGINS;
+        init = new InitOp(platform, injector, defaults);
         init.setCommandLocator(mockCommands);
 
         mockRepo = mock(Repository.class);

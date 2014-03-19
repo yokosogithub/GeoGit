@@ -53,37 +53,6 @@ public class Init extends AbstractCommand implements CLICommand {
     @Parameter(names = { "--config" }, description = "Extra configuration options to set while preparing repository. Separate names from values with an equals sign and delimit configuration options with a colon. Example: storage.objects=bdbje:bdbje.version=0.1")
     private String config;
 
-    private void addDefaults(PluginDefaults defaults, ImmutableList.Builder<String> builder) {
-        Optional<VersionedFormat> refs = defaults.getRefs();
-        Optional<VersionedFormat> objects = defaults.getObjects();
-        Optional<VersionedFormat> staging = defaults.getStaging();
-        Optional<VersionedFormat> graph = defaults.getGraph();
-        if (refs.isPresent()) {
-            builder.add("storage.refs");
-            builder.add(refs.get().getFormat());
-            builder.add(refs.get().getFormat() + ".version");
-            builder.add(refs.get().getVersion());
-        }
-        if (objects.isPresent()) {
-            builder.add("storage.objects");
-            builder.add(objects.get().getFormat());
-            builder.add(objects.get().getFormat() + ".version");
-            builder.add(objects.get().getVersion());
-        }
-        if (staging.isPresent()) {
-            builder.add("storage.staging");
-            builder.add(staging.get().getFormat());
-            builder.add(staging.get().getFormat() + ".version");
-            builder.add(staging.get().getVersion());
-        }
-        if (graph.isPresent()) {
-            builder.add("storage.graph");
-            builder.add(graph.get().getFormat());
-            builder.add(graph.get().getFormat() + ".version");
-            builder.add(graph.get().getVersion());
-        }
-    }
-
     /**
      * Executes the init command.
      */
@@ -113,10 +82,10 @@ public class Init extends AbstractCommand implements CLICommand {
                 geogit = new GeoGIT(geogitInjector);
             }
             repoExisted = determineIfRepoExists(targetDirectory, geogit);
-            final List<String> effectiveConfiguration = resolveConfigParameters(cli);
+            final List<String> suppliedConfiguration = splitConfig(config);
 
             try {
-                repository = geogit.command(InitOp.class).setConfig(effectiveConfiguration)
+                repository = geogit.command(InitOp.class).setConfig(suppliedConfiguration)
                         .setTarget(targetDirectory).call();
             } catch (IllegalArgumentException e) {
                 throw new CommandFailedException(e.getMessage(), e);
@@ -154,14 +123,6 @@ public class Init extends AbstractCommand implements CLICommand {
         repoExisted = currentRepoUrl.isPresent();
         geogit.getPlatform().setWorkingDir(currentDirectory);
         return repoExisted;
-    }
-
-    private List<String> resolveConfigParameters(GeogitCLI cli) {
-        ImmutableList.Builder<String> builder = ImmutableList.builder();
-        addDefaults(cli.getGeogitInjector().getInstance(PluginDefaults.class), builder);
-        builder.addAll(splitConfig(config));
-        List<String> effectiveConfiguration = builder.build();
-        return effectiveConfiguration;
     }
 
     public static List<String> splitConfig(String config) {
