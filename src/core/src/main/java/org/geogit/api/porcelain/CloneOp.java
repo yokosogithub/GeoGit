@@ -163,9 +163,8 @@ public class CloneOp extends AbstractGeoGitOp<Void> {
         command(FetchOp.class).setDepth(depth.or(0)).setProgressListener(subProgress(90.f)).call();
 
         // Set up remote tracking branches
-        final ImmutableSet<Ref> remoteRefs = command(LsRemote.class)
-                .setRemote(Suppliers.ofInstance(Optional.of(remote))).retrieveLocalRefs(true)
-                .call();
+        final ImmutableSet<Ref> remoteRefs = command(LsRemote.class).retrieveTags(false)
+                .setRemote(Suppliers.ofInstance(Optional.of(remote))).call();
 
         boolean emptyRepo = true;
 
@@ -177,12 +176,11 @@ public class CloneOp extends AbstractGeoGitOp<Void> {
             if (remoteRef instanceof SymRef) {
                 continue;
             }
-            if (!command(RefParse.class).setName(Ref.HEADS_PREFIX + remoteRef.localName()).call()
-                    .isPresent()) {
+            if (!command(RefParse.class).setName(Ref.HEADS_PREFIX + branchName).call().isPresent()) {
                 command(BranchCreateOp.class).setName(branchName)
                         .setSource(remoteRef.getObjectId().toString()).call();
             } else {
-                command(UpdateRef.class).setName(Ref.HEADS_PREFIX + remoteRef.localName())
+                command(UpdateRef.class).setName(Ref.HEADS_PREFIX + branchName)
                         .setNewValue(remoteRef.getObjectId()).call();
             }
 
