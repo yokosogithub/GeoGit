@@ -5,7 +5,7 @@ import org.geogit.repository.RepositoryConnectionException;
 import org.geogit.storage.blueprints.BlueprintsGraphDatabase;
 import org.geogit.storage.ConfigDatabase;
 
-import com.boundlessgeo.blongo.MongoGraph;
+import org.geogit.blongo.MongoGraph;
 import com.google.inject.Inject;
 import com.mongodb.DB;
 import com.mongodb.DBCollection;

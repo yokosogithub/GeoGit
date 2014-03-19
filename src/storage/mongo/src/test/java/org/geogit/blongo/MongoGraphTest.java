@@ -9,6 +9,7 @@ import java.lang.reflect.Method;
 import com.mongodb.DB;
 import com.mongodb.DBCollection;
 import com.mongodb.MongoClient;
+import com.mongodb.MongoClientURI;
 import com.tinkerpop.blueprints.Graph;
 import com.tinkerpop.blueprints.EdgeTestSuite;
 import com.tinkerpop.blueprints.KeyIndexableGraphTestSuite;
@@ -18,6 +19,7 @@ import com.tinkerpop.blueprints.TestSuite;
 import com.tinkerpop.blueprints.VertexQueryTestSuite;
 import com.tinkerpop.blueprints.VertexTestSuite;
 import com.tinkerpop.blueprints.impls.GraphTest;
+import org.geogit.storage.integration.mongo.IniMongoProperties;
 
 public class MongoGraphTest extends GraphTest {
     public void doTestSuite(TestSuite suite) throws Exception {
@@ -38,9 +40,12 @@ public class MongoGraphTest extends GraphTest {
 
     public Graph generateGraph() {
         try {
-            MongoClient client = new MongoClient("192.168.122.165", 27017);
-            client.getDB("blueprints").dropDatabase();
-            DB db = client.getDB("blueprints");
+            IniMongoProperties properties = new IniMongoProperties();
+            final String uri = properties.get("mongodb.uri", String.class).or("mongodb://localhost:27017/");
+            final String database = properties.get("mongodb.database", String.class).or("geogit");
+            MongoClient client = new MongoClient(new MongoClientURI(uri));
+            client.getDB(database).dropDatabase();
+            DB db = client.getDB(database);
             DBCollection collection = db.getCollection("graph");
             return new MongoGraph(collection);
         } catch (RuntimeException e) {
