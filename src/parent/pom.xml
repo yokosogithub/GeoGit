@@ -323,6 +323,11 @@
         <version>${blueprints.version}</version>
       </dependency>
       <dependency>
+        <groupId>com.tinkerpop.blueprints</groupId>
+        <artifactId>blueprints-test</artifactId>
+        <version>${blueprints.version}</version>
+      </dependency>
+      <dependency>
         <groupId>com.tinkerpop.gremlin</groupId>
         <artifactId>gremlin-java</artifactId>
         <version>${blueprints.version}</version>
