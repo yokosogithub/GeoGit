@@ -846,7 +846,12 @@ public class JEObjectDatabase extends AbstractObjectDatabase implements ObjectDa
         if (transactional) {
             TransactionConfig txConfig = new TransactionConfig();
             txConfig.setReadUncommitted(true);
-            txConfig.setDurability(Durability.COMMIT_WRITE_NO_SYNC);
+            Optional<String> durability = configDB.get("bdbje.object_durability");
+            if ("safe".equals(durability.orNull())) {
+                txConfig.setDurability(Durability.COMMIT_SYNC);
+            } else {
+                txConfig.setDurability(Durability.COMMIT_WRITE_NO_SYNC);
+            }
             Transaction transaction = env.beginTransaction(null, txConfig);
             return transaction;
         }
