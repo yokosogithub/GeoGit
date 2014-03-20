@@ -14,8 +14,10 @@ import org.geogit.api.AbstractGeoGitOp;
 import org.geogit.api.FeatureInfo;
 import org.geogit.api.NodeRef;
 import org.geogit.api.ObjectId;
+import org.geogit.api.ProgressListener;
 import org.geogit.api.Ref;
 import org.geogit.api.RevCommit;
+import org.geogit.api.SubProgressListener;
 import org.geogit.api.SymRef;
 import org.geogit.api.plumbing.DiffTree;
 import org.geogit.api.plumbing.FindCommonAncestor;
@@ -31,8 +33,6 @@ import org.geogit.api.plumbing.merge.MergeScenarioReport;
 import org.geogit.api.plumbing.merge.ReportMergeScenarioOp;
 import org.geogit.api.plumbing.merge.SaveMergeCommitMessageOp;
 import org.geogit.repository.Repository;
-import org.geotools.util.SubProgressListener;
-import org.opengis.util.ProgressListener;
 
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
@@ -289,7 +289,7 @@ public class MergeOp extends AbstractGeoGitOp<MergeOp.MergeReport> {
 
                 pairs.add(new CommitAncestorPair(commitId, ancestorCommit.get().getId()));
 
-                subProgress.progress(10.f);
+                subProgress.setProgress(10.f);
 
                 Preconditions.checkState(ancestorCommit.isPresent(),
                         "No ancestor commit could be found.");

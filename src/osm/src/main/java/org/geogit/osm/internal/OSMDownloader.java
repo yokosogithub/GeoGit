@@ -22,7 +22,7 @@ import java.net.URLEncoder;
 
 import javax.annotation.Nullable;
 
-import org.opengis.util.ProgressListener;
+import org.geogit.api.ProgressListener;
 
 import com.google.common.io.ByteStreams;
 import com.google.common.io.Closeables;
@@ -171,7 +171,7 @@ public class OSMDownloader {
          */
         private void progress(int read) {
             readCount += read;
-            listener.progress(readCount);
+            listener.setProgress(readCount);
         }
     }
 

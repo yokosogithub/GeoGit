@@ -57,7 +57,7 @@ public class GeogitPy4JEntryPointTest {
         geogitCLI.getGeogit().command(AddOp.class).call();
         geogitCLI.getGeogit().command(CommitOp.class).setMessage("message").call();
         py4j.runCommand(repoFolder, new String[] { "log" });
-        String output = py4j.lastOutput();
+        String output = py4j.nextOutputPage();
         assertTrue(output.contains("message"));
         assertTrue(output.contains("name"));
         assertTrue(output.contains("email@email.com"));
@@ -65,7 +65,7 @@ public class GeogitPy4JEntryPointTest {
         py4j.runCommand(repoFolder, new String[] { "add" });
         py4j.runCommand(repoFolder, new String[] { "commit", "-m", "a commit message" });
         py4j.runCommand(repoFolder, new String[] { "log" });
-        output = py4j.lastOutput();
+        output = py4j.nextOutputPage();
         System.out.println(output);
         assertTrue(output.contains("a commit message"));
 

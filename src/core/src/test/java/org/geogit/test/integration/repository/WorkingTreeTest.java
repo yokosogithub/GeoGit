@@ -14,10 +14,12 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 
+import org.geogit.api.DefaultProgressListener;
 import org.geogit.api.Node;
 import org.geogit.api.NodeRef;
 import org.geogit.api.ObjectId;
 import org.geogit.api.Platform;
+import org.geogit.api.ProgressListener;
 import org.geogit.api.RevFeatureType;
 import org.geogit.api.RevTree;
 import org.geogit.api.TestPlatform;
@@ -33,7 +35,6 @@ import org.geotools.data.Query;
 import org.geotools.data.QueryCapabilities;
 import org.geotools.data.memory.MemoryDataStore;
 import org.geotools.feature.FeatureCollection;
-import org.geotools.util.NullProgressListener;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -49,7 +50,7 @@ import com.google.common.collect.ImmutableList;
  */
 public class WorkingTreeTest extends RepositoryTestCase {
 
-    private static final NullProgressListener LISTENER = new NullProgressListener();
+    private static final ProgressListener LISTENER = new DefaultProgressListener();
 
     private WorkingTree workTree;
 
@@ -220,7 +221,7 @@ public class WorkingTreeTest extends RepositoryTestCase {
         assertFalse(source.getQueryCapabilities().isOffsetSupported());
 
         String treePath = "target_typename";
-        workTree.insert(treePath, source, Query.ALL, new NullProgressListener());
+        workTree.insert(treePath, source, Query.ALL, LISTENER);
 
         assertEquals(3, workTree.countUnstaged(treePath).getFeaturesCount());
 
@@ -261,7 +262,7 @@ public class WorkingTreeTest extends RepositoryTestCase {
         assertTrue(source.getQueryCapabilities().isOffsetSupported());
 
         String treePath = "target_typename";
-        workTree.insert(treePath, source, Query.ALL, new NullProgressListener());
+        workTree.insert(treePath, source, Query.ALL, LISTENER);
 
         assertEquals(3, workTree.countUnstaged(treePath).getFeaturesCount());
     }

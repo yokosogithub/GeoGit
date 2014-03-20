@@ -9,9 +9,6 @@ import java.util.concurrent.Callable;
 import org.geogit.repository.StagingArea;
 import org.geogit.repository.WorkingTree;
 import org.geogit.storage.RefDatabase;
-import org.geotools.util.NullProgressListener;
-import org.geotools.util.SubProgressListener;
-import org.opengis.util.ProgressListener;
 
 import com.google.inject.Inject;
 
@@ -22,7 +19,7 @@ import com.google.inject.Inject;
  */
 public abstract class AbstractGeoGitOp<T> implements Callable<T> {
 
-    private static final ProgressListener NULL_PROGRESS_LISTENER = new NullProgressListener();
+    private static final ProgressListener NULL_PROGRESS_LISTENER = new DefaultProgressListener();
 
     private ProgressListener progressListener = NULL_PROGRESS_LISTENER;
 

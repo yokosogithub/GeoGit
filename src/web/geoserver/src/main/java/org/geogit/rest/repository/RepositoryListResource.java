@@ -4,7 +4,7 @@
  */
 package org.geogit.rest.repository;
 
-import static org.geogit.rest.repository.GeogitResourceUtils.findGeogitStores;
+import static org.geogit.rest.repository.RESTUtils.*;
 
 import java.util.Collections;
 import java.util.List;
@@ -52,7 +52,9 @@ public class RepositoryListResource extends MapResource {
 
     private List<String> getRepoNames() {
         Request request = getRequest();
-        List<DataStoreInfo> geogitStores = findGeogitStores(request);
+        CatalogRepositoryProvider repoFinder = (CatalogRepositoryProvider) repositoryProvider(request);
+
+        List<DataStoreInfo> geogitStores = repoFinder.findGeogitStores(request);
 
         List<String> repoNames = Lists.newArrayListWithCapacity(geogitStores.size());
         for (DataStoreInfo info : geogitStores) {

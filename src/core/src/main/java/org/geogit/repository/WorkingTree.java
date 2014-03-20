@@ -61,7 +61,7 @@ import org.opengis.feature.type.FeatureType;
 import org.opengis.feature.type.Name;
 import org.opengis.filter.Filter;
 import org.opengis.geometry.BoundingBox;
-import org.opengis.util.ProgressListener;
+import org.geogit.api.ProgressListener;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -556,7 +556,7 @@ public class WorkingTree {
                 @Override
                 public synchronized void inserted(ObjectId object,
                         @Nullable Integer storageSizeBytes) {
-                    listener.progress((float) (++inserted * 100) / total);
+                    listener.setProgress((float) (++inserted * 100) / total);
                 }
             };
         }
@@ -723,9 +723,9 @@ public class WorkingTree {
 
                         count++;
                         if (collectionSize == null) {
-                            listener.progress(count);
+                            listener.setProgress(count);
                         } else {
-                            listener.progress((float) (count * 100) / collectionSize.intValue());
+                            listener.setProgress((float) (count * 100) / collectionSize.intValue());
                         }
                         return revFeature;
                     }

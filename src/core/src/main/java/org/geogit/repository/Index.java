@@ -31,7 +31,7 @@ import org.geogit.api.plumbing.diff.DiffEntry;
 import org.geogit.api.plumbing.diff.DiffObjectCount;
 import org.geogit.api.plumbing.merge.Conflict;
 import org.geogit.storage.StagingDatabase;
-import org.opengis.util.ProgressListener;
+import org.geogit.api.ProgressListener;
 
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
@@ -194,7 +194,7 @@ public class Index implements StagingArea {
                 // it is the root tree that's been changed, update head and ignore anything else
                 ObjectId newRoot = diff.newObjectId();
                 updateStageHead(newRoot);
-                progress.progress(100f);
+                progress.setProgress(100f);
                 progress.complete();
                 return;
             }
@@ -202,7 +202,7 @@ public class Index implements StagingArea {
                     parentMetadataIds);
 
             i++;
-            progress.progress((float) (i * 100) / numChanges);
+            progress.setProgress((float) (i * 100) / numChanges);
 
             NodeRef oldObject = diff.getOldObject();
             NodeRef newObject = diff.getNewObject();

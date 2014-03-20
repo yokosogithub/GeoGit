@@ -30,7 +30,6 @@ import com.google.gson.annotations.Expose;
 import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.geom.GeometryFactory;
-import com.vividsolutions.jts.geom.LineString;
 import com.vividsolutions.jts.geom.Point;
 import com.vividsolutions.jts.geom.Polygon;
 
@@ -240,6 +239,9 @@ public class MappingRule {
             if (Geometry.class.isAssignableFrom(clazz)) {
                 Geometry geom = prepareGeometry((Geometry) feature.getDefaultGeometryProperty()
                         .getValue());
+                if (geom == null) {
+                    return Optional.absent();
+                }
                 featureBuilder.set(attrName, geom);
             } else {
                 Object value = null;
@@ -279,14 +281,13 @@ public class MappingRule {
                 newCoords[coords.length] = coords[0];
                 coords = newCoords;
             }
-            return gf.createPolygon(coords);
-        } else {
-            if (geometryType.equals(LineString.class)) {
-
+            if (coords.length < 4) {
+                return null;
             }
-            return geom;
+            return gf.createPolygon(coords);
         }
-
+        
+        return geom;
     }
 
     private Object getAttributeValue(String value, FieldType type) {

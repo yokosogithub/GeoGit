@@ -40,7 +40,7 @@ import org.opengis.feature.Feature;
 import org.opengis.feature.simple.SimpleFeature;
 import org.opengis.feature.simple.SimpleFeatureType;
 import org.opengis.feature.type.AttributeDescriptor;
-import org.opengis.util.ProgressListener;
+import org.geogit.api.ProgressListener;
 
 import com.google.common.base.Function;
 import com.google.common.base.Optional;

@@ -79,7 +79,7 @@ public class LsRemote extends AbstractGeoGitOp<ImmutableSet<Ref>> {
      * @param getTags tells whether to retrieve remote tags, defaults to {@code true}
      * @return {@code this}
      */
-    public LsRemote retrieveTgs(boolean getTags) {
+    public LsRemote retrieveTags(boolean getTags) {
         this.getTags = getTags;
         return this;
     }

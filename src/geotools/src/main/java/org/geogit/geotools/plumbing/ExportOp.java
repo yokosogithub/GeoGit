@@ -43,7 +43,7 @@ import org.opengis.feature.Feature;
 import org.opengis.feature.simple.SimpleFeature;
 import org.opengis.feature.simple.SimpleFeatureType;
 import org.opengis.feature.type.PropertyDescriptor;
-import org.opengis.util.ProgressListener;
+import org.geogit.api.ProgressListener;
 
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
@@ -203,7 +203,7 @@ public class ExportOp extends AbstractGeoGitOp<SimpleFeatureStore> {
 
             @Override
             public NodeRef apply(NodeRef input) {
-                progressListener.progress((count.incrementAndGet() * 100.f) / typeTree.size());
+                progressListener.setProgress((count.incrementAndGet() * 100.f) / typeTree.size());
                 return input;
             }
         });

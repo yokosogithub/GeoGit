@@ -5,7 +5,7 @@
 
 package org.geogit.rest.repository;
 
-import static org.geogit.rest.repository.GeogitResourceUtils.getGeogit;
+import static org.geogit.rest.repository.RESTUtils.getGeogit;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -31,7 +31,6 @@ import org.geogit.api.plumbing.FindTreeChild;
 import org.geogit.api.plumbing.RevObjectParse;
 import org.geogit.storage.FieldType;
 import org.geogit.web.api.CommandSpecException;
-import org.geoserver.rest.RestletException;
 import org.geotools.feature.simple.SimpleFeatureBuilder;
 import org.geotools.geometry.jts.WKTReader2;
 import org.opengis.feature.simple.SimpleFeature;

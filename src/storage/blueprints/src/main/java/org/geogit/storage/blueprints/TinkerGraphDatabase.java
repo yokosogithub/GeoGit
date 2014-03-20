@@ -21,7 +21,7 @@ public class TinkerGraphDatabase extends SynchronizedGraphDatabase {
         super(new Impl(platform, configDB));
     }
 
-    private static class Impl extends BlueprintsGraphDatabase<TinkerGraph> {
+    static class Impl extends BlueprintsGraphDatabase<TinkerGraph> {
         private final ConfigDatabase configDB;
 
         /**
@@ -41,10 +41,8 @@ public class TinkerGraphDatabase extends SynchronizedGraphDatabase {
             // HACK: force the gml file to be created. If it didn't exist, the constructor created
             // the directory but not the file, and subsequent attempts to open the graph (from
             // another process) results in a FileNotFountException
-            //if (tinkerGraph.getEdges().iterator().hasNext()) {
-                tinkerGraph.shutdown();
-                tinkerGraph = new TinkerGraph(dbPath, TinkerGraph.FileType.GML);
-            //}
+            tinkerGraph.shutdown();
+            tinkerGraph = new TinkerGraph(dbPath, TinkerGraph.FileType.GML);
             return tinkerGraph;
         }
 
@@ -57,6 +55,17 @@ public class TinkerGraphDatabase extends SynchronizedGraphDatabase {
         @Override
         public void checkConfig() throws RepositoryConnectionException {
             RepositoryConnectionException.StorageType.GRAPH.verify(configDB, "tinkergraph", "0.1");
+        }
+
+        @Override
+        protected void commit() {
+            // shutDown() on a file based tinker graph only saves the graph to the file
+            graphDB.shutdown();
+        }
+
+        @Override
+        protected void rollback() {
+            // no-op
         }
     }
 }
