@@ -5,9 +5,7 @@
 
 package org.geogit.api.porcelain;
 
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.anyBoolean;
@@ -28,7 +26,6 @@ import org.geogit.api.CommandLocator;
 import org.geogit.api.ObjectId;
 import org.geogit.api.Platform;
 import org.geogit.api.Ref;
-import org.geogit.api.RevObject.TYPE;
 import org.geogit.api.plumbing.RefParse;
 import org.geogit.api.plumbing.ResolveGeogitDir;
 import org.geogit.api.plumbing.UpdateRef;

@@ -10,6 +10,7 @@ import java.io.IOException;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.List;
+import java.util.Map;
 
 import org.geogit.api.GeoGIT;
 import org.geogit.api.plumbing.ResolveGeogitDir;
@@ -19,14 +20,12 @@ import org.geogit.cli.CLICommand;
 import org.geogit.cli.CommandFailedException;
 import org.geogit.cli.GeogitCLI;
 import org.geogit.cli.annotation.RequiresRepository;
-import org.geogit.di.PluginDefaults;
-import org.geogit.di.VersionedFormat;
 import org.geogit.repository.Repository;
 
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.Parameters;
 import com.google.common.base.Optional;
-import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Maps;
 import com.google.inject.Injector;
 
 /**
@@ -82,7 +81,7 @@ public class Init extends AbstractCommand implements CLICommand {
                 geogit = new GeoGIT(geogitInjector);
             }
             repoExisted = determineIfRepoExists(targetDirectory, geogit);
-            final List<String> suppliedConfiguration = splitConfig(config);
+            final Map<String, String> suppliedConfiguration = splitConfig(config);
 
             try {
                 repository = geogit.command(InitOp.class).setConfig(suppliedConfiguration)
@@ -125,17 +124,17 @@ public class Init extends AbstractCommand implements CLICommand {
         return repoExisted;
     }
 
-    public static List<String> splitConfig(String config) {
-        ImmutableList.Builder<String> builder = ImmutableList.builder();
-        if (config != null) {
-            String[] options = config.split(",");
+    public static Map<String, String> splitConfig(final String configArg) {
+        Map<String, String> configProps = Maps.newTreeMap();
+        if (configArg != null) {
+            String[] options = configArg.split(",");
             for (String option : options) {
                 String[] kv = option.split("=", 2);
                 if (kv.length < 2)
                     continue;
-                builder.add(kv[0], kv[1]);
+                configProps.put(kv[0], kv[1]);
             }
         }
-        return builder.build();
+        return configProps;
     }
 }
