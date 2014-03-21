@@ -32,7 +32,7 @@ man_pages = [
     ('config', 'geogit-config', 'Get and set repository or global options', ['OpenGeo <http://opengeo.org>'], '1'),
     ('cherrypick', 'geogit-cherrypick', 'Apply the changes introduced by some existing commits', ['OpenGeo <http://opengeo.org>'], '1'),
     ('log', 'geogit-log', 'Show commit logs', ['OpenGeo <http://opengeo.org>'], '1'),
-    ('help', 'geogit-log', 'Get help for a command', ['OpenGeo <http://opengeo.org', 1]),
+    ('help', 'geogit-help', 'Get help for a command', ['OpenGeo <http://opengeo.org'], 1),
     ('status', 'geogit-status', 'Show the working tree and index status', ['OpenGeo <http://opengeo.org>'], '1'),
 	('merge', 'geogit-merge', 'Merge two or more histories into one', ['OpenGeo <http://opengeo.org>'], '1'),
     ('rebase', 'geogit-rebase', 'Forward-port local commits to the updated upstream head', ['OpenGeo <http://opengeo.org>'], '1'),
