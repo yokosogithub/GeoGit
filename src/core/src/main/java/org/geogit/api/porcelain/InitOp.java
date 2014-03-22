@@ -15,7 +15,8 @@ import java.io.OutputStream;
 import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.net.URL;
-import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 
 import javax.annotation.Nullable;
 
@@ -28,6 +29,8 @@ import org.geogit.api.plumbing.ResolveGeogitDir;
 import org.geogit.api.plumbing.UpdateRef;
 import org.geogit.api.plumbing.UpdateSymRef;
 import org.geogit.di.CanRunDuringConflict;
+import org.geogit.di.PluginDefaults;
+import org.geogit.di.VersionedFormat;
 import org.geogit.repository.Repository;
 import org.geogit.repository.RepositoryConnectionException;
 import org.geogit.storage.ConfigDatabase;
@@ -35,8 +38,8 @@ import org.geogit.storage.ConfigDatabase;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Iterables;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Maps;
 import com.google.common.io.Files;
 import com.google.common.io.Resources;
 import com.google.inject.Inject;
@@ -63,7 +66,9 @@ public class InitOp extends AbstractGeoGitOp<Repository> {
 
     private Injector injector;
 
-    private List<String> config;
+    private Map<String, String> config;
+    
+    private PluginDefaults defaults;
 
     private String filterFile;
 
@@ -78,15 +83,18 @@ public class InitOp extends AbstractGeoGitOp<Repository> {
      *        the {@code .geogit} repository directory is found or created.
      */
     @Inject
-    public InitOp(Platform platform, Injector injector) {
+    public InitOp(Platform platform, Injector injector, PluginDefaults defaults) {
         checkNotNull(platform);
         checkNotNull(injector);
+        checkNotNull(defaults);
         this.platform = platform;
         this.injector = injector;
+        this.defaults = defaults;
+        this.config = Maps.newTreeMap();
     }
 
-    public InitOp setConfig(List<String> config) {
-        this.config = config;
+    public InitOp setConfig(Map<String, String> suppliedConfiguration) {
+        this.config = ImmutableMap.copyOf(suppliedConfiguration);
         return this;
     }
 
@@ -150,10 +158,11 @@ public class InitOp extends AbstractGeoGitOp<Repository> {
             }
         }
 
-        ImmutableList.Builder<String> effectiveConfigBuilder = ImmutableList.builder();
+        Map<String, String> effectiveConfigBuilder = Maps.newTreeMap();
         if (config != null) {
-            effectiveConfigBuilder.addAll(config);
+            effectiveConfigBuilder.putAll(config);
         }
+        addDefaults(defaults, effectiveConfigBuilder);
 
         if (filterFile != null) {
             try {
@@ -184,7 +193,7 @@ public class InitOp extends AbstractGeoGitOp<Repository> {
                 File newFilterFile = new File(repoDir, FILTER_FILE);
 
                 Files.copy(oldFilterFile, newFilterFile);
-                effectiveConfigBuilder.add("sparse.filter", FILTER_FILE);
+                effectiveConfigBuilder.put("sparse.filter", FILTER_FILE);
             } catch (Exception e) {
                 throw new IllegalStateException("Unable to copy filter file at path " + filterFile
                         + " to the new repository.", e);
@@ -203,13 +212,10 @@ public class InitOp extends AbstractGeoGitOp<Repository> {
             if (!repoExisted) {
                 ConfigDatabase configDB = injector.getInstance(ConfigDatabase.class);
                 try {
-                    ImmutableList<String> effectiveConfig = effectiveConfigBuilder.build();
-                    if (!effectiveConfig.isEmpty()) {
-                        for (List<String> pair : Iterables.partition(effectiveConfig, 2)) {
-                            String key = pair.get(0);
-                            String value = pair.get(1);
-                            configDB.put(key, value);
-                        }
+                    for (Entry<String, String> pair : effectiveConfigBuilder.entrySet()) {
+                        String key = pair.getKey();
+                        String value = pair.getValue();
+                        configDB.put(key, value);
                     }
                     repository = injector.getInstance(Repository.class);
                     repository.configure();
@@ -265,6 +271,29 @@ public class InitOp extends AbstractGeoGitOp<Repository> {
         OutputStream os = new FileOutputStream(new File(folder, file).getAbsolutePath());
         Resources.copy(url, os);
         os.close();
+    }
+
+    private void addDefaults(PluginDefaults defaults, Map<String, String> configProps) {
+        Optional<VersionedFormat> refs = defaults.getRefs();
+        Optional<VersionedFormat> objects = defaults.getObjects();
+        Optional<VersionedFormat> staging = defaults.getStaging();
+        Optional<VersionedFormat> graph = defaults.getGraph();
+        if (refs.isPresent()) {
+            configProps.put("storage.refs", refs.get().getFormat());
+            configProps.put(refs.get().getFormat() + ".version", refs.get().getVersion());
+        }
+        if (objects.isPresent()) {
+            configProps.put("storage.objects", objects.get().getFormat());
+            configProps.put(objects.get().getFormat() + ".version", objects.get().getVersion());
+        }
+        if (staging.isPresent()) {
+            configProps.put("storage.staging", staging.get().getFormat());
+            configProps.put(staging.get().getFormat() + ".version", staging.get().getVersion());
+        }
+        if (graph.isPresent()) {
+            configProps.put("storage.graph", graph.get().getFormat());
+            configProps.put(graph.get().getFormat() + ".version", graph.get().getVersion());
+        }
     }
 
     private void createDefaultRefs() {

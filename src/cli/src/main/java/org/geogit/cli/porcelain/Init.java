@@ -10,6 +10,7 @@ import java.io.IOException;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.List;
+import java.util.Map;
 
 import org.geogit.api.GeoGIT;
 import org.geogit.api.plumbing.ResolveGeogitDir;
@@ -19,14 +20,12 @@ import org.geogit.cli.CLICommand;
 import org.geogit.cli.CommandFailedException;
 import org.geogit.cli.GeogitCLI;
 import org.geogit.cli.annotation.RequiresRepository;
-import org.geogit.di.PluginDefaults;
-import org.geogit.di.VersionedFormat;
 import org.geogit.repository.Repository;
 
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.Parameters;
 import com.google.common.base.Optional;
-import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Maps;
 import com.google.inject.Injector;
 
 /**
@@ -52,37 +51,6 @@ public class Init extends AbstractCommand implements CLICommand {
 
     @Parameter(names = { "--config" }, description = "Extra configuration options to set while preparing repository. Separate names from values with an equals sign and delimit configuration options with a colon. Example: storage.objects=bdbje:bdbje.version=0.1")
     private String config;
-
-    private void addDefaults(PluginDefaults defaults, ImmutableList.Builder<String> builder) {
-        Optional<VersionedFormat> refs = defaults.getRefs();
-        Optional<VersionedFormat> objects = defaults.getObjects();
-        Optional<VersionedFormat> staging = defaults.getStaging();
-        Optional<VersionedFormat> graph = defaults.getGraph();
-        if (refs.isPresent()) {
-            builder.add("storage.refs");
-            builder.add(refs.get().getFormat());
-            builder.add(refs.get().getFormat() + ".version");
-            builder.add(refs.get().getVersion());
-        }
-        if (objects.isPresent()) {
-            builder.add("storage.objects");
-            builder.add(objects.get().getFormat());
-            builder.add(objects.get().getFormat() + ".version");
-            builder.add(objects.get().getVersion());
-        }
-        if (staging.isPresent()) {
-            builder.add("storage.staging");
-            builder.add(staging.get().getFormat());
-            builder.add(staging.get().getFormat() + ".version");
-            builder.add(staging.get().getVersion());
-        }
-        if (graph.isPresent()) {
-            builder.add("storage.graph");
-            builder.add(graph.get().getFormat());
-            builder.add(graph.get().getFormat() + ".version");
-            builder.add(graph.get().getVersion());
-        }
-    }
 
     /**
      * Executes the init command.
@@ -113,10 +81,10 @@ public class Init extends AbstractCommand implements CLICommand {
                 geogit = new GeoGIT(geogitInjector);
             }
             repoExisted = determineIfRepoExists(targetDirectory, geogit);
-            final List<String> effectiveConfiguration = resolveConfigParameters(cli);
+            final Map<String, String> suppliedConfiguration = splitConfig(config);
 
             try {
-                repository = geogit.command(InitOp.class).setConfig(effectiveConfiguration)
+                repository = geogit.command(InitOp.class).setConfig(suppliedConfiguration)
                         .setTarget(targetDirectory).call();
             } catch (IllegalArgumentException e) {
                 throw new CommandFailedException(e.getMessage(), e);
@@ -156,25 +124,17 @@ public class Init extends AbstractCommand implements CLICommand {
         return repoExisted;
     }
 
-    private List<String> resolveConfigParameters(GeogitCLI cli) {
-        ImmutableList.Builder<String> builder = ImmutableList.builder();
-        addDefaults(cli.getGeogitInjector().getInstance(PluginDefaults.class), builder);
-        builder.addAll(splitConfig(config));
-        List<String> effectiveConfiguration = builder.build();
-        return effectiveConfiguration;
-    }
-
-    public static List<String> splitConfig(String config) {
-        ImmutableList.Builder<String> builder = ImmutableList.builder();
-        if (config != null) {
-            String[] options = config.split(",");
+    public static Map<String, String> splitConfig(final String configArg) {
+        Map<String, String> configProps = Maps.newTreeMap();
+        if (configArg != null) {
+            String[] options = configArg.split(",");
             for (String option : options) {
                 String[] kv = option.split("=", 2);
                 if (kv.length < 2)
                     continue;
-                builder.add(kv[0], kv[1]);
+                configProps.put(kv[0], kv[1]);
             }
         }
-        return builder.build();
+        return configProps;
     }
 }
