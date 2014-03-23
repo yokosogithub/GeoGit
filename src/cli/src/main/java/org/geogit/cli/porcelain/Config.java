@@ -104,11 +104,11 @@ public class Config extends AbstractCommand implements CLICommand {
             ConfigAction action = resolveConfigAction();
 
             if (action == ConfigAction.CONFIG_NO_ACTION) {
-                printUsage();
+                printUsage(cli);
                 throw new CommandFailedException();
             }
             if (global && local) {
-                printUsage();
+                printUsage(cli);
                 throw new CommandFailedException();
             }
             ConfigScope scope = ConfigScope.DEFAULT;

@@ -74,7 +74,7 @@ public class PGExport extends AbstractPGCommand implements CLICommand {
     protected void runInternal(GeogitCLI cli) throws IOException {
 
         if (args.isEmpty()) {
-            printUsage();
+            printUsage(cli);
             throw new CommandFailedException();
         }
 

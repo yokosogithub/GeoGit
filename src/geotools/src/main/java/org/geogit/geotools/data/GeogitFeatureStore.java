@@ -10,8 +10,10 @@ import java.util.AbstractList;
 import java.util.Iterator;
 import java.util.List;
 
+import org.geogit.api.DefaultProgressListener;
 import org.geogit.api.Node;
 import org.geogit.api.NodeRef;
+import org.geogit.api.ProgressListener;
 import org.geogit.repository.WorkingTree;
 import org.geotools.data.EmptyFeatureReader;
 import org.geotools.data.FeatureReader;
@@ -32,7 +34,6 @@ import org.geotools.feature.simple.SimpleFeatureBuilder;
 import org.geotools.filter.identity.FeatureIdVersionedImpl;
 import org.geotools.filter.visitor.SimplifyingFilterVisitor;
 import org.geotools.geometry.jts.ReferencedEnvelope;
-import org.geotools.util.NullProgressListener;
 import org.opengis.feature.Feature;
 import org.opengis.feature.FeatureVisitor;
 import org.opengis.feature.simple.SimpleFeature;
@@ -200,7 +201,8 @@ class GeogitFeatureStore extends ContentFeatureStore {
             final int flags) throws IOException {
 
         Preconditions.checkArgument(flags != 0, "no write flags set");
-        Preconditions.checkState(getDataStore().isAllowTransactions(), "Transactions not supported; head is not a local branch");
+        Preconditions.checkState(getDataStore().isAllowTransactions(),
+                "Transactions not supported; head is not a local branch");
 
         FeatureReader<SimpleFeatureType, SimpleFeature> features;
         if ((flags | WRITER_UPDATE) == WRITER_UPDATE) {
@@ -229,11 +231,12 @@ class GeogitFeatureStore extends ContentFeatureStore {
         if (Transaction.AUTO_COMMIT.equals(getTransaction())) {
             throw new UnsupportedOperationException("GeoGIT does not support AUTO_COMMIT");
         }
-        Preconditions.checkState(getDataStore().isAllowTransactions(), "Transactions not supported; head is not a local branch");
+        Preconditions.checkState(getDataStore().isAllowTransactions(),
+                "Transactions not supported; head is not a local branch");
         final WorkingTree workingTree = delegate.getWorkingTree();
         final String path = delegate.getTypeTreePath();
 
-        NullProgressListener listener = new NullProgressListener();
+        ProgressListener listener = new DefaultProgressListener();
 
         final List<FeatureId> insertedFids = Lists.newArrayList();
         List<Node> deferringTarget = new AbstractList<Node>() {
@@ -322,7 +325,8 @@ class GeogitFeatureStore extends ContentFeatureStore {
 
     @Override
     public void modifyFeatures(Name[] names, Object[] values, Filter filter) throws IOException {
-        Preconditions.checkState(getDataStore().isAllowTransactions(), "Transactions not supported; head is not a local branch");
+        Preconditions.checkState(getDataStore().isAllowTransactions(),
+                "Transactions not supported; head is not a local branch");
 
         final WorkingTree workingTree = delegate.getWorkingTree();
         final String path = delegate.getTypeTreePath();
@@ -337,7 +341,7 @@ class GeogitFeatureStore extends ContentFeatureStore {
         features = Iterators.transform(features, new SchemaInforcer(nativeSchema));
 
         try {
-            NullProgressListener listener = new NullProgressListener();
+            ProgressListener listener = new DefaultProgressListener();
             Integer count = (Integer) null;
             List<Node> target = (List<Node>) null;
             workingTree.insert(path, features, listener, target, count);
@@ -374,7 +378,8 @@ class GeogitFeatureStore extends ContentFeatureStore {
 
     @Override
     public void removeFeatures(Filter filter) throws IOException {
-        Preconditions.checkState(getDataStore().isAllowTransactions(), "Transactions not supported; head is not a local branch");
+        Preconditions.checkState(getDataStore().isAllowTransactions(),
+                "Transactions not supported; head is not a local branch");
         final WorkingTree workingTree = delegate.getWorkingTree();
         final String typeTreePath = delegate.getTypeTreePath();
         filter = (Filter) filter.accept(new SimplifyingFilterVisitor(), null);

@@ -29,7 +29,7 @@ import java.util.zip.InflaterInputStream;
 
 import javax.annotation.Nullable;
 
-import org.opengis.util.ProgressListener;
+import org.geogit.api.ProgressListener;
 
 import com.google.common.base.Optional;
 import com.google.common.base.Supplier;
@@ -329,7 +329,7 @@ class ChangesetDownloader {
         private void progress(int read) {
             readCount += read;
             float percent = (float) (readCount * 100) / contentLength;
-            listener.progress(percent);
+            listener.setProgress(percent);
         }
     }
 

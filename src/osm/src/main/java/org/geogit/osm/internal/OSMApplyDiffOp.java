@@ -18,13 +18,13 @@ import org.geogit.api.AbstractGeoGitOp;
 import org.geogit.api.CommandLocator;
 import org.geogit.api.NodeRef;
 import org.geogit.api.Platform;
+import org.geogit.api.ProgressListener;
+import org.geogit.api.SubProgressListener;
 import org.geogit.api.plumbing.FindTreeChild;
 import org.geogit.repository.FeatureToDelete;
 import org.geogit.repository.WorkingTree;
-import org.geotools.util.SubProgressListener;
 import org.opengis.feature.Feature;
 import org.opengis.feature.simple.SimpleFeatureType;
-import org.opengis.util.ProgressListener;
 import org.openstreetmap.osmosis.core.container.v0_6.ChangeContainer;
 import org.openstreetmap.osmosis.core.container.v0_6.EntityContainer;
 import org.openstreetmap.osmosis.core.domain.v0_6.Entity;
@@ -119,7 +119,7 @@ public class OSMApplyDiffOp extends AbstractGeoGitOp<Optional<OSMReport>> {
         SubProgressListener noProgressReportingListener = new SubProgressListener(progressListener,
                 0) {
             @Override
-            public void progress(float progress) {
+            public void setProgress(float progress) {
                 // no-op
             }
         };
@@ -228,7 +228,7 @@ public class OSMApplyDiffOp extends AbstractGeoGitOp<Optional<OSMReport>> {
 
         @Override
         public void complete() {
-            progressListener.progress(count);
+            progressListener.setProgress(count);
             progressListener.complete();
             target.finish();
             pointCache.dispose();
@@ -264,7 +264,7 @@ public class OSMApplyDiffOp extends AbstractGeoGitOp<Optional<OSMReport>> {
             }
 
             if (++count % 10 == 0) {
-                progressListener.progress(count);
+                progressListener.setProgress(count);
             }
             latestChangeset = Math.max(latestChangeset, entity.getChangesetId());
             latestTimestamp = Math.max(latestTimestamp, entity.getTimestamp().getTime());

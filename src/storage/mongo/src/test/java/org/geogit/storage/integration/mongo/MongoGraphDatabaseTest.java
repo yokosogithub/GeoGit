@@ -4,30 +4,29 @@
  */
 package org.geogit.storage.integration.mongo;
 
-import org.geogit.di.GeogitModule;
+import org.geogit.api.Platform;
+import org.geogit.storage.ConfigDatabase;
 import org.geogit.storage.GraphDatabaseTest;
+import org.geogit.storage.mongo.MongoConnectionManager;
+import org.geogit.storage.mongo.MongoGraphDatabase;
 
-import com.google.inject.Guice;
-import com.google.inject.Injector;
-import com.google.inject.util.Modules;
 import com.mongodb.DB;
 import com.mongodb.MongoClient;
+import com.mongodb.MongoClientURI;
 
 public class MongoGraphDatabaseTest extends GraphDatabaseTest {
-    @Override 
-    public void setUpInternal() throws Exception {
-        super.setUpInternal();
-        IniMongoProperties properties = new IniMongoProperties();
-        String host = properties.get("mongo.host", String.class).or("localhost"); 
-        int port = properties.get("mongodb.port", Integer.class).or(27017);
-        MongoClient client = new MongoClient(host, Integer.valueOf(port));
-        DB db = client.getDB("geogit");
-        db.dropDatabase();
-    }
-
     @Override
-    protected Injector createInjector() {
-        return Guice.createInjector(Modules.override(new GeogitModule())
-                .with(new MongoTestStorageModule()));
+    protected MongoGraphDatabase createDatabase(Platform platform) throws Exception {
+        final IniMongoProperties properties = new IniMongoProperties();
+        final String uri = properties.get("mongodb.uri", String.class).or("mongodb://localhost:27017/"); 
+        final String database = properties.get("mongodb.database", String.class).or("geogit");
+        MongoClient client = new MongoClient(new MongoClientURI(uri));
+        DB db = client.getDB(database);
+        db.dropDatabase();
+
+        MongoConnectionManager manager = new MongoConnectionManager();
+        ConfigDatabase config = new TestConfigDatabase(platform);
+        MongoGraphDatabase mongoGraphDatabase = new MongoGraphDatabase(platform, manager, config);
+        return mongoGraphDatabase;
     }
 }

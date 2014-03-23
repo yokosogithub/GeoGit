@@ -47,7 +47,7 @@ public class RemoteRemove extends AbstractCommand implements CLICommand {
     @Override
     public void runInternal(GeogitCLI cli) {
         if (params == null || params.size() != 1) {
-            printUsage();
+            printUsage(cli);
             throw new CommandFailedException();
         }
 

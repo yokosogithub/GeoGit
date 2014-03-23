@@ -73,7 +73,7 @@ public class GeoJsonExport extends AbstractGeoJsonCommand implements CLICommand 
     protected void runInternal(GeogitCLI cli) throws InvalidParameterException,
             CommandFailedException, IOException {
         if (args.isEmpty()) {
-            printUsage();
+            printUsage(cli);
             throw new CommandFailedException();
         }
 

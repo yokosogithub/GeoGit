@@ -377,7 +377,7 @@ public class CommitOp extends AbstractGeoGitOp<RevCommit> {
         checkState(treeId.isPresent());
         checkState(newTreeId.equals(treeId.get()));
 
-        getProgressListener().progress(100f);
+        getProgressListener().setProgress(100f);
         getProgressListener().complete();
 
         // TODO: maybe all this "heads cleaning" should be put in an independent operation

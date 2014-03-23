@@ -35,7 +35,7 @@ import org.geogit.repository.WorkingTree;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
-import org.opengis.util.ProgressListener;
+import org.geogit.api.ProgressListener;
 
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;

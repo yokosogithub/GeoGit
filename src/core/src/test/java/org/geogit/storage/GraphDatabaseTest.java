@@ -4,15 +4,24 @@
  */
 package org.geogit.storage;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+
+import java.io.File;
 import java.io.IOException;
 
 import org.geogit.api.ObjectId;
-import org.geogit.test.integration.RepositoryTestCase;
+import org.geogit.api.Platform;
+import org.geogit.api.TestPlatform;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.TemporaryFolder;
 
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
-import com.google.inject.Injector;
 
 /**
  * Abstract test suite for {@link GraphDatabase} implementations.
@@ -20,16 +29,33 @@ import com.google.inject.Injector;
  * Create a concrete subclass of this test suite and implement {@link #createInjector()} so that
  * {@code GraphDtabase.class} is bound to your implementation instance as a singleton.
  */
-public abstract class GraphDatabaseTest extends RepositoryTestCase {
+public abstract class GraphDatabaseTest {
 
     protected GraphDatabase database;
 
-    @Override
-    protected void setUpInternal() throws Exception {
-        database = (GraphDatabase) geogit.getRepository().getGraphDatabase();
+    protected TestPlatform platform;
+
+    @Rule
+    public TemporaryFolder tmpFolder = new TemporaryFolder();
+
+    @Before
+    public void setUp() throws Exception {
+        File root = tmpFolder.getRoot();
+        tmpFolder.newFolder(".geogit");
+        platform = new TestPlatform(root);
+        platform.setUserHome(tmpFolder.newFolder("fake_home"));
+        database = createDatabase(platform);
+        database.open();
     }
 
-    protected abstract Injector createInjector();
+    @After
+    public void tearDown() throws Exception {
+        if (database != null) {
+            database.close();
+        }
+    }
+
+    protected abstract GraphDatabase createDatabase(Platform platform) throws Exception;
 
     @Test
     public void testNodes() throws IOException {

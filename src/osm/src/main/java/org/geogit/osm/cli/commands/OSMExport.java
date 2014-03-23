@@ -83,7 +83,7 @@ public class OSMExport extends AbstractCommand implements CLICommand {
     @Override
     protected void runInternal(GeogitCLI cli) throws IOException {
         if (args.size() < 1 || args.size() > 2) {
-            printUsage();
+            printUsage(cli);
             throw new CommandFailedException();
         }
 

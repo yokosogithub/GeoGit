@@ -48,7 +48,7 @@ public class OSMMap extends AbstractCommand implements CLICommand {
     @Override
     protected void runInternal(GeogitCLI cli) throws IOException {
         if (args == null || args.isEmpty() || args.size() != 1) {
-            printUsage();
+            printUsage(cli);
             throw new CommandFailedException();
         }
 

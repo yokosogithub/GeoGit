@@ -21,6 +21,8 @@ import javax.annotation.Nullable;
 import org.geogit.api.AbstractGeoGitOp;
 import org.geogit.api.ObjectId;
 import org.geogit.api.Platform;
+import org.geogit.api.ProgressListener;
+import org.geogit.api.SubProgressListener;
 import org.geogit.api.porcelain.AddOp;
 import org.geogit.api.porcelain.CommitOp;
 import org.geogit.osm.internal.log.AddOSMLogEntry;
@@ -29,9 +31,7 @@ import org.geogit.osm.internal.log.OSMMappingLogEntry;
 import org.geogit.osm.internal.log.WriteOSMFilterFile;
 import org.geogit.osm.internal.log.WriteOSMMappingEntries;
 import org.geogit.repository.WorkingTree;
-import org.geotools.util.SubProgressListener;
 import org.opengis.feature.Feature;
-import org.opengis.util.ProgressListener;
 import org.openstreetmap.osmosis.core.container.v0_6.EntityContainer;
 import org.openstreetmap.osmosis.core.domain.v0_6.Entity;
 import org.openstreetmap.osmosis.core.domain.v0_6.Node;
@@ -333,7 +333,7 @@ public class OSMImportOp extends AbstractGeoGitOp<Optional<OSMReport>> {
         SubProgressListener noPorgressReportingListener = new SubProgressListener(progressListener,
                 0) {
             @Override
-            public void progress(float progress) {
+            public void setProgress(float progress) {
                 // no-op
             }
         };
@@ -430,7 +430,7 @@ public class OSMImportOp extends AbstractGeoGitOp<Optional<OSMReport>> {
 
         @Override
         public void complete() {
-            progressListener.progress(count);
+            progressListener.setProgress(count);
             progressListener.complete();
             target.finish();
             pointCache.dispose();
@@ -448,7 +448,7 @@ public class OSMImportOp extends AbstractGeoGitOp<Optional<OSMReport>> {
         public void process(EntityContainer entityContainer) {
             Entity entity = entityContainer.getEntity();
             if (++count % 10 == 0) {
-                progressListener.progress(count);
+                progressListener.setProgress(count);
             }
             latestChangeset = Math.max(latestChangeset, entity.getChangesetId());
             latestTimestamp = Math.max(latestTimestamp, entity.getTimestamp().getTime());

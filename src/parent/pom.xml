@@ -139,7 +139,7 @@
     <guava.version>14.0.1</guava.version>
     <guice.version>3.0</guice.version>
     <jcommander.version>1.30</jcommander.version>
-    <jettison.version>1.0.1</jettison.version>
+    <jettison.version>1.0.1</jettison.version> <!-- matches version used in geoserver -->
     <jline.version>2.11</jline.version>
     <jsr305.version>1.3.7</jsr305.version>
     <jts.version>1.13</jts.version>
@@ -148,7 +148,7 @@
     <mockito.version>1.9.5</mockito.version>
     <mockrunner.version>0.3.6</mockrunner.version>
     <neo4j.version>1.9.2</neo4j.version>
-    <restlet.version>2.0.15</restlet.version>
+    <restlet.version>1.0.8</restlet.version> <!-- matches version used in geoserver -->
     <slf4j.version>1.7.5</slf4j.version>
     <sqljdbc4.version>3.0</sqljdbc4.version>
     <osmosis.version>0.43-RELEASE</osmosis.version>
@@ -323,6 +323,11 @@
         <version>${blueprints.version}</version>
       </dependency>
       <dependency>
+        <groupId>com.tinkerpop.blueprints</groupId>
+        <artifactId>blueprints-test</artifactId>
+        <version>${blueprints.version}</version>
+      </dependency>
+      <dependency>
         <groupId>com.tinkerpop.gremlin</groupId>
         <artifactId>gremlin-java</artifactId>
         <version>${blueprints.version}</version>
@@ -333,13 +338,18 @@
         <version>${blueprints.version}</version>
       </dependency>
       <dependency>
-        <groupId>org.restlet.jse</groupId>
-        <artifactId>org.restlet.ext.jetty</artifactId>
+        <groupId>org.restlet</groupId>
+        <artifactId>org.restlet</artifactId>
         <version>${restlet.version}</version>
       </dependency>
       <dependency>
-        <groupId>org.restlet.jee</groupId>
-        <artifactId>org.restlet.ext.servlet</artifactId>
+        <groupId>com.noelios.restlet</groupId>
+        <artifactId>com.noelios.restlet.ext.jetty</artifactId>
+        <version>${restlet.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>com.noelios.restlet</groupId>
+        <artifactId>com.noelios.restlet.ext.servlet</artifactId>
         <version>${restlet.version}</version>
       </dependency>
 

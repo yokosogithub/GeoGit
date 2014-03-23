@@ -18,6 +18,7 @@ import org.geogit.api.AbstractGeoGitOp;
 import org.geogit.api.Node;
 import org.geogit.api.NodeRef;
 import org.geogit.api.ObjectId;
+import org.geogit.api.ProgressListener;
 import org.geogit.api.Ref;
 import org.geogit.api.RevObject.TYPE;
 import org.geogit.api.RevTree;
@@ -30,7 +31,6 @@ import org.geogit.api.porcelain.CommitOp;
 import org.geogit.repository.SpatialOps;
 import org.geogit.storage.ObjectDatabase;
 import org.geogit.storage.StagingDatabase;
-import org.opengis.util.ProgressListener;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

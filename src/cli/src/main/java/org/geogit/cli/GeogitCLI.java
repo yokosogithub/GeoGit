@@ -29,9 +29,11 @@ import jline.console.ConsoleReader;
 import jline.console.CursorBuffer;
 
 import org.geogit.api.DefaultPlatform;
+import org.geogit.api.DefaultProgressListener;
 import org.geogit.api.GeoGIT;
 import org.geogit.api.GlobalInjectorBuilder;
 import org.geogit.api.Platform;
+import org.geogit.api.ProgressListener;
 import org.geogit.api.plumbing.ResolveGeogitDir;
 import org.geogit.api.porcelain.ConfigException;
 import org.geogit.api.porcelain.ConfigGet;
@@ -41,8 +43,6 @@ import org.geogit.cli.annotation.RemotesReadOnly;
 import org.geogit.cli.annotation.RequiresRepository;
 import org.geogit.cli.annotation.StagingDatabaseReadOnly;
 import org.geogit.repository.Hints;
-import org.geotools.util.DefaultProgressListener;
-import org.opengis.util.ProgressListener;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.bridge.SLF4JBridgeHandler;
@@ -544,7 +544,7 @@ public class GeogitCLI {
                         .toArray(new String[args.length - 1]);
                 mainCommander = ((CLICommandExtension) object).getCommandParser();
                 if (Lists.newArrayList(args).contains("--help")) {
-                    mainCommander.usage();
+                    printUsage(mainCommander);
                     return;
                 }
             }
@@ -554,13 +554,13 @@ public class GeogitCLI {
         final String parsedCommand = mainCommander.getParsedCommand();
         if (null == parsedCommand) {
             if (mainCommander.getObjects().size() == 0) {
-                mainCommander.usage();
+                printUsage(mainCommander);
             } else if (mainCommander.getObjects().get(0) instanceof CLICommandExtension) {
                 CLICommandExtension extension = (CLICommandExtension) mainCommander.getObjects()
                         .get(0);
-                extension.getCommandParser().usage();
+                printUsage(extension.getCommandParser());
             } else {
-                mainCommander.usage();
+                printUsage(mainCommander);
             }
         } else {
             JCommander jCommander = mainCommander.getCommands().get(parsedCommand);
@@ -568,7 +568,7 @@ public class GeogitCLI {
             CLICommand cliCommand = (CLICommand) objects.get(0);
             Class<? extends CLICommand> cmdClass = cliCommand.getClass();
             if (cliCommand instanceof AbstractCommand && ((AbstractCommand) cliCommand).help) {
-                ((AbstractCommand) cliCommand).printUsage();
+                ((AbstractCommand) cliCommand).printUsage(this);
                 getConsole().flush();
                 return;
             }
@@ -591,6 +591,23 @@ public class GeogitCLI {
 
             cliCommand.run(this);
             getConsole().flush();
+        }
+    }
+
+    /**
+     * This method should be used instead of {@link JCommander#usage()} so the help string is
+     * printed to the cli's {@link #getConsole() console} (and hence to wherever its output is sent)
+     * instead of directly to {@code System.out}
+     */
+    public void printUsage(JCommander mainCommander) {
+        StringBuilder out = new StringBuilder();
+        mainCommander.usage(out);
+        ConsoleReader console = getConsole();
+        try {
+            console.println(out.toString());
+            console.flush();
+        } catch (IOException e) {
+            throw Throwables.propagate(e);
         }
     }
 
@@ -828,8 +845,8 @@ public class GeogitCLI {
                 }
 
                 @Override
-                public synchronized void progress(float percent) {
-                    super.progress(percent);
+                public synchronized void setProgress(float percent) {
+                    super.setProgress(percent);
                     long nanoTime = platform.nanoTime();
                     if ((nanoTime - lastRun) > delayNanos) {
                         lastRun = nanoTime;

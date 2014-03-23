@@ -65,7 +65,7 @@ public class OSMExportShp extends AbstractShpCommand implements CLICommand {
         Preconditions.checkNotNull(mappingFile != null, "A data mapping file must be specified");
 
         if (args == null || args.isEmpty() || args.size() != 1) {
-            printUsage();
+            printUsage(cli);
             throw new CommandFailedException();
         }
 

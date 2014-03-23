@@ -4,21 +4,22 @@
  */
 package org.geogit.test.integration.sqlite;
 
-import static org.geogit.test.integration.sqlite.XerialTests.injector;
-
-import org.geogit.api.TestPlatform;
+import org.geogit.api.Platform;
+import org.geogit.storage.ConfigDatabase;
+import org.geogit.storage.GraphDatabase;
 import org.geogit.storage.GraphDatabaseTest;
+import org.geogit.storage.fs.IniFileConfigDatabase;
+import org.geogit.storage.sqlite.XerialGraphDatabase;
 import org.junit.Rule;
 import org.junit.rules.TemporaryFolder;
-
-import com.google.inject.Injector;
 
 public class XerialGraphDatabaseTest extends GraphDatabaseTest {
     @Rule
     public TemporaryFolder temp = new TemporaryFolder();
 
     @Override
-    protected Injector createInjector() {
-        return injector(new TestPlatform(temp.getRoot()));
+    protected GraphDatabase createDatabase(Platform platform) throws Exception {
+        ConfigDatabase configdb = new IniFileConfigDatabase(platform);
+        return new XerialGraphDatabase(configdb, platform);
     }
 }

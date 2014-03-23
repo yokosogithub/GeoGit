@@ -2,7 +2,7 @@
 .. _geogit-sl-describe:
 
 geogit-sl-describe documentation
-#################################
+################################
 
 
 
