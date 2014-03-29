@@ -20,11 +20,13 @@
       <artifactId>geogit-core</artifactId>
       <version>${project.version}</version>
     </dependency>
+
     <dependency>
       <groupId>org.apache.hbase</groupId>
-      <artifactId>hbase</artifactId>
-      <version>0.94.17</version>
+      <artifactId>hbase-client</artifactId>
+      <version>0.98.0-hadoop2</version>
     </dependency>
+
     <dependency>
       <groupId>org.geogit</groupId>
       <artifactId>geogit-mongodb</artifactId>
@@ -39,15 +41,11 @@
     </dependency>
     -->
     <!-- is this necessary? -->
-    <!--
     <dependency>
-    -->
-      <!-- Google Common Libraries. Featuring com.google.collect collection classes -->
-      <!--
       <groupId>com.google.guava</groupId>
       <artifactId>guava</artifactId>
     </dependency>
-    -->
+    
     <!-- Test scope dependencies -->
     <dependency>
       <groupId>org.geogit</groupId>
