@@ -20,16 +20,25 @@
       <artifactId>geogit-core</artifactId>
       <version>${project.version}</version>
     </dependency>
-    <dependency>
-      <groupId>org.apache.hbase</groupId>
-      <artifactId>hbase</artifactId>
-      <version>0.94.17</version>
-    </dependency>
-    <dependency>
-      <groupId>org.geogit</groupId>
-      <artifactId>geogit-mongodb</artifactId>
-      <version>${project.version}</version>
-    </dependency>
+
+	<dependency>
+		<groupId>org.apache.hbase</groupId>
+		<artifactId>hbase</artifactId>
+		<version>0.94.17</version>
+	</dependency>
+	
+	<dependency>
+		<groupId>org.apache.hadoop</groupId>
+		<artifactId>hadoop-core</artifactId>
+		<version>1.0.4</version>
+	</dependency>
+	
+	<dependency>
+		<groupId>org.slf4j</groupId>
+		<artifactId>slf4j-log4j12</artifactId>
+		<version>1.7.5</version>
+	</dependency>
+
     <!-- is this necessary? -->
     <!--
     <dependency>
@@ -39,15 +48,11 @@
     </dependency>
     -->
     <!-- is this necessary? -->
-    <!--
     <dependency>
-    -->
-      <!-- Google Common Libraries. Featuring com.google.collect collection classes -->
-      <!--
       <groupId>com.google.guava</groupId>
       <artifactId>guava</artifactId>
     </dependency>
-    -->
+    
     <!-- Test scope dependencies -->
     <dependency>
       <groupId>org.geogit</groupId>
@@ -64,8 +69,6 @@
   </dependencies>
 
   <build>
-    <!-- don't know what this is -->
-    <!--
     <plugins>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
@@ -75,7 +78,6 @@
         </configuration>
       </plugin>
     </plugins>
-    -->
   </build>
 
   <profiles>
