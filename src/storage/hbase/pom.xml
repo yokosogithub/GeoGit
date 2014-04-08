@@ -32,6 +32,12 @@
 		<artifactId>hadoop-core</artifactId>
 		<version>1.0.4</version>
 	</dependency>
+	
+	<dependency>
+		<groupId>org.slf4j</groupId>
+		<artifactId>slf4j-log4j12</artifactId>
+		<version>1.7.5</version>
+	</dependency>
 
     <!-- is this necessary? -->
     <!--
@@ -63,8 +69,6 @@
   </dependencies>
 
   <build>
-    <!-- don't know what this is -->
-    <!--
     <plugins>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
@@ -74,7 +78,6 @@
         </configuration>
       </plugin>
     </plugins>
-    -->
   </build>
 
   <profiles>
