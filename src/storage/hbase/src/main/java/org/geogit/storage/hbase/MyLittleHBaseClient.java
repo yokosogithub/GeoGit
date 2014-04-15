@@ -1,5 +1,7 @@
 package org.geogit.storage.hbase;
 
+
+
 import java.io.IOException;
 
 import org.apache.hadoop.conf.Configuration;
@@ -22,7 +24,7 @@ public class MyLittleHBaseClient {
     // into your hbase-site.xml and in hbase-default.xml, as long as these can
     // be found on the CLASSPATH
     Configuration config = HBaseConfiguration.create();
-    config.addResource("/Users/apple/Documents/tools/hbase-0.94.17/conf/hbase-site.xml");
+    //config.addResource("/Users/apple/Documents/tools/hbase-0.94.17/conf/hbase-site.xml");
 
     // This instantiates an HTable object that connects you to
     // the "myLittleHBaseTable" table.
