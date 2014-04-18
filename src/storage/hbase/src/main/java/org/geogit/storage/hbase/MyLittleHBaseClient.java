@@ -42,7 +42,7 @@ public class MyLittleHBaseClient {
 
     // To set the value you'd like to update in the row 'myLittleRow', specify
     // the column family, column qualifier, and value of the table cell you'd
-    // like to update.  The column family must already exist in your table
+    // like to update.  The column family must al ready exist in your table
     // schema.  The qualifier can be anything.  All must be specified as byte
     // arrays as hbase is all about byte arrays.  Lets pretend the table
     // 'myLittleHBaseTable' was created with a family 'myLittleFamily'.

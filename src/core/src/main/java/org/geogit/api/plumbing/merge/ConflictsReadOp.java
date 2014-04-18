@@ -1,3 +1,4 @@
+<<<<<<< .merge_file_3QSlaX
 /* Copyright (c) 2013 OpenPlans. All rights reserved.
  * This code is licensed under the BSD New License, available at the root
  * application directory.
@@ -24,3 +25,39 @@ public class ConflictsReadOp extends AbstractGeoGitOp<List<Conflict>> {
         }
     }
 }
+=======
+/* Copyright (c) 2013 OpenPlans. All rights reserved.
+ * This code is licensed under the BSD New License, available at the root
+ * application directory.
+ */
+package org.geogit.api.plumbing.merge;
+
+import java.net.URL;
+import java.util.List;
+
+import org.geogit.api.AbstractGeoGitOp;
+import org.geogit.api.plumbing.ResolveGeogitDir;
+
+import com.google.common.base.Optional;
+import com.google.common.base.Supplier;
+import com.google.common.collect.ImmutableList;
+
+public class ConflictsReadOp extends AbstractGeoGitOp<List<Conflict>> implements
+        Supplier<Iterable<Conflict>> {
+
+    @Override
+    public List<Conflict> call() {
+        final Optional<URL> repoUrl = getCommandLocator().command(ResolveGeogitDir.class).call();
+        if (repoUrl.isPresent()) {
+            return getIndex().getDatabase().getConflicts(null, null);
+        } else {
+            return ImmutableList.of();
+        }
+    }
+
+    @Override
+    public Iterable<Conflict> get() {
+        return call();
+    }
+}
+>>>>>>> .merge_file_rwzVSY
